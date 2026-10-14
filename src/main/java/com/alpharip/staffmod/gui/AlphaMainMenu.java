@@ -9,11 +9,10 @@ import net.minecraft.client.gui.GuiSelectWorld;
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
 
-/** Original dark AlphaClient menu for Minecraft 1.8.9. */
+/** Completely reworked AlphaClient landing screen for Minecraft 1.8.9. */
 public final class AlphaMainMenu extends GuiScreen {
     private static final int PLAY = 10;
     private static final int MULTIPLAYER = 11;
@@ -21,73 +20,87 @@ public final class AlphaMainMenu extends GuiScreen {
     private static final int OPTIONS = 13;
     private static final int PARTNER = 14;
     private static final int QUIT = 15;
-    private static final ResourceLocation ALPHA_LOGO = new ResourceLocation("alphastaffmod", "textures/gui/alpha_logo.png");
 
     @Override
     public void initGui() {
         buttonList.clear();
-        int center = width / 2;
-        int buttonWidth = Math.min(300, width - 40);
-        int left = center - buttonWidth / 2;
-        int y = Math.max(130, height / 2 - 30);
-        buttonList.add(new AlphaButton(PLAY, left, y, buttonWidth, 24, "SINGLEPLAYER"));
-        buttonList.add(new AlphaButton(MULTIPLAYER, left, y + 29, buttonWidth, 24, "MULTIPLAYER"));
-        buttonList.add(new AlphaButton(MODULES, left, y + 58, buttonWidth, 24, "MOD MENU"));
-        buttonList.add(new AlphaButton(OPTIONS, left, y + 87, buttonWidth, 24, "SETTINGS"));
-        buttonList.add(new AlphaButton(PARTNER, left, y + 116, buttonWidth, 24, "JOIN ALPHA.RIP"));
-        buttonList.add(new AlphaButton(QUIT, left, y + 145, buttonWidth, 24, "QUIT"));
+        int sidebarWidth = Math.max(190, Math.min(230, width / 4));
+        int contentLeft = sidebarWidth + 30;
+        int contentWidth = Math.max(220, width - contentLeft - 28);
+        int buttonWidth = Math.min(270, contentWidth);
+        int buttonX = contentLeft;
+        int buttonY = Math.max(174, height / 2 - 12);
+
+        buttonList.add(new AlphaButton(PLAY, buttonX, buttonY, buttonWidth, 28, "SINGLEPLAYER"));
+        buttonList.add(new AlphaButton(MULTIPLAYER, buttonX, buttonY + 36, buttonWidth, 28, "MULTIPLAYER"));
+        buttonList.add(new AlphaButton(MODULES, buttonX, buttonY + 72, buttonWidth, 28, "MODULES"));
+        buttonList.add(new AlphaButton(OPTIONS, buttonX, buttonY + 108, buttonWidth, 28, "SETTINGS"));
+        buttonList.add(new AlphaButton(PARTNER, buttonX, buttonY + 144, buttonWidth, 28, "JOIN ALPHA.RIP"));
+        buttonList.add(new AlphaButton(QUIT, width - 92, height - 32, 78, 20, "QUIT"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawGradientRect(0, 0, width, height, 0xFF17191F, 0xFF0B0C10);
-        drawGradientRect(width / 2 - 170, 38, width / 2 + 170, 116, 0x332A2D35, 0x0017191F);
-        Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
-        drawModalRectWithCustomSizedTexture(width / 2 - 32, 17, 0.0F, 0.0F, 64, 64, 128.0F, 128.0F);
-        drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2, 84, 0xFFFFFFFF);
-        drawCenteredString(fontRendererObj, "MINECRAFT 1.8.9  •  FORGE", width / 2, 103, 0xFFB8BBC4);
-        drawCenteredString(fontRendererObj, "A client built around the Alpha community", width / 2, 121, 0xFF858A96);
+        drawGradientRect(0, 0, width, height, 0xFF14161B, 0xFF090A0D);
+
+        int sidebarWidth = Math.max(190, Math.min(230, width / 4));
+        drawRect(0, 0, sidebarWidth, height, 0xFF101116);
+        drawRect(sidebarWidth - 1, 0, sidebarWidth, height, 0xFF343740);
+        drawRect(22, 25, 25, 65, 0xFFFFD866);
+        drawString(fontRendererObj, "ALPHA", 36, 28, 0xFFFFD866);
+        drawString(fontRendererObj, "CLIENT", 36, 41, 0xFFFFFFFF);
+        drawString(fontRendererObj, "MINECRAFT 1.8.9", 22, 78, 0xFF858A96);
+        drawString(fontRendererObj, "Forge Edition", 22, 91, 0xFF666B76);
+
+        int contentLeft = sidebarWidth + 30;
+        drawString(fontRendererObj, "WELCOME BACK", contentLeft, 35, 0xFFFFD866);
+        drawString(fontRendererObj, "Your Minecraft, your Alpha.", contentLeft, 53, 0xFFFFFFFF);
+        drawString(fontRendererObj, "Choose a destination to get started.", contentLeft, 68, 0xFF9DA2AE);
+
+        int cardTop = 91;
+        int cardRight = width - 28;
+        drawRect(contentLeft, cardTop, cardRight, cardTop + 56, 0xAA202229);
+        drawRect(contentLeft, cardTop, cardRight, cardTop + 1, 0xFF454954);
+        drawString(fontRendererObj, "CLIENT STATUS", contentLeft + 12, cardTop + 10, 0xFFFFD866);
+        drawString(fontRendererObj, "AlphaClient is running locally", contentLeft + 12, cardTop + 25, 0xFFE8E9ED);
+        drawString(fontRendererObj, "Version  " + com.alpharip.staffmod.BuildInfo.VERSION,
+                contentLeft + 12, cardTop + 39, 0xFF858A96);
+
         super.drawScreen(mouseX, mouseY, partialTicks);
         GlStateManager.disableLighting();
-        drawString(fontRendererObj, "AlphaClient", 8, height - 18, 0xFFFFD866);
-        drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION, width - 74, height - 18, 0xFF858A96);
+        drawString(fontRendererObj, "ALPHA.RIP  /  COMMUNITY", 22, height - 30, 0xFF858A96);
+        drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION,
+                width - 84, height - 18, 0xFF858A96);
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if (button == null) {
-            return;
-        }
-        Minecraft mc = Minecraft.getMinecraft();
+        if (button == null) return;
+        Minecraft minecraft = Minecraft.getMinecraft();
         switch (button.id) {
             case PLAY:
-                mc.displayGuiScreen(new GuiSelectWorld(this));
+                minecraft.displayGuiScreen(new GuiSelectWorld(this));
                 break;
             case MULTIPLAYER:
-                mc.displayGuiScreen(new GuiMultiplayer(this));
+                minecraft.displayGuiScreen(new GuiMultiplayer(this));
                 break;
             case MODULES:
-                mc.displayGuiScreen(new AlphaModMenu(this));
+                minecraft.displayGuiScreen(new AlphaModMenu(this));
                 break;
             case OPTIONS:
-                mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings));
+                minecraft.displayGuiScreen(new GuiOptions(this, minecraft.gameSettings));
                 break;
             case PARTNER:
-                // Connecting starts only after the custom main menu is open and the user clicks.
-                mc.displayGuiScreen(new GuiConnecting(this, mc,
+                // Only this explicit button click initiates a connection.
+                minecraft.displayGuiScreen(new GuiConnecting(this, minecraft,
                         new ServerData("Alpha.Rip", "alpha.rip:25565", false)));
                 break;
             case QUIT:
-                mc.shutdown();
+                minecraft.shutdown();
                 break;
             default:
                 break;
         }
-    }
-
-    @Override
-    public void onGuiClosed() {
-        super.onGuiClosed();
     }
 
     @Override
