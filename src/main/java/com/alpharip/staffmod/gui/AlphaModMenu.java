@@ -36,7 +36,8 @@ public final class AlphaModMenu extends GuiScreen {
             buttonList.add(new AlphaButton(CATEGORY_BASE + i, x, y, categoryWidth, 22,
                     categories[i].getTitle()));
         }
-        buttonList.add(new GuiButton(BACK, 14, height - 32, 100, 20, "BACK"));
+        buttonList.add(new AlphaButton(BACK, 14, height - 32, 100, 20, "BACK"));
+        buttonList.add(new AlphaButton(COMMUNITY_LOGIN, width - 174, height - 32, 160, 20, "COMMUNITY LOGIN"));
         addModuleButtons();
     }
 
@@ -52,7 +53,7 @@ public final class AlphaModMenu extends GuiScreen {
         for (int i = scrollOffset; i < modules.size() && visibleIndex < 7; i++, visibleIndex++) {
             AlphaModule module = modules.get(i);
             String label = module.getName() + "  [" + module.getStatusLabel() + "]";
-            buttonList.add(new GuiButton(MODULE_BASE + i, 18, y + visibleIndex * 32,
+            buttonList.add(new AlphaButton(MODULE_BASE + i, 18, y + visibleIndex * 32,
                     Math.max(220, Math.min(380, width - 36)), 25, label));
         }
     }
