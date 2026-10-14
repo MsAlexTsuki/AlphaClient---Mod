@@ -2,6 +2,9 @@ package com.alpharip.staffmod.permissions;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Session;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Central client-side permission gate.
@@ -29,6 +32,8 @@ public final class PermissionService {
 
     private static volatile Rank verifiedOnlineRank = Rank.PUBLIC;
     private static volatile boolean onlineRankVerified = false;
+    private static volatile Set<String> verifiedModEntitlements = Collections.emptySet();
+    private static volatile boolean modEntitlementsVerified = false;
 
     private PermissionService() {
     }
@@ -71,6 +76,38 @@ public final class PermissionService {
     public static void clearVerifiedOnlineRank() {
         verifiedOnlineRank = Rank.PUBLIC;
         onlineRankVerified = false;
+        clearVerifiedModEntitlements();
+    }
+
+    /**
+     * Supplies the exact mod IDs returned by the authenticated Alpha permission API.
+     * Call only after validating the response for the signed-in Alpha account.
+     * Empty or missing responses fail closed for every non-public mod.
+     */
+    public static void setVerifiedModEntitlements(Set<String> modIds) {
+        if (modIds == null) {
+            clearVerifiedModEntitlements();
+            return;
+        }
+        verifiedModEntitlements = Collections.unmodifiableSet(new HashSet<String>(modIds));
+        modEntitlementsVerified = true;
+    }
+
+    public static void clearVerifiedModEntitlements() {
+        verifiedModEntitlements = Collections.emptySet();
+        modEntitlementsVerified = false;
+    }
+
+    /** Checks one stable database mod_id, not a guessed rank hierarchy. */
+    public static boolean hasModAccess(String modId) {
+        if (modId == null || modId.trim().isEmpty()) return false;
+        if (isOfflineTestSession()) return true;
+        if (!modEntitlementsVerified) return false;
+        return verifiedModEntitlements.contains(modId);
+    }
+
+    public static boolean areModEntitlementsVerified() {
+        return modEntitlementsVerified;
     }
 
     public static Rank getEffectiveRank() {
@@ -105,6 +142,9 @@ public final class PermissionService {
     public static String getStatusText() {
         if (isOfflineTestSession()) {
             return "FOUNDER OFFLINE TEST";
+        }
+        if (!modEntitlementsVerified) {
+            return "MOD PERMISSIONS NOT VERIFIED";
         }
         if (!onlineRankVerified) {
             return "COMMUNITY RANK NOT VERIFIED";
