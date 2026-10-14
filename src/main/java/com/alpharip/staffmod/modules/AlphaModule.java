@@ -1,6 +1,9 @@
 package com.alpharip.staffmod.modules;
 
 import com.alpharip.staffmod.permissions.PermissionService;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Small module descriptor used by the new AlphaClient module menu.
@@ -36,6 +39,7 @@ public final class AlphaModule {
     private final Category category;
     private final boolean implemented;
     private boolean enabled;
+    private final List<AlphaModuleFeature> features = new ArrayList<AlphaModuleFeature>();
 
     public AlphaModule(String id, String name, String description,
                        Category category, boolean implemented,
@@ -46,6 +50,21 @@ public final class AlphaModule {
         this.category = category;
         this.implemented = implemented;
         this.enabled = defaultEnabled;
+    }
+
+    public void addFeature(AlphaModuleFeature feature) {
+        if (feature != null) features.add(feature);
+    }
+
+    public List<AlphaModuleFeature> getFeatures() {
+        return Collections.unmodifiableList(features);
+    }
+
+    public AlphaModuleFeature getFeature(String featureId) {
+        for (AlphaModuleFeature feature : features) {
+            if (feature.getId().equals(featureId)) return feature;
+        }
+        return null;
     }
 
     public String getId() { return id; }
