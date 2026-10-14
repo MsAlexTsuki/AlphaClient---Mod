@@ -56,5 +56,4 @@ public final class AlphaHudRenderer {
         mc.fontRendererObj.drawString(label, x + (width - mc.fontRendererObj.getStringWidth(label)) / 2,
                 y + 5, foreground);
     }
-    }
 }
