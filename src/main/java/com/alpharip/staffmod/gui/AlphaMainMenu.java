@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiSelectWorld;
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
 
@@ -20,6 +21,7 @@ public final class AlphaMainMenu extends GuiScreen {
     private static final int OPTIONS = 13;
     private static final int PARTNER = 14;
     private static final int QUIT = 15;
+    private static final ResourceLocation ALPHA_LOGO = new ResourceLocation("alphastaffmod", "textures/gui/alpha_logo.png");
 
     @Override
     public void initGui() {
@@ -40,10 +42,11 @@ public final class AlphaMainMenu extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawGradientRect(0, 0, width, height, 0xFF17191F, 0xFF0B0C10);
         drawGradientRect(width / 2 - 170, 38, width / 2 + 170, 116, 0x332A2D35, 0x0017191F);
-        drawCenteredString(fontRendererObj, "A", width / 2, 30, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2, 57, 0xFFFFFFFF);
-        drawCenteredString(fontRendererObj, "MINECRAFT 1.8.9  •  FORGE", width / 2, 78, 0xFFB8BBC4);
-        drawCenteredString(fontRendererObj, "A client built around the Alpha community", width / 2, 98, 0xFF858A96);
+        Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
+        drawModalRectWithCustomSizedTexture(width / 2 - 32, 17, 0.0F, 0.0F, 64, 64, 128.0F, 128.0F);
+        drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2, 84, 0xFFFFFFFF);
+        drawCenteredString(fontRendererObj, "MINECRAFT 1.8.9  •  FORGE", width / 2, 103, 0xFFB8BBC4);
+        drawCenteredString(fontRendererObj, "A client built around the Alpha community", width / 2, 121, 0xFF858A96);
         super.drawScreen(mouseX, mouseY, partialTicks);
         GlStateManager.disableLighting();
         drawString(fontRendererObj, "AlphaClient", 8, height - 18, 0xFFFFD866);
