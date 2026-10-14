@@ -36,8 +36,8 @@ public final class AlphaSettingsMenu extends GuiScreen {
                 "RESET HUD POSITION"));
         buttonList.add(new AlphaButton(MINECRAFT_OPTIONS, left + 18, top + 126, buttonWidth, 28,
                 "MINECRAFT OPTIONS"));
-        buttonList.add(new AlphaButton(SCALE_DOWN, center - 80, top + 174, 48, 24, "−"));
-        buttonList.add(new AlphaButton(SCALE_UP, center + 32, top + 174, 48, 24, "+"));
+        buttonList.add(new AlphaButton(SCALE_DOWN, center - 80, top + 204, 48, 24, "−"));
+        buttonList.add(new AlphaButton(SCALE_UP, center + 32, top + 204, 48, 24, "+"));
         buttonList.add(new AlphaButton(BACK, 14, height - 32, 100, 20, "BACK"));
     }
 
