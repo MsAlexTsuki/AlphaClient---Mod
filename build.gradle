@@ -61,7 +61,7 @@ if (currentBuildNumber <= 100) {
 
 version = "0." + versionMinor + "." + versionPatch
 
-group = "com.alpharip.staffmod"
+group = "com.alpharip.alphaclient"
 archivesBaseName = "AlphaClient"
 
 /*
