@@ -91,7 +91,7 @@ public final class AlphaClient {
 
         if (toggleBhopKey != null && toggleBhopKey.isPressed()) {
             AlphaModule staffmods = AlphaModuleRegistry.find("staffmods");
-            if (staffmods == null || !staffmods.isImplemented() || !staffmods.isUnlocked()) {
+            if (staffmods == null || !staffmods.isImplemented() || !PermissionService.hasModAccess("staff.bhop")) {
                 System.out.println("[AlphaClient] BHOP requires Staff access or Founder offline test mode.");
                 return;
             }
@@ -104,6 +104,6 @@ public final class AlphaClient {
     public static void syncBhopModuleState() {
         AlphaModule staffmods = AlphaModuleRegistry.find("staffmods");
         BhopMode.setEnabled(staffmods != null && staffmods.isEnabled()
-                && PermissionService.hasAccess(PermissionService.Rank.STAFF));
+                && PermissionService.hasModAccess("staff.bhop"));
     }
 }
