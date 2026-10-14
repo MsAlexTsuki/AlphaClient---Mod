@@ -2,6 +2,7 @@ package com.alpharip.staffmod.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSelectWorld;
@@ -11,8 +12,14 @@ import net.minecraft.client.renderer.GlStateManager;
 
 import java.io.IOException;
 
-/** Compact AlphaClient landing screen; adapts its spacing to the scaled Minecraft resolution. */
-public final class AlphaMainMenu extends GuiScreen {
+/**
+ * AlphaClient's compact main menu.
+ *
+ * GuiMainMenu supplies Minecraft's existing animated panorama background;
+ * this screen layers the Alpha interface over it without replacing the
+ * underlying world panorama with a static image.
+ */
+public final class AlphaMainMenu extends GuiMainMenu {
     private static final int PLAY = 10;
     private static final int MULTIPLAYER = 11;
     private static final int MODULES = 12;
@@ -20,78 +27,100 @@ public final class AlphaMainMenu extends GuiScreen {
     private static final int PARTNER = 14;
     private static final int QUIT = 15;
 
+    private static final int ACCENT = 0xFFFFD866;
     private int sidebarWidth;
-    private int contentLeft;
-    private int buttonWidth;
-    private int buttonY;
+    private int menuButtonWidth;
+    private int menuButtonHeight;
+    private int menuButtonGap;
 
     @Override
     public void initGui() {
         buttonList.clear();
-        sidebarWidth = Math.max(126, Math.min(158, width / 7));
-        contentLeft = sidebarWidth + 24;
-        int contentWidth = Math.max(190, width - contentLeft - 24);
-        buttonWidth = Math.min(250, contentWidth);
-        int contentCenter = contentLeft + contentWidth / 2;
-        int buttonX = contentCenter - buttonWidth / 2;
-        buttonY = Math.max(156, Math.min(height - 174, height / 2 - 52));
-        int buttonHeight = 25;
-        int gap = 7;
 
-        buttonList.add(new AlphaButton(PLAY, buttonX, buttonY, buttonWidth, buttonHeight, "PLAY SINGLEPLAYER", true));
-        buttonList.add(new AlphaButton(MULTIPLAYER, buttonX, buttonY + buttonHeight + gap,
-                buttonWidth, buttonHeight, "MULTIPLAYER"));
-        buttonList.add(new AlphaButton(MODULES, buttonX, buttonY + (buttonHeight + gap) * 2,
-                buttonWidth, buttonHeight, "MODULES"));
-        buttonList.add(new AlphaButton(OPTIONS, buttonX, buttonY + (buttonHeight + gap) * 3,
-                buttonWidth, buttonHeight, "SETTINGS"));
-        buttonList.add(new AlphaButton(PARTNER, buttonX, buttonY + (buttonHeight + gap) * 4,
-                buttonWidth, buttonHeight, "JOIN ALPHA.RIP"));
-        buttonList.add(new AlphaButton(QUIT, width - 72, height - 25, 60, 16, "QUIT"));
+        sidebarWidth = Math.max(174, Math.min(204, width / 5));
+        menuButtonWidth = sidebarWidth - 40;
+        menuButtonHeight = 25;
+        menuButtonGap = 7;
+
+        int buttonX = (sidebarWidth - menuButtonWidth) / 2;
+        int firstButtonY = Math.max(118, Math.min(154, height / 2 - 58));
+
+        buttonList.add(new AlphaButton(PLAY, buttonX, firstButtonY,
+                menuButtonWidth, menuButtonHeight, "PLAY SINGLEPLAYER", true));
+        buttonList.add(new AlphaButton(MULTIPLAYER, buttonX, firstButtonY + menuButtonHeight + menuButtonGap,
+                menuButtonWidth, menuButtonHeight, "MULTIPLAYER"));
+        buttonList.add(new AlphaButton(MODULES, buttonX,
+                firstButtonY + (menuButtonHeight + menuButtonGap) * 2,
+                menuButtonWidth, menuButtonHeight, "MODULES"));
+        buttonList.add(new AlphaButton(OPTIONS, buttonX,
+                firstButtonY + (menuButtonHeight + menuButtonGap) * 3,
+                menuButtonWidth, menuButtonHeight, "SETTINGS"));
+        buttonList.add(new AlphaButton(PARTNER, buttonX,
+                firstButtonY + (menuButtonHeight + menuButtonGap) * 4,
+                menuButtonWidth, menuButtonHeight, "JOIN ALPHA.RIP"));
+        buttonList.add(new AlphaButton(QUIT, 20, height - 37, 64, 19, "QUIT"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawGradientRect(0, 0, width, height, 0xFF181B22, 0xFF090A0E);
-
-        drawRect(0, 0, sidebarWidth, height, 0xFF111319);
-        drawRect(sidebarWidth - 1, 0, sidebarWidth, height, 0xFF292D36);
-        drawRect(16, 22, 19, 54, 0xFFFFD866);
-        drawString(fontRendererObj, "ALPHA", 27, 23, 0xFFFFD866);
-        drawString(fontRendererObj, "CLIENT", 27, 35, 0xFFF4F5F8);
-        drawString(fontRendererObj, "MINECRAFT 1.8.9", 16, 64, 0xFF9A9FAC);
-        drawString(fontRendererObj, "FORGE EDITION", 16, 76, 0xFF686E7A);
-        drawRect(16, 94, sidebarWidth - 16, 95, 0xFF2A2D35);
-        drawString(fontRendererObj, "ALPHA.RIP", 16, 108, 0xFFE2E4EA);
-        drawString(fontRendererObj, "COMMUNITY", 16, 120, 0xFF9A9FAC);
-        drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION,
-                16, height - 18, 0xFF686E7A);
-
-        int contentWidth = width - contentLeft - 24;
-        int contentRight = width - 24;
-        drawString(fontRendererObj, "WELCOME BACK", contentLeft, 22, 0xFFFFD866);
-        drawString(fontRendererObj, "Your Minecraft. Your Alpha.", contentLeft, 38, 0xFFF4F5F8);
-        drawString(fontRendererObj, "Choose where to go.", contentLeft, 51, 0xFF9A9FAC);
-
-        int cardWidth = Math.min(330, contentWidth);
-        int cardLeft = contentLeft + (contentWidth - cardWidth) / 2;
-        int cardTop = 70;
-        int cardBottom = 112;
-        drawRect(cardLeft, cardTop, cardLeft + cardWidth, cardBottom, 0xFF171A21);
-        drawRect(cardLeft, cardTop, cardLeft + cardWidth, cardTop + 1, 0xFF343944);
-        drawRect(cardLeft, cardTop, cardLeft + 2, cardBottom, 0xFFFFD866);
-        drawString(fontRendererObj, "CLIENT READY", cardLeft + 11, cardTop + 8, 0xFF9A9FAC);
-        drawString(fontRendererObj, "AlphaClient  v" + com.alpharip.staffmod.BuildInfo.VERSION,
-                cardLeft + 11, cardTop + 23, 0xFFF4F5F8);
-
-        drawString(fontRendererObj, "QUICK ACCESS", contentLeft, buttonY - 16, 0xFF686E7A);
+        /*
+         * Draw the vanilla menu first so its animated Minecraft panorama
+         * remains active. The custom interface is layered on top afterwards.
+         */
         super.drawScreen(mouseX, mouseY, partialTicks);
+
+        // A light global tint improves text contrast while keeping the scenery visible.
+        drawRect(0, 0, width, height, 0x30070A10);
+        // Fade the vanilla logo out into the sky rather than placing a large opaque panel over it.
+        drawGradientRect(0, 0, width, Math.min(height, 154),
+                0xE6101218, 0x00101218);
+        drawGradientRect(0, Math.max(0, height - 74), width, height,
+                0x00101218, 0xB8101218);
+
+        // Narrow, translucent navigation rail; the panorama remains visible across the screen.
+        drawRect(0, 0, sidebarWidth, height, 0xB8101218);
+        drawRect(sidebarWidth - 1, 0, sidebarWidth, height, 0x553A3E48);
+        drawRect(sidebarWidth - 3, 0, sidebarWidth - 1, height, 0x66FFD866);
+
+        // Alpha wordmark and compact game information.
+        drawRect(20, 23, 23, 55, ACCENT);
+        drawString(fontRendererObj, "ALPHA", 31, 24, ACCENT);
+        drawString(fontRendererObj, "CLIENT", 31, 37, 0xFFF5F6F8);
+        drawString(fontRendererObj, "MINECRAFT 1.8.9", 20, 66, 0xFFB2B6C0);
+        drawString(fontRendererObj, "FORGE EDITION", 20, 78, 0xFF777D89);
+        drawRect(20, 96, sidebarWidth - 20, 97, 0x553D424D);
+
+        drawString(fontRendererObj, "NAVIGATION", 20, 105, 0xFF777D89);
+        drawString(fontRendererObj, "ALPHA.RIP  /  COMMUNITY",
+                sidebarWidth + 24, height - 22, 0xFFB2B6C0);
+        drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION,
+                94, height - 31, 0xFF777D89);
+
+        // Hero copy stays over the scenery, with no oversized central card.
+        int heroX = Math.min(width - 220, sidebarWidth + Math.max(28, (width - sidebarWidth) / 12));
+        int heroY = Math.max(42, height / 3 - 20);
+        drawString(fontRendererObj, "YOUR WORLD.", heroX, heroY, 0xFFF5F6F8);
+        drawString(fontRendererObj, "YOUR RULES.", heroX, heroY + 18, ACCENT);
+        drawRect(heroX, heroY + 38, heroX + 42, heroY + 40, ACCENT);
+        drawString(fontRendererObj, "A cleaner way to play Minecraft.",
+                heroX, heroY + 51, 0xFFD0D3DA);
+        drawString(fontRendererObj, "Choose a destination from the menu.",
+                heroX, heroY + 64, 0xFF9DA3AE);
+
+        // Redraw the custom controls above the tint and background overlays.
+        for (GuiButton button : buttonList) {
+            button.drawButton(Minecraft.getMinecraft(), mouseX, mouseY);
+        }
+
         GlStateManager.disableLighting();
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if (button == null) return;
+        if (button == null) {
+            return;
+        }
+
         Minecraft minecraft = Minecraft.getMinecraft();
         switch (button.id) {
             case PLAY:
