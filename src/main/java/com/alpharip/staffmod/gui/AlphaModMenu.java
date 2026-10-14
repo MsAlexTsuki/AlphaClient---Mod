@@ -32,7 +32,7 @@ public final class AlphaModMenu extends GuiScreen {
         AlphaModule.Category[] categories = AlphaModule.Category.values();
         for (int i = 0; i < categories.length; i++) {
             int x = left + i * (categoryWidth + 5);
-            buttonList.add(new GuiButton(CATEGORY_BASE + i, x, y, categoryWidth, 22,
+            buttonList.add(new AlphaButton(CATEGORY_BASE + i, x, y, categoryWidth, 22,
                     categories[i].getTitle()));
         }
         buttonList.add(new GuiButton(BACK, 14, height - 32, 100, 20, "BACK"));
