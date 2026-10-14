@@ -114,10 +114,6 @@ public final class AlphaModMenu extends GuiScreen {
                 drawRect(listX + 3, rowY - 2, listX + listWidth + 5, rowY + 40, 0xFF22252D);
                 drawRect(listX + 3, rowY - 2, listX + 5, rowY + 40, 0xFFFFD866);
             }
-            int statusColor = module.isEnabled() ? 0xFF8DDBA4
-                    : module.isImplemented() ? 0xFF9298A5 : 0xFF686E7A;
-            drawString(fontRendererObj, module.getStatusLabel(),
-                    listX + listWidth - 66, rowY + 4, statusColor);
             String description = module.getDescription();
             int maxChars = Math.max(12, (listWidth - 24) / 6);
             if (description.length() > maxChars) description = description.substring(0, maxChars - 3) + "...";
@@ -128,7 +124,12 @@ public final class AlphaModMenu extends GuiScreen {
         if (selected != null) {
             drawString(fontRendererObj, "MODULE DETAILS", detailX + 14, 84, 0xFF686E7A);
             drawString(fontRendererObj, selected.getName(), detailX + 14, 103, 0xFFF4F5F8);
-            drawString(fontRendererObj, selected.getDescription(), detailX + 14, 121, 0xFFB8BDC8);
+            String selectedDescription = selected.getDescription();
+            int detailChars = Math.max(14, (detailRight - detailX - 30) / 6);
+            if (selectedDescription.length() > detailChars) {
+                selectedDescription = selectedDescription.substring(0, detailChars - 3) + "...";
+            }
+            drawString(fontRendererObj, selectedDescription, detailX + 14, 121, 0xFFB8BDC8);
             drawRect(detailX + 14, 145, detailRight - 14, 146, 0xFF292D36);
 
             drawString(fontRendererObj, "STATUS", detailX + 14, 160, 0xFF686E7A);
