@@ -47,7 +47,7 @@ public class BhopHud {
      * =========================================================
      */
 
-    private static final int HUD_HEIGHT = 24;
+    private static final int HUD_HEIGHT = 28;
 
     private static final int HUD_PADDING_LEFT = 8;
     private static final int HUD_PADDING_RIGHT = 8;
@@ -399,123 +399,44 @@ public class BhopHud {
 
 
         /*
-         * =====================================================
-         * BACKGROUND
-         * =====================================================
+         * AlphaClient compact HUD panel.
          */
-
-        drawRect(
-                0,
-                0,
-                hudWidth,
-                HUD_HEIGHT,
-                0x8C101010
-        );
-
+        drawRect(0, 0, hudWidth, HUD_HEIGHT, 0xD9101218);
+        drawRect(0, 0, hudWidth, 2, 0xFFFFD866);
+        drawRect(0, 2, 2, HUD_HEIGHT, 0xFFFFD866);
+        drawRect(2, HUD_HEIGHT - 1, hudWidth, HUD_HEIGHT, 0x553F444E);
 
         /*
-         * =====================================================
-         * BORDER
-         * =====================================================
+         * Profile label keeps its configured color.
          */
-
-        drawRect(
-                0,
-                0,
-                1,
-                HUD_HEIGHT,
-                0x30FFFFFF
-        );
-
-        drawRect(
-                hudWidth - 1,
-                0,
-                hudWidth,
-                HUD_HEIGHT,
-                0x30FFFFFF
-        );
-
-        drawRect(
-                0,
-                HUD_HEIGHT - 1,
-                hudWidth,
-                HUD_HEIGHT,
-                0x20FFFFFF
-        );
-
-
-        /*
-         * =====================================================
-         * PROFILE NAME COLOR
-         * =====================================================
-         */
-
         int bhopNameColor =
                 parseColor(
                         ProfileManager
                                 .getInstance()
-                                .getColor(
-                                        "BHOP_PROFILE_NAME"
-                                )
+                                .getColor("BHOP_PROFILE_NAME")
                 );
-
-
         font.drawStringWithShadow(
                 bhopName,
                 HUD_PADDING_LEFT,
-                8,
+                10,
                 bhopNameColor
         );
 
+        int bhopNameWidth = font.getStringWidth(bhopName);
+        int separatorX = HUD_PADDING_LEFT + bhopNameWidth + PROFILE_SEPARATOR_GAP;
+        font.drawStringWithShadow("•", separatorX, 10, 0xFF858A96);
 
-        /*
-         * =====================================================
-         * SEPARATOR
-         * =====================================================
-         */
-
-        int bhopNameWidth =
-                font.getStringWidth(
-                        bhopName
-                );
-
-        int separatorX =
-                HUD_PADDING_LEFT
-                        + bhopNameWidth
-                        + PROFILE_SEPARATOR_GAP;
-
-        font.drawStringWithShadow(
-                "•",
-                separatorX,
-                8,
-                0xFFFFFFFF
-        );
-
-
-        /*
-         * =====================================================
-         * SPEED COLOR
-         * =====================================================
-         */
+        int speedX = separatorX + separatorWidthGap(font);
+        int speedWidth = font.getStringWidth(speedName);
+        drawRect(speedX - 4, 5, speedX + speedWidth + 4, HUD_HEIGHT - 4, 0xFF272B33);
 
         int speedColor =
                 parseColor(
                         ProfileManager
                                 .getInstance()
-                                .getColor(
-                                        "BHOP_SPEED"
-                                )
+                                .getColor("BHOP_SPEED")
                 );
-
-
-        font.drawStringWithShadow(
-                speedName,
-                separatorX
-                        + separatorWidthGap(font),
-                8,
-                speedColor
-        );
-
+        font.drawStringWithShadow(speedName, speedX, 10, speedColor);
 
         GlStateManager.popMatrix();
     }
