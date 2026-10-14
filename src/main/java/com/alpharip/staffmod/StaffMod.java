@@ -13,9 +13,6 @@ import com.alpharip.staffmod.util.CPSTracker;
 import com.alpharip.staffmod.util.KnockbackTracker;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiConnecting;
-import net.minecraft.client.gui.GuiMainMenu;
-import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.settings.KeyBinding;
 
 import net.minecraftforge.common.MinecraftForge;
@@ -49,10 +46,6 @@ public class StaffMod {
     private KeyBinding settingsKey;
     private KeyBinding settingsKeyRControl;
     private KeyBinding bhopKey;
-
-    // Partner Server launches should show the Minecraft menu before connecting.
-    private boolean partnerServerAutoConnectHandled = false;
-    private int partnerServerWaitTicks = 0;
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
@@ -165,34 +158,7 @@ public class StaffMod {
 
         Minecraft mc = Minecraft.getMinecraft();
 
-        if (mc == null) {
-            return;
-        }
-
-        // The launcher passes this property only for its Partner Server button.
-        // Wait for the main menu to initialize and render before opening the
-        // normal Minecraft connection screen instead of connecting during startup.
-        if (!partnerServerAutoConnectHandled) {
-            String partnerServer = System.getProperty("alphaclient.partnerServer");
-
-            if (partnerServer != null && !partnerServer.trim().isEmpty()
-                    && mc.currentScreen instanceof GuiMainMenu) {
-                partnerServerWaitTicks++;
-
-                if (partnerServerWaitTicks >= 20) {
-                    partnerServerAutoConnectHandled = true;
-                    System.clearProperty("alphaclient.partnerServer");
-
-                    mc.displayGuiScreen(new GuiConnecting(
-                            mc.currentScreen,
-                            mc,
-                            new ServerData("Alpha.Rip", partnerServer.trim(), false)
-                    ));
-                }
-            }
-        }
-
-        if (mc.thePlayer == null) {
+        if (mc == null || mc.thePlayer == null) {
             return;
         }
 
