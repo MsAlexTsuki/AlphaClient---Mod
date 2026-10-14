@@ -48,9 +48,9 @@ public final class AlphaSettingsMenu extends GuiScreen {
         int left = width / 2 - panelWidth / 2;
         int right = left + panelWidth;
         int top = 20;
-        drawRect(left, top, right, Math.min(height - 34, top + 240), 0xFF14171D);
+        drawRect(left, top, right, Math.min(height - 34, top + 252), 0xFF14171D);
         drawRect(left, top, right, top + 1, 0xFF343944);
-        drawRect(left, top, left + 3, Math.min(height - 34, top + 240), 0xFFFFD866);
+        drawRect(left, top, left + 3, Math.min(height - 34, top + 252), 0xFFFFD866);
 
         drawString(fontRendererObj, "ALPHA CLIENT", left + 14, top + 10, 0xFFFFD866);
         drawString(fontRendererObj, "Settings", left + 14, top + 24, 0xFFF4F5F8);
