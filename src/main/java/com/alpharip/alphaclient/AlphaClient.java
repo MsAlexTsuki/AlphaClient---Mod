@@ -49,6 +49,7 @@ public final class AlphaClient {
     @Mod.EventHandler
     public void initialize(FMLInitializationEvent event) {
         instance = this;
+        com.alpharip.staffmod.StaffMod.instance = this;
         System.out.println("[AlphaClient] Starting " + NAME + " v" + VERSION);
 
         // One central bootstrap wires the client systems together.
@@ -61,6 +62,7 @@ public final class AlphaClient {
         BhopHud.loadHudPosition();
         MinecraftForge.EVENT_BUS.register(new BhopHud());
         bhopMode = new BhopMode();
+        com.alpharip.staffmod.StaffMod.bhopMode = bhopMode;
 
         AlphaModule bhop = AlphaModuleRegistry.find("bhop");
         if (bhop != null) {
