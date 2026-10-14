@@ -1,12 +1,10 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.hud.BhopHud;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
-
 import java.io.IOException;
 
 /** AlphaClient settings hub; Minecraft's native options remain available as a sub-screen. */
@@ -17,7 +15,6 @@ public final class AlphaSettingsMenu extends GuiScreen {
     private static final int MINECRAFT_OPTIONS = 4;
     private static final int SCALE_DOWN = 5;
     private static final int SCALE_UP = 6;
-
     private final GuiScreen parent;
 
     public AlphaSettingsMenu(GuiScreen parent) {
@@ -28,34 +25,49 @@ public final class AlphaSettingsMenu extends GuiScreen {
     public void initGui() {
         buttonList.clear();
         int center = width / 2;
-        int buttonWidth = Math.min(320, width - 36);
-        int left = center - buttonWidth / 2;
-        int y = Math.max(140, height / 2 - 48);
+        int panelWidth = Math.min(440, width - 32);
+        int left = center - panelWidth / 2;
+        int top = 112;
+        int buttonWidth = panelWidth - 36;
 
-        buttonList.add(new AlphaButton(BHOP_HUD, left, y, buttonWidth, 26,
-                "BHOP HUD: " + (BhopHud.isEnabled() ? "ON" : "OFF")));
-        buttonList.add(new AlphaButton(RESET_BHOP_HUD, left, y + 34, buttonWidth, 26,
-                "RESET BHOP HUD POSITION"));
-        buttonList.add(new AlphaButton(MINECRAFT_OPTIONS, left, y + 68, buttonWidth, 26,
+        buttonList.add(new AlphaButton(BHOP_HUD, left + 18, top + 54, buttonWidth, 28,
+                "BHOP HUD  /  " + (BhopHud.isEnabled() ? "ENABLED" : "DISABLED")));
+        buttonList.add(new AlphaButton(RESET_BHOP_HUD, left + 18, top + 90, buttonWidth, 28,
+                "RESET HUD POSITION"));
+        buttonList.add(new AlphaButton(MINECRAFT_OPTIONS, left + 18, top + 126, buttonWidth, 28,
                 "MINECRAFT OPTIONS"));
-        buttonList.add(new AlphaButton(SCALE_DOWN, center - 100, y + 102, 44, 22, "-"));
-        buttonList.add(new AlphaButton(SCALE_UP, center + 56, y + 102, 44, 22, "+"));
+        buttonList.add(new AlphaButton(SCALE_DOWN, center - 80, top + 204, 48, 24, "−"));
+        buttonList.add(new AlphaButton(SCALE_UP, center + 32, top + 204, 48, 24, "+"));
         buttonList.add(new AlphaButton(BACK, 14, height - 32, 100, 20, "BACK"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawGradientRect(0, 0, width, height, 0xFF15171C, 0xFF090A0D);
-        drawRect(width / 2 - 190, 34, width / 2 + 190, 92, 0x77202229);
-        drawRect(width / 2 - 190, 34, width / 2 + 190, 35, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2, 47, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "SETTINGS", width / 2, 65, 0xFFFFFFFF);
-        drawCenteredString(fontRendererObj, "Client controls and HUD preferences", width / 2, 80, 0xFF858A96);
+        drawGradientRect(0, 0, width, height, 0xFF181B22, 0xFF090A0E);
+        int panelWidth = Math.min(440, width - 32);
+        int left = width / 2 - panelWidth / 2;
+        int right = left + panelWidth;
+        int top = 28;
+        drawRect(left, top, right, height - 44, 0xFF14171D);
+        drawRect(left, top, right, top + 1, 0xFF343944);
+        drawRect(left, top, left + 3, height - 44, 0xFFFFD866);
 
-        int y = Math.max(140, height / 2 - 48);
-        drawCenteredString(fontRendererObj, "BHOP HUD", width / 2, y - 15, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "Position: " + BhopHud.getHudX() + ", " + BhopHud.getHudY()
-                + "    Scale: " + BhopHud.getHudScale(), width / 2, y + 132, 0xFF858A96);
+        drawString(fontRendererObj, "ALPHA CLIENT", left + 18, top + 14, 0xFFFFD866);
+        drawString(fontRendererObj, "Settings", left + 18, top + 31, 0xFFF4F5F8);
+        drawString(fontRendererObj, "Manage client features and interface preferences.",
+                left + 18, top + 45, 0xFF9298A5);
+
+        int sectionY = top + 76;
+        drawString(fontRendererObj, "HUD & INTERFACE", left + 18, sectionY, 0xFF686E7A);
+        drawRect(left + 18, sectionY + 13, right - 18, sectionY + 14, 0xFF292D36);
+
+        int scaleY = top + 222;
+        drawString(fontRendererObj, "HUD SCALE", left + 18, scaleY, 0xFFFFD866);
+        drawString(fontRendererObj, BhopHud.getHudScale() + "%",
+                width / 2, scaleY + 20, 0xFFF4F5F8);
+        drawString(fontRendererObj, "Position  " + BhopHud.getHudX() + ", " + BhopHud.getHudY(),
+                left + 18, scaleY + 39, 0xFF858B98);
+
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
