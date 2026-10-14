@@ -28,34 +28,37 @@ public final class CommunityLoginGui extends GuiScreen {
     @Override
     public void initGui() {
         int center = width / 2;
-        emailField = new GuiTextField(10, fontRendererObj, center - 145, 145, 290, 22);
+        int fieldWidth = Math.min(270, width - 48);
+        int fieldLeft = center - fieldWidth / 2;
+        emailField = new GuiTextField(10, fontRendererObj, fieldLeft, 122, fieldWidth, 20);
         emailField.setMaxStringLength(254);
-        passwordField = new GuiTextField(11, fontRendererObj, center - 145, 190, 290, 22);
+        passwordField = new GuiTextField(11, fontRendererObj, fieldLeft, 164, fieldWidth, 20);
         passwordField.setMaxStringLength(256);
         buttonList.clear();
-        buttonList.add(new AlphaButton(SIGN_IN, center - 145, 230, 140, 24, "SIGN IN"));
-        buttonList.add(new AlphaButton(SIGN_OUT, center + 5, 230, 140, 24, "SIGN OUT"));
-        buttonList.add(new AlphaButton(BACK, 14, height - 32, 100, 20, "BACK"));
+        int buttonWidth = (fieldWidth - 8) / 2;
+        buttonList.add(new AlphaButton(SIGN_IN, fieldLeft, 199, buttonWidth, 22, "SIGN IN", true));
+        buttonList.add(new AlphaButton(SIGN_OUT, fieldLeft + buttonWidth + 8, 199, buttonWidth, 22, "SIGN OUT"));
+        buttonList.add(new AlphaButton(BACK, 10, height - 25, 76, 18, "BACK"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawGradientRect(0, 0, width, height, 0xFF181B22, 0xFF090A0E);
 
-        int panelWidth = Math.min(390, width - 32);
+        int panelWidth = Math.min(340, width - 24);
         int left = width / 2 - panelWidth / 2;
         int right = left + panelWidth;
-        drawRect(left, 44, right, height - 44, 0xFF14171D);
-        drawRect(left, 44, right, 45, 0xFF343944);
-        drawRect(left, 44, left + 3, height - 44, 0xFFFFD866);
+        drawRect(left, 38, right, Math.min(height - 32, 286), 0xFF14171D);
+        drawRect(left, 38, right, 39, 0xFF343944);
+        drawRect(left, 38, left + 3, Math.min(height - 32, 286), 0xFFFFD866);
 
-        drawString(fontRendererObj, "ALPHA COMMUNITY", left + 18, 62, 0xFFFFD866);
-        drawString(fontRendererObj, "Sign in to verify your community rank", left + 18, 82, 0xFFF4F5F8);
-        drawString(fontRendererObj, "Your verified rank controls module access.", left + 18, 98, 0xFF9298A5);
-        drawRect(left + 18, 115, right - 18, 116, 0xFF292D36);
+        drawString(fontRendererObj, "ALPHA COMMUNITY", left + 14, 51, 0xFFFFD866);
+        drawString(fontRendererObj, "Sign in to verify your community rank", left + 14, 67, 0xFFF4F5F8);
+        drawString(fontRendererObj, "Your verified rank controls module access.", left + 14, 81, 0xFF9298A5);
+        drawRect(left + 14, 96, right - 14, 97, 0xFF292D36);
 
-        drawString(fontRendererObj, "EMAIL ADDRESS", width / 2 - 145, 130, 0xFF9298A5);
-        drawString(fontRendererObj, "PASSWORD", width / 2 - 145, 175, 0xFF9298A5);
+        drawString(fontRendererObj, "EMAIL ADDRESS", width / 2 - Math.min(270, width - 48) / 2, 109, 0xFF9298A5);
+        drawString(fontRendererObj, "PASSWORD", width / 2 - Math.min(270, width - 48) / 2, 151, 0xFF9298A5);
         emailField.drawTextBox();
 
         // Draw a masked copy without persisting or writing the password to disk.
@@ -72,13 +75,13 @@ public final class CommunityLoginGui extends GuiScreen {
         passwordField.setCursorPosition(Math.min(cursor, raw.length()));
         passwordField.setSelectionPos(Math.min(selection, raw.length()));
 
-        drawRect(left + 18, 266, right - 18, 267, 0xFF292D36);
-        drawCenteredString(fontRendererObj, status, width / 2, 278, 0xFFB8BDC8);
+        drawRect(left + 14, 232, right - 14, 233, 0xFF292D36);
+        drawCenteredString(fontRendererObj, status, width / 2, 241, 0xFFB8BDC8);
         drawCenteredString(fontRendererObj, "ACCESS  /  " + PermissionService.getStatusText(),
-                width / 2, 296, 0xFFFFD866);
+                width / 2, 258, 0xFFFFD866);
         if (SupabaseCommunityService.isSignedIn()) {
             drawCenteredString(fontRendererObj, "Signed in as " + SupabaseCommunityService.getSignedInEmail(),
-                    width / 2, 314, 0xFF8DDBA4);
+                    width / 2, 275, 0xFF8DDBA4);
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
