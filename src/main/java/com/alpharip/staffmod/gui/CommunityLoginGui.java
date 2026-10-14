@@ -109,6 +109,7 @@ public final class CommunityLoginGui extends GuiScreen {
             if (busy) return;
             final String email = emailField.getText().trim();
             final String password = passwordField.getText();
+            passwordField.setText("");
             busy = true;
             status = "Connecting to Alpha community...";
             new Thread(new Runnable() {
