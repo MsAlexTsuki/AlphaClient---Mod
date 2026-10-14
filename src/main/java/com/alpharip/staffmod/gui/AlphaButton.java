@@ -3,7 +3,7 @@ package com.alpharip.staffmod.gui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
-/** Shared AlphaClient button styling: restrained surfaces and a clear accent state. */
+/** Compact shared AlphaClient button styling with a restrained Alpha Yellow accent. */
 public final class AlphaButton extends GuiButton {
     private final boolean primary;
 
@@ -23,19 +23,17 @@ public final class AlphaButton extends GuiButton {
         hovered = mouseX >= xPosition && mouseY >= yPosition
                 && mouseX < xPosition + width && mouseY < yPosition + height;
 
-        int background;
-        if (!enabled) background = 0xFF191B20;
-        else if (primary) background = hovered ? 0xFFFFE49A : 0xFFFFD866;
-        else background = hovered ? 0xFF2B2E36 : 0xFF202229;
-
+        int background = !enabled ? 0xFF191B20
+                : primary ? (hovered ? 0xFFFFE49A : 0xFFFFD866)
+                : (hovered ? 0xFF2B2E36 : 0xFF202229);
         int foreground = !enabled ? 0xFF666B75
-                : primary ? 0xFF17191E : hovered ? 0xFFFFD866 : 0xFFE9EAF0;
-        drawRect(xPosition, yPosition, xPosition + width, yPosition + height, background);
+                : primary ? 0xFF17191E : (hovered ? 0xFFFFD866 : 0xFFE9EAF0);
 
+        drawRect(xPosition, yPosition, xPosition + width, yPosition + height, background);
+        drawRect(xPosition, yPosition, xPosition + width, yPosition + 1,
+                primary ? 0x55FFFFFF : (hovered ? 0xFFFFD866 : 0xFF393D47));
+        drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height, 0xFF14161B);
         if (!primary) {
-            drawRect(xPosition, yPosition, xPosition + width, yPosition + 1,
-                    hovered ? 0xFFFFD866 : 0xFF393D47);
-            drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height, 0xFF14161B);
             drawRect(xPosition, yPosition, xPosition + 2, yPosition + height,
                     hovered ? 0xFFFFD866 : 0xFF393D47);
         } else {
