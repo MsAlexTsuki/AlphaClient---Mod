@@ -35,6 +35,8 @@ public final class AlphaMainMenu extends GuiMainMenu {
 
     @Override
     public void initGui() {
+        // Initialize vanilla panorama state before replacing its default buttons.
+        super.initGui();
         buttonList.clear();
 
         sidebarWidth = Math.max(174, Math.min(204, width / 5));
