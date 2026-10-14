@@ -88,7 +88,7 @@ public final class AlphaMainMenu extends GuiScreen {
                 minecraft.displayGuiScreen(new AlphaModMenu(this));
                 break;
             case OPTIONS:
-                minecraft.displayGuiScreen(new GuiOptions(this, minecraft.gameSettings));
+                minecraft.displayGuiScreen(new AlphaSettingsMenu(this));
                 break;
             case PARTNER:
                 // Only this explicit button click initiates a connection.
