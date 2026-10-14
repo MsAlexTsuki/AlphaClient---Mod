@@ -85,7 +85,17 @@ public final class PermissionService {
             return false;
         }
         Rank actual = getEffectiveRank();
-        return actual.ordinal() >= required.ordinal();
+        if (actual == Rank.FOUNDER) {
+            return true;
+        }
+        if (required == Rank.PUBLIC) {
+            return true;
+        }
+        if (actual == Rank.STAFF) {
+            return true;
+        }
+        // Beta and Donator are separate entitlements, not a single rank ladder.
+        return actual == required;
     }
 
     public static boolean isOnlineRankVerified() {
