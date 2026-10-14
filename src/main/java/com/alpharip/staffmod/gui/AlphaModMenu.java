@@ -37,8 +37,8 @@ public final class AlphaModMenu extends GuiScreen {
 
         AlphaModule.Category[] categories = AlphaModule.Category.values();
         for (int i = 0; i < categories.length; i++) {
-            buttonList.add(new AlphaButton(CATEGORY_BASE + i, 12, 76 + i * 30,
-                    sidebarWidth - 24, 24, categories[i].getTitle()));
+            buttonList.add(new AlphaButton(CATEGORY_BASE + i, 12, 76 + i * 32,
+                    sidebarWidth - 24, 26, categories[i].getTitle()));
         }
 
         int listX = sidebarWidth + 12;
@@ -47,9 +47,8 @@ public final class AlphaModMenu extends GuiScreen {
         int maxVisible = getVisibleModuleCount();
         for (int i = scrollOffset; i < modules.size() && i < scrollOffset + maxVisible; i++) {
             AlphaModule module = modules.get(i);
-            String label = module.getName() + "  [" + module.getStatusLabel() + "]";
-            buttonList.add(new AlphaButton(MODULE_BASE + i, listX, 76 + (i - scrollOffset) * 32,
-                    listWidth, 26, label));
+            buttonList.add(new AlphaButton(MODULE_BASE + i, listX + 5,
+                    78 + (i - scrollOffset) * 46, listWidth - 10, 38, module.getName()));
         }
 
         buttonList.add(new AlphaButton(BACK, 12, footerY, 88, 20, "BACK"));
@@ -58,13 +57,14 @@ public final class AlphaModMenu extends GuiScreen {
         AlphaModule selected = getSelectedModule();
         if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
             buttonList.add(new AlphaButton(TOGGLE_MODULE, width - 174, height - 68, 160, 24,
-                    selected.isEnabled() ? "DISABLE MODULE" : "ENABLE MODULE"));
+                    selected.isEnabled() ? "DISABLE MODULE" : "ENABLE MODULE",
+                    !selected.isEnabled()));
         }
     }
 
     private int getVisibleModuleCount() {
         int listBottom = height - 48;
-        return Math.max(1, (listBottom - 82) / 32);
+        return Math.max(1, (listBottom - 82) / 46);
     }
 
     private AlphaModule getSelectedModule() {
@@ -78,81 +78,93 @@ public final class AlphaModMenu extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawGradientRect(0, 0, width, height, 0xFF15171C, 0xFF090A0D);
+        drawGradientRect(0, 0, width, height, 0xFF181B22, 0xFF090A0E);
 
-        // Sidebar and navigation.
-        drawRect(0, 0, 154, height, 0xFF101116);
-        drawRect(153, 0, 154, height, 0xFF363941);
-        drawRect(14, 20, 17, 51, 0xFFFFD866);
+        drawRect(0, 0, 154, height, 0xFF111319);
+        drawRect(153, 0, 154, height, 0xFF292D36);
+        drawRect(14, 20, 17, 54, 0xFFFFD866);
         drawString(fontRendererObj, "ALPHA", 26, 22, 0xFFFFD866);
-        drawString(fontRendererObj, "MODULES", 26, 35, 0xFFFFFFFF);
-        drawString(fontRendererObj, "CATEGORIES", 14, 61, 0xFF858A96);
+        drawString(fontRendererObj, "CLIENT", 26, 36, 0xFFF4F5F8);
+        drawString(fontRendererObj, "MODULES", 14, 62, 0xFF686E7A);
 
-        drawString(fontRendererObj, "MODULE LIBRARY", 170, 22, 0xFFFFD866);
-        drawString(fontRendererObj, selectedCategory.getTitle(), 170, 40, 0xFFFFFFFF);
-        drawString(fontRendererObj, "Select a module to inspect its status and features.",
-                170, 54, 0xFF858A96);
-
+        int contentLeft = 174;
         int listX = 166;
         int listWidth = Math.max(160, Math.min(240, width / 3 - 20));
-        drawRect(listX, 70, listX + listWidth + 8, height - 42, 0x55202229);
+        int detailX = listX + listWidth + 20;
+        int detailRight = width - 14;
+        int panelTop = 70;
+        int panelBottom = height - 42;
+
+        drawString(fontRendererObj, "MODULE LIBRARY", contentLeft, 20, 0xFFFFD866);
+        drawString(fontRendererObj, selectedCategory.getTitle(), contentLeft, 37, 0xFFF4F5F8);
+        drawString(fontRendererObj, "Choose a module to view its status and features.",
+                contentLeft, 52, 0xFF9298A5);
+
+        drawRect(listX, panelTop, listX + listWidth + 8, panelBottom, 0xFF14171D);
+        drawRect(listX, panelTop, listX + listWidth + 8, panelTop + 1, 0xFF343944);
+        drawRect(detailX, panelTop, detailRight, panelBottom, 0xFF14171D);
+        drawRect(detailX, panelTop, detailRight, panelTop + 1, 0xFF343944);
 
         List<AlphaModule> modules = AlphaModuleRegistry.getForCategory(selectedCategory);
         int maxVisible = getVisibleModuleCount();
         for (int i = scrollOffset; i < modules.size() && i < scrollOffset + maxVisible; i++) {
             AlphaModule module = modules.get(i);
-            int rowY = 76 + (i - scrollOffset) * 32;
+            int rowY = 78 + (i - scrollOffset) * 46;
             if (module.getId().equals(selectedModuleId)) {
-                drawRect(listX + 4, rowY - 2, listX + listWidth + 4, rowY + 27, 0x663B3527);
-                drawRect(listX + 4, rowY - 2, listX + 6, rowY + 27, 0xFFFFD866);
+                drawRect(listX + 3, rowY - 2, listX + listWidth + 5, rowY + 40, 0xFF22252D);
+                drawRect(listX + 3, rowY - 2, listX + 5, rowY + 40, 0xFFFFD866);
             }
-            drawString(fontRendererObj, module.getDescription(), listX + 10, rowY + 27, 0xFF858A96);
+            int statusColor = module.isEnabled() ? 0xFF8DDBA4
+                    : module.isImplemented() ? 0xFF9298A5 : 0xFF686E7A;
+            drawString(fontRendererObj, module.getStatusLabel(),
+                    listX + listWidth - 66, rowY + 4, statusColor);
+            String description = module.getDescription();
+            int maxChars = Math.max(12, (listWidth - 24) / 6);
+            if (description.length() > maxChars) description = description.substring(0, maxChars - 3) + "...";
+            drawString(fontRendererObj, description, listX + 12, rowY + 25, 0xFF858B98);
         }
-
-        int detailX = listX + listWidth + 24;
-        int detailRight = width - 14;
-        drawRect(detailX, 70, detailRight, height - 42, 0x55202229);
-        drawRect(detailX, 70, detailRight, 71, 0xFF454954);
 
         AlphaModule selected = getSelectedModule();
         if (selected != null) {
-            drawString(fontRendererObj, "SELECTED MODULE", detailX + 12, 83, 0xFF858A96);
-            drawString(fontRendererObj, selected.getName(), detailX + 12, 101, 0xFFFFFFFF);
-            drawString(fontRendererObj, selected.getDescription(), detailX + 12, 118, 0xFFB8BBC4);
-            drawString(fontRendererObj, "STATUS", detailX + 12, 148, 0xFF858A96);
-            drawString(fontRendererObj, selected.getStatusLabel(), detailX + 12, 162,
-                    selected.isEnabled() ? 0xFF8DDBA4 : 0xFFFFD866);
-            drawString(fontRendererObj, "CATEGORY ACCESS", detailX + 12, 185, 0xFF858A96);
-            drawString(fontRendererObj, selected.getCategory().getRequiredRank().name(),
-                    detailX + 12, 199, selected.isUnlocked() ? 0xFF8DDBA4 : 0xFFFF7777);
+            drawString(fontRendererObj, "MODULE DETAILS", detailX + 14, 84, 0xFF686E7A);
+            drawString(fontRendererObj, selected.getName(), detailX + 14, 103, 0xFFF4F5F8);
+            drawString(fontRendererObj, selected.getDescription(), detailX + 14, 121, 0xFFB8BDC8);
+            drawRect(detailX + 14, 145, detailRight - 14, 146, 0xFF292D36);
 
-            drawString(fontRendererObj, "FEATURES", detailX + 12, 228, 0xFFFFD866);
+            drawString(fontRendererObj, "STATUS", detailX + 14, 160, 0xFF686E7A);
+            drawString(fontRendererObj, selected.getStatusLabel(), detailX + 14, 174,
+                    selected.isEnabled() ? 0xFF8DDBA4 : 0xFFFFD866);
+            drawString(fontRendererObj, "ACCESS LEVEL", detailX + 14, 197, 0xFF686E7A);
+            drawString(fontRendererObj, selected.getCategory().getRequiredRank().name(),
+                    detailX + 14, 211, selected.isUnlocked() ? 0xFF8DDBA4 : 0xFFFF7777);
+
+            drawString(fontRendererObj, "FEATURES", detailX + 14, 239, 0xFFFFD866);
             List<AlphaModuleFeature> features = selected.getFeatures();
             if (features.isEmpty()) {
-                drawString(fontRendererObj, selected.isImplemented()
+                String featureText = selected.isImplemented()
                         ? "No additional feature tiers registered."
-                        : "This module is planned and not implemented yet.",
-                        detailX + 12, 246, 0xFF858A96);
+                        : "Planned feature — not implemented yet.";
+                drawString(fontRendererObj, featureText, detailX + 14, 258, 0xFF858B98);
             } else {
-                int featureY = 246;
+                int featureY = 258;
                 int maxFeatures = Math.max(1, (height - featureY - 92) / 30);
                 for (int i = 0; i < features.size() && i < maxFeatures; i++) {
                     AlphaModuleFeature feature = features.get(i);
                     int color = feature.isAvailable() ? 0xFF8DDBA4
-                            : PermissionService.hasAccess(feature.getRequiredRank()) ? 0xFFB8BBC4 : 0xFF777D89;
-                    drawString(fontRendererObj, feature.getName(), detailX + 12, featureY, color);
+                            : PermissionService.hasAccess(feature.getRequiredRank()) ? 0xFFB8BDC8 : 0xFF777D89;
+                    drawString(fontRendererObj, feature.getName(), detailX + 14, featureY, color);
                     drawString(fontRendererObj, feature.getRequiredRank().name() + " / " + feature.getStatusLabel(),
-                            detailX + 12, featureY + 12, 0xFF858A96);
+                            detailX + 14, featureY + 12, 0xFF858B98);
                     featureY += 30;
                 }
             }
         } else {
-            drawString(fontRendererObj, "No modules in this category yet.", detailX + 12, 92, 0xFF858A96);
+            drawString(fontRendererObj, "No modules in this category yet.", detailX + 14, 92, 0xFF858B98);
         }
 
-        drawString(fontRendererObj, "ACCESS: " + PermissionService.getStatusText(),
+        drawString(fontRendererObj, "ACCESS  /  " + PermissionService.getStatusText(),
                 170, height - 27, PermissionService.getMode() == PermissionService.Mode.OFFLINE_TEST
-                        ? 0xFFFFD866 : 0xFF858A96);
+                        ? 0xFFFFD866 : 0xFF858B98);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
