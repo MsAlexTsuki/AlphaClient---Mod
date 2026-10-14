@@ -1,5 +1,6 @@
 package com.alpharip.staffmod;
 
+import com.alpharip.staffmod.config.AlphaClientConfig;
 import com.alpharip.staffmod.gui.AlphaClientGuiHandler;
 import com.alpharip.staffmod.hud.AlphaHudRenderer;
 import com.alpharip.staffmod.hud.BhopHud;
@@ -55,6 +56,7 @@ public class StaffMod {
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
         MinecraftForge.EVENT_BUS.register(new AlphaHudRenderer());
 
+        AlphaClientConfig.load();
         BhopHud.loadHudPosition();
         MinecraftForge.EVENT_BUS.register(new BhopHud());
         bhopMode = new BhopMode();
