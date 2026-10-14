@@ -13,6 +13,7 @@ import java.util.List;
 /** Category-based module browser for AlphaClient. */
 public final class AlphaModMenu extends GuiScreen {
     private static final int BACK = 1;
+    private static final int COMMUNITY_LOGIN = 2;
     private static final int CATEGORY_BASE = 20;
     private static final int MODULE_BASE = 100;
     private final GuiScreen parent;
@@ -84,6 +85,10 @@ public final class AlphaModMenu extends GuiScreen {
         }
         if (button.id == BACK) {
             mc.displayGuiScreen(parent);
+            return;
+        }
+        if (button.id == COMMUNITY_LOGIN) {
+            mc.displayGuiScreen(new CommunityLoginGui(this));
             return;
         }
         if (button.id >= CATEGORY_BASE && button.id < CATEGORY_BASE + AlphaModule.Category.values().length) {
