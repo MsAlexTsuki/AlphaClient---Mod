@@ -40,11 +40,22 @@ public final class CommunityLoginGui extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawGradientRect(0, 0, width, height, 0xFF17191F, 0xFF0B0C10);
-        drawCenteredString(fontRendererObj, "ALPHA COMMUNITY", width / 2, 65, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "Sign in to verify your community rank", width / 2, 86, 0xFFE8E9ED);
-        drawString(fontRendererObj, "Email", width / 2 - 145, 130, 0xFFB8BBC4);
-        drawString(fontRendererObj, "Password", width / 2 - 145, 175, 0xFFB8BBC4);
+        drawGradientRect(0, 0, width, height, 0xFF181B22, 0xFF090A0E);
+
+        int panelWidth = Math.min(390, width - 32);
+        int left = width / 2 - panelWidth / 2;
+        int right = left + panelWidth;
+        drawRect(left, 44, right, height - 44, 0xFF14171D);
+        drawRect(left, 44, right, 45, 0xFF343944);
+        drawRect(left, 44, left + 3, height - 44, 0xFFFFD866);
+
+        drawString(fontRendererObj, "ALPHA COMMUNITY", left + 18, 62, 0xFFFFD866);
+        drawString(fontRendererObj, "Sign in to verify your community rank", left + 18, 82, 0xFFF4F5F8);
+        drawString(fontRendererObj, "Your verified rank controls module access.", left + 18, 98, 0xFF9298A5);
+        drawRect(left + 18, 115, right - 18, 116, 0xFF292D36);
+
+        drawString(fontRendererObj, "EMAIL ADDRESS", width / 2 - 145, 130, 0xFF9298A5);
+        drawString(fontRendererObj, "PASSWORD", width / 2 - 145, 175, 0xFF9298A5);
         emailField.drawTextBox();
 
         // Draw a masked copy without persisting or writing the password to disk.
@@ -61,12 +72,13 @@ public final class CommunityLoginGui extends GuiScreen {
         passwordField.setCursorPosition(Math.min(cursor, raw.length()));
         passwordField.setSelectionPos(Math.min(selection, raw.length()));
 
-        drawCenteredString(fontRendererObj, status, width / 2, 276, 0xFFB8BBC4);
-        drawCenteredString(fontRendererObj, "Access: " + PermissionService.getStatusText(),
-                width / 2, 294, 0xFFFFD866);
+        drawRect(left + 18, 266, right - 18, 267, 0xFF292D36);
+        drawCenteredString(fontRendererObj, status, width / 2, 278, 0xFFB8BDC8);
+        drawCenteredString(fontRendererObj, "ACCESS  /  " + PermissionService.getStatusText(),
+                width / 2, 296, 0xFFFFD866);
         if (SupabaseCommunityService.isSignedIn()) {
             drawCenteredString(fontRendererObj, "Signed in as " + SupabaseCommunityService.getSignedInEmail(),
-                    width / 2, 313, 0xFF8DDBA4);
+                    width / 2, 314, 0xFF8DDBA4);
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
