@@ -1,7 +1,6 @@
 package com.alpharip.alphaclient;
 
 import com.alpharip.staffmod.BuildInfo;
-import com.alpharip.staffmod.StaffMod;
 import com.alpharip.staffmod.config.AlphaClientConfig;
 import com.alpharip.staffmod.gui.AlphaClientGuiHandler;
 import com.alpharip.staffmod.gui.AlphaModMenu;
@@ -45,7 +44,6 @@ public final class AlphaClient {
     @Mod.EventHandler
     public void initialize(FMLInitializationEvent event) {
         instance = this;
-        StaffMod.instance = this;
         System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
 
         // Register the client systems through one central startup path.
@@ -61,7 +59,6 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new BhopHud());
 
         bhopMode = new BhopMode();
-        StaffMod.bhopMode = bhopMode;
         syncBhopModuleState();
 
         openModMenuKey = new KeyBinding(
