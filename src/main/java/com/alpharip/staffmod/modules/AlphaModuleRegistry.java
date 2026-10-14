@@ -36,7 +36,7 @@ public final class AlphaModuleRegistry {
         MODULES.add(new AlphaModule(
                 "keystrokes", "Keystrokes",
                 "Configurable movement-key overlay.",
-                AlphaModule.Category.PUBLIC, false, false));
+                AlphaModule.Category.PUBLIC, true, false));
         MODULES.add(new AlphaModule(
                 "motion_blur", "Motion Blur",
                 "Optional motion-blur visual effect.",
