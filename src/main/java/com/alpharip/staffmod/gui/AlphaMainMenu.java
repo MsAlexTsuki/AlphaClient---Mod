@@ -30,7 +30,7 @@ public final class AlphaMainMenu extends GuiMainMenu {
 
     private static final int ACCENT = 0xFFFFD866;
     private static final ResourceLocation ALPHA_LOGO =
-            new ResourceLocation("alphastaffmod", "textures/gui/alpha_logo.png");
+            new ResourceLocation("alphastaffmod", "textures/gui/alpha_launcher_logo.png");
     private int sidebarWidth;
     private int menuButtonWidth;
     private int menuButtonHeight;
@@ -85,7 +85,7 @@ public final class AlphaMainMenu extends GuiMainMenu {
         // Place the real Alpha logo directly over the panorama, without a backing box.
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        drawModalRectWithCustomSizedTexture(20, 18, 0, 0, 44, 44, 44, 44);
+        drawModalRectWithCustomSizedTexture(18, 16, 0, 0, 46, 46, 1238, 1238);
         drawString(fontRendererObj, "ALPHA", 73, 23, ACCENT);
         drawString(fontRendererObj, "CLIENT", 73, 36, 0xFFF5F6F8);
         drawString(fontRendererObj, "MINECRAFT 1.8.9", 20, 69, 0xFFB2B6C0);
