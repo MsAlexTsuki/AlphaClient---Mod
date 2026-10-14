@@ -64,7 +64,7 @@ public final class AlphaClient {
         bhopMode = new BhopMode();
         com.alpharip.staffmod.StaffMod.bhopMode = bhopMode;
 
-        AlphaModule bhop = AlphaModuleRegistry.find("bhop");
+        AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
         if (bhop != null) {
             BhopMode.setEnabled(bhop.isEnabled());
         }
