@@ -43,7 +43,8 @@ public final class AlphaHudManager {
     @SubscribeEvent
     public void onOverlay(RenderGameOverlayEvent.Text event) {
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || minecraft.thePlayer == null || minecraft.gameSettings == null) return;
+        if (minecraft == null || minecraft.thePlayer == null || minecraft.gameSettings == null
+                || minecraft.gameSettings.hideGUI) return;
         for (AlphaHudWidget widget : widgets) {
             AlphaModule module = AlphaModuleRegistry.find(widget.getModuleId());
             if (module != null && module.isImplemented() && module.isEnabled() && module.isUnlocked()) {
