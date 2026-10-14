@@ -31,11 +31,11 @@ public final class AlphaMainMenu extends GuiScreen {
         int left = center - buttonWidth / 2;
         int y = Math.max(130, height / 2 - 30);
         buttonList.add(new AlphaButton(PLAY, left, y, buttonWidth, 24, "SINGLEPLAYER"));
-        buttonList.add(new GuiButton(MULTIPLAYER, left, y + 29, buttonWidth, 24, "MULTIPLAYER"));
-        buttonList.add(new GuiButton(MODULES, left, y + 58, buttonWidth, 24, "MOD MENU"));
-        buttonList.add(new GuiButton(OPTIONS, left, y + 87, buttonWidth, 24, "SETTINGS"));
-        buttonList.add(new GuiButton(PARTNER, left, y + 116, buttonWidth, 24, "JOIN ALPHA.RIP"));
-        buttonList.add(new GuiButton(QUIT, left, y + 145, buttonWidth, 24, "QUIT"));
+        buttonList.add(new AlphaButton(MULTIPLAYER, left, y + 29, buttonWidth, 24, "MULTIPLAYER"));
+        buttonList.add(new AlphaButton(MODULES, left, y + 58, buttonWidth, 24, "MOD MENU"));
+        buttonList.add(new AlphaButton(OPTIONS, left, y + 87, buttonWidth, 24, "SETTINGS"));
+        buttonList.add(new AlphaButton(PARTNER, left, y + 116, buttonWidth, 24, "JOIN ALPHA.RIP"));
+        buttonList.add(new AlphaButton(QUIT, left, y + 145, buttonWidth, 24, "QUIT"));
     }
 
     @Override
