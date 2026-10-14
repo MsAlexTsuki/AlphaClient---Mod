@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.modules;
 
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.config.AlphaClientConfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -76,7 +77,10 @@ public final class AlphaModule {
 
     public void setEnabled(boolean enabled) {
         if (implemented && PermissionService.hasAccess(category.getRequiredRank())) {
-            this.enabled = enabled;
+            if (this.enabled != enabled) {
+                this.enabled = enabled;
+                AlphaClientConfig.saveModuleState(id, enabled);
+            }
         }
     }
 
