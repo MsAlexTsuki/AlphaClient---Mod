@@ -1,6 +1,7 @@
 package com.alpharip.alphaclient;
 
 import com.alpharip.staffmod.BuildInfo;
+import com.alpharip.staffmod.StaffMod;
 import com.alpharip.staffmod.config.AlphaClientConfig;
 import com.alpharip.staffmod.gui.AlphaClientGuiHandler;
 import com.alpharip.staffmod.gui.AlphaModMenu;
@@ -22,12 +23,7 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 
 import org.lwjgl.input.Keyboard;
 
-/**
- * Main AlphaClient mod entry point.
- *
- * This replaces the old StaffMod bootstrap. The main class owns startup and
- * connects the UI, module registry, HUD, configuration, permissions and BHOP.
- */
+/** Central Forge entry point and lifecycle owner for AlphaClient. */
 @Mod(
         modid = AlphaClient.MOD_ID,
         name = AlphaClient.NAME,
@@ -49,28 +45,27 @@ public final class AlphaClient {
     @Mod.EventHandler
     public void initialize(FMLInitializationEvent event) {
         instance = this;
-        com.alpharip.staffmod.StaffMod.instance = this;
-        System.out.println("[AlphaClient] Starting " + NAME + " v" + VERSION);
+        StaffMod.instance = this;
+        System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
 
-        // One central bootstrap wires the client systems together.
+        // Register the client systems through one central startup path.
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
-        MinecraftForge.EVENT_BUS.register(new AlphaHudRenderer());
 
+        AlphaHudRenderer hudRenderer = new AlphaHudRenderer();
+        MinecraftForge.EVENT_BUS.register(hudRenderer);
+
+        // Load settings before enabling the retained BHOP implementation.
         AlphaClientConfig.load();
-
         BhopHud.loadHudPosition();
         MinecraftForge.EVENT_BUS.register(new BhopHud());
-        bhopMode = new BhopMode();
-        com.alpharip.staffmod.StaffMod.bhopMode = bhopMode;
 
-        AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
-        if (bhop != null) {
-            BhopMode.setEnabled(bhop.isEnabled());
-        }
+        bhopMode = new BhopMode();
+        StaffMod.bhopMode = bhopMode;
+        syncBhopModuleState();
 
         openModMenuKey = new KeyBinding(
-                "AlphaClient: Open Mod Menu",
+                "AlphaClient: Open Module Menu",
                 Keyboard.KEY_RCONTROL,
                 "AlphaClient"
         );
@@ -82,33 +77,36 @@ public final class AlphaClient {
         ClientRegistry.registerKeyBinding(openModMenuKey);
         ClientRegistry.registerKeyBinding(toggleBhopKey);
 
-        System.out.println("[AlphaClient] Core ready. Access: " + PermissionService.getStatusText());
+        System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
     }
 
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event) {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null) {
-            return;
-        }
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null) return;
 
         if (openModMenuKey != null && openModMenuKey.isPressed()) {
-            if (mc.currentScreen == null) {
-                mc.displayGuiScreen(new AlphaModMenu(null));
+            if (minecraft.currentScreen == null) {
+                minecraft.displayGuiScreen(new AlphaModMenu(null));
             }
             return;
         }
 
         if (toggleBhopKey != null && toggleBhopKey.isPressed()) {
-            AlphaModule bhop = AlphaModuleRegistry.find("bhop");
-            if (bhop == null || !PermissionService.hasAccess(bhop.getCategory().getRequiredRank())) {
+            AlphaModule staffmods = AlphaModuleRegistry.find("staffmods");
+            if (staffmods == null || !staffmods.isImplemented() || !staffmods.isUnlocked()) {
                 System.out.println("[AlphaClient] BHOP requires Staff access or Founder offline test mode.");
                 return;
             }
-
-            boolean enabled = !bhop.isEnabled();
-            bhop.setEnabled(enabled);
-            BhopMode.setEnabled(enabled);
+            staffmods.setEnabled(!staffmods.isEnabled());
+            syncBhopModuleState();
         }
+    }
+
+    /** Keeps the temporary BHOP implementation connected to its module toggle. */
+    public static void syncBhopModuleState() {
+        AlphaModule staffmods = AlphaModuleRegistry.find("staffmods");
+        BhopMode.setEnabled(staffmods != null && staffmods.isEnabled()
+                && PermissionService.hasAccess(PermissionService.Rank.STAFF));
     }
 }
