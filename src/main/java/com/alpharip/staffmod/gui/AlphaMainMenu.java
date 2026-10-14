@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiSelectWorld;
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
 
@@ -28,6 +29,8 @@ public final class AlphaMainMenu extends GuiMainMenu {
     private static final int QUIT = 15;
 
     private static final int ACCENT = 0xFFFFD866;
+    private static final ResourceLocation ALPHA_LOGO =
+            new ResourceLocation("alphastaffmod", "textures/gui/alpha_logo.png");
     private int sidebarWidth;
     private int menuButtonWidth;
     private int menuButtonHeight;
@@ -79,20 +82,15 @@ public final class AlphaMainMenu extends GuiMainMenu {
         drawGradientRect(0, Math.max(0, height - 74), width, height,
                 0x00101218, 0xB8101218);
 
-        // Narrow, translucent navigation rail; the panorama remains visible across the screen.
-        drawRect(0, 0, sidebarWidth, height, 0xB8101218);
-        drawRect(sidebarWidth - 1, 0, sidebarWidth, height, 0x553A3E48);
-        drawRect(sidebarWidth - 3, 0, sidebarWidth - 1, height, 0x66FFD866);
-
-        // Alpha wordmark and compact game information.
-        drawRect(20, 23, 23, 55, ACCENT);
-        drawString(fontRendererObj, "ALPHA", 31, 24, ACCENT);
-        drawString(fontRendererObj, "CLIENT", 31, 37, 0xFFF5F6F8);
-        drawString(fontRendererObj, "MINECRAFT 1.8.9", 20, 66, 0xFFB2B6C0);
-        drawString(fontRendererObj, "FORGE EDITION", 20, 78, 0xFF777D89);
-        drawRect(20, 96, sidebarWidth - 20, 97, 0x553D424D);
-
-        drawString(fontRendererObj, "NAVIGATION", 20, 105, 0xFF777D89);
+        // Place the real Alpha logo directly over the panorama, without a backing box.
+        Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        drawModalRectWithCustomSizedTexture(20, 18, 0, 0, 44, 44, 44, 44);
+        drawString(fontRendererObj, "ALPHA", 73, 23, ACCENT);
+        drawString(fontRendererObj, "CLIENT", 73, 36, 0xFFF5F6F8);
+        drawString(fontRendererObj, "MINECRAFT 1.8.9", 20, 69, 0xFFB2B6C0);
+        drawString(fontRendererObj, "FORGE EDITION", 20, 81, 0xFFB2B6C0);
+        drawString(fontRendererObj, "NAVIGATION", 20, 105, 0xFFB2B6C0);
         drawString(fontRendererObj, "ALPHA.RIP  /  COMMUNITY",
                 sidebarWidth + 24, height - 22, 0xFFB2B6C0);
         drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION,
