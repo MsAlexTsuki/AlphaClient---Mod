@@ -1,0 +1,224 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name = "forge"
+            url = "https://files.minecraftforge.net/maven"
+        }
+    }
+
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'idea'
+
+/*
+ * ==========================================
+ * BUILD NUMBER
+ * ==========================================
+ *
+ * Het buildnummer wordt verhoogd wanneer de
+ * Gradle-task "build" wordt uitgevoerd.
+ */
+
+def versionFile = file("buildnumber.txt")
+
+if (!versionFile.exists()) {
+    versionFile.text = "0"
+}
+
+def currentBuildNumber = Integer.parseInt(
+        versionFile.text.trim()
+)
+
+/*
+ * ==========================================
+ * MOD VERSION
+ * ==========================================
+ *
+ * 1   -> 0.1.1
+ * 100 -> 0.1.100
+ * 101 -> 0.2.0
+ * 201 -> 0.2.100
+ * 202 -> 0.3.0
+ */
+
+def versionMinor
+def versionPatch
+
+if (currentBuildNumber <= 100) {
+    versionMinor = 1
+    versionPatch = currentBuildNumber
+} else {
+    def postInitialBuild = currentBuildNumber - 101
+
+    versionMinor = 2 + (postInitialBuild / 101).intValue()
+    versionPatch = postInitialBuild % 101
+}
+
+version = "0." + versionMinor + "." + versionPatch
+
+group = "com.alpharip.staffmod"
+archivesBaseName = "AlphaClient"
+
+/*
+ * ==========================================
+ * MINECRAFT / FORGE
+ * ==========================================
+ */
+
+minecraft {
+    version = "1.8.9-11.15.1.2318-1.8.9"
+    runDir = "run"
+    mappings = "stable_20"
+    makeObfSourceJar = false
+}
+
+/*
+ * ==========================================
+ * JAVA
+ * ==========================================
+ */
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+compileJava.options.encoding = 'UTF-8'
+
+/*
+ * ==========================================
+ * REPOSITORIES
+ * ==========================================
+ */
+
+repositories {
+    mavenCentral()
+}
+
+/*
+ * ==========================================
+ * DEPENDENCIES
+ * ==========================================
+ */
+
+dependencies {
+}
+
+/*
+ * ==========================================
+ * GENERATED BUILD INFO
+ * ==========================================
+ *
+ * Genereert BuildInfo.java automatisch met
+ * dezelfde projectversie als mcmod.info.
+ */
+
+def generatedVersionDir = file(
+        "$buildDir/generated/sources/version/java"
+)
+
+sourceSets.main.java.srcDir generatedVersionDir
+
+task generateBuildInfo {
+    inputs.property("version", project.version)
+    outputs.dir generatedVersionDir
+
+    doLast {
+        def packageDir = new File(
+                generatedVersionDir,
+                "com/alpharip/staffmod"
+        )
+
+        packageDir.mkdirs()
+
+        def buildInfoFile = new File(
+                packageDir,
+                "BuildInfo.java"
+        )
+
+        buildInfoFile.text = """\
+package com.alpharip.staffmod;
+ 
+public final class BuildInfo {
+    public static final String VERSION = "${project.version}";
+ 
+    private BuildInfo() {
+    }
+}
+"""
+    }
+}
+
+compileJava.dependsOn generateBuildInfo
+
+/*
+ * ==========================================
+ * INTELLIJ
+ * ==========================================
+ *
+ * Zorgt dat IntelliJ de gegenereerde map met
+ * BuildInfo.java als bronmap (Sources Root)
+ * herkent, ook na "gradlew idea". De build-map
+ * staat standaard als excluded, dus die haalt
+ * deze map er expliciet weer uit.
+ */
+
+idea {
+    module {
+        sourceDirs += generatedVersionDir
+        excludeDirs -= generatedVersionDir
+        generatedSourceDirs += generatedVersionDir
+    }
+}
+
+/*
+ * ==========================================
+ * PROCESS RESOURCES
+ * ==========================================
+ *
+ * Vervangt ${version} en ${mcversion} in
+ * mcmod.info.
+ */
+
+processResources {
+    inputs.property("version", project.version)
+    inputs.property("mcversion", project.minecraft.version)
+
+    from(sourceSets.main.resources.srcDirs) {
+        include "mcmod.info"
+
+        expand(
+                "version": project.version,
+                "mcversion": project.minecraft.version
+        )
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude "mcmod.info"
+    }
+}
+
+/*
+ * ==========================================
+ * BUILD NUMBER INCREMENT
+ * ==========================================
+ *
+ * Verhoogt het buildnummer één keer wanneer
+ * de build-task daadwerkelijk is aangevraagd.
+ */
+
+gradle.taskGraph.whenReady { taskGraph ->
+    def isBuild = taskGraph.allTasks.any {
+        it.name == "build"
+    }
+
+    if (isBuild) {
+        def nextBuildNumber = currentBuildNumber + 1
+
+        versionFile.text = nextBuildNumber.toString()
+    }
+}
+ 

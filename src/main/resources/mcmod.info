@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "alphastaffmod",
+    "name": "Alpha Client",
+    "description": "Made by MsAlexTsuki - Alpha Client made for Alpha.Rip staff team.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["-MsAlexTsuki - Sem"],
+    "credits": "Made by MsAlexTsuki",
+    "logoFile": "assets/alphastaffmod/logo.png",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
