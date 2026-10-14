@@ -2,6 +2,7 @@ package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.permissions.PermissionService;
 
 import net.minecraft.client.gui.GuiButton;
@@ -19,6 +20,7 @@ public final class AlphaModMenu extends GuiScreen {
     private final GuiScreen parent;
     private AlphaModule.Category selectedCategory = AlphaModule.Category.PUBLIC;
     private int scrollOffset = 0;
+    private String selectedModuleId = "alpha_hud";
 
     public AlphaModMenu(GuiScreen parent) {
         this.parent = parent;
@@ -54,7 +56,7 @@ public final class AlphaModMenu extends GuiScreen {
             AlphaModule module = modules.get(i);
             String label = module.getName() + "  [" + module.getStatusLabel() + "]";
             buttonList.add(new AlphaButton(MODULE_BASE + i, 18, y + visibleIndex * 32,
-                    Math.max(220, Math.min(380, width - 36)), 25, label));
+                    Math.max(180, Math.min(330, width / 2 - 35)), 25, label));
         }
     }
 
@@ -73,8 +75,31 @@ public final class AlphaModMenu extends GuiScreen {
             drawString(fontRendererObj, module.getDescription(), 30, y + (i - scrollOffset) * 32 + 15,
                     0xFF9DA2AE);
         }
+
+        int detailX = width / 2 + 12;
+        drawString(fontRendererObj, "MODULE FEATURES", detailX, 88, 0xFFFFD866);
+        AlphaModule selected = AlphaModuleRegistry.find(selectedModuleId);
+        if (selected == null || selected.getCategory() != selectedCategory) {
+            selected = modules.isEmpty() ? null : modules.get(0);
+        }
+        if (selected != null) {
+            drawString(fontRendererObj, selected.getName(), detailX, 105, 0xFFFFFFFF);
+            if (selected.getFeatures().isEmpty()) {
+                drawString(fontRendererObj, "No tiered features registered.", detailX, 124, 0xFF9DA2AE);
+            } else {
+                int featureY = 124;
+                for (AlphaModuleFeature feature : selected.getFeatures()) {
+                    int color = feature.isAvailable() ? 0xFF8DDBA4
+                            : PermissionService.hasAccess(feature.getRequiredRank()) ? 0xFFB8BBC4 : 0xFF777D89;
+                    drawString(fontRendererObj, feature.getName(), detailX, featureY, color);
+                    drawString(fontRendererObj, feature.getRequiredRank().name() + "  /  " + feature.getStatusLabel(),
+                            detailX, featureY + 11, 0xFF858A96);
+                    featureY += 31;
+                }
+            }
+        }
         drawString(fontRendererObj,
-                "Online ranks stay locked until verified by the Alpha community service.",
+                "Use COMMUNITY LOGIN to verify online ranks.",
                 18, height - 48, 0xFF777D89);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
@@ -103,6 +128,7 @@ public final class AlphaModMenu extends GuiScreen {
             int index = button.id - MODULE_BASE;
             if (index >= 0 && index < modules.size()) {
                 AlphaModule module = modules.get(index);
+                selectedModuleId = module.getId();
                 if (!module.isUnlocked() || !module.isImplemented()) {
                     return;
                 }
