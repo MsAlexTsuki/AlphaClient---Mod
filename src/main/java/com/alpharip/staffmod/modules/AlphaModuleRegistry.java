@@ -15,10 +15,20 @@ public final class AlphaModuleRegistry {
     private static final List<AlphaModule> MODULES = new ArrayList<AlphaModule>();
 
     static {
-        MODULES.add(new AlphaModule(
+        AlphaModule alphaHud = new AlphaModule(
                 "alpha_hud", "Alpha HUD",
                 "Displays the AlphaClient brand and session status.",
-                AlphaModule.Category.PUBLIC, true, true));
+                AlphaModule.Category.PUBLIC, true, true);
+        alphaHud.addFeature(new AlphaModuleFeature(
+                "basic_hud", "Basic HUD", "AlphaClient branding and rank status.",
+                PermissionService.Rank.PUBLIC, true));
+        alphaHud.addFeature(new AlphaModuleFeature(
+                "beta_hud_widgets", "Advanced HUD Widgets", "Additional HUD widgets for Beta testers.",
+                PermissionService.Rank.BETA, false));
+        alphaHud.addFeature(new AlphaModuleFeature(
+                "donator_hud_themes", "Custom HUD Themes", "Extra client themes for Donators.",
+                PermissionService.Rank.DONATOR, false));
+        MODULES.add(alphaHud);
         MODULES.add(new AlphaModule(
                 "fps_counter", "FPS Counter",
                 "Displays the current Minecraft frame rate.",
