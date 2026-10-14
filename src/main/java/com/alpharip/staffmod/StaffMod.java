@@ -60,6 +60,10 @@ public class StaffMod {
         BhopHud.loadHudPosition();
         MinecraftForge.EVENT_BUS.register(new BhopHud());
         bhopMode = new BhopMode();
+        AlphaModule bhopModule = AlphaModuleRegistry.find("bhop");
+        if (bhopModule != null) {
+            BhopMode.setEnabled(bhopModule.isEnabled());
+        }
 
         bhopKey = new KeyBinding("AlphaClient: Toggle BHOP", Keyboard.KEY_B, "AlphaClient");
         modMenuKey = new KeyBinding("AlphaClient: Open Mod Menu", Keyboard.KEY_RCONTROL, "AlphaClient");
