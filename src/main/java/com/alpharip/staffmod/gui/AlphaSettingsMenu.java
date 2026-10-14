@@ -15,6 +15,8 @@ public final class AlphaSettingsMenu extends GuiScreen {
     private static final int BHOP_HUD = 2;
     private static final int RESET_BHOP_HUD = 3;
     private static final int MINECRAFT_OPTIONS = 4;
+    private static final int SCALE_DOWN = 5;
+    private static final int SCALE_UP = 6;
 
     private final GuiScreen parent;
 
@@ -36,6 +38,8 @@ public final class AlphaSettingsMenu extends GuiScreen {
                 "RESET BHOP HUD POSITION"));
         buttonList.add(new AlphaButton(MINECRAFT_OPTIONS, left, y + 68, buttonWidth, 26,
                 "MINECRAFT OPTIONS"));
+        buttonList.add(new AlphaButton(SCALE_DOWN, center - 100, y + 102, 44, 22, "-"));
+        buttonList.add(new AlphaButton(SCALE_UP, center + 56, y + 102, 44, 22, "+"));
         buttonList.add(new AlphaButton(BACK, 14, height - 32, 100, 20, "BACK"));
     }
 
@@ -51,7 +55,7 @@ public final class AlphaSettingsMenu extends GuiScreen {
         int y = Math.max(140, height / 2 - 48);
         drawCenteredString(fontRendererObj, "BHOP HUD", width / 2, y - 15, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "Position: " + BhopHud.getHudX() + ", " + BhopHud.getHudY()
-                + "    Scale: " + BhopHud.getHudScale(), width / 2, y + 105, 0xFF858A96);
+                + "    Scale: " + BhopHud.getHudScale(), width / 2, y + 132, 0xFF858A96);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
@@ -73,6 +77,14 @@ public final class AlphaSettingsMenu extends GuiScreen {
                 break;
             case MINECRAFT_OPTIONS:
                 minecraft.displayGuiScreen(new GuiOptions(this, minecraft.gameSettings));
+                break;
+            case SCALE_DOWN:
+                BhopHud.setHudScale(BhopHud.getHudScale() - 10);
+                initGui();
+                break;
+            case SCALE_UP:
+                BhopHud.setHudScale(BhopHud.getHudScale() + 10);
+                initGui();
                 break;
             default:
                 break;
