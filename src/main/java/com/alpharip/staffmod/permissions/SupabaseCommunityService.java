@@ -29,6 +29,9 @@ public final class SupabaseCommunityService {
     }
 
     public static synchronized void signIn(String email, String password) throws Exception {
+        accessToken = null;
+        signedInEmail = null;
+        PermissionService.clearVerifiedOnlineRank();
         if (email == null || email.trim().isEmpty() || password == null || password.isEmpty()) {
             throw new IllegalArgumentException("Enter your Alpha community email and password.");
         }
