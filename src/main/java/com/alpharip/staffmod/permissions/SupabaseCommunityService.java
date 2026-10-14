@@ -152,7 +152,9 @@ public final class SupabaseCommunityService {
         connection.setReadTimeout(8000);
         connection.setRequestProperty("apikey", PUBLISHABLE_KEY);
         connection.setRequestProperty("Accept", "application/json");
-        connection.setRequestProperty("Authorization", "Bearer " + (bearer == null ? PUBLISHABLE_KEY : bearer));
+        if (bearer != null && !bearer.trim().isEmpty()) {
+            connection.setRequestProperty("Authorization", "Bearer " + bearer);
+        }
         return connection;
     }
 
