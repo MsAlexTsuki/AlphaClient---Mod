@@ -6,6 +6,7 @@ import com.alpharip.staffmod.hud.BhopHud;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
+import com.alpharip.staffmod.modules.LongJumpMod;
 import com.alpharip.staffmod.permissions.PermissionService;
 
 import net.minecraft.client.Minecraft;
@@ -38,6 +39,8 @@ public class StaffMod {
 
     public static StaffMod instance;
     public static BhopMode bhopMode;
+    // Kept as a source-compatibility field for inactive legacy GUI classes.
+    public static LongJumpMod longJumpMod;
 
     private KeyBinding bhopKey;
     private KeyBinding modMenuKey;
