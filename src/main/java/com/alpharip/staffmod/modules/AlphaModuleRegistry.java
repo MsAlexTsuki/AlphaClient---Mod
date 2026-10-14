@@ -45,10 +45,14 @@ public final class AlphaModuleRegistry {
                 "cosmetics", "Alpha Cosmetics",
                 "Community cosmetics and client-side appearance options.",
                 AlphaModule.Category.DONATOR, false, false));
-        MODULES.add(new AlphaModule(
-                "bhop", "BHOP Staff Mod",
-                "Retained staff movement test module.",
-                AlphaModule.Category.STAFF, true, false));
+        AlphaModule staffmods = new AlphaModule(
+                "staffmods", "Staffmods",
+                "Staff-only module collection. BHOP is currently the retained feature.",
+                AlphaModule.Category.STAFF, true, false);
+        staffmods.addFeature(new AlphaModuleFeature(
+                "bhop", "BHOP", "Retained staff movement module.",
+                PermissionService.Rank.STAFF, true));
+        MODULES.add(staffmods);
     }
 
     private AlphaModuleRegistry() {
