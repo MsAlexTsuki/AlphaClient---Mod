@@ -24,6 +24,7 @@ public final class SupabaseCommunityService {
 
     private static volatile String accessToken;
     private static volatile String signedInEmail;
+    private static volatile String signedInRankLabel;
 
     private SupabaseCommunityService() {
     }
@@ -31,6 +32,7 @@ public final class SupabaseCommunityService {
     public static synchronized void signIn(String email, String password) throws Exception {
         accessToken = null;
         signedInEmail = null;
+        signedInRankLabel = null;
         PermissionService.clearVerifiedOnlineRank();
         if (email == null || email.trim().isEmpty() || password == null || password.isEmpty()) {
             throw new IllegalArgumentException("Enter your Alpha community email and password.");
@@ -70,6 +72,7 @@ public final class SupabaseCommunityService {
 
         accessToken = token;
         signedInEmail = email.trim();
+        signedInRankLabel = formatRankLabel(rankKey, founder);
         PermissionService.setVerifiedOnlineRank(rank);
     }
 
@@ -77,6 +80,7 @@ public final class SupabaseCommunityService {
         String token = accessToken;
         accessToken = null;
         signedInEmail = null;
+        signedInRankLabel = null;
         PermissionService.clearVerifiedOnlineRank();
         if (token != null) {
             try {
@@ -93,6 +97,23 @@ public final class SupabaseCommunityService {
 
     public static String getSignedInEmail() {
         return signedInEmail;
+    }
+
+    public static String getSignedInRankLabel() {
+        return signedInRankLabel == null ? "RANK NOT VERIFIED" : signedInRankLabel;
+    }
+
+    private static String formatRankLabel(String rankKey, boolean founder) {
+        if (founder || "founder".equalsIgnoreCase(rankKey)) return "Founder";
+        if (rankKey == null || rankKey.trim().isEmpty() || "public".equalsIgnoreCase(rankKey)) return "Member";
+        String[] parts = rankKey.trim().toLowerCase(java.util.Locale.ROOT).split("[_\\\\- ]+");
+        StringBuilder label = new StringBuilder();
+        for (String part : parts) {
+            if (part.isEmpty()) continue;
+            if (label.length() > 0) label.append(' ');
+            label.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
+        }
+        return label.toString();
     }
 
     private static PermissionService.Rank mapRank(String rankKey, boolean founder) {
