@@ -69,9 +69,9 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setEnableBackgroundDrawing(true);
         searchField.setTextColor(0xFFE7E9EE);
         searchField.setDisabledTextColour(0xFF858B98);
-        buttonList.add(new AlphaButton(BACK, panelLeft + 7, panelTop + panelHeight - 23, 42, 15, "CLOSE"));
-        buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + 52, panelTop + panelHeight - 23, 64, 15, "ACCOUNT"));
-        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 119, panelTop + panelHeight - 23, 82, 15, "HUD EDITOR"));
+        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 42, panelTop + 7, 34, 16, "X"));
+        buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + panelWidth - 82, panelTop + 7, 34, 16, "⚙"));
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 7, panelTop + panelHeight - 23, 82, 15, "HUD EDITOR"));
         buttonList.add(new AlphaButton(CATEGORY_BASE, panelLeft + 6, panelTop + 58, sidebarWidth - 12, 17,
                 "GENERAL", selectedCategory == AlphaModule.Category.PUBLIC));
 
@@ -149,9 +149,9 @@ public final class AlphaModMenu extends GuiScreen {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1F, 1F, 1F, 1F);
-        drawModalRectWithCustomSizedTexture(panelLeft + 8, panelTop + 7, 0, 0, 22, 22, 1238, 1238);
-        drawString(fontRendererObj, "ALPHA CLIENT", panelLeft + 35, panelTop + 9, 0xFFF0F1F4);
-        drawString(fontRendererObj, "MODS", panelLeft + 35, panelTop + 20, ACCENT);
+        drawModalRectWithCustomSizedTexture(panelLeft + 10, panelTop + 8, 0, 0, 26, 26, 256, 256);
+        drawString(fontRendererObj, "ALPHA", panelLeft + 42, panelTop + 9, 0xFFF0F1F4);
+        drawString(fontRendererObj, "C L I E N T", panelLeft + 42, panelTop + 20, ACCENT);
         drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
                 + " modules", contentLeft + 4, panelTop + 12, 0xFF858B98);
         searchField.drawTextBox();
