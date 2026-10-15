@@ -111,8 +111,10 @@ public final class AlphaModMenu extends GuiScreen {
             int y = contentTop + (local / 2) * (tileHeight + rowGap);
             String moduleStatus = "staffmods".equals(filtered.get(i).getId())
                     ? (BhopMode.isEnabled() ? "ON" : "OFF")
-                    : ("quality".equals(filtered.get(i).getId()) ? "SETTINGS" : filtered.get(i).getStatusLabel());
-            String moduleLabel = filtered.get(i).getName() + "  |  " + moduleStatus;
+                    : ("quality".equals(filtered.get(i).getId()) ? "" : filtered.get(i).getStatusLabel());
+            String moduleLabel = "quality".equals(filtered.get(i).getId())
+                    ? filtered.get(i).getName()
+                    : filtered.get(i).getName() + "  |  " + moduleStatus;
             buttonList.add(new AlphaButton(MODULE_BASE + i, x, y, tileWidth, tileHeight,
                     moduleLabel, filtered.get(i).getId().equals(selectedModuleId)));
         }
@@ -291,7 +293,15 @@ public final class AlphaModMenu extends GuiScreen {
         } else if (button.id >= MODULE_BASE) {
             List<AlphaModule> modules = getFilteredModules();
             int index = button.id - MODULE_BASE;
-            if (index >= 0 && index < modules.size()) selectedModuleId = modules.get(index).getId();
+            if (index >= 0 && index < modules.size()) {
+                AlphaModule clickedModule = modules.get(index);
+                if ("quality".equals(clickedModule.getId())
+                        && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                    mc.displayGuiScreen(new QualityGui(this));
+                    return;
+                }
+                selectedModuleId = clickedModule.getId();
+            }
         }
         scrollOffset = 0;
         initGui();
