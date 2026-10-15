@@ -3,6 +3,7 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.movement.BhopProfileManager;
 import com.alpharip.staffmod.movement.BhopProfileManager.BhopProfile;
+import com.alpharip.staffmod.permissions.PermissionService;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -34,6 +35,7 @@ public class StaffModsGui extends ModernGuiScreen {
     private static final int MAX_PROFILES = 10;
 
     private final GuiScreen parentScreen;
+    private PermissionService.Rank selectedStaffCategory = PermissionService.Rank.PUBLIC;
 
     private int moduleScroll = 0;
     private int profileScroll = 0;
@@ -136,6 +138,8 @@ public class StaffModsGui extends ModernGuiScreen {
                 this.width / 2,
                 18
         );
+
+        drawStaffCategoryTabs(scaledMouseX, scaledMouseY);
 
         drawCenteredString(
                 this.fontRendererObj,
@@ -397,6 +401,66 @@ public class StaffModsGui extends ModernGuiScreen {
         return profiles != null && profiles.size() >= MAX_PROFILES;
     }
 
+
+    private void drawStaffCategoryTabs(int mouseX, int mouseY) {
+        String[] labels = { "GENERAL", "T-MOD", "MOD", "SR-MOD", "ADMIN", "SR-ADMIN", "MANAGEMENT", "OWNER", "FOUNDER" };
+        PermissionService.Rank[] ranks = {
+                PermissionService.Rank.PUBLIC, PermissionService.Rank.T_MOD, PermissionService.Rank.MOD,
+                PermissionService.Rank.SR_MOD, PermissionService.Rank.ADMIN, PermissionService.Rank.SR_ADMIN,
+                PermissionService.Rank.MANAGEMENT, PermissionService.Rank.OWNER, PermissionService.Rank.FOUNDER
+        };
+        int gap = 3;
+        int available = Math.max(1, this.width - 24);
+        int tabWidth = Math.max(36, (available - gap * (labels.length - 1)) / labels.length);
+        int total = labels.length * tabWidth + (labels.length - 1) * gap;
+        if (total > available) {
+            tabWidth = Math.max(30, (available - gap * (labels.length - 1)) / labels.length);
+            total = labels.length * tabWidth + (labels.length - 1) * gap;
+        }
+        int x = (this.width - total) / 2;
+        for (int i = 0; i < labels.length; i++) {
+            if (ranks[i] != PermissionService.Rank.PUBLIC && !PermissionService.hasAccess(ranks[i])) continue;
+            int bx = x + i * (tabWidth + gap);
+            boolean hovered = isInside(mouseX, mouseY, bx, 40, tabWidth, 18);
+            boolean selected = selectedStaffCategory == ranks[i];
+            int background = selected ? 0x805A4820 : hovered ? 0x55303030 : 0x38101010;
+            drawRect(bx, 40, bx + tabWidth, 58, background);
+            drawRect(bx, 40, bx + tabWidth, 41, selected ? COLOR_GOLD : 0x30E8E8E8);
+            drawCenteredString(this.fontRendererObj, labels[i], bx + tabWidth / 2, 46,
+                    selected ? COLOR_GOLD : 0xFFFFFFFF);
+        }
+    }
+
+    private boolean handleStaffCategoryClick(int mouseX, int mouseY) {
+        if (mouseY < 40 || mouseY > 58) return false;
+        String[] labels = { "GENERAL", "T-MOD", "MOD", "SR-MOD", "ADMIN", "SR-ADMIN", "MANAGEMENT", "OWNER", "FOUNDER" };
+        PermissionService.Rank[] ranks = {
+                PermissionService.Rank.PUBLIC, PermissionService.Rank.T_MOD, PermissionService.Rank.MOD,
+                PermissionService.Rank.SR_MOD, PermissionService.Rank.ADMIN, PermissionService.Rank.SR_ADMIN,
+                PermissionService.Rank.MANAGEMENT, PermissionService.Rank.OWNER, PermissionService.Rank.FOUNDER
+        };
+        int gap = 3;
+        int available = Math.max(1, this.width - 24);
+        int tabWidth = Math.max(36, (available - gap * (labels.length - 1)) / labels.length);
+        int total = labels.length * tabWidth + (labels.length - 1) * gap;
+        if (total > available) {
+            tabWidth = Math.max(30, (available - gap * (labels.length - 1)) / labels.length);
+            total = labels.length * tabWidth + (labels.length - 1) * gap;
+        }
+        int x = (this.width - total) / 2;
+        for (int i = 0; i < labels.length; i++) {
+            if (ranks[i] != PermissionService.Rank.PUBLIC && !PermissionService.hasAccess(ranks[i])) continue;
+            int bx = x + i * (tabWidth + gap);
+            if (isInside(mouseX, mouseY, bx, 40, tabWidth, 18)) {
+                selectedStaffCategory = ranks[i];
+                moduleScroll = 0;
+                hoveredModule = -1;
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void drawModules(
             int left,
             int width,
@@ -411,10 +475,9 @@ public class StaffModsGui extends ModernGuiScreen {
         int innerWidth = width - (LIST_PADDING * 2);
         int columnWidth = (innerWidth - MODULE_GAP) / MODULE_COLUMNS;
 
-        String[] modules = {
-                "BHOP",
-                "UTILITIES"
-        };
+        String[] modules = selectedStaffCategory == PermissionService.Rank.PUBLIC
+                ? new String[] { "BHOP", "UTILITIES" }
+                : new String[0];
 
         for (int i = 0; i < modules.length; i++) {
             int row = i / MODULE_COLUMNS;
@@ -654,6 +717,8 @@ public class StaffModsGui extends ModernGuiScreen {
         int scaledMouseX = getScaledMouseX(mouseX);
         int scaledMouseY = getScaledMouseY(mouseY);
 
+        if (handleStaffCategoryClick(scaledMouseX, scaledMouseY)) return;
+
         if (maxProfilesPopup) {
             int buttonWidth = 90;
             int buttonHeight = 28;
@@ -758,10 +823,9 @@ public class StaffModsGui extends ModernGuiScreen {
         int innerWidth = moduleWidth - (LIST_PADDING * 2);
         int columnWidth = (innerWidth - MODULE_GAP) / MODULE_COLUMNS;
 
-        String[] modules = {
-                "BHOP",
-                "UTILITIES"
-        };
+        String[] modules = selectedStaffCategory == PermissionService.Rank.PUBLIC
+                ? new String[] { "BHOP", "UTILITIES" }
+                : new String[0];
 
         for (int i = 0; i < modules.length; i++) {
             int row = i / MODULE_COLUMNS;
