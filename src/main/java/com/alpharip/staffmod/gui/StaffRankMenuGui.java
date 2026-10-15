@@ -78,7 +78,7 @@ public final class StaffRankMenuGui extends GuiScreen {
         if (button == null) return;
         if (button.id == BACK) { mc.displayGuiScreen(parent); return; }
         if (button.id == BHOP && "General".equals(selected) && PermissionService.hasModAccess("staff.bhop")) {
-            mc.displayGuiScreen(new StaffModsGui(this)); return;
+            mc.displayGuiScreen(new StaffModsMenuGui(this)); return;
         }
         int index = button.id - CATEGORY_BASE;
         if (index >= 0 && index < categories.size()) {
