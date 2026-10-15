@@ -139,7 +139,7 @@ public final class AlphaModMenu extends GuiScreen {
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1F, 1F, 1F, 1F);
         drawModalRectWithCustomSizedTexture(panelLeft + 8, panelTop + 7, 0, 0, 21, 21, 256, 256);
-        drawString(fontRendererObj, "MODS", panelLeft + 34, panelTop + 12, 0xFFF0F1F4);
+        drawString(fontRendererObj, "MODS", panelLeft + 8, panelTop + 31, 0xFFF0F1F4);
         drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
                 + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
         searchField.drawTextBox();
