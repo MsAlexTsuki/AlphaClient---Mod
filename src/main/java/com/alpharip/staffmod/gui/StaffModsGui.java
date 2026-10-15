@@ -412,10 +412,7 @@ public class StaffModsGui extends ModernGuiScreen {
         int columnWidth = (innerWidth - MODULE_GAP) / MODULE_COLUMNS;
 
         String[] modules = {
-                "CPS",
                 "BHOP",
-                "KNOCKBACK",
-                "LONGJUMP",
                 "UTILITIES"
         };
 
@@ -769,10 +766,7 @@ public class StaffModsGui extends ModernGuiScreen {
         int columnWidth = (innerWidth - MODULE_GAP) / MODULE_COLUMNS;
 
         String[] modules = {
-                "CPS",
                 "BHOP",
-                "KNOCKBACK",
-                "LONGJUMP",
                 "UTILITIES"
         };
 
@@ -844,38 +838,12 @@ public class StaffModsGui extends ModernGuiScreen {
     }
 
     private void openModule(String module) {
-        if ("CPS".equals(module)) {
-            Minecraft.getMinecraft().displayGuiScreen(
-                    new CpsSettingsGui(this)
-            );
-            return;
-        }
-
         if ("BHOP".equals(module)) {
-            Minecraft.getMinecraft().displayGuiScreen(
-                    new BhopSettingsGui(this)
-            );
+            Minecraft.getMinecraft().displayGuiScreen(new BhopSettingsGui(this));
             return;
         }
-
-        if ("KNOCKBACK".equals(module)) {
-            Minecraft.getMinecraft().displayGuiScreen(
-                    new KnockbackSettingsGui(this)
-            );
-            return;
-        }
-
-        if ("LONGJUMP".equals(module)) {
-            Minecraft.getMinecraft().displayGuiScreen(
-                    new DubbleJumpGui(this)
-            );
-            return;
-        }
-
         if ("UTILITIES".equals(module)) {
-            Minecraft.getMinecraft().displayGuiScreen(
-                    new UtilitiesGui(this)
-            );
+            Minecraft.getMinecraft().displayGuiScreen(new UtilitiesGui(this));
         }
     }
 
@@ -978,7 +946,7 @@ public class StaffModsGui extends ModernGuiScreen {
     }
 
     private void clampModuleScroll() {
-        int moduleCount = 5;
+        int moduleCount = 2
 
         int listTop = TOP + LIST_TOP_OFFSET;
         int listBottom = getLayout()[8];
