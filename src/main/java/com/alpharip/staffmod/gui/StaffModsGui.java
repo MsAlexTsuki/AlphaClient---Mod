@@ -946,7 +946,7 @@ public class StaffModsGui extends ModernGuiScreen {
     }
 
     private void clampModuleScroll() {
-        int moduleCount = 2
+        int moduleCount = 2;
 
         int listTop = TOP + LIST_TOP_OFFSET;
         int listBottom = getLayout()[8];
