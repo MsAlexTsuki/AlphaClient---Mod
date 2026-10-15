@@ -4,6 +4,7 @@ import com.alpharip.staffmod.BuildInfo;
 import com.alpharip.staffmod.config.AlphaClientConfig;
 import com.alpharip.staffmod.gui.AlphaClientGuiHandler;
 import com.alpharip.staffmod.gui.AlphaModMenu;
+import com.alpharip.staffmod.gui.AlphaMainMenu;
 import com.alpharip.staffmod.hud.AlphaHudRenderer;
 import com.alpharip.staffmod.hud.BhopHud;
 import com.alpharip.staffmod.modules.AlphaModule;
@@ -84,7 +85,7 @@ public final class AlphaClient {
 
         if (openModMenuKey != null && openModMenuKey.isPressed()) {
             if (minecraft.currentScreen == null) {
-                minecraft.displayGuiScreen(new AlphaModMenu(null));
+                minecraft.displayGuiScreen(new AlphaMainMenu());
             }
             return;
         }
