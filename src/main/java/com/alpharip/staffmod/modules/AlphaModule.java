@@ -13,9 +13,16 @@ import java.util.List;
 public final class AlphaModule {
     public enum Category {
         PUBLIC("General", PermissionService.Rank.PUBLIC),
-        BETA("Beta Mods", PermissionService.Rank.BETA),
+        BETA("Beta", PermissionService.Rank.BETA),
         DONATOR("Donator", PermissionService.Rank.DONATOR),
-        STAFF("Staff Mods", PermissionService.Rank.STAFF);
+        T_MOD("T-Mod", PermissionService.Rank.T_MOD),
+        MOD("Mod", PermissionService.Rank.MOD),
+        SR_MOD("Sr-Mod", PermissionService.Rank.SR_MOD),
+        ADMIN("Admin", PermissionService.Rank.ADMIN),
+        SR_ADMIN("Sr-Admin", PermissionService.Rank.SR_ADMIN),
+        MANAGEMENT("Management", PermissionService.Rank.MANAGEMENT),
+        OWNER("Owner", PermissionService.Rank.OWNER),
+        FOUNDER("Founder", PermissionService.Rank.FOUNDER);
 
         private final String title;
         private final PermissionService.Rank requiredRank;
