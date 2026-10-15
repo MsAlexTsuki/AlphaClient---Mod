@@ -7,6 +7,9 @@ import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.AlphaMainMenu;
 import com.alpharip.staffmod.hud.AlphaHudRenderer;
 import com.alpharip.staffmod.hud.BhopHud;
+import com.alpharip.staffmod.hud.TargetHud;
+import com.alpharip.staffmod.hud.KnockbackHud;
+import com.alpharip.staffmod.util.KnockbackTracker;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
@@ -47,17 +50,21 @@ public final class AlphaClient {
         instance = this;
         System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
 
-        // Register the client systems through one central startup path.
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
 
         AlphaHudRenderer hudRenderer = new AlphaHudRenderer();
         MinecraftForge.EVENT_BUS.register(hudRenderer);
 
-        // Load settings before enabling the retained BHOP implementation.
+        // Load every implemented HUD's persisted position before registering its renderer.
         AlphaClientConfig.load();
         BhopHud.loadHudPosition();
+        TargetHud.loadHudPosition();
+        KnockbackTracker.loadHudPosition();
+
         MinecraftForge.EVENT_BUS.register(new BhopHud());
+        MinecraftForge.EVENT_BUS.register(new TargetHud());
+        MinecraftForge.EVENT_BUS.register(new KnockbackHud());
 
         bhopMode = new BhopMode();
         syncBhopModuleState();
