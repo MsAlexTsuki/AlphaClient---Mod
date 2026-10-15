@@ -81,7 +81,14 @@ public final class AlphaModMenu extends GuiScreen {
                 case PUBLIC: label = "GENERAL"; break;
                 case BETA: label = "BETA"; break;
                 case DONATOR: label = "DONATOR"; break;
-                case STAFF: label = "STAFF MODS"; break;
+                case T_MOD: label = "T-MOD"; break;
+                case MOD: label = "MOD"; break;
+                case SR_MOD: label = "SR-MOD"; break;
+                case ADMIN: label = "ADMIN"; break;
+                case SR_ADMIN: label = "SR-ADMIN"; break;
+                case MANAGEMENT: label = "MANAGEMENT"; break;
+                case OWNER: label = "OWNER"; break;
+                case FOUNDER: label = "FOUNDER"; break;
                 default: continue;
             }
             buttonList.add(new AlphaButton(CATEGORY_BASE + category.ordinal(),
