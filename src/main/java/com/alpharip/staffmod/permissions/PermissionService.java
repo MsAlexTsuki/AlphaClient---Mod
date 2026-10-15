@@ -21,7 +21,13 @@ public final class PermissionService {
         PUBLIC,
         BETA,
         DONATOR,
-        STAFF,
+        T_MOD,
+        MOD,
+        SR_MOD,
+        ADMIN,
+        SR_ADMIN,
+        MANAGEMENT,
+        OWNER,
         FOUNDER
     }
 
@@ -122,17 +128,30 @@ public final class PermissionService {
             return false;
         }
         Rank actual = getEffectiveRank();
-        if (actual == Rank.FOUNDER) {
-            return true;
+        if (actual == Rank.FOUNDER) return true;
+        if (required == Rank.PUBLIC) return true;
+
+        // Beta and Donator are separate entitlements, except for staff and Founder.
+        if (actual == Rank.BETA || actual == Rank.DONATOR) return actual == required;
+
+        // Staff ranks inherit categories below their own rank.
+        int actualLevel = staffLevel(actual);
+        int requiredLevel = staffLevel(required);
+        return actualLevel >= 0 && requiredLevel >= 0 && actualLevel >= requiredLevel;
+    }
+
+    private static int staffLevel(Rank rank) {
+        switch (rank) {
+            case T_MOD: return 1;
+            case MOD: return 2;
+            case SR_MOD: return 3;
+            case ADMIN: return 4;
+            case SR_ADMIN: return 5;
+            case MANAGEMENT: return 6;
+            case OWNER: return 7;
+            case FOUNDER: return 8;
+            default: return -1;
         }
-        if (required == Rank.PUBLIC) {
-            return true;
-        }
-        if (actual == Rank.STAFF) {
-            return true;
-        }
-        // Beta and Donator are separate entitlements, not a single rank ladder.
-        return actual == required;
     }
 
     public static boolean isOnlineRankVerified() {
