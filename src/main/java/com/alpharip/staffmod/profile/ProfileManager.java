@@ -702,25 +702,7 @@ public final class ProfileManager {
         );
 
 
-        /*
-         * Dubble Jump OFF.
-         */
-        profile.setModule(
-                MODULE_DUBBLE_JUMP,
-                false
-        );
-
-
-        /*
-         * NoFall OFF.
-         */
-        profile.setModule(
-                MODULE_NOFALL,
-                false
-        );
-
-
-        profile.setColor(
+profile.setColor(
                 "BHOP_PROFILE_NAME",
                 DEFAULT_COLOR
         );
@@ -929,22 +911,7 @@ public final class ProfileManager {
         );
 
 
-        /*
-         * Nieuwe profielen starten met
-         * alle staff modules UIT.
-         */
-        profile.setModule(
-                MODULE_DUBBLE_JUMP,
-                false
-        );
-
-        profile.setModule(
-                MODULE_NOFALL,
-                false
-        );
-
-
-        profile.setColor(
+profile.setColor(
                 "BHOP_PROFILE_NAME",
                 DEFAULT_COLOR
         );
@@ -1120,33 +1087,7 @@ public final class ProfileManager {
         );
 
 
-        /*
-         * =====================================================
-         * DUBBLE JUMP
-         * =====================================================
-         */
-
-        LongJumpMod.getInstance()
-                .setEnabled(
-                        profile.getModule(
-                                MODULE_DUBBLE_JUMP
-                        )
-                );
-
-
-        /*
-         * =====================================================
-         * NOFALL
-         * =====================================================
-         */
-
-        NoFallMod.getInstance()
-                .setEnabled(
-                        profile.getModule(
-                                MODULE_NOFALL
-                        )
-                );
-    }
+}
 
 
     /*
