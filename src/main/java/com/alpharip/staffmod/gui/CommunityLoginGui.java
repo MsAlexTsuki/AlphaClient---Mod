@@ -77,8 +77,13 @@ public final class CommunityLoginGui extends GuiScreen {
 
         drawRect(left + 14, 232, right - 14, 233, 0xFF292D36);
         drawCenteredString(fontRendererObj, status, width / 2, 241, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "ACCESS  /  " + PermissionService.getStatusText(),
-                width / 2, 258, 0xFFFFD866);
+        if (SupabaseCommunityService.isSignedIn()) {
+            drawCenteredString(fontRendererObj, PermissionService.getStatusText(),
+                    width / 2, 258, 0xFFFFD866);
+        } else {
+            drawCenteredString(fontRendererObj, "RANK NOT VERIFIED",
+                    width / 2, 258, 0xFFFFD866);
+        }
         if (SupabaseCommunityService.isSignedIn()) {
             drawCenteredString(fontRendererObj, "Signed in as " + SupabaseCommunityService.getSignedInEmail(),
                     width / 2, 275, 0xFF8DDBA4);
