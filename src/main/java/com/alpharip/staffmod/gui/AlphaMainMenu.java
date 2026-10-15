@@ -75,8 +75,8 @@ public final class AlphaMainMenu extends GuiScreen {
         int menuCardBottom = menuTop + 6 * buttonHeight + 5 * buttonGap + 22;
 
         drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardBottom, 0xA90E1015);
-        drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardTop + 2, 0x887D682D);
-        drawRect(menuCardLeft, menuCardTop, menuCardLeft + 1, menuCardBottom, 0x557F8794);
+        drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardTop + 1, 0x554B515D);
+        drawRect(menuCardLeft, menuCardTop, menuCardLeft + 1, menuCardBottom, 0x334B515D);
 
         drawString(fontRendererObj, "ALPHA CLIENT", menuLeft, menuTop - 67, 0xFFF3F0E8);
         drawString(fontRendererObj, "YOUR NEXT MINECRAFT EXPERIENCE", menuLeft, menuTop - 49, ACCENT);
@@ -90,8 +90,8 @@ public final class AlphaMainMenu extends GuiScreen {
         int panelBottom = Math.min(height - 48, height / 2 + 178);
         drawRect(panelLeft + 5, panelTop + 5, panelRight + 1, panelBottom + 1, 0x66000000);
         drawRect(panelLeft, panelTop, panelRight, panelBottom, 0xE6101218);
-        drawRect(panelLeft, panelTop, panelRight, panelTop + 2, ACCENT);
-        drawRect(panelLeft, panelTop, panelLeft + 1, panelBottom, 0x887D682D);
+        drawRect(panelLeft, panelTop, panelRight, panelTop + 1, 0x554B515D);
+        drawRect(panelLeft, panelTop, panelLeft + 1, panelBottom, 0x334B515D);
         drawRect(panelLeft + 24, panelTop + 25, panelRight - 24, panelTop + 26, 0x557F8794);
 
         int availableWidth = Math.max(1, panelRight - panelLeft - 42);

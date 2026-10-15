@@ -32,7 +32,7 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int HUD_EDITOR = 305;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_launcher_logo.png");
-    private static final int ACCENT = 0xFFFFD32F;
+    private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
     private AlphaModule.Category selectedCategory = AlphaModule.Category.PUBLIC;
@@ -141,9 +141,9 @@ public final class AlphaModMenu extends GuiScreen {
         drawRect(0, 0, width, height, 0x18000000);
         int right = panelLeft + panelWidth, bottom = panelTop + panelHeight;
         drawRect(panelLeft, panelTop, right, bottom, 0xD90A0C11);
-        drawRect(panelLeft, panelTop, right, panelTop + 2, ACCENT);
-        drawRect(panelLeft, panelTop + 1, panelLeft + 1, bottom - 1, 0xA0FFD866);
-        drawRect(right - 1, panelTop + 1, right, bottom - 1, 0x805B4B20);
+        drawRect(panelLeft, panelTop, right, panelTop + 1, 0x554B515D);
+        drawRect(panelLeft, panelTop + 1, panelLeft + 1, bottom - 1, 0x334B515D);
+        drawRect(right - 1, panelTop + 1, right, bottom - 1, 0x334B515D);
         drawRect(panelLeft + sidebarWidth, panelTop + 2, panelLeft + sidebarWidth + 1, bottom - 1, 0x553F424A);
         drawRect(settingsLeft - 7, panelTop + 2, settingsLeft - 6, bottom - 1, 0x553F424A);
 

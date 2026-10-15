@@ -35,7 +35,7 @@ public final class AlphaButton extends GuiButton {
         }
         drawRect(xPosition, yPosition, xPosition + width, yPosition + height, background);
         drawRect(xPosition, yPosition, xPosition + width, yPosition + 1,
-                primary ? 0xAAFFF0B0 : (hovered ? 0xFFFFD866 : 0x887D641F));
+                primary ? 0xAAFFF0B0 : (hovered ? 0x665B626E : 0x554B515D));
         drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height, 0xFF14161B);
         if (!primary) {
             drawRect(xPosition, yPosition, xPosition + 2, yPosition + height,

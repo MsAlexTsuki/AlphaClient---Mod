@@ -51,7 +51,7 @@ public final class HudEditorGui extends GuiScreen {
         int left = (width - panelWidth) / 2;
         int top = 18;
         drawRect(left, top, left + panelWidth, top + panelHeight, 0xE10D1017);
-        drawRect(left, top, left + panelWidth, top + 2, ACCENT);
+        drawRect(left, top, left + panelWidth, top + 1, 0x554B515D);
         drawString(fontRendererObj, "ALPHA", left + 16, top + 12, ACCENT);
         drawString(fontRendererObj, "HUD EDITOR", left + 16, top + 27, 0xFFF1F3F7);
         drawString(fontRendererObj, "Drag any preview to move it. Positions are saved automatically.", left + 16,
