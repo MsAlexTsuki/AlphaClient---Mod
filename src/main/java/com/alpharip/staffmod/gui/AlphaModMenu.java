@@ -23,6 +23,7 @@ public final class AlphaModMenu extends GuiScreen {
     private final GuiScreen parent;
 
     private AlphaModule.Category selectedCategory = AlphaModule.Category.PUBLIC;
+    private java.util.List<AlphaModule.Category> visibleCategories;
     private String selectedModuleId = "alpha_hud";
     private int scrollOffset;
     private int panelLeft;
@@ -57,7 +58,12 @@ public final class AlphaModMenu extends GuiScreen {
         detailX = listX + listWidth + 14;
         detailRight = panelRight - 16;
 
-        AlphaModule.Category[] categories = AlphaModule.Category.values();
+        visibleCategories = new java.util.ArrayList<AlphaModule.Category>();
+        for (AlphaModule.Category category : AlphaModule.Category.values()) {
+            if (PermissionService.hasAccess(category.getRequiredRank())) visibleCategories.add(category);
+        }
+        if (!visibleCategories.contains(selectedCategory)) selectedCategory = AlphaModule.Category.PUBLIC;
+        AlphaModule.Category[] categories = visibleCategories.toArray(new AlphaModule.Category[visibleCategories.size()]);
         int tabsLeft = panelLeft + 16;
         int tabsRight = panelRight - 16;
         int tabGap = 5;
@@ -109,13 +115,13 @@ public final class AlphaModMenu extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawDefaultBackground();
+        drawRect(0, 0, width, height, 0x28000000);
 
         int panelRight = panelLeft + panelWidth;
         int panelBottom = panelTop + panelHeight;
 
         // One compact floating surface; the screen itself is no longer filled with large panels.
-        drawRect(panelLeft, panelTop, panelRight, panelBottom, 0xE8101218);
+        drawRect(panelLeft, panelTop, panelRight, panelBottom, 0xB8101218);
         drawRect(panelLeft, panelTop, panelRight, panelTop + 2, ACCENT);
         drawRect(panelLeft, panelTop + 1, panelLeft + 1, panelBottom - 1, 0x553A3E48);
         drawRect(panelRight - 1, panelTop + 1, panelRight, panelBottom - 1, 0x553A3E48);
@@ -218,8 +224,9 @@ public final class AlphaModMenu extends GuiScreen {
             return;
         }
         if (button.id >= CATEGORY_BASE
-                && button.id < CATEGORY_BASE + AlphaModule.Category.values().length) {
-            selectedCategory = AlphaModule.Category.values()[button.id - CATEGORY_BASE];
+                && visibleCategories != null
+                && button.id < CATEGORY_BASE + visibleCategories.size()) {
+            selectedCategory = visibleCategories.get(button.id - CATEGORY_BASE);
             scrollOffset = 0;
             List<AlphaModule> modules = AlphaModuleRegistry.getForCategory(selectedCategory);
             selectedModuleId = modules.isEmpty() ? "" : modules.get(0).getId();
@@ -228,11 +235,12 @@ public final class AlphaModMenu extends GuiScreen {
         }
         if (button.id == TOGGLE_MODULE) {
             AlphaModule selected = getSelectedModule();
+            if (selected != null && "staffmods".equals(selected.getId())) {
+                if (PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffModsGui(this));
+                return;
+            }
             if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
                 selected.setEnabled(!selected.isEnabled());
-                if ("staffmods".equals(selected.getId())) {
-                    com.alpharip.alphaclient.AlphaClient.syncBhopModuleState();
-                }
             }
             initGui();
             return;
