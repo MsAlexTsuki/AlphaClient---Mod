@@ -27,7 +27,6 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int MODULE_BASE = 100;
     private static final int EXIT = 300;
     private static final int ACCOUNT = 301;
-    private static final int OPEN_SETTINGS = 302;
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
@@ -119,12 +118,6 @@ public final class AlphaModMenu extends GuiScreen {
                     moduleLabel, filtered.get(i).getId().equals(selectedModuleId)));
         }
 
-        AlphaModule selected = getSelectedModule();
-        if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
-            buttonList.add(new AlphaButton(OPEN_SETTINGS, settingsLeft + 6, contentBottom - 25,
-                    Math.max(86, panelLeft + panelWidth - 14 - (settingsLeft + 6)), 20,
-                    "OPEN SETTINGS", true));
-        }
     }
 
     private List<AlphaModule> getFilteredModules() {
@@ -280,25 +273,19 @@ public final class AlphaModMenu extends GuiScreen {
                 selectedCategory = category;
                 selectedModuleId = "";
             }
-        } else if (button.id == OPEN_SETTINGS) {
-            AlphaModule selected = getSelectedModule();
-            if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
-                if ("staffmods".equals(selected.getId())) {
-                    mc.displayGuiScreen(new BhopSettingsGui(this));
-                } else if ("quality".equals(selected.getId())) {
-                    mc.displayGuiScreen(new QualityGui(this));
-                }
-            }
-            return;
-        } else if (button.id >= MODULE_BASE) {
+} else if (button.id >= MODULE_BASE) {
             List<AlphaModule> modules = getFilteredModules();
             int index = button.id - MODULE_BASE;
             if (index >= 0 && index < modules.size()) {
                 AlphaModule clickedModule = modules.get(index);
-                if ("quality".equals(clickedModule.getId())
-                        && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                    mc.displayGuiScreen(new QualityGui(this));
-                    return;
+                if (clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                    if ("quality".equals(clickedModule.getId())) {
+                        mc.displayGuiScreen(new QualityGui(this));
+                        return;
+                    } else if ("staffmods".equals(clickedModule.getId())) {
+                        mc.displayGuiScreen(new BhopSettingsGui(this));
+                        return;
+                    }
                 }
                 selectedModuleId = clickedModule.getId();
             }
