@@ -18,7 +18,7 @@ public final class AlphaModuleRegistry {
                 "staffmods",
                 "BHOP",
                 "Retained AlphaClient movement module.",
-                AlphaModule.Category.PUBLIC,
+                AlphaModule.Category.MOD,
                 true,
                 false
         );
