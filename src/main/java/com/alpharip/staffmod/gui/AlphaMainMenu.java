@@ -32,7 +32,7 @@ public final class AlphaMainMenu extends GuiMainMenu {
 
     private static final int ACCENT = 0xFFFFD866;
     private static final ResourceLocation ALPHA_LOGO =
-            new ResourceLocation("alphastaffmod", "textures/gui/alpha_launcher_logo.png");
+            new ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
     private int sidebarWidth;
     private int menuButtonWidth;
     private int menuButtonHeight;
@@ -71,7 +71,7 @@ public final class AlphaMainMenu extends GuiMainMenu {
         drawRect(0, 0, width, height, 0x12FFD866);
         drawGradientRect(0, 0, width, Math.min(height, 180), 0x28FFD866, 0x00FFD866);
         drawGradientRect(0, Math.max(0, height - 90), width, height, 0x00FFD866, 0x35FFD866);
-        int logoSize = Math.min(220, Math.max(150, height / 4));
+        int logoSize = Math.min(180, Math.max(112, height / 5));
         int logoX = (width - logoSize) / 2;
         int logoY = 30;
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
