@@ -49,37 +49,37 @@ public final class AlphaModMenu extends GuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
-        panelWidth = Math.min(610, Math.max(440, width - 80));
-        panelHeight = Math.min(320, Math.max(250, height - 70));
+        panelWidth = Math.min(500, Math.max(390, width - 100));
+        panelHeight = Math.min(270, Math.max(220, height - 100));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
-        sidebarWidth = 88;
+        sidebarWidth = 70;
         contentLeft = panelLeft + sidebarWidth + 10;
-        contentRight = panelLeft + panelWidth - 126;
-        contentTop = panelTop + 58;
-        contentBottom = panelTop + panelHeight - 30;
+        contentRight = panelLeft + panelWidth - 112;
+        contentTop = panelTop + 49;
+        contentBottom = panelTop + panelHeight - 25;
         settingsLeft = contentRight + 8;
 
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj,
-                contentLeft + 4, panelTop + 27, Math.max(100, contentRight - contentLeft - 8), 17);
+                contentLeft + 3, panelTop + 25, Math.max(80, contentRight - contentLeft - 6), 15);
         searchField.setMaxStringLength(48);
         searchField.setText(searchText);
         searchField.setFocused(searchFocused);
         searchField.setEnableBackgroundDrawing(true);
         searchField.setTextColor(0xFFE7E9EE);
         searchField.setDisabledTextColour(0xFFB8BDC8);
-        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 62, panelTop + 8, 54, 20, "CLOSE"));
-        buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + panelWidth - 132, panelTop + 8, 62, 20, "ACCOUNT"));
-        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 8, panelTop + panelHeight - 30, 104, 22, "HUD EDITOR"));
-        buttonList.add(new AlphaButton(CATEGORY_BASE + 3, panelLeft + 7, panelTop + 58, sidebarWidth - 14, 24,
+        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 54, panelTop + 7, 46, 17, "CLOSE"));
+        buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + panelWidth - 115, panelTop + 7, 54, 17, "ACCOUNT"));
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 7, panelTop + panelHeight - 23, 88, 17, "HUD EDITOR"));
+        buttonList.add(new AlphaButton(CATEGORY_BASE + 3, panelLeft + 6, panelTop + 49, sidebarWidth - 12, 21,
                 "BHOP", true));
 
         List<AlphaModule> filtered = getFilteredModules();
         int gridWidth = Math.max(180, contentRight - contentLeft);
         int gap = 8;
         int tileWidth = (gridWidth - gap) / 2;
-        int tileHeight = 32;
-        int rowGap = 5;
+        int tileHeight = 26;
+        int rowGap = 4;
         int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
         int start = Math.min(scrollOffset, Math.max(0, filtered.size() - visibleRows * 2));
         for (int i = start; i < filtered.size() && i < start + visibleRows * 2; i++) {
@@ -95,8 +95,8 @@ public final class AlphaModMenu extends GuiScreen {
 
         AlphaModule selected = getSelectedModule();
         if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
-            buttonList.add(new AlphaButton(OPEN_SETTINGS, settingsLeft + 10, contentBottom - 31,
-                    Math.max(105, panelLeft + panelWidth - 18 - (settingsLeft + 10)), 24,
+            buttonList.add(new AlphaButton(OPEN_SETTINGS, settingsLeft + 6, contentBottom - 25,
+                    Math.max(86, panelLeft + panelWidth - 14 - (settingsLeft + 6)), 20,
                     "OPEN SETTINGS", true));
         }
     }
@@ -138,17 +138,17 @@ public final class AlphaModMenu extends GuiScreen {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1F, 1F, 1F, 1F);
-        drawModalRectWithCustomSizedTexture(panelLeft + 10, panelTop + 8, 0, 0, 26, 26, 256, 256);
-        drawString(fontRendererObj, "ALPHA", panelLeft + 42, panelTop + 9, 0xFFF0F1F4);
-        drawString(fontRendererObj, "C L I E N T", panelLeft + 42, panelTop + 20, ACCENT);
+        drawModalRectWithCustomSizedTexture(panelLeft + 8, panelTop + 7, 0, 0, 21, 21, 256, 256);
+        drawString(fontRendererObj, "ALPHA", panelLeft + 33, panelTop + 7, 0xFFF0F1F4);
+        drawString(fontRendererObj, "CLIENT", panelLeft + 33, panelTop + 17, ACCENT);
         drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
-                + " modules", contentLeft + 4, panelTop + 12, 0xFFB8BDC8);
+                + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
         searchField.drawTextBox();
 
-        drawString(fontRendererObj, "BROWSE", panelLeft + 7, panelTop + 46, 0xFFB8BDC8);
+        drawString(fontRendererObj, "BROWSE", panelLeft + 6, panelTop + 39, 0xFFB8BDC8);
         drawString(fontRendererObj, selectedCategory.getTitle().toUpperCase(Locale.ROOT),
-                contentLeft + 4, contentTop - 11, ACCENT);
-        drawString(fontRendererObj, "DETAILS", settingsLeft + 7, panelTop + 46, 0xFFB8BDC8);
+                contentLeft + 3, contentTop - 9, ACCENT);
+        drawString(fontRendererObj, "DETAILS", settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
 
         List<AlphaModule> modules = getFilteredModules();
         int gridWidth = Math.max(180, contentRight - contentLeft);
@@ -168,24 +168,24 @@ public final class AlphaModMenu extends GuiScreen {
 
         AlphaModule selected = getSelectedModule();
         if (selected != null) {
-            drawRect(settingsLeft + 5, panelTop + 69, right - 8, panelTop + 108, 0xB5161820);
-            drawString(fontRendererObj, selected.getName(), settingsLeft + 12, panelTop + 78, 0xFFF3F4F6);
+            drawRect(settingsLeft + 4, panelTop + 57, right - 6, panelTop + 89, 0xB5161820);
+            drawString(fontRendererObj, selected.getName(), settingsLeft + 9, panelTop + 64, 0xFFF3F4F6);
             boolean selectedHeaderEnabled = "staffmods".equals(selected.getId())
                     ? BhopMode.isEnabled() : selected.isEnabled();
             drawString(fontRendererObj, selectedHeaderEnabled ? "ON" : "OFF",
-                    settingsLeft + 12, panelTop + 92, selectedHeaderEnabled ? 0xFF9CE2AC : 0xFF9A9EAA);
-            drawWrappedText(selected.getDescription(), settingsLeft + 7, panelTop + 119,
-                    Math.max(100, right - settingsLeft - 22), 0xFFB9BDC6);
+                    settingsLeft + 9, panelTop + 77, selectedHeaderEnabled ? 0xFF9CE2AC : 0xFF9A9EAA);
+            drawWrappedText(selected.getDescription(), settingsLeft + 5, panelTop + 97,
+                    Math.max(84, right - settingsLeft - 16), 0xFFB9BDC6);
 
-            drawRect(settingsLeft + 5, panelTop + 161, right - 8, panelTop + 162, 0x553F424A);
-            drawString(fontRendererObj, "OPTIONS", settingsLeft + 7, panelTop + 172, ACCENT);
-            int y = panelTop + 190;
-            drawString(fontRendererObj, "Status", settingsLeft + 10, y, 0xFFB8BDC8);
+            drawRect(settingsLeft + 4, panelTop + 132, right - 6, panelTop + 133, 0x553F424A);
+            drawString(fontRendererObj, "OPTIONS", settingsLeft + 5, panelTop + 140, ACCENT);
+            int y = panelTop + 156;
+            drawString(fontRendererObj, "Status", settingsLeft + 7, y, 0xFFB8BDC8);
             boolean selectedEnabled = "staffmods".equals(selected.getId())
                     ? BhopMode.isEnabled() : selected.isEnabled();
-            drawString(fontRendererObj, selectedEnabled ? "ON" : "OFF", settingsLeft + 65, y,
+            drawString(fontRendererObj, selectedEnabled ? "ON" : "OFF", settingsLeft + 49, y,
                     selectedEnabled ? 0xFF9CE2AC : 0xFFB9BDC6);
-            y += 17;
+            y += 11;
             
             List<AlphaModuleFeature> features = selected.getFeatures();
             if (features.isEmpty()) {
@@ -193,19 +193,19 @@ public final class AlphaModMenu extends GuiScreen {
                         : "Not implemented yet.", settingsLeft + 10, y,
                         Math.max(100, right - settingsLeft - 22), 0xFFB8BDC8);
             } else {
-                for (int i = 0; i < features.size() && y < contentBottom - 28; i++) {
+                for (int i = 0; i < features.size() && y < contentBottom - 18; i++) {
                     AlphaModuleFeature feature = features.get(i);
-                    drawString(fontRendererObj, feature.getName(), settingsLeft + 10, y,
+                    drawString(fontRendererObj, feature.getName(), settingsLeft + 7, y,
                             feature.isAvailable() ? 0xFF9CE2AC : 0xFFB9BDC6);
                     y += 13;
                 }
             }
         } else {
-            drawString(fontRendererObj, "No modules found.", settingsLeft + 10, panelTop + 91, 0xFFB8BDC8);
+            drawString(fontRendererObj, "No modules found.", settingsLeft + 7, panelTop + 79, 0xFFB8BDC8);
         }
 
         drawString(fontRendererObj, "RANK: " + (SupabaseCommunityService.isSignedIn() ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK"),
-                settingsLeft + 7, bottom - 14, SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
+                settingsLeft + 5, bottom - 11, SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
