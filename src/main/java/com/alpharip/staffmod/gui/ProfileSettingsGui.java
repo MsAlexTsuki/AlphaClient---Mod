@@ -80,6 +80,13 @@ public class ProfileSettingsGui extends ModernGuiScreen {
                         22
                 );
 
+        profileField.setTextColor(0xFFF4F5F8);
+        profileField.setDisabledTextColour(0xFFB8BDC8);
+        nameField.setTextColor(0xFFF4F5F8);
+        nameField.setDisabledTextColour(0xFFB8BDC8);
+        colorField.setTextColor(0xFFF4F5F8);
+        colorField.setDisabledTextColour(0xFFB8BDC8);
+
         profileField.setMaxStringLength(32);
         nameField.setMaxStringLength(32);
         colorField.setMaxStringLength(16);
@@ -827,7 +834,7 @@ profile.setModule(
                 "Select a saved profile.",
                 centerX - 125,
                 122,
-                0x888888
+                0xFFB8BDC8
         );
 
         drawTextFieldBackground(
@@ -865,7 +872,7 @@ profile.setModule(
                 "Name shown for this BHOP profile.",
                 panelLeft + 25,
                 240,
-                0x888888
+                0xFFB8BDC8
         );
 
         drawTextFieldBackground(
@@ -890,7 +897,7 @@ profile.setModule(
                 "Profile display color.",
                 panelRight - 275,
                 240,
-                0x888888
+                0xFFB8BDC8
         );
 
         drawTextFieldBackground(
@@ -916,7 +923,7 @@ profile.setModule(
                         + BhopMode.getSpeedLevelName(),
                 panelLeft + 25,
                 323,
-                0xAAAAAA
+                0xFFD0D3DB
         );
 
         this.fontRendererObj.drawStringWithShadow(

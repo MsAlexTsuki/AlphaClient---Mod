@@ -67,7 +67,7 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setFocused(searchFocused);
         searchField.setEnableBackgroundDrawing(true);
         searchField.setTextColor(0xFFE7E9EE);
-        searchField.setDisabledTextColour(0xFF858B98);
+        searchField.setDisabledTextColour(0xFFB8BDC8);
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 62, panelTop + 8, 54, 20, "CLOSE"));
         buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + panelWidth - 132, panelTop + 8, 62, 20, "ACCOUNT"));
         buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 8, panelTop + panelHeight - 30, 104, 22, "HUD EDITOR"));
@@ -142,13 +142,13 @@ public final class AlphaModMenu extends GuiScreen {
         drawString(fontRendererObj, "ALPHA", panelLeft + 42, panelTop + 9, 0xFFF0F1F4);
         drawString(fontRendererObj, "C L I E N T", panelLeft + 42, panelTop + 20, ACCENT);
         drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
-                + " modules", contentLeft + 4, panelTop + 12, 0xFF858B98);
+                + " modules", contentLeft + 4, panelTop + 12, 0xFFB8BDC8);
         searchField.drawTextBox();
 
-        drawString(fontRendererObj, "BROWSE", panelLeft + 7, panelTop + 46, 0xFF9297A2);
+        drawString(fontRendererObj, "BROWSE", panelLeft + 7, panelTop + 46, 0xFFB8BDC8);
         drawString(fontRendererObj, selectedCategory.getTitle().toUpperCase(Locale.ROOT),
                 contentLeft + 4, contentTop - 11, ACCENT);
-        drawString(fontRendererObj, "DETAILS", settingsLeft + 7, panelTop + 46, 0xFF9297A2);
+        drawString(fontRendererObj, "DETAILS", settingsLeft + 7, panelTop + 46, 0xFFB8BDC8);
 
         List<AlphaModule> modules = getFilteredModules();
         int gridWidth = Math.max(180, contentRight - contentLeft);
@@ -180,7 +180,7 @@ public final class AlphaModMenu extends GuiScreen {
             drawRect(settingsLeft + 5, panelTop + 161, right - 8, panelTop + 162, 0x553F424A);
             drawString(fontRendererObj, "OPTIONS", settingsLeft + 7, panelTop + 172, ACCENT);
             int y = panelTop + 190;
-            drawString(fontRendererObj, "Status", settingsLeft + 10, y, 0xFF969BA6);
+            drawString(fontRendererObj, "Status", settingsLeft + 10, y, 0xFFB8BDC8);
             boolean selectedEnabled = "staffmods".equals(selected.getId())
                     ? BhopMode.isEnabled() : selected.isEnabled();
             drawString(fontRendererObj, selectedEnabled ? "ON" : "OFF", settingsLeft + 65, y,
@@ -191,7 +191,7 @@ public final class AlphaModMenu extends GuiScreen {
             if (features.isEmpty()) {
                 drawWrappedText(selected.isImplemented() ? "No extra options available yet."
                         : "Not implemented yet.", settingsLeft + 10, y,
-                        Math.max(100, right - settingsLeft - 22), 0xFF858B98);
+                        Math.max(100, right - settingsLeft - 22), 0xFFB8BDC8);
             } else {
                 for (int i = 0; i < features.size() && y < contentBottom - 28; i++) {
                     AlphaModuleFeature feature = features.get(i);
@@ -201,11 +201,11 @@ public final class AlphaModMenu extends GuiScreen {
                 }
             }
         } else {
-            drawString(fontRendererObj, "No modules found.", settingsLeft + 10, panelTop + 91, 0xFF858B98);
+            drawString(fontRendererObj, "No modules found.", settingsLeft + 10, panelTop + 91, 0xFFB8BDC8);
         }
 
         drawString(fontRendererObj, "RANK: " + (SupabaseCommunityService.isSignedIn() ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK"),
-                settingsLeft + 7, bottom - 14, SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFF858B98);
+                settingsLeft + 7, bottom - 14, SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 

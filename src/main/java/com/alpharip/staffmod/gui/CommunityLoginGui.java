@@ -31,8 +31,12 @@ public final class CommunityLoginGui extends GuiScreen {
         int fieldWidth = Math.min(270, width - 48);
         int fieldLeft = center - fieldWidth / 2;
         emailField = new GuiTextField(10, fontRendererObj, fieldLeft, 122, fieldWidth, 20);
+        emailField.setTextColor(0xFFF4F5F8);
+        emailField.setDisabledTextColour(0xFFB8BDC8);
         emailField.setMaxStringLength(254);
         passwordField = new GuiTextField(11, fontRendererObj, fieldLeft, 164, fieldWidth, 20);
+        passwordField.setTextColor(0xFFF4F5F8);
+        passwordField.setDisabledTextColour(0xFFB8BDC8);
         passwordField.setMaxStringLength(256);
         buttonList.clear();
         int buttonWidth = (fieldWidth - 8) / 2;
@@ -54,11 +58,11 @@ public final class CommunityLoginGui extends GuiScreen {
 
         drawString(fontRendererObj, "ALPHA COMMUNITY", left + 14, 51, 0xFFFFD866);
         drawString(fontRendererObj, "Sign in to verify your community rank", left + 14, 67, 0xFFF4F5F8);
-        drawString(fontRendererObj, "Your verified rank controls module access.", left + 14, 81, 0xFF9298A5);
+        drawString(fontRendererObj, "Your verified rank controls module access.", left + 14, 81, 0xFFB8BDC8);
         drawRect(left + 14, 96, right - 14, 97, 0xFF292D36);
 
-        drawString(fontRendererObj, "EMAIL ADDRESS", width / 2 - Math.min(270, width - 48) / 2, 109, 0xFF9298A5);
-        drawString(fontRendererObj, "PASSWORD", width / 2 - Math.min(270, width - 48) / 2, 151, 0xFF9298A5);
+        drawString(fontRendererObj, "EMAIL ADDRESS", width / 2 - Math.min(270, width - 48) / 2, 109, 0xFFB8BDC8);
+        drawString(fontRendererObj, "PASSWORD", width / 2 - Math.min(270, width - 48) / 2, 151, 0xFFB8BDC8);
         emailField.drawTextBox();
 
         // Draw a masked copy without persisting or writing the password to disk.

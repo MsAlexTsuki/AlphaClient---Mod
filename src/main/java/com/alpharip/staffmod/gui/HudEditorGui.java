@@ -35,7 +35,7 @@ public final class HudEditorGui extends GuiScreen {
         drawString(fontRendererObj, "ALPHA", left + 16, top + 12, ACCENT);
         drawString(fontRendererObj, "HUD EDITOR", left + 16, top + 27, 0xFFF1F3F7);
         drawString(fontRendererObj, "Drag the BHOP preview to move it.", left + 16, top + 48, 0xFFB9C0CB);
-        drawString(fontRendererObj, "Only the BHOP HUD is retained.", left + 16, top + 65, 0xFF858D99);
+        drawString(fontRendererObj, "Only the BHOP HUD is retained.", left + 16, top + 65, 0xFFB8BDC8);
 
         int x = BhopHud.getHudX(), y = BhopHud.getHudY();
         int w = Math.max(110, BhopHud.getHudWidth()), h = 28;

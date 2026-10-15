@@ -50,7 +50,7 @@ public class ModSettingsGui extends GuiScreen {
         drawRect(left, bottom - 1, right, bottom, 0xFF252525);
 
         drawCenteredString(this.fontRendererObj, "ALPHA CLIENT SETTINGS", centerX, 94, 0xFFFFFF);
-        drawCenteredString(this.fontRendererObj, "Configure BHOP", centerX, 112, 0x999999);
+        drawCenteredString(this.fontRendererObj, "Configure BHOP", centerX, 112, 0xFFB8BDC8);
         drawRect(centerX - 145, 132, centerX + 145, 133, 0xFF303030);
 
         super.drawScreen(mouseX, mouseY, partialTicks);

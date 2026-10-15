@@ -60,13 +60,13 @@ public final class StaffRankMenuGui extends GuiScreen {
         drawRect(left, top, left + panelWidth, top + 2, ACCENT);
         drawString(fontRendererObj, "ALPHA", left + 16, top + 15, ACCENT);
         drawString(fontRendererObj, "STAFF MODS", left + 16, top + 30, 0xFFF4F5F8);
-        drawString(fontRendererObj, "RANK CATEGORIES", left + 16, top + 46, 0xFF858B98);
+        drawString(fontRendererObj, "RANK CATEGORIES", left + 16, top + 46, 0xFFB8BDC8);
         if (categories.isEmpty()) {
             drawString(fontRendererObj, "No staff permissions are verified for this account.", left + 210, top + 72, 0xFFB8BDC8);
         } else if ("General".equals(selected)) {
             drawString(fontRendererObj, "GENERAL", left + 220, top + 48, ACCENT);
             drawString(fontRendererObj, "General staff tools available to your account.", left + 220, top + 64, 0xFFB8BDC8);
-            drawString(fontRendererObj, "Choose a mod to open its settings.", left + 220, top + 81, 0xFF858B98);
+            drawString(fontRendererObj, "Choose a mod to open its settings.", left + 220, top + 81, 0xFFB8BDC8);
         } else {
             drawString(fontRendererObj, selected.toUpperCase(), left + 220, top + 48, ACCENT);
             drawString(fontRendererObj, "No tools are configured for this rank yet.", left + 220, top + 68, 0xFFB8BDC8);
