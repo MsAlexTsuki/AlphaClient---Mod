@@ -85,7 +85,7 @@ public final class AlphaClient {
 
         if (openModMenuKey != null && openModMenuKey.isPressed()) {
             if (minecraft.currentScreen == null) {
-                minecraft.displayGuiScreen(new AlphaMainMenu());
+                minecraft.displayGuiScreen(new AlphaModMenu(null));
             }
             return;
         }
