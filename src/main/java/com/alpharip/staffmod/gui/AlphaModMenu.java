@@ -37,6 +37,8 @@ public final class AlphaModMenu extends GuiScreen {
     private int settingsLeft;
     private int scrollOffset;
     private GuiTextField searchField;
+    private String searchText = "";
+    private boolean searchFocused;
 
     public AlphaModMenu(GuiScreen parent) { this.parent = parent; }
 
@@ -57,11 +59,11 @@ public final class AlphaModMenu extends GuiScreen {
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj,
                 contentLeft + 4, panelTop + 31, Math.max(120, contentRight - contentLeft - 8), 20);
         searchField.setMaxStringLength(48);
+        searchField.setText(searchText);
+        searchField.setFocused(searchFocused);
         searchField.setEnableBackgroundDrawing(true);
         searchField.setTextColor(0xFFE7E9EE);
         searchField.setDisabledTextColour(0xFF858B98);
-        searchField.setFocused(false);
-
         buttonList.add(new AlphaButton(BACK, panelLeft + 12, panelTop + panelHeight - 29, 56, 18, "CLOSE"));
         buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + 73, panelTop + panelHeight - 29, 118, 18, "COMMUNITY"));
         buttonList.add(new AlphaButton(CATEGORY_BASE, panelLeft + 12, panelTop + 82, sidebarWidth - 22, 23,
@@ -277,15 +279,19 @@ public final class AlphaModMenu extends GuiScreen {
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (searchField != null && searchField.isFocused()) {
             if (keyCode == Keyboard.KEY_ESCAPE) {
+                searchFocused = false;
                 searchField.setFocused(false);
             } else {
                 searchField.textboxKeyTyped(typedChar, keyCode);
+                searchText = searchField.getText();
+                searchFocused = true;
                 scrollOffset = 0;
                 initGui();
             }
             return;
         }
         if (keyCode == Keyboard.KEY_SLASH) {
+            searchFocused = true;
             searchField.setFocused(true);
             return;
         }
@@ -295,7 +301,10 @@ public final class AlphaModMenu extends GuiScreen {
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
-        if (searchField != null) searchField.mouseClicked(mouseX, mouseY, mouseButton);
+        if (searchField != null) {
+            searchField.mouseClicked(mouseX, mouseY, mouseButton);
+            searchFocused = searchField.isFocused();
+        }
     }
 
     @Override
