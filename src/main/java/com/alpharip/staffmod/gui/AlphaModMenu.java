@@ -236,7 +236,7 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == TOGGLE_MODULE) {
             AlphaModule selected = getSelectedModule();
             if (selected != null && "staffmods".equals(selected.getId())) {
-                if (PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffModsGui(this));
+                if (PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffRankMenuGui(this));
                 return;
             }
             if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
