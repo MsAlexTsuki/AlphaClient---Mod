@@ -120,22 +120,44 @@ public final class SupabaseCommunityService {
         if (founder || "founder".equalsIgnoreCase(rankKey)) {
             return PermissionService.Rank.FOUNDER;
         }
-        if ("beta".equalsIgnoreCase(rankKey)) {
-            return PermissionService.Rank.BETA;
+        if (rankKey == null) return PermissionService.Rank.PUBLIC;
+
+        String normalized = rankKey.trim().toLowerCase(java.util.Locale.ROOT)
+                .replace('-', '_').replace(' ', '_');
+        switch (normalized) {
+            case "beta":
+                return PermissionService.Rank.BETA;
+            case "alpha":
+            case "alpha_plus":
+            case "donator":
+                return PermissionService.Rank.DONATOR;
+            case "t_mod":
+            case "trial_mod":
+            case "trial_moderator":
+            case "tmod":
+                return PermissionService.Rank.T_MOD;
+            case "mod":
+            case "moderator":
+                return PermissionService.Rank.MOD;
+            case "sr_mod":
+            case "senior_mod":
+            case "senior_moderator":
+            case "smod":
+                return PermissionService.Rank.SR_MOD;
+            case "admin":
+                return PermissionService.Rank.ADMIN;
+            case "sr_admin":
+            case "senior_admin":
+            case "sadmin":
+                return PermissionService.Rank.SR_ADMIN;
+            case "management":
+            case "manager":
+                return PermissionService.Rank.MANAGEMENT;
+            case "owner":
+                return PermissionService.Rank.OWNER;
+            default:
+                return PermissionService.Rank.PUBLIC;
         }
-        if ("alpha".equalsIgnoreCase(rankKey) || "alpha_plus".equalsIgnoreCase(rankKey)) {
-            return PermissionService.Rank.DONATOR;
-        }
-        if ("owner".equalsIgnoreCase(rankKey)
-                || "management".equalsIgnoreCase(rankKey)
-                || "senior_admin".equalsIgnoreCase(rankKey)
-                || "admin".equalsIgnoreCase(rankKey)
-                || "senior_moderator".equalsIgnoreCase(rankKey)
-                || "moderator".equalsIgnoreCase(rankKey)
-                || "trial_moderator".equalsIgnoreCase(rankKey)) {
-            return PermissionService.Rank.STAFF;
-        }
-        return PermissionService.Rank.PUBLIC;
     }
 
     private static JsonObject requestJson(String method, String path, String bearer, String body) throws Exception {
