@@ -57,9 +57,9 @@ public final class AlphaMainMenu extends GuiMainMenu {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
-        drawRect(0, 0, width, height, 0x22000000);
-        drawGradientRect(0, 0, width, Math.min(height, 180), 0x66070A10, 0x00070A10);
-        drawGradientRect(0, Math.max(0, height - 90), width, height, 0x00070A10, 0x99070A10);
+        drawRect(0, 0, width, height, 0x12FFD866);
+        drawGradientRect(0, 0, width, Math.min(height, 180), 0x28FFD866, 0x00FFD866);
+        drawGradientRect(0, Math.max(0, height - 90), width, height, 0x00FFD866, 0x35FFD866);
         int logoSize = Math.min(230, Math.max(150, height / 3));
         int logoX = (width - logoSize) / 2;
         int logoY = Math.max(20, height / 2 - logoSize - 32);
