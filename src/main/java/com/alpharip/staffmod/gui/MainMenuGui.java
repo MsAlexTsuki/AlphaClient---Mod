@@ -127,7 +127,7 @@ public class MainMenuGui extends ModernGuiScreen {
         if (button.id == BUTTON_STAFF_MODS) {
 
             this.mc.displayGuiScreen(
-                    new StaffModsGui(this)
+                    new StaffModsMenuGui(this)
             );
 
             return;
