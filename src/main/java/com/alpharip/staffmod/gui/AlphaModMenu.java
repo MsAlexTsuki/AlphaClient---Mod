@@ -110,7 +110,8 @@ public final class AlphaModMenu extends GuiScreen {
             int x = contentLeft + (local % 2) * (tileWidth + gap);
             int y = contentTop + (local / 2) * (tileHeight + rowGap);
             String moduleStatus = "staffmods".equals(filtered.get(i).getId())
-                    ? (BhopMode.isEnabled() ? "ON" : "OFF") : filtered.get(i).getStatusLabel();
+                    ? (BhopMode.isEnabled() ? "ON" : "OFF")
+                    : ("quality".equals(filtered.get(i).getId()) ? "SETTINGS" : filtered.get(i).getStatusLabel());
             String moduleLabel = filtered.get(i).getName() + "  |  " + moduleStatus;
             buttonList.add(new AlphaButton(MODULE_BASE + i, x, y, tileWidth, tileHeight,
                     moduleLabel, filtered.get(i).getId().equals(selectedModuleId)));
@@ -194,19 +195,28 @@ public final class AlphaModMenu extends GuiScreen {
             drawString(fontRendererObj, selected.getName(), settingsLeft + 9, panelTop + 64, 0xFFF3F4F6);
             boolean selectedHeaderEnabled = "staffmods".equals(selected.getId())
                     ? BhopMode.isEnabled() : selected.isEnabled();
-            drawString(fontRendererObj, selectedHeaderEnabled ? "ON" : "OFF",
-                    settingsLeft + 9, panelTop + 77, selectedHeaderEnabled ? 0xFF9CE2AC : 0xFF9A9EAA);
+            if ("quality".equals(selected.getId())) {
+                drawString(fontRendererObj, "MENU", settingsLeft + 9, panelTop + 77, ACCENT);
+            } else {
+                drawString(fontRendererObj, selectedHeaderEnabled ? "ON" : "OFF",
+                        settingsLeft + 9, panelTop + 77, selectedHeaderEnabled ? 0xFF9CE2AC : 0xFF9A9EAA);
+            }
             drawWrappedText(selected.getDescription(), settingsLeft + 5, panelTop + 97,
                     Math.max(84, right - settingsLeft - 16), 0xFFB9BDC6);
 
             drawRect(settingsLeft + 4, panelTop + 132, right - 6, panelTop + 133, 0x553F424A);
             drawString(fontRendererObj, "OPTIONS", settingsLeft + 5, panelTop + 140, ACCENT);
             int y = panelTop + 156;
-            drawString(fontRendererObj, "Status", settingsLeft + 7, y, 0xFFB8BDC8);
-            boolean selectedEnabled = "staffmods".equals(selected.getId())
-                    ? BhopMode.isEnabled() : selected.isEnabled();
-            drawString(fontRendererObj, selectedEnabled ? "ON" : "OFF", settingsLeft + 49, y,
-                    selectedEnabled ? 0xFF9CE2AC : 0xFFB9BDC6);
+            if ("quality".equals(selected.getId())) {
+                drawString(fontRendererObj, "Type", settingsLeft + 7, y, 0xFFB8BDC8);
+                drawString(fontRendererObj, "Menu", settingsLeft + 49, y, ACCENT);
+            } else {
+                drawString(fontRendererObj, "Status", settingsLeft + 7, y, 0xFFB8BDC8);
+                boolean selectedEnabled = "staffmods".equals(selected.getId())
+                        ? BhopMode.isEnabled() : selected.isEnabled();
+                drawString(fontRendererObj, selectedEnabled ? "ON" : "OFF", settingsLeft + 49, y,
+                        selectedEnabled ? 0xFF9CE2AC : 0xFFB9BDC6);
+            }
             y += 11;
             
             List<AlphaModuleFeature> features = selected.getFeatures();
