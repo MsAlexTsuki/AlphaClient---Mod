@@ -67,7 +67,7 @@ public final class AlphaMainMenu extends GuiMainMenu {
         // Cover the vanilla Minecraft logo while keeping the animated panorama visible.
         int logoCoverWidth = Math.min(560, width - 40);
         int logoCoverLeft = (width - logoCoverWidth) / 2;
-        drawRect(logoCoverLeft, 22, logoCoverLeft + logoCoverWidth, Math.min(height / 2, 174), 0x40202020);
+        drawRect(logoCoverLeft, 22, logoCoverLeft + logoCoverWidth, Math.min(height / 2, 174), 0xC0101115);
         drawRect(0, 0, width, height, 0x12FFD866);
         drawGradientRect(0, 0, width, Math.min(height, 180), 0x28FFD866, 0x00FFD866);
         drawGradientRect(0, Math.max(0, height - 90), width, height, 0x00FFD866, 0x35FFD866);
