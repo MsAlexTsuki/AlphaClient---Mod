@@ -442,13 +442,6 @@ public class StaffModsGui extends ModernGuiScreen {
 
             String label = modules[i];
 
-            /*
-             * Dubble Jump is always displayed simply as "Dubble Jump".
-             * Its ON/OFF status is handled inside DubbleJumpGui instead.
-             */
-            if ("LONGJUMP".equals(label)) {
-                label = "Dubble Jump";
-            }
 
             drawListRow(
                     x,

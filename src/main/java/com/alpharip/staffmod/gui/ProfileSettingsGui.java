@@ -1,7 +1,5 @@
 package com.alpharip.staffmod.gui;
 
-import com.alpharip.staffmod.modules.LongJumpMod;
-import com.alpharip.staffmod.modules.NoFallMod;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.profile.Profile;
 import com.alpharip.staffmod.profile.ProfileManager;
@@ -325,32 +323,6 @@ public class ProfileSettingsGui extends ModernGuiScreen {
 
         /*
          * =========================
-         * DUBBLE JUMP
-         * =========================
-         */
-
-        selectedProfile.setModule(
-                "LONGJUMP",
-                LongJumpMod
-                        .getInstance()
-                        .isEnabled()
-        );
-
-        /*
-         * =========================
-         * NOFALL
-         * =========================
-         */
-
-        selectedProfile.setModule(
-                "NOFALL",
-                NoFallMod
-                        .getInstance()
-                        .isEnabled()
-        );
-
-        /*
-         * =========================
          * SAVE
          * =========================
          */
@@ -444,12 +416,7 @@ public class ProfileSettingsGui extends ModernGuiScreen {
         profile.setBhopName("BHOP");
         profile.setBhopColor("#55FF55");
 
-        profile.setModule(
-                "LONGJUMP",
-                false
-        );
-
-        profile.setModule(
+profile.setModule(
                 "NOFALL",
                 false
         );
@@ -972,46 +939,6 @@ public class ProfileSettingsGui extends ModernGuiScreen {
                 panelLeft + 300,
                 323,
                 BhopMode.isShiftUpEnabled()
-                        ? 0x55FF55
-                        : 0xFF5555
-        );
-
-        /*
-         * DUBBLE JUMP
-         */
-
-        this.fontRendererObj.drawStringWithShadow(
-                "Dubble Jump: "
-                        + (LongJumpMod
-                        .getInstance()
-                        .isEnabled()
-                        ? "ON"
-                        : "OFF"),
-                panelLeft + 25,
-                340,
-                LongJumpMod
-                        .getInstance()
-                        .isEnabled()
-                        ? 0x55FF55
-                        : 0xFF5555
-        );
-
-        /*
-         * NOFALL
-         */
-
-        this.fontRendererObj.drawStringWithShadow(
-                "NoFall: "
-                        + (NoFallMod
-                        .getInstance()
-                        .isEnabled()
-                        ? "ON"
-                        : "OFF"),
-                panelLeft + 180,
-                340,
-                NoFallMod
-                        .getInstance()
-                        .isEnabled()
                         ? 0x55FF55
                         : 0xFF5555
         );

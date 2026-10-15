@@ -1,7 +1,5 @@
 package com.alpharip.staffmod.profile;
 
-import com.alpharip.staffmod.modules.LongJumpMod;
-import com.alpharip.staffmod.modules.NoFallMod;
 import com.alpharip.staffmod.movement.BhopMode;
 
 import com.google.gson.Gson;
@@ -66,14 +64,7 @@ public final class ProfileManager {
      * Dit behouden we voor backwards compatibility.
      */
 
-    private static final String MODULE_DUBBLE_JUMP =
-            "LONGJUMP";
-
-    private static final String MODULE_NOFALL =
-            "NOFALL";
-
-
-    /*
+/*
      * =========================================================
      * GSON
      * =========================================================
@@ -603,30 +594,8 @@ public final class ProfileManager {
      * Alleen als deze nog niet bestaan.
      */
 
-    private void ensureModuleDefaults(
-            Profile profile) {
-
-        if (profile == null) {
-            return;
-        }
-
-        if (!profile.getModules()
-                .has(MODULE_DUBBLE_JUMP)) {
-
-            profile.setModule(
-                    MODULE_DUBBLE_JUMP,
-                    false
-            );
-        }
-
-        if (!profile.getModules()
-                .has(MODULE_NOFALL)) {
-
-            profile.setModule(
-                    MODULE_NOFALL,
-                    false
-            );
-        }
+    private void ensureModuleDefaults(Profile profile) {
+        // Legacy module flags are ignored; profile serialization stays backward-compatible.
     }
 
 
@@ -1088,36 +1057,6 @@ public final class ProfileManager {
 
         /*
          * =====================================================
-         * DUBBLE JUMP
-         * =====================================================
-         *
-         * LONGJUMP blijft de interne module-ID.
-         */
-
-        profile.setModule(
-                MODULE_DUBBLE_JUMP,
-                LongJumpMod
-                        .getInstance()
-                        .isEnabled()
-        );
-
-
-        /*
-         * =====================================================
-         * NOFALL
-         * =====================================================
-         */
-
-        profile.setModule(
-                MODULE_NOFALL,
-                NoFallMod
-                        .getInstance()
-                        .isEnabled()
-        );
-
-
-        /*
-         * =====================================================
          * SAVE
          * =====================================================
          */
@@ -1248,32 +1187,6 @@ public final class ProfileManager {
                 moduleName,
                 enabled
         );
-
-
-        /*
-         * Direct runtime assignment.
-         * No toggle().
-         */
-        if (MODULE_DUBBLE_JUMP.equals(
-                moduleName
-        )) {
-
-            LongJumpMod.getInstance()
-                    .setEnabled(
-                            enabled
-                    );
-        }
-
-
-        if (MODULE_NOFALL.equals(
-                moduleName
-        )) {
-
-            NoFallMod.getInstance()
-                    .setEnabled(
-                            enabled
-                    );
-        }
 
 
         save();
