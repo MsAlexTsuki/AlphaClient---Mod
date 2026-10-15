@@ -1,7 +1,6 @@
 package com.alpharip.staffmod;
 
 import com.alpharip.alphaclient.AlphaClient;
-import com.alpharip.staffmod.modules.LongJumpMod;
 import com.alpharip.staffmod.movement.BhopMode;
 
 /**
@@ -16,7 +15,6 @@ public final class StaffMod {
 
     public static AlphaClient instance;
     public static BhopMode bhopMode;
-    public static LongJumpMod longJumpMod;
 
     private StaffMod() {
     }
