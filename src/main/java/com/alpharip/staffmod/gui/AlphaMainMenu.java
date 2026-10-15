@@ -93,9 +93,21 @@ public final class AlphaMainMenu extends GuiScreen {
         drawRect(menuCardLeft, menuCardTop, menuCardLeft + 1, menuCardBottom, 0x334B515D);
 
         if (compactLayout) {
-            drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2, Math.max(12, menuTop - 35), 0xFFF3F0E8);
+            // Keep the Alpha logo visible in compact mode instead of hiding the entire brand panel.
+            int compactLogoWidth = Math.min(112, Math.max(56, width - 40));
+            int compactLogoHeight = compactLogoWidth * 448 / 512;
+            int compactLogoX = (width - compactLogoWidth) / 2;
+            int compactLogoY = Math.max(6, menuTop - compactLogoHeight - 42);
+            Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.enableBlend();
+            drawScaledCustomSizeModalRect(compactLogoX, compactLogoY, 0.0F, 0.0F, 512, 448,
+                    compactLogoWidth, compactLogoHeight, 512.0F, 448.0F);
+            GlStateManager.disableBlend();
+            drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2,
+                    compactLogoY + compactLogoHeight + 3, 0xFFF3F0E8);
             drawCenteredString(fontRendererObj, "MINECRAFT 1.8.9  /  FORGE", width / 2,
-                    Math.max(25, menuTop - 21), ACCENT);
+                    compactLogoY + compactLogoHeight + 15, ACCENT);
         } else {
             drawString(fontRendererObj, "ALPHA CLIENT", menuLeft, menuTop - 67, 0xFFF3F0E8);
             drawString(fontRendererObj, "YOUR NEXT MINECRAFT EXPERIENCE", menuLeft, menuTop - 49, ACCENT);
