@@ -29,6 +29,7 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int ACCOUNT = 301;
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
+    private static final int STAFF_MODS = 306;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -74,6 +75,9 @@ public final class AlphaModMenu extends GuiScreen {
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
+            if (category != AlphaModule.Category.PUBLIC
+                    && category != AlphaModule.Category.BETA
+                    && category != AlphaModule.Category.DONATOR) continue;
             if (!PermissionService.hasAccess(category.getRequiredRank())) continue;
             String label;
             switch (category) {
@@ -94,6 +98,10 @@ public final class AlphaModMenu extends GuiScreen {
                     panelLeft + 5, categoryY, sidebarWidth - 10, 20,
                     label, category == selectedCategory));
             categoryY += 23;
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) {
+            buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, categoryY,
+                    sidebarWidth - 10, 20, "STAFFMODS"));
         }
 
         List<AlphaModule> filtered = getFilteredModules();
@@ -266,6 +274,12 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
         if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
+        if (button.id == STAFF_MODS) {
+            if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) {
+                mc.displayGuiScreen(new StaffModsGui(this));
+            }
+            return;
+        }
         if (button.id >= CATEGORY_BASE
                 && button.id < CATEGORY_BASE + AlphaModule.Category.values().length) {
             AlphaModule.Category category = AlphaModule.Category.values()[button.id - CATEGORY_BASE];
