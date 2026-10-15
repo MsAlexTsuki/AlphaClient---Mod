@@ -38,83 +38,40 @@ public final class AlphaMainMenu extends GuiMainMenu {
 
     @Override
     public void initGui() {
-        // Initialize vanilla panorama state before replacing its default buttons.
+        // Keep vanilla's animated Minecraft panorama and replace only its controls.
         super.initGui();
         buttonList.clear();
-
-        sidebarWidth = Math.max(174, Math.min(204, width / 5));
-        menuButtonWidth = sidebarWidth - 40;
-        menuButtonHeight = 25;
-        menuButtonGap = 7;
-
-        int buttonX = (sidebarWidth - menuButtonWidth) / 2;
-        int firstButtonY = Math.max(118, Math.min(154, height / 2 - 58));
-
-        buttonList.add(new AlphaButton(PLAY, buttonX, firstButtonY,
-                menuButtonWidth, menuButtonHeight, "PLAY SINGLEPLAYER", true));
-        buttonList.add(new AlphaButton(MULTIPLAYER, buttonX, firstButtonY + menuButtonHeight + menuButtonGap,
-                menuButtonWidth, menuButtonHeight, "MULTIPLAYER"));
-        buttonList.add(new AlphaButton(MODULES, buttonX,
-                firstButtonY + (menuButtonHeight + menuButtonGap) * 2,
-                menuButtonWidth, menuButtonHeight, "MODULES"));
-        buttonList.add(new AlphaButton(OPTIONS, buttonX,
-                firstButtonY + (menuButtonHeight + menuButtonGap) * 3,
-                menuButtonWidth, menuButtonHeight, "SETTINGS"));
-        buttonList.add(new AlphaButton(PARTNER, buttonX,
-                firstButtonY + (menuButtonHeight + menuButtonGap) * 4,
-                menuButtonWidth, menuButtonHeight, "JOIN ALPHA.RIP"));
-        buttonList.add(new AlphaButton(QUIT, 20, height - 37, 64, 19, "QUIT"));
+        menuButtonWidth = Math.min(310, Math.max(220, width / 4));
+        menuButtonHeight = 34;
+        menuButtonGap = 8;
+        int centerX = width / 2;
+        int firstY = Math.max(245, height / 2 + 20);
+        int buttonX = centerX - menuButtonWidth / 2;
+        buttonList.add(new AlphaButton(PLAY, buttonX, firstY, menuButtonWidth, menuButtonHeight, "SPELEN", true));
+        buttonList.add(new AlphaButton(OPTIONS, buttonX, firstY + 42, menuButtonWidth, menuButtonHeight, "INSTELLINGEN"));
+        buttonList.add(new AlphaButton(MODULES, buttonX, firstY + 84, menuButtonWidth, menuButtonHeight, "MODS"));
+        buttonList.add(new AlphaButton(QUIT, buttonX, firstY + 126, menuButtonWidth, menuButtonHeight, "AFSLUITEN"));
+        buttonList.add(new AlphaButton(MULTIPLAYER, 20, 18, 190, 36, "ACCOUNT / MULTIPLAYER"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        /*
-         * Draw the vanilla menu first so its animated Minecraft panorama
-         * remains active. The custom interface is layered on top afterwards.
-         */
         super.drawScreen(mouseX, mouseY, partialTicks);
-
-        // A light global tint improves text contrast while keeping the scenery visible.
-        drawRect(0, 0, width, height, 0x30070A10);
-        // Fade the vanilla logo out into the sky rather than placing a large opaque panel over it.
-        drawGradientRect(0, 0, width, Math.min(height, 154),
-                0xE6101218, 0x00101218);
-        drawGradientRect(0, Math.max(0, height - 74), width, height,
-                0x00101218, 0xB8101218);
-
-        // Place the real Alpha logo directly over the panorama, without a backing box.
+        drawRect(0, 0, width, height, 0x22000000);
+        drawGradientRect(0, 0, width, Math.min(height, 180), 0x66070A10, 0x00070A10);
+        drawGradientRect(0, Math.max(0, height - 90), width, height, 0x00070A10, 0x99070A10);
+        int logoSize = Math.min(230, Math.max(150, height / 3));
+        int logoX = (width - logoSize) / 2;
+        int logoY = Math.max(20, height / 2 - logoSize - 32);
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        drawModalRectWithCustomSizedTexture(18, 16, 0, 0, 46, 46, 1238, 1238);
-        drawString(fontRendererObj, "ALPHA", 73, 23, ACCENT);
-        drawString(fontRendererObj, "CLIENT", 73, 36, 0xFFF5F6F8);
-        drawString(fontRendererObj, "MINECRAFT 1.8.9", 20, 69, 0xFFB2B6C0);
-        drawString(fontRendererObj, "FORGE EDITION", 20, 81, 0xFFB2B6C0);
-        drawString(fontRendererObj, "NAVIGATION", 20, 105, 0xFFB2B6C0);
-        drawString(fontRendererObj, "ALPHA.RIP  /  COMMUNITY",
-                sidebarWidth + 24, height - 22, 0xFFB2B6C0);
-        drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION,
-                94, height - 31, 0xFF777D89);
-
-        // Hero copy stays over the scenery, with no oversized central card.
-        int heroX = Math.min(width - 220, sidebarWidth + Math.max(28, (width - sidebarWidth) / 12));
-        int heroY = Math.max(42, height / 3 - 20);
-        drawString(fontRendererObj, "YOUR WORLD.", heroX, heroY, 0xFFF5F6F8);
-        drawString(fontRendererObj, "YOUR RULES.", heroX, heroY + 18, ACCENT);
-        drawRect(heroX, heroY + 38, heroX + 42, heroY + 40, ACCENT);
-        drawString(fontRendererObj, "A cleaner way to play Minecraft.",
-                heroX, heroY + 51, 0xFFD0D3DA);
-        drawString(fontRendererObj, "Choose a destination from the menu.",
-                heroX, heroY + 64, 0xFF9DA3AE);
-
-        // Redraw the custom controls above the tint and background overlays.
-        for (GuiButton button : buttonList) {
-            button.drawButton(Minecraft.getMinecraft(), mouseX, mouseY);
-        }
-
+        drawModalRectWithCustomSizedTexture(logoX, logoY, 0, 0, logoSize, logoSize, 1238, 1238);
+        drawString(fontRendererObj, "Play Different.", width - 116, height - 42, ACCENT);
+        drawString(fontRendererObj, "AlphaClient  |  Minecraft 1.8.9", 20, height - 18, 0xFFB2B6C0);
+        drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION, width - 70, height - 18, 0xFFB2B6C0);
+        for (GuiButton button : buttonList) button.drawButton(Minecraft.getMinecraft(), mouseX, mouseY);
         GlStateManager.disableLighting();
     }
-
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) {
