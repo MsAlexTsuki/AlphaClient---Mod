@@ -29,8 +29,8 @@ public final class AlphaButton extends GuiButton {
             background = 0xA512141A;
             foreground = 0xFF777D88;
         } else if (primary) {
-            background = hovered ? 0xFFFFE49A : 0xFFFFD866;
-            foreground = 0xFF17191E;
+            background = hovered ? 0xFF292D36 : 0xFF171A21;
+            foreground = 0xFFFFD866;
         } else {
             background = hovered ? 0xE02A2D35 : 0xC014161D;
             foreground = hovered ? 0xFFFFD866 : 0xFFE6E8ED;
