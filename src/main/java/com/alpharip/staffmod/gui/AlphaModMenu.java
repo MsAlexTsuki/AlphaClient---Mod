@@ -35,8 +35,8 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
-    private AlphaModule.Category selectedCategory = AlphaModule.Category.PUBLIC;
-    private String selectedModuleId = "alpha_hud";
+    private AlphaModule.Category selectedCategory = AlphaModule.Category.STAFF;
+    private String selectedModuleId = "staffmods";
     private int panelLeft, panelTop, panelWidth, panelHeight;
     private int sidebarWidth, contentLeft, contentRight, contentTop, contentBottom;
     private int settingsLeft;
@@ -72,18 +72,17 @@ public final class AlphaModMenu extends GuiScreen {
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 42, panelTop + 7, 34, 16, "X"));
         buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + panelWidth - 82, panelTop + 7, 34, 16, "⚙"));
         buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 7, panelTop + panelHeight - 23, 82, 15, "HUD EDITOR"));
-        buttonList.add(new AlphaButton(CATEGORY_BASE, panelLeft + 6, panelTop + 58, sidebarWidth - 12, 17,
-                "GENERAL", selectedCategory == AlphaModule.Category.PUBLIC));
+        buttonList.add(new AlphaButton(CATEGORY_BASE + 3, panelLeft + 6, panelTop + 58, sidebarWidth - 12, 17, "BHOP", true));
 
-        if (PermissionService.hasAccess(PermissionService.Rank.BETA)) {
+        if (false && PermissionService.hasAccess(PermissionService.Rank.BETA)) {
             buttonList.add(new AlphaButton(CATEGORY_BASE + 1, panelLeft + 6, panelTop + 79,
                     sidebarWidth - 12, 17, "BETA", selectedCategory == AlphaModule.Category.BETA));
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.DONATOR)) {
+        if (false && PermissionService.hasAccess(PermissionService.Rank.DONATOR)) {
             buttonList.add(new AlphaButton(CATEGORY_BASE + 2, panelLeft + 6, panelTop + 100,
                     sidebarWidth - 12, 17, "DONATOR", selectedCategory == AlphaModule.Category.DONATOR));
         }
-        if (PermissionService.hasModAccess("staff.bhop")) {
+        if (false && PermissionService.hasModAccess("staff.bhop")) {
             buttonList.add(new AlphaButton(STAFF_MENU, panelLeft + 6, panelTop + panelHeight - 44,
                     sidebarWidth - 12, 17, "STAFF"));
         }
@@ -263,7 +262,7 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == COMMUNITY_LOGIN) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
         if (button.id == STAFF_MENU) {
-            if (PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffRankMenuGui(this));
+            if (false && PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffRankMenuGui(this));
             return;
         }
         if (button.id == CATEGORY_BASE) {
@@ -277,7 +276,7 @@ public final class AlphaModMenu extends GuiScreen {
         } else if (button.id == TOGGLE_MODULE) {
             AlphaModule selected = getSelectedModule();
             if (selected != null && "staffmods".equals(selected.getId())) {
-                if (PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffRankMenuGui(this));
+                if (false && PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffRankMenuGui(this));
                 return;
             }
             if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
