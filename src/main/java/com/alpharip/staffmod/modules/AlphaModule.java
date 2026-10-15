@@ -12,7 +12,7 @@ import java.util.List;
  */
 public final class AlphaModule {
     public enum Category {
-        PUBLIC("Public Mods", PermissionService.Rank.PUBLIC),
+        PUBLIC("General", PermissionService.Rank.PUBLIC),
         BETA("Beta Mods", PermissionService.Rank.BETA),
         DONATOR("Donator", PermissionService.Rank.DONATOR),
         STAFF("Staff Mods", PermissionService.Rank.STAFF);
