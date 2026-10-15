@@ -1,7 +1,5 @@
 package com.alpharip.staffmod.network;
 
-import com.alpharip.staffmod.util.CPSTracker;
-import com.alpharip.staffmod.util.KnockbackTracker;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -32,89 +30,6 @@ public class PacketSniffer extends ChannelDuplexHandler {
             ChannelHandlerContext ctx,
             Object msg)
             throws Exception {
-
-        if (msg instanceof S12PacketEntityVelocity) {
-
-            try {
-
-                S12PacketEntityVelocity packet =
-                        (S12PacketEntityVelocity) msg;
-
-                int entityId = getVelocityEntityId(packet);
-                int motionX = getVelocityMotionX(packet);
-                int motionY = getVelocityMotionY(packet);
-                int motionZ = getVelocityMotionZ(packet);
-
-                if (entityId != Integer.MIN_VALUE
-                        && motionX != Integer.MIN_VALUE
-                        && motionY != Integer.MIN_VALUE
-                        && motionZ != Integer.MIN_VALUE) {
-
-                    try {
-
-                        KnockbackTracker.receiveVelocity(
-                                entityId,
-                                motionX,
-                                motionY,
-                                motionZ
-                        );
-
-                    } catch (Throwable t) {
-
-                        System.out.println(
-                                "[AlphaStaffMod] KnockbackTracker error."
-                        );
-
-                        t.printStackTrace();
-                    }
-                }
-
-            } catch (Throwable t) {
-
-                System.out.println(
-                        "[AlphaStaffMod] Error processing velocity packet."
-                );
-
-                t.printStackTrace();
-            }
-        }
-
-        if (msg instanceof S0BPacketAnimation) {
-
-            try {
-
-                S0BPacketAnimation packet =
-                        (S0BPacketAnimation) msg;
-
-                int entityId = getAnimationEntityId(packet);
-                int animationType = getAnimationType(packet);
-
-                if (entityId != Integer.MIN_VALUE
-                        && animationType == ANIMATION_SWING_ARM) {
-
-                    try {
-
-                        CPSTracker.recordSwing(entityId);
-
-                    } catch (Throwable t) {
-
-                        System.out.println(
-                                "[AlphaStaffMod] CPSTracker error."
-                        );
-
-                        t.printStackTrace();
-                    }
-                }
-
-            } catch (Throwable t) {
-
-                System.out.println(
-                        "[AlphaStaffMod] Error processing animation packet."
-                );
-
-                t.printStackTrace();
-            }
-        }
 
         super.channelRead(ctx, msg);
     }
