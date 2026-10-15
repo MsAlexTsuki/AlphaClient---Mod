@@ -33,17 +33,30 @@ public final class AlphaMainMenu extends GuiScreen {
     private int buttonGap;
     private int menuLeft;
     private int menuTop;
+    private boolean compactLayout;
 
     @Override
     public void initGui() {
         buttonList.clear();
 
-        buttonWidth = Math.min(292, Math.max(220, width / 4));
-        buttonHeight = 32;
-        buttonGap = 8;
-        menuLeft = Math.max(34, width / 2 - buttonWidth - 48);
+        // Use a single-column layout when the screen cannot comfortably fit both panels.
+        compactLayout = width < 1000 || height < 620;
+        buttonWidth = compactLayout
+                ? Math.min(320, Math.max(180, width - 48))
+                : Math.min(292, Math.max(220, width / 4));
+        buttonHeight = height < 360 ? 22 : height < 480 ? 26 : 32;
+        buttonGap = height < 360 ? 3 : height < 480 ? 5 : 8;
         int menuHeight = 6 * buttonHeight + 5 * buttonGap;
-        menuTop = Math.max(170, (height - menuHeight) / 2 + 28);
+        if (compactLayout) {
+            menuLeft = Math.max(12, (width - buttonWidth) / 2);
+            menuTop = Math.max(66, (height - menuHeight) / 2 + 34);
+            if (menuTop + menuHeight > height - 34) {
+                menuTop = Math.max(42, height - menuHeight - 34);
+            }
+        } else {
+            menuLeft = Math.max(34, width / 2 - buttonWidth - 48);
+            menuTop = Math.max(170, (height - menuHeight) / 2 + 28);
+        }
 
         buttonList.add(new AlphaButton(PLAY, menuLeft, menuTop, buttonWidth, buttonHeight, "PLAY", true));
         buttonList.add(new AlphaButton(MULTIPLAYER, menuLeft, menuTop + buttonHeight + buttonGap,
@@ -68,22 +81,30 @@ public final class AlphaMainMenu extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawAlphaBackground();
 
-        // Left navigation card and title hierarchy.
-        int menuCardLeft = menuLeft - 22;
-        int menuCardRight = menuLeft + buttonWidth + 22;
-        int menuCardTop = menuTop - 84;
-        int menuCardBottom = menuTop + 6 * buttonHeight + 5 * buttonGap + 22;
+        // Navigation card adapts to the available viewport.
+        int menuCardLeft = Math.max(8, menuLeft - (compactLayout ? 14 : 22));
+        int menuCardRight = Math.min(width - 8, menuLeft + buttonWidth + (compactLayout ? 14 : 22));
+        int menuCardTop = Math.max(8, menuTop - (compactLayout ? 48 : 84));
+        int menuCardBottom = Math.min(height - 8,
+                menuTop + 6 * buttonHeight + 5 * buttonGap + (compactLayout ? 16 : 22));
 
         drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardBottom, 0xA90E1015);
         drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardTop + 1, 0x554B515D);
         drawRect(menuCardLeft, menuCardTop, menuCardLeft + 1, menuCardBottom, 0x334B515D);
 
-        drawString(fontRendererObj, "ALPHA CLIENT", menuLeft, menuTop - 67, 0xFFF3F0E8);
-        drawString(fontRendererObj, "YOUR NEXT MINECRAFT EXPERIENCE", menuLeft, menuTop - 49, ACCENT);
-        drawRect(menuLeft, menuTop - 30, menuLeft + 46, menuTop - 28, ACCENT);
-        drawRect(menuLeft + 51, menuTop - 30, menuLeft + 98, menuTop - 29, 0x557F8794);
+        if (compactLayout) {
+            drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2, Math.max(12, menuTop - 35), 0xFFF3F0E8);
+            drawCenteredString(fontRendererObj, "MINECRAFT 1.8.9  /  FORGE", width / 2,
+                    Math.max(25, menuTop - 21), ACCENT);
+        } else {
+            drawString(fontRendererObj, "ALPHA CLIENT", menuLeft, menuTop - 67, 0xFFF3F0E8);
+            drawString(fontRendererObj, "YOUR NEXT MINECRAFT EXPERIENCE", menuLeft, menuTop - 49, ACCENT);
+            drawRect(menuLeft, menuTop - 30, menuLeft + 46, menuTop - 28, ACCENT);
+            drawRect(menuLeft + 51, menuTop - 30, menuLeft + 98, menuTop - 29, 0x557F8794);
+        }
 
-        // Right-side brand panel.
+        // The promotional brand panel is shown only when there is room for a two-column layout.
+        if (!compactLayout) {
         int panelLeft = Math.min(width - 170, width / 2 + 28);
         int panelRight = width - 28;
         int panelTop = Math.max(46, height / 2 - 180);
@@ -115,13 +136,16 @@ public final class AlphaMainMenu extends GuiScreen {
         drawRect(panelLeft + 30, dividerY, panelRight - 30, dividerY + 1, 0x557F8794);
         drawString(fontRendererObj, "MINECRAFT 1.8.9", panelLeft + 26, dividerY + 15, 0xFFD0D3DB);
         drawString(fontRendererObj, "FORGE  |  ALPHACLIENT", panelLeft + 26, dividerY + 30, 0xFF858B98);
+        }
 
         // Compact footer.
-        drawString(fontRendererObj, "ALPHA CLIENT", 24, height - 32, ACCENT);
-        drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION
-                + "  /  FORGE 1.8.9", 24, height - 19, 0xFF969DAA);
-        drawString(fontRendererObj, "ALPHA.RIP", width - fontRendererObj.getStringWidth("ALPHA.RIP") - 24,
-                height - 23, 0xFFB9BEC8);
+        if (height >= 390) {
+            drawString(fontRendererObj, "ALPHA CLIENT", 12, height - 28, ACCENT);
+            drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION
+                    + "  /  FORGE 1.8.9", 12, height - 16, 0xFF969DAA);
+            drawString(fontRendererObj, "ALPHA.RIP", width - fontRendererObj.getStringWidth("ALPHA.RIP") - 12,
+                    height - 20, 0xFFB9BEC8);
+        }
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
