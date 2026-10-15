@@ -5,6 +5,7 @@ import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
+import com.alpharip.staffmod.permissions.PermissionService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -34,7 +35,7 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
-    private AlphaModule.Category selectedCategory = AlphaModule.Category.STAFF;
+    private AlphaModule.Category selectedCategory = AlphaModule.Category.PUBLIC;
     private String selectedModuleId = "staffmods";
     private int panelLeft, panelTop, panelWidth, panelHeight;
     private int sidebarWidth, contentLeft, contentRight, contentTop, contentBottom;
@@ -71,8 +72,23 @@ public final class AlphaModMenu extends GuiScreen {
         buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + panelHeight - 22, 16, 16, ""));
         buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + panelHeight - 22, 16, 16, ""));
         buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 7, panelTop + panelHeight - 23, 88, 17, "HUD EDITOR"));
-        buttonList.add(new AlphaButton(CATEGORY_BASE + 3, panelLeft + 6, panelTop + 49, sidebarWidth - 12, 21,
-                "BHOP", true));
+
+        int categoryY = panelTop + 49;
+        for (AlphaModule.Category category : AlphaModule.Category.values()) {
+            if (!PermissionService.hasAccess(category.getRequiredRank())) continue;
+            String label;
+            switch (category) {
+                case PUBLIC: label = "GENERAL"; break;
+                case BETA: label = "BETA"; break;
+                case DONATOR: label = "DONATOR"; break;
+                case STAFF: label = "STAFF MODS"; break;
+                default: continue;
+            }
+            buttonList.add(new AlphaButton(CATEGORY_BASE + category.ordinal(),
+                    panelLeft + 5, categoryY, sidebarWidth - 10, 20,
+                    label, category == selectedCategory));
+            categoryY += 23;
+        }
 
         List<AlphaModule> filtered = getFilteredModules();
         int gridWidth = Math.max(180, contentRight - contentLeft);
@@ -238,8 +254,13 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
         if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
-        if (button.id == CATEGORY_BASE + 3) {
-            selectedCategory = AlphaModule.Category.STAFF;
+        if (button.id >= CATEGORY_BASE
+                && button.id < CATEGORY_BASE + AlphaModule.Category.values().length) {
+            AlphaModule.Category category = AlphaModule.Category.values()[button.id - CATEGORY_BASE];
+            if (PermissionService.hasAccess(category.getRequiredRank())) {
+                selectedCategory = category;
+                selectedModuleId = "";
+            }
         } else if (button.id == OPEN_SETTINGS) {
             AlphaModule selected = getSelectedModule();
             if (selected != null && "staffmods".equals(selected.getId())
