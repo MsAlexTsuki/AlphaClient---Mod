@@ -270,9 +270,12 @@ public final class AlphaModMenu extends GuiScreen {
             }
         } else if (button.id == OPEN_SETTINGS) {
             AlphaModule selected = getSelectedModule();
-            if (selected != null && "staffmods".equals(selected.getId())
-                    && selected.isImplemented() && selected.isUnlocked()) {
-                mc.displayGuiScreen(new BhopSettingsGui(this));
+            if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
+                if ("staffmods".equals(selected.getId())) {
+                    mc.displayGuiScreen(new BhopSettingsGui(this));
+                } else if ("quality".equals(selected.getId())) {
+                    mc.displayGuiScreen(new QualityGui(this));
+                }
             }
             return;
         } else if (button.id >= MODULE_BASE) {
