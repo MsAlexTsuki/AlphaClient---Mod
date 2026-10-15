@@ -100,7 +100,7 @@ public final class SupabaseCommunityService {
     }
 
     public static String getSignedInRankLabel() {
-        return signedInRankLabel == null ? "RANK NOT VERIFIED" : signedInRankLabel;
+        return signedInRankLabel == null ? "No Rank" : signedInRankLabel;
     }
 
     private static String formatRankLabel(String rankKey, boolean founder) {
