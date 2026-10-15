@@ -18,6 +18,7 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int BACK = 300;
     private static final int COMMUNITY_LOGIN = 301;
     private static final int TOGGLE_MODULE = 302;
+    private static final int STAFF_MENU = 303;
 
     private static final int ACCENT = 0xFFFFD866;
     private final GuiScreen parent;
@@ -58,21 +59,33 @@ public final class AlphaModMenu extends GuiScreen {
         detailX = listX + listWidth + 14;
         detailRight = panelRight - 16;
 
+        // General is the only top-level collection. Restricted collections live in its footer.
         visibleCategories = new java.util.ArrayList<AlphaModule.Category>();
-        for (AlphaModule.Category category : AlphaModule.Category.values()) {
-            if (PermissionService.hasAccess(category.getRequiredRank())) visibleCategories.add(category);
+        visibleCategories.add(AlphaModule.Category.PUBLIC);
+        if (selectedCategory != AlphaModule.Category.PUBLIC
+                && !PermissionService.hasAccess(selectedCategory.getRequiredRank())) {
+            selectedCategory = AlphaModule.Category.PUBLIC;
         }
-        if (!visibleCategories.contains(selectedCategory)) selectedCategory = AlphaModule.Category.PUBLIC;
-        AlphaModule.Category[] categories = visibleCategories.toArray(new AlphaModule.Category[visibleCategories.size()]);
-        int tabsLeft = panelLeft + 16;
-        int tabsRight = panelRight - 16;
-        int tabGap = 5;
-        int tabWidth = Math.max(44, (tabsRight - tabsLeft - tabGap * (categories.length - 1))
-                / Math.max(1, categories.length));
-        for (int i = 0; i < categories.length; i++) {
-            int tabX = tabsLeft + i * (tabWidth + tabGap);
-            buttonList.add(new AlphaButton(CATEGORY_BASE + i, tabX, panelTop + 67,
-                    Math.min(tabWidth, tabsRight - tabX), 20, categories[i].getTitle()));
+        if (selectedCategory == AlphaModule.Category.STAFF) selectedCategory = AlphaModule.Category.PUBLIC;
+        buttonList.add(new AlphaButton(CATEGORY_BASE, panelLeft + 16, panelTop + 67,
+                108, 20, "GENERAL", selectedCategory == AlphaModule.Category.PUBLIC));
+
+        int accessX = panelLeft + 16;
+        int accessY = panelTop + panelHeight - 54;
+        int accessWidth = 82;
+        if (PermissionService.hasAccess(PermissionService.Rank.BETA)) {
+            buttonList.add(new AlphaButton(CATEGORY_BASE + 1, accessX, accessY, accessWidth, 18,
+                    "BETA"));
+            accessX += accessWidth + 5;
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.DONATOR)) {
+            buttonList.add(new AlphaButton(CATEGORY_BASE + 2, accessX, accessY, accessWidth, 18,
+                    "DONATOR"));
+            accessX += accessWidth + 5;
+        }
+        if (PermissionService.hasModAccess("staff.bhop")) {
+            buttonList.add(new AlphaButton(STAFF_MENU, accessX, accessY,
+                    Math.min(112, panelRight - 16 - accessX), 18, "STAFF MODS"));
         }
 
         List<AlphaModule> modules = AlphaModuleRegistry.getForCategory(selectedCategory);
@@ -128,8 +141,8 @@ public final class AlphaModMenu extends GuiScreen {
         drawRect(panelLeft + 1, panelBottom - 1, panelRight - 1, panelBottom, 0x553A3E48);
 
         drawString(fontRendererObj, "ALPHA", panelLeft + 16, panelTop + 15, ACCENT);
-        drawString(fontRendererObj, "MODULES", panelLeft + 16, panelTop + 29, 0xFFF4F5F8);
-        drawString(fontRendererObj, selectedCategory.getTitle(), panelLeft + 104,
+        drawString(fontRendererObj, "MODS", panelLeft + 16, panelTop + 29, 0xFFF4F5F8);
+        drawString(fontRendererObj, "GENERAL COLLECTION", panelLeft + 72,
                 panelTop + 29, 0xFFB8BDC8);
         drawString(fontRendererObj, "Select a module to view its status and features.",
                 panelLeft + 16, panelTop + 47, 0xFF858B98);
@@ -223,13 +236,29 @@ public final class AlphaModMenu extends GuiScreen {
             mc.displayGuiScreen(new CommunityLoginGui(this));
             return;
         }
-        if (button.id >= CATEGORY_BASE
-                && visibleCategories != null
-                && button.id < CATEGORY_BASE + visibleCategories.size()) {
-            selectedCategory = visibleCategories.get(button.id - CATEGORY_BASE);
+        if (button.id == STAFF_MENU) {
+            if (PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffRankMenuGui(this));
+            return;
+        }
+        if (button.id == CATEGORY_BASE) {
+            selectedCategory = AlphaModule.Category.PUBLIC;
             scrollOffset = 0;
             List<AlphaModule> modules = AlphaModuleRegistry.getForCategory(selectedCategory);
             selectedModuleId = modules.isEmpty() ? "" : modules.get(0).getId();
+            initGui();
+            return;
+        }
+        if (button.id == CATEGORY_BASE + 1 && PermissionService.hasAccess(PermissionService.Rank.BETA)) {
+            selectedCategory = AlphaModule.Category.BETA;
+            scrollOffset = 0;
+            selectedModuleId = "motion_blur";
+            initGui();
+            return;
+        }
+        if (button.id == CATEGORY_BASE + 2 && PermissionService.hasAccess(PermissionService.Rank.DONATOR)) {
+            selectedCategory = AlphaModule.Category.DONATOR;
+            scrollOffset = 0;
+            selectedModuleId = "cosmetics";
             initGui();
             return;
         }
