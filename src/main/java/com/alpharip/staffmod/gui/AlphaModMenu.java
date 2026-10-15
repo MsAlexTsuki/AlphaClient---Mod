@@ -276,7 +276,7 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
         if (button.id == STAFF_MODS) {
             if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) {
-                mc.displayGuiScreen(new StaffModsGui(this));
+                mc.displayGuiScreen(new StaffModsMenuGui(this));
             }
             return;
         }
@@ -297,7 +297,7 @@ public final class AlphaModMenu extends GuiScreen {
                         mc.displayGuiScreen(new QualityGui(this));
                         return;
                     } else if ("staffmods".equals(clickedModule.getId())) {
-                        mc.displayGuiScreen(new BhopSettingsGui(this));
+                        mc.displayGuiScreen(new StaffModsMenuGui(this));
                         return;
                     }
                 }
