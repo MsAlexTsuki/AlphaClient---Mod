@@ -3,7 +3,7 @@ package com.alpharip.staffmod.gui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
-/** Compact shared AlphaClient button styling with a restrained Alpha Yellow accent. */
+/** Shared AlphaClient button: restrained dark surface, clean border and Alpha Yellow focus. */
 public final class AlphaButton extends GuiButton {
     private final boolean primary;
 
@@ -23,26 +23,27 @@ public final class AlphaButton extends GuiButton {
         hovered = mouseX >= xPosition && mouseY >= yPosition
                 && mouseX < xPosition + width && mouseY < yPosition + height;
 
-        int background = !enabled ? 0xA51B1912
-                : primary ? (hovered ? 0xFFFFE49A : 0xFFFFD866)
-                : (hovered ? 0xB84B3B12 : 0x7430270E);
-        int foreground = !enabled ? 0xFF9A9278
-                : primary ? 0xFF17191E : (hovered ? 0xFFFFE49A : 0xFFF3EAD0);
-
-        if (hovered || primary) {
-            drawRect(xPosition - 2, yPosition - 2, xPosition + width + 2, yPosition + height + 2,
-                    primary ? 0x35FFD866 : 0x25FFD866);
-        }
-        drawRect(xPosition, yPosition, xPosition + width, yPosition + height, background);
-        drawRect(xPosition, yPosition, xPosition + width, yPosition + 1,
-                primary ? 0xAAFFF0B0 : (hovered ? 0x665B626E : 0x554B515D));
-        drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height, 0xFF14161B);
-        if (!primary) {
-            drawRect(xPosition, yPosition, xPosition + 2, yPosition + height,
-                    hovered ? 0xFFFFD866 : 0x887D641F);
+        int background;
+        int foreground;
+        if (!enabled) {
+            background = 0xA512141A;
+            foreground = 0xFF777D88;
+        } else if (primary) {
+            background = hovered ? 0xFFFFE49A : 0xFFFFD866;
+            foreground = 0xFF17191E;
         } else {
-            drawRect(xPosition, yPosition + height - 2, xPosition + width, yPosition + height, 0x66FFFFFF);
+            background = hovered ? 0xE02A2D35 : 0xC014161D;
+            foreground = hovered ? 0xFFFFD866 : 0xFFE6E8ED;
         }
+
+        drawRect(xPosition, yPosition, xPosition + width, yPosition + height, background);
+        int border = primary ? (hovered ? 0xFFFFF0BE : 0xFFFFD866)
+                : (hovered ? 0xFFFFD866 : 0x664B515D);
+        drawRect(xPosition, yPosition, xPosition + width, yPosition + 1, border);
+        drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height,
+                primary ? 0x66FFFFFF : 0xAA090A0E);
+        drawRect(xPosition, yPosition, xPosition + 1, yPosition + height, border);
+        drawRect(xPosition + width - 1, yPosition, xPosition + width, yPosition + height, border);
 
         drawCenteredString(mc.fontRendererObj, displayString,
                 xPosition + width / 2, yPosition + (height - 8) / 2, foreground);

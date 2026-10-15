@@ -6,7 +6,7 @@ import net.minecraft.client.gui.GuiButton;
 public class ModernButton extends GuiButton {
 
     private static final int COLOR_ALPHA =
-            0xFFF2EE4D;
+            0xFFFFD866;
 
     public ModernButton(
             int buttonId,
@@ -55,12 +55,12 @@ public class ModernButton extends GuiButton {
         if (hovered) {
 
             background =
-                    0xCC303030;
+                    0xE02A2D35;
 
         } else {
 
             background =
-                    0xAA151515;
+                    0xC014161D;
         }
 
         drawRect(
@@ -80,7 +80,7 @@ public class ModernButton extends GuiButton {
         int border =
                 hovered
                         ? COLOR_ALPHA
-                        : 0xFF404040;
+                        : 0x664B515D;
 
         /*
          * Top
@@ -139,8 +139,7 @@ public class ModernButton extends GuiButton {
          */
 
         String text =
-                "\u00A7l"
-                        + this.displayString;
+                this.displayString;
 
         drawCenteredString(
                 mc.fontRendererObj,

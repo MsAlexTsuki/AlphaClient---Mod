@@ -3,7 +3,7 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
-import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -26,8 +26,7 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int MODULE_BASE = 100;
     private static final int BACK = 300;
     private static final int COMMUNITY_LOGIN = 301;
-    private static final int TOGGLE_MODULE = 302;
-    private static final int STAFF_MENU = 303;
+    private static final int OPEN_SETTINGS = 302;
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
@@ -69,23 +68,11 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setEnableBackgroundDrawing(true);
         searchField.setTextColor(0xFFE7E9EE);
         searchField.setDisabledTextColour(0xFF858B98);
-        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 42, panelTop + 7, 34, 16, "X"));
-        buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + panelWidth - 82, panelTop + 7, 34, 16, "⚙"));
-        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 7, panelTop + panelHeight - 23, 82, 15, "HUD EDITOR"));
-        buttonList.add(new AlphaButton(CATEGORY_BASE + 3, panelLeft + 6, panelTop + 58, sidebarWidth - 12, 17, "BHOP", true));
-
-        if (false && PermissionService.hasAccess(PermissionService.Rank.BETA)) {
-            buttonList.add(new AlphaButton(CATEGORY_BASE + 1, panelLeft + 6, panelTop + 79,
-                    sidebarWidth - 12, 17, "BETA", selectedCategory == AlphaModule.Category.BETA));
-        }
-        if (false && PermissionService.hasAccess(PermissionService.Rank.DONATOR)) {
-            buttonList.add(new AlphaButton(CATEGORY_BASE + 2, panelLeft + 6, panelTop + 100,
-                    sidebarWidth - 12, 17, "DONATOR", selectedCategory == AlphaModule.Category.DONATOR));
-        }
-        if (false && PermissionService.hasModAccess("staff.bhop")) {
-            buttonList.add(new AlphaButton(STAFF_MENU, panelLeft + 6, panelTop + panelHeight - 44,
-                    sidebarWidth - 12, 17, "STAFF"));
-        }
+        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 62, panelTop + 8, 54, 20, "CLOSE"));
+        buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + panelWidth - 132, panelTop + 8, 62, 20, "ACCOUNT"));
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 8, panelTop + panelHeight - 30, 104, 22, "HUD EDITOR"));
+        buttonList.add(new AlphaButton(CATEGORY_BASE + 3, panelLeft + 7, panelTop + 58, sidebarWidth - 14, 24,
+                "BHOP", true));
 
         List<AlphaModule> filtered = getFilteredModules();
         int gridWidth = Math.max(180, contentRight - contentLeft);
@@ -99,15 +86,18 @@ public final class AlphaModMenu extends GuiScreen {
             int local = i - start;
             int x = contentLeft + (local % 2) * (tileWidth + gap);
             int y = contentTop + (local / 2) * (tileHeight + rowGap);
+            String moduleStatus = "staffmods".equals(filtered.get(i).getId())
+                    ? (BhopMode.isEnabled() ? "ON" : "OFF") : filtered.get(i).getStatusLabel();
+            String moduleLabel = filtered.get(i).getName() + "  |  " + moduleStatus;
             buttonList.add(new AlphaButton(MODULE_BASE + i, x, y, tileWidth, tileHeight,
-                    filtered.get(i).getName(), filtered.get(i).getId().equals(selectedModuleId)));
+                    moduleLabel, filtered.get(i).getId().equals(selectedModuleId)));
         }
 
         AlphaModule selected = getSelectedModule();
         if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
-            buttonList.add(new AlphaButton(TOGGLE_MODULE, settingsLeft + 10, contentBottom - 31,
-                    Math.max(105, panelLeft + panelWidth - 18 - (settingsLeft + 10)), 22,
-                    selected.isEnabled() ? "DISABLE" : "ENABLE", !selected.isEnabled()));
+            buttonList.add(new AlphaButton(OPEN_SETTINGS, settingsLeft + 10, contentBottom - 31,
+                    Math.max(105, panelLeft + panelWidth - 18 - (settingsLeft + 10)), 24,
+                    "OPEN SETTINGS", true));
         }
     }
 
@@ -164,40 +154,26 @@ public final class AlphaModMenu extends GuiScreen {
         int gridWidth = Math.max(180, contentRight - contentLeft);
         int gap = 8;
         int tileWidth = (gridWidth - gap) / 2;
-        int tileHeight = 32, rowGap = 5;
+        int tileHeight = 32;
+        int rowGap = 5;
         int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
         int start = Math.min(scrollOffset, Math.max(0, modules.size() - visibleRows * 2));
         for (int i = start; i < modules.size() && i < start + visibleRows * 2; i++) {
-            AlphaModule module = modules.get(i);
             int local = i - start;
             int x = contentLeft + (local % 2) * (tileWidth + gap);
             int y = contentTop + (local / 2) * (tileHeight + rowGap);
-            boolean selected = module.getId().equals(selectedModuleId);
-            drawRect(x, y, x + tileWidth, y + tileHeight, selected ? 0xD02B281D : 0xB5161820);
-            drawRect(x, y, x + tileWidth, y + 1, selected ? ACCENT : 0x33494D57);
-            if (selected) drawRect(x, y, x + 2, y + tileHeight, ACCENT);
-            drawRect(x + 8, y + 9, x + 29, y + 31, selected ? 0x663F350F : 0x442E2B22);
-            drawString(fontRendererObj, moduleIcon(module.getId()), x + 12, y + 15,
-                    selected ? 0xFFFFD32F : 0xFFBBA34D);
-            drawString(fontRendererObj, module.getName(), x + 35, y + 6,
-                    module.isUnlocked() ? 0xFFF2F3F5 : 0xFF858B98);
-            String status = module.isUnlocked() ? module.getStatusLabel() : "LOCKED";
-            drawString(fontRendererObj, status, x + 35, y + 21,
-                    module.isEnabled() ? 0xFF9CE2AC : 0xFF9A9EAA);
-            int switchX = x + tileWidth - 24;
-            drawRect(switchX, y + 15, switchX + 15, y + 23,
-                    module.isEnabled() ? ACCENT : 0xFF50545D);
-            drawRect(switchX + (module.isEnabled() ? 8 : 1), y + 16,
-                    switchX + (module.isEnabled() ? 13 : 6), y + 22, 0xFFF8F8F8);
+            drawRect(x, y, x + tileWidth, y + tileHeight, 0xB5161820);
+            drawRect(x, y, x + tileWidth, y + 1, 0x33494D57);
         }
 
         AlphaModule selected = getSelectedModule();
         if (selected != null) {
             drawRect(settingsLeft + 5, panelTop + 69, right - 8, panelTop + 108, 0xB5161820);
-            drawString(fontRendererObj, moduleIcon(selected.getId()), settingsLeft + 12, panelTop + 81, ACCENT);
-            drawString(fontRendererObj, selected.getName(), settingsLeft + 30, panelTop + 78, 0xFFF3F4F6);
-            drawString(fontRendererObj, selected.isEnabled() ? "ON" : "OFF",
-                    settingsLeft + 30, panelTop + 92, selected.isEnabled() ? 0xFF9CE2AC : 0xFF9A9EAA);
+            drawString(fontRendererObj, selected.getName(), settingsLeft + 12, panelTop + 78, 0xFFF3F4F6);
+            boolean selectedHeaderEnabled = "staffmods".equals(selected.getId())
+                    ? BhopMode.isEnabled() : selected.isEnabled();
+            drawString(fontRendererObj, selectedHeaderEnabled ? "ON" : "OFF",
+                    settingsLeft + 12, panelTop + 92, selectedHeaderEnabled ? 0xFF9CE2AC : 0xFF9A9EAA);
             drawWrappedText(selected.getDescription(), settingsLeft + 7, panelTop + 119,
                     Math.max(100, right - settingsLeft - 22), 0xFFB9BDC6);
 
@@ -205,8 +181,10 @@ public final class AlphaModMenu extends GuiScreen {
             drawString(fontRendererObj, "OPTIONS", settingsLeft + 7, panelTop + 172, ACCENT);
             int y = panelTop + 190;
             drawString(fontRendererObj, "Status", settingsLeft + 10, y, 0xFF969BA6);
-            drawString(fontRendererObj, selected.getStatusLabel(), settingsLeft + 65, y,
-                    selected.isEnabled() ? 0xFF9CE2AC : 0xFFB9BDC6);
+            boolean selectedEnabled = "staffmods".equals(selected.getId())
+                    ? BhopMode.isEnabled() : selected.isEnabled();
+            drawString(fontRendererObj, selectedEnabled ? "ON" : "OFF", settingsLeft + 65, y,
+                    selectedEnabled ? 0xFF9CE2AC : 0xFFB9BDC6);
             y += 17;
             
             List<AlphaModuleFeature> features = selected.getFeatures();
@@ -231,16 +209,6 @@ public final class AlphaModMenu extends GuiScreen {
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
-    private String moduleIcon(String id) {
-        if ("alpha_hud".equals(id)) return "A";
-        if ("fps_counter".equals(id)) return "F";
-        if ("keystrokes".equals(id)) return "K";
-        if ("motion_blur".equals(id)) return "M";
-        if ("cosmetics".equals(id)) return "C";
-        if ("staffmods".equals(id)) return "S";
-        return "*";
-    }
-
     private void drawWrappedText(String text, int x, int y, int maxWidth, int color) {
         if (text == null || text.isEmpty()) return;
         StringBuilder line = new StringBuilder();
@@ -261,27 +229,15 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == BACK) { mc.displayGuiScreen(parent); return; }
         if (button.id == COMMUNITY_LOGIN) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
-        if (button.id == STAFF_MENU) {
-            if (false && PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffRankMenuGui(this));
-            return;
-        }
-        if (button.id == CATEGORY_BASE) {
-            selectedCategory = AlphaModule.Category.PUBLIC;
-        } else if (button.id == CATEGORY_BASE + 1
-                && PermissionService.hasAccess(PermissionService.Rank.BETA)) {
-            selectedCategory = AlphaModule.Category.BETA;
-        } else if (button.id == CATEGORY_BASE + 2
-                && PermissionService.hasAccess(PermissionService.Rank.DONATOR)) {
-            selectedCategory = AlphaModule.Category.DONATOR;
-        } else if (button.id == TOGGLE_MODULE) {
+        if (button.id == CATEGORY_BASE + 3) {
+            selectedCategory = AlphaModule.Category.STAFF;
+        } else if (button.id == OPEN_SETTINGS) {
             AlphaModule selected = getSelectedModule();
-            if (selected != null && "staffmods".equals(selected.getId())) {
-                if (false && PermissionService.hasModAccess("staff.bhop")) mc.displayGuiScreen(new StaffRankMenuGui(this));
-                return;
+            if (selected != null && "staffmods".equals(selected.getId())
+                    && selected.isImplemented() && selected.isUnlocked()) {
+                mc.displayGuiScreen(new BhopSettingsGui(this));
             }
-            if (selected != null && selected.isImplemented() && selected.isUnlocked()) {
-                selected.setEnabled(!selected.isEnabled());
-            }
+            return;
         } else if (button.id >= MODULE_BASE) {
             List<AlphaModule> modules = getFilteredModules();
             int index = button.id - MODULE_BASE;
