@@ -176,7 +176,8 @@ public final class StaffModsMenuGui extends GuiScreen {
             int index = button.id - MODULE_BASE;
             if (index < 0 || index >= visibleModules.size()) return;
             AlphaModule module = visibleModules.get(index);
-            if (!PermissionService.hasAccess(module.getCategory().getRequiredRank())) return;
+            if (selectedRank != PermissionService.Rank.PUBLIC
+                    && !PermissionService.hasAccess(module.getCategory().getRequiredRank())) return;
             if ("staffmods".equals(module.getId())) {
                 mc.displayGuiScreen(new BhopSettingsGui(this));
             }
