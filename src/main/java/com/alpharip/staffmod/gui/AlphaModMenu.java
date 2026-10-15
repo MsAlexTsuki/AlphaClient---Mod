@@ -154,8 +154,8 @@ public final class AlphaModMenu extends GuiScreen {
         int gridWidth = Math.max(180, contentRight - contentLeft);
         int gap = 8;
         int tileWidth = (gridWidth - gap) / 2;
-        int tileHeight = 32;
-        int rowGap = 5;
+        int tileHeight = 26;
+        int rowGap = 4;
         int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
         int start = Math.min(scrollOffset, Math.max(0, modules.size() - visibleRows * 2));
         for (int i = start; i < modules.size() && i < start + visibleRows * 2; i++) {
