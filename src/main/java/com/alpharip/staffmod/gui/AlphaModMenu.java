@@ -31,7 +31,7 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
-            new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_launcher_logo.png");
+            new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
@@ -73,7 +73,7 @@ public final class AlphaModMenu extends GuiScreen {
         buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + panelHeight - 22, 16, 16, ""));
         buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 7, panelTop + panelHeight - 23, 88, 17, "HUD EDITOR"));
 
-        int categoryY = panelTop + 49;
+        int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
             if (!PermissionService.hasAccess(category.getRequiredRank())) continue;
             String label;
@@ -154,13 +154,13 @@ public final class AlphaModMenu extends GuiScreen {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1F, 1F, 1F, 1F);
-        drawModalRectWithCustomSizedTexture(panelLeft + 8, panelTop + 7, 0, 0, 21, 21, 256, 256);
-        drawString(fontRendererObj, "MODS", panelLeft + 8, panelTop + 31, 0xFFF0F1F4);
+        drawModalRectWithCustomSizedTexture(panelLeft + 18, panelTop + 5, 0, 0, 32, 32, 256, 256);
+        drawString(fontRendererObj, "MODS", panelLeft + 8, panelTop + 40, 0xFFF0F1F4);
         drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
                 + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
         searchField.drawTextBox();
 
-        drawString(fontRendererObj, "BROWSE", panelLeft + 6, panelTop + 39, 0xFFB8BDC8);
+        drawString(fontRendererObj, "BROWSE", panelLeft + 6, panelTop + 57, 0xFFB8BDC8);
         drawString(fontRendererObj, selectedCategory.getTitle().toUpperCase(Locale.ROOT),
                 contentLeft + 3, contentTop - 9, ACCENT);
         drawString(fontRendererObj, "DETAILS", settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
