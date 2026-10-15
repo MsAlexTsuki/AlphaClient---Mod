@@ -71,14 +71,18 @@ public final class AlphaMainMenu extends GuiMainMenu {
         drawRect(0, 0, width, height, 0x12FFD866);
         drawGradientRect(0, 0, width, Math.min(height, 180), 0x28FFD866, 0x00FFD866);
         drawGradientRect(0, Math.max(0, height - 90), width, height, 0x00FFD866, 0x35FFD866);
+        // Render the complete source image through Gui's scaled-texture helper.
+        // Keep source UV dimensions separate from the on-screen size to avoid cropping the A.
         int logoWidth = Math.min(240, Math.max(150, width / 4));
         int logoHeight = logoWidth * 448 / 512;
         int logoX = (width - logoWidth) / 2;
         int logoY = 24;
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        // Use the real 512x448 texture dimensions; 256x256 UV dimensions crop the logo.
-        drawModalRectWithCustomSizedTexture(logoX, logoY, 0, 0, logoWidth, logoHeight, 512, 448);
+        GlStateManager.enableBlend();
+        drawScaledCustomSizeModalRect(logoX, logoY, 0.0F, 0.0F, 512, 448,
+                logoWidth, logoHeight, 512.0F, 448.0F);
+        GlStateManager.disableBlend();
         drawString(fontRendererObj, "Play Different.", width - 116, height - 42, ACCENT);
         drawString(fontRendererObj, "AlphaClient  |  Version 1.8.9", 20, height - 18, 0xFFB2B6C0);
         drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION, width - 70, height - 18, 0xFFB2B6C0);
