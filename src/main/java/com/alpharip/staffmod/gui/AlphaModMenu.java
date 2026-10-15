@@ -24,8 +24,8 @@ import java.util.Locale;
 public final class AlphaModMenu extends GuiScreen {
     private static final int CATEGORY_BASE = 20;
     private static final int MODULE_BASE = 100;
-    private static final int BACK = 300;
-    private static final int COMMUNITY_LOGIN = 301;
+    private static final int EXIT = 300;
+    private static final int ACCOUNT = 301;
     private static final int OPEN_SETTINGS = 302;
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
@@ -49,8 +49,8 @@ public final class AlphaModMenu extends GuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
-        panelWidth = Math.min(500, Math.max(390, width - 100));
-        panelHeight = Math.min(270, Math.max(220, height - 100));
+        panelWidth = Math.min(460, Math.max(390, width - 80));
+        panelHeight = Math.min(250, Math.max(210, height - 80));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
         sidebarWidth = 70;
@@ -68,8 +68,8 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setEnableBackgroundDrawing(true);
         searchField.setTextColor(0xFFE7E9EE);
         searchField.setDisabledTextColour(0xFFB8BDC8);
-        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 54, panelTop + 7, 46, 17, "CLOSE"));
-        buttonList.add(new AlphaButton(COMMUNITY_LOGIN, panelLeft + panelWidth - 115, panelTop + 7, 54, 17, "ACCOUNT"));
+        buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + panelHeight - 22, 16, 16, ""));
+        buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + panelHeight - 22, 16, 16, ""));
         buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 7, panelTop + panelHeight - 23, 88, 17, "HUD EDITOR"));
         buttonList.add(new AlphaButton(CATEGORY_BASE + 3, panelLeft + 6, panelTop + 49, sidebarWidth - 12, 21,
                 "BHOP", true));
@@ -139,8 +139,7 @@ public final class AlphaModMenu extends GuiScreen {
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1F, 1F, 1F, 1F);
         drawModalRectWithCustomSizedTexture(panelLeft + 8, panelTop + 7, 0, 0, 21, 21, 256, 256);
-        drawString(fontRendererObj, "ALPHA", panelLeft + 33, panelTop + 7, 0xFFF0F1F4);
-        drawString(fontRendererObj, "CLIENT", panelLeft + 33, panelTop + 17, ACCENT);
+        drawString(fontRendererObj, "MODS", panelLeft + 34, panelTop + 12, 0xFFF0F1F4);
         drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
                 + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
         searchField.drawTextBox();
@@ -207,6 +206,16 @@ public final class AlphaModMenu extends GuiScreen {
         drawString(fontRendererObj, "RANK: " + (SupabaseCommunityService.isSignedIn() ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK"),
                 settingsLeft + 5, bottom - 11, SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
+        int footerY = panelTop + panelHeight - 22;
+        int accountX = panelLeft + panelWidth - 43;
+        int accountCenter = accountX + 8;
+        drawRect(accountCenter - 2, footerY + 3, accountCenter + 2, footerY + 7, ACCENT);
+        drawRect(accountCenter - 4, footerY + 8, accountCenter + 4, footerY + 12, ACCENT);
+        int exitX = panelLeft + panelWidth - 23;
+        drawRect(exitX + 4, footerY + 3, exitX + 6, footerY + 13, 0xFFE6E8ED);
+        drawRect(exitX + 6, footerY + 7, exitX + 12, footerY + 9, 0xFFE6E8ED);
+        drawRect(exitX + 10, footerY + 5, exitX + 12, footerY + 7, 0xFFE6E8ED);
+        drawRect(exitX + 10, footerY + 9, exitX + 12, footerY + 11, 0xFFE6E8ED);
     }
 
     private void drawWrappedText(String text, int x, int y, int maxWidth, int color) {
@@ -226,8 +235,8 @@ public final class AlphaModMenu extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
-        if (button.id == BACK) { mc.displayGuiScreen(parent); return; }
-        if (button.id == COMMUNITY_LOGIN) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
+        if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
+        if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
         if (button.id == CATEGORY_BASE + 3) {
             selectedCategory = AlphaModule.Category.STAFF;
