@@ -21,7 +21,7 @@ public final class AlphaMainMenu extends GuiScreen {
     private static final int PARTNER = 14;
     private static final int QUIT = 15;
     private static final int ACCOUNT_MENU = 16;
-    private static final int ADD_ACCOUNT = 17;
+    private static final int ACCOUNT_SWITCHER = 17;
 
     private static final int ACCENT = 0xFFFFD866;
     private static final ResourceLocation ALPHA_LOGO =
@@ -39,14 +39,17 @@ public final class AlphaMainMenu extends GuiScreen {
     public void initGui() {
         buttonList.clear();
 
-        // Use a single-column layout when the screen cannot comfortably fit both panels.
         compactLayout = width < 1000 || height < 620;
         buttonWidth = compactLayout
                 ? Math.min(320, Math.max(180, width - 48))
                 : Math.min(292, Math.max(220, width / 4));
         buttonHeight = height < 360 ? 22 : height < 480 ? 26 : 32;
         buttonGap = height < 360 ? 3 : height < 480 ? 5 : 8;
-        int menuHeight = 6 * buttonHeight + 5 * buttonGap;
+
+        // Multiplayer is available from the Account dropdown instead of taking
+        // a permanent slot in the main navigation.
+        int menuButtonCount = 5;
+        int menuHeight = menuButtonCount * buttonHeight + (menuButtonCount - 1) * buttonGap;
         if (compactLayout) {
             menuLeft = Math.max(12, (width - buttonWidth) / 2);
             menuTop = Math.max(66, (height - menuHeight) / 2 + 34);
@@ -59,21 +62,20 @@ public final class AlphaMainMenu extends GuiScreen {
         }
 
         buttonList.add(new AlphaButton(PLAY, menuLeft, menuTop, buttonWidth, buttonHeight, "PLAY", true));
-        buttonList.add(new AlphaButton(MULTIPLAYER, menuLeft, menuTop + buttonHeight + buttonGap,
-                buttonWidth, buttonHeight, "MULTIPLAYER"));
-        buttonList.add(new AlphaButton(MODULES, menuLeft, menuTop + 2 * (buttonHeight + buttonGap),
+        buttonList.add(new AlphaButton(MODULES, menuLeft, menuTop + buttonHeight + buttonGap,
                 buttonWidth, buttonHeight, "MODS"));
-        buttonList.add(new AlphaButton(OPTIONS, menuLeft, menuTop + 3 * (buttonHeight + buttonGap),
+        buttonList.add(new AlphaButton(OPTIONS, menuLeft, menuTop + 2 * (buttonHeight + buttonGap),
                 buttonWidth, buttonHeight, "SETTINGS"));
-        buttonList.add(new AlphaButton(PARTNER, menuLeft, menuTop + 4 * (buttonHeight + buttonGap),
+        buttonList.add(new AlphaButton(PARTNER, menuLeft, menuTop + 3 * (buttonHeight + buttonGap),
                 buttonWidth, buttonHeight, "CONNECT TO ALPHA.RIP"));
-        buttonList.add(new AlphaButton(QUIT, menuLeft, menuTop + 5 * (buttonHeight + buttonGap),
+        buttonList.add(new AlphaButton(QUIT, menuLeft, menuTop + 4 * (buttonHeight + buttonGap),
                 buttonWidth, buttonHeight, "QUIT"));
 
-        buttonList.add(new AlphaButton(ACCOUNT_MENU, 24, 22, 112, 27,
+        buttonList.add(new AlphaButton(ACCOUNT_MENU, 24, 22, 132, 27,
                 accountMenuOpen ? "ACCOUNT  -" : "ACCOUNT  +"));
         if (accountMenuOpen) {
-            buttonList.add(new AlphaButton(ADD_ACCOUNT, 24, 55, 112, 25, "ACCOUNT INFO"));
+            buttonList.add(new AlphaButton(ACCOUNT_SWITCHER, 24, 55, 132, 25, "ACCOUNT SWITCHER"));
+            buttonList.add(new AlphaButton(MULTIPLAYER, 24, 84, 132, 25, "MULTIPLAYER"));
         }
     }
 
@@ -81,19 +83,17 @@ public final class AlphaMainMenu extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawAlphaBackground();
 
-        // Navigation card adapts to the available viewport.
         int menuCardLeft = Math.max(8, menuLeft - (compactLayout ? 14 : 22));
         int menuCardRight = Math.min(width - 8, menuLeft + buttonWidth + (compactLayout ? 14 : 22));
         int menuCardTop = Math.max(8, menuTop - (compactLayout ? 48 : 84));
         int menuCardBottom = Math.min(height - 8,
-                menuTop + 6 * buttonHeight + 5 * buttonGap + (compactLayout ? 16 : 22));
+                menuTop + 5 * buttonHeight + 4 * buttonGap + (compactLayout ? 16 : 22));
 
         drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardBottom, 0xA90E1015);
         drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardTop + 1, 0x554B515D);
         drawRect(menuCardLeft, menuCardTop, menuCardLeft + 1, menuCardBottom, 0x334B515D);
 
         if (compactLayout) {
-            // Keep the Alpha logo visible in compact mode instead of hiding the entire brand panel.
             int compactLogoWidth = Math.min(112, Math.max(56, width - 40));
             int compactLogoHeight = compactLogoWidth * 448 / 512;
             int compactLogoX = (width - compactLogoWidth) / 2;
@@ -115,42 +115,40 @@ public final class AlphaMainMenu extends GuiScreen {
             drawRect(menuLeft + 51, menuTop - 30, menuLeft + 98, menuTop - 29, 0x557F8794);
         }
 
-        // The promotional brand panel is shown only when there is room for a two-column layout.
         if (!compactLayout) {
-        int panelLeft = Math.min(width - 170, width / 2 + 28);
-        int panelRight = width - 28;
-        int panelTop = Math.max(46, height / 2 - 180);
-        int panelBottom = Math.min(height - 48, height / 2 + 178);
-        drawRect(panelLeft + 5, panelTop + 5, panelRight + 1, panelBottom + 1, 0x66000000);
-        drawRect(panelLeft, panelTop, panelRight, panelBottom, 0xE6101218);
-        drawRect(panelLeft, panelTop, panelRight, panelTop + 1, 0x554B515D);
-        drawRect(panelLeft, panelTop, panelLeft + 1, panelBottom, 0x334B515D);
-        drawRect(panelLeft + 24, panelTop + 25, panelRight - 24, panelTop + 26, 0x557F8794);
+            int panelLeft = Math.min(width - 170, width / 2 + 28);
+            int panelRight = width - 28;
+            int panelTop = Math.max(46, height / 2 - 180);
+            int panelBottom = Math.min(height - 48, height / 2 + 178);
+            drawRect(panelLeft + 5, panelTop + 5, panelRight + 1, panelBottom + 1, 0x66000000);
+            drawRect(panelLeft, panelTop, panelRight, panelBottom, 0xE6101218);
+            drawRect(panelLeft, panelTop, panelRight, panelTop + 1, 0x554B515D);
+            drawRect(panelLeft, panelTop, panelLeft + 1, panelBottom, 0x334B515D);
+            drawRect(panelLeft + 24, panelTop + 25, panelRight - 24, panelTop + 26, 0x557F8794);
 
-        int availableWidth = Math.max(1, panelRight - panelLeft - 42);
-        int logoWidth = Math.min(250, availableWidth);
-        int logoHeight = logoWidth * 448 / 512;
-        int logoX = panelLeft + (panelRight - panelLeft - logoWidth) / 2;
-        int logoY = panelTop + 42;
-        Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.enableBlend();
-        drawScaledCustomSizeModalRect(logoX, logoY, 0.0F, 0.0F, 512, 448,
-                logoWidth, logoHeight, 512.0F, 448.0F);
-        GlStateManager.disableBlend();
+            int availableWidth = Math.max(1, panelRight - panelLeft - 42);
+            int logoWidth = Math.min(250, availableWidth);
+            int logoHeight = logoWidth * 448 / 512;
+            int logoX = panelLeft + (panelRight - panelLeft - logoWidth) / 2;
+            int logoY = panelTop + 42;
+            Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.enableBlend();
+            drawScaledCustomSizeModalRect(logoX, logoY, 0.0F, 0.0F, 512, 448,
+                    logoWidth, logoHeight, 512.0F, 448.0F);
+            GlStateManager.disableBlend();
 
-        int centerX = (panelLeft + panelRight) / 2;
-        int taglineY = Math.max(logoY + logoHeight + 12, panelTop + 205);
-        drawCenteredString(fontRendererObj, "PLAY DIFFERENT.", centerX, taglineY, 0xFFF5F2E8);
-        drawCenteredString(fontRendererObj, "BUILT AROUND YOUR GAME", centerX, taglineY + 19, ACCENT);
+            int centerX = (panelLeft + panelRight) / 2;
+            int taglineY = Math.max(logoY + logoHeight + 12, panelTop + 205);
+            drawCenteredString(fontRendererObj, "PLAY DIFFERENT.", centerX, taglineY, 0xFFF5F2E8);
+            drawCenteredString(fontRendererObj, "BUILT AROUND YOUR GAME", centerX, taglineY + 19, ACCENT);
 
-        int dividerY = Math.min(panelBottom - 55, taglineY + 47);
-        drawRect(panelLeft + 30, dividerY, panelRight - 30, dividerY + 1, 0x557F8794);
-        drawString(fontRendererObj, "MINECRAFT 1.8.9", panelLeft + 26, dividerY + 15, 0xFFD0D3DB);
-        drawString(fontRendererObj, "FORGE  |  ALPHACLIENT", panelLeft + 26, dividerY + 30, 0xFF858B98);
+            int dividerY = Math.min(panelBottom - 55, taglineY + 47);
+            drawRect(panelLeft + 30, dividerY, panelRight - 30, dividerY + 1, 0x557F8794);
+            drawString(fontRendererObj, "MINECRAFT 1.8.9", panelLeft + 26, dividerY + 15, 0xFFD0D3DB);
+            drawString(fontRendererObj, "FORGE  |  ALPHACLIENT", panelLeft + 26, dividerY + 30, 0xFF858B98);
         }
 
-        // Compact footer.
         if (height >= 390) {
             drawString(fontRendererObj, "ALPHA CLIENT", 12, height - 28, ACCENT);
             drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION
@@ -163,24 +161,17 @@ public final class AlphaMainMenu extends GuiScreen {
     }
 
     private void drawAlphaBackground() {
-        // Opaque custom background: no Minecraft panorama is drawn or visible behind the UI.
         drawRect(0, 0, width, height, 0xFF090B0F);
         drawGradientRect(0, 0, width, height, 0xFF171A21, 0xFF090A0D);
-
-        // Large, low-contrast panels add depth without competing with the controls.
         drawRect(0, 0, width / 2, height, 0x241D2028);
         drawGradientRect(0, height / 4, width / 2, height, 0x161E222B, 0x00090A0D);
         drawRect(0, 0, width, 3, ACCENT);
         drawRect(0, height - 3, width, height, 0xFF252017);
-
-        // Fine framing and angled accent motif.
         drawRect(22, 78, 23, height - 66, 0x337F8794);
         drawRect(22, 78, Math.min(width - 22, 160), 79, 0x337F8794);
         drawRect(width - 160, height - 67, width - 22, height - 66, 0x337F8794);
         drawRect(width - 23, 80, width - 22, height - 66, 0x337F8794);
         drawRect(width / 2 - 1, 74, width / 2, height - 74, 0x337D682D);
-
-        // Subtle yellow wash on the left, using Alpha Yellow as an accent rather than a full-screen fill.
         drawGradientRect(0, 0, width / 3, height, 0x12FFD866, 0x00090B0F);
     }
 
@@ -197,7 +188,7 @@ public final class AlphaMainMenu extends GuiScreen {
                 accountMenuOpen = !accountMenuOpen;
                 initGui();
                 break;
-            case ADD_ACCOUNT:
+            case ACCOUNT_SWITCHER:
                 minecraft.displayGuiScreen(new AccountInfoGui(this));
                 break;
             case MULTIPLAYER:
