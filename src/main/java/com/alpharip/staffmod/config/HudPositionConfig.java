@@ -29,6 +29,9 @@ public class HudPositionConfig {
     private static final int DEFAULT_BHOP_Y = 100;
     private static final int DEFAULT_BHOP_SCALE = 50;
 
+    private static final int DEFAULT_FPS_X = 6;
+    private static final int DEFAULT_FPS_Y = 6;
+
 
     /*
      * =========================
@@ -62,6 +65,9 @@ public class HudPositionConfig {
 
     private static int bhopScale =
             DEFAULT_BHOP_SCALE;
+
+    private static int fpsX = DEFAULT_FPS_X;
+    private static int fpsY = DEFAULT_FPS_Y;
 
     private static boolean loaded =
             false;
@@ -232,6 +238,9 @@ public class HudPositionConfig {
                             DEFAULT_BHOP_SCALE
                     );
 
+            fpsX = getInt(properties, "fpsX", DEFAULT_FPS_X);
+            fpsY = getInt(properties, "fpsY", DEFAULT_FPS_Y);
+
         } catch (Exception e) {
 
             System.out.println(
@@ -331,6 +340,9 @@ public class HudPositionConfig {
                 "bhopScale",
                 String.valueOf(bhopScale)
         );
+
+        properties.setProperty("fpsX", String.valueOf(fpsX));
+        properties.setProperty("fpsY", String.valueOf(fpsY));
 
 
         FileOutputStream output =
@@ -656,11 +668,37 @@ public class HudPositionConfig {
     }
 
 
+    public static int getFpsX() {
+        load();
+        return fpsX;
+    }
+
+    public static int getFpsY() {
+        load();
+        return fpsY;
+    }
+
+    public static void setFpsPosition(int x, int y) {
+        load();
+        fpsX = Math.max(0, x);
+        fpsY = Math.max(0, y);
+        save();
+    }
+
+
     /*
      * =========================
      * RESET EVERYTHING
      * =========================
      */
+
+    public static void resetAll() {
+        load();
+        resetValues();
+        fpsX = DEFAULT_FPS_X;
+        fpsY = DEFAULT_FPS_Y;
+        save();
+    }
 
     private static void resetValues() {
 
@@ -690,6 +728,9 @@ public class HudPositionConfig {
 
         bhopScale =
                 DEFAULT_BHOP_SCALE;
+
+        fpsX = DEFAULT_FPS_X;
+        fpsY = DEFAULT_FPS_Y;
     }
 
 
