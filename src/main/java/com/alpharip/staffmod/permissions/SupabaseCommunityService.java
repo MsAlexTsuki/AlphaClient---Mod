@@ -34,6 +34,9 @@ public final class SupabaseCommunityService {
     }
 
     public static synchronized void signIn(String email, String password) throws Exception {
+        if (accessToken != null) {
+            throw new IllegalStateException("Already signed in to an Alpha community account. Sign out before switching accounts.");
+        }
         accessToken = null;
         signedInEmail = null;
         signedInRankLabel = null;
