@@ -131,7 +131,7 @@ public final class SupabaseCommunityService {
     private static String formatRankLabel(String rankKey, boolean founder) {
         if (founder || "founder".equalsIgnoreCase(rankKey)) return "Founder";
         if (rankKey == null || rankKey.trim().isEmpty() || "public".equalsIgnoreCase(rankKey)) return "Member";
-        String[] parts = rankKey.trim().toLowerCase(java.util.Locale.ROOT).split("[_\\\\- ]+");
+        String[] parts = rankKey.trim().toLowerCase(java.util.Locale.ROOT).split("[-_ ]+");
         StringBuilder label = new StringBuilder();
         for (String part : parts) {
             if (part.isEmpty()) continue;
