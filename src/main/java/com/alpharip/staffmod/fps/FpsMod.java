@@ -3,6 +3,8 @@ package com.alpharip.staffmod.fps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
 import com.alpharip.staffmod.config.HudPositionConfig;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import java.awt.Color;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -93,6 +95,8 @@ public final class FpsMod {
         loadHudPosition();
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.gameSettings == null || mc.gameSettings.showDebugInfo) return;
+        AlphaModule module = AlphaModuleRegistry.find("fps");
+        if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
         if (!showFps) return;
 
         String line = "FPS " + Minecraft.getDebugFPS();
