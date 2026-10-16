@@ -27,11 +27,11 @@ public final class RankViewerRenderer {
         if (renderingLocalPlayer) return;
         if (player.isInvisible()) return;
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
-        // Other players only get a badge when rank data exists. The local player's
-        // username is still rendered while rank data is loading or unavailable.
-        if (!renderingLocalPlayer && rank == null) return;
+        // Only render a custom badge for players with a rank record. Their
+        // normal Minecraft nametag remains handled by vanilla rendering.
+        if (rank == null) return;
 
-        String label = rank.label().toUpperCase(java.util.Locale.ROOT);
+        String label = rank.label().toUpperCase(java.util.Locale.ROOT) + "  |  " + player.getName();
         String emblem = rank.emblem();
         int labelWidth = minecraft.fontRendererObj.getStringWidth(label);
         int emblemWidth = minecraft.fontRendererObj.getStringWidth(emblem);
