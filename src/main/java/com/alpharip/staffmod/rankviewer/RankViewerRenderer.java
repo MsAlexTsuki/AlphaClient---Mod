@@ -99,8 +99,6 @@ public final class RankViewerRenderer {
         GlStateManager.disableDepth();
         GlStateManager.depthMask(false);
 
-        drawRect(minecraft, -labelWidth / 2 - 3, -2, labelWidth / 2 + 3, labelHeight + 2, EDGE_DARK);
-        drawRect(minecraft, -labelWidth / 2 - 1, 0, labelWidth / 2 + 1, labelHeight, PANEL);
         minecraft.fontRendererObj.drawStringWithShadow(label, -labelWidth / 2, 1, 0xFFFFD866);
 
         GlStateManager.depthMask(true);
