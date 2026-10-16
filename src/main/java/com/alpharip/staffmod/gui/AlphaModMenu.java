@@ -72,7 +72,7 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setDisabledTextColour(0xFFB8BDC8);
         buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + panelHeight - 22, 16, 16, ""));
         buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + panelHeight - 22, 16, 16, ""));
-        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 7, panelTop + panelHeight - 23, 88, 17, "HUD EDITOR"));
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 6, panelTop + panelHeight - 20, 58, 14, "HUD"));
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
@@ -189,8 +189,8 @@ public final class AlphaModMenu extends GuiScreen {
                     "ON".equals(selectedStatus) ? 0xFF9CE2AC
                             : ("LOCKED".equals(selectedStatus) || "COMING SOON".equals(selectedStatus)
                             ? 0xFFFFD866 : 0xFF9A9EAA));
-            drawWrappedText(selected.getDescription(), settingsLeft + 5, panelTop + 97,
-                    Math.max(84, right - settingsLeft - 16), 0xFFB9BDC6);
+            drawWrappedTextLimited(selected.getDescription(), settingsLeft + 5, panelTop + 97,
+                    Math.max(70, right - settingsLeft - 16), 0xFFB9BDC6, 3);
 
             drawRect(settingsLeft + 4, panelTop + 132, right - 6, panelTop + 133, 0x553F424A);
             drawString(fontRendererObj, "OPTIONS", settingsLeft + 5, panelTop + 140, ACCENT);
@@ -219,8 +219,17 @@ public final class AlphaModMenu extends GuiScreen {
             drawString(fontRendererObj, "No modules found.", settingsLeft + 7, panelTop + 79, 0xFFB8BDC8);
         }
 
-        drawString(fontRendererObj, "RANK: " + (SupabaseCommunityService.isSignedIn() ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK"),
-                settingsLeft + 5, bottom - 11, SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
+        String rankText = "RANK: " + (SupabaseCommunityService.isSignedIn()
+                ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK");
+        int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 50 - settingsLeft - 8);
+        while (rankText.length() > 4 && fontRendererObj.getStringWidth(rankText) > rankMaxWidth) {
+            rankText = rankText.substring(0, rankText.length() - 1);
+        }
+        if (fontRendererObj.getStringWidth(rankText) > rankMaxWidth && rankText.length() > 3) {
+            rankText = rankText.substring(0, Math.max(1, rankText.length() - 3)) + "...";
+        }
+        drawString(fontRendererObj, rankText, settingsLeft + 5, bottom - 11,
+                SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8)
         super.drawScreen(mouseX, mouseY, partialTicks);
         int footerY = panelTop + panelHeight - 22;
         int accountX = panelLeft + panelWidth - 43;
@@ -234,6 +243,34 @@ public final class AlphaModMenu extends GuiScreen {
         drawRect(exitX + 10, footerY + 9, exitX + 12, footerY + 11, 0xFFE6E8ED);
     }
 
+    private void drawWrappedTextLimited(String text, int x, int y, int maxWidth, int color, int maxLines) {
+        if (text == null || text.isEmpty() || maxLines <= 0) return;
+        StringBuilder line = new StringBuilder();
+        int lines = 0;
+        for (String word : text.split(" ")) {
+            String candidate = line.length() == 0 ? word : line + " " + word;
+            if (fontRendererObj.getStringWidth(candidate) > maxWidth && line.length() > 0) {
+                if (lines >= maxLines - 1) {
+                    String last = line.toString();
+                    while (last.length() > 3 && fontRendererObj.getStringWidth(last + "...") > maxWidth) last = last.substring(0, last.length() - 1);
+                    drawString(fontRendererObj, last + "...", x, y, color);
+                    return;
+                }
+                drawString(fontRendererObj, line.toString(), x, y, color);
+                y += 10;
+                lines++;
+                line = new StringBuilder(word);
+            } else line = new StringBuilder(candidate);
+        }
+        if (line.length() > 0 && lines < maxLines) {
+            String last = line.toString();
+            if (fontRendererObj.getStringWidth(last) > maxWidth) {
+                while (last.length() > 3 && fontRendererObj.getStringWidth(last + "...") > maxWidth) last = last.substring(0, last.length() - 1);
+                last += "...";
+            }
+            drawString(fontRendererObj, last, x, y, color);
+        }
+    }
     private void drawWrappedText(String text, int x, int y, int maxWidth, int color) {
         if (text == null || text.isEmpty()) return;
         StringBuilder line = new StringBuilder();
