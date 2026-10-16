@@ -117,7 +117,7 @@ public final class AlphaModMenu extends GuiScreen {
             int x = contentLeft + (local % 2) * (tileWidth + gap);
             int y = contentTop + (local / 2) * (tileHeight + rowGap);
             String moduleStatus = filtered.get(i).getStatusLabel();
-            String moduleLabel = filtered.get(i).getName() + "  |  " + moduleStatus;
+            String moduleLabel = "quality".equals(filtered.get(i).getId()) ? filtered.get(i).getName() : filtered.get(i).getName() + "  |  " + moduleStatus;
             buttonList.add(new AlphaButton(MODULE_BASE + i, x, y, tileWidth, tileHeight,
                     moduleLabel, filtered.get(i).getId().equals(selectedModuleId)));
         }
@@ -192,7 +192,7 @@ public final class AlphaModMenu extends GuiScreen {
         if (selected != null) {
             drawRect(settingsLeft + 4, panelTop + 57, right - 6, panelTop + 89, 0xB5161820);
             drawString(fontRendererObj, selected.getName(), settingsLeft + 9, panelTop + 64, 0xFFF3F4F6);
-            String selectedStatus = selected.getStatusLabel();
+            String selectedStatus = "quality".equals(selected.getId()) ? "FOLDER" : selected.getStatusLabel();
             drawString(fontRendererObj, selectedStatus, settingsLeft + 9, panelTop + 77,
                     "ON".equals(selectedStatus) ? 0xFF9CE2AC
                             : ("LOCKED".equals(selectedStatus) || "COMING SOON".equals(selectedStatus)
@@ -204,7 +204,7 @@ public final class AlphaModMenu extends GuiScreen {
             drawString(fontRendererObj, "OPTIONS", settingsLeft + 5, panelTop + 140, ACCENT);
             int y = panelTop + 156;
             drawString(fontRendererObj, "Status", settingsLeft + 7, y, 0xFFB8BDC8);
-            String status = selected.getStatusLabel();
+            String status = "quality".equals(selected.getId()) ? "FOLDER" : selected.getStatusLabel();
             int statusColor = "ON".equals(status) ? 0xFF9CE2AC
                     : ("LOCKED".equals(status) || "COMING SOON".equals(status) ? ACCENT : 0xFFB9BDC6);
             drawString(fontRendererObj, status, settingsLeft + 49, y, statusColor);
@@ -281,7 +281,10 @@ public final class AlphaModMenu extends GuiScreen {
             if (index >= 0 && index < modules.size()) {
                 AlphaModule clickedModule = modules.get(index);
                 if (clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                    if ("quality".equals(clickedModule.getId())) {
+                    if ("name-viewer".equals(clickedModule.getId())) {
+                        mc.displayGuiScreen(new NameViewerSettingsGui(this));
+                        return;
+                    } else if ("quality".equals(clickedModule.getId())) {
                         mc.displayGuiScreen(new QualityGui(this));
                         return;
                     } else if ("staffmods".equals(clickedModule.getId())) {
