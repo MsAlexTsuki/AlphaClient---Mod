@@ -3,6 +3,8 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.hud.BhopHud;
 import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.fps.FpsMod;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
@@ -18,6 +20,11 @@ public final class HudEditorGui extends GuiScreen {
     private int dragX, dragY;
 
     public HudEditorGui(GuiScreen parent) { this.parent = parent; }
+
+    private static boolean isFpsModuleEnabled() {
+        AlphaModule module = AlphaModuleRegistry.find("fps");
+        return module != null && module.isEnabled() && module.isUnlocked();
+    }
 
     @Override
     public void initGui() {
@@ -48,7 +55,7 @@ public final class HudEditorGui extends GuiScreen {
         drawRect(x, y, x + 1, y + h, 0x665B626E);
         drawString(fontRendererObj, BhopHud.getDisplayedProfileName() + "  |  "
                 + BhopHud.getDisplayedSpeedName(), x + 8, y + 10, 0xFFF3F4F6);
-        if (FpsMod.isShowFps()) {
+        if (isFpsModuleEnabled()) {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
             int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
             int fw = fontRendererObj.getStringWidth(fps) + 10;
@@ -62,7 +69,7 @@ public final class HudEditorGui extends GuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
         int fw = fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10;
-        if (FpsMod.isShowFps() && mouseButton == 0 && mouseX >= fx - 3 && mouseX <= fx + fw && mouseY >= fy - 3 && mouseY <= fy + fontRendererObj.FONT_HEIGHT + 3) {
+        if (isFpsModuleEnabled() && mouseButton == 0 && mouseX >= fx - 3 && mouseX <= fx + fw && mouseY >= fy - 3 && mouseY <= fy + fontRendererObj.FONT_HEIGHT + 3) {
             dragging = true; dragX = mouseX - fx; dragY = mouseY - fy; fpsDragging = true; return;
         }
         int x = BhopHud.getHudX(), y = BhopHud.getHudY(), w = Math.max(110, BhopHud.getHudWidth());
