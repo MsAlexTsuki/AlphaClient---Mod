@@ -8,7 +8,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import java.awt.Color;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-/** Compact FPS counter with first-run performance defaults for AlphaClient. */
+/** Compact FPS HUD renderer for AlphaClient. */
 public final class FpsMod {
     private static boolean showFps = true;
     private static boolean showBackground = true;
