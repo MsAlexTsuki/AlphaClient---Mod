@@ -1,6 +1,8 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.fps.FpsMod;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
@@ -12,6 +14,7 @@ public final class FpsSettingsGui extends GuiScreen {
     private static final int FRAME = 3;
     private static final int BACKGROUND = 4;
     private static final int OPTIMIZE = 5;
+    private static final int ENABLE = 6;
     private final GuiScreen parent;
     private int left, top, right, bottom;
 
@@ -24,13 +27,15 @@ public final class FpsSettingsGui extends GuiScreen {
         right = left + 300;
         top = Math.max(12, height / 2 - 105);
         bottom = Math.min(height - 12, top + 210);
-        buttonList.add(new AlphaButton(FPS, left + 20, top + 65, 260, 20, fpsLabel()));
-        buttonList.add(new AlphaButton(FRAME, left + 20, top + 91, 260, 20, frameLabel()));
-        buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 117, 260, 20, backgroundLabel()));
-        buttonList.add(new AlphaButton(OPTIMIZE, left + 20, top + 143, 260, 20, optimizeLabel()));
+        buttonList.add(new AlphaButton(ENABLE, left + 20, top + 55, 260, 20, moduleLabel()));
+        buttonList.add(new AlphaButton(FPS, left + 20, top + 81, 260, 20, fpsLabel()));
+        buttonList.add(new AlphaButton(FRAME, left + 20, top + 107, 260, 20, frameLabel()));
+        buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 133, 260, 20, backgroundLabel()));
+        buttonList.add(new AlphaButton(OPTIMIZE, left + 20, top + 159, 260, 20, optimizeLabel()));
         buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
+    private String moduleLabel() { AlphaModule module = AlphaModuleRegistry.find("fps"); return "FPS MODULE: " + (module != null && module.isEnabled() ? "ON" : "OFF"); }
     private String fpsLabel() { return "FPS COUNTER: " + (FpsMod.isShowFps() ? "ON" : "OFF"); }
     private String frameLabel() { return "MIN FRAME TIME: " + (FpsMod.isShowFrameTime() ? "ON" : "OFF"); }
     private String backgroundLabel() { return "HUD BACKGROUND: " + (FpsMod.isShowBackground() ? "ON" : "OFF"); }
@@ -51,6 +56,7 @@ public final class FpsSettingsGui extends GuiScreen {
         if (button == null) return;
         switch (button.id) {
             case BACK: mc.displayGuiScreen(parent); return;
+            case ENABLE: { AlphaModule module = AlphaModuleRegistry.find("fps"); if (module != null) module.setEnabled(!module.isEnabled()); break; }
             case FPS: FpsMod.setShowFps(!FpsMod.isShowFps()); break;
             case FRAME: FpsMod.setShowFrameTime(!FpsMod.isShowFrameTime()); break;
             case BACKGROUND: FpsMod.setShowBackground(!FpsMod.isShowBackground()); break;
