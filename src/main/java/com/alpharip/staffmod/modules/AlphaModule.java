@@ -2,6 +2,7 @@ package com.alpharip.staffmod.modules;
 
 import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.config.AlphaClientConfig;
+import com.alpharip.staffmod.movement.BhopProfileManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -87,6 +88,9 @@ public final class AlphaModule {
             if (this.enabled != enabled) {
                 this.enabled = enabled;
                 AlphaClientConfig.saveModuleState(id, enabled);
+                if (!BhopProfileManager.isApplyingModuleStates()) {
+                    BhopProfileManager.setSelectedModuleEnabled(id, enabled);
+                }
             }
         }
     }
