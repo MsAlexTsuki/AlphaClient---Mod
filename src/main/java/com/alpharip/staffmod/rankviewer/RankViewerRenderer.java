@@ -87,8 +87,15 @@ public final class RankViewerRenderer {
         y -= renderManager.viewerPosY;
         z -= renderManager.viewerPosZ;
 
-        String label = player.getName();
+        AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
+        String name = player.getName();
+        String rankLabel = rank == null ? "" : rank.label().toUpperCase(java.util.Locale.ROOT) + "  |  ";
+        String label = rankLabel + name;
+        String emblem = rank == null ? "" : rank.emblem();
+        int rankColor = rank == null ? 0xFFFFD866 : rank.color();
+        int emblemWidth = minecraft.fontRendererObj.getStringWidth(emblem);
         int labelWidth = minecraft.fontRendererObj.getStringWidth(label);
+        int totalWidth = labelWidth + (emblem.isEmpty() ? 0 : emblemWidth + 5);
         int labelHeight = minecraft.fontRendererObj.FONT_HEIGHT;
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y + player.height + 0.5D, z);
@@ -99,7 +106,12 @@ public final class RankViewerRenderer {
         GlStateManager.disableDepth();
         GlStateManager.depthMask(false);
 
-        minecraft.fontRendererObj.drawStringWithShadow(label, -labelWidth / 2, 1, 0xFFFFD866);
+        int cursor = -totalWidth / 2;
+        if (!emblem.isEmpty()) {
+            minecraft.fontRendererObj.drawStringWithShadow(emblem, cursor, 1, rankColor);
+            cursor += emblemWidth + 5;
+        }
+        minecraft.fontRendererObj.drawStringWithShadow(label, cursor, 1, rankColor);
 
         GlStateManager.depthMask(true);
         GlStateManager.enableDepth();
