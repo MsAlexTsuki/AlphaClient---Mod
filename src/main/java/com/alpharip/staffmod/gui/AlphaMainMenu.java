@@ -2,6 +2,7 @@ package com.alpharip.staffmod.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSelectWorld;
 import net.minecraft.client.multiplayer.GuiConnecting;
@@ -14,6 +15,7 @@ import java.io.IOException;
 /** Fully custom AlphaClient menu; deliberately does not render GuiMainMenu or its panorama. */
 public final class AlphaMainMenu extends GuiScreen {
     private static final int PLAY = 10;
+    private static final int MULTIPLAYER = 11;
     private static final int MODULES = 12;
     private static final int OPTIONS = 13;
     private static final int PARTNER = 14;
@@ -44,7 +46,7 @@ public final class AlphaMainMenu extends GuiScreen {
         buttonHeight = height < 360 ? 22 : height < 480 ? 26 : 32;
         buttonGap = height < 360 ? 3 : height < 480 ? 5 : 8;
 
-        int menuButtonCount = 5;
+        int menuButtonCount = 6;
         int menuHeight = menuButtonCount * buttonHeight + (menuButtonCount - 1) * buttonGap;
         if (compactLayout) {
             menuLeft = Math.max(12, (width - buttonWidth) / 2);
@@ -58,13 +60,15 @@ public final class AlphaMainMenu extends GuiScreen {
         }
 
         buttonList.add(new AlphaButton(PLAY, menuLeft, menuTop, buttonWidth, buttonHeight, "PLAY", true));
-        buttonList.add(new AlphaButton(MODULES, menuLeft, menuTop + buttonHeight + buttonGap,
+        buttonList.add(new AlphaButton(MULTIPLAYER, menuLeft, menuTop + buttonHeight + buttonGap,
+                buttonWidth, buttonHeight, "MULTIPLAYER"));
+        buttonList.add(new AlphaButton(MODULES, menuLeft, menuTop + 2 * (buttonHeight + buttonGap),
                 buttonWidth, buttonHeight, "MODS"));
-        buttonList.add(new AlphaButton(OPTIONS, menuLeft, menuTop + 2 * (buttonHeight + buttonGap),
+        buttonList.add(new AlphaButton(OPTIONS, menuLeft, menuTop + 3 * (buttonHeight + buttonGap),
                 buttonWidth, buttonHeight, "SETTINGS"));
-        buttonList.add(new AlphaButton(PARTNER, menuLeft, menuTop + 3 * (buttonHeight + buttonGap),
+        buttonList.add(new AlphaButton(PARTNER, menuLeft, menuTop + 4 * (buttonHeight + buttonGap),
                 buttonWidth, buttonHeight, "CONNECT TO ALPHA.RIP"));
-        buttonList.add(new AlphaButton(QUIT, menuLeft, menuTop + 4 * (buttonHeight + buttonGap),
+        buttonList.add(new AlphaButton(QUIT, menuLeft, menuTop + 5 * (buttonHeight + buttonGap),
                 buttonWidth, buttonHeight, "QUIT"));
 
         buttonList.add(new AlphaButton(ACCOUNT_MENU, 24, 22, 132, 27,
@@ -82,7 +86,7 @@ public final class AlphaMainMenu extends GuiScreen {
         int menuCardRight = Math.min(width - 8, menuLeft + buttonWidth + (compactLayout ? 14 : 22));
         int menuCardTop = Math.max(8, menuTop - (compactLayout ? 48 : 84));
         int menuCardBottom = Math.min(height - 8,
-                menuTop + 5 * buttonHeight + 4 * buttonGap + (compactLayout ? 16 : 22));
+                menuTop + 6 * buttonHeight + 5 * buttonGap + (compactLayout ? 16 : 22));
 
         drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardBottom, 0xA90E1015);
         drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardTop + 1, 0x554B515D);
@@ -185,6 +189,9 @@ public final class AlphaMainMenu extends GuiScreen {
                 break;
             case ACCOUNT_SWITCHER:
                 minecraft.displayGuiScreen(new AccountInfoGui(this));
+                break;
+            case MULTIPLAYER:
+                minecraft.displayGuiScreen(new GuiMultiplayer(this));
                 break;
             case MODULES:
                 minecraft.displayGuiScreen(new AlphaModMenu(this));
