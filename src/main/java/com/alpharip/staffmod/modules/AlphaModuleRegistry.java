@@ -36,22 +36,22 @@ public final class AlphaModuleRegistry {
         quality.addFeature(new AlphaModuleFeature("crash-reporter", "Alpha Crash Reporter", "Collect crash diagnostics.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("update-checker", "Alpha Update Checker", "Check AlphaClient updates.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("control-center", "Alpha Control Center", "Central place for AlphaClient controls.", PermissionService.Rank.PUBLIC, false));
-        quality.addFeature(new AlphaModuleFeature("keybind-manager", "Keybind Manager", "Configure AlphaClient keybinds.", PermissionService.Rank.PUBLIC, false));
+        quality.addFeature(new AlphaModuleFeature("keybind-manager", "Keybind Manager", "Configure keybinds.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("config-profiles", "Config Profiles", "Maintain named configuration profiles.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("session-timer", "Session Timer", "Track the current play session.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("feature-flags", "Alpha Feature Flags", "Control experimental feature availability.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("mod-toggle-menu", "Mod Toggle Menu", "Quickly enable or disable modules.", PermissionService.Rank.PUBLIC, false));
         MODULES.add(quality);
 
-        AlphaModule rankViewer = new AlphaModule(
-                "rank-viewer",
-                "Rank Viewer",
-                "Show compact public community-rank labels above player nameplates.",
+        AlphaModule nameViewer = new AlphaModule(
+                "name-viewer",
+                "Name Vieuwer",
+                "Show community rank badges above player names, including your own when rendered.",
                 AlphaModule.Category.PUBLIC,
                 true,
                 true
         );
-        MODULES.add(rankViewer);
+        MODULES.add(nameViewer);
 
         AlphaModule bhop = new AlphaModule(
                 "staffmods",
