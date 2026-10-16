@@ -14,6 +14,10 @@ import com.alpharip.staffmod.rankviewer.RankCache;
 import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.GuiConnecting;
+import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -21,6 +25,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import org.lwjgl.input.Keyboard;
 
@@ -42,6 +47,8 @@ public final class AlphaClient {
 
     private KeyBinding openModMenuKey;
     private KeyBinding toggleBhopKey;
+    private int partnerAutoConnectTicks = -1;
+    private boolean partnerAutoConnectConsumed;
 
     @Mod.EventHandler
     public void initialize(FMLInitializationEvent event) {
@@ -76,6 +83,33 @@ public final class AlphaClient {
         ClientRegistry.registerKeyBinding(toggleBhopKey);
 
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
+    }
+
+    /** Connects to the partner server only after the AlphaClient main menu has loaded. */
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || partnerAutoConnectConsumed) return;
+
+        String partnerServer = System.getProperty("alphaclient.partnerServer");
+        if (partnerServer == null || partnerServer.trim().isEmpty()) return;
+
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null) return;
+
+        // Wait for the actual menu screen to remain active for one second before connecting.
+        if (minecraft.currentScreen instanceof AlphaMainMenu || minecraft.currentScreen instanceof GuiMainMenu) {
+            if (partnerAutoConnectTicks < 0) partnerAutoConnectTicks = 0;
+            partnerAutoConnectTicks++;
+            if (partnerAutoConnectTicks >= 20) {
+                partnerAutoConnectConsumed = true;
+                GuiScreen parent = minecraft.currentScreen;
+                ServerData serverData = new ServerData("Alpha.rip", partnerServer.trim(), false);
+                minecraft.displayGuiScreen(new GuiConnecting(parent, minecraft, serverData));
+                System.out.println("[AlphaClient] Connecting to partner server " + partnerServer.trim());
+            }
+        } else {
+            partnerAutoConnectTicks = -1;
+        }
     }
 
     @SubscribeEvent
