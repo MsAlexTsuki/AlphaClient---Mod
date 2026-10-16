@@ -2,13 +2,13 @@ package com.alpharip.staffmod.fps;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;\nimport java.awt.Color;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** Compact FPS counter with automatic performance settings for AlphaClient. */
 public final class FpsMod {
     private static boolean showFps = true;
-    private static boolean showBackground = true;
+    private static boolean showBackground = true;\n    private static int hudX = 6;\n    private static int hudY = 6;\n    private static int colorIndex = 0;\n    private static final String[] COLOR_NAMES = {"White", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Pink", "Rainbow"};\n    private static final int[] COLORS = {0xFFFFFFFF, 0xFFFF5555, 0xFFFFAA00, 0xFFFFFF55, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};
     private static boolean originalsCaptured;
     private static boolean originalVsync;
     private static int originalLimit;
@@ -21,7 +21,7 @@ public final class FpsMod {
     public static boolean isShowFps() { return showFps; }
     public static boolean isShowBackground() { return showBackground; }
     public static void setShowFps(boolean value) { showFps = value; }
-    public static void setShowBackground(boolean value) { showBackground = value; }
+    public static void setShowBackground(boolean value) { showBackground = value; }\n    public static int getHudX() { return hudX; }\n    public static int getHudY() { return hudY; }\n    public static void setHudPosition(int x, int y) { hudX = x; hudY = y; }\n    public static String getColorName() { return COLOR_NAMES[colorIndex]; }\n    public static void cycleColor() { colorIndex = (colorIndex + 1) % COLOR_NAMES.length; }\n    public static int getTextColor() {\n        if (colorIndex == COLOR_NAMES.length - 1) {\n            float hue = (System.currentTimeMillis() % 4000L) / 4000.0F;\n            return 0xFF000000 | (Color.HSBtoRGB(hue, 1.0F, 1.0F) & 0x00FFFFFF);\n        }\n        return COLORS[colorIndex];\n    }
 
     /** Applies conservative FPS settings automatically, independently of HUD/module toggles. */
     public static void applyAutomaticOptimization() {
@@ -70,6 +70,6 @@ public final class FpsMod {
             net.minecraft.client.gui.Gui.drawRect(x - 3, y - 3, x + width, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
             net.minecraft.client.gui.Gui.drawRect(x - 3, y - 3, x + width, y - 2, 0xFFFFD866);
         }
-        mc.fontRendererObj.drawStringWithShadow(line, x, y, 0xFFFFFFFF);
+        mc.fontRendererObj.drawStringWithShadow(line, x, y, getTextColor());
     }
 }
