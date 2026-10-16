@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -15,25 +14,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public final class RankViewerRenderer {
     private static final int BADGE_SIZE = 8;
     private static final int BADGE_GAP = 3;
-
-    @SubscribeEvent
-    public void onRenderPlayer(RenderPlayerEvent.Pre event) {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || minecraft.thePlayer == null || minecraft.gameSettings == null
-                || event.entityPlayer == null) return;
-
-        // In rear-facing F5, hide only the local player model when the camera has clipped
-        // inside the player's hitbox. Keep the Name Viewer and rank badge rendering intact.
-        if (minecraft.gameSettings.thirdPersonView != 1
-                || !minecraft.thePlayer.getUniqueID().equals(event.entityPlayer.getUniqueID())) return;
-
-        net.minecraft.util.AxisAlignedBB bounds = event.entityPlayer.getEntityBoundingBox();
-        net.minecraft.client.renderer.entity.RenderManager renderManager = minecraft.getRenderManager();
-        if (bounds != null && bounds.isVecInside(new net.minecraft.util.Vec3(
-                renderManager.viewerPosX, renderManager.viewerPosY, renderManager.viewerPosZ))) {
-            event.setCanceled(true);
-        }
-    }
 
     @SubscribeEvent
     public void onRenderPlayerSpecials(RenderPlayerEvent.Specials.Pre event) {
