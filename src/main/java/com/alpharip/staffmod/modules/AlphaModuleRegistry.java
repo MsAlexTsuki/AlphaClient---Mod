@@ -43,6 +43,16 @@ public final class AlphaModuleRegistry {
         quality.addFeature(new AlphaModuleFeature("mod-toggle-menu", "Mod Toggle Menu", "Quickly enable or disable modules.", PermissionService.Rank.PUBLIC, false));
         MODULES.add(quality);
 
+        AlphaModule rankViewer = new AlphaModule(
+                "rank-viewer",
+                "Rank Viewer",
+                "Show compact public community-rank labels above player nameplates.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                true
+        );
+        MODULES.add(rankViewer);
+
         AlphaModule bhop = new AlphaModule(
                 "staffmods",
                 "BHOP",

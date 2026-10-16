@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.minecraft.client.Minecraft;
+import java.util.UUID;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -74,6 +76,29 @@ public final class SupabaseCommunityService {
         signedInEmail = email.trim();
         signedInRankLabel = formatRankLabel(rankKey, founder);
         PermissionService.setVerifiedOnlineRank(rank);
+        linkCurrentMinecraftUuid(token);
+    }
+
+    /**
+     * Links this authenticated community profile to the current online Minecraft UUID
+     * for public rank display only. This mapping must never grant client or server permissions.
+     */
+    private static void linkCurrentMinecraftUuid(String token) {
+        if (PermissionService.isOfflineTestSession()) return;
+        try {
+            Minecraft minecraft = Minecraft.getMinecraft();
+            if (minecraft == null || minecraft.getSession() == null
+                    || minecraft.getSession().getProfile() == null) return;
+            UUID uuid = minecraft.getSession().getProfile().getId();
+            if (uuid == null) return;
+
+            JsonObject payload = new JsonObject();
+            payload.addProperty("target_uuid", uuid.toString());
+            requestJson("POST", "/rest/v1/rpc/link_minecraft_uuid", token, payload.toString());
+        } catch (Exception exception) {
+            System.err.println("[AlphaClient] Could not link Minecraft UUID for public rank display: "
+                    + exception.getMessage());
+        }
     }
 
     public static synchronized void signOut() {
