@@ -2,6 +2,7 @@ package com.alpharip.staffmod.fps;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
+import com.alpharip.staffmod.config.HudPositionConfig;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import java.awt.Color;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -12,6 +13,7 @@ public final class FpsMod {
     private static boolean showBackground = true;
     private static int hudX = 6;
     private static int hudY = 6;
+    private static boolean hudPositionLoaded;
     private static int colorIndex = 0;
     private static final String[] COLOR_NAMES = {"White", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Pink", "Rainbow"};
     private static final int[] COLORS = {0xFFFFFFFF, 0xFFFF5555, 0xFFFFAA00, 0xFFFFFF55, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};
@@ -30,7 +32,19 @@ public final class FpsMod {
     public static void setShowBackground(boolean value) { showBackground = value; }
     public static int getHudX() { return hudX; }
     public static int getHudY() { return hudY; }
-    public static void setHudPosition(int x, int y) { hudX = x; hudY = y; }
+    public static void loadHudPosition() {
+        if (hudPositionLoaded) return;
+        HudPositionConfig.load();
+        hudX = HudPositionConfig.getFpsX();
+        hudY = HudPositionConfig.getFpsY();
+        hudPositionLoaded = true;
+    }
+    public static void setHudPosition(int x, int y) {
+        loadHudPosition();
+        hudX = Math.max(0, x);
+        hudY = Math.max(0, y);
+        HudPositionConfig.setFpsPosition(hudX, hudY);
+    }
     public static String getColorName() { return COLOR_NAMES[colorIndex]; }
     public static void cycleColor() { colorIndex = (colorIndex + 1) % COLOR_NAMES.length; }
     public static int getTextColor() {
@@ -76,13 +90,14 @@ public final class FpsMod {
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Text event) {
         if (event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
+        loadHudPosition();
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.gameSettings == null || mc.gameSettings.showDebugInfo) return;
         if (!showFps) return;
 
         String line = "FPS " + Minecraft.getDebugFPS();
-        int x = 6;
-        int y = 6;
+        int x = hudX;
+        int y = hudY;
         int width = mc.fontRendererObj.getStringWidth(line) + 10;
         if (showBackground) {
             net.minecraft.client.gui.Gui.drawRect(x - 3, y - 3, x + width, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
