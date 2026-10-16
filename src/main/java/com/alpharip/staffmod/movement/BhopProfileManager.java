@@ -644,6 +644,8 @@ public final class BhopProfileManager {
                         2
                 );
 
+        initializeModuleDefaults(profile);
+
         profiles.add(
                 profile
         );
@@ -716,6 +718,7 @@ public final class BhopProfileManager {
         if (name.isEmpty() || findProfile(name) != null) return false;
         saveCurrentModuleStates();
         BhopProfile profile = new BhopProfile(name, "BHOP", DEFAULT_COLOR, false, false, 2);
+        initializeModuleDefaults(profile);
         profiles.add(profile);
         selectedProfile = name;
         ensureProfileModColors(profile, readLegacyModColors());
@@ -1382,6 +1385,14 @@ public final class BhopProfileManager {
     }
 
 
+    /** Initialize every registered module to OFF for a newly created profile. */
+    private static void initializeModuleDefaults(BhopProfile profile) {
+        if (profile == null) return;
+        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            profile.getModule(module.getId()).addProperty("enabled", false);
+        }
+    }
+
     /**
      * True while module values are being applied from a profile.
      * Prevents setters from writing applied values back mid-load.
@@ -1429,9 +1440,15 @@ public final class BhopProfileManager {
                     } catch (Exception ignored) {
                     }
                 } else {
-                    // Legacy profiles have no toggle state: retain the current setting
-                    // and migrate it rather than resetting existing users.
-                    settings.addProperty("enabled", module.isEnabled());
+                    // Default starts conservatively with every module disabled.
+                    // For older non-default profiles, retain the current state when no
+                    // value has ever been stored, then persist it for future launches.
+                    boolean enabled = "Default".equalsIgnoreCase(profile.getProfileName())
+                            ? false : module.isEnabled();
+                    settings.addProperty("enabled", enabled);
+                    if ("Default".equalsIgnoreCase(profile.getProfileName())) {
+                        module.setEnabled(false);
+                    }
                 }
             }
         } finally {
