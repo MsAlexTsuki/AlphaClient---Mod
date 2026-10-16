@@ -31,6 +31,7 @@ public class HudPositionConfig {
 
     private static final int DEFAULT_FPS_X = 6;
     private static final int DEFAULT_FPS_Y = 6;
+    private static final int DEFAULT_FPS_COLOR_INDEX = 0;
 
 
     /*
@@ -68,6 +69,7 @@ public class HudPositionConfig {
 
     private static int fpsX = DEFAULT_FPS_X;
     private static int fpsY = DEFAULT_FPS_Y;
+    private static int fpsColorIndex = DEFAULT_FPS_COLOR_INDEX;
 
     private static boolean loaded =
             false;
@@ -240,6 +242,8 @@ public class HudPositionConfig {
 
             fpsX = getInt(properties, "fpsX", DEFAULT_FPS_X);
             fpsY = getInt(properties, "fpsY", DEFAULT_FPS_Y);
+            fpsColorIndex = getInt(properties, "fpsColorIndex", DEFAULT_FPS_COLOR_INDEX);
+            if (fpsColorIndex < 0 || fpsColorIndex > 9) fpsColorIndex = DEFAULT_FPS_COLOR_INDEX;
 
         } catch (Exception e) {
 
@@ -343,6 +347,7 @@ public class HudPositionConfig {
 
         properties.setProperty("fpsX", String.valueOf(fpsX));
         properties.setProperty("fpsY", String.valueOf(fpsY));
+        properties.setProperty("fpsColorIndex", String.valueOf(fpsColorIndex));
 
 
         FileOutputStream output =
@@ -682,6 +687,17 @@ public class HudPositionConfig {
         load();
         fpsX = Math.max(0, x);
         fpsY = Math.max(0, y);
+        save();
+    }
+
+    public static int getFpsColorIndex() {
+        load();
+        return fpsColorIndex;
+    }
+
+    public static void setFpsColorIndex(int index) {
+        load();
+        fpsColorIndex = Math.max(0, Math.min(9, index));
         save();
     }
 
