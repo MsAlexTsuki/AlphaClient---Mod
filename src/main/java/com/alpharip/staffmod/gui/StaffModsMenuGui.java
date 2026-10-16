@@ -220,7 +220,7 @@ public final class StaffModsMenuGui extends GuiScreen {
             if (rank != PermissionService.Rank.PUBLIC && !PermissionService.hasAccess(rank)) continue;
             int x = contentLeft + (index % columns) * (tileWidth + gap);
             int y = contentTop + (index / columns) * (tileHeight + gap);
-            drawCard(x, y, tileWidth, tileHeight, LABELS[i], "Open folder", mouseX, mouseY);
+            drawCard(x, y, tileWidth, tileHeight, LABELS[i], mouseX, mouseY);
             index++;
         }
     }
@@ -229,13 +229,13 @@ public final class StaffModsMenuGui extends GuiScreen {
         for (int i = scrollOffset; i < visibleModules.size() && i < scrollOffset + visibleRows; i++) {
             int y = contentTop + (i - scrollOffset) * 44;
             drawCard(contentLeft, y, contentRight - contentLeft, 36,
-                    visibleModules.get(i).getName(), "Open settings", mouseX, mouseY);
+                    visibleModules.get(i).getName(), mouseX, mouseY);
         }
         if (selectedRank == PermissionService.Rank.PUBLIC
                 && visibleModules.size() - scrollOffset < visibleRows) {
             int y = contentTop + (visibleModules.size() - scrollOffset) * 44;
             drawCard(contentLeft, y, contentRight - contentLeft, 36,
-                    "UTILITIES", "Staff utilities", mouseX, mouseY);
+                    "UTILITIES", mouseX, mouseY);
         }
         if (visibleModules.isEmpty() && selectedRank != PermissionService.Rank.PUBLIC) {
             drawString(fontRendererObj, "No modules are registered in this folder yet.",
@@ -243,8 +243,7 @@ public final class StaffModsMenuGui extends GuiScreen {
         }
     }
 
-    private void drawCard(int x, int y, int w, int h, String title,
-                          String subtitle, int mouseX, int mouseY) {
+    private void drawCard(int x, int y, int w, int h, String title, int mouseX, int mouseY) {
         boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
         int background = hovered ? 0xFF252A33 : 0xD9161820;
         int border = hovered ? ACCENT : 0x664B515D;
@@ -253,8 +252,9 @@ public final class StaffModsMenuGui extends GuiScreen {
         drawRect(x, y + h - 1, x + w, y + h, border);
         drawRect(x, y, x + 1, y + h, border);
         drawRect(x + w - 1, y, x + w, y + h, border);
-        drawString(fontRendererObj, title, x + 9, y + 6, hovered ? ACCENT : 0xFFF0F1F4);
-        drawString(fontRendererObj, subtitle, x + 9, y + 20, 0xFFB8BDC8);
+        int titleX = x + (w - fontRendererObj.getStringWidth(title)) / 2;
+        int titleY = y + (h - fontRendererObj.FONT_HEIGHT) / 2;
+        drawString(fontRendererObj, title, titleX, titleY, 0xFFFFFFFF);
     }
 
     private int indexOf(PermissionService.Rank rank) {
