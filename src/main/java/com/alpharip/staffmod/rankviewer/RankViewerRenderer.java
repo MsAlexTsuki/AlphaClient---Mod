@@ -17,9 +17,11 @@ public final class RankViewerRenderer {
     public void onRenderPlayerSpecials(RenderPlayerEvent.Specials.Pre event) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || event.entityPlayer == null || minecraft.theWorld == null) return;
-        AlphaModule module = AlphaModuleRegistry.find("name-viewer");
-        if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
         EntityPlayer player = event.entityPlayer;
+        AlphaModule module = AlphaModuleRegistry.find("name-viewer");
+        boolean renderingLocalPlayer = minecraft.thePlayer != null
+                && minecraft.thePlayer.getUniqueID().equals(player.getUniqueID());
+        if (renderingLocalPlayer && (module == null || !module.isEnabled() || !module.isUnlocked())) return;
         if (player.isInvisible()) return;
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
         if (rank == null) return;
