@@ -20,7 +20,7 @@ public final class AlphaModuleRegistry {
                 "Quality of Life tools and planned features.",
                 AlphaModule.Category.PUBLIC,
                 true,
-                true
+                false
         );
         quality.addFeature(new AlphaModuleFeature("alpha-module-manager", "Alpha Module Manager", "Central module management.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("playtime-tracker", "Playtime Tracker", "Track time spent playing.", PermissionService.Rank.PUBLIC, false));
@@ -49,7 +49,7 @@ public final class AlphaModuleRegistry {
                 "Show community rank badges above player names, including your own when rendered.",
                 AlphaModule.Category.PUBLIC,
                 true,
-                true
+                false
         );
         MODULES.add(nameViewer);
 
