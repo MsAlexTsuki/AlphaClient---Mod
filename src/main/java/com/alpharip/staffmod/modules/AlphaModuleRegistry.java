@@ -56,7 +56,7 @@ public final class AlphaModuleRegistry {
         AlphaModule fps = new AlphaModule(
                 "fps",
                 "FPS",
-                "Compact FPS counter, minimum frame-time display and optional performance preset.",
+                "Compact FPS counter; client-wide performance optimization runs automatically.",
                 AlphaModule.Category.PUBLIC,
                 true,
                 false
