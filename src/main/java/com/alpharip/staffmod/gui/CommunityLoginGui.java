@@ -34,10 +34,12 @@ public final class CommunityLoginGui extends GuiScreen {
         emailField.setTextColor(0xFFF4F5F8);
         emailField.setDisabledTextColour(0xFFB8BDC8);
         emailField.setMaxStringLength(254);
+        emailField.setFocused(true);
         passwordField = new GuiTextField(11, fontRendererObj, fieldLeft, 164, fieldWidth, 20);
         passwordField.setTextColor(0xFFF4F5F8);
         passwordField.setDisabledTextColour(0xFFB8BDC8);
         passwordField.setMaxStringLength(256);
+        passwordField.setFocused(false);
         buttonList.clear();
         int buttonWidth = (fieldWidth - 8) / 2;
         buttonList.add(new AlphaButton(SIGN_IN, fieldLeft, 199, buttonWidth, 22, "SIGN IN", true));
@@ -101,6 +103,25 @@ public final class CommunityLoginGui extends GuiScreen {
             mc.displayGuiScreen(parent);
             return;
         }
+        if (keyCode == org.lwjgl.input.Keyboard.KEY_TAB) {
+            if (emailField.isFocused()) {
+                emailField.setFocused(false);
+                passwordField.setFocused(true);
+            } else {
+                emailField.setFocused(true);
+                passwordField.setFocused(false);
+            }
+            return;
+        }
+        if (keyCode == org.lwjgl.input.Keyboard.KEY_RETURN
+                || keyCode == org.lwjgl.input.Keyboard.KEY_NUMPADENTER) {
+            if (emailField.isFocused() || passwordField.isFocused()) {
+                emailField.setFocused(false);
+                passwordField.setFocused(false);
+                if (!busy) actionPerformed(buttonList.get(0));
+                return;
+            }
+        }
         if (emailField != null && emailField.isFocused()) {
             emailField.textboxKeyTyped(typedChar, keyCode);
         } else if (passwordField != null && passwordField.isFocused()) {
@@ -109,7 +130,6 @@ public final class CommunityLoginGui extends GuiScreen {
             super.keyTyped(typedChar, keyCode);
         }
     }
-
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
