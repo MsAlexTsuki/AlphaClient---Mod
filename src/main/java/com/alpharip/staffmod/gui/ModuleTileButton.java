@@ -8,6 +8,9 @@ import net.minecraft.client.gui.GuiButton;
 public final class ModuleTileButton extends GuiButton {
     private final AlphaModule module;
     private final boolean selected;
+    private boolean switchClicked;
+    private static final int SWITCH_WIDTH = 18;
+    private static final int SWITCH_HEIGHT = 9;
     private static final int YELLOW = 0xFFFFD866;
 
     public ModuleTileButton(int id, int x, int y, int width, int height,
@@ -39,12 +42,12 @@ public final class ModuleTileButton extends GuiButton {
             int stateColor = "ON".equals(state) ? YELLOW
                     : ("LOCKED".equals(state) || "COMING SOON".equals(state) ? 0xFF8A8F99 : 0xFFB8BDC8);
             mc.fontRendererObj.drawString(state, xPosition + 7, yPosition + 4, stateColor, false);
-            int sw = 23, sh = 11;
-            int sx = xPosition + width - sw - 7, sy = yPosition + 5;
+            int sw = SWITCH_WIDTH, sh = SWITCH_HEIGHT;
+            int sx = xPosition + width - sw - 7, sy = yPosition + 6;
             int switchBg = on ? YELLOW : 0xFF454A54;
             drawRect(sx, sy, sx + sw, sy + sh, switchBg);
-            int knobX = on ? sx + sw - 9 : sx + 2;
-            drawRect(knobX, sy + 2, knobX + 7, sy + sh - 2, 0xFFF6F6F6);
+            int knobX = on ? sx + sw - 7 : sx + 2;
+            drawRect(knobX, sy + 1, knobX + 5, sy + sh - 1, 0xFFF6F6F6);
         }
 
         String icon = iconFor(module.getId());
@@ -62,6 +65,21 @@ public final class ModuleTileButton extends GuiButton {
         mc.fontRendererObj.drawString(name,
                 xPosition + (width - mc.fontRendererObj.getStringWidth(name)) / 2,
                 yPosition + height - 11, 0xFFF0F1F4, false);
+    }
+
+    public boolean wasSwitchClicked() { return switchClicked; }
+
+    @Override
+    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+        boolean pressed = super.mousePressed(mc, mouseX, mouseY);
+        switchClicked = false;
+        if (pressed && !"quality".equals(module.getId())) {
+            int sx = xPosition + width - SWITCH_WIDTH - 7;
+            int sy = yPosition + 6;
+            switchClicked = mouseX >= sx && mouseX < sx + SWITCH_WIDTH
+                    && mouseY >= sy && mouseY < sy + SWITCH_HEIGHT;
+        }
+        return pressed;
     }
 
     private static String iconFor(String id) {
