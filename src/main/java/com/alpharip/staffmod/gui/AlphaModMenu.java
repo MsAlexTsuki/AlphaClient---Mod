@@ -46,6 +46,7 @@ public final class AlphaModMenu extends GuiScreen {
     private int sidebarWidth, contentLeft, contentRight, contentTop, contentBottom;
     private int settingsLeft;
     private int scrollOffset;
+    private int profileScrollOffset;
     private GuiTextField searchField;
     private String searchText = "";
     private boolean searchFocused;
@@ -112,23 +113,22 @@ public final class AlphaModMenu extends GuiScreen {
         AlphaModule currentSelection = getSelectedModule();
         if (currentSelection != null && "quality".equals(currentSelection.getId())) {
             List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
-            int profileY = panelTop + 86;
-            int profileBottom = panelTop + panelHeight - 54;
-            int row = 0;
-            for (BhopProfileManager.BhopProfile profile : profiles) {
-                if (profileY + 18 > profileBottom || row >= 30) break;
+            int actionY = panelTop + panelHeight - 48;
+            int profileTop = panelTop + 86;
+            int profileBottom = actionY - 8;
+            int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
+            profileScrollOffset = Math.max(0, Math.min(profileScrollOffset, Math.max(0, profiles.size() - visibleProfiles)));
+            int actionWidth = Math.max(35, (panelLeft + panelWidth - settingsLeft - 14) / 3);
+            for (int row = 0; row < visibleProfiles && profileScrollOffset + row < profiles.size(); row++) {
+                BhopProfileManager.BhopProfile profile = profiles.get(profileScrollOffset + row);
                 buttonList.add(new AlphaButton(PROFILE_SELECT_BASE + row, settingsLeft + 4,
-                        profileY - 2, Math.max(50, panelLeft + panelWidth - settingsLeft - 10),
+                        profileTop + row * 21, Math.max(50, panelLeft + panelWidth - settingsLeft - 10),
                         18, profile.getProfileName(),
                         profile.getProfileName().equalsIgnoreCase(BhopProfileManager.getSelectedProfileName())));
-                profileY += 21;
-                row++;
             }
-            int actionY = panelTop + panelHeight - 48;
-            int actionWidth = Math.max(35, (panelLeft + panelWidth - settingsLeft - 14) / 3);
             buttonList.add(new AlphaButton(PROFILE_CREATE, settingsLeft + 4, actionY, actionWidth, 15, "CREATE"));
             buttonList.add(new AlphaButton(PROFILE_EDIT, settingsLeft + 7 + actionWidth, actionY, actionWidth, 15, "EDIT"));
-            buttonList.add(new AlphaButton(PROFILE_DELETE, settingsLeft + 10 + actionWidth * 2, actionY, actionWidth, 15, "DELETE"));
+            buttonList.add(new AlphaButton(PROFILE_DELETE, settingsLeft + 10 + actionWidth * 2, actionY, 15, 15, "DEL"));
         }
 
         List<AlphaModule> filtered = getFilteredModules();
@@ -205,14 +205,22 @@ public final class AlphaModMenu extends GuiScreen {
         if (qualityFolderSelected) {
             List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
             String activeProfile = BhopProfileManager.getSelectedProfileName();
-            drawString(fontRendererObj, "Select a profile", settingsLeft + 7, panelTop + 67, 0xFFF3F4F6);
+            int profileTop = panelTop + 67;
+            int actionY = panelTop + panelHeight - 48;
+            int profileBottom = actionY - 8;
+            int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
+            drawString(fontRendererObj, "Select a profile", settingsLeft + 7, panelTop + 55, 0xFFF3F4F6);
             if (profiles.isEmpty()) {
-                drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, panelTop + 91, 0xFFB8BDC8);
+                drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, profileTop + 4, 0xFFB8BDC8);
             } else {
                 drawString(fontRendererObj, "Active: " + activeProfile, settingsLeft + 7,
-                        panelTop + panelHeight - 61, 0xFF9CE2AC);
-            }
-        }        } else if (selected != null) {
+                        panelTop + panelHeight - 27, 0xFF9CE2AC);
+                if (profiles.size() > visibleProfiles) {
+                    drawString(fontRendererObj, "Scroll for more (" + (profileScrollOffset + 1) + "-"
+                            + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + "/" + profiles.size() + ")",
+                            settingsLeft + 7, panelTop + 68, 0xFFB8BDC8);
+                }
+            }        } else if (selected != null) {
             drawRect(settingsLeft + 4, panelTop + 57, right - 6, panelTop + 89, 0xB5161820);
             drawString(fontRendererObj, selected.getName(), settingsLeft + 9, panelTop + 64, 0xFFF3F4F6);
             String selectedStatus = "quality".equals(selected.getId()) ? "FOLDER" : selected.getStatusLabel();
@@ -334,7 +342,7 @@ public final class AlphaModMenu extends GuiScreen {
         }
         if (button.id >= PROFILE_SELECT_BASE && button.id < PROFILE_SELECT_BASE + 30) {
             List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
-            int index = button.id - PROFILE_SELECT_BASE;
+            int index = profileScrollOffset + button.id - PROFILE_SELECT_BASE;
             if (index >= 0 && index < profiles.size()) {
                 BhopProfileManager.selectProfile(profiles.get(index).getProfileName());
             }
@@ -427,6 +435,18 @@ public final class AlphaModMenu extends GuiScreen {
         super.handleMouseInput();
         int wheel = org.lwjgl.input.Mouse.getEventDWheel();
         if (wheel != 0) {
+            AlphaModule selected = getSelectedModule();
+            if (selected != null && "quality".equals(selected.getId())) {
+                List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
+                int profileTop = panelTop + 86;
+                int actionY = panelTop + panelHeight - 48;
+                int visibleProfiles = Math.max(1, (actionY - 8 - profileTop) / 21);
+                int maxProfileOffset = Math.max(0, profiles.size() - visibleProfiles);
+                profileScrollOffset = Math.max(0, Math.min(maxProfileOffset,
+                        profileScrollOffset + (wheel < 0 ? 1 : -1)));
+                initGui();
+                return;
+            }
             List<AlphaModule> modules = getFilteredModules();
             int maxOffset = Math.max(0, modules.size() - visibleRows() * 2);
             scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset + (wheel < 0 ? 2 : -2)));
