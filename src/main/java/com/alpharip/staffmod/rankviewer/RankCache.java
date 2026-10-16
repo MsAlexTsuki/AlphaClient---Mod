@@ -101,7 +101,7 @@ public final class RankCache {
             UUID uuid = iterator.next();
             if (inFlight.add(uuid)) {
                 batch.add(uuid);
-                iterator.remove();
+                pending.remove(uuid);
             }
         }
         if (batch.isEmpty()) return;
