@@ -82,7 +82,7 @@ public final class RankViewerRenderer {
         boolean lightingEnabled = GL11.glIsEnabled(GL11.GL_LIGHTING);
         boolean textureEnabled = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
         boolean depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
-        java.nio.FloatBuffer previousColor = org.lwjgl.BufferUtils.createFloatBuffer(4);
+        java.nio.FloatBuffer previousColor = org.lwjgl.BufferUtils.createFloatBuffer(16);
         GL11.glGetFloat(GL11.GL_CURRENT_COLOR, previousColor);
         float red = previousColor.get(0);
         float green = previousColor.get(1);
