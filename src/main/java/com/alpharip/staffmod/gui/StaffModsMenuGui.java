@@ -145,13 +145,13 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (button == null) return;
 
         if (button.id == BACK) {
-            // Back from a rank's module list always returns to the rank-folder chooser.
-            // At the chooser, keep the user in StaffMods instead of jumping to all modules.
             if (openFolderRank != null) {
                 openFolderRank = null;
                 scrollOffset = 0;
+                initGui();
+            } else {
+                mc.displayGuiScreen(parent);
             }
-            initGui();
             return;
         }
 
@@ -276,8 +276,13 @@ public final class StaffModsMenuGui extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) {
-            // Escape always closes the entire StaffMods menu and returns directly to gameplay.
-            mc.displayGuiScreen(null);
+            if (openFolderRank != null) {
+                openFolderRank = null;
+                scrollOffset = 0;
+                initGui();
+            } else {
+                mc.displayGuiScreen(parent);
+            }
             return;
         }
         super.keyTyped(typedChar, keyCode);
