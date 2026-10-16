@@ -17,7 +17,7 @@ public final class RankViewerRenderer {
     public void onRenderPlayerSpecials(RenderPlayerEvent.Specials.Pre event) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || event.entityPlayer == null || minecraft.theWorld == null) return;
-        AlphaModule module = AlphaModuleRegistry.find("rank-viewer");
+        AlphaModule module = AlphaModuleRegistry.find("name-viewer");
         if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
         EntityPlayer player = event.entityPlayer;
         if (player.isInvisible()) return;
