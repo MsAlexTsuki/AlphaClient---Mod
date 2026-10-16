@@ -45,11 +45,11 @@ public final class AlphaModuleRegistry {
 
         AlphaModule nameViewer = new AlphaModule(
                 "name-viewer",
-                "Name Vieuwer",
-                "Show community rank badges above player names, including your own when rendered.",
+                "Name Viewer",
+                "Show your own Minecraft name above your character; other players' rank badges remain automatic.",
                 AlphaModule.Category.PUBLIC,
                 true,
-                false
+                true
         );
         MODULES.add(nameViewer);
 
