@@ -31,6 +31,10 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
     private static final int STAFF_MODS = 306;
+    private static final int PROFILE_SELECT_BASE = 400;
+    private static final int PROFILE_CREATE = 430;
+    private static final int PROFILE_EDIT = 431;
+    private static final int PROFILE_DELETE = 432;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -103,6 +107,28 @@ public final class AlphaModMenu extends GuiScreen {
         if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) {
             buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, categoryY,
                     sidebarWidth - 10, 20, "STAFFMODS"));
+        }
+
+        AlphaModule currentSelection = getSelectedModule();
+        if (currentSelection != null && "quality".equals(currentSelection.getId())) {
+            List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
+            int profileY = panelTop + 86;
+            int profileBottom = panelTop + panelHeight - 54;
+            int row = 0;
+            for (BhopProfileManager.BhopProfile profile : profiles) {
+                if (profileY + 18 > profileBottom || row >= 30) break;
+                buttonList.add(new AlphaButton(PROFILE_SELECT_BASE + row, settingsLeft + 4,
+                        profileY - 2, Math.max(50, panelLeft + panelWidth - settingsLeft - 10),
+                        18, profile.getProfileName(),
+                        profile.getProfileName().equalsIgnoreCase(BhopProfileManager.getSelectedProfileName())));
+                profileY += 21;
+                row++;
+            }
+            int actionY = panelTop + panelHeight - 48;
+            int actionWidth = Math.max(35, (panelLeft + panelWidth - settingsLeft - 14) / 3);
+            buttonList.add(new AlphaButton(PROFILE_CREATE, settingsLeft + 4, actionY, actionWidth, 15, "CREATE"));
+            buttonList.add(new AlphaButton(PROFILE_EDIT, settingsLeft + 7 + actionWidth, actionY, actionWidth, 15, "EDIT"));
+            buttonList.add(new AlphaButton(PROFILE_DELETE, settingsLeft + 10 + actionWidth * 2, actionY, actionWidth, 15, "DELETE"));
         }
 
         List<AlphaModule> filtered = getFilteredModules();
@@ -195,6 +221,8 @@ public final class AlphaModMenu extends GuiScreen {
                         profileY + 3, 0xFF9CE2AC);
                 profileY += 22;
             }
+            drawString(fontRendererObj, "Create / edit / delete profiles below",
+                    settingsLeft + 5, bottom - 28, 0xFFB8BDC8);
             if (profiles.isEmpty()) {
                 drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, profileY, 0xFFB8BDC8);
             }
@@ -305,6 +333,28 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
         if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
+        if (button.id == PROFILE_CREATE) {
+            mc.displayGuiScreen(new ProfileNameGui(this, false, ""));
+            return;
+        }
+        if (button.id == PROFILE_EDIT) {
+            mc.displayGuiScreen(new ProfileNameGui(this, true, BhopProfileManager.getSelectedProfileName()));
+            return;
+        }
+        if (button.id == PROFILE_DELETE) {
+            BhopProfileManager.deleteSelectedProfile();
+            initGui();
+            return;
+        }
+        if (button.id >= PROFILE_SELECT_BASE && button.id < PROFILE_SELECT_BASE + 30) {
+            List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
+            int index = button.id - PROFILE_SELECT_BASE;
+            if (index >= 0 && index < profiles.size()) {
+                BhopProfileManager.selectProfile(profiles.get(index).getProfileName());
+            }
+            initGui();
+            return;
+        }
         if (button.id == STAFF_MODS) {
             if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) {
                 mc.displayGuiScreen(new StaffModsMenuGui(this));
