@@ -6,9 +6,8 @@ import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
 /**
- * Explains where Minecraft account sessions are managed.
- * Minecraft authentication is owned by the launcher; this screen must not collect
- * or persist Microsoft passwords inside the game client.
+ * Account-switcher information screen.
+ * Microsoft authentication and saved account tokens remain managed by AlphaLauncher.
  */
 public final class AccountInfoGui extends GuiScreen {
     private final GuiScreen parent;
@@ -26,16 +25,17 @@ public final class AccountInfoGui extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        int panelWidth = Math.min(300, width - 24);
+        int panelWidth = Math.min(320, width - 24);
         int left = (width - panelWidth) / 2;
-        int top = height / 2 - 62;
-        drawRect(left, top, left + panelWidth, top + 126, 0xE814171D);
+        int top = height / 2 - 66;
+        drawRect(left, top, left + panelWidth, top + 132, 0xE814171D);
         drawRect(left, top, left + panelWidth, top + 2, 0xFFFFD866);
-        drawRect(left, top, left + 3, top + 126, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "MINECRAFT ACCOUNTS", width / 2, top + 15, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "Add and switch Microsoft accounts", width / 2, top + 39, 0xFFF0F1F4);
-        drawCenteredString(fontRendererObj, "in the AlphaLauncher account manager.", width / 2, top + 53, 0xFFADB3C0);
-        drawCenteredString(fontRendererObj, "The game client does not store passwords.", width / 2, top + 70, 0xFF858C9A);
+        drawRect(left, top, left + 3, top + 132, 0xFFFFD866);
+        drawCenteredString(fontRendererObj, "ACCOUNT SWITCHER", width / 2, top + 15, 0xFFFFD866);
+        drawCenteredString(fontRendererObj, "Manage saved Microsoft accounts", width / 2, top + 40, 0xFFF0F1F4);
+        drawCenteredString(fontRendererObj, "in the AlphaLauncher account menu.", width / 2, top + 54, 0xFFADB3C0);
+        drawCenteredString(fontRendererObj, "Select an account before launching Minecraft.", width / 2, top + 75, 0xFFADB3C0);
+        drawCenteredString(fontRendererObj, "Account passwords are never stored by the mod.", width / 2, top + 91, 0xFF858C9A);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
@@ -49,7 +49,7 @@ public final class AccountInfoGui extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) {
-            mc.displayGuiScreen(null);
+            mc.displayGuiScreen(parent);
             return;
         }
         super.keyTyped(typedChar, keyCode);
