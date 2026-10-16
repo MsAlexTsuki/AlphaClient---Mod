@@ -145,9 +145,12 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (button == null) return;
 
         if (button.id == BACK) {
+            // Navigation is intentionally two-level:
+            // rank folder -> rank chooser -> Mods menu.
             if (openFolderRank != null) {
                 openFolderRank = null;
                 scrollOffset = 0;
+                visibleModules.clear();
                 initGui();
             } else {
                 mc.displayGuiScreen(parent);
@@ -201,7 +204,7 @@ public final class StaffModsMenuGui extends GuiScreen {
                     contentLeft, panelTop + 57, ACCENT);
             drawFolderContents(mouseX, mouseY);
         } else {
-            drawString(fontRendererObj, "SELECT A FOLDER", contentLeft, panelTop + 57, 0xFFB8BDC8);
+            drawString(fontRendererObj, "STAFF RANKS MODS", contentLeft, panelTop + 57, 0xFFB8BDC8);
             drawFolderCards(mouseX, mouseY);
         }
         drawString(fontRendererObj, "RANK ACCESS: " + PermissionService.getEffectiveRank().name(),
@@ -276,9 +279,11 @@ public final class StaffModsMenuGui extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) {
+            // Escape follows the same navigation path as the Back button.
             if (openFolderRank != null) {
                 openFolderRank = null;
                 scrollOffset = 0;
+                visibleModules.clear();
                 initGui();
             } else {
                 mc.displayGuiScreen(parent);
