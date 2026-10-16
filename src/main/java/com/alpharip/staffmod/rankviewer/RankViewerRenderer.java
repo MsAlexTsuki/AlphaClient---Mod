@@ -16,6 +16,25 @@ public final class RankViewerRenderer {
     private static final int BADGE_GAP = 3;
 
     @SubscribeEvent
+    public void onRenderPlayer(RenderPlayerEvent.Pre event) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null || minecraft.thePlayer == null || minecraft.gameSettings == null
+                || event.entityPlayer == null) return;
+
+        // In rear-facing F5, hide only the local player model when the camera has clipped
+        // inside the player's hitbox. Keep the Name Viewer and rank badge rendering intact.
+        if (minecraft.gameSettings.thirdPersonView != 1
+                || !minecraft.thePlayer.getUniqueID().equals(event.entityPlayer.getUniqueID())) return;
+
+        net.minecraft.util.AxisAlignedBB bounds = event.entityPlayer.getEntityBoundingBox();
+        net.minecraft.client.renderer.entity.RenderManager renderManager = minecraft.getRenderManager();
+        if (bounds != null && bounds.isVecInside(new net.minecraft.util.Vec3(
+                renderManager.viewerPosX, renderManager.viewerPosY, renderManager.viewerPosZ))) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
     public void onRenderPlayerSpecials(RenderPlayerEvent.Specials.Pre event) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || event.entityPlayer == null || minecraft.theWorld == null
@@ -41,9 +60,8 @@ public final class RankViewerRenderer {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null
                 || minecraft.gameSettings == null || minecraft.fontRendererObj == null) return;
-        // The local Name Viewer is only intended for front-facing F5 (thirdPersonView == 2).
-        // Hide it in first-person and rear-facing F5, where the camera can clip into the player. 
-        if (minecraft.gameSettings.thirdPersonView != 2) return;
+        // Render the local Name Viewer in both F5 views, but never in first-person.
+        if (minecraft.gameSettings.thirdPersonView == 0) return;
 
         AlphaModule module = AlphaModuleRegistry.find("name-viewer");
         if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
