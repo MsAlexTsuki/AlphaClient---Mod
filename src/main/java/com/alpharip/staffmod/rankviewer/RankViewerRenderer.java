@@ -29,7 +29,7 @@ public final class RankViewerRenderer {
         float scale = 0.02F;
 
         GlStateManager.pushMatrix();
-        GlStateManager.translate(event.x, event.y + player.height + 0.28D, event.z);
+        GlStateManager.translate(event.x, event.y + player.height + 0.72D, event.z);
         GlStateManager.rotate(-minecraft.getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
         GlStateManager.rotate(minecraft.getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
         GlStateManager.scale(-scale, -scale, scale);
