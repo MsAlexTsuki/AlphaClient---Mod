@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** Draws a compact, colored Alpha rank badge above player nameplates. */
@@ -55,6 +56,34 @@ public final class RankViewerRenderer {
         GlStateManager.enableDepth();
         GlStateManager.enableLighting();
         GlStateManager.popMatrix();
+    }
+
+    /**
+     * The local player model is not rendered in first-person view, so its nameplate
+     * cannot be drawn by RenderPlayerEvent. Show the local player's cached Alpha rank
+     * and Minecraft username in the HUD instead.
+     */
+    @SubscribeEvent
+    public void onRenderHud(RenderGameOverlayEvent.Post event) {
+        if (event.type != RenderGameOverlayEvent.ElementType.ALL) return;
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null) return;
+
+        AlphaModule module = AlphaModuleRegistry.find("name-viewer");
+        if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
+
+        AlphaRank rank = RankCache.INSTANCE.get(minecraft.thePlayer.getUniqueID());
+        if (rank == null) return;
+
+        String playerName = minecraft.thePlayer.getName();
+        String rankLabel = rank.label().toUpperCase(java.util.Locale.ROOT);
+        String text = rankLabel + "  |  " + playerName;
+        int width = minecraft.fontRendererObj.getStringWidth(text);
+        int x = (event.resolution.getScaledWidth() - width) / 2;
+        int y = event.resolution.getScaledHeight() / 2 + 18;
+        drawRect(minecraft, x - 5, y - 3, x + width + 5, y + minecraft.fontRendererObj.FONT_HEIGHT + 3, PANEL);
+        drawRect(minecraft, x - 5, y - 3, x + width + 5, y - 2, rank.color());
+        minecraft.fontRendererObj.drawStringWithShadow(text, x, y, 0xFFFFFFFF);
     }
 
     private static void drawRect(Minecraft minecraft, int left, int top, int right, int bottom, int color) {
