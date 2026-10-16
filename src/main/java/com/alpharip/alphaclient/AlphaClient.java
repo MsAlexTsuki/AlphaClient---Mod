@@ -7,6 +7,7 @@ import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.AlphaMainMenu;
 import com.alpharip.staffmod.hud.BhopHud;
 import com.alpharip.staffmod.fps.FpsMod;
+import com.alpharip.staffmod.optimization.FpsOptimization;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
@@ -51,6 +52,7 @@ public final class AlphaClient {
     private KeyBinding toggleBhopKey;
     private int partnerAutoConnectTicks = -1;
     private boolean partnerAutoConnectConsumed;
+    private boolean fpsOptimizationInitialized;
 
     @Mod.EventHandler
     public void initialize(FMLInitializationEvent event) {
@@ -96,8 +98,10 @@ public final class AlphaClient {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
 
-        // Client-wide optimization is automatic and independent of individual module toggles.
-        FpsMod.applyAutomaticOptimization();
+        // Apply FPS defaults once when Minecraft's settings are ready, independent of HUD toggles.
+        if (!fpsOptimizationInitialized) {
+            fpsOptimizationInitialized = FpsOptimization.applyOnce();
+        }
 
         if (partnerAutoConnectConsumed) return;
         String partnerServer = System.getProperty("alphaclient.partnerServer");
