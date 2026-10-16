@@ -10,6 +10,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.lwjgl.opengl.GL11;
 
 /** Renders the rank's image badge immediately before the player's name. */
 public final class RankViewerRenderer {
@@ -75,6 +76,19 @@ public final class RankViewerRenderer {
         int badgeWidth = rank == null ? 0 : BADGE_SIZE + BADGE_GAP;
         int totalWidth = nameWidth + badgeWidth;
 
+        // Capture the state that this renderer changes. World rendering and the vanilla HUD
+        // share the OpenGL context, so forcing states to "enabled" can leak into later renders.
+        boolean depthEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+        boolean lightingEnabled = GL11.glIsEnabled(GL11.GL_LIGHTING);
+        boolean textureEnabled = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
+        boolean depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+        java.nio.FloatBuffer previousColor = org.lwjgl.BufferUtils.createFloatBuffer(4);
+        GL11.glGetFloat(GL11.GL_CURRENT_COLOR, previousColor);
+        float red = previousColor.get(0);
+        float green = previousColor.get(1);
+        float blue = previousColor.get(2);
+        float alpha = previousColor.get(3);
+
         GlStateManager.pushMatrix();
         try {
             GlStateManager.translate(x, y, z);
@@ -104,11 +118,31 @@ public final class RankViewerRenderer {
             // Keep the player's name; only the rank label/emblem text is replaced by the image.
             minecraft.fontRendererObj.drawStringWithShadow(name, cursor, 1, 0xFFFFFFFF);
         } finally {
-            GlStateManager.depthMask(true);
-            GlStateManager.enableDepth();
-            GlStateManager.enableLighting();
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.depthMask(depthMask);
+            restoreCapability(GL11.GL_DEPTH_TEST, depthEnabled);
+            restoreCapability(GL11.GL_LIGHTING, lightingEnabled);
+            restoreCapability(GL11.GL_TEXTURE_2D, textureEnabled);
+            GlStateManager.color(red, green, blue, alpha);
             GlStateManager.popMatrix();
+        }
+    }
+
+    private static void restoreCapability(int capability, boolean enabled) {
+        switch (capability) {
+            case GL11.GL_DEPTH_TEST:
+                if (enabled) GlStateManager.enableDepth();
+                else GlStateManager.disableDepth();
+                break;
+            case GL11.GL_LIGHTING:
+                if (enabled) GlStateManager.enableLighting();
+                else GlStateManager.disableLighting();
+                break;
+            case GL11.GL_TEXTURE_2D:
+                if (enabled) GlStateManager.enableTexture2D();
+                else GlStateManager.disableTexture2D();
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported OpenGL capability: " + capability);
         }
     }
 }
