@@ -6,9 +6,8 @@ import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import org.lwjgl.opengl.Display;
 
-/** Compact FPS counter and opt-in conservative performance settings. */
+/** Compact FPS counter with optimization tied to the module's enabled state. */
 public final class FpsMod {
     private static boolean showFps = true;
     private static boolean showFrameTime = true;
@@ -19,7 +18,6 @@ public final class FpsMod {
     private static int originalLimit;
     private static int originalParticles;
     private static boolean originalFancyGraphics;
-    private static int lastFps;
     private static long lastSampleNanos;
     private static double minFrameTimeMs;
     private static long sampleCount;
@@ -63,7 +61,11 @@ public final class FpsMod {
     public void onRenderOverlay(RenderGameOverlayEvent.Text event) {
         if (event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
         AlphaModule module = AlphaModuleRegistry.find("fps");
-        if (module == null || !module.isEnabled()) return;
+        boolean moduleEnabled = module != null && module.isEnabled();
+        // Optimization follows the module state; merely opening its settings does nothing.
+        setOptimizationEnabled(moduleEnabled);
+
+        if (!moduleEnabled) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.gameSettings == null || mc.gameSettings.showDebugInfo) return;
         long now = System.nanoTime();
@@ -75,9 +77,9 @@ public final class FpsMod {
             }
         }
         lastSampleNanos = now;
-        lastFps = Minecraft.getDebugFPS();
+        int fps = Minecraft.getDebugFPS();
         if (!showFps && !showFrameTime) return;
-        String line = (showFps ? "FPS " + lastFps : "")
+        String line = (showFps ? "FPS " + fps : "")
                 + (showFps && showFrameTime ? "  " : "")
                 + (showFrameTime ? "MIN " + (sampleCount == 0 ? "--" : String.format(java.util.Locale.ROOT, "%.1f", minFrameTimeMs)) + " ms" : "");
         int x = 6;
