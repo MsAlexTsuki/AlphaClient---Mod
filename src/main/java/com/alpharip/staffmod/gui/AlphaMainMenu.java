@@ -2,7 +2,6 @@ package com.alpharip.staffmod.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSelectWorld;
 import net.minecraft.client.multiplayer.GuiConnecting;
@@ -15,7 +14,6 @@ import java.io.IOException;
 /** Fully custom AlphaClient menu; deliberately does not render GuiMainMenu or its panorama. */
 public final class AlphaMainMenu extends GuiScreen {
     private static final int PLAY = 10;
-    private static final int MULTIPLAYER = 11;
     private static final int MODULES = 12;
     private static final int OPTIONS = 13;
     private static final int PARTNER = 14;
@@ -46,8 +44,6 @@ public final class AlphaMainMenu extends GuiScreen {
         buttonHeight = height < 360 ? 22 : height < 480 ? 26 : 32;
         buttonGap = height < 360 ? 3 : height < 480 ? 5 : 8;
 
-        // Multiplayer is available from the Account dropdown instead of taking
-        // a permanent slot in the main navigation.
         int menuButtonCount = 5;
         int menuHeight = menuButtonCount * buttonHeight + (menuButtonCount - 1) * buttonGap;
         if (compactLayout) {
@@ -75,7 +71,6 @@ public final class AlphaMainMenu extends GuiScreen {
                 accountMenuOpen ? "ACCOUNT  -" : "ACCOUNT  +"));
         if (accountMenuOpen) {
             buttonList.add(new AlphaButton(ACCOUNT_SWITCHER, 24, 55, 132, 25, "ACCOUNT SWITCHER"));
-            buttonList.add(new AlphaButton(MULTIPLAYER, 24, 84, 132, 25, "MULTIPLAYER"));
         }
     }
 
@@ -190,9 +185,6 @@ public final class AlphaMainMenu extends GuiScreen {
                 break;
             case ACCOUNT_SWITCHER:
                 minecraft.displayGuiScreen(new AccountInfoGui(this));
-                break;
-            case MULTIPLAYER:
-                minecraft.displayGuiScreen(new GuiMultiplayer(this));
                 break;
             case MODULES:
                 minecraft.displayGuiScreen(new AlphaModMenu(this));
