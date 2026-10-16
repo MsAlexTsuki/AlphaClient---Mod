@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -124,7 +125,9 @@ public final class RankCache {
 
     private Map<UUID, AlphaRank> fetch(List<UUID> uuids) throws IOException {
         JsonArray input = new JsonArray();
-        for (UUID uuid : uuids) input.add(uuid.toString());
+        for (UUID uuid : uuids) {
+            input.add(new JsonPrimitive(uuid.toString()));
+        }
         JsonObject body = new JsonObject();
         body.add("uuids", input);
 
