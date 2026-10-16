@@ -238,7 +238,7 @@ public final class AlphaModMenu extends GuiScreen {
 
         String rankText = "RANK: " + (SupabaseCommunityService.isSignedIn()
                 ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK");
-        int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 43 - settingsLeft - 14);
+        int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 14 - settingsLeft);
         while (rankText.length() > 1 && fontRendererObj.getStringWidth(rankText) > rankMaxWidth) {
             rankText = rankText.substring(0, rankText.length() - 1);
         }
