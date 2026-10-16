@@ -47,13 +47,11 @@ public class BhopHud {
      * =========================================================
      */
 
-    private static final int HUD_HEIGHT = 28;
+    private static final int HUD_HEIGHT = 20;
 
     private static final int HUD_PADDING_LEFT = 8;
     private static final int HUD_PADDING_RIGHT = 8;
 
-    private static final int PROFILE_SEPARATOR_GAP = 5;
-    private static final int SPEED_SEPARATOR_GAP = 5;
 
 
     /*
@@ -281,30 +279,13 @@ public class BhopHud {
         String bhopName =
                 getDisplayedBhopName();
 
-        String speedName =
-                getDisplayedSpeedName();
-
         int bhopNameWidth =
                 font.getStringWidth(
                         bhopName
                 );
 
-        int separatorWidth =
-                font.getStringWidth(
-                        "•"
-                );
-
-        int speedWidth =
-                font.getStringWidth(
-                        speedName
-                );
-
         return HUD_PADDING_LEFT
                 + bhopNameWidth
-                + PROFILE_SEPARATOR_GAP
-                + separatorWidth
-                + SPEED_SEPARATOR_GAP
-                + speedWidth
                 + HUD_PADDING_RIGHT;
     }
 
@@ -418,25 +399,9 @@ public class BhopHud {
         font.drawStringWithShadow(
                 bhopName,
                 HUD_PADDING_LEFT,
-                10,
+                6,
                 bhopNameColor
         );
-
-        int bhopNameWidth = font.getStringWidth(bhopName);
-        int separatorX = HUD_PADDING_LEFT + bhopNameWidth + PROFILE_SEPARATOR_GAP;
-        font.drawStringWithShadow("•", separatorX, 10, 0xFF858A96);
-
-        int speedX = separatorX + separatorWidthGap(font);
-        int speedWidth = font.getStringWidth(speedName);
-        drawRect(speedX - 4, 5, speedX + speedWidth + 4, HUD_HEIGHT - 4, 0xFF272B33);
-
-        int speedColor =
-                parseColor(
-                        ProfileManager
-                                .getInstance()
-                                .getColor("BHOP_SPEED")
-                );
-        font.drawStringWithShadow(speedName, speedX, 10, speedColor);
 
         GlStateManager.popMatrix();
     }
@@ -485,22 +450,6 @@ public class BhopHud {
 
             return 0xFFF2EE4D;
         }
-    }
-
-
-    /*
-     * =========================================================
-     * SPEED TEXT GAP
-     * =========================================================
-     */
-
-    private static int separatorWidthGap(
-            FontRenderer font) {
-
-        return font.getStringWidth(
-                "•"
-        )
-                + SPEED_SEPARATOR_GAP;
     }
 
 
