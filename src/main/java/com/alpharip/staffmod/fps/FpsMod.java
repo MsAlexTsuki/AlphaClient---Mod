@@ -7,9 +7,11 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import java.awt.Color;
+import java.io.File;
+import java.io.FileWriter;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-/** Compact FPS counter with automatic performance settings for AlphaClient. */
+/** Compact FPS counter with first-run performance defaults for AlphaClient. */
 public final class FpsMod {
     private static boolean showFps = true;
     private static boolean showBackground = true;
@@ -19,11 +21,6 @@ public final class FpsMod {
     private static int colorIndex = 0;
     private static final String[] COLOR_NAMES = {"White", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Pink", "Rainbow"};
     private static final int[] COLORS = {0xFFFFFFFF, 0xFFFF5555, 0xFFFFAA00, 0xFFFFFF55, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};
-    private static boolean originalsCaptured;
-    private static boolean originalVsync;
-    private static int originalLimit;
-    private static int originalParticles;
-    private static boolean originalFancyGraphics;
     private static boolean optimizationApplied;
 
     public FpsMod() { }
@@ -67,36 +64,46 @@ public final class FpsMod {
         return COLORS[colorIndex];
     }
 
-    /** Applies conservative FPS settings automatically, independently of HUD/module toggles. */
+    /**
+     * Applies the FPS defaults once per Minecraft installation. After the first
+     * application, Minecraft's saved options remain authoritative so player
+     * changes survive subsequent launches.
+     */
     public static void applyAutomaticOptimization() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.gameSettings == null || optimizationApplied) return;
-        GameSettings settings = mc.gameSettings;
-        originalVsync = settings.enableVsync;
-        originalLimit = settings.limitFramerate;
-        originalParticles = settings.particleSetting;
-        originalFancyGraphics = settings.fancyGraphics;
-        originalsCaptured = true;
 
+        File marker = new File(new File(mc.mcDataDir, "config"), "alphaclient-fps-defaults-applied");
+        if (marker.isFile()) {
+            optimizationApplied = true;
+            return;
+        }
+
+        GameSettings settings = mc.gameSettings;
         settings.enableVsync = false;
-        settings.limitFramerate = 260;
+        settings.limitFramerate = 260; // Minecraft 1.8.9 slider maximum represents Unlimited.
         settings.particleSetting = 2;
-        settings.fancyGraphics = false;
         settings.saveOptions();
-        optimizationApplied = true;
-    }
 
-    /** Restores the user's settings when the client is shut down normally. */
-    public static void restoreOriginalSettings() {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.gameSettings == null || !optimizationApplied || !originalsCaptured) return;
-        GameSettings settings = mc.gameSettings;
-        settings.enableVsync = originalVsync;
-        settings.limitFramerate = originalLimit;
-        settings.particleSetting = originalParticles;
-        settings.fancyGraphics = originalFancyGraphics;
-        settings.saveOptions();
-        optimizationApplied = false;
+        File parent = marker.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            System.out.println("[AlphaClient] Could not create FPS optimization config directory.");
+        } else {
+            FileWriter writer = null;
+            try {
+                writer = new FileWriter(marker);
+                writer.write("AlphaClient FPS defaults applied. Minecraft options are now controlled by the player.");
+                writer.flush();
+            } catch (Exception e) {
+                System.out.println("[AlphaClient] Could not save FPS optimization marker: " + e.getMessage());
+            } finally {
+                if (writer != null) {
+                    try { writer.close(); } catch (Exception ignored) { }
+                }
+            }
+        }
+
+        optimizationApplied = true;
     }
 
     @SubscribeEvent
