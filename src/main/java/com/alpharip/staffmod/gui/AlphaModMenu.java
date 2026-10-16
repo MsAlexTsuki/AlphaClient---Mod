@@ -128,7 +128,7 @@ public final class AlphaModMenu extends GuiScreen {
             }
             buttonList.add(new AlphaButton(PROFILE_CREATE, settingsLeft + 4, actionY, actionWidth, 15, "CREATE"));
             buttonList.add(new AlphaButton(PROFILE_EDIT, settingsLeft + 7 + actionWidth, actionY, actionWidth, 15, "EDIT"));
-            buttonList.add(new AlphaButton(PROFILE_DELETE, settingsLeft + 10 + actionWidth * 2, actionY, 15, 15, "DEL"));
+            buttonList.add(new AlphaButton(PROFILE_DELETE, settingsLeft + 10 + actionWidth * 2, actionY, actionWidth, 15, "DELETE"));
         }
 
         List<AlphaModule> filtered = getFilteredModules();
@@ -220,7 +220,8 @@ public final class AlphaModMenu extends GuiScreen {
                             + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + "/" + profiles.size() + ")",
                             settingsLeft + 7, panelTop + 68, 0xFFB8BDC8);
                 }
-            }        } else if (selected != null) {
+            }
+        } else if (selected != null) {
             drawRect(settingsLeft + 4, panelTop + 57, right - 6, panelTop + 89, 0xB5161820);
             drawString(fontRendererObj, selected.getName(), settingsLeft + 9, panelTop + 64, 0xFFF3F4F6);
             String selectedStatus = "quality".equals(selected.getId()) ? "FOLDER" : selected.getStatusLabel();
