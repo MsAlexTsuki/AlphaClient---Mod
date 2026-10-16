@@ -200,10 +200,9 @@ public final class AlphaModMenu extends GuiScreen {
         drawString(fontRendererObj, selectedCategory.getTitle().toUpperCase(Locale.ROOT),
                 contentLeft + 3, contentTop - 9, ACCENT);
         AlphaModule selected = getSelectedModule();
-        drawString(fontRendererObj, "PROFILES",
-                settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
-
-        {
+        if (selected == null) {
+            drawString(fontRendererObj, "PROFILES",
+                    settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
             List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
             String activeProfile = BhopProfileManager.getSelectedProfileName();
             int profileTop = panelTop + 67;
