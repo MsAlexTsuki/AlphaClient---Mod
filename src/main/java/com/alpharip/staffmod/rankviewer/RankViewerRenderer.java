@@ -41,7 +41,9 @@ public final class RankViewerRenderer {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null
                 || minecraft.gameSettings == null || minecraft.fontRendererObj == null) return;
-        if (minecraft.gameSettings.thirdPersonView == 0) return;
+        // The local Name Viewer is only intended for front-facing F5 (thirdPersonView == 2).
+        // Hide it in first-person and rear-facing F5, where the camera can clip into the player. 
+        if (minecraft.gameSettings.thirdPersonView != 2) return;
 
         AlphaModule module = AlphaModuleRegistry.find("name-viewer");
         if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
