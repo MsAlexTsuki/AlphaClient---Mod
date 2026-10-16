@@ -6,26 +6,21 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderPlayerEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** Draws a compact, colored Alpha rank badge above player nameplates. */
 public final class RankViewerRenderer {
-    private static final int PANEL = 0xE8101116;
-    private static final int EDGE_DARK = 0xFF08090D;
-
     @SubscribeEvent
     public void onRenderPlayerSpecials(RenderPlayerEvent.Specials.Pre event) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || event.entityPlayer == null || minecraft.theWorld == null) return;
         EntityPlayer player = event.entityPlayer;
-        AlphaModule module = AlphaModuleRegistry.find("name-viewer");
         boolean renderingLocalPlayer = minecraft.thePlayer != null
                 && minecraft.thePlayer.getUniqueID().equals(player.getUniqueID());
         // The local player's name is drawn in RenderWorldLastEvent.
-        if (renderingLocalPlayer) return;
-        if (player.isInvisible()) return;
+        if (renderingLocalPlayer || player.isInvisible()) return;
+
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
         // Only render a custom badge for players with a rank record. Their
         // normal Minecraft nametag remains handled by vanilla rendering.
@@ -35,35 +30,32 @@ public final class RankViewerRenderer {
         String emblem = rank.emblem();
         int labelWidth = minecraft.fontRendererObj.getStringWidth(label);
         int emblemWidth = minecraft.fontRendererObj.getStringWidth(emblem);
-        int contentWidth = emblemWidth + (emblem.isEmpty() ? 0 : 8) + labelWidth;
+        int contentWidth = emblemWidth + (emblem.isEmpty() ? 0 : 5) + labelWidth;
         int left = -contentWidth / 2;
-        int top = -2;
-        int bottom = minecraft.fontRendererObj.FONT_HEIGHT + 4;
 
         GlStateManager.pushMatrix();
-        GlStateManager.translate(event.x, event.y + player.height + 0.72D, event.z);
-        GlStateManager.rotate(-minecraft.getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate(minecraft.getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
-        GlStateManager.scale(-0.02F, -0.02F, 0.02F);
-        GlStateManager.disableLighting();
-        GlStateManager.disableDepth();
-        GlStateManager.depthMask(false);
+        try {
+            GlStateManager.translate(event.x, event.y + player.height + 0.72D, event.z);
+            GlStateManager.rotate(-minecraft.getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(minecraft.getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
+            GlStateManager.scale(-0.02F, -0.02F, 0.02F);
+            GlStateManager.disableLighting();
+            GlStateManager.disableDepth();
+            GlStateManager.depthMask(false);
 
-        drawRect(minecraft, left - 2, top - 2, left + contentWidth + 3, bottom + 2, EDGE_DARK);
-        int rankColor = rank == null ? 0xFFFFD866 : rank.color();
-        drawRect(minecraft, left, top, left + contentWidth + 1, bottom, rankColor);
-        drawRect(minecraft, left + 2, top + 2, left + contentWidth - 1, bottom - 2, PANEL);
-        if (!emblem.isEmpty()) {
-            drawRect(minecraft, left + 2, top + 2, left + emblemWidth + 7, bottom - 2, rankColor);
-            minecraft.fontRendererObj.drawStringWithShadow(emblem, left + 4, top + 2, 0xFFFFFFFF);
+            int rankColor = rank.color();
+            int cursor = left;
+            if (!emblem.isEmpty()) {
+                minecraft.fontRendererObj.drawStringWithShadow(emblem, cursor, 0, rankColor);
+                cursor += emblemWidth + 5;
+            }
+            minecraft.fontRendererObj.drawStringWithShadow(label, cursor, 0, rankColor);
+        } finally {
+            GlStateManager.depthMask(true);
+            GlStateManager.enableDepth();
+            GlStateManager.enableLighting();
+            GlStateManager.popMatrix();
         }
-        minecraft.fontRendererObj.drawStringWithShadow(label, left + (emblem.isEmpty() ? 4 : emblemWidth + 10),
-                top + 2, rankColor);
-
-        GlStateManager.depthMask(true);
-        GlStateManager.enableDepth();
-        GlStateManager.enableLighting();
-        GlStateManager.popMatrix();
     }
 
     @SubscribeEvent
@@ -96,30 +88,28 @@ public final class RankViewerRenderer {
         int emblemWidth = minecraft.fontRendererObj.getStringWidth(emblem);
         int labelWidth = minecraft.fontRendererObj.getStringWidth(label);
         int totalWidth = labelWidth + (emblem.isEmpty() ? 0 : emblemWidth + 5);
-        int labelHeight = minecraft.fontRendererObj.FONT_HEIGHT;
+
         GlStateManager.pushMatrix();
-        GlStateManager.translate(x, y + player.height + 0.5D, z);
-        GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate(renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-        GlStateManager.scale(-0.026666668F, -0.026666668F, 0.026666668F);
-        GlStateManager.disableLighting();
-        GlStateManager.disableDepth();
-        GlStateManager.depthMask(false);
+        try {
+            GlStateManager.translate(x, y + player.height + 0.5D, z);
+            GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
+            GlStateManager.scale(-0.026666668F, -0.026666668F, 0.026666668F);
+            GlStateManager.disableLighting();
+            GlStateManager.disableDepth();
+            GlStateManager.depthMask(false);
 
-        int cursor = -totalWidth / 2;
-        if (!emblem.isEmpty()) {
-            minecraft.fontRendererObj.drawStringWithShadow(emblem, cursor, 1, rankColor);
-            cursor += emblemWidth + 5;
+            int cursor = -totalWidth / 2;
+            if (!emblem.isEmpty()) {
+                minecraft.fontRendererObj.drawStringWithShadow(emblem, cursor, 1, rankColor);
+                cursor += emblemWidth + 5;
+            }
+            minecraft.fontRendererObj.drawStringWithShadow(label, cursor, 1, rankColor);
+        } finally {
+            GlStateManager.depthMask(true);
+            GlStateManager.enableDepth();
+            GlStateManager.enableLighting();
+            GlStateManager.popMatrix();
         }
-        minecraft.fontRendererObj.drawStringWithShadow(label, cursor, 1, rankColor);
-
-        GlStateManager.depthMask(true);
-        GlStateManager.enableDepth();
-        GlStateManager.enableLighting();
-        GlStateManager.popMatrix();
-    }
-
-    private static void drawRect(Minecraft minecraft, int left, int top, int right, int bottom, int color) {
-        minecraft.ingameGUI.drawRect(left, top, right, bottom, color);
     }
 }
