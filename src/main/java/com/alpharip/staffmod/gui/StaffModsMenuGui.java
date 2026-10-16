@@ -145,13 +145,10 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (button == null) return;
 
         if (button.id == BACK) {
-            // Navigation is intentionally two-level:
-            // rank folder -> rank chooser -> Mods menu.
+            // Always replace the current screen rather than reinitializing a stale button list.
+            // Folder contents -> fresh rank chooser; rank chooser -> parent Mods menu.
             if (openFolderRank != null) {
-                openFolderRank = null;
-                scrollOffset = 0;
-                visibleModules.clear();
-                initGui();
+                mc.displayGuiScreen(new StaffModsMenuGui(parent));
             } else {
                 mc.displayGuiScreen(parent);
             }
