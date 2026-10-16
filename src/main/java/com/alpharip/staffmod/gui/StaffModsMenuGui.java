@@ -279,15 +279,8 @@ public final class StaffModsMenuGui extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) {
-            // Escape follows the same navigation path as the Back button.
-            if (openFolderRank != null) {
-                openFolderRank = null;
-                scrollOffset = 0;
-                visibleModules.clear();
-                initGui();
-            } else {
-                mc.displayGuiScreen(parent);
-            }
+            // Escape always closes the entire GUI, regardless of the current folder.
+            mc.displayGuiScreen(null);
             return;
         }
         super.keyTyped(typedChar, keyCode);
