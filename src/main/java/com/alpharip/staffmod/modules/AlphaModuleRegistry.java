@@ -49,7 +49,7 @@ public final class AlphaModuleRegistry {
                 "Show your own Minecraft name above your character; other players' rank badges remain automatic.",
                 AlphaModule.Category.PUBLIC,
                 true,
-                true
+                false
         );
         MODULES.add(nameViewer);
 
