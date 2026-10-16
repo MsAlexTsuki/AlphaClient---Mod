@@ -118,7 +118,10 @@ public final class AlphaModMenu extends GuiScreen {
             int profileBottom = actionY - 8;
             int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
             profileScrollOffset = Math.max(0, Math.min(profileScrollOffset, Math.max(0, profiles.size() - visibleProfiles)));
-            int actionWidth = Math.max(35, (panelLeft + panelWidth - settingsLeft - 14) / 3);
+            int actionsLeft = settingsLeft + 4;
+            int actionsRight = panelLeft + panelWidth - 10;
+            int actionGap = 4;
+            int actionWidth = Math.max(1, (actionsRight - actionsLeft - actionGap * 2) / 3);
             for (int row = 0; row < visibleProfiles && profileScrollOffset + row < profiles.size(); row++) {
                 BhopProfileManager.BhopProfile profile = profiles.get(profileScrollOffset + row);
                 buttonList.add(new AlphaButton(PROFILE_SELECT_BASE + row, settingsLeft + 4,
@@ -126,9 +129,9 @@ public final class AlphaModMenu extends GuiScreen {
                         18, profile.getProfileName(),
                         profile.getProfileName().equalsIgnoreCase(BhopProfileManager.getSelectedProfileName())));
             }
-            buttonList.add(new AlphaButton(PROFILE_CREATE, settingsLeft + 4, actionY, actionWidth, 15, "CREATE"));
-            buttonList.add(new AlphaButton(PROFILE_EDIT, settingsLeft + 7 + actionWidth, actionY, actionWidth, 15, "EDIT"));
-            buttonList.add(new AlphaButton(PROFILE_DELETE, settingsLeft + 10 + actionWidth * 2, actionY, actionWidth, 15, "DELETE"));
+            buttonList.add(new AlphaButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 15, "CREATE"));
+            buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 15, "EDIT"));
+            buttonList.add(new AlphaButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 15, "DELETE"));
         }
 
         List<AlphaModule> filtered = getFilteredModules();
