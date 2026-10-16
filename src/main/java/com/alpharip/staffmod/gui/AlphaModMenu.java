@@ -353,6 +353,11 @@ public final class AlphaModMenu extends GuiScreen {
                         mc.displayGuiScreen(new NameViewerSettingsGui(this));
                         return;
                     }
+                    if ("fps".equals(clickedModule.getId())
+                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                        mc.displayGuiScreen(new FpsSettingsGui(this));
+                        return;
+                    }
                 }
             }
         }
