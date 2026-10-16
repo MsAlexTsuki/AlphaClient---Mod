@@ -10,7 +10,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** Compact FPS HUD renderer for AlphaClient. */
 public final class FpsMod {
-    private static boolean showFps = true;
     private static boolean showBackground = true;
     private static int hudX = 6;
     private static int hudY = 6;
@@ -21,9 +20,7 @@ public final class FpsMod {
 
     public FpsMod() { }
 
-    public static boolean isShowFps() { return showFps; }
     public static boolean isShowBackground() { return showBackground; }
-    public static void setShowFps(boolean value) { showFps = value; }
     public static void setShowBackground(boolean value) { showBackground = value; }
     public static int getHudX() { return hudX; }
     public static int getHudY() { return hudY; }
@@ -68,7 +65,6 @@ public final class FpsMod {
         if (mc == null || mc.gameSettings == null || mc.gameSettings.showDebugInfo) return;
         AlphaModule module = AlphaModuleRegistry.find("fps");
         if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
-        if (!showFps) return;
 
         String line = "FPS " + Minecraft.getDebugFPS();
         int x = hudX;
