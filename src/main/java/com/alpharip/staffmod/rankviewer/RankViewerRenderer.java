@@ -3,59 +3,37 @@ package com.alpharip.staffmod.rankviewer;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-/** Draws a compact, colored Alpha rank badge above player nameplates. */
+/** Renders the rank's image badge immediately before the player's name. */
 public final class RankViewerRenderer {
+    private static final int BADGE_SIZE = 8;
+    private static final int BADGE_GAP = 3;
+
     @SubscribeEvent
     public void onRenderPlayerSpecials(RenderPlayerEvent.Specials.Pre event) {
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || event.entityPlayer == null || minecraft.theWorld == null) return;
+        if (minecraft == null || event.entityPlayer == null || minecraft.theWorld == null
+                || minecraft.fontRendererObj == null) return;
+
         EntityPlayer player = event.entityPlayer;
         boolean renderingLocalPlayer = minecraft.thePlayer != null
                 && minecraft.thePlayer.getUniqueID().equals(player.getUniqueID());
-        // The local player's name is drawn in RenderWorldLastEvent.
+        // The local player's name is rendered by the Name Viewer below.
         if (renderingLocalPlayer || player.isInvisible()) return;
 
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
-        // Only render a custom badge for players with a rank record. Their
-        // normal Minecraft nametag remains handled by vanilla rendering.
         if (rank == null) return;
 
-        String label = rank.label().toUpperCase(java.util.Locale.ROOT) + "  |  " + player.getName();
-        String emblem = rank.emblem();
-        int labelWidth = minecraft.fontRendererObj.getStringWidth(label);
-        int emblemWidth = minecraft.fontRendererObj.getStringWidth(emblem);
-        int contentWidth = emblemWidth + (emblem.isEmpty() ? 0 : 5) + labelWidth;
-        int left = -contentWidth / 2;
-
-        GlStateManager.pushMatrix();
-        try {
-            GlStateManager.translate(event.x, event.y + player.height + 0.72D, event.z);
-            GlStateManager.rotate(-minecraft.getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
-            GlStateManager.rotate(minecraft.getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
-            GlStateManager.scale(-0.02F, -0.02F, 0.02F);
-            GlStateManager.disableLighting();
-            GlStateManager.disableDepth();
-            GlStateManager.depthMask(false);
-
-            int rankColor = rank.color();
-            int cursor = left;
-            if (!emblem.isEmpty()) {
-                minecraft.fontRendererObj.drawStringWithShadow(emblem, cursor, 0, rankColor);
-                cursor += emblemWidth + 5;
-            }
-            minecraft.fontRendererObj.drawStringWithShadow(label, cursor, 0, rankColor);
-        } finally {
-            GlStateManager.depthMask(true);
-            GlStateManager.enableDepth();
-            GlStateManager.enableLighting();
-            GlStateManager.popMatrix();
-        }
+        drawNameWithBadge(minecraft, rank, player.getName(), event.x,
+                event.y + player.height + 0.72D, event.z,
+                minecraft.getRenderManager().playerViewY,
+                minecraft.getRenderManager().playerViewX, 0.02F);
     }
 
     @SubscribeEvent
@@ -80,35 +58,51 @@ public final class RankViewerRenderer {
         z -= renderManager.viewerPosZ;
 
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
-        String name = player.getName();
-        String rankLabel = rank == null ? "" : rank.label().toUpperCase(java.util.Locale.ROOT) + "  |  ";
-        String label = rankLabel + name;
-        String emblem = rank == null ? "" : rank.emblem();
-        int rankColor = rank == null ? 0xFFFFD866 : rank.color();
-        int emblemWidth = minecraft.fontRendererObj.getStringWidth(emblem);
-        int labelWidth = minecraft.fontRendererObj.getStringWidth(label);
-        int totalWidth = labelWidth + (emblem.isEmpty() ? 0 : emblemWidth + 5);
+        drawNameWithBadge(minecraft, rank, player.getName(), x,
+                y + player.height + 0.5D, z,
+                renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
+    }
+
+    private void drawNameWithBadge(Minecraft minecraft, AlphaRank rank, String name,
+                                   double x, double y, double z,
+                                   float playerViewY, float playerViewX, float scale) {
+        int nameWidth = minecraft.fontRendererObj.getStringWidth(name);
+        int badgeWidth = rank == null ? 0 : BADGE_SIZE + BADGE_GAP;
+        int totalWidth = nameWidth + badgeWidth;
 
         GlStateManager.pushMatrix();
         try {
-            GlStateManager.translate(x, y + player.height + 0.5D, z);
-            GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-            GlStateManager.rotate(renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-            GlStateManager.scale(-0.026666668F, -0.026666668F, 0.026666668F);
+            GlStateManager.translate(x, y, z);
+            GlStateManager.rotate(-playerViewY, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(playerViewX, 1.0F, 0.0F, 0.0F);
+            GlStateManager.scale(-scale, -scale, scale);
             GlStateManager.disableLighting();
             GlStateManager.disableDepth();
             GlStateManager.depthMask(false);
 
             int cursor = -totalWidth / 2;
-            if (!emblem.isEmpty()) {
-                minecraft.fontRendererObj.drawStringWithShadow(emblem, cursor, 1, rankColor);
-                cursor += emblemWidth + 5;
+            if (rank != null) {
+                GlStateManager.pushMatrix();
+                try {
+                    minecraft.getTextureManager().bindTexture(rank.texture());
+                    GlStateManager.enableTexture2D();
+                    GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                    Gui.drawModalRectWithCustomSizedTexture(
+                            cursor, 0, 0.0F, 0.0F,
+                            BADGE_SIZE, BADGE_SIZE, BADGE_SIZE, BADGE_SIZE);
+                } finally {
+                    GlStateManager.popMatrix();
+                }
+                cursor += badgeWidth;
             }
-            minecraft.fontRendererObj.drawStringWithShadow(label, cursor, 1, rankColor);
+
+            // Keep the player's name; only the rank label/emblem text is replaced by the image.
+            minecraft.fontRendererObj.drawStringWithShadow(name, cursor, 1, 0xFFFFFFFF);
         } finally {
             GlStateManager.depthMask(true);
             GlStateManager.enableDepth();
             GlStateManager.enableLighting();
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             GlStateManager.popMatrix();
         }
     }
