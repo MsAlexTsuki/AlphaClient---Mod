@@ -22,7 +22,11 @@ public final class RankViewerRenderer {
         AlphaModule module = AlphaModuleRegistry.find("name-viewer");
         boolean renderingLocalPlayer = minecraft.thePlayer != null
                 && minecraft.thePlayer.getUniqueID().equals(player.getUniqueID());
-        if (renderingLocalPlayer && (module == null || !module.isEnabled() || !module.isUnlocked())) return;
+        if (renderingLocalPlayer) {
+            // The own nametag is intended for third-person view only (F5).
+            if (minecraft.gameSettings == null || minecraft.gameSettings.thirdPersonView == 0) return;
+            if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
+        }
         if (player.isInvisible()) return;
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
         // Other players only get a badge when rank data exists. The local player's
