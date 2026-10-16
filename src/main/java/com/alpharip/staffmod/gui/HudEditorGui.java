@@ -53,7 +53,7 @@ public final class HudEditorGui extends GuiScreen {
             int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
             int fw = fontRendererObj.getStringWidth(fps) + 10;
             if (FpsMod.isShowBackground()) drawRect(fx - 3, fy - 3, fx + fw, fy + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-            drawStringWithShadow(fontRendererObj, fps, fx, fy, FpsMod.getTextColor());
+            fontRendererObj.drawStringWithShadow(fps, fx, fy, FpsMod.getTextColor());
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
