@@ -39,6 +39,8 @@ public final class FpsMod {
         HudPositionConfig.load();
         hudX = HudPositionConfig.getFpsX();
         hudY = HudPositionConfig.getFpsY();
+        colorIndex = HudPositionConfig.getFpsColorIndex();
+        if (colorIndex < 0 || colorIndex >= COLOR_NAMES.length) colorIndex = 0;
         hudPositionLoaded = true;
     }
     public static void setHudPosition(int x, int y) {
@@ -47,9 +49,17 @@ public final class FpsMod {
         hudY = Math.max(0, y);
         HudPositionConfig.setFpsPosition(hudX, hudY);
     }
-    public static String getColorName() { return COLOR_NAMES[colorIndex]; }
-    public static void cycleColor() { colorIndex = (colorIndex + 1) % COLOR_NAMES.length; }
+    public static String getColorName() {
+        loadHudPosition();
+        return COLOR_NAMES[colorIndex];
+    }
+    public static void cycleColor() {
+        loadHudPosition();
+        colorIndex = (colorIndex + 1) % COLOR_NAMES.length;
+        HudPositionConfig.setFpsColorIndex(colorIndex);
+    }
     public static int getTextColor() {
+        loadHudPosition();
         if (colorIndex == COLOR_NAMES.length - 1) {
             float hue = (System.currentTimeMillis() % 4000L) / 4000.0F;
             return 0xFF000000 | (Color.HSBtoRGB(hue, 1.0F, 1.0F) & 0x00FFFFFF);
