@@ -50,7 +50,7 @@ public final class ModuleTileButton extends GuiButton {
         String icon = iconFor(module.getId());
         int iconWidth = mc.fontRendererObj.getStringWidth(icon);
         mc.fontRendererObj.drawString(icon, xPosition + (width - iconWidth) / 2,
-                yPosition + 15, 0xFFE5E7EB, false);
+                yPosition + 21, 0xFFE5E7EB, false);
         String name = module.getName();
         int maxWidth = width - 10;
         if (mc.fontRendererObj.getStringWidth(name) > maxWidth) {
