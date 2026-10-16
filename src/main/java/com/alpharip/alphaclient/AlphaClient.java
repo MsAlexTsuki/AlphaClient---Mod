@@ -10,6 +10,8 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.rankviewer.RankCache;
+import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
@@ -48,6 +50,8 @@ public final class AlphaClient {
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
+        MinecraftForge.EVENT_BUS.register(new RankViewerRenderer());
+        RankCache.INSTANCE.start();
 
         // Load every implemented HUD's persisted position before registering its renderer.
         AlphaClientConfig.load();
