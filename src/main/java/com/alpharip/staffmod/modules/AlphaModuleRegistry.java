@@ -53,6 +53,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(nameViewer);
 
+        AlphaModule fps = new AlphaModule(
+                "fps",
+                "FPS",
+                "Compact FPS counter, minimum frame-time display and optional performance preset.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                false
+        );
+        MODULES.add(fps);
+
         AlphaModule bhop = new AlphaModule(
                 "staffmods",
                 "BHOP",
