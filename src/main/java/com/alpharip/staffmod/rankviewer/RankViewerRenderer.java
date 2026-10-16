@@ -2,6 +2,7 @@ package com.alpharip.staffmod.rankviewer;
 
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
@@ -77,7 +78,10 @@ public final class RankViewerRenderer {
         y -= renderManager.viewerPosY;
         z -= renderManager.viewerPosZ;
 
-        AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
+        // The local badge follows the currently signed-in Alpha account, not an arbitrary
+        // Minecraft-UUID association (one UUID may be linked to multiple Alpha accounts).
+        AlphaRank rank = SupabaseCommunityService.getSignedInDisplayRank();
+        if (rank == null) rank = RankCache.INSTANCE.get(player.getUniqueID());
         drawNameWithBadge(minecraft, rank, player.getName(), x,
                 y + player.height + 0.5D, z,
                 renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
