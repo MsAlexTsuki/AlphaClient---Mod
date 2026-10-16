@@ -5,8 +5,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSelectWorld;
-import net.minecraft.client.multiplayer.GuiConnecting;
-import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 
@@ -18,7 +16,6 @@ public final class AlphaMainMenu extends GuiScreen {
     private static final int MULTIPLAYER = 11;
     private static final int MODULES = 12;
     private static final int OPTIONS = 13;
-    private static final int PARTNER = 14;
     private static final int QUIT = 15;
     private static final int ACCOUNT_MENU = 16;
     private static final int ACCOUNT_SWITCHER = 17;
@@ -46,7 +43,7 @@ public final class AlphaMainMenu extends GuiScreen {
         buttonHeight = height < 360 ? 22 : height < 480 ? 26 : 32;
         buttonGap = height < 360 ? 3 : height < 480 ? 5 : 8;
 
-        int menuButtonCount = 6;
+        int menuButtonCount = 5;
         int menuHeight = menuButtonCount * buttonHeight + (menuButtonCount - 1) * buttonGap;
         if (compactLayout) {
             menuLeft = Math.max(12, (width - buttonWidth) / 2);
@@ -59,22 +56,20 @@ public final class AlphaMainMenu extends GuiScreen {
             menuTop = Math.max(170, (height - menuHeight) / 2 + 28);
         }
 
-        buttonList.add(new AlphaButton(PLAY, menuLeft, menuTop, buttonWidth, buttonHeight, "PLAY", true));
+        buttonList.add(new AlphaButton(PLAY, menuLeft, menuTop, buttonWidth, buttonHeight, "Play", true));
         buttonList.add(new AlphaButton(MULTIPLAYER, menuLeft, menuTop + buttonHeight + buttonGap,
-                buttonWidth, buttonHeight, "MULTIPLAYER"));
+                buttonWidth, buttonHeight, "Multiplayer"));
         buttonList.add(new AlphaButton(MODULES, menuLeft, menuTop + 2 * (buttonHeight + buttonGap),
-                buttonWidth, buttonHeight, "MODS"));
+                buttonWidth, buttonHeight, "Mods"));
         buttonList.add(new AlphaButton(OPTIONS, menuLeft, menuTop + 3 * (buttonHeight + buttonGap),
-                buttonWidth, buttonHeight, "SETTINGS"));
-        buttonList.add(new AlphaButton(PARTNER, menuLeft, menuTop + 4 * (buttonHeight + buttonGap),
-                buttonWidth, buttonHeight, "CONNECT TO ALPHA.RIP"));
-        buttonList.add(new AlphaButton(QUIT, menuLeft, menuTop + 5 * (buttonHeight + buttonGap),
-                buttonWidth, buttonHeight, "QUIT"));
+                buttonWidth, buttonHeight, "Settings"));
+        buttonList.add(new AlphaButton(QUIT, menuLeft, menuTop + 4 * (buttonHeight + buttonGap),
+                buttonWidth, buttonHeight, "Quit"));
 
         buttonList.add(new AlphaButton(ACCOUNT_MENU, 24, 22, 132, 27,
-                accountMenuOpen ? "ACCOUNT  -" : "ACCOUNT  +"));
+                accountMenuOpen ? "Account  -" : "Account  +"));
         if (accountMenuOpen) {
-            buttonList.add(new AlphaButton(ACCOUNT_SWITCHER, 24, 55, 132, 25, "ACCOUNT SWITCHER"));
+            buttonList.add(new AlphaButton(ACCOUNT_SWITCHER, 24, 55, 132, 25, "Account switcher"));
         }
     }
 
@@ -86,7 +81,7 @@ public final class AlphaMainMenu extends GuiScreen {
         int menuCardRight = Math.min(width - 8, menuLeft + buttonWidth + (compactLayout ? 14 : 22));
         int menuCardTop = Math.max(8, menuTop - (compactLayout ? 48 : 84));
         int menuCardBottom = Math.min(height - 8,
-                menuTop + 6 * buttonHeight + 5 * buttonGap + (compactLayout ? 16 : 22));
+                menuTop + 5 * buttonHeight + 4 * buttonGap + (compactLayout ? 16 : 22));
 
         drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardBottom, 0xA90E1015);
         drawRect(menuCardLeft, menuCardTop, menuCardRight, menuCardTop + 1, 0x554B515D);
@@ -103,13 +98,13 @@ public final class AlphaMainMenu extends GuiScreen {
             drawScaledCustomSizeModalRect(compactLogoX, compactLogoY, 0.0F, 0.0F, 512, 448,
                     compactLogoWidth, compactLogoHeight, 512.0F, 448.0F);
             GlStateManager.disableBlend();
-            drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2,
+            drawCenteredString(fontRendererObj, "Alpha Client", width / 2,
                     compactLogoY + compactLogoHeight + 3, 0xFFF3F0E8);
-            drawCenteredString(fontRendererObj, "MINECRAFT 1.8.9  /  FORGE", width / 2,
+            drawCenteredString(fontRendererObj, "Minecraft 1.8.9  /  Forge", width / 2,
                     compactLogoY + compactLogoHeight + 15, ACCENT);
         } else {
             drawString(fontRendererObj, "ALPHA CLIENT", menuLeft, menuTop - 67, 0xFFF3F0E8);
-            drawString(fontRendererObj, "YOUR NEXT MINECRAFT EXPERIENCE", menuLeft, menuTop - 49, ACCENT);
+            drawString(fontRendererObj, "Your next Minecraft experience", menuLeft, menuTop - 49, ACCENT);
             drawRect(menuLeft, menuTop - 30, menuLeft + 46, menuTop - 28, ACCENT);
             drawRect(menuLeft + 51, menuTop - 30, menuLeft + 98, menuTop - 29, 0x557F8794);
         }
@@ -139,20 +134,20 @@ public final class AlphaMainMenu extends GuiScreen {
 
             int centerX = (panelLeft + panelRight) / 2;
             int taglineY = Math.max(logoY + logoHeight + 12, panelTop + 205);
-            drawCenteredString(fontRendererObj, "PLAY DIFFERENT.", centerX, taglineY, 0xFFF5F2E8);
-            drawCenteredString(fontRendererObj, "BUILT AROUND YOUR GAME", centerX, taglineY + 19, ACCENT);
+            drawCenteredString(fontRendererObj, "Play different.", centerX, taglineY, 0xFFF5F2E8);
+            drawCenteredString(fontRendererObj, "Built around your game", centerX, taglineY + 19, ACCENT);
 
             int dividerY = Math.min(panelBottom - 55, taglineY + 47);
             drawRect(panelLeft + 30, dividerY, panelRight - 30, dividerY + 1, 0x557F8794);
-            drawString(fontRendererObj, "MINECRAFT 1.8.9", panelLeft + 26, dividerY + 15, 0xFFD0D3DB);
-            drawString(fontRendererObj, "FORGE  |  ALPHACLIENT", panelLeft + 26, dividerY + 30, 0xFF858B98);
+            drawString(fontRendererObj, "Minecraft 1.8.9", panelLeft + 26, dividerY + 15, 0xFFD0D3DB);
+            drawString(fontRendererObj, "Forge  |  AlphaClient", panelLeft + 26, dividerY + 30, 0xFF858B98);
         }
 
         if (height >= 390) {
             drawString(fontRendererObj, "ALPHA CLIENT", 12, height - 28, ACCENT);
             drawString(fontRendererObj, "v" + com.alpharip.staffmod.BuildInfo.VERSION
                     + "  /  FORGE 1.8.9", 12, height - 16, 0xFF969DAA);
-            drawString(fontRendererObj, "ALPHA.RIP", width - fontRendererObj.getStringWidth("ALPHA.RIP") - 12,
+            drawString(fontRendererObj, "Alpha.Rip", width - fontRendererObj.getStringWidth("ALPHA.RIP") - 12,
                     height - 20, 0xFFB9BEC8);
         }
 
@@ -198,10 +193,6 @@ public final class AlphaMainMenu extends GuiScreen {
                 break;
             case OPTIONS:
                 minecraft.displayGuiScreen(new AlphaSettingsMenu(this));
-                break;
-            case PARTNER:
-                minecraft.displayGuiScreen(new GuiConnecting(this, minecraft,
-                        new ServerData("Alpha.Rip", "alpha.rip:25565", false)));
                 break;
             case QUIT:
                 minecraft.shutdown();
