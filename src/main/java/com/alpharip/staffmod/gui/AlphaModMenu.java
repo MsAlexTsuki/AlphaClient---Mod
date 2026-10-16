@@ -116,10 +116,9 @@ public final class AlphaModMenu extends GuiScreen {
             int local = i - start;
             int x = contentLeft + (local % 2) * (tileWidth + gap);
             int y = contentTop + (local / 2) * (tileHeight + rowGap);
-            String moduleStatus = filtered.get(i).getStatusLabel();
-            String moduleLabel = "quality".equals(filtered.get(i).getId()) ? filtered.get(i).getName() : filtered.get(i).getName() + "  |  " + moduleStatus;
-            buttonList.add(new AlphaButton(MODULE_BASE + i, x, y, tileWidth, tileHeight,
-                    moduleLabel, filtered.get(i).getId().equals(selectedModuleId)));
+            AlphaModule module = filtered.get(i);
+            buttonList.add(new ModuleTileButton(MODULE_BASE + i, x, y, tileWidth, tileHeight,
+                    module, module.getId().equals(selectedModuleId)));
         }
 
     }
@@ -280,17 +279,16 @@ public final class AlphaModMenu extends GuiScreen {
             int index = button.id - MODULE_BASE;
             if (index >= 0 && index < modules.size()) {
                 AlphaModule clickedModule = modules.get(index);
+                if ("quality".equals(clickedModule.getId())) {
+                    mc.displayGuiScreen(new QualityGui(this));
+                    return;
+                }
+                if ("staffmods".equals(clickedModule.getId())) {
+                    mc.displayGuiScreen(new StaffModsMenuGui(this));
+                    return;
+                }
                 if (clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                    if ("name-viewer".equals(clickedModule.getId())) {
-                        mc.displayGuiScreen(new NameViewerSettingsGui(this));
-                        return;
-                    } else if ("quality".equals(clickedModule.getId())) {
-                        mc.displayGuiScreen(new QualityGui(this));
-                        return;
-                    } else if ("staffmods".equals(clickedModule.getId())) {
-                        mc.displayGuiScreen(new StaffModsMenuGui(this));
-                        return;
-                    }
+                    clickedModule.setEnabled(!clickedModule.isEnabled());
                 }
                 selectedModuleId = clickedModule.getId();
             }
