@@ -27,6 +27,8 @@ public final class SupabaseCommunityService {
     private static volatile String accessToken;
     private static volatile String signedInEmail;
     private static volatile String signedInRankLabel;
+    private static volatile String signedInRankKey;
+    private static volatile boolean signedInFounder;
 
     private SupabaseCommunityService() {
     }
@@ -35,6 +37,8 @@ public final class SupabaseCommunityService {
         accessToken = null;
         signedInEmail = null;
         signedInRankLabel = null;
+        signedInRankKey = null;
+        signedInFounder = false;
         PermissionService.clearVerifiedOnlineRank();
         if (email == null || email.trim().isEmpty() || password == null || password.isEmpty()) {
             throw new IllegalArgumentException("Enter your Alpha community email and password.");
@@ -75,6 +79,8 @@ public final class SupabaseCommunityService {
         accessToken = token;
         signedInEmail = email.trim();
         signedInRankLabel = formatRankLabel(rankKey, founder);
+        signedInRankKey = rankKey;
+        signedInFounder = founder;
         PermissionService.setVerifiedOnlineRank(rank);
         linkCurrentMinecraftUuid(token);
     }
@@ -126,6 +132,15 @@ public final class SupabaseCommunityService {
 
     public static String getSignedInRankLabel() {
         return signedInRankLabel == null ? "No Rank" : signedInRankLabel;
+    }
+
+    /** Returns the badge rank for the currently authenticated Alpha account, if any. */
+    public static com.alpharip.staffmod.rankviewer.AlphaRank getSignedInDisplayRank() {
+        if (accessToken == null) return null;
+        if (signedInFounder || "founder".equalsIgnoreCase(signedInRankKey)) {
+            return com.alpharip.staffmod.rankviewer.AlphaRank.FOUNDER;
+        }
+        return com.alpharip.staffmod.rankviewer.AlphaRank.fromString(signedInRankKey);
     }
 
     private static String formatRankLabel(String rankKey, boolean founder) {
