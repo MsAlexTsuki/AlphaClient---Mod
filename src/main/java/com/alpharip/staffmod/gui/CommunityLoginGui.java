@@ -166,6 +166,15 @@ public final class CommunityLoginGui extends GuiScreen {
                     try {
                         SupabaseCommunityService.signIn(email, password);
                         status = "Signed in. Community rank verified.";
+                        mc.addScheduledTask(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (SupabaseCommunityService.isSignedIn()
+                                        && mc.currentScreen == CommunityLoginGui.this) {
+                                    mc.displayGuiScreen(parent);
+                                }
+                            }
+                        });
                     } catch (Exception e) {
                         status = e.getMessage() == null ? "Sign-in failed." : e.getMessage();
                     } finally {
