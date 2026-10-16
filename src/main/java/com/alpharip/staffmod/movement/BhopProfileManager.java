@@ -1,5 +1,8 @@
 package com.alpharip.staffmod.movement;
 
+import com.alpharip.alphaclient.AlphaClient;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -41,6 +44,8 @@ public final class BhopProfileManager {
 
     private static boolean loaded =
             false;
+
+    private static boolean applyingModuleStates = false;
 
     /*
      * =========================================================
@@ -709,12 +714,14 @@ public final class BhopProfileManager {
         if (profileName == null) return false;
         String name = profileName.trim();
         if (name.isEmpty() || findProfile(name) != null) return false;
+        saveCurrentModuleStates();
         BhopProfile profile = new BhopProfile(name, "BHOP", DEFAULT_COLOR, false, false, 2);
         profiles.add(profile);
         selectedProfile = name;
         ensureProfileModColors(profile, readLegacyModColors());
         save();
         BhopMode.loadSelectedProfile();
+        applySelectedModuleStates();
         return true;
     }
 
@@ -741,10 +748,12 @@ public final class BhopProfileManager {
         if (profiles.size() <= 1) return false;
         BhopProfile current = findProfile(selectedProfile);
         if (current == null || "Default".equalsIgnoreCase(current.getProfileName())) return false;
+        saveCurrentModuleStates();
         profiles.remove(current);
         selectedProfile = profiles.get(0).getProfileName();
         save();
         BhopMode.loadSelectedProfile();
+        applySelectedModuleStates();
         return true;
     }
 
@@ -766,16 +775,17 @@ public final class BhopProfileManager {
             return false;
         }
 
+        // Persist the outgoing profile before changing the active selection.
+        saveCurrentModuleStates();
+
         selectedProfile =
                 profile.getProfileName();
 
         save();
 
-        /*
-         * Immediately load the newly selected profile into BHOP.
-         * This keeps speed, toggle state and Jump Boost profile-specific.
-         */
+        // Keep legacy BHOP settings, then apply all registered module states.
         BhopMode.loadSelectedProfile();
+        applySelectedModuleStates();
 
         return true;
     }
@@ -1371,6 +1381,66 @@ public final class BhopProfileManager {
         );
     }
 
+
+    /**
+     * True while module values are being applied from a profile.
+     * Prevents setters from writing applied values back mid-load.
+     */
+    public static boolean isApplyingModuleStates() {
+        return applyingModuleStates;
+    }
+
+    /** Save all active module toggles into the currently selected profile. */
+    public static void saveCurrentModuleStates() {
+        load();
+        BhopProfile profile = findProfile(selectedProfile);
+        if (profile == null || applyingModuleStates) return;
+
+        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            profile.getModule(module.getId()).addProperty("enabled", module.isEnabled());
+        }
+        save();
+    }
+
+    /** Store an explicit module toggle in the selected profile. */
+    public static void setSelectedModuleEnabled(String moduleId, boolean enabled) {
+        if (applyingModuleStates || moduleId == null || moduleId.trim().isEmpty()) return;
+        load();
+        BhopProfile profile = findProfile(selectedProfile);
+        if (profile == null) return;
+        profile.getModule(moduleId).addProperty("enabled", enabled);
+        save();
+    }
+
+    /** Apply saved module toggles at startup and whenever the selected profile changes. */
+    public static void applySelectedModuleStates() {
+        load();
+        BhopProfile profile = findProfile(selectedProfile);
+        if (profile == null) return;
+
+        applyingModuleStates = true;
+        try {
+            for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+                JsonObject settings = profile.getModule(module.getId());
+                JsonElement savedEnabled = settings.get("enabled");
+                if (savedEnabled != null && savedEnabled.isJsonPrimitive()) {
+                    try {
+                        module.setEnabled(savedEnabled.getAsBoolean());
+                    } catch (Exception ignored) {
+                    }
+                } else {
+                    // Legacy profiles have no toggle state: retain the current setting
+                    // and migrate it rather than resetting existing users.
+                    settings.addProperty("enabled", module.isEnabled());
+                }
+            }
+        } finally {
+            applyingModuleStates = false;
+        }
+
+        save();
+        AlphaClient.syncBhopModuleState();
+    }
 
     public static void setSelectedModule(
             String moduleName,
