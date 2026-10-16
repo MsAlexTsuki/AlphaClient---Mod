@@ -20,7 +20,7 @@ public final class RankViewerRenderer {
         AlphaModule module = AlphaModuleRegistry.find("rank-viewer");
         if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
         EntityPlayer player = event.entityPlayer;
-        if (player == minecraft.thePlayer || player.isInvisible()) return;
+        if (player.isInvisible()) return;
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
         if (rank == null) return;
 
