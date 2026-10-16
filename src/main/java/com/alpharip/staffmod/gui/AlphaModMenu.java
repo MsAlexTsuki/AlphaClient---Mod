@@ -330,7 +330,7 @@ public final class AlphaModMenu extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
-        if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
+        if (button.id == EXIT) { mc.displayGuiScreen(null); return; }
         if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
         if (button.id == PROFILE_CREATE) {
