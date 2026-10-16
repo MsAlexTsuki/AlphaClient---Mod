@@ -277,7 +277,7 @@ public final class StaffModsMenuGui extends GuiScreen {
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) {
             if (openFolderRank != null) {
-                openFolderRank != null = false;
+                openFolderRank = null;
                 scrollOffset = 0;
                 initGui();
             } else {
