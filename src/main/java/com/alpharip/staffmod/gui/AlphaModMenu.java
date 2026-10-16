@@ -30,7 +30,6 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
     private static final int STAFF_MODS = 306;
-    private static final int MODULE_TOGGLE = 307;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -72,7 +71,7 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setDisabledTextColour(0xFFB8BDC8);
         buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + panelHeight - 22, 16, 16, ""));
         buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + panelHeight - 22, 16, 16, ""));
-        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 6, panelTop + panelHeight - 20, 58, 14, "HUD"));
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 20, 64, 14, "HUD EDITOR"));
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
@@ -122,13 +121,7 @@ public final class AlphaModMenu extends GuiScreen {
                     module, module.getId().equals(selectedModuleId)));
         }
 
-        AlphaModule selectedForSettings = getSelectedModule();
-        if (selectedForSettings != null && !"quality".equals(selectedForSettings.getId())
-                && !"staffmods".equals(selectedForSettings.getId())) {
-            String toggleLabel = selectedForSettings.isEnabled() ? "DISABLE MODULE" : "ENABLE MODULE";
-            buttonList.add(new AlphaButton(MODULE_TOGGLE, settingsLeft + 4, panelTop + 113,
-                    Math.max(88, panelLeft + panelWidth - settingsLeft - 10), 18, toggleLabel, true));
-        }
+
     }
 
     private List<AlphaModule> getFilteredModules() {
@@ -221,15 +214,12 @@ public final class AlphaModMenu extends GuiScreen {
 
         String rankText = "RANK: " + (SupabaseCommunityService.isSignedIn()
                 ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK");
-        int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 50 - settingsLeft - 8);
-        while (rankText.length() > 4 && fontRendererObj.getStringWidth(rankText) > rankMaxWidth) {
+        int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 43 - settingsLeft - 14);
+        while (rankText.length() > 1 && fontRendererObj.getStringWidth(rankText) > rankMaxWidth) {
             rankText = rankText.substring(0, rankText.length() - 1);
         }
-        if (fontRendererObj.getStringWidth(rankText) > rankMaxWidth && rankText.length() > 3) {
-            rankText = rankText.substring(0, Math.max(1, rankText.length() - 3)) + "...";
-        }
         drawString(fontRendererObj, rankText, settingsLeft + 5, bottom - 11,
-                SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8)
+                SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
         int footerY = panelTop + panelHeight - 22;
         int accountX = panelLeft + panelWidth - 43;
@@ -297,15 +287,7 @@ public final class AlphaModMenu extends GuiScreen {
             }
             return;
         }
-        if (button.id == MODULE_TOGGLE) {
-            AlphaModule selected = getSelectedModule();
-            if (selected != null && selected.isImplemented() && selected.isUnlocked()
-                    && !"quality".equals(selected.getId()) && !"staffmods".equals(selected.getId())) {
-                selected.setEnabled(!selected.isEnabled());
-            }
-            initGui();
-            return;
-        }
+
         if (button.id >= CATEGORY_BASE
                 && button.id < CATEGORY_BASE + AlphaModule.Category.values().length) {
             AlphaModule.Category category = AlphaModule.Category.values()[button.id - CATEGORY_BASE];
