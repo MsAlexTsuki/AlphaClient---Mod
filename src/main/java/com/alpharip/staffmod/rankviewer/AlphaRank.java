@@ -1,5 +1,6 @@
 package com.alpharip.staffmod.rankviewer;
 
+import net.minecraft.util.ResourceLocation;
 import java.util.Locale;
 
 /** Public community rank presentation. This is display-only, not an authorization source. */
@@ -21,18 +22,22 @@ public enum AlphaRank {
     private final String label;
     private final int color;
     private final String emblem;
+    private final ResourceLocation texture;
 
     AlphaRank(String key, String label, int color, String emblem) {
         this.key = key;
         this.label = label;
         this.color = color;
         this.emblem = emblem;
+        this.texture = new ResourceLocation(
+                "alphastaffmod", "textures/ranks/" + key + ".png");
     }
 
     public String key() { return key; }
     public String label() { return label; }
     public int color() { return color; }
     public String emblem() { return emblem; }
+    public ResourceLocation texture() { return texture; }
 
     public static AlphaRank fromString(String value) {
         if (value == null || value.trim().isEmpty()) return MEMBER;
