@@ -310,6 +310,12 @@ public class BhopHud {
             return;
         }
 
+        // The BHOP HUD is tied to the BHOP module state.
+        // Keep editor preview independent so users can still position the HUD while BHOP is off.
+        if (!BhopMode.isEnabled() && !editorPreviewMode) {
+            return;
+        }
+
         if (editorPreviewMode) {
             return;
         }
