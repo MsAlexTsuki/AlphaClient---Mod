@@ -468,19 +468,12 @@ public final class BhopProfileManager {
             }
 
             if (profiles.isEmpty()) {
-
                 createDefaultProfile();
-
-                migrateProfileColors();
-
-                save();
-
-                return;
+            } else if (findProfile("Default") == null) {
+                profiles.add(0, new BhopProfile("Default", "BHOP", DEFAULT_COLOR, false, false, 2));
             }
 
-            if (findProfile(
-                    selectedProfile
-            ) == null) {
+            if (findProfile(selectedProfile) == null) {
 
                 selectedProfile =
                         profiles.get(0)
@@ -731,7 +724,9 @@ public final class BhopProfileManager {
         if (newName == null) return false;
         String name = newName.trim();
         BhopProfile current = findProfile(selectedProfile);
-        if (current == null || name.isEmpty()) return false;
+        if (current == null || name.isEmpty()
+                || "Default".equalsIgnoreCase(current.getProfileName())
+                || "Default".equalsIgnoreCase(name)) return false;
         BhopProfile collision = findProfile(name);
         if (collision != null && collision != current) return false;
         current.profileName = name;
@@ -745,7 +740,7 @@ public final class BhopProfileManager {
         load();
         if (profiles.size() <= 1) return false;
         BhopProfile current = findProfile(selectedProfile);
-        if (current == null) return false;
+        if (current == null || "Default".equalsIgnoreCase(current.getProfileName())) return false;
         profiles.remove(current);
         selectedProfile = profiles.get(0).getProfileName();
         save();
