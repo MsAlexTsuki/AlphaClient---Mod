@@ -710,6 +710,49 @@ public final class BhopProfileManager {
     }
 
 
+    /** Creates a new profile with safe defaults and selects it. */
+    public static boolean createProfile(String profileName) {
+        load();
+        if (profileName == null) return false;
+        String name = profileName.trim();
+        if (name.isEmpty() || findProfile(name) != null) return false;
+        BhopProfile profile = new BhopProfile(name, "BHOP", DEFAULT_COLOR, false, false, 2);
+        profiles.add(profile);
+        selectedProfile = name;
+        ensureProfileModColors(profile, readLegacyModColors());
+        save();
+        BhopMode.loadSelectedProfile();
+        return true;
+    }
+
+    /** Renames the selected profile without discarding its module settings. */
+    public static boolean renameSelectedProfile(String newName) {
+        load();
+        if (newName == null) return false;
+        String name = newName.trim();
+        BhopProfile current = findProfile(selectedProfile);
+        if (current == null || name.isEmpty()) return false;
+        BhopProfile collision = findProfile(name);
+        if (collision != null && collision != current) return false;
+        current.profileName = name;
+        selectedProfile = name;
+        save();
+        return true;
+    }
+
+    /** Deletes the selected profile, preserving at least one usable profile. */
+    public static boolean deleteSelectedProfile() {
+        load();
+        if (profiles.size() <= 1) return false;
+        BhopProfile current = findProfile(selectedProfile);
+        if (current == null) return false;
+        profiles.remove(current);
+        selectedProfile = profiles.get(0).getProfileName();
+        save();
+        BhopMode.loadSelectedProfile();
+        return true;
+    }
+
     /*
      * =========================================================
      * SELECT PROFILE
