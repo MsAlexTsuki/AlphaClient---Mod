@@ -13,6 +13,7 @@ public final class FpsSettingsGui extends GuiScreen {
     private static final int FPS = 2;
     private static final int BACKGROUND = 3;
     private static final int ENABLE = 4;
+    private static final int COLOR = 5;
     private final GuiScreen parent;
     private int left, top, right, bottom;
 
@@ -23,11 +24,12 @@ public final class FpsSettingsGui extends GuiScreen {
         buttonList.clear();
         left = width / 2 - 150;
         right = left + 300;
-        top = Math.max(12, height / 2 - 82);
-        bottom = Math.min(height - 12, top + 164);
+        top = Math.max(12, height / 2 - 95);
+        bottom = Math.min(height - 12, top + 190);
         buttonList.add(new AlphaButton(ENABLE, left + 20, top + 52, 260, 20, moduleLabel()));
         buttonList.add(new AlphaButton(FPS, left + 20, top + 78, 260, 20, fpsLabel()));
         buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 104, 260, 20, backgroundLabel()));
+        buttonList.add(new AlphaButton(COLOR, left + 20, top + 130, 260, 20, "TEXT COLOR: " + FpsMod.getColorName()));
         buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
@@ -53,6 +55,7 @@ public final class FpsSettingsGui extends GuiScreen {
             case ENABLE: { AlphaModule module = AlphaModuleRegistry.find("fps"); if (module != null) module.setEnabled(!module.isEnabled()); break; }
             case FPS: FpsMod.setShowFps(!FpsMod.isShowFps()); break;
             case BACKGROUND: FpsMod.setShowBackground(!FpsMod.isShowBackground()); break;
+            case COLOR: FpsMod.cycleColor(); break;
             default: return;
         }
         initGui();
