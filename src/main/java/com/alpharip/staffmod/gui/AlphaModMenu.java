@@ -55,8 +55,8 @@ public final class AlphaModMenu extends GuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
-        panelWidth = Math.min(460, Math.max(390, width - 80));
-        panelHeight = Math.min(250, Math.max(210, height - 80));
+        panelWidth = Math.min(460, Math.max(280, width - 20));
+        panelHeight = Math.min(300, Math.max(210, height - 24));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
         sidebarWidth = 70;
@@ -206,27 +206,13 @@ public final class AlphaModMenu extends GuiScreen {
             List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
             String activeProfile = BhopProfileManager.getSelectedProfileName();
             drawString(fontRendererObj, "Select a profile", settingsLeft + 7, panelTop + 67, 0xFFF3F4F6);
-            int profileY = panelTop + 86;
-            int profileBottom = bottom - 31;
-            for (BhopProfileManager.BhopProfile profile : profiles) {
-                if (profileY + 19 > profileBottom) break;
-                boolean active = profile.getProfileName().equalsIgnoreCase(activeProfile);
-                drawRect(settingsLeft + 4, profileY - 2, right - 6, profileY + 16,
-                        active ? 0xD02D2A1B : 0xB5161820);
-                drawRect(settingsLeft + 4, profileY - 2, settingsLeft + 6, profileY + 16,
-                        active ? ACCENT : 0x664B515D);
-                drawString(fontRendererObj, profile.getProfileName(), settingsLeft + 11, profileY + 3,
-                        active ? ACCENT : 0xFFE7E9EE);
-                if (active) drawString(fontRendererObj, "ACTIVE", right - 12 - fontRendererObj.getStringWidth("ACTIVE"),
-                        profileY + 3, 0xFF9CE2AC);
-                profileY += 22;
-            }
-            drawString(fontRendererObj, "Create / edit / delete profiles below",
-                    settingsLeft + 5, bottom - 28, 0xFFB8BDC8);
             if (profiles.isEmpty()) {
-                drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, profileY, 0xFFB8BDC8);
+                drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, panelTop + 91, 0xFFB8BDC8);
+            } else {
+                drawString(fontRendererObj, "Active: " + activeProfile, settingsLeft + 7,
+                        panelTop + panelHeight - 61, 0xFF9CE2AC);
             }
-        } else if (selected != null) {
+        }        } else if (selected != null) {
             drawRect(settingsLeft + 4, panelTop + 57, right - 6, panelTop + 89, 0xB5161820);
             drawString(fontRendererObj, selected.getName(), settingsLeft + 9, panelTop + 64, 0xFFF3F4F6);
             String selectedStatus = "quality".equals(selected.getId()) ? "FOLDER" : selected.getStatusLabel();
