@@ -30,6 +30,7 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
     private static final int STAFF_MODS = 306;
+    private static final int MODULE_TOGGLE = 307;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -121,6 +122,13 @@ public final class AlphaModMenu extends GuiScreen {
                     module, module.getId().equals(selectedModuleId)));
         }
 
+        AlphaModule selectedForSettings = getSelectedModule();
+        if (selectedForSettings != null && !"quality".equals(selectedForSettings.getId())
+                && !"staffmods".equals(selectedForSettings.getId())) {
+            String toggleLabel = selectedForSettings.isEnabled() ? "DISABLE MODULE" : "ENABLE MODULE";
+            buttonList.add(new AlphaButton(MODULE_TOGGLE, settingsLeft + 4, panelTop + 113,
+                    Math.max(88, panelLeft + panelWidth - settingsLeft - 10), 18, toggleLabel, true));
+        }
     }
 
     private List<AlphaModule> getFilteredModules() {
@@ -172,21 +180,6 @@ public final class AlphaModMenu extends GuiScreen {
         drawString(fontRendererObj, "DETAILS", settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
 
         List<AlphaModule> modules = getFilteredModules();
-        int gridWidth = Math.max(180, contentRight - contentLeft);
-        int gap = 8;
-        int tileWidth = (gridWidth - gap) / 2;
-        int tileHeight = 26;
-        int rowGap = 4;
-        int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
-        int start = Math.min(scrollOffset, Math.max(0, modules.size() - visibleRows * 2));
-        for (int i = start; i < modules.size() && i < start + visibleRows * 2; i++) {
-            int local = i - start;
-            int x = contentLeft + (local % 2) * (tileWidth + gap);
-            int y = contentTop + (local / 2) * (tileHeight + rowGap);
-            drawRect(x, y, x + tileWidth, y + tileHeight, 0xB5161820);
-            drawRect(x, y, x + tileWidth, y + 1, 0x33494D57);
-        }
-
         AlphaModule selected = getSelectedModule();
         if (selected != null) {
             drawRect(settingsLeft + 4, panelTop + 57, right - 6, panelTop + 89, 0xB5161820);
@@ -267,6 +260,15 @@ public final class AlphaModMenu extends GuiScreen {
             }
             return;
         }
+        if (button.id == MODULE_TOGGLE) {
+            AlphaModule selected = getSelectedModule();
+            if (selected != null && selected.isImplemented() && selected.isUnlocked()
+                    && !"quality".equals(selected.getId()) && !"staffmods".equals(selected.getId())) {
+                selected.setEnabled(!selected.isEnabled());
+            }
+            initGui();
+            return;
+        }
         if (button.id >= CATEGORY_BASE
                 && button.id < CATEGORY_BASE + AlphaModule.Category.values().length) {
             AlphaModule.Category category = AlphaModule.Category.values()[button.id - CATEGORY_BASE];
@@ -287,10 +289,18 @@ public final class AlphaModMenu extends GuiScreen {
                     mc.displayGuiScreen(new StaffModsMenuGui(this));
                     return;
                 }
-                if (clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                    clickedModule.setEnabled(!clickedModule.isEnabled());
+                if (button instanceof ModuleTileButton && ((ModuleTileButton) button).wasSwitchClicked()) {
+                    if (clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                        clickedModule.setEnabled(!clickedModule.isEnabled());
+                    }
+                } else {
+                    selectedModuleId = clickedModule.getId();
+                    if ("name-viewer".equals(clickedModule.getId())
+                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                        mc.displayGuiScreen(new NameViewerSettingsGui(this));
+                        return;
+                    }
                 }
-                selectedModuleId = clickedModule.getId();
             }
         }
         scrollOffset = 0;
