@@ -16,7 +16,7 @@ import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiMainMenu;
-import net.minecraft.client.gui.GuiConnecting;
+import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.MinecraftForge;
