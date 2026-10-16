@@ -110,8 +110,7 @@ public final class AlphaModMenu extends GuiScreen {
                     sidebarWidth - 10, 20, "STAFFMODS"));
         }
 
-        AlphaModule currentSelection = getSelectedModule();
-        if (currentSelection != null && "quality".equals(currentSelection.getId())) {
+        if (true) {
             List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
             int actionY = panelTop + panelHeight - 48;
             int profileTop = panelTop + 86;
@@ -201,11 +200,10 @@ public final class AlphaModMenu extends GuiScreen {
         drawString(fontRendererObj, selectedCategory.getTitle().toUpperCase(Locale.ROOT),
                 contentLeft + 3, contentTop - 9, ACCENT);
         AlphaModule selected = getSelectedModule();
-        boolean qualityFolderSelected = selected != null && "quality".equals(selected.getId());
-        drawString(fontRendererObj, qualityFolderSelected ? "PROFILES" : "DETAILS",
+        drawString(fontRendererObj, "PROFILES",
                 settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
 
-        if (qualityFolderSelected) {
+        {
             List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
             String activeProfile = BhopProfileManager.getSelectedProfileName();
             int profileTop = panelTop + 67;
