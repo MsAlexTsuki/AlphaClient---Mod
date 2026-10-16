@@ -333,11 +333,9 @@ public final class AlphaModMenu extends GuiScreen {
             if (index >= 0 && index < modules.size()) {
                 AlphaModule clickedModule = modules.get(index);
                 if ("quality".equals(clickedModule.getId())) {
-                    selectedModuleId = clickedModule.getId();
                     searchFocused = false;
                     if (searchField != null) searchField.setFocused(false);
-                    scrollOffset = 0;
-                    initGui();
+                    mc.displayGuiScreen(new QualityGui(this));
                     return;
                 }
                 if ("staffmods".equals(clickedModule.getId())) {
