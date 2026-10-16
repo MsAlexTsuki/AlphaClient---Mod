@@ -39,7 +39,7 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private final GuiScreen parent;
     private PermissionService.Rank selectedRank = PermissionService.Rank.PUBLIC;
-    private boolean folderOpen;
+    private PermissionService.Rank openFolderRank;
     private int panelLeft, panelTop, panelWidth, panelHeight;
     private int contentLeft, contentTop, contentRight, contentBottom;
     private int scrollOffset;
@@ -62,7 +62,7 @@ public final class StaffModsMenuGui extends GuiScreen {
         contentTop = panelTop + 76;
         contentBottom = panelTop + panelHeight - 43;
 
-        if (!folderOpen) {
+        if (openFolderRank == null) {
             int gap = 8;
             int columns = 3;
             int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
@@ -145,8 +145,8 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (button == null) return;
 
         if (button.id == BACK) {
-            if (folderOpen) {
-                folderOpen = false;
+            if (openFolderRank != null) {
+                openFolderRank = null;
                 scrollOffset = 0;
                 initGui();
             } else {
@@ -155,24 +155,24 @@ public final class StaffModsMenuGui extends GuiScreen {
             return;
         }
 
-        if (!folderOpen && button.id >= CATEGORY_BASE && button.id < CATEGORY_BASE + RANKS.length) {
+        if (openFolderRank == null && button.id >= CATEGORY_BASE && button.id < CATEGORY_BASE + RANKS.length) {
             PermissionService.Rank rank = RANKS[button.id - CATEGORY_BASE];
             if (rank == PermissionService.Rank.PUBLIC || PermissionService.hasAccess(rank)) {
                 selectedRank = rank;
-                folderOpen = true;
+                openFolderRank = rank;
                 scrollOffset = 0;
                 initGui();
             }
             return;
         }
 
-        if (folderOpen && button.id == MODULE_BASE + 100
+        if (openFolderRank != null && button.id == MODULE_BASE + 100
                 && selectedRank == PermissionService.Rank.PUBLIC) {
             mc.displayGuiScreen(new UtilitiesGui(this));
             return;
         }
 
-        if (folderOpen && button.id >= MODULE_BASE && button.id < MODULE_BASE + 100) {
+        if (openFolderRank != null && button.id >= MODULE_BASE && button.id < MODULE_BASE + 100) {
             int index = button.id - MODULE_BASE;
             if (index < 0 || index >= visibleModules.size()) return;
             AlphaModule module = visibleModules.get(index);
@@ -196,7 +196,7 @@ public final class StaffModsMenuGui extends GuiScreen {
 
         drawString(fontRendererObj, "ALPHA CLIENT", panelLeft + 14, panelTop + 14, 0xFFF0F1F4);
         drawString(fontRendererObj, "STAFFMODS", panelLeft + 14, panelTop + 34, ACCENT);
-        if (folderOpen) {
+        if (openFolderRank != null) {
             drawString(fontRendererObj, LABELS[indexOf(selectedRank)] + "  /  MODS",
                     contentLeft, panelTop + 57, ACCENT);
             drawFolderContents(mouseX, mouseY);
@@ -266,7 +266,7 @@ public final class StaffModsMenuGui extends GuiScreen {
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
-        if (folderOpen && wheel != 0) {
+        if (openFolderRank != null && wheel != 0) {
             int maxOffset = Math.max(0, visibleModules.size() - visibleRows);
             scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset + (wheel < 0 ? 1 : -1)));
             initGui();
@@ -276,8 +276,8 @@ public final class StaffModsMenuGui extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) {
-            if (folderOpen) {
-                folderOpen = false;
+            if (openFolderRank != null) {
+                openFolderRank != null = false;
                 scrollOffset = 0;
                 initGui();
             } else {
