@@ -1,6 +1,8 @@
 package com.alpharip.staffmod.fps;
 
 import net.minecraft.client.Minecraft;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -60,6 +62,8 @@ public final class FpsMod {
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Text event) {
         if (event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
+        AlphaModule module = AlphaModuleRegistry.find("fps");
+        if (module == null || !module.isEnabled()) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.gameSettings == null || mc.gameSettings.showDebugInfo) return;
         long now = System.nanoTime();
