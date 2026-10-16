@@ -6,6 +6,7 @@ import com.alpharip.staffmod.gui.AlphaClientGuiHandler;
 import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.AlphaMainMenu;
 import com.alpharip.staffmod.hud.BhopHud;
+import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
@@ -58,6 +59,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
         MinecraftForge.EVENT_BUS.register(new RankViewerRenderer());
+        MinecraftForge.EVENT_BUS.register(new FpsMod());
         RankCache.INSTANCE.start();
 
         // Load every implemented HUD's persisted position before registering its renderer.
