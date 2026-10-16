@@ -90,8 +90,12 @@ public final class AlphaClient {
     /** Connects to the partner server only after the AlphaClient main menu has loaded. */
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || partnerAutoConnectConsumed) return;
+        if (event.phase != TickEvent.Phase.END) return;
 
+        // Client-wide optimization is automatic and independent of individual module toggles.
+        FpsMod.applyAutomaticOptimization();
+
+        if (partnerAutoConnectConsumed) return;
         String partnerServer = System.getProperty("alphaclient.partnerServer");
         if (partnerServer == null || partnerServer.trim().isEmpty()) return;
 
