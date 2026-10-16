@@ -4,6 +4,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
+import com.alpharip.staffmod.movement.BhopProfileManager;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.permissions.PermissionService;
 import net.minecraft.client.Minecraft;
@@ -69,8 +70,8 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setEnableBackgroundDrawing(true);
         searchField.setTextColor(0xFFE7E9EE);
         searchField.setDisabledTextColour(0xFFB8BDC8);
-        buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + panelHeight - 22, 16, 16, ""));
-        buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + panelHeight - 22, 16, 16, ""));
+        buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + 5, 16, 16, ""));
+        buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + 5, 16, 16, ""));
         buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 20, 64, 14, "HUD EDITOR"));
 
         int categoryY = panelTop + 68;
@@ -170,11 +171,34 @@ public final class AlphaModMenu extends GuiScreen {
         drawString(fontRendererObj, "BROWSE", panelLeft + 6, panelTop + 57, 0xFFB8BDC8);
         drawString(fontRendererObj, selectedCategory.getTitle().toUpperCase(Locale.ROOT),
                 contentLeft + 3, contentTop - 9, ACCENT);
-        drawString(fontRendererObj, "DETAILS", settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
-
-        List<AlphaModule> modules = getFilteredModules();
         AlphaModule selected = getSelectedModule();
-        if (selected != null) {
+        boolean qualityFolderSelected = selected != null && "quality".equals(selected.getId());
+        drawString(fontRendererObj, qualityFolderSelected ? "PROFILES" : "DETAILS",
+                settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
+
+        if (qualityFolderSelected) {
+            List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
+            String activeProfile = BhopProfileManager.getSelectedProfileName();
+            drawString(fontRendererObj, "Select a profile", settingsLeft + 7, panelTop + 67, 0xFFF3F4F6);
+            int profileY = panelTop + 86;
+            int profileBottom = bottom - 31;
+            for (BhopProfileManager.BhopProfile profile : profiles) {
+                if (profileY + 19 > profileBottom) break;
+                boolean active = profile.getProfileName().equalsIgnoreCase(activeProfile);
+                drawRect(settingsLeft + 4, profileY - 2, right - 6, profileY + 16,
+                        active ? 0xD02D2A1B : 0xB5161820);
+                drawRect(settingsLeft + 4, profileY - 2, settingsLeft + 6, profileY + 16,
+                        active ? ACCENT : 0x664B515D);
+                drawString(fontRendererObj, profile.getProfileName(), settingsLeft + 11, profileY + 3,
+                        active ? ACCENT : 0xFFE7E9EE);
+                if (active) drawString(fontRendererObj, "ACTIVE", right - 12 - fontRendererObj.getStringWidth("ACTIVE"),
+                        profileY + 3, 0xFF9CE2AC);
+                profileY += 22;
+            }
+            if (profiles.isEmpty()) {
+                drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, profileY, 0xFFB8BDC8);
+            }
+        } else if (selected != null) {
             drawRect(settingsLeft + 4, panelTop + 57, right - 6, panelTop + 89, 0xB5161820);
             drawString(fontRendererObj, selected.getName(), settingsLeft + 9, panelTop + 64, 0xFFF3F4F6);
             String selectedStatus = "quality".equals(selected.getId()) ? "FOLDER" : selected.getStatusLabel();
@@ -221,16 +245,16 @@ public final class AlphaModMenu extends GuiScreen {
         drawString(fontRendererObj, rankText, settingsLeft + 5, bottom - 11,
                 SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
-        int footerY = panelTop + panelHeight - 22;
+        int iconY = panelTop + 5;
         int accountX = panelLeft + panelWidth - 43;
         int accountCenter = accountX + 8;
-        drawRect(accountCenter - 2, footerY + 3, accountCenter + 2, footerY + 7, ACCENT);
-        drawRect(accountCenter - 4, footerY + 8, accountCenter + 4, footerY + 12, ACCENT);
+        drawRect(accountCenter - 2, iconY + 3, accountCenter + 2, iconY + 7, ACCENT);
+        drawRect(accountCenter - 4, iconY + 8, accountCenter + 4, iconY + 12, ACCENT);
         int exitX = panelLeft + panelWidth - 23;
-        drawRect(exitX + 4, footerY + 3, exitX + 6, footerY + 13, 0xFFE6E8ED);
-        drawRect(exitX + 6, footerY + 7, exitX + 12, footerY + 9, 0xFFE6E8ED);
-        drawRect(exitX + 10, footerY + 5, exitX + 12, footerY + 7, 0xFFE6E8ED);
-        drawRect(exitX + 10, footerY + 9, exitX + 12, footerY + 11, 0xFFE6E8ED);
+        drawRect(exitX + 4, iconY + 3, exitX + 6, iconY + 13, 0xFFE6E8ED);
+        drawRect(exitX + 6, iconY + 7, exitX + 12, iconY + 9, 0xFFE6E8ED);
+        drawRect(exitX + 10, iconY + 5, exitX + 12, iconY + 7, 0xFFE6E8ED);
+        drawRect(exitX + 10, iconY + 9, exitX + 12, iconY + 11, 0xFFE6E8ED);
     }
 
     private void drawWrappedTextLimited(String text, int x, int y, int maxWidth, int color, int maxLines) {
