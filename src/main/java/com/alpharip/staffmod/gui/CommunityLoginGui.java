@@ -150,6 +150,10 @@ public final class CommunityLoginGui extends GuiScreen {
             return;
         }
         if (button.id == SIGN_IN) {
+            if (SupabaseCommunityService.isSignedIn()) {
+                status = "Already signed in. Sign out before switching accounts.";
+                return;
+            }
             if (busy) return;
             final String email = emailField.getText().trim();
             final String password = passwordField.getText();
@@ -177,7 +181,7 @@ public final class CommunityLoginGui extends GuiScreen {
         if (emailField != null) emailField.updateCursorCounter();
         if (passwordField != null) passwordField.updateCursorCounter();
         if (buttonList != null && !buttonList.isEmpty()) {
-            buttonList.get(0).enabled = !busy;
+            buttonList.get(0).enabled = !busy && !SupabaseCommunityService.isSignedIn();
         }
     }
 
