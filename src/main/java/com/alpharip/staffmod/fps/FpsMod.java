@@ -24,7 +24,7 @@ public final class FpsMod {
     private static double minFrameTimeMs;
     private static long sampleCount;
 
-    private FpsMod() { }
+    public FpsMod() { }
 
     public static boolean isShowFps() { return showFps; }
     public static boolean isShowFrameTime() { return showFrameTime; }
@@ -45,7 +45,7 @@ public final class FpsMod {
             originalFancyGraphics = settings.fancyGraphics;
             rememberOriginals = true;
             settings.enableVsync = false;
-            settings.limitFramerate = GameSettings.FRAMERATE_LIMIT;
+            settings.limitFramerate = 260;
             settings.particleSetting = 2;
             settings.fancyGraphics = false;
             settings.saveOptions();
