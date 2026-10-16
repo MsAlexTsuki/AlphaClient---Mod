@@ -73,16 +73,14 @@ public final class RankViewerRenderer {
         if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
 
         AlphaRank rank = RankCache.INSTANCE.get(minecraft.thePlayer.getUniqueID());
-        if (rank == null) return;
-
         String playerName = minecraft.thePlayer.getName();
-        String rankLabel = rank.label().toUpperCase(java.util.Locale.ROOT);
-        String text = rankLabel + "  |  " + playerName;
+        String text = rank == null ? playerName
+                : rank.label().toUpperCase(java.util.Locale.ROOT) + "  |  " + playerName;
         int width = minecraft.fontRendererObj.getStringWidth(text);
         int x = (event.resolution.getScaledWidth() - width) / 2;
         int y = event.resolution.getScaledHeight() / 2 + 18;
         drawRect(minecraft, x - 5, y - 3, x + width + 5, y + minecraft.fontRendererObj.FONT_HEIGHT + 3, PANEL);
-        drawRect(minecraft, x - 5, y - 3, x + width + 5, y - 2, rank.color());
+        drawRect(minecraft, x - 5, y - 3, x + width + 5, y - 2, rank == null ? 0xFFFFD866 : rank.color());
         minecraft.fontRendererObj.drawStringWithShadow(text, x, y, 0xFFFFFFFF);
     }
 
