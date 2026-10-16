@@ -25,13 +25,18 @@ public final class RankViewerRenderer {
         if (renderingLocalPlayer && (module == null || !module.isEnabled() || !module.isUnlocked())) return;
         if (player.isInvisible()) return;
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
-        if (rank == null) return;
+        // Other players only get a badge when rank data exists. The local player's
+        // username is still rendered while rank data is loading or unavailable.
+        if (!renderingLocalPlayer && rank == null) return;
 
-        String label = rank.label().toUpperCase(java.util.Locale.ROOT);
-        String emblem = rank.emblem();
+        String label = renderingLocalPlayer
+                ? (rank == null ? player.getName()
+                        : rank.label().toUpperCase(java.util.Locale.ROOT) + "  |  " + player.getName())
+                : rank.label().toUpperCase(java.util.Locale.ROOT);
+        String emblem = renderingLocalPlayer && rank == null ? "" : rank.emblem();
         int labelWidth = minecraft.fontRendererObj.getStringWidth(label);
         int emblemWidth = minecraft.fontRendererObj.getStringWidth(emblem);
-        int contentWidth = emblemWidth + 8 + labelWidth;
+        int contentWidth = emblemWidth + (emblem.isEmpty() ? 0 : 8) + labelWidth;
         int left = -contentWidth / 2;
         int top = -2;
         int bottom = minecraft.fontRendererObj.FONT_HEIGHT + 4;
@@ -46,42 +51,20 @@ public final class RankViewerRenderer {
         GlStateManager.depthMask(false);
 
         drawRect(minecraft, left - 2, top - 2, left + contentWidth + 3, bottom + 2, EDGE_DARK);
-        drawRect(minecraft, left, top, left + contentWidth + 1, bottom, rank.color());
+        int rankColor = rank == null ? 0xFFFFD866 : rank.color();
+        drawRect(minecraft, left, top, left + contentWidth + 1, bottom, rankColor);
         drawRect(minecraft, left + 2, top + 2, left + contentWidth - 1, bottom - 2, PANEL);
-        drawRect(minecraft, left + 2, top + 2, left + emblemWidth + 7, bottom - 2, rank.color());
-        minecraft.fontRendererObj.drawStringWithShadow(emblem, left + 4, top + 2, 0xFFFFFFFF);
-        minecraft.fontRendererObj.drawStringWithShadow(label, left + emblemWidth + 10, top + 2, rank.color());
+        if (!emblem.isEmpty()) {
+            drawRect(minecraft, left + 2, top + 2, left + emblemWidth + 7, bottom - 2, rankColor);
+            minecraft.fontRendererObj.drawStringWithShadow(emblem, left + 4, top + 2, 0xFFFFFFFF);
+        }
+        minecraft.fontRendererObj.drawStringWithShadow(label, left + (emblem.isEmpty() ? 4 : emblemWidth + 10),
+                top + 2, renderingLocalPlayer ? 0xFFFFFFFF : rankColor);
 
         GlStateManager.depthMask(true);
         GlStateManager.enableDepth();
         GlStateManager.enableLighting();
         GlStateManager.popMatrix();
-    }
-
-    /**
-     * The local player model is not rendered in first-person view, so its nameplate
-     * cannot be drawn by RenderPlayerEvent. Show the local player's cached Alpha rank
-     * and Minecraft username in the HUD instead.
-     */
-    @SubscribeEvent
-    public void onRenderHud(RenderGameOverlayEvent.Post event) {
-        if (event.type != RenderGameOverlayEvent.ElementType.ALL) return;
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null) return;
-
-        AlphaModule module = AlphaModuleRegistry.find("name-viewer");
-        if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
-
-        AlphaRank rank = RankCache.INSTANCE.get(minecraft.thePlayer.getUniqueID());
-        String playerName = minecraft.thePlayer.getName();
-        String text = rank == null ? playerName
-                : rank.label().toUpperCase(java.util.Locale.ROOT) + "  |  " + playerName;
-        int width = minecraft.fontRendererObj.getStringWidth(text);
-        int x = (event.resolution.getScaledWidth() - width) / 2;
-        int y = event.resolution.getScaledHeight() / 2 + 18;
-        drawRect(minecraft, x - 5, y - 3, x + width + 5, y + minecraft.fontRendererObj.FONT_HEIGHT + 3, PANEL);
-        drawRect(minecraft, x - 5, y - 3, x + width + 5, y - 2, rank == null ? 0xFFFFD866 : rank.color());
-        minecraft.fontRendererObj.drawStringWithShadow(text, x, y, 0xFFFFFFFF);
     }
 
     private static void drawRect(Minecraft minecraft, int left, int top, int right, int bottom, int color) {
