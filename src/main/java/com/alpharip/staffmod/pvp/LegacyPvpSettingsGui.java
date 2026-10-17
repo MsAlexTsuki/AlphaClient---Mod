@@ -172,6 +172,14 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
                     status = "HOOK NOT LOADED";
                     statusColor = 0xFFFFD866;
                 }
+            } else if (feature.id.equals("missed-swing-delay")) {
+                if (LegacyPvpTransformer.isMissedSwingDelayInstalled()) {
+                    status = "CONFIGURABLE";
+                    statusColor = 0xFF9CE2AC;
+                } else {
+                    status = "HOOK NOT LOADED";
+                    statusColor = 0xFFFFD866;
+                }
             }
             drawString(fontRendererObj, status, statusX, y + 4, statusColor);
         }
