@@ -17,6 +17,7 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
     private static final int TOGGLE_VIEW_BOBBING = 1;
     private static final int CLOSE = 2;
     private static final int TOGGLE_BLOCKHIT = 3;
+    private static final int TOGGLE_BOW_ANIMATION = 4;
     private static final int ROW_HEIGHT = 24;
     private static final int LIST_TOP = 124;
     private static final int LIST_BOTTOM_MARGIN = 42;
@@ -48,6 +49,14 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
                 && LegacyPvpTransformer.isInstalled()) {
             buttonList.add(new ModernButton(TOGGLE_BLOCKHIT, getToggleX(), blockhitY + 1, 94, 20,
                     LegacyPvpSettings.isBlockhitEnabled() ? "BLOCKHIT: ON" : "BLOCKHIT: OFF"));
+        }
+
+        int bowIndex = indexOf("bow-animation", features);
+        int bowY = LIST_TOP + (bowIndex - scrollOffset) * ROW_HEIGHT;
+        if (bowIndex >= scrollOffset && bowIndex < scrollOffset + visibleRows
+                && LegacyPvpTransformer.isBowAnimationInstalled()) {
+            buttonList.add(new ModernButton(TOGGLE_BOW_ANIMATION, getToggleX(), bowY + 1, 94, 20,
+                    LegacyPvpSettings.isLegacyBowAnimationEnabled() ? "LEGACY BOW: ON" : "LEGACY BOW: OFF"));
         }
         buttonList.add(new ModernButton(CLOSE, centerX - 70, height - 30, 140, 20, "BACK"));
     }
@@ -89,6 +98,9 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
         } else if (button.id == TOGGLE_BLOCKHIT) {
             LegacyPvpSettings.setBlockhitEnabled(!LegacyPvpSettings.isBlockhitEnabled());
             initGui();
+        } else if (button.id == TOGGLE_BOW_ANIMATION) {
+            LegacyPvpSettings.setLegacyBowAnimationEnabled(!LegacyPvpSettings.isLegacyBowAnimationEnabled());
+            initGui();
         } else if (button.id == CLOSE) {
             mc.displayGuiScreen(parent);
         }
@@ -106,7 +118,8 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
             boolean insideRow = mouseX >= panelLeft + 8 && mouseX < panelRight - 8;
             boolean onToggle = mouseX >= getToggleX() && mouseX < getToggleX() + 94
                     && ((index == indexOf("camera-bobbing", features))
-                    || (index == indexOf("blockhit", features) && LegacyPvpTransformer.isInstalled()));
+                    || (index == indexOf("blockhit", features) && LegacyPvpTransformer.isInstalled())
+                    || (index == indexOf("bow-animation", features) && LegacyPvpTransformer.isBowAnimationInstalled()));
             if (insideRow && !onToggle && index >= 0 && index < features.length) {
                 mc.displayGuiScreen(new LegacyPvpFeatureGui(this, features[index].id));
                 return;
@@ -174,6 +187,14 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
                 }
             } else if (feature.id.equals("missed-swing-delay")) {
                 if (LegacyPvpTransformer.isMissedSwingDelayInstalled()) {
+                    status = "CONFIGURABLE";
+                    statusColor = 0xFF9CE2AC;
+                } else {
+                    status = "HOOK NOT LOADED";
+                    statusColor = 0xFFFFD866;
+                }
+            } else if (feature.id.equals("bow-animation")) {
+                if (LegacyPvpTransformer.isBowAnimationInstalled()) {
                     status = "CONFIGURABLE";
                     statusColor = 0xFF9CE2AC;
                 } else {
