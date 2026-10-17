@@ -14,10 +14,12 @@ public final class LegacyPvpSettings {
     private static final String KEY_DISABLE_VIEW_BOBBING = "disableViewBobbing";
     private static final String KEY_ENABLE_BLOCKHIT = "enableBlockhit";
     private static final String KEY_REMOVE_MISSED_SWING_DELAY = "removeMissedSwingDelay";
+    private static final String KEY_LEGACY_BOW_ANIMATION = "legacyBowAnimation";
     private static boolean loaded;
     private static boolean disableViewBobbing = true;
     private static boolean enableBlockhit = true;
     private static boolean removeMissedSwingDelay = true;
+    private static boolean legacyBowAnimation = true;
 
     private LegacyPvpSettings() { }
 
@@ -41,6 +43,9 @@ public final class LegacyPvpSettings {
             }
             if (root.has(KEY_REMOVE_MISSED_SWING_DELAY)) {
                 removeMissedSwingDelay = root.get(KEY_REMOVE_MISSED_SWING_DELAY).getAsBoolean();
+            }
+            if (root.has(KEY_LEGACY_BOW_ANIMATION)) {
+                legacyBowAnimation = root.get(KEY_LEGACY_BOW_ANIMATION).getAsBoolean();
             }
         } catch (Exception e) {
             System.out.println("[AlphaClient] Could not load Legacy PvP settings: " + e.getMessage());
@@ -84,6 +89,17 @@ public final class LegacyPvpSettings {
         save();
     }
 
+    public static synchronized boolean isLegacyBowAnimationEnabled() {
+        load();
+        return legacyBowAnimation;
+    }
+
+    public static synchronized void setLegacyBowAnimationEnabled(boolean value) {
+        load();
+        legacyBowAnimation = value;
+        save();
+    }
+
     public static synchronized void save() {
         FileWriter writer = null;
         try {
@@ -94,6 +110,7 @@ public final class LegacyPvpSettings {
             root.addProperty(KEY_DISABLE_VIEW_BOBBING, disableViewBobbing);
             root.addProperty(KEY_ENABLE_BLOCKHIT, enableBlockhit);
             root.addProperty(KEY_REMOVE_MISSED_SWING_DELAY, removeMissedSwingDelay);
+            root.addProperty(KEY_LEGACY_BOW_ANIMATION, legacyBowAnimation);
             writer = new FileWriter(file);
             writer.write(root.toString());
             writer.flush();
