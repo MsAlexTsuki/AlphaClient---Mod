@@ -23,16 +23,28 @@ import org.objectweb.asm.tree.VarInsnNode;
  */
 public final class LegacyPvpTransformer implements IClassTransformer {
     private static final String ITEM_RENDERER = "net.minecraft.client.renderer.ItemRenderer";
+    private static final String MINECRAFT = "net.minecraft.client.Minecraft";
     private static final String HOOK_OWNER = "com/alpharip/staffmod/pvp/LegacyPvpRenderHooks";
     private static volatile boolean installed;
+    private static volatile boolean missedSwingDelayInstalled;
 
     public static boolean isInstalled() {
         return installed;
     }
 
+    public static boolean isMissedSwingDelayInstalled() {
+        return missedSwingDelayInstalled;
+    }
+
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        if (basicClass == null || !ITEM_RENDERER.equals(transformedName)) {
+        if (basicClass == null) {
+            return basicClass;
+        }
+        if (MINECRAFT.equals(transformedName)) {
+            return transformMinecraft(basicClass);
+        }
+        if (!ITEM_RENDERER.equals(transformedName)) {
             return basicClass;
         }
 
@@ -105,6 +117,50 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             return writer.toByteArray();
         } catch (Throwable error) {
             System.err.println("[AlphaClient] Legacy PvP blockhit transformer failed; vanilla rendering was left unchanged.");
+            error.printStackTrace();
+            return basicClass;
+        }
+    }
+
+    /**
+     * Adds a guarded client-side hook at the start of Minecraft.runTick.
+     * The hook only clears the missed-swing counter while Legacy PvP is enabled
+     * and the crosshair is over air; block/entity targeting is left untouched.
+     */
+    private byte[] transformMinecraft(byte[] basicClass) {
+        try {
+            ClassNode classNode = new ClassNode();
+            new ClassReader(basicClass).accept(classNode, 0);
+            for (MethodNode method : classNode.methods) {
+                if (!("runTick".equals(method.name) || "func_71407_l".equals(method.name))
+                        || !"()V".equals(method.desc)) {
+                    continue;
+                }
+                for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                    if (instruction instanceof MethodInsnNode) {
+                        MethodInsnNode call = (MethodInsnNode) instruction;
+                        if (HOOK_OWNER.equals(call.owner)
+                                && "resetMissedSwingDelayIfNeeded".equals(call.name)
+                                && "()V".equals(call.desc)) {
+                            missedSwingDelayInstalled = true;
+                            return basicClass;
+                        }
+                    }
+                }
+                org.objectweb.asm.tree.InsnList hook = new org.objectweb.asm.tree.InsnList();
+                hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK_OWNER,
+                        "resetMissedSwingDelayIfNeeded", "()V", false));
+                method.instructions.insert(hook);
+                ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+                classNode.accept(writer);
+                missedSwingDelayInstalled = true;
+                System.out.println("[AlphaClient] Installed guarded missed-swing delay hook.");
+                return writer.toByteArray();
+            }
+            System.err.println("[AlphaClient] Legacy PvP could not find Minecraft.runTick; missed-swing delay hook was not installed.");
+            return basicClass;
+        } catch (Throwable error) {
+            System.err.println("[AlphaClient] Legacy PvP missed-swing delay transformer failed; vanilla timing was left unchanged.");
             error.printStackTrace();
             return basicClass;
         }
