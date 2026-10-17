@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.config.HudPositionConfig;
+import com.alpharip.staffmod.hud.BhopHud;
 import com.alpharip.staffmod.profile.ConfigProfileManager;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -134,6 +135,7 @@ public final class ConfigProfilesGui extends GuiScreen {
         if (button.id == LOAD) {
             if (selectedProfile != null && ConfigProfileManager.loadProfile(selectedProfile)) {
                 HudPositionConfig.reload();
+                BhopHud.loadHudPosition();
                 status = "Config profile loaded.";
             } else {
                 status = "Select a profile to load.";
