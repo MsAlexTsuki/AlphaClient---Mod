@@ -6,6 +6,7 @@ import com.alpharip.staffmod.gui.AlphaClientGuiHandler;
 import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.AlphaMainMenu;
 import com.alpharip.staffmod.hud.BhopHud;
+import com.alpharip.staffmod.hud.AfkTimerHud;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.optimization.FpsOptimization;
@@ -74,6 +75,7 @@ public final class AlphaClient {
         CpsMod.load();
 
         MinecraftForge.EVENT_BUS.register(new BhopHud());
+        MinecraftForge.EVENT_BUS.register(new AfkTimerHud());
 
         bhopMode = new BhopMode();
         // Restore per-profile module toggles after the registry and BHOP mode exist.
