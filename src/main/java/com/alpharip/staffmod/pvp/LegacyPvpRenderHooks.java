@@ -7,6 +7,7 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
+import net.minecraft.item.EnumAction;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import org.lwjgl.input.Mouse;
@@ -125,7 +126,18 @@ public final class LegacyPvpRenderHooks {
      * bow option is enabled. Vanilla 1.8.9 passes zero for active item use.
      */
     public static float getLegacyBowSwingProgress(float swingProgress) {
-        return isLegacyBowAnimationActive() ? swingProgress : 0.0F;
+        return getLegacyUseSwingProgress(swingProgress);
+    }
+
+    public static float getLegacyUseSwingProgress(float swingProgress) {
+        if (!isLegacyBowAnimationActive()) return 0.0F;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null) return 0.0F;
+        ItemStack active = mc.thePlayer.getItemInUse();
+        if (active == null) return 0.0F;
+        EnumAction action = active.getItemUseAction();
+        return action == EnumAction.BOW || action == EnumAction.EAT || action == EnumAction.DRINK
+                ? swingProgress : 0.0F;
     }
 
     private static boolean isLegacyBowAnimationActive() {
@@ -149,7 +161,8 @@ public final class LegacyPvpRenderHooks {
         try {
             Minecraft mc = Minecraft.getMinecraft();
             if (mc == null || mc.thePlayer == null || mc.theWorld == null
-                    || mc.currentScreen != null || !Mouse.isButtonDown(1)) {
+                    || mc.currentScreen != null
+                    || (!Mouse.isButtonDown(1) && !mc.gameSettings.keyBindUseItem.isKeyDown())) {
                 return 0.0F;
             }
 
