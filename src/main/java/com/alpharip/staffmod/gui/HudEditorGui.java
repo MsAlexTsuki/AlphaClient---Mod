@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.hud.BhopHud;
+import com.alpharip.staffmod.hud.AfkTimerHud;
 import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
@@ -19,6 +20,7 @@ public final class HudEditorGui extends GuiScreen {
     private boolean dragging;
     private boolean fpsDragging;
     private boolean cpsDragging;
+    private boolean afkTimerDragging;
     private int dragX, dragY;
 
     public HudEditorGui(GuiScreen parent) { this.parent = parent; }
@@ -58,6 +60,15 @@ public final class HudEditorGui extends GuiScreen {
 
         BhopHud.renderEditorPreview();
 
+        int afkX = AfkTimerHud.getHudX(), afkY = AfkTimerHud.getHudY();
+        String afkText = "AFK 00:00";
+        int afkWidth = fontRendererObj.getStringWidth(afkText) + 10;
+        net.minecraft.client.gui.Gui.drawRect(afkX - 3, afkY - 3,
+                afkX + afkWidth, afkY + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+        net.minecraft.client.gui.Gui.drawRect(afkX - 3, afkY - 3,
+                afkX + afkWidth, afkY - 2, ACCENT);
+        fontRendererObj.drawStringWithShadow(afkText, afkX, afkY, 0xFFFFFFFF);
+
         if (isFpsModuleEnabled()) {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
             int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
@@ -78,6 +89,17 @@ public final class HudEditorGui extends GuiScreen {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        int ax = AfkTimerHud.getHudX(), ay = AfkTimerHud.getHudY();
+        int aw = fontRendererObj.getStringWidth("AFK 00:00") + 10;
+        if (mouseButton == 0 && mouseX >= ax - 3 && mouseX <= ax + aw
+                && mouseY >= ay - 3 && mouseY <= ay + fontRendererObj.FONT_HEIGHT + 3) {
+            dragging = true;
+            dragX = mouseX - ax;
+            dragY = mouseY - ay;
+            afkTimerDragging = true;
+            return;
+        }
+
         int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
         int cw = fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10;
         if (isCpsModuleEnabled() && mouseButton == 0 && mouseX >= cx - 3 && mouseX <= cx + cw
@@ -113,14 +135,30 @@ public final class HudEditorGui extends GuiScreen {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
         if (dragging && button == 0) {
-            int x = Math.max(0, Math.min(width - 40, mouseX - dragX));
-            int y = Math.max(0, Math.min(height - 40, mouseY - dragY));
-            if (fpsDragging) {
+            int x = mouseX - dragX;
+            int y = mouseY - dragY;
+            if (afkTimerDragging) {
+                int itemWidth = fontRendererObj.getStringWidth("AFK 00:00") + 10;
+                x = Math.max(3, Math.min(width - itemWidth - 3, x));
+                y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
+                AfkTimerHud.setHudPosition(x, y);
+            } else if (fpsDragging) {
+                int itemWidth = fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10;
+                x = Math.max(3, Math.min(width - itemWidth - 3, x));
+                y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 FpsMod.setHudPosition(x, y);
             } else if (cpsDragging) {
+                int itemWidth = fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10;
+                x = Math.max(3, Math.min(width - itemWidth - 3, x));
+                y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 CpsMod.setHudPosition(x, y);
             } else {
-                BhopHud.setHudPosition(x, Math.min(height - 60, y));
+                float scale = BhopHud.getVisualScale();
+                int itemWidth = (int) Math.ceil(BhopHud.getHudWidth() * scale);
+                int itemHeight = (int) Math.ceil(20 * scale);
+                x = Math.max(0, Math.min(width - itemWidth, x));
+                y = Math.max(0, Math.min(height - itemHeight, y));
+                BhopHud.setHudPosition(x, y);
             }
             return;
         }
@@ -132,6 +170,7 @@ public final class HudEditorGui extends GuiScreen {
         dragging = false;
         fpsDragging = false;
         cpsDragging = false;
+        afkTimerDragging = false;
         super.mouseReleased(mouseX, mouseY, state);
     }
 
@@ -145,6 +184,7 @@ public final class HudEditorGui extends GuiScreen {
             BhopHud.loadHudPosition();
             FpsMod.setHudPosition(6, 6);
             CpsMod.setHudPosition(5, 28);
+            AfkTimerHud.setHudPosition(6, 6);
         }
     }
 
