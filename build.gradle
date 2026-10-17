@@ -139,7 +139,7 @@ task generateBuildInfo {
                 "BuildInfo.java"
         )
 
-        buildInfoFile.text = """\
+        buildInfoFile.text = """\\
 package com.alpharip.staffmod;
  
 public final class BuildInfo {
@@ -203,6 +203,23 @@ processResources {
 
 /*
  * ==========================================
+ * PRODUCTION JAR REOBFUSCATION
+ * ==========================================
+ *
+ * Minecraft/Forge development names such as
+ * Minecraft.getMinecraft() must be remapped to
+ * the runtime names used by Minecraft 1.8.9.
+ *
+ * Make sure every normal production build runs
+ * ForgeGradle's reobfJar task before it is
+ * considered complete. Publish the resulting
+ * reobfuscated JAR, not an unprocessed dev JAR.
+ */
+
+build.dependsOn reobfJar
+
+/*
+ * ==========================================
  * BUILD NUMBER INCREMENT
  * ==========================================
  *
@@ -221,4 +238,3 @@ gradle.taskGraph.whenReady { taskGraph ->
         versionFile.text = nextBuildNumber.toString()
     }
 }
- 
