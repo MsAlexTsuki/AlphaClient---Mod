@@ -16,7 +16,8 @@ public enum AlphaRank {
     BETA("beta", "Beta", 0xFFFF922E, "B"),
     ALPHA_PLUS("alpha_plus", "Alpha+", 0xFF00D9D9, "A+"),
     ALPHA("alpha", "Alpha", 0xFF777BFF, "A"),
-    MEMBER("member", "Member", 0xFFB8BDC8, "•");
+    MEMBER("member", "Member", 0xFFB8BDC8, "•"),
+    THE_NIBBLER("the_nibbler", "The Nibbler", 0xFFC3BFE0, "N");
 
     private final String key;
     private final String label;
@@ -30,7 +31,8 @@ public enum AlphaRank {
         this.color = color;
         this.emblem = emblem;
         this.texture = new ResourceLocation(
-                "alphastaffmod", "textures/ranks/" + key + ".png");
+                "alphastaffmod", "textures/ranks/" + key
+                        + ("the_nibbler".equals(key) ? ".jpg" : ".png"));
     }
 
     public String key() { return key; }
