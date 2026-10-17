@@ -4,6 +4,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
+import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.permissions.PermissionService;
@@ -361,6 +362,11 @@ public final class AlphaModMenu extends GuiScreen {
                     if ("cps".equals(clickedModule.getId())
                             && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         mc.displayGuiScreen(new CpsSettingsGui(this));
+                        return;
+                    }
+                    if ("legacy-pvp".equals(clickedModule.getId())
+                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                        mc.displayGuiScreen(new LegacyPvpSettingsGui(this));
                         return;
                     }
                 }
