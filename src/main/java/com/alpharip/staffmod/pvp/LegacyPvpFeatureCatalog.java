@@ -9,15 +9,13 @@ package com.alpharip.staffmod.pvp;
 public final class LegacyPvpFeatureCatalog {
     public enum Scope {
         CLIENT_VISUAL,
-        CLIENT_INPUT,
-        SERVER_DEPENDENT
+        CLIENT_INPUT
     }
 
     public enum Status {
         CONFIGURABLE,
         RENDER_HOOK_REQUIRED,
-        INPUT_HOOK_REQUIRED,
-        SERVER_REQUIRED
+        INPUT_HOOK_REQUIRED
     }
 
     public static final class Feature {
@@ -63,18 +61,6 @@ public final class LegacyPvpFeatureCatalog {
                 "Server still validates attacks and placement."),
         new Feature("rod-hotbar", "Rod and hotbar switching behavior", Scope.CLIENT_INPUT, Status.INPUT_HOOK_REQUIRED,
                 "Requires input-state and inventory testing."),
-        new Feature("hit-timing", "Hit delay and damage timing", Scope.SERVER_DEPENDENT, Status.SERVER_REQUIRED,
-                "The client cannot override server combat timing."),
-        new Feature("knockback", "Knockback profiles", Scope.SERVER_DEPENDENT, Status.SERVER_REQUIRED,
-                "Client-only profiles cannot dictate server-applied velocity."),
-        new Feature("hit-registration", "Hit registration behavior", Scope.SERVER_DEPENDENT, Status.SERVER_REQUIRED,
-                "The server decides whether a hit is accepted."),
-        new Feature("reach-hitbox", "Reach and hitbox behavior", Scope.SERVER_DEPENDENT, Status.SERVER_REQUIRED,
-                "Local targeting cannot override server validation."),
-        new Feature("weapon-values", "Legacy weapon damage / enchantment values", Scope.SERVER_DEPENDENT, Status.SERVER_REQUIRED,
-                "Authoritative damage and enchantment outcomes are server-controlled."),
-        new Feature("projectiles", "Legacy projectile and fishing-rod interactions", Scope.SERVER_DEPENDENT, Status.SERVER_REQUIRED,
-                "Rendering is client-side; authoritative hits and effects are server-side.")
     };
 
     private LegacyPvpFeatureCatalog() { }
@@ -88,7 +74,6 @@ public final class LegacyPvpFeatureCatalog {
             case CONFIGURABLE: return "AVAILABLE";
             case RENDER_HOOK_REQUIRED: return "RENDER HOOK NEEDED";
             case INPUT_HOOK_REQUIRED: return "INPUT HOOK NEEDED";
-            case SERVER_REQUIRED: return "SERVER REQUIRED";
             default: return "UNKNOWN";
         }
     }
