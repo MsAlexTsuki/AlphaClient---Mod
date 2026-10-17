@@ -69,7 +69,7 @@ public final class AlphaModuleRegistry {
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
-                "Optional legacy-style PvP presentation. This initial version disables camera bobbing while enabled.",
+                "Legacy PvP presentation settings; each feature reports whether it is available, needs a client hook, or requires server support.",
                 AlphaModule.Category.PUBLIC,
                 true,
                 DEFAULT_MODULE_ENABLED
