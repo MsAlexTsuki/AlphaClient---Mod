@@ -43,7 +43,7 @@ public final class QualityGui extends GuiScreen {
         if (AFK_TIMER_INDEX >= scrollOffset && AFK_TIMER_INDEX < scrollOffset + visibleRows) {
             int timerY = panelTop + 68 + (AFK_TIMER_INDEX - scrollOffset) * 20;
             buttonList.add(new AlphaButton(AFK_TIMER, panelLeft + 10, timerY, panelRight - panelLeft - 20, 17,
-                    "AFK TIMER - OPEN SETTINGS", true));
+                    "AFK Timer", true));
         }
     }
 
