@@ -12,7 +12,7 @@ import com.alpharip.staffmod.optimization.FpsOptimization;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
-import com.alpharip.staffmod.movement.BhopProfileManager;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.rankviewer.RankCache;
 import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
@@ -76,8 +76,8 @@ public final class AlphaClient {
 
         bhopMode = new BhopMode();
         // Restore per-profile module toggles after the registry and BHOP mode exist.
-        BhopProfileManager.load();
-        BhopProfileManager.applySelectedModuleStates();
+        ModuleProfileManager.load();
+        ModuleProfileManager.applySelectedModuleStates();
         syncBhopModuleState();
 
         openModMenuKey = new KeyBinding(
