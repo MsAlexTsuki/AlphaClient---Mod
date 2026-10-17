@@ -30,6 +30,11 @@ public final class CpsMod {
 
     public CpsMod() { }
 
+    public static void reloadConfig() {
+        loaded = false;
+        load();
+    }
+
     public static void load() {
         if (loaded) return;
         HudPositionConfig.load();
