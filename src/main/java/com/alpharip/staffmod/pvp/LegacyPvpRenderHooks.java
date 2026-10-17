@@ -129,16 +129,28 @@ public final class LegacyPvpRenderHooks {
         return getLegacyUseSwingProgress(swingProgress);
     }
 
-    public static float getLegacyUseSwingProgress(float swingProgress) {
-        if (!isLegacyBowAnimationActive()) return 0.0F;
+    /**
+     * Restores the legacy first-person swing while eating or drinking.
+     * This is independent of the bow-animation setting.
+     */
+    public static float getLegacyFoodDrinkSwingProgress(float partialTicks) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.thePlayer == null) return 0.0F;
+        if (mc == null || mc.thePlayer == null || mc.theWorld == null || mc.currentScreen != null) {
+            return 0.0F;
+        }
+
+        AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
+        if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()) {
+            return 0.0F;
+        }
+
         ItemStack active = mc.thePlayer.getItemInUse();
         if (active == null) active = mc.thePlayer.getHeldItem();
         if (active == null) return 0.0F;
+
         EnumAction action = active.getItemUseAction();
-        return action == EnumAction.BOW || action == EnumAction.EAT || action == EnumAction.DRINK
-                ? swingProgress : 0.0F;
+        if (action != EnumAction.EAT && action != EnumAction.DRINK) return 0.0F;
+        return mc.thePlayer.getSwingProgress(partialTicks);
     }
 
     private static boolean isLegacyBowAnimationActive() {
@@ -156,9 +168,7 @@ public final class LegacyPvpRenderHooks {
      * and an attack swing is already in progress. Do not require a block target:
      * during PvP the crosshair is normally on an entity, not a world block.
      */
-    public static float getBlockhitSwingProgress(float swingProgress) {
-        if (swingProgress <= 0.0F) return 0.0F;
-
+    public static float getBlockhitSwingProgress(float partialTicks) {
         try {
             Minecraft mc = Minecraft.getMinecraft();
             if (mc == null || mc.thePlayer == null || mc.theWorld == null
@@ -166,6 +176,9 @@ public final class LegacyPvpRenderHooks {
                     || (!Mouse.isButtonDown(1) && !mc.gameSettings.keyBindUseItem.isKeyDown())) {
                 return 0.0F;
             }
+
+            float swingProgress = mc.thePlayer.getSwingProgress(partialTicks);
+            if (swingProgress <= 0.0F) return 0.0F;
 
             AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
             if (module == null || !module.isImplemented() || !module.isUnlocked()
