@@ -63,18 +63,15 @@ public final class HudEditorGui extends GuiScreen {
         drawRect(x, y, x + 1, y + h, 0x665B626E);
         drawString(fontRendererObj, BhopHud.getDisplayedProfileName() + "  |  "
                 + BhopHud.getDisplayedSpeedName(), x + 8, y + 10, 0xFFF3F4F6);
+
         if (isFpsModuleEnabled()) {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
-            int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
-        int cw = fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10;
-        if (isCpsModuleEnabled() && mouseButton == 0 && mouseX >= cx - 3 && mouseX <= cx + cw && mouseY >= cy - 3 && mouseY <= cy + fontRendererObj.FONT_HEIGHT + 3) {
-            dragging = true; dragX = mouseX - cx; dragY = mouseY - cy; cpsDragging = true; return;
-        }
-        int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
+            int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
             int fw = fontRendererObj.getStringWidth(fps) + 10;
             if (FpsMod.isShowBackground()) drawRect(fx - 3, fy - 3, fx + fw, fy + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
             fontRendererObj.drawStringWithShadow(fps, fx, fy, FpsMod.getTextColor());
         }
+
         if (isCpsModuleEnabled()) {
             String cps = CpsMod.getDisplayText();
             int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
@@ -87,11 +84,28 @@ public final class HudEditorGui extends GuiScreen {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
+        int cw = fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10;
+        if (isCpsModuleEnabled() && mouseButton == 0 && mouseX >= cx - 3 && mouseX <= cx + cw
+                && mouseY >= cy - 3 && mouseY <= cy + fontRendererObj.FONT_HEIGHT + 3) {
+            dragging = true;
+            dragX = mouseX - cx;
+            dragY = mouseY - cy;
+            cpsDragging = true;
+            return;
+        }
+
         int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
         int fw = fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10;
-        if (isFpsModuleEnabled() && mouseButton == 0 && mouseX >= fx - 3 && mouseX <= fx + fw && mouseY >= fy - 3 && mouseY <= fy + fontRendererObj.FONT_HEIGHT + 3) {
-            dragging = true; dragX = mouseX - fx; dragY = mouseY - fy; fpsDragging = true; return;
+        if (isFpsModuleEnabled() && mouseButton == 0 && mouseX >= fx - 3 && mouseX <= fx + fw
+                && mouseY >= fy - 3 && mouseY <= fy + fontRendererObj.FONT_HEIGHT + 3) {
+            dragging = true;
+            dragX = mouseX - fx;
+            dragY = mouseY - fy;
+            fpsDragging = true;
+            return;
         }
+
         int x = BhopHud.getHudX(), y = BhopHud.getHudY(), w = Math.max(110, BhopHud.getHudWidth());
         if (mouseButton == 0 && mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + 28) {
             dragging = true;
@@ -136,7 +150,7 @@ public final class HudEditorGui extends GuiScreen {
             HudPositionConfig.resetAll();
             BhopHud.loadHudPosition();
             FpsMod.setHudPosition(6, 6);
-            CpsMod.setHudPosition(5, 5);
+            CpsMod.setHudPosition(5, 28);
         }
     }
 
