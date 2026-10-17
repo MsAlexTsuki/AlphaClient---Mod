@@ -3,6 +3,8 @@ package com.alpharip.staffmod.pvp;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.item.ItemPotion;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.MouseEvent;
 import org.lwjgl.input.Mouse;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -16,6 +18,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 public final class LegacyPvpMod {
     private boolean wasEnabled;
     private boolean pendingUseSwing;
+    private boolean pendingPotionPunchSwing;
     private boolean previousViewBobbing;
     private boolean bobbingOverridden;
 
@@ -32,11 +35,20 @@ public final class LegacyPvpMod {
 
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.currentScreen != null || mc.thePlayer == null || mc.theWorld == null) return;
-        if (!mc.thePlayer.isUsingItem()) return;
-
         AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
-        if (module == null || !module.isImplemented() || !module.isUnlocked()
-                || !module.isEnabled() || !LegacyPvpSettings.isBlockhitEnabled()) return;
+        if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()) return;
+
+        ItemStack held = mc.thePlayer.getHeldItem();
+        if (held != null && held.getItem() instanceof ItemPotion
+                && ItemPotion.isSplash(held.getMetadata())
+                && LegacyPvpSettings.isPotionPunchAnimationEnabled()) {
+            // Splash potions are thrown immediately on right-click, so isUsingItem()
+            // is false for them. Queue only a local swing; never cancel either click event.
+            pendingPotionPunchSwing = true;
+            return;
+        }
+
+        if (!mc.thePlayer.isUsingItem() || !LegacyPvpSettings.isBlockhitEnabled()) return;
 
         // Defer the extra animation until the normal mouse processing has finished.
         // This avoids restarting a swing that vanilla already began for the same click.
@@ -49,6 +61,16 @@ public final class LegacyPvpMod {
 
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.gameSettings == null) return;
+
+        if (pendingPotionPunchSwing) {
+            pendingPotionPunchSwing = false;
+            if (mc.currentScreen == null && mc.thePlayer != null && mc.theWorld != null
+                    && Mouse.isButtonDown(1)) {
+                if (!mc.thePlayer.isSwingInProgress) {
+                    mc.thePlayer.swingItem();
+                }
+            }
+        }
 
         if (pendingUseSwing) {
             pendingUseSwing = false;
