@@ -137,7 +137,7 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
         drawRect(panelLeft, 12, panelRight, 13, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "LEGACY PVP SETTINGS", centerX, 24, 0xFFFFFFFF);
         drawCenteredString(fontRendererObj, "Only implemented settings are interactive.", centerX, 39, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Scroll to inspect all 19 requested mechanics.", centerX, 51, 0xFFB8BDC8);
+        drawCenteredString(fontRendererObj, "Client-side mechanics only.", centerX, 51, 0xFFB8BDC8);
 
         drawRect(panelLeft + 8, 68, panelRight - 8, 69, 0x553F424A);
         drawString(fontRendererObj, "FEATURE", panelLeft + 13, 76, 0xFFFFD866);
@@ -159,9 +159,7 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
 
             String status = LegacyPvpFeatureCatalog.getStatusLabel(feature.status);
             int statusColor = feature.status == LegacyPvpFeatureCatalog.Status.CONFIGURABLE
-                    ? 0xFF9CE2AC
-                    : (feature.status == LegacyPvpFeatureCatalog.Status.SERVER_REQUIRED
-                    ? 0xFFFFD866 : 0xFFB8BDC8);
+                    ? 0xFF9CE2AC : 0xFFB8BDC8;
             int statusX = centerX + 4;
             if (feature.id.equals("camera-bobbing")) {
                 status = "CONFIGURABLE";
