@@ -100,9 +100,6 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
             } else if ("camera-bobbing".equals(feature.id)) {
                 drawWrapped("When enabled, camera bobbing is temporarily disabled. Turning this option off restores the previous Minecraft setting.",
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
-            } else if (feature.status == LegacyPvpFeatureCatalog.Status.SERVER_REQUIRED) {
-                drawWrapped("This behavior requires server support and cannot be enabled by a client-only setting.",
-                        left + 16, top + 112, panelWidth - 32, 0xFFFFD866);
             } else {
                 drawWrapped("This feature does not have a working client-side implementation yet, so no toggle is exposed.",
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
