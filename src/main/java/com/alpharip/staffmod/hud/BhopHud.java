@@ -343,7 +343,16 @@ public class BhopHud {
      * =========================================================
      */
 
-    private void renderHud(
+    /** Draws the live BHOP HUD style inside the HUD editor preview. */
+    public static void renderEditorPreview() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.fontRendererObj == null) {
+            return;
+        }
+        renderHud(mc);
+    }
+
+    private static void renderHud(
             Minecraft mc) {
 
         FontRenderer font =
