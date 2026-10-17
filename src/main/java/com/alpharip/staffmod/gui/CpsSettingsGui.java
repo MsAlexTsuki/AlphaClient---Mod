@@ -20,8 +20,8 @@ public final class CpsSettingsGui extends GuiScreen {
         buttonList.clear();
         left = width / 2 - 150;
         right = left + 300;
-        top = Math.max(12, height / 2 - 96);
-        bottom = Math.min(height - 12, top + 192);
+        top = Math.max(12, height / 2 - 108);
+        bottom = Math.min(height - 12, top + 216);
         buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 58, 260, 20, backgroundLabel()));
         buttonList.add(new AlphaButton(COLOR, left + 20, top + 86, 260, 20, "TEXT COLOR: " + CpsMod.getColorName()));
         buttonList.add(new AlphaButton(MODE, left + 20, top + 114, 260, 20,
@@ -33,7 +33,7 @@ public final class CpsSettingsGui extends GuiScreen {
                     CpsMod.getDisplayMode() == CpsMod.MODE_LEFT));
             buttonList.add(new AlphaButton(OPTION_RIGHT, left + 20, top + 172, 260, 18, "RMB",
                     CpsMod.getDisplayMode() == CpsMod.MODE_RIGHT));
-            bottom = Math.min(height - 8, top + 198);
+            bottom = Math.min(height - 8, top + 216);
         }
         buttonList.add(new AlphaButton(BACK, left + 10, Math.min(height - 32, bottom - 24), 75, 18, "BACK"));
     }
