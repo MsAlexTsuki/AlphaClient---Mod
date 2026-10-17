@@ -55,6 +55,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             new ClassReader(basicClass).accept(classNode, 0);
             boolean changed = false;
             boolean bowChanged = false;
+            boolean bowSwingChanged = false;
 
             for (MethodNode method : classNode.methods) {
                 if (!containsFirstPersonBlockTransform(classNode.name, method)) {
@@ -108,13 +109,72 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                 if (changed) break;
             }
 
-            // Patch only the bow-transform call inside the first-person item renderer.
-            // The descriptor check avoids depending on the private method's mapped name.
+            // Restore the 1.7.10 swing transform for the bow-use branch. In 1.8.9
+            // transformFirstPersonItem is called with 0.0F while using any item.
+            // Replace that zero only when the call is immediately followed by the
+            // bow-specific transform; a runtime gate keeps vanilla behavior available.
             for (MethodNode method : classNode.methods) {
                 if (!"(F)V".equals(method.desc)) {
                     continue;
                 }
 
+                AbstractInsnNode[] instructions = method.instructions.toArray();
+                boolean methodBowSwingChanged = false;
+                for (AbstractInsnNode instruction : instructions) {
+                    if (!(instruction instanceof MethodInsnNode)) {
+                        continue;
+                    }
+
+                    MethodInsnNode call = (MethodInsnNode) instruction;
+                    if (!classNode.name.equals(call.owner) || !"(FF)V".equals(call.desc)) {
+                        continue;
+                    }
+
+                    AbstractInsnNode next = nextReal(instruction);
+                    if (!(next instanceof VarInsnNode) || next.getOpcode() != Opcodes.ALOAD
+                            || ((VarInsnNode) next).var != 0) {
+                        continue;
+                    }
+
+                    AbstractInsnNode lookAhead = nextReal(next);
+                    boolean bowBranch = false;
+                    for (int step = 0; step < 6 && lookAhead != null; step++) {
+                        if (lookAhead instanceof MethodInsnNode) {
+                            MethodInsnNode candidate = (MethodInsnNode) lookAhead;
+                            if (classNode.name.equals(candidate.owner)
+                                    && "(FLnet/minecraft/client/entity/AbstractClientPlayer;)V".equals(candidate.desc)) {
+                                bowBranch = true;
+                                break;
+                            }
+                        }
+                        lookAhead = nextReal(lookAhead);
+                    }
+                    if (!bowBranch) {
+                        continue;
+                    }
+
+                    AbstractInsnNode argument = previousReal(instruction);
+                    if (argument == null || argument.getOpcode() != Opcodes.FCONST_0) {
+                        continue;
+                    }
+
+                    VarInsnNode swingProgress = new VarInsnNode(Opcodes.FLOAD, 4);
+                    method.instructions.set(argument, swingProgress);
+                    method.instructions.insert(swingProgress, new MethodInsnNode(
+                            Opcodes.INVOKESTATIC, HOOK_OWNER,
+                            "getLegacyBowSwingProgress", "(F)F", false
+                    ));
+                    methodBowSwingChanged = true;
+                    bowSwingChanged = true;
+                    break;
+                }
+
+                if (!methodBowSwingChanged) {
+                    continue;
+                }
+
+                // Replace only the bow-transform call, preserving the receiver in
+                // the static hook's first parameter to keep the operand stack valid.
                 for (AbstractInsnNode instruction : method.instructions.toArray()) {
                     if (!(instruction instanceof MethodInsnNode)) {
                         continue;
@@ -152,11 +212,11 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             } else {
                 System.err.println("[AlphaClient] Legacy PvP blockhit render pattern was not found; blockhit remains vanilla.");
             }
-            if (bowChanged) {
+            if (bowChanged && bowSwingChanged) {
                 bowAnimationInstalled = true;
-                System.out.println("[AlphaClient] Installed Legacy PvP legacy bow animation hook.");
+                System.out.println("[AlphaClient] Installed Legacy PvP legacy bow animation and swing hooks.");
             } else {
-                System.err.println("[AlphaClient] Legacy PvP bow render pattern was not found; bow rendering remains vanilla.");
+                System.err.println("[AlphaClient] Legacy PvP bow render patterns were not both found; bow legacy animation remains unavailable.");
             }
             return writer.toByteArray();
         } catch (Throwable error) {
