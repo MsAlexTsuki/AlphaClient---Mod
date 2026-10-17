@@ -60,14 +60,7 @@ public final class HudEditorGui extends GuiScreen {
 
         BhopHud.renderEditorPreview();
 
-        int afkX = AfkTimerHud.getHudX(), afkY = AfkTimerHud.getHudY();
-        String afkText = "AFK 00:00";
-        int afkWidth = fontRendererObj.getStringWidth(afkText) + 10;
-        net.minecraft.client.gui.Gui.drawRect(afkX - 3, afkY - 3,
-                afkX + afkWidth, afkY + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-        net.minecraft.client.gui.Gui.drawRect(afkX - 3, afkY - 3,
-                afkX + afkWidth, afkY - 2, ACCENT);
-        fontRendererObj.drawStringWithShadow(afkText, afkX, afkY, 0xFFFFFFFF);
+        AfkTimerHud.renderEditorPreview();
 
         if (isFpsModuleEnabled()) {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
