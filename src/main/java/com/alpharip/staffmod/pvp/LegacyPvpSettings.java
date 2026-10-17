@@ -12,8 +12,10 @@ import java.io.FileWriter;
 /** Persisted user-configurable options for Legacy PvP. */
 public final class LegacyPvpSettings {
     private static final String KEY_DISABLE_VIEW_BOBBING = "disableViewBobbing";
+    private static final String KEY_ENABLE_BLOCKHIT = "enableBlockhit";
     private static boolean loaded;
     private static boolean disableViewBobbing = true;
+    private static boolean enableBlockhit = true;
 
     private LegacyPvpSettings() { }
 
@@ -31,6 +33,9 @@ public final class LegacyPvpSettings {
             JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
             if (root.has(KEY_DISABLE_VIEW_BOBBING)) {
                 disableViewBobbing = root.get(KEY_DISABLE_VIEW_BOBBING).getAsBoolean();
+            }
+            if (root.has(KEY_ENABLE_BLOCKHIT)) {
+                enableBlockhit = root.get(KEY_ENABLE_BLOCKHIT).getAsBoolean();
             }
         } catch (Exception e) {
             System.out.println("[AlphaClient] Could not load Legacy PvP settings: " + e.getMessage());
@@ -52,6 +57,17 @@ public final class LegacyPvpSettings {
         save();
     }
 
+    public static synchronized boolean isBlockhitEnabled() {
+        load();
+        return enableBlockhit;
+    }
+
+    public static synchronized void setBlockhitEnabled(boolean value) {
+        load();
+        enableBlockhit = value;
+        save();
+    }
+
     public static synchronized void save() {
         FileWriter writer = null;
         try {
@@ -60,6 +76,7 @@ public final class LegacyPvpSettings {
             if (parent != null && !parent.exists() && !parent.mkdirs()) return;
             JsonObject root = new JsonObject();
             root.addProperty(KEY_DISABLE_VIEW_BOBBING, disableViewBobbing);
+            root.addProperty(KEY_ENABLE_BLOCKHIT, enableBlockhit);
             writer = new FileWriter(file);
             writer.write(root.toString());
             writer.flush();
