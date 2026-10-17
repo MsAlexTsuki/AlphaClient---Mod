@@ -216,6 +216,20 @@ processResources {
  * resulting reobfuscated production artifact.
  */
 
+jar {
+    manifest {
+        attributes(
+                'FMLCorePlugin': 'com.alpharip.staffmod.pvp.LegacyPvpCorePlugin',
+                'FMLCorePluginContainsFMLMod': 'true'
+        )
+    }
+}
+
+// Load the same narrowly scoped renderer hook during ForgeGradle development runs.
+runClient {
+    jvmArgs '-Dfml.coreMods.load=com.alpharip.staffmod.pvp.LegacyPvpCorePlugin'
+}
+
 jar.finalizedBy('reobfJar')
 
 /*
