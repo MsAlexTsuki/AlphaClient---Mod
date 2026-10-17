@@ -4,7 +4,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
-import com.alpharip.staffmod.movement.BhopProfileManager;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.permissions.PermissionService;
 import net.minecraft.client.Minecraft;
@@ -111,7 +111,7 @@ public final class AlphaModMenu extends GuiScreen {
         }
 
         if (true) {
-            List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
+            List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
             int actionY = panelTop + panelHeight - 48;
             int profileTop = panelTop + 86;
             int profileBottom = actionY - 8;
@@ -122,11 +122,11 @@ public final class AlphaModMenu extends GuiScreen {
             int actionGap = 4;
             int actionWidth = Math.max(1, (actionsRight - actionsLeft - actionGap * 2) / 3);
             for (int row = 0; row < visibleProfiles && profileScrollOffset + row < profiles.size(); row++) {
-                BhopProfileManager.BhopProfile profile = profiles.get(profileScrollOffset + row);
+                ModuleProfileManager.BhopProfile profile = profiles.get(profileScrollOffset + row);
                 buttonList.add(new AlphaButton(PROFILE_SELECT_BASE + row, settingsLeft + 4,
                         profileTop + row * 21, Math.max(50, panelLeft + panelWidth - settingsLeft - 10),
                         18, profile.getProfileName(),
-                        profile.getProfileName().equalsIgnoreCase(BhopProfileManager.getSelectedProfileName())));
+                        profile.getProfileName().equalsIgnoreCase(ModuleProfileManager.getSelectedProfileName())));
             }
             buttonList.add(new AlphaButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 15, "CREATE"));
             buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 15, "EDIT"));
@@ -203,8 +203,8 @@ public final class AlphaModMenu extends GuiScreen {
         if (selected == null) {
             drawString(fontRendererObj, "PROFILES",
                     settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
-            List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
-            String activeProfile = BhopProfileManager.getSelectedProfileName();
+            List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
+            String activeProfile = ModuleProfileManager.getSelectedProfileName();
             int profileTop = panelTop + 67;
             int actionY = panelTop + panelHeight - 48;
             int profileBottom = actionY - 8;
@@ -296,19 +296,19 @@ public final class AlphaModMenu extends GuiScreen {
             return;
         }
         if (button.id == PROFILE_EDIT) {
-            mc.displayGuiScreen(new ProfileNameGui(this, true, BhopProfileManager.getSelectedProfileName()));
+            mc.displayGuiScreen(new ProfileNameGui(this, true, ModuleProfileManager.getSelectedProfileName()));
             return;
         }
         if (button.id == PROFILE_DELETE) {
-            BhopProfileManager.deleteSelectedProfile();
+            ModuleProfileManager.deleteSelectedProfile();
             initGui();
             return;
         }
         if (button.id >= PROFILE_SELECT_BASE && button.id < PROFILE_SELECT_BASE + 30) {
-            List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
+            List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
             int index = profileScrollOffset + button.id - PROFILE_SELECT_BASE;
             if (index >= 0 && index < profiles.size()) {
-                BhopProfileManager.selectProfile(profiles.get(index).getProfileName());
+                ModuleProfileManager.selectProfile(profiles.get(index).getProfileName());
             }
             initGui();
             return;
@@ -409,7 +409,7 @@ public final class AlphaModMenu extends GuiScreen {
         if (wheel != 0) {
             AlphaModule selected = getSelectedModule();
             if (selected != null && "quality".equals(selected.getId())) {
-                List<BhopProfileManager.BhopProfile> profiles = BhopProfileManager.getProfiles();
+                List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
                 int profileTop = panelTop + 86;
                 int actionY = panelTop + panelHeight - 48;
                 int visibleProfiles = Math.max(1, (actionY - 8 - profileTop) / 21);
