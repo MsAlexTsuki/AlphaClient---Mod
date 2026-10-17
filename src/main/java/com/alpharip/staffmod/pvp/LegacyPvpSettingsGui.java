@@ -51,7 +51,7 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
     }
 
     private int getVisibleRows() {
-        return Math.max(1, (height - LIST_TOP - LIST_BOTTOM_MARGIN) / ROW_HEIGHT);
+        return Math.max(1, (height - 183) / ROW_HEIGHT);
     }
 
     @Override
