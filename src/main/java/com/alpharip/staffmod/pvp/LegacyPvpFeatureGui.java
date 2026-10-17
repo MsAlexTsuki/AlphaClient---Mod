@@ -23,7 +23,7 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
         buttonList.clear();
         LegacyPvpSettings.load();
         LegacyPvpFeatureCatalog.Feature feature = findFeature();
-        if (feature != null && isConfigurable(feature.id)) {
+        if (feature != null && isToggleAvailable(feature.id)) {
             buttonList.add(new ModernButton(TOGGLE, width / 2 - 90, height - 62, 180, 20,
                     getToggleLabel(feature.id)));
         }
@@ -38,14 +38,24 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
     }
 
     private boolean isConfigurable(String id) {
-        return "blockhit".equals(id) || "camera-bobbing".equals(id);
+        return "blockhit".equals(id) || "camera-bobbing".equals(id)
+                || "missed-swing-delay".equals(id);
+    }
+
+    private boolean isToggleAvailable(String id) {
+        if ("blockhit".equals(id)) return LegacyPvpTransformer.isInstalled();
+        if ("missed-swing-delay".equals(id)) return LegacyPvpTransformer.isMissedSwingDelayInstalled();
+        return "camera-bobbing".equals(id);
     }
 
     private String getToggleLabel(String id) {
         if ("blockhit".equals(id)) {
             return LegacyPvpSettings.isBlockhitEnabled() ? "BLOCKHIT: ON" : "BLOCKHIT: OFF";
         }
-        return LegacyPvpSettings.isDisableViewBobbing() ? "BOBBING: OFF" : "BOBBING: ON";
+        if ("camera-bobbing".equals(id)) {
+            return LegacyPvpSettings.isDisableViewBobbing() ? "BOBBING: OFF" : "BOBBING: ON";
+        }
+        return LegacyPvpSettings.isRemoveMissedSwingDelayEnabled() ? "MISS DELAY: OFF" : "MISS DELAY: ON";
     }
 
     @Override
@@ -62,6 +72,10 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
                 }
             } else if ("camera-bobbing".equals(featureId)) {
                 LegacyPvpSettings.setDisableViewBobbing(!LegacyPvpSettings.isDisableViewBobbing());
+            } else if ("missed-swing-delay".equals(featureId)
+                    && LegacyPvpTransformer.isMissedSwingDelayInstalled()) {
+                LegacyPvpSettings.setRemoveMissedSwingDelayEnabled(
+                        !LegacyPvpSettings.isRemoveMissedSwingDelayEnabled());
             }
             initGui();
         }
@@ -86,9 +100,12 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
             String status = LegacyPvpFeatureCatalog.getStatusLabel(feature.status);
             if ("blockhit".equals(feature.id) && !LegacyPvpTransformer.isInstalled()) {
                 status = "HOOK NOT LOADED";
+            } else if ("missed-swing-delay".equals(feature.id)
+                    && !LegacyPvpTransformer.isMissedSwingDelayInstalled()) {
+                status = "HOOK NOT LOADED";
             }
             drawCenteredString(fontRendererObj, status, width / 2, top + 38,
-                    isConfigurable(feature.id) ? 0xFF9CE2AC : 0xFFFFD866);
+                    isToggleAvailable(feature.id) ? 0xFF9CE2AC : 0xFFFFD866);
             drawWrapped(feature.detail, left + 16, top + 66, panelWidth - 32, 0xFFE7E9EE);
             if ("blockhit".equals(feature.id)) {
                 drawWrapped("This option controls the local legacy swing animation. Server-side combat behavior remains server-authoritative.",
@@ -100,6 +117,13 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
             } else if ("camera-bobbing".equals(feature.id)) {
                 drawWrapped("When enabled, camera bobbing is temporarily disabled. Turning this option off restores the previous Minecraft setting.",
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
+            } else if ("missed-swing-delay".equals(feature.id)) {
+                drawWrapped("When enabled, this clears the local click delay only while aiming at air. Block and entity targets keep their normal timing. It does not enable blockhit while looking at air.",
+                        left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
+                if (!LegacyPvpTransformer.isMissedSwingDelayInstalled()) {
+                    drawCenteredString(fontRendererObj, "The Minecraft tick hook is not loaded; vanilla timing is unchanged.",
+                            width / 2, bottom - 88, 0xFFFFD866);
+                }
             } else {
                 drawWrapped("This feature does not have a working client-side implementation yet, so no toggle is exposed.",
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
