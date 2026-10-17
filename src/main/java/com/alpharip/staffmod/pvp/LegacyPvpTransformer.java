@@ -24,6 +24,11 @@ import org.objectweb.asm.tree.VarInsnNode;
 public final class LegacyPvpTransformer implements IClassTransformer {
     private static final String ITEM_RENDERER = "net.minecraft.client.renderer.ItemRenderer";
     private static final String HOOK_OWNER = "com/alpharip/staffmod/pvp/LegacyPvpRenderHooks";
+    private static volatile boolean installed;
+
+    public static boolean isInstalled() {
+        return installed;
+    }
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
@@ -96,6 +101,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
 
             ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             classNode.accept(writer);
+            installed = true;
             System.out.println("[AlphaClient] Installed Legacy PvP blockhit render hook.");
             return writer.toByteArray();
         } catch (Throwable error) {
