@@ -8,10 +8,10 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.LineNumberNode;
+import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
-import org.objectweb.asm.tree.InsnNode;
 
 /**
  * Adds the player's swing progress to the vanilla BLOCK item transform only.
@@ -126,7 +126,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
 
     private static AbstractInsnNode nextReal(AbstractInsnNode instruction) {
         AbstractInsnNode next = instruction == null ? null : instruction.getNext();
-        while (next instanceof LineNumberNode || next instanceof FrameNode) {
+        while (next instanceof LineNumberNode || next instanceof FrameNode || next instanceof LabelNode) {
             next = next.getNext();
         }
         return next;
@@ -134,7 +134,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
 
     private static AbstractInsnNode previousReal(AbstractInsnNode instruction) {
         AbstractInsnNode previous = instruction == null ? null : instruction.getPrevious();
-        while (previous instanceof LineNumberNode || previous instanceof FrameNode) {
+        while (previous instanceof LineNumberNode || previous instanceof FrameNode || previous instanceof LabelNode) {
             previous = previous.getPrevious();
         }
         return previous;
