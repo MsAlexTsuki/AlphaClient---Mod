@@ -27,6 +27,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
     private static final String HOOK_OWNER = "com/alpharip/staffmod/pvp/LegacyPvpRenderHooks";
     private static volatile boolean installed;
     private static volatile boolean missedSwingDelayInstalled;
+    private static volatile boolean bowAnimationInstalled;
 
     public static boolean isInstalled() {
         return installed;
@@ -34,6 +35,10 @@ public final class LegacyPvpTransformer implements IClassTransformer {
 
     public static boolean isMissedSwingDelayInstalled() {
         return missedSwingDelayInstalled;
+    }
+
+    public static boolean isBowAnimationInstalled() {
+        return bowAnimationInstalled;
     }
 
     @Override
@@ -52,6 +57,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             ClassNode classNode = new ClassNode();
             new ClassReader(basicClass).accept(classNode, 0);
             boolean changed = false;
+            boolean bowChanged = false;
 
             for (MethodNode method : classNode.methods) {
                 if (!containsFirstPersonBlockTransform(classNode.name, method)) {
@@ -105,15 +111,56 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                 if (changed) break;
             }
 
-            if (!changed) {
-                System.err.println("[AlphaClient] Legacy PvP blockhit transformer could not find the expected 1.8.9 BLOCK render pattern. Vanilla rendering was left unchanged.");
+            // Patch only the bow-transform call inside the first-person item renderer.
+            // The descriptor check avoids depending on the private method's mapped name.
+            for (MethodNode method : classNode.methods) {
+                if (!"(F)V".equals(method.desc) || !containsFirstPersonBlockTransform(classNode.name, method)) {
+                    continue;
+                }
+
+                for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                    if (!(instruction instanceof MethodInsnNode)) {
+                        continue;
+                    }
+
+                    MethodInsnNode call = (MethodInsnNode) instruction;
+                    if (!classNode.name.equals(call.owner)
+                            || !"(FLnet/minecraft/client/entity/AbstractClientPlayer;)V".equals(call.desc)) {
+                        continue;
+                    }
+
+                    method.instructions.set(instruction, new MethodInsnNode(
+                            Opcodes.INVOKESTATIC,
+                            HOOK_OWNER,
+                            "applyBowTransformations",
+                            "(Lnet/minecraft/client/renderer/ItemRenderer;FLnet/minecraft/client/entity/AbstractClientPlayer;)V",
+                            false
+                    ));
+                    bowChanged = true;
+                    break;
+                }
+                if (bowChanged) break;
+            }
+
+            if (!changed && !bowChanged) {
+                System.err.println("[AlphaClient] Legacy PvP could not find the expected ItemRenderer render patterns; vanilla rendering was left unchanged.");
                 return basicClass;
             }
 
             ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             classNode.accept(writer);
-            installed = true;
-            System.out.println("[AlphaClient] Installed Legacy PvP blockhit render hook.");
+            if (changed) {
+                installed = true;
+                System.out.println("[AlphaClient] Installed Legacy PvP blockhit render hook.");
+            } else {
+                System.err.println("[AlphaClient] Legacy PvP blockhit render pattern was not found; blockhit remains vanilla.");
+            }
+            if (bowChanged) {
+                bowAnimationInstalled = true;
+                System.out.println("[AlphaClient] Installed Legacy PvP legacy bow animation hook.");
+            } else {
+                System.err.println("[AlphaClient] Legacy PvP bow render pattern was not found; bow rendering remains vanilla.");
+            }
             return writer.toByteArray();
         } catch (Throwable error) {
             System.err.println("[AlphaClient] Legacy PvP blockhit transformer failed; vanilla rendering was left unchanged.");
