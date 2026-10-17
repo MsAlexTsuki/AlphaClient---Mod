@@ -54,7 +54,7 @@ public final class QualityGui extends GuiScreen {
         drawRect(panelLeft, panelTop, panelRight, panelTop + 2, ACCENT);
         drawCenteredString(fontRendererObj, "QUALITY", width / 2, panelTop + 13, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "QUALITY OF LIFE FEATURES", width / 2, panelTop + 30, ACCENT);
-        drawString(fontRendererObj, "Ideas from the AlphaClient roadmap", panelLeft + 12, panelTop + 49, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Features and roadmap ideas", panelLeft + 12, panelTop + 49, 0xFFB8BDC8);
 
         int listTop = panelTop + 68;
         int listBottom = panelBottom - 38;
