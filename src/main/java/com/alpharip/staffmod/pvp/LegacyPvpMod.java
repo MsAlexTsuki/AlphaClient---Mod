@@ -3,8 +3,6 @@ package com.alpharip.staffmod.pvp;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.item.ItemBow;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.MouseEvent;
 import org.lwjgl.input.Mouse;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
