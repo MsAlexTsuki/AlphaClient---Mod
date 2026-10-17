@@ -14,12 +14,9 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 /**
- * Adds gated swing progress to the vanilla BLOCK item transform only.
- *
- * The hook does not force a blockhit when right-click is merely held. It only
- * returns swing progress when the runtime hook confirms a sword, a block target,
- * right-click, and an active attack swing. Bow, food and drink rendering remain
- * on their vanilla paths.
+ * Installs narrowly scoped Legacy PvP hooks for the first-person item renderer:
+ * gated sword blockhit swing progress and the optional 1.7.10 bow draw transform.
+ * Food, drink, and other item-use rendering remain on their vanilla paths.
  */
 public final class LegacyPvpTransformer implements IClassTransformer {
     private static final String ITEM_RENDERER = "net.minecraft.client.renderer.ItemRenderer";
@@ -114,7 +111,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             // Patch only the bow-transform call inside the first-person item renderer.
             // The descriptor check avoids depending on the private method's mapped name.
             for (MethodNode method : classNode.methods) {
-                if (!"(F)V".equals(method.desc) || !containsFirstPersonBlockTransform(classNode.name, method)) {
+                if (!"(F)V".equals(method.desc)) {
                     continue;
                 }
 
