@@ -15,7 +15,7 @@ public final class QualityGui extends GuiScreen {
             "Auto Respawn", "AlphaClient Core Experience", "AFK Detector", "Mod Profiles",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
             "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Config Profiles",
-            "Session Timer", "Alpha Feature Flags", "Mod Toggle Menu"
+            "Session Timer", "Alpha Feature Flags"
     };
 
     private final GuiScreen parent;
