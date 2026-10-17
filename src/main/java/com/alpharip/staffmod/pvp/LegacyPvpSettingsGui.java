@@ -104,7 +104,7 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
 
             int background = (row % 2 == 0) ? 0x332A2D35 : 0x221A1C22;
             drawRect(panelLeft + 8, y, panelRight - 8, y + ROW_HEIGHT - 1, background);
-            drawString(fontRendererObj, feature.label, panelLeft + 13, y + 4, 0xFFE7E9EE);
+            drawString(fontRendererObj, fitLabel(feature.label, centerX - panelLeft - 20), panelLeft + 13, y + 4, 0xFFE7E9EE);
 
             String status = LegacyPvpFeatureCatalog.getStatusLabel(feature.status);
             int statusColor = feature.status == LegacyPvpFeatureCatalog.Status.CONFIGURABLE
