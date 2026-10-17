@@ -3,8 +3,11 @@ package com.alpharip.staffmod.pvp;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import org.lwjgl.input.Mouse;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -57,6 +60,62 @@ public final class LegacyPvpRenderHooks {
             }
         } catch (ReflectiveOperationException | RuntimeException error) {
             System.err.println("[AlphaClient] Could not reset the client-side missed-swing delay: " + error.getMessage());
+        }
+    }
+
+    /**
+     * Recreates the 1.7.10 bow draw transform when enabled. The 1.7.10 renderer
+     * scales the bow around its vertical midpoint; 1.8.9 scales around the
+     * origin, which changes the old bow's pull-back appearance.
+     *
+     * The transformer replaces only ItemRenderer's bow-transform call. Other
+     * item-use paths, blockhit, and fishing-rod rendering are left untouched.
+     */
+    public static void applyBowTransformations(
+            net.minecraft.client.renderer.ItemRenderer renderer,
+            float partialTicks,
+            AbstractClientPlayer clientPlayer) {
+        if (clientPlayer == null) {
+            return;
+        }
+
+        ItemStack activeItem = clientPlayer.getItemInUse();
+        if (activeItem == null) {
+            return;
+        }
+
+        // Common 1.7.10/1.8.9 bow pose and draw-progress calculation.
+        GlStateManager.rotate(-18.0F, 0.0F, 0.0F, 1.0F);
+        GlStateManager.rotate(-12.0F, 0.0F, 1.0F, 0.0F);
+        GlStateManager.rotate(-8.0F, 1.0F, 0.0F, 0.0F);
+        GlStateManager.translate(-0.9F, 0.2F, 0.0F);
+
+        float elapsedUse = (float) activeItem.getMaxItemUseDuration()
+                - ((float) clientPlayer.getItemInUseCount() - partialTicks + 1.0F);
+        float pullProgress = elapsedUse / 20.0F;
+        pullProgress = (pullProgress * pullProgress + pullProgress * 2.0F) / 3.0F;
+        if (pullProgress > 1.0F) {
+            pullProgress = 1.0F;
+        }
+
+        if (pullProgress > 0.1F) {
+            float bob = MathHelper.sin((elapsedUse - 0.1F) * 1.3F) * 0.01F * (pullProgress - 0.1F);
+            GlStateManager.translate(0.0F, bob, 0.0F);
+        }
+        GlStateManager.translate(0.0F, 0.0F, pullProgress * 0.1F);
+
+        if (LegacyPvpSettings.isLegacyBowAnimationEnabled()) {
+            // 1.7.10: apply the draw stretch around the bow model's midpoint.
+            GlStateManager.rotate(-335.0F, 0.0F, 0.0F, 1.0F);
+            GlStateManager.rotate(-50.0F, 0.0F, 1.0F, 0.0F);
+            GlStateManager.translate(0.0F, 0.5F, 0.0F);
+            GlStateManager.scale(1.0F, 1.0F, 1.0F + pullProgress * 0.2F);
+            GlStateManager.translate(0.0F, -0.5F, 0.0F);
+            GlStateManager.rotate(50.0F, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(335.0F, 0.0F, 0.0F, 1.0F);
+        } else {
+            // Exact 1.8.9 vanilla scaling when the legacy option is switched off.
+            GlStateManager.scale(1.0F, 1.0F, 1.0F + pullProgress * 0.2F);
         }
     }
 
