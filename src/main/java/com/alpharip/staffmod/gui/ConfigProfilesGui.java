@@ -161,7 +161,6 @@ public final class ConfigProfilesGui extends GuiScreen {
             int index = scrollOffset + button.id - PROFILE_BASE;
             if (index >= 0 && index < profiles.size()) {
                 selectedProfile = profiles.get(index);
-                nameField.setText(selectedProfile);
                 status = "Selected: " + selectedProfile;
                 initGui();
             }
