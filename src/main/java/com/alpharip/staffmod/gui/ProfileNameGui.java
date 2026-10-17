@@ -1,6 +1,6 @@
 package com.alpharip.staffmod.gui;
 
-import com.alpharip.staffmod.movement.BhopProfileManager;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -68,8 +68,8 @@ public final class ProfileNameGui extends GuiScreen {
                 return;
             }
             boolean success = editing
-                    ? BhopProfileManager.renameSelectedProfile(name)
-                    : BhopProfileManager.createProfile(name);
+                    ? ModuleProfileManager.renameSelectedProfile(name)
+                    : ModuleProfileManager.createProfile(name);
             if (success) {
                 mc.displayGuiScreen(parent);
             } else {
