@@ -32,6 +32,9 @@ public class HudPositionConfig {
     private static final int DEFAULT_FPS_X = 6;
     private static final int DEFAULT_FPS_Y = 6;
     private static final int DEFAULT_FPS_COLOR_INDEX = 0;
+    private static final int DEFAULT_CPS_COLOR_INDEX = 0;
+    private static final int DEFAULT_CPS_DISPLAY_MODE = 0;
+    private static final boolean DEFAULT_CPS_SHOW_BACKGROUND = true;
 
 
     /*
@@ -70,6 +73,9 @@ public class HudPositionConfig {
     private static int fpsX = DEFAULT_FPS_X;
     private static int fpsY = DEFAULT_FPS_Y;
     private static int fpsColorIndex = DEFAULT_FPS_COLOR_INDEX;
+    private static int cpsColorIndex = DEFAULT_CPS_COLOR_INDEX;
+    private static int cpsDisplayMode = DEFAULT_CPS_DISPLAY_MODE;
+    private static boolean cpsShowBackground = DEFAULT_CPS_SHOW_BACKGROUND;
 
     private static boolean loaded =
             false;
@@ -183,6 +189,11 @@ public class HudPositionConfig {
                             "cpsScale",
                             DEFAULT_CPS_SCALE
                     );
+            cpsColorIndex = getInt(properties, "cpsColorIndex", DEFAULT_CPS_COLOR_INDEX);
+            if (cpsColorIndex < 0 || cpsColorIndex > 9) cpsColorIndex = DEFAULT_CPS_COLOR_INDEX;
+            cpsDisplayMode = getInt(properties, "cpsDisplayMode", DEFAULT_CPS_DISPLAY_MODE);
+            if (cpsDisplayMode < 0 || cpsDisplayMode > 2) cpsDisplayMode = DEFAULT_CPS_DISPLAY_MODE;
+            cpsShowBackground = Boolean.parseBoolean(properties.getProperty("cpsShowBackground", String.valueOf(DEFAULT_CPS_SHOW_BACKGROUND)));
 
 
             /*
@@ -300,6 +311,9 @@ public class HudPositionConfig {
                 "cpsScale",
                 String.valueOf(cpsScale)
         );
+        properties.setProperty("cpsColorIndex", String.valueOf(cpsColorIndex));
+        properties.setProperty("cpsDisplayMode", String.valueOf(cpsDisplayMode));
+        properties.setProperty("cpsShowBackground", String.valueOf(cpsShowBackground));
 
 
         /*
@@ -673,6 +687,18 @@ public class HudPositionConfig {
     }
 
 
+    public static int getCpsColorIndex() { load(); return cpsColorIndex; }
+
+    public static void setCpsColorIndex(int index) { load(); cpsColorIndex = Math.max(0, Math.min(9, index)); save(); }
+
+    public static int getCpsDisplayMode() { load(); return cpsDisplayMode; }
+
+    public static void setCpsDisplayMode(int mode) { load(); cpsDisplayMode = Math.max(0, Math.min(2, mode)); save(); }
+
+    public static boolean isCpsShowBackground() { load(); return cpsShowBackground; }
+
+    public static void setCpsShowBackground(boolean value) { load(); cpsShowBackground = value; save(); }
+
     public static int getFpsX() {
         load();
         return fpsX;
@@ -747,6 +773,9 @@ public class HudPositionConfig {
 
         fpsX = DEFAULT_FPS_X;
         fpsY = DEFAULT_FPS_Y;
+        cpsColorIndex = DEFAULT_CPS_COLOR_INDEX;
+        cpsDisplayMode = DEFAULT_CPS_DISPLAY_MODE;
+        cpsShowBackground = DEFAULT_CPS_SHOW_BACKGROUND;
     }
 
 
