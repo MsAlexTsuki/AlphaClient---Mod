@@ -11,11 +11,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 /**
- * Client-side controller for the optional legacy PvP presentation mode.
- *
- * This initial implementation applies only the safe camera-bobbing preference.
- * Combat timing and knockback remain controlled by Minecraft/the server and are
- * not changed by this class.
+ * Client-side controller for Legacy PvP presentation and input behavior.
+ * The blockhit swing is local animation/input handling; combat timing and
+ * knockback remain controlled by Minecraft and the server.
  */
 public final class LegacyPvpMod {
     private boolean wasEnabled;
