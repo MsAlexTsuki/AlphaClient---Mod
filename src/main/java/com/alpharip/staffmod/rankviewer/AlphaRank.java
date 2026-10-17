@@ -32,7 +32,7 @@ public enum AlphaRank {
         this.emblem = emblem;
         this.texture = new ResourceLocation(
                 "alphastaffmod", "textures/ranks/" + key
-                        + ("the_nibbler".equals(key) ? ".jpg" : ".png"));
+                        + ".png");
     }
 
     public String key() { return key; }
