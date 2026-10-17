@@ -129,6 +129,18 @@ public final class LegacyPvpRenderHooks {
         return getLegacyUseSwingProgress(swingProgress);
     }
 
+    /** Existing bow-use swing gate; food/drink now has its own independent hook. */
+    public static float getLegacyUseSwingProgress(float swingProgress) {
+        if (!isLegacyBowAnimationActive()) return 0.0F;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null) return 0.0F;
+        ItemStack active = mc.thePlayer.getItemInUse();
+        if (active == null) active = mc.thePlayer.getHeldItem();
+        if (active == null) return 0.0F;
+        EnumAction action = active.getItemUseAction();
+        return action == EnumAction.BOW ? swingProgress : 0.0F;
+    }
+
     /**
      * Restores the legacy first-person swing while eating or drinking.
      * This is independent of the bow-animation setting.
