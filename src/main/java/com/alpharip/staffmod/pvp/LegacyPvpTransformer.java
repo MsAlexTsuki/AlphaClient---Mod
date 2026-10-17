@@ -109,6 +109,44 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                 if (changed) break;
             }
 
+            // Eating and drinking use performDrinking followed by a transformFirstPersonItem
+            // call with zero swing progress in 1.8.9. Restore the old use swing only in
+            // that branch; do not touch the BLOCK branch used by true blockhit.
+            for (MethodNode method : classNode.methods) {
+                if (!"(F)V".equals(method.desc)) continue;
+                for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                    if (!(instruction instanceof MethodInsnNode)) continue;
+                    MethodInsnNode call = (MethodInsnNode) instruction;
+                    if (!classNode.name.equals(call.owner) || !"(FF)V".equals(call.desc)) continue;
+                    AbstractInsnNode argument = previousReal(instruction);
+                    if (argument == null || argument.getOpcode() != Opcodes.FCONST_0) continue;
+
+                    AbstractInsnNode previous = previousReal(argument);
+                    boolean eatDrinkBranch = false;
+                    for (int step = 0; step < 14 && previous != null; step++) {
+                        if (previous instanceof MethodInsnNode) {
+                            MethodInsnNode candidate = (MethodInsnNode) previous;
+                            if (classNode.name.equals(candidate.owner)
+                                    && candidate.name.toLowerCase(java.util.Locale.ROOT).contains("drinking")) {
+                                eatDrinkBranch = true;
+                                break;
+                            }
+                            // Do not scan into another item-use switch branch.
+                            if (classNode.name.equals(candidate.owner) && "()V".equals(candidate.desc)) break;
+                        }
+                        previous = previousReal(previous);
+                    }
+                    if (!eatDrinkBranch) continue;
+
+                    VarInsnNode swingProgress = new VarInsnNode(Opcodes.FLOAD, 4);
+                    method.instructions.set(argument, swingProgress);
+                    method.instructions.insert(swingProgress, new MethodInsnNode(
+                            Opcodes.INVOKESTATIC, HOOK_OWNER,
+                            "getLegacyUseSwingProgress", "(F)F", false));
+                    bowSwingChanged = true;
+                }
+            }
+
             // Restore the 1.7.10 swing transform for the bow-use branch. In 1.8.9
             // transformFirstPersonItem is called with 0.0F while using any item.
             // Replace that zero only when the call is immediately followed by the
