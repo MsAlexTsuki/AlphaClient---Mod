@@ -18,7 +18,7 @@ public class HudPositionConfig {
      */
 
     private static final int DEFAULT_CPS_X = 5;
-    private static final int DEFAULT_CPS_Y = 5;
+    private static final int DEFAULT_CPS_Y = 28;
     private static final int DEFAULT_CPS_SCALE = 50;
 
     private static final int DEFAULT_KNOCKBACK_X = 5;
