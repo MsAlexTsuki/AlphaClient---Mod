@@ -13,11 +13,11 @@ public enum AlphaRank {
     SENIOR_MODERATOR("senior_moderator", "Senior Moderator", 0xFFFF35B8, "S"),
     MODERATOR("moderator", "Moderator", 0xFF39E85B, "M"),
     TRIAL_MODERATOR("trial_moderator", "Trial Moderator", 0xFF159BFF, "T"),
+    THE_NIBBLER("the_nibbler", "The Nibbler", 0xFFC3BFE0, "N"),
     BETA("beta", "Beta", 0xFFFF922E, "B"),
     ALPHA_PLUS("alpha_plus", "Alpha+", 0xFF00D9D9, "A+"),
     ALPHA("alpha", "Alpha", 0xFF777BFF, "A"),
-    MEMBER("member", "Member", 0xFFB8BDC8, "•"),
-    THE_NIBBLER("the_nibbler", "The Nibbler", 0xFFC3BFE0, "N");
+    MEMBER("member", "Member", 0xFFB8BDC8, "•");
 
     private final String key;
     private final String label;
