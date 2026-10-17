@@ -14,7 +14,7 @@ public final class QualityGui extends GuiScreen {
             "Alpha Module Manager", "Playtime Tracker", "Auto GG", "Keybind Profiles",
             "Auto Respawn", "AlphaClient Core Experience", "AFK Detector", "Mod Profiles",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
-            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Config Profiles",
+            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager",
             "Session Timer", "Alpha Feature Flags"
     };
 
@@ -56,9 +56,8 @@ public final class QualityGui extends GuiScreen {
             int y = listTop + (i - scrollOffset) * rowHeight;
             drawRect(panelLeft + 10, y, panelRight - 10, y + 17, 0xB5161820);
             drawString(fontRendererObj, FEATURES[i], panelLeft + 17, y + 5, 0xFFE7E9EE);
-            String status = "Config Profiles".equals(FEATURES[i]) ? "AVAILABLE" : "PLANNED";
-            int statusColor = "AVAILABLE".equals(status) ? ACCENT : 0xFFB8BDC8;
-            drawString(fontRendererObj, status, panelRight - 17 - fontRendererObj.getStringWidth(status), y + 5, statusColor);
+            String status = "PLANNED";
+            drawString(fontRendererObj, status, panelRight - 17 - fontRendererObj.getStringWidth(status), y + 5, 0xFFB8BDC8);
         }
         if (FEATURES.length > visibleRows) {
             drawString(fontRendererObj, "Scroll to view all " + FEATURES.length + " ideas", panelLeft + 112,
