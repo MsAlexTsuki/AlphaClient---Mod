@@ -5,7 +5,6 @@ import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.MouseEvent;
 import org.lwjgl.input.Mouse;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -24,9 +23,8 @@ public final class LegacyPvpMod {
 
     /**
      * Legacy use-and-swing input: while right mouse is held and Minecraft is
-     * actively using an item, preserve the left-click hand swing. Bows may swing
-     * without targeting a block; other active-use items require a block hit so
-     * clicking air does not trigger the legacy blockhit animation.
+     * actively using an item, preserve the left-click hand swing. This includes
+     * bows, food, and potions; item-use animations must also work while targeting air.
      * This adds a local swing animation; it does not cancel item use or guarantee
      * a server-side attack while the item is being consumed/drawn.
      */
@@ -37,11 +35,6 @@ public final class LegacyPvpMod {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.currentScreen != null || mc.thePlayer == null || mc.theWorld == null) return;
         if (!mc.thePlayer.isUsingItem()) return;
-
-        ItemStack activeStack = mc.thePlayer.getItemInUse();
-        boolean usingBow = activeStack != null && activeStack.getItem() instanceof ItemBow;
-        if (!usingBow && (mc.objectMouseOver == null
-                || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK)) return;
 
         AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
         if (module == null || !module.isImplemented() || !module.isUnlocked()
@@ -63,11 +56,7 @@ public final class LegacyPvpMod {
             pendingUseSwing = false;
             if (mc.currentScreen == null && mc.thePlayer != null && mc.theWorld != null
                     && Mouse.isButtonDown(1) && mc.thePlayer.isUsingItem()) {
-                ItemStack activeStack = mc.thePlayer.getItemInUse();
-                boolean usingBow = activeStack != null && activeStack.getItem() instanceof ItemBow;
-                boolean lookingAtBlock = mc.objectMouseOver != null
-                        && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK;
-                if ((usingBow || lookingAtBlock) && !mc.thePlayer.isSwingInProgress) {
+                if (!mc.thePlayer.isSwingInProgress) {
                     // Do not restart an active swing: it makes the arm snap into the bow-draw pose.
                     mc.thePlayer.swingItem();
                 }
