@@ -358,6 +358,11 @@ public final class AlphaModMenu extends GuiScreen {
                         mc.displayGuiScreen(new FpsSettingsGui(this));
                         return;
                     }
+                    if ("cps".equals(clickedModule.getId())
+                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                        mc.displayGuiScreen(new CpsSettingsGui(this));
+                        return;
+                    }
                 }
             }
         }
