@@ -94,9 +94,11 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                     }
 
                     // Local 4 is swingProgress in renderItemInFirstPerson(float).
-                    VarInsnNode swingProgress = new VarInsnNode(Opcodes.FLOAD, 4);
-                    method.instructions.set(argument, swingProgress);
-                    method.instructions.insert(swingProgress, new MethodInsnNode(
+                    // Local 1 is partialTicks in renderItemInFirstPerson(float).
+                    // The hook obtains the player's actual swing progress at runtime.
+                    VarInsnNode partialTicks = new VarInsnNode(Opcodes.FLOAD, 1);
+                    method.instructions.set(argument, partialTicks);
+                    method.instructions.insert(partialTicks, new MethodInsnNode(
                             Opcodes.INVOKESTATIC,
                             HOOK_OWNER,
                             "getBlockhitSwingProgress",
@@ -143,11 +145,13 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                     }
                     if (!eatDrinkBranch) continue;
 
-                    VarInsnNode swingProgress = new VarInsnNode(Opcodes.FLOAD, 4);
-                    method.instructions.set(argument, swingProgress);
-                    method.instructions.insert(swingProgress, new MethodInsnNode(
+                    // Local 1 is partialTicks in renderItemInFirstPerson(float).
+                    // Food and potion use animation must not depend on the bow option.
+                    VarInsnNode partialTicks = new VarInsnNode(Opcodes.FLOAD, 1);
+                    method.instructions.set(argument, partialTicks);
+                    method.instructions.insert(partialTicks, new MethodInsnNode(
                             Opcodes.INVOKESTATIC, HOOK_OWNER,
-                            "getLegacyUseSwingProgress", "(F)F", false));
+                            "getLegacyFoodDrinkSwingProgress", "(F)F", false));
                     bowSwingChanged = true;
                 }
             }
