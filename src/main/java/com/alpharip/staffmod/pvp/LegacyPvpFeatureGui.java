@@ -136,7 +136,7 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
                             width / 2, bottom - 88, 0xFFFFD866);
                 }
             } else if ("bow-animation".equals(feature.id)) {
-                drawWrapped("When enabled, the bow's draw stretch is applied around the midpoint, matching the 1.7.10 first-person animation. Turn it off to use the vanilla 1.8.9 bow transform.",
+                drawWrapped("When enabled, the bow keeps the 1.7.10 swing movement during use and stretches around the model midpoint while drawing. Turn it off to restore vanilla 1.8.9 bow transforms.",
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
                 if (!LegacyPvpTransformer.isBowAnimationInstalled()) {
                     drawCenteredString(fontRendererObj, "The bow render hook is not loaded; vanilla bow rendering is unchanged.",
