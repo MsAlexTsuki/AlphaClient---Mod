@@ -11,6 +11,9 @@ import java.util.List;
  * registered here and are only shown inside their assigned category.
  */
 public final class AlphaModuleRegistry {
+    /** All modules are disabled by default; profiles can opt in explicitly. */
+    public static final boolean DEFAULT_MODULE_ENABLED = false;
+
     private static final List<AlphaModule> MODULES = new ArrayList<AlphaModule>();
 
     static {
@@ -20,7 +23,7 @@ public final class AlphaModuleRegistry {
                 "Quality of Life tools and planned features.",
                 AlphaModule.Category.PUBLIC,
                 true,
-                false
+                DEFAULT_MODULE_ENABLED
         );
         quality.addFeature(new AlphaModuleFeature("alpha-module-manager", "Alpha Module Manager", "Central module management.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("playtime-tracker", "Playtime Tracker", "Track time spent playing.", PermissionService.Rank.PUBLIC, false));
@@ -49,7 +52,7 @@ public final class AlphaModuleRegistry {
                 "Show your own Minecraft name above your character; other players' rank badges remain automatic.",
                 AlphaModule.Category.PUBLIC,
                 true,
-                false
+                DEFAULT_MODULE_ENABLED
         );
         MODULES.add(nameViewer);
 
@@ -59,7 +62,7 @@ public final class AlphaModuleRegistry {
                 "Compact FPS counter; client-wide performance optimization runs automatically.",
                 AlphaModule.Category.PUBLIC,
                 true,
-                false
+                DEFAULT_MODULE_ENABLED
         );
         MODULES.add(fps);
 
@@ -69,7 +72,7 @@ public final class AlphaModuleRegistry {
                 "Clicks per second HUD with selectable mouse buttons and appearance settings.",
                 AlphaModule.Category.PUBLIC,
                 true,
-                false
+                DEFAULT_MODULE_ENABLED
         );
         MODULES.add(cps);
 
@@ -79,7 +82,7 @@ public final class AlphaModuleRegistry {
                 "Retained AlphaClient movement module.",
                 AlphaModule.Category.MOD,
                 true,
-                false
+                DEFAULT_MODULE_ENABLED
         );
         bhop.addFeature(new AlphaModuleFeature(
                 "bhop",
