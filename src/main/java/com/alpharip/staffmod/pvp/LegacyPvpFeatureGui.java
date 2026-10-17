@@ -39,12 +39,13 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
 
     private boolean isConfigurable(String id) {
         return "blockhit".equals(id) || "camera-bobbing".equals(id)
-                || "missed-swing-delay".equals(id);
+                || "missed-swing-delay".equals(id) || "bow-animation".equals(id);
     }
 
     private boolean isToggleAvailable(String id) {
         if ("blockhit".equals(id)) return LegacyPvpTransformer.isInstalled();
         if ("missed-swing-delay".equals(id)) return LegacyPvpTransformer.isMissedSwingDelayInstalled();
+        if ("bow-animation".equals(id)) return LegacyPvpTransformer.isBowAnimationInstalled();
         return "camera-bobbing".equals(id);
     }
 
@@ -54,6 +55,9 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
         }
         if ("camera-bobbing".equals(id)) {
             return LegacyPvpSettings.isDisableViewBobbing() ? "BOBBING: OFF" : "BOBBING: ON";
+        }
+        if ("bow-animation".equals(id)) {
+            return LegacyPvpSettings.isLegacyBowAnimationEnabled() ? "LEGACY BOW: ON" : "LEGACY BOW: OFF";
         }
         return LegacyPvpSettings.isRemoveMissedSwingDelayEnabled() ? "MISS DELAY: OFF" : "MISS DELAY: ON";
     }
@@ -76,6 +80,10 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
                     && LegacyPvpTransformer.isMissedSwingDelayInstalled()) {
                 LegacyPvpSettings.setRemoveMissedSwingDelayEnabled(
                         !LegacyPvpSettings.isRemoveMissedSwingDelayEnabled());
+            } else if ("bow-animation".equals(featureId)
+                    && LegacyPvpTransformer.isBowAnimationInstalled()) {
+                LegacyPvpSettings.setLegacyBowAnimationEnabled(
+                        !LegacyPvpSettings.isLegacyBowAnimationEnabled());
             }
             initGui();
         }
@@ -103,6 +111,9 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
             } else if ("missed-swing-delay".equals(feature.id)
                     && !LegacyPvpTransformer.isMissedSwingDelayInstalled()) {
                 status = "HOOK NOT LOADED";
+            } else if ("bow-animation".equals(feature.id)
+                    && !LegacyPvpTransformer.isBowAnimationInstalled()) {
+                status = "HOOK NOT LOADED";
             }
             drawCenteredString(fontRendererObj, status, width / 2, top + 38,
                     isToggleAvailable(feature.id) ? 0xFF9CE2AC : 0xFFFFD866);
@@ -122,6 +133,13 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
                 if (!LegacyPvpTransformer.isMissedSwingDelayInstalled()) {
                     drawCenteredString(fontRendererObj, "The Minecraft tick hook is not loaded; vanilla timing is unchanged.",
+                            width / 2, bottom - 88, 0xFFFFD866);
+                }
+            } else if ("bow-animation".equals(feature.id)) {
+                drawWrapped("When enabled, the bow's draw stretch is applied around the midpoint, matching the 1.7.10 first-person animation. Turn it off to use the vanilla 1.8.9 bow transform.",
+                        left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
+                if (!LegacyPvpTransformer.isBowAnimationInstalled()) {
+                    drawCenteredString(fontRendererObj, "The bow render hook is not loaded; vanilla bow rendering is unchanged.",
                             width / 2, bottom - 88, 0xFFFFD866);
                 }
             } else {
