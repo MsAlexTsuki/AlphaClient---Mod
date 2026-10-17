@@ -142,7 +142,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                         if (lookAhead instanceof MethodInsnNode) {
                             MethodInsnNode candidate = (MethodInsnNode) lookAhead;
                             if (classNode.name.equals(candidate.owner)
-                                    && "(FLnet/minecraft/client/entity/AbstractClientPlayer;)V".equals(candidate.desc)) {
+                                    && isBowTransformCall(classNode.name, candidate)) {
                                 bowBranch = true;
                                 break;
                             }
@@ -182,7 +182,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
 
                     MethodInsnNode call = (MethodInsnNode) instruction;
                     if (!classNode.name.equals(call.owner)
-                            || !"(FLnet/minecraft/client/entity/AbstractClientPlayer;)V".equals(call.desc)) {
+                            || !isBowTransformCall(classNode.name, call)) {
                         continue;
                     }
 
@@ -190,7 +190,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                             Opcodes.INVOKESTATIC,
                             HOOK_OWNER,
                             "applyBowTransformations",
-                            "(Lnet/minecraft/client/renderer/ItemRenderer;FLnet/minecraft/client/entity/AbstractClientPlayer;)V",
+                            "(Ljava/lang/Object;FLjava/lang/Object;)V",
                             false
                     ));
                     bowChanged = true;
@@ -268,6 +268,16 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             error.printStackTrace();
             return basicClass;
         }
+    }
+
+    private static boolean isBowTransformCall(String owner, MethodInsnNode call) {
+        // The player class in this descriptor may be deobfuscated or obfuscated
+        // depending on the LaunchWrapper transformer order.
+        return owner.equals(call.owner)
+                && call.desc.startsWith("(F")
+                && call.desc.indexOf(';') >= 0
+                && call.desc.endsWith(")V")
+                && !"(FF)V".equals(call.desc);
     }
 
     private static boolean containsFirstPersonBlockTransform(String owner, MethodNode method) {
