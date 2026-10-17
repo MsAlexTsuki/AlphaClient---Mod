@@ -38,7 +38,8 @@ public final class ModuleSettingsGui extends GuiScreen {
         boolean canToggle = module.isImplemented() && module.isUnlocked();
         buttonList.add(new AlphaButton(TOGGLE_MODULE, centerX - 82, height - 58, 164, 20,
                 canToggle ? (module.isEnabled() ? "DISABLE MODULE" : "ENABLE MODULE")
-                        : (module.isUnlocked() ? "COMING SOON" : "LOCKED"), false, !canToggle));
+                        : (module.isUnlocked() ? "COMING SOON" : "LOCKED"), false));
+        buttonList.get(0).enabled = canToggle;
         buttonList.add(new AlphaButton(BACK, centerX - 60, height - 31, 120, 20, "BACK"));
     }
 
