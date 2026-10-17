@@ -126,8 +126,13 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                     for (int step = 0; step < 14 && previous != null; step++) {
                         if (previous instanceof MethodInsnNode) {
                             MethodInsnNode candidate = (MethodInsnNode) previous;
+                            // Match the eating/drinking helper by its argument shape,
+                            // not its method name: Forge may present obfuscated names here.
+                            // performDrinking takes (player, partialTicks), unlike the
+                            // bow helper which takes (partialTicks, player).
                             if (classNode.name.equals(candidate.owner)
-                                    && candidate.name.toLowerCase(java.util.Locale.ROOT).contains("drinking")) {
+                                    && candidate.desc.startsWith("(L")
+                                    && candidate.desc.contains(";F)V")) {
                                 eatDrinkBranch = true;
                                 break;
                             }
@@ -237,7 +242,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                 if (bowChanged) break;
             }
 
-            if (!changed && !bowChanged) {
+            if (!changed && !bowChanged && !bowSwingChanged) {
                 System.err.println("[AlphaClient] Legacy PvP could not find the expected ItemRenderer render patterns; vanilla rendering was left unchanged.");
                 return basicClass;
             }
