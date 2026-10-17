@@ -8,11 +8,11 @@ import java.io.IOException;
 
 /** Browser for the planned AlphaClient Quality of Life features. */
 public final class QualityGui extends GuiScreen {
-    private static final int BACK = 1;
+    private static final int BACK = 1;\n    private static final int AFK_TIMER = 2;\n    private static final int AFK_TIMER_INDEX = 6;
     private static final int ACCENT = 0xFFFFD866;
     private static final String[] FEATURES = {
             "Alpha Module Manager", "Playtime Tracker", "Auto GG", "Keybind Profiles",
-            "Auto Respawn", "AlphaClient Core Experience", "AFK Detector", "Mod Profiles",
+            "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Mod Profiles",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
             "Alpha Update Checker", "Alpha Control Center", "Keybind Manager",
             "Session Timer", "Alpha Feature Flags"
@@ -37,7 +37,7 @@ public final class QualityGui extends GuiScreen {
         visibleRows = Math.max(1, (panelBottom - panelTop - 92) / 20);
         int maxScroll = Math.max(0, FEATURES.length - visibleRows);
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
-        buttonList.add(new GuiButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        buttonList.add(new GuiButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));\n        if (AFK_TIMER_INDEX >= scrollOffset && AFK_TIMER_INDEX < scrollOffset + visibleRows) {\n            int timerY = panelTop + 68 + (AFK_TIMER_INDEX - scrollOffset) * 20;\n            buttonList.add(new AlphaButton(AFK_TIMER, panelLeft + 10, timerY, panelRight - panelLeft - 20, 17,\n                    "AFK TIMER  \\u2022  OPEN SETTINGS", true));\n        }
     }
 
     @Override
@@ -79,7 +79,7 @@ public final class QualityGui extends GuiScreen {
         int wheel = Mouse.getEventDWheel();
         if (wheel != 0) {
             int maxScroll = Math.max(0, FEATURES.length - visibleRows);
-            scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset + (wheel < 0 ? 2 : -2)));
+            scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset + (wheel < 0 ? 2 : -2)));\n            initGui();
         }
     }
 
