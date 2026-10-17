@@ -26,7 +26,8 @@ public final class LegacyPvpMod {
 
         AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
         boolean enabled = module != null && module.isImplemented()
-                && module.isUnlocked() && module.isEnabled();
+                && module.isUnlocked() && module.isEnabled()
+                && LegacyPvpSettings.isDisableViewBobbing();
 
         if (enabled && !wasEnabled) {
             previousViewBobbing = mc.gameSettings.viewBobbing;
