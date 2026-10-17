@@ -31,11 +31,6 @@ public final class FpsMod {
     }
     public static int getHudX() { return hudX; }
     public static int getHudY() { return hudY; }
-    public static void reloadHudPosition() {
-        hudPositionLoaded = false;
-        loadHudPosition();
-    }
-
     public static void loadHudPosition() {
         if (hudPositionLoaded) return;
         HudPositionConfig.load();
