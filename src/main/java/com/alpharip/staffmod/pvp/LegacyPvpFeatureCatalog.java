@@ -37,8 +37,8 @@ public final class LegacyPvpFeatureCatalog {
     }
 
     private static final Feature[] FEATURES = new Feature[] {
-        new Feature("blockhit", "True 1.7.10 blockhit animation", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
-                "Needs a verified first-person render hook."),
+        new Feature("blockhit", "True 1.7.10 blockhit animation", Scope.CLIENT_VISUAL, Status.CONFIGURABLE,
+                "Adds swing progress to the sword-blocking first-person render branch."),
         new Feature("sword-swing", "Legacy sword swing", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
                 "Needs a verified swing-animation hook."),
         new Feature("item-transform", "Legacy first-person item position / rotation", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
