@@ -66,6 +66,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(fps);
 
+        AlphaModule legacyPvp = new AlphaModule(
+                "legacy-pvp",
+                "Legacy PvP",
+                "Optional legacy-style PvP presentation. This initial version disables camera bobbing while enabled.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(legacyPvp);
+
         AlphaModule cps = new AlphaModule(
                 "cps",
                 "CPS",
