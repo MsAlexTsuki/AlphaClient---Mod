@@ -15,11 +15,13 @@ public final class LegacyPvpSettings {
     private static final String KEY_ENABLE_BLOCKHIT = "enableBlockhit";
     private static final String KEY_REMOVE_MISSED_SWING_DELAY = "removeMissedSwingDelay";
     private static final String KEY_LEGACY_BOW_ANIMATION = "legacyBowAnimation";
+    private static final String KEY_POTION_PUNCH_ANIMATION = "potionPunchAnimation";
     private static boolean loaded;
     private static boolean disableViewBobbing = true;
     private static boolean enableBlockhit = true;
     private static boolean removeMissedSwingDelay = true;
     private static boolean legacyBowAnimation = true;
+    private static boolean potionPunchAnimation = true;
 
     private LegacyPvpSettings() { }
 
@@ -46,6 +48,9 @@ public final class LegacyPvpSettings {
             }
             if (root.has(KEY_LEGACY_BOW_ANIMATION)) {
                 legacyBowAnimation = root.get(KEY_LEGACY_BOW_ANIMATION).getAsBoolean();
+            }
+            if (root.has(KEY_POTION_PUNCH_ANIMATION)) {
+                potionPunchAnimation = root.get(KEY_POTION_PUNCH_ANIMATION).getAsBoolean();
             }
         } catch (Exception e) {
             System.out.println("[AlphaClient] Could not load Legacy PvP settings: " + e.getMessage());
@@ -100,6 +105,17 @@ public final class LegacyPvpSettings {
         save();
     }
 
+    public static synchronized boolean isPotionPunchAnimationEnabled() {
+        load();
+        return potionPunchAnimation;
+    }
+
+    public static synchronized void setPotionPunchAnimationEnabled(boolean value) {
+        load();
+        potionPunchAnimation = value;
+        save();
+    }
+
     public static synchronized void save() {
         FileWriter writer = null;
         try {
@@ -111,6 +127,7 @@ public final class LegacyPvpSettings {
             root.addProperty(KEY_ENABLE_BLOCKHIT, enableBlockhit);
             root.addProperty(KEY_REMOVE_MISSED_SWING_DELAY, removeMissedSwingDelay);
             root.addProperty(KEY_LEGACY_BOW_ANIMATION, legacyBowAnimation);
+            root.addProperty(KEY_POTION_PUNCH_ANIMATION, potionPunchAnimation);
             writer = new FileWriter(file);
             writer.write(root.toString());
             writer.flush();
