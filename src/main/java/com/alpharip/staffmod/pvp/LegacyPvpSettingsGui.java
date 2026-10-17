@@ -68,6 +68,19 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
         return panelRight - 102;
     }
 
+    private String fitLabel(String label, int maxWidth) {
+        if (label == null || fontRendererObj == null || maxWidth <= 0) {
+            return "";
+        }
+        if (fontRendererObj.getStringWidth(label) <= maxWidth) {
+            return label;
+        }
+
+        String ellipsis = "...";
+        int textWidth = Math.max(0, maxWidth - fontRendererObj.getStringWidth(ellipsis));
+        return fontRendererObj.trimStringToWidth(label, textWidth) + ellipsis;
+    }
+
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button.id == TOGGLE_VIEW_BOBBING) {
