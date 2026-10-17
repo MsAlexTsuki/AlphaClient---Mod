@@ -19,6 +19,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 public final class LegacyPvpMod {
     private boolean wasEnabled;
     private boolean previousViewBobbing;
+    private boolean bobbingOverridden;
 
     /**
      * Legacy use-and-swing input: while right mouse is held and Minecraft is
@@ -61,15 +62,18 @@ public final class LegacyPvpMod {
                 && module.isUnlocked() && module.isEnabled()
                 && LegacyPvpSettings.isDisableViewBobbing();
 
-        if (enabled && !wasEnabled) {
-            previousViewBobbing = mc.gameSettings.viewBobbing;
+        if (enabled) {
+            if (!bobbingOverridden) {
+                // Capture the real user setting once, before overriding it.
+                previousViewBobbing = mc.gameSettings.viewBobbing;
+                bobbingOverridden = true;
+            }
             mc.gameSettings.viewBobbing = false;
-        } else if (enabled) {
-            // Keep the legacy presentation consistent while the module is enabled.
-            mc.gameSettings.viewBobbing = false;
-        } else if (wasEnabled) {
-            // Restore the user's previous option instead of permanently changing it.
+        } else if (bobbingOverridden) {
+            // Restore the original setting even if the option was toggled off
+            // before the next tick or the module was disabled from another GUI.
             mc.gameSettings.viewBobbing = previousViewBobbing;
+            bobbingOverridden = false;
         }
 
         wasEnabled = enabled;
