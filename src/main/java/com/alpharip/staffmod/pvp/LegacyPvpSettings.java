@@ -13,9 +13,11 @@ import java.io.FileWriter;
 public final class LegacyPvpSettings {
     private static final String KEY_DISABLE_VIEW_BOBBING = "disableViewBobbing";
     private static final String KEY_ENABLE_BLOCKHIT = "enableBlockhit";
+    private static final String KEY_REMOVE_MISSED_SWING_DELAY = "removeMissedSwingDelay";
     private static boolean loaded;
     private static boolean disableViewBobbing = true;
     private static boolean enableBlockhit = true;
+    private static boolean removeMissedSwingDelay = true;
 
     private LegacyPvpSettings() { }
 
@@ -36,6 +38,9 @@ public final class LegacyPvpSettings {
             }
             if (root.has(KEY_ENABLE_BLOCKHIT)) {
                 enableBlockhit = root.get(KEY_ENABLE_BLOCKHIT).getAsBoolean();
+            }
+            if (root.has(KEY_REMOVE_MISSED_SWING_DELAY)) {
+                removeMissedSwingDelay = root.get(KEY_REMOVE_MISSED_SWING_DELAY).getAsBoolean();
             }
         } catch (Exception e) {
             System.out.println("[AlphaClient] Could not load Legacy PvP settings: " + e.getMessage());
@@ -68,6 +73,17 @@ public final class LegacyPvpSettings {
         save();
     }
 
+    public static synchronized boolean isRemoveMissedSwingDelayEnabled() {
+        load();
+        return removeMissedSwingDelay;
+    }
+
+    public static synchronized void setRemoveMissedSwingDelayEnabled(boolean value) {
+        load();
+        removeMissedSwingDelay = value;
+        save();
+    }
+
     public static synchronized void save() {
         FileWriter writer = null;
         try {
@@ -77,6 +93,7 @@ public final class LegacyPvpSettings {
             JsonObject root = new JsonObject();
             root.addProperty(KEY_DISABLE_VIEW_BOBBING, disableViewBobbing);
             root.addProperty(KEY_ENABLE_BLOCKHIT, enableBlockhit);
+            root.addProperty(KEY_REMOVE_MISSED_SWING_DELAY, removeMissedSwingDelay);
             writer = new FileWriter(file);
             writer.write(root.toString());
             writer.flush();
