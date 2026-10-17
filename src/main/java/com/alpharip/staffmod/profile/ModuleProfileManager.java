@@ -1437,29 +1437,28 @@ public class ModuleProfileManager {
         try {
             for (AlphaModule module : AlphaModuleRegistry.getAll()) {
                 JsonObject settings = profile.getModule(module.getId());
-
-                /*
-                 * Default is a safe baseline: every registered module is forced OFF
-                 * whenever Default is applied, even if an older saved file says ON.
-                 * Explicit OFF values are persisted so newly registered modules also
-                 * start OFF on future launches.
-                 */
-                if (defaultProfile) {
-                    settings.addProperty("enabled", false);
-                    module.setEnabled(false);
-                    continue;
-                }
-
                 JsonElement savedEnabled = settings.get("enabled");
-                if (savedEnabled != null && savedEnabled.isJsonPrimitive()) {
+
+                if (savedEnabled != null
+                        && savedEnabled.isJsonPrimitive()
+                        && savedEnabled.getAsJsonPrimitive().isBoolean()) {
+                    // Preserve explicit user choices stored in the profile.
                     try {
                         module.setEnabled(savedEnabled.getAsBoolean());
                     } catch (Exception ignored) {
                     }
-                } else {
-                    // Preserve current state for older non-Default profiles that
-                    // have never stored a value for this module, then persist it.
-                    settings.addProperty("enabled", module.isEnabled());
+                    continue;
+                }
+
+                /*
+                 * If Default has no value for a registered module, initialize it
+                 * to OFF. This also covers modules added after the profile was made.
+                 * Existing explicit ON/OFF choices are never overwritten.
+                 */
+                boolean enabled = defaultProfile ? false : module.isEnabled();
+                settings.addProperty("enabled", enabled);
+                if (defaultProfile) {
+                    module.setEnabled(false);
                 }
             }
         } finally {
