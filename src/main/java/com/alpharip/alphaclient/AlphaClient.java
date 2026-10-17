@@ -14,6 +14,7 @@ import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.rankviewer.RankCache;
 import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 
@@ -85,13 +86,8 @@ public final class AlphaClient {
                 Keyboard.KEY_RCONTROL,
                 "AlphaClient"
         );
-        toggleBhopKey = new KeyBinding(
-                "AlphaClient: Toggle BHOP",
-                Keyboard.KEY_B,
-                "AlphaClient"
-        );
         ClientRegistry.registerKeyBinding(openModMenuKey);
-        ClientRegistry.registerKeyBinding(toggleBhopKey);
+        syncBhopKeyBindingVisibility();
 
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
     }
@@ -100,6 +96,9 @@ public final class AlphaClient {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
+
+        // Keep the BHOP key visible in Minecraft Controls only while community-authenticated.
+        syncBhopKeyBindingVisibility();
 
         // Apply FPS defaults once when Minecraft's settings are ready, independent of HUD toggles.
         if (!fpsOptimizationInitialized) {
@@ -142,6 +141,7 @@ public final class AlphaClient {
         }
 
         if (toggleBhopKey != null && toggleBhopKey.isPressed()) {
+            if (!SupabaseCommunityService.isSignedIn()) return;
             AlphaModule staffmods = AlphaModuleRegistry.find("staffmods");
             if (staffmods == null || !staffmods.isImplemented() || !PermissionService.hasModAccess("staff.bhop")) {
                 System.out.println("[AlphaClient] BHOP requires Staff access or Founder offline test mode.");
@@ -149,6 +149,51 @@ public final class AlphaClient {
             }
             staffmods.setEnabled(!staffmods.isEnabled());
             syncBhopModuleState();
+        }
+    }
+
+    /**
+     * Registers the BHOP key only for authenticated community accounts and removes it on sign-out.
+     * This keeps it out of Minecraft's Controls list while the user is signed out.
+     */
+    private void syncBhopKeyBindingVisibility() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null || minecraft.gameSettings == null) return;
+
+        boolean shouldBeVisible = SupabaseCommunityService.isSignedIn();
+        if (shouldBeVisible && toggleBhopKey == null) {
+            toggleBhopKey = new KeyBinding(
+                    "AlphaClient: Toggle BHOP",
+                    Keyboard.KEY_B,
+                    "AlphaClient"
+            );
+            ClientRegistry.registerKeyBinding(toggleBhopKey);
+        } else if (!shouldBeVisible && toggleBhopKey != null) {
+            KeyBinding removed = toggleBhopKey;
+            KeyBinding[] bindings = minecraft.gameSettings.keyBindings;
+            int count = 0;
+            for (KeyBinding binding : bindings) {
+                if (binding != removed) count++;
+            }
+            KeyBinding[] filtered = new KeyBinding[count];
+            int index = 0;
+            for (KeyBinding binding : bindings) {
+                if (binding != removed) filtered[index++] = binding;
+            }
+            minecraft.gameSettings.keyBindings = filtered;
+
+            KeyBinding[] allBindings = KeyBinding.keybindArray;
+            count = 0;
+            for (KeyBinding binding : allBindings) {
+                if (binding != removed) count++;
+            }
+            filtered = new KeyBinding[count];
+            index = 0;
+            for (KeyBinding binding : allBindings) {
+                if (binding != removed) filtered[index++] = binding;
+            }
+            KeyBinding.keybindArray = filtered;
+            toggleBhopKey = null;
         }
     }
 
