@@ -369,6 +369,9 @@ public final class AlphaModMenu extends GuiScreen {
                         mc.displayGuiScreen(new LegacyPvpSettingsGui(this));
                         return;
                     }
+                    // Every module must open a settings screen, even when it has no specialized GUI yet.
+                    mc.displayGuiScreen(new ModuleSettingsGui(this, clickedModule));
+                    return;
                 }
             }
         }
