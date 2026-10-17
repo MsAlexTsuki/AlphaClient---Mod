@@ -72,12 +72,13 @@ public final class LegacyPvpRenderHooks {
      * item-use paths, blockhit, and fishing-rod rendering are left untouched.
      */
     public static void applyBowTransformations(
-            net.minecraft.client.renderer.ItemRenderer renderer,
+            Object renderer,
             float partialTicks,
-            AbstractClientPlayer clientPlayer) {
-        if (clientPlayer == null) {
+            Object playerObject) {
+        if (!(playerObject instanceof AbstractClientPlayer)) {
             return;
         }
+        AbstractClientPlayer clientPlayer = (AbstractClientPlayer) playerObject;
 
         ItemStack activeItem = clientPlayer.getItemInUse();
         if (activeItem == null) {
