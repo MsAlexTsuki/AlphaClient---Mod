@@ -20,8 +20,15 @@ public final class FpsMod {
 
     public FpsMod() { }
 
-    public static boolean isShowBackground() { return showBackground; }
-    public static void setShowBackground(boolean value) { showBackground = value; }
+    public static boolean isShowBackground() {
+        loadHudPosition();
+        return showBackground;
+    }
+    public static void setShowBackground(boolean value) {
+        loadHudPosition();
+        showBackground = value;
+        HudPositionConfig.setFpsShowBackground(value);
+    }
     public static int getHudX() { return hudX; }
     public static int getHudY() { return hudY; }
     public static void loadHudPosition() {
@@ -31,6 +38,7 @@ public final class FpsMod {
         hudY = HudPositionConfig.getFpsY();
         colorIndex = HudPositionConfig.getFpsColorIndex();
         if (colorIndex < 0 || colorIndex >= COLOR_NAMES.length) colorIndex = 0;
+        showBackground = HudPositionConfig.isFpsShowBackground();
         hudPositionLoaded = true;
     }
     public static void setHudPosition(int x, int y) {
