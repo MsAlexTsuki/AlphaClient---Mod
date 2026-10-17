@@ -31,6 +31,7 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
     private static final int STAFF_MODS = 306;
+    private static final int CONFIG_PROFILES = 307;
     private static final int PROFILE_SELECT_BASE = 400;
     private static final int PROFILE_CREATE = 430;
     private static final int PROFILE_EDIT = 431;
@@ -77,7 +78,8 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setDisabledTextColour(0xFFB8BDC8);
         buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + 5, 16, 16, ""));
         buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + 5, 16, 16, ""));
-        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 20, 64, 14, "HUD EDITOR"));
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 36, 64, 14, "HUD EDITOR"));
+        buttonList.add(new AlphaButton(CONFIG_PROFILES, panelLeft + 5, panelTop + panelHeight - 20, 64, 14, "CONFIGS"));
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
@@ -291,6 +293,7 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == EXIT) { mc.displayGuiScreen(null); return; }
         if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
+        if (button.id == CONFIG_PROFILES) { mc.displayGuiScreen(new ConfigProfilesGui(this)); return; }
         if (button.id == PROFILE_CREATE) {
             mc.displayGuiScreen(new ProfileNameGui(this, false, ""));
             return;
