@@ -8,7 +8,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import org.lwjgl.input.Mouse;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 
 import java.awt.Color;
 import java.util.ArrayDeque;
@@ -24,8 +24,6 @@ public final class CpsMod {
     private static final int[] COLORS = {0xFFFFFFFF, 0xFFFF5555, 0xFFFFAA00, 0xFFFFFF55, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};
     private static final Deque<Long> leftClicks = new ArrayDeque<Long>();
     private static final Deque<Long> rightClicks = new ArrayDeque<Long>();
-    private static boolean previousLeftDown;
-    private static boolean previousRightDown;
     private static boolean showBackground = true;
     private static int hudX = 5, hudY = 5, colorIndex, displayMode = MODE_BOTH;
     private static boolean loaded;
@@ -46,24 +44,24 @@ public final class CpsMod {
     }
 
     @SubscribeEvent
+    public void onMouseInput(InputEvent.MouseInputEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.currentScreen != null || mc.thePlayer == null) return;
+        if (!org.lwjgl.input.Mouse.getEventButtonState()) return;
+        int button = org.lwjgl.input.Mouse.getEventButton();
+        long now = System.currentTimeMillis();
+        if (button == 0) leftClicks.addLast(now);
+        else if (button == 1) rightClicks.addLast(now);
+        trim(leftClicks, now);
+        trim(rightClicks, now);
+    }
+
+    @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null) return;
-        if (mc.currentScreen == null && mc.thePlayer != null) {
-            boolean leftDown = Mouse.isButtonDown(0);
-            boolean rightDown = Mouse.isButtonDown(1);
-            long now = System.currentTimeMillis();
-            if (leftDown && !previousLeftDown) leftClicks.addLast(now);
-            if (rightDown && !previousRightDown) rightClicks.addLast(now);
-            previousLeftDown = leftDown;
-            previousRightDown = rightDown;
-            trim(leftClicks, now);
-            trim(rightClicks, now);
-        } else {
-            previousLeftDown = Mouse.isButtonDown(0);
-            previousRightDown = Mouse.isButtonDown(1);
-        }
+        long now = System.currentTimeMillis();
+        trim(leftClicks, now);
+        trim(rightClicks, now);
     }
 
     private static void trim(Deque<Long> clicks, long now) {
