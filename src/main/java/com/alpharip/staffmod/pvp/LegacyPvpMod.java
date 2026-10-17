@@ -3,6 +3,8 @@ package com.alpharip.staffmod.pvp;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.item.ItemBow;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.MouseEvent;
 import org.lwjgl.input.Mouse;
@@ -20,9 +22,9 @@ public final class LegacyPvpMod {
 
     /**
      * Legacy use-and-swing input: while right mouse is held and Minecraft is
-     * actively using an item, preserve the left-click hand swing only when the
-     * crosshair is targeting a block. This covers swords, food, bows, drinkable
-     * potions and other active-use items. It does not trigger when clicking air.
+     * actively using an item, preserve the left-click hand swing. Bows may swing
+     * without targeting a block; other active-use items require a block hit so
+     * clicking air does not trigger the legacy blockhit animation.
      * This adds a local swing animation; it does not cancel item use or guarantee
      * a server-side attack while the item is being consumed/drawn.
      */
@@ -33,15 +35,17 @@ public final class LegacyPvpMod {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.currentScreen != null || mc.thePlayer == null || mc.theWorld == null) return;
         if (!mc.thePlayer.isUsingItem()) return;
-        if (mc.objectMouseOver == null
-                || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
+
+        ItemStack activeStack = mc.thePlayer.getItemInUse();
+        boolean usingBow = activeStack != null && activeStack.getItem() instanceof ItemBow;
+        if (!usingBow && (mc.objectMouseOver == null
+                || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK)) return;
 
         AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
         if (module == null || !module.isImplemented() || !module.isUnlocked()
                 || !module.isEnabled() || !LegacyPvpSettings.isBlockhitEnabled()) return;
 
-        // Preserve the visible swing for any actively used item without
-        // cancelling the original mouse event or interrupting its use.
+        // Preserve the visible swing without cancelling or interrupting item use.
         mc.thePlayer.swingItem();
     }
 
