@@ -18,8 +18,8 @@ import org.objectweb.asm.tree.VarInsnNode;
  *
  * Minecraft 1.8.9 normally passes 0.0F into transformFirstPersonItem while a
  * sword is blocking, which suppresses the swing animation in that branch.
- * This transformer changes only that argument and leaves all other item-use
- * branches (food, potions, bows, maps, etc.) untouched.
+ * This transformer changes the swing argument in the BLOCK and BOW branches.
+ * Food and drink keep their vanilla swing-progress path.
  */
 public final class LegacyPvpTransformer implements IClassTransformer {
     private static final String ITEM_RENDERER = "net.minecraft.client.renderer.ItemRenderer";
@@ -60,16 +60,14 @@ public final class LegacyPvpTransformer implements IClassTransformer {
 
                     AbstractInsnNode next = nextReal(instruction);
                     AbstractInsnNode afterNext = nextReal(next);
-                    if (!(next instanceof VarInsnNode)
-                            || next.getOpcode() != Opcodes.ALOAD
-                            || ((VarInsnNode) next).var != 0
-                            || !(afterNext instanceof MethodInsnNode)) {
-                        continue;
-                    }
-
-                    MethodInsnNode followingCall = (MethodInsnNode) afterNext;
-                    if (!classNode.name.equals(followingCall.owner)
-                            || !"()V".equals(followingCall.desc)) {
+                    boolean blockBranch = next instanceof VarInsnNode
+                            && next.getOpcode() == Opcodes.ALOAD
+                            && ((VarInsnNode) next).var == 0
+                            && afterNext instanceof MethodInsnNode
+                            && classNode.name.equals(((MethodInsnNode) afterNext).owner)
+                            && "()V".equals(((MethodInsnNode) afterNext).desc);
+                    boolean bowBranch = followsBowTransform(instruction, classNode.name);
+                    if (!blockBranch && !bowBranch) {
                         continue;
                     }
 
@@ -79,6 +77,8 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                     }
 
                     // Local 4 is swingProgress in ItemRenderer.renderItemInFirstPerson(float).
+                    // Reuse it in the BLOCK and BOW use branches so a swing blends into
+                    // the held-item pose instead of snapping instantly into bow draw.
                     VarInsnNode swingProgress = new VarInsnNode(Opcodes.FLOAD, 4);
                     method.instructions.set(argument, swingProgress);
                     method.instructions.insert(swingProgress, new MethodInsnNode(
@@ -109,6 +109,26 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             error.printStackTrace();
             return basicClass;
         }
+    }
+
+    private static boolean followsBowTransform(AbstractInsnNode transformCall, String owner) {
+        AbstractInsnNode instruction = transformCall;
+        // The bow transform receives partialTicks and ItemStack after transformFirstPersonItem.
+        for (int i = 0; i < 5; i++) {
+            instruction = nextReal(instruction);
+            if (instruction == null) return false;
+            if (instruction instanceof MethodInsnNode) {
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                if (owner.equals(call.owner)
+                        && "(FLnet/minecraft/item/ItemStack;)V".equals(call.desc)) {
+                    return true;
+                }
+                if (owner.equals(call.owner) && "(FF)V".equals(call.desc)) {
+                    return false;
+                }
+            }
+        }
+        return false;
     }
 
     private static boolean containsBlockTransformCall(String owner, MethodNode method) {
