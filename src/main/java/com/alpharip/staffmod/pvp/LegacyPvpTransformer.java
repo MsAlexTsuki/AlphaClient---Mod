@@ -132,8 +132,8 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             ClassNode classNode = new ClassNode();
             new ClassReader(basicClass).accept(classNode, 0);
             for (MethodNode method : classNode.methods) {
-                if (!("runTick".equals(method.name) || "func_71407_l".equals(method.name))
-                        || !"()V".equals(method.desc)) {
+                if (!("runTick".equals(method.name) || "func_71407_l".equals(method.name)
+                        || "s".equals(method.name)) || !"()V".equals(method.desc)) {
                     continue;
                 }
                 for (AbstractInsnNode instruction : method.instructions.toArray()) {
