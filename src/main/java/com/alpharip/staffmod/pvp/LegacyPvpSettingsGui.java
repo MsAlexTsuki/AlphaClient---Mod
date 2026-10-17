@@ -16,6 +16,7 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
     private final GuiScreen parent;
     private static final int TOGGLE_VIEW_BOBBING = 1;
     private static final int CLOSE = 2;
+    private static final int TOGGLE_BLOCKHIT = 3;
     private static final int ROW_HEIGHT = 24;
     private static final int LIST_TOP = 124;
     private static final int LIST_BOTTOM_MARGIN = 42;
@@ -37,8 +38,15 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
         int cameraIndex = indexOf("camera-bobbing", features);
         int cameraY = LIST_TOP + (cameraIndex - scrollOffset) * ROW_HEIGHT;
         if (cameraIndex >= scrollOffset && cameraIndex < scrollOffset + visibleRows) {
-            buttonList.add(new ModernButton(TOGGLE_VIEW_BOBBING, centerX + 54, cameraY + 1, 94, 20,
-                    LegacyPvpSettings.isDisableViewBobbing() ? "DISABLE: ON" : "DISABLE: OFF"));
+            buttonList.add(new ModernButton(TOGGLE_VIEW_BOBBING, getToggleX(), cameraY + 1, 94, 20,
+                    LegacyPvpSettings.isDisableViewBobbing() ? "BOBBING OFF" : "BOBBING ON"));
+        }
+
+        int blockhitIndex = indexOf("blockhit", features);
+        int blockhitY = LIST_TOP + (blockhitIndex - scrollOffset) * ROW_HEIGHT;
+        if (blockhitIndex >= scrollOffset && blockhitIndex < scrollOffset + visibleRows) {
+            buttonList.add(new ModernButton(TOGGLE_BLOCKHIT, getToggleX(), blockhitY + 1, 94, 20,
+                    LegacyPvpSettings.isBlockhitEnabled() ? "BLOCKHIT: ON" : "BLOCKHIT: OFF"));
         }
         buttonList.add(new ModernButton(CLOSE, centerX - 70, height - 30, 140, 20, "BACK"));
     }
@@ -54,10 +62,18 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
         return Math.max(1, (height - 183) / ROW_HEIGHT);
     }
 
+    private int getToggleX() {
+        int panelRight = Math.min(width - 8, width / 2 + 180);
+        return panelRight - 102;
+    }
+
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button.id == TOGGLE_VIEW_BOBBING) {
             LegacyPvpSettings.setDisableViewBobbing(!LegacyPvpSettings.isDisableViewBobbing());
+            initGui();
+        } else if (button.id == TOGGLE_BLOCKHIT) {
+            LegacyPvpSettings.setBlockhitEnabled(!LegacyPvpSettings.isBlockhitEnabled());
             initGui();
         } else if (button.id == CLOSE) {
             mc.displayGuiScreen(parent);
@@ -112,8 +128,8 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
                     : (feature.status == LegacyPvpFeatureCatalog.Status.SERVER_REQUIRED
                     ? 0xFFFFD866 : 0xFFB8BDC8);
             int statusX = centerX + 4;
-            if (feature.id.equals("camera-bobbing")) {
-                status = "AVAILABLE";
+            if (feature.id.equals("camera-bobbing") || feature.id.equals("blockhit")) {
+                status = "CONFIGURABLE";
                 statusColor = 0xFF9CE2AC;
             }
             drawString(fontRendererObj, status, statusX, y + 4, statusColor);
