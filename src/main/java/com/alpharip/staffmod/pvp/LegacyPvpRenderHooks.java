@@ -134,6 +134,7 @@ public final class LegacyPvpRenderHooks {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null) return 0.0F;
         ItemStack active = mc.thePlayer.getItemInUse();
+        if (active == null) active = mc.thePlayer.getHeldItem();
         if (active == null) return 0.0F;
         EnumAction action = active.getItemUseAction();
         return action == EnumAction.BOW || action == EnumAction.EAT || action == EnumAction.DRINK
@@ -152,8 +153,8 @@ public final class LegacyPvpRenderHooks {
     /**
      * Supplies swing progress only for an actual sword blockhit:
      * the module is enabled, right-click is held, the player is using a sword,
-     * a block is targeted, and an attack swing is already in progress.
-     * Holding right-click alone therefore never creates repeated blockhit swings.
+     * and an attack swing is already in progress. Do not require a block target:
+     * during PvP the crosshair is normally on an entity, not a world block.
      */
     public static float getBlockhitSwingProgress(float swingProgress) {
         if (swingProgress <= 0.0F) return 0.0F;
@@ -183,11 +184,10 @@ public final class LegacyPvpRenderHooks {
                 return 0.0F;
             }
 
-            MovingObjectPosition target = mc.objectMouseOver;
-            if (target == null || target.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
-                return 0.0F;
-            }
-
+            // A real blockhit is commonly aimed at an entity while attacking.
+            // Requiring MovingObjectType.BLOCK here suppresses the legacy swing
+            // in normal PvP combat, so the BLOCK render branch and sword gate
+            // are the relevant checks instead.
             return swingProgress;
         } catch (RuntimeException error) {
             System.err.println("[AlphaClient] Could not read Legacy PvP blockhit state: " + error.getMessage());
