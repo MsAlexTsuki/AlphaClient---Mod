@@ -95,6 +95,27 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
     }
 
     @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        if (mouseButton == 0 && mouseY >= LIST_TOP && mouseY < Math.min(height - 24 - 35,
+                LIST_TOP + getVisibleRows() * ROW_HEIGHT)) {
+            int row = (mouseY - LIST_TOP) / ROW_HEIGHT;
+            int index = scrollOffset + row;
+            LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
+            int panelLeft = Math.max(8, width / 2 - 180);
+            int panelRight = Math.min(width - 8, width / 2 + 180);
+            boolean insideRow = mouseX >= panelLeft + 8 && mouseX < panelRight - 8;
+            boolean onToggle = mouseX >= getToggleX() && mouseX < getToggleX() + 94
+                    && ((index == indexOf("camera-bobbing", features))
+                    || (index == indexOf("blockhit", features) && LegacyPvpTransformer.isInstalled()));
+            if (insideRow && !onToggle && index >= 0 && index < features.length) {
+                mc.displayGuiScreen(new LegacyPvpFeatureGui(this, features[index].id));
+                return;
+            }
+        }
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+    }
+
+    @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
