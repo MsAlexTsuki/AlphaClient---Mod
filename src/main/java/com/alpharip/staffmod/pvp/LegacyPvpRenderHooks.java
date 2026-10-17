@@ -172,7 +172,13 @@ public final class LegacyPvpRenderHooks {
                 return 0.0F;
             }
 
+            // The render hook already runs inside the BLOCK item-use branch.
+            // Prefer the active-use stack, but fall back to the held stack because
+            // some 1.8.9 server/client states clear getItemInUse before this render.
             ItemStack usingItem = mc.thePlayer.getItemInUse();
+            if (usingItem == null) {
+                usingItem = mc.thePlayer.getHeldItem();
+            }
             if (usingItem == null || !(usingItem.getItem() instanceof ItemSword)) {
                 return 0.0F;
             }
