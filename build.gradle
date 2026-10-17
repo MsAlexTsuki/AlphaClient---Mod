@@ -139,7 +139,7 @@ task generateBuildInfo {
                 "BuildInfo.java"
         )
 
-        buildInfoFile.text = """\\
+        buildInfoFile.text = """
 package com.alpharip.staffmod;
  
 public final class BuildInfo {
