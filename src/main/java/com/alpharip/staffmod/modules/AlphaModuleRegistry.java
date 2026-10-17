@@ -63,6 +63,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(fps);
 
+        AlphaModule cps = new AlphaModule(
+                "cps",
+                "CPS",
+                "Clicks per second HUD with selectable mouse buttons and appearance settings.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                false
+        );
+        MODULES.add(cps);
+
         AlphaModule bhop = new AlphaModule(
                 "staffmods",
                 "BHOP",
