@@ -18,6 +18,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
  */
 public final class LegacyPvpMod {
     private boolean wasEnabled;
+    private boolean pendingUseSwing;
     private boolean previousViewBobbing;
     private boolean bobbingOverridden;
 
@@ -46,8 +47,9 @@ public final class LegacyPvpMod {
         if (module == null || !module.isImplemented() || !module.isUnlocked()
                 || !module.isEnabled() || !LegacyPvpSettings.isBlockhitEnabled()) return;
 
-        // Preserve the visible swing without cancelling or interrupting item use.
-        mc.thePlayer.swingItem();
+        // Defer the extra animation until the normal mouse processing has finished.
+        // This avoids restarting a swing that vanilla already began for the same click.
+        pendingUseSwing = true;
     }
 
     @SubscribeEvent
@@ -56,6 +58,21 @@ public final class LegacyPvpMod {
 
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.gameSettings == null) return;
+
+        if (pendingUseSwing) {
+            pendingUseSwing = false;
+            if (mc.currentScreen == null && mc.thePlayer != null && mc.theWorld != null
+                    && Mouse.isButtonDown(1) && mc.thePlayer.isUsingItem()) {
+                ItemStack activeStack = mc.thePlayer.getItemInUse();
+                boolean usingBow = activeStack != null && activeStack.getItem() instanceof ItemBow;
+                boolean lookingAtBlock = mc.objectMouseOver != null
+                        && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK;
+                if ((usingBow || lookingAtBlock) && !mc.thePlayer.isSwingInProgress) {
+                    // Do not restart an active swing: it makes the arm snap into the bow-draw pose.
+                    mc.thePlayer.swingItem();
+                }
+            }
+        }
 
         AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
         boolean enabled = module != null && module.isImplemented()
