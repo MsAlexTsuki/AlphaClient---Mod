@@ -66,9 +66,9 @@ public final class LegacyPvpMod {
             pendingPotionPunchSwing = false;
             if (mc.currentScreen == null && mc.thePlayer != null && mc.theWorld != null
                     && Mouse.isButtonDown(1)) {
-                if (!mc.thePlayer.isSwingInProgress) {
-                    mc.thePlayer.swingItem();
-                }
+                // Restart the local arm swing for the legacy potion-punch pose,
+                // even if vanilla already started the normal attack swing this tick.
+                mc.thePlayer.swingItem();
             }
         }
 
