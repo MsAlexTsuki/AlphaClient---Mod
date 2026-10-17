@@ -44,7 +44,8 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
 
         int blockhitIndex = indexOf("blockhit", features);
         int blockhitY = LIST_TOP + (blockhitIndex - scrollOffset) * ROW_HEIGHT;
-        if (blockhitIndex >= scrollOffset && blockhitIndex < scrollOffset + visibleRows) {
+        if (blockhitIndex >= scrollOffset && blockhitIndex < scrollOffset + visibleRows
+                && LegacyPvpTransformer.isInstalled()) {
             buttonList.add(new ModernButton(TOGGLE_BLOCKHIT, getToggleX(), blockhitY + 1, 94, 20,
                     LegacyPvpSettings.isBlockhitEnabled() ? "BLOCKHIT: ON" : "BLOCKHIT: OFF"));
         }
@@ -128,9 +129,17 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
                     : (feature.status == LegacyPvpFeatureCatalog.Status.SERVER_REQUIRED
                     ? 0xFFFFD866 : 0xFFB8BDC8);
             int statusX = centerX + 4;
-            if (feature.id.equals("camera-bobbing") || feature.id.equals("blockhit")) {
+            if (feature.id.equals("camera-bobbing")) {
                 status = "CONFIGURABLE";
                 statusColor = 0xFF9CE2AC;
+            } else if (feature.id.equals("blockhit")) {
+                if (LegacyPvpTransformer.isInstalled()) {
+                    status = "CONFIGURABLE";
+                    statusColor = 0xFF9CE2AC;
+                } else {
+                    status = "HOOK NOT LOADED";
+                    statusColor = 0xFFFFD866;
+                }
             }
             drawString(fontRendererObj, status, statusX, y + 4, statusColor);
         }
