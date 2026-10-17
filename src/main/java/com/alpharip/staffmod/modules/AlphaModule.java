@@ -84,7 +84,7 @@ public final class AlphaModule {
     public boolean isEnabled() { return enabled; }
 
     public void setEnabled(boolean enabled) {
-        if (implemented && PermissionService.hasAccess(category.getRequiredRank())) {
+        if (implemented && (!enabled || PermissionService.hasAccess(category.getRequiredRank()))) {
             if (this.enabled != enabled) {
                 this.enabled = enabled;
                 AlphaClientConfig.saveModuleState(id, enabled);
