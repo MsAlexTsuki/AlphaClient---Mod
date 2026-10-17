@@ -70,18 +70,45 @@ public final class AfkTimerHud {
                 || mc.gameSettings.showDebugInfo || mc.gameSettings.hideGUI) return;
         if (!isEnabled() || !positionInitialized || lastMovementTime == 0L) return;
 
+        if (!positionInitialized || lastMovementTime == 0L) return;
         long currentTime = System.currentTimeMillis();
         boolean afk = currentTime - lastMovementTime >= AFK_DELAY_MS;
         if (getDisplayMode() == MODE_ONLY_WHILE_AFK && !afk) return;
-
         long elapsed = afk ? currentTime - (lastMovementTime + AFK_DELAY_MS) : 0L;
-        String text = "AFK " + formatDuration(elapsed);
-        int x = 6;
-        int y = 6;
+        renderHud(mc, "AFK " + formatDuration(elapsed));
+    }
+
+    /** Draws a selectable preview in the HUD editor, even before the player is AFK. */
+    public static void renderEditorPreview() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.fontRendererObj == null) return;
+        renderHud(mc, "AFK 00:00");
+    }
+
+    private static void renderHud(Minecraft mc, String text) {
+        int x = getHudX();
+        int y = getHudY();
         int textWidth = mc.fontRendererObj.getStringWidth(text) + 10;
         Gui.drawRect(x - 3, y - 3, x + textWidth, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
         Gui.drawRect(x - 3, y - 3, x + textWidth, y - 2, 0xFFFFD866);
         mc.fontRendererObj.drawStringWithShadow(text, x, y, getTextColor());
+    }
+
+    public static int getHudX() {
+        JsonObject settings = getSettings();
+        return settings.has("hudX") ? Math.max(0, settings.get("hudX").getAsInt()) : 6;
+    }
+
+    public static int getHudY() {
+        JsonObject settings = getSettings();
+        return settings.has("hudY") ? Math.max(0, settings.get("hudY").getAsInt()) : 6;
+    }
+
+    public static void setHudPosition(int x, int y) {
+        JsonObject settings = getSettings();
+        settings.addProperty("hudX", Math.max(0, x));
+        settings.addProperty("hudY", Math.max(0, y));
+        saveSettings();
     }
 
     public static boolean isEnabled() {
