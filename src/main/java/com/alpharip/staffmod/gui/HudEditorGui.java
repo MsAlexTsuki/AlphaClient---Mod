@@ -56,13 +56,7 @@ public final class HudEditorGui extends GuiScreen {
         drawString(fontRendererObj, "Drag any HUD preview to reposition it.", left + 16, top + 48, 0xFFB9C0CB);
         drawString(fontRendererObj, "Use RESET ALL to restore default HUD positions.", left + 16, top + 65, 0xFFB8BDC8);
 
-        int x = BhopHud.getHudX(), y = BhopHud.getHudY();
-        int w = Math.max(110, BhopHud.getHudWidth()), h = 28;
-        drawRect(x, y, x + w, y + h, 0xE0161921);
-        drawRect(x, y, x + w, y + 1, 0x665B626E);
-        drawRect(x, y, x + 1, y + h, 0x665B626E);
-        drawString(fontRendererObj, BhopHud.getDisplayedProfileName() + "  |  "
-                + BhopHud.getDisplayedSpeedName(), x + 8, y + 10, 0xFFF3F4F6);
+        BhopHud.renderEditorPreview();
 
         if (isFpsModuleEnabled()) {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
