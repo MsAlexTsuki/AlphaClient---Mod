@@ -193,6 +193,7 @@ public final class AlphaClient {
                 if (binding != removed) filtered[index++] = binding;
             }
             KeyBinding.keybindArray = filtered;
+            KeyBinding.resetKeyBindingArrayAndHash();
             toggleBhopKey = null;
         }
     }
