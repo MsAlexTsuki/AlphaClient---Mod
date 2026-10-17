@@ -130,6 +130,11 @@ public class HudPositionConfig {
      * =========================
      */
 
+    public static void reload() {
+        loaded = false;
+        load();
+    }
+
     public static void load() {
 
         if (loaded) {
