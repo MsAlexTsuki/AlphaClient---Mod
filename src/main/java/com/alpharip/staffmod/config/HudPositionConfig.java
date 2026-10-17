@@ -32,6 +32,7 @@ public class HudPositionConfig {
     private static final int DEFAULT_FPS_X = 6;
     private static final int DEFAULT_FPS_Y = 6;
     private static final int DEFAULT_FPS_COLOR_INDEX = 0;
+    private static final boolean DEFAULT_FPS_SHOW_BACKGROUND = true;
     private static final int DEFAULT_CPS_COLOR_INDEX = 0;
     private static final int DEFAULT_CPS_DISPLAY_MODE = 0;
     private static final boolean DEFAULT_CPS_SHOW_BACKGROUND = true;
@@ -73,6 +74,7 @@ public class HudPositionConfig {
     private static int fpsX = DEFAULT_FPS_X;
     private static int fpsY = DEFAULT_FPS_Y;
     private static int fpsColorIndex = DEFAULT_FPS_COLOR_INDEX;
+    private static boolean fpsShowBackground = DEFAULT_FPS_SHOW_BACKGROUND;
     private static int cpsColorIndex = DEFAULT_CPS_COLOR_INDEX;
     private static int cpsDisplayMode = DEFAULT_CPS_DISPLAY_MODE;
     private static boolean cpsShowBackground = DEFAULT_CPS_SHOW_BACKGROUND;
@@ -255,6 +257,7 @@ public class HudPositionConfig {
             fpsY = getInt(properties, "fpsY", DEFAULT_FPS_Y);
             fpsColorIndex = getInt(properties, "fpsColorIndex", DEFAULT_FPS_COLOR_INDEX);
             if (fpsColorIndex < 0 || fpsColorIndex > 9) fpsColorIndex = DEFAULT_FPS_COLOR_INDEX;
+            fpsShowBackground = Boolean.parseBoolean(properties.getProperty("fpsShowBackground", String.valueOf(DEFAULT_FPS_SHOW_BACKGROUND)));
 
         } catch (Exception e) {
 
@@ -362,6 +365,7 @@ public class HudPositionConfig {
         properties.setProperty("fpsX", String.valueOf(fpsX));
         properties.setProperty("fpsY", String.valueOf(fpsY));
         properties.setProperty("fpsColorIndex", String.valueOf(fpsColorIndex));
+        properties.setProperty("fpsShowBackground", String.valueOf(fpsShowBackground));
 
 
         FileOutputStream output =
@@ -699,6 +703,10 @@ public class HudPositionConfig {
 
     public static void setCpsShowBackground(boolean value) { load(); cpsShowBackground = value; save(); }
 
+    public static boolean isFpsShowBackground() { load(); return fpsShowBackground; }
+
+    public static void setFpsShowBackground(boolean value) { load(); fpsShowBackground = value; save(); }
+
     public static int getFpsX() {
         load();
         return fpsX;
@@ -773,6 +781,7 @@ public class HudPositionConfig {
 
         fpsX = DEFAULT_FPS_X;
         fpsY = DEFAULT_FPS_Y;
+        fpsShowBackground = DEFAULT_FPS_SHOW_BACKGROUND;
         cpsColorIndex = DEFAULT_CPS_COLOR_INDEX;
         cpsDisplayMode = DEFAULT_CPS_DISPLAY_MODE;
         cpsShowBackground = DEFAULT_CPS_SHOW_BACKGROUND;
