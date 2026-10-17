@@ -105,7 +105,7 @@ public final class LegacyPvpRenderHooks {
         }
         GlStateManager.translate(0.0F, 0.0F, pullProgress * 0.1F);
 
-        if (LegacyPvpSettings.isLegacyBowAnimationEnabled()) {
+        if (isLegacyBowAnimationActive()) {
             // 1.7.10: apply the draw stretch around the bow model's midpoint.
             GlStateManager.rotate(-335.0F, 0.0F, 0.0F, 1.0F);
             GlStateManager.rotate(-50.0F, 0.0F, 1.0F, 0.0F);
@@ -125,7 +125,16 @@ public final class LegacyPvpRenderHooks {
      * bow option is enabled. Vanilla 1.8.9 passes zero for active item use.
      */
     public static float getLegacyBowSwingProgress(float swingProgress) {
-        return LegacyPvpSettings.isLegacyBowAnimationEnabled() ? swingProgress : 0.0F;
+        return isLegacyBowAnimationActive() ? swingProgress : 0.0F;
+    }
+
+    private static boolean isLegacyBowAnimationActive() {
+        if (!LegacyPvpSettings.isLegacyBowAnimationEnabled()) {
+            return false;
+        }
+
+        AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
+        return module != null && module.isImplemented() && module.isUnlocked() && module.isEnabled();
     }
 
     /**
