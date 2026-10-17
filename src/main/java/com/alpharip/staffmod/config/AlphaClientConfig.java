@@ -7,11 +7,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.client.FMLClientHandler;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.Map;
 
 /** Persists module enable states to config/alphaclient.json. */
 public final class AlphaClientConfig {
@@ -88,7 +88,7 @@ public final class AlphaClientConfig {
     }
 
     private static File getConfigFile() {
-        Minecraft mc = Minecraft.getMinecraft();
+        Minecraft mc = FMLClientHandler.instance().getClient();
         File base = mc == null ? new File(".") : mc.mcDataDir;
         return new File(new File(base, "config"), "alphaclient.json");
     }
