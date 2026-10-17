@@ -69,8 +69,6 @@ public final class AfkTimerHud {
         if (mc == null || mc.thePlayer == null || mc.gameSettings == null
                 || mc.gameSettings.showDebugInfo || mc.gameSettings.hideGUI) return;
         if (!isEnabled() || !positionInitialized || lastMovementTime == 0L) return;
-
-        if (!positionInitialized || lastMovementTime == 0L) return;
         long currentTime = System.currentTimeMillis();
         boolean afk = currentTime - lastMovementTime >= AFK_DELAY_MS;
         if (getDisplayMode() == MODE_ONLY_WHILE_AFK && !afk) return;
