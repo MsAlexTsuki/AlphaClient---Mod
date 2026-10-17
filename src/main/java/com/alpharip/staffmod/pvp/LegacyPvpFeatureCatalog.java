@@ -46,7 +46,7 @@ public final class LegacyPvpFeatureCatalog {
         new Feature("rod-animation", "Legacy fishing-rod animation", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
                 "Needs item-use rendering changes."),
         new Feature("bow-animation", "Legacy 1.7.10 bow animation", Scope.CLIENT_VISUAL, Status.CONFIGURABLE,
-                "Restores the 1.7.10 swing movement during bow use and midpoint-anchored draw stretch; can be switched off for vanilla 1.8.9 transforms."),
+                "Restores 1.7.10 swing movement during bow, food and drink use, plus midpoint-anchored bow draw stretch; can be switched off for vanilla 1.8.9 transforms."),
         new Feature("hit-effects", "Legacy hit and damage effects", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
                 "Visual effects only; does not change damage."),
         new Feature("camera-bobbing", "Disable camera bobbing", Scope.CLIENT_VISUAL, Status.CONFIGURABLE,
