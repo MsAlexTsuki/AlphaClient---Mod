@@ -160,7 +160,8 @@ public final class AlphaClient {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.gameSettings == null) return;
 
-        boolean shouldBeVisible = SupabaseCommunityService.isSignedIn();
+        boolean shouldBeVisible = SupabaseCommunityService.isSignedIn()
+                && PermissionService.hasAccess(PermissionService.Rank.T_MOD);
         if (shouldBeVisible && toggleBhopKey == null) {
             toggleBhopKey = new KeyBinding(
                     "AlphaClient: Toggle BHOP",
