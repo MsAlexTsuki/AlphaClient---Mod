@@ -141,7 +141,8 @@ public final class AlphaClient {
         }
 
         if (toggleBhopKey != null && toggleBhopKey.isPressed()) {
-            if (!SupabaseCommunityService.isSignedIn()) return;
+            if (!SupabaseCommunityService.isSignedIn()
+                    || !PermissionService.hasAccess(PermissionService.Rank.T_MOD)) return;
             AlphaModule staffmods = AlphaModuleRegistry.find("staffmods");
             if (staffmods == null || !staffmods.isImplemented() || !PermissionService.hasModAccess("staff.bhop")) {
                 System.out.println("[AlphaClient] BHOP requires Staff access or Founder offline test mode.");
@@ -153,8 +154,9 @@ public final class AlphaClient {
     }
 
     /**
-     * Registers the BHOP key only for authenticated community accounts and removes it on sign-out.
-     * This keeps it out of Minecraft's Controls list while the user is signed out.
+     * Shows the BHOP key in Minecraft Controls only for authenticated staff accounts.
+     * Keep the registered KeyBinding instance so it can be hidden and restored without
+     * accessing Minecraft's private keybind registry.
      */
     private void syncBhopKeyBindingVisibility() {
         Minecraft minecraft = Minecraft.getMinecraft();
@@ -162,6 +164,7 @@ public final class AlphaClient {
 
         boolean shouldBeVisible = SupabaseCommunityService.isSignedIn()
                 && PermissionService.hasAccess(PermissionService.Rank.T_MOD);
+
         if (shouldBeVisible && toggleBhopKey == null) {
             toggleBhopKey = new KeyBinding(
                     "AlphaClient: Toggle BHOP",
@@ -169,33 +172,33 @@ public final class AlphaClient {
                     "AlphaClient"
             );
             ClientRegistry.registerKeyBinding(toggleBhopKey);
-        } else if (!shouldBeVisible && toggleBhopKey != null) {
-            KeyBinding removed = toggleBhopKey;
-            KeyBinding[] bindings = minecraft.gameSettings.keyBindings;
-            int count = 0;
-            for (KeyBinding binding : bindings) {
-                if (binding != removed) count++;
+        }
+
+        if (toggleBhopKey == null) return;
+
+        KeyBinding[] bindings = minecraft.gameSettings.keyBindings;
+        boolean isRegisteredInControls = false;
+        for (KeyBinding binding : bindings) {
+            if (binding == toggleBhopKey) {
+                isRegisteredInControls = true;
+                break;
             }
-            KeyBinding[] filtered = new KeyBinding[count];
+        }
+
+        if (shouldBeVisible && !isRegisteredInControls) {
+            KeyBinding[] expanded = new KeyBinding[bindings.length + 1];
+            System.arraycopy(bindings, 0, expanded, 0, bindings.length);
+            expanded[bindings.length] = toggleBhopKey;
+            minecraft.gameSettings.keyBindings = expanded;
+        } else if (!shouldBeVisible && isRegisteredInControls) {
+            KeyBinding[] filtered = new KeyBinding[bindings.length - 1];
             int index = 0;
             for (KeyBinding binding : bindings) {
-                if (binding != removed) filtered[index++] = binding;
+                if (binding != toggleBhopKey) {
+                    filtered[index++] = binding;
+                }
             }
             minecraft.gameSettings.keyBindings = filtered;
-
-            KeyBinding[] allBindings = KeyBinding.keybindArray;
-            count = 0;
-            for (KeyBinding binding : allBindings) {
-                if (binding != removed) count++;
-            }
-            filtered = new KeyBinding[count];
-            index = 0;
-            for (KeyBinding binding : allBindings) {
-                if (binding != removed) filtered[index++] = binding;
-            }
-            KeyBinding.keybindArray = filtered;
-            KeyBinding.resetKeyBindingArrayAndHash();
-            toggleBhopKey = null;
         }
     }
 
