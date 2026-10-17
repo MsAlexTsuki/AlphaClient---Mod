@@ -120,6 +120,14 @@ public final class LegacyPvpRenderHooks {
     }
 
     /**
+     * Keeps the old 1.7.10 swing movement during bow use only while the legacy
+     * bow option is enabled. Vanilla 1.8.9 passes zero for active item use.
+     */
+    public static float getLegacyBowSwingProgress(float swingProgress) {
+        return LegacyPvpSettings.isLegacyBowAnimationEnabled() ? swingProgress : 0.0F;
+    }
+
+    /**
      * Supplies swing progress only for an actual sword blockhit:
      * the module is enabled, right-click is held, the player is using a sword,
      * a block is targeted, and an attack swing is already in progress.
