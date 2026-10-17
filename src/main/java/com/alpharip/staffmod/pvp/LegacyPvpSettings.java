@@ -1,0 +1,80 @@
+package com.alpharip.staffmod.pvp;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.client.FMLClientHandler;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+
+/** Persisted user-configurable options for Legacy PvP. */
+public final class LegacyPvpSettings {
+    private static final String KEY_DISABLE_VIEW_BOBBING = "disableViewBobbing";
+    private static boolean loaded;
+    private static boolean disableViewBobbing = true;
+
+    private LegacyPvpSettings() { }
+
+    public static synchronized void load() {
+        if (loaded) return;
+        loaded = true;
+        FileReader reader = null;
+        try {
+            File file = getFile();
+            if (!file.isFile()) {
+                save();
+                return;
+            }
+            reader = new FileReader(file);
+            JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
+            if (root.has(KEY_DISABLE_VIEW_BOBBING)) {
+                disableViewBobbing = root.get(KEY_DISABLE_VIEW_BOBBING).getAsBoolean();
+            }
+        } catch (Exception e) {
+            System.out.println("[AlphaClient] Could not load Legacy PvP settings: " + e.getMessage());
+        } finally {
+            if (reader != null) {
+                try { reader.close(); } catch (Exception ignored) { }
+            }
+        }
+    }
+
+    public static synchronized boolean isDisableViewBobbing() {
+        load();
+        return disableViewBobbing;
+    }
+
+    public static synchronized void setDisableViewBobbing(boolean value) {
+        load();
+        disableViewBobbing = value;
+        save();
+    }
+
+    public static synchronized void save() {
+        FileWriter writer = null;
+        try {
+            File file = getFile();
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists() && !parent.mkdirs()) return;
+            JsonObject root = new JsonObject();
+            root.addProperty(KEY_DISABLE_VIEW_BOBBING, disableViewBobbing);
+            writer = new FileWriter(file);
+            writer.write(root.toString());
+            writer.flush();
+        } catch (Exception e) {
+            System.out.println("[AlphaClient] Could not save Legacy PvP settings: " + e.getMessage());
+        } finally {
+            if (writer != null) {
+                try { writer.close(); } catch (Exception ignored) { }
+            }
+        }
+    }
+
+    private static File getFile() {
+        Minecraft mc = FMLClientHandler.instance().getClient();
+        File base = mc == null ? new File(".") : mc.mcDataDir;
+        return new File(new File(new File(base, "config"), "alphaclient"), "legacy-pvp.json");
+    }
+}
