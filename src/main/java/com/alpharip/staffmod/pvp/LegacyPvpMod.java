@@ -3,6 +3,7 @@ package com.alpharip.staffmod.pvp;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.MouseEvent;
 import org.lwjgl.input.Mouse;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -19,9 +20,10 @@ public final class LegacyPvpMod {
 
     /**
      * Legacy use-and-swing input: while right mouse is held and Minecraft is
-     * actively using an item, preserve the left-click hand swing. This covers
-     * swords, food, bows, drinkable potions and other active-use items. It only
-     * adds the local swing animation; it does not cancel item use or guarantee
+     * actively using an item, preserve the left-click hand swing only when the
+     * crosshair is targeting a block. This covers swords, food, bows, drinkable
+     * potions and other active-use items. It does not trigger when clicking air.
+     * This adds a local swing animation; it does not cancel item use or guarantee
      * a server-side attack while the item is being consumed/drawn.
      */
     @SubscribeEvent
@@ -31,6 +33,8 @@ public final class LegacyPvpMod {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.currentScreen != null || mc.thePlayer == null || mc.theWorld == null) return;
         if (!mc.thePlayer.isUsingItem()) return;
+        if (mc.objectMouseOver == null
+                || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
 
         AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
         if (module == null || !module.isImplemented() || !module.isUnlocked()
