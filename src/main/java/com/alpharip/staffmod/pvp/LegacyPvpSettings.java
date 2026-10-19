@@ -16,12 +16,14 @@ public final class LegacyPvpSettings {
     private static final String KEY_REMOVE_MISSED_SWING_DELAY = "removeMissedSwingDelay";
     private static final String KEY_LEGACY_BOW_ANIMATION = "legacyBowAnimation";
     private static final String KEY_POTION_PUNCH_ANIMATION = "potionPunchAnimation";
+    private static final String KEY_FOOD_DRINK_ANIMATION = "foodDrinkAnimation";
     private static boolean loaded;
     private static boolean disableViewBobbing = true;
     private static boolean enableBlockhit = true;
     private static boolean removeMissedSwingDelay = true;
     private static boolean legacyBowAnimation = true;
     private static boolean potionPunchAnimation = true;
+    private static boolean foodDrinkAnimation = true;
 
     private LegacyPvpSettings() { }
 
@@ -51,6 +53,9 @@ public final class LegacyPvpSettings {
             }
             if (root.has(KEY_POTION_PUNCH_ANIMATION)) {
                 potionPunchAnimation = root.get(KEY_POTION_PUNCH_ANIMATION).getAsBoolean();
+            }
+            if (root.has(KEY_FOOD_DRINK_ANIMATION)) {
+                foodDrinkAnimation = root.get(KEY_FOOD_DRINK_ANIMATION).getAsBoolean();
             }
         } catch (Exception e) {
             System.out.println("[AlphaClient] Could not load Legacy PvP settings: " + e.getMessage());
@@ -116,6 +121,17 @@ public final class LegacyPvpSettings {
         save();
     }
 
+    public static synchronized boolean isFoodDrinkAnimationEnabled() {
+        load();
+        return foodDrinkAnimation;
+    }
+
+    public static synchronized void setFoodDrinkAnimationEnabled(boolean value) {
+        load();
+        foodDrinkAnimation = value;
+        save();
+    }
+
     public static synchronized void save() {
         FileWriter writer = null;
         try {
@@ -128,6 +144,7 @@ public final class LegacyPvpSettings {
             root.addProperty(KEY_REMOVE_MISSED_SWING_DELAY, removeMissedSwingDelay);
             root.addProperty(KEY_LEGACY_BOW_ANIMATION, legacyBowAnimation);
             root.addProperty(KEY_POTION_PUNCH_ANIMATION, potionPunchAnimation);
+            root.addProperty(KEY_FOOD_DRINK_ANIMATION, foodDrinkAnimation);
             writer = new FileWriter(file);
             writer.write(root.toString());
             writer.flush();
