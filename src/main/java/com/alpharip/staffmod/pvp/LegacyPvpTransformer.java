@@ -25,6 +25,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
     private static volatile boolean installed;
     private static volatile boolean missedSwingDelayInstalled;
     private static volatile boolean bowAnimationInstalled;
+    private static volatile boolean swordSwingInstalled;
 
     public static boolean isInstalled() {
         return installed;
@@ -36,6 +37,10 @@ public final class LegacyPvpTransformer implements IClassTransformer {
 
     public static boolean isBowAnimationInstalled() {
         return bowAnimationInstalled;
+    }
+
+    public static boolean isSwordSwingInstalled() {
+        return swordSwingInstalled;
     }
 
     @Override
