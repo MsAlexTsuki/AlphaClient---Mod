@@ -40,7 +40,7 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
     private boolean isConfigurable(String id) {
         return "blockhit".equals(id) || "camera-bobbing".equals(id)
                 || "missed-swing-delay".equals(id) || "bow-animation".equals(id)
-                || "potion-punch".equals(id);
+                || "potion-punch".equals(id) || "food-drink-animation".equals(id);
     }
 
     private boolean isToggleAvailable(String id) {
@@ -63,6 +63,9 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
         }
         if ("potion-punch".equals(id)) {
             return LegacyPvpSettings.isPotionPunchAnimationEnabled() ? "POTION PUNCH: ON" : "POTION PUNCH: OFF";
+        }
+        if ("food-drink-animation".equals(id)) {
+            return LegacyPvpSettings.isFoodDrinkAnimationEnabled() ? "FOOD/DRINK ANIMATION: ON" : "FOOD/DRINK ANIMATION: OFF";
         }
         return LegacyPvpSettings.isRemoveMissedSwingDelayEnabled() ? "MISS DELAY: OFF" : "MISS DELAY: ON";
     }
@@ -92,6 +95,9 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
             } else if ("potion-punch".equals(featureId)) {
                 LegacyPvpSettings.setPotionPunchAnimationEnabled(
                         !LegacyPvpSettings.isPotionPunchAnimationEnabled());
+            } else if ("food-drink-animation".equals(featureId)) {
+                LegacyPvpSettings.setFoodDrinkAnimationEnabled(
+                        !LegacyPvpSettings.isFoodDrinkAnimationEnabled());
             }
             initGui();
         }
@@ -150,6 +156,9 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
                     drawCenteredString(fontRendererObj, "The bow render hook is not loaded; vanilla bow rendering is unchanged.",
                             width / 2, bottom - 88, 0xFFFFD866);
                 }
+            } else if ("food-drink-animation".equals(feature.id)) {
+                drawWrapped("This toggle controls the legacy first-person swing while eating food or drinking a potion. It is independent of the bow animation setting.",
+                        left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
             } else if ("potion-punch".equals(feature.id)) {
                 drawWrapped("When enabled, left-clicking while holding a splash potion and keeping right-click held queues a local arm swing. The normal Minecraft mouse events are left untouched; the server still decides whether an attack succeeds.",
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
