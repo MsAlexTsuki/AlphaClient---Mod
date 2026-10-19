@@ -42,7 +42,7 @@ public final class WTapAssistance {
     @SubscribeEvent
     public void onAttackEntity(AttackEntityEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (!enabled || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer) return;
+        if (!enabled || mode == 3 || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer) return;
         if (!PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) return;
         Entity victim = event.target;
         if (!(victim instanceof EntityLivingBase)) return;
@@ -62,7 +62,7 @@ public final class WTapAssistance {
             return;
         }
         if (!enabled || !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                || mc.currentScreen != null) {
+                || mc.currentScreen != null || mode == 3) {
             restoreForwardKey(mc);
             pendingDelay = -1;
             releaseTicks = 0;
