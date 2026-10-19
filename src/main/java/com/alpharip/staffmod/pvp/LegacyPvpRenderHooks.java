@@ -215,7 +215,7 @@ public final class LegacyPvpRenderHooks {
             float swing = MathHelper.sqrt_float(swingProgress);
             float sinSwing = MathHelper.sin(swing * (float) Math.PI);
             float sinRoot = MathHelper.sin(swing * (float) Math.PI);
-            GlStateManager.translate(-0.005F * sinRoot, 0.025F * sinSwing, 0.0F);
+            GlStateManager.translate(0.08F * sinRoot, 0.025F * sinSwing, 0.0F);
             GlStateManager.rotate(8.0F * sinRoot, 0.0F, 1.0F, 0.0F);
             GlStateManager.rotate(-5.0F * sinSwing, 0.0F, 0.0F, 1.0F);
             GlStateManager.rotate(-2.0F * sinRoot, 1.0F, 0.0F, 0.0F);
