@@ -187,36 +187,59 @@ public final class LegacyPvpRenderHooks {
         return module != null && module.isImplemented() && module.isUnlocked() && module.isEnabled();
     }
 
+    private static boolean rodUseButtonWasDown;
+    private static long rodUseAnimationStart;
+
     /**
-     * Applies a restrained legacy first-person fishing-rod swing transform.
-     * Only the held fishing rod is affected; other items keep vanilla rendering.
+     * Animates the first-person fishing rod when right-click starts a cast or reel.
+     * This is a client-side render transform only; vanilla fishing logic is untouched.
      */
     public static void applyLegacyFishingRodAnimation(Object renderer, float equipProgress, float swingProgress) {
         try {
             Minecraft mc = Minecraft.getMinecraft();
-            if (mc == null || mc.thePlayer == null || mc.theWorld == null
-                    || mc.currentScreen != null || swingProgress <= 0.0F
-                    || !LegacyPvpSettings.isLegacyRodAnimationEnabled()) {
+            if (mc == null || mc.thePlayer == null || mc.theWorld == null || mc.currentScreen != null) {
+                rodUseButtonWasDown = false;
                 return;
             }
 
             AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
-            if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()) {
+            if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()
+                    || !LegacyPvpSettings.isLegacyRodAnimationEnabled()) {
+                rodUseButtonWasDown = false;
                 return;
             }
 
             ItemStack held = mc.thePlayer.getHeldItem();
             if (held == null || !(held.getItem() instanceof ItemFishingRod)) {
+                rodUseButtonWasDown = false;
                 return;
             }
 
-            float swing = MathHelper.sqrt_float(swingProgress);
-            float sin = MathHelper.sin(swing * (float) Math.PI);
-            float sinRoot = MathHelper.sin(swing * (float) Math.PI);
-            GlStateManager.translate(0.10F * sinRoot, 0.015F * sin, 0.0F);
-            GlStateManager.rotate(5.0F * sinRoot, 0.0F, 1.0F, 0.0F);
-            GlStateManager.rotate(-3.0F * sin, 0.0F, 0.0F, 1.0F);
-            GlStateManager.rotate(-1.5F * sinRoot, 1.0F, 0.0F, 0.0F);
+            boolean useButtonDown = Mouse.isButtonDown(1) || mc.gameSettings.keyBindUseItem.isKeyDown();
+            long now = System.currentTimeMillis();
+            if (useButtonDown && !rodUseButtonWasDown) {
+                rodUseAnimationStart = now;
+            }
+            rodUseButtonWasDown = useButtonDown;
+
+            if (rodUseAnimationStart == 0L) {
+                return;
+            }
+            float progress = (now - rodUseAnimationStart) / 240.0F;
+            if (progress < 0.0F || progress >= 1.0F) {
+                if (progress >= 1.0F) rodUseAnimationStart = 0L;
+                return;
+            }
+
+            // Smooth, short pull-and-release motion on each right-click edge.
+            float eased = progress < 0.5F
+                    ? 2.0F * progress * progress
+                    : 1.0F - (float) Math.pow(-2.0F * progress + 2.0F, 2.0D) / 2.0F;
+            float motion = MathHelper.sin(eased * (float) Math.PI);
+            GlStateManager.translate(-0.035F * motion, -0.025F * motion, 0.045F * motion);
+            GlStateManager.rotate(-9.0F * motion, 1.0F, 0.0F, 0.0F);
+            GlStateManager.rotate(4.0F * motion, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(-3.0F * motion, 0.0F, 0.0F, 1.0F);
         } catch (RuntimeException error) {
             System.err.println("[AlphaClient] Could not apply Legacy Fishing Rod Animation: " + error.getMessage());
         }
