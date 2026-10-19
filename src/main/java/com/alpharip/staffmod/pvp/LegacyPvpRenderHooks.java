@@ -41,8 +41,19 @@ public final class LegacyPvpRenderHooks {
                 return;
             }
 
+            // During sword blockhit, vanilla can leave the local click counter
+            // active after a previous click. That makes a fresh left-click appear
+            // to do nothing while right-click is held. Clear that client-side gate
+            // for the explicit left+right mouse combination, regardless of whether
+            // the crosshair currently points at air, a block, or an entity.
+            boolean blockhitCombo = Mouse.isButtonDown(0)
+                    && Mouse.isButtonDown(1)
+                    && LegacyPvpSettings.isBlockhitEnabled()
+                    && mc.thePlayer.getHeldItem() != null
+                    && mc.thePlayer.getHeldItem().getItem() instanceof ItemSword;
             MovingObjectPosition target = mc.objectMouseOver;
-            if (target != null && target.typeOfHit != MovingObjectPosition.MovingObjectType.MISS) {
+            if (!blockhitCombo && target != null
+                    && target.typeOfHit != MovingObjectPosition.MovingObjectType.MISS) {
                 return;
             }
 
