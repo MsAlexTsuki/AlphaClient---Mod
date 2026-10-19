@@ -176,16 +176,18 @@ public final class StaffModsMenuGui extends GuiScreen {
             int index = button.id - MODULE_BASE;
             if (index < 0 || index >= visibleModules.size()) return;
             AlphaModule module = visibleModules.get(index);
+            if ("w-tap-assistance".equals(module.getId())) {
+                if (selectedRank == PermissionService.Rank.FOUNDER
+                        && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
+                    mc.displayGuiScreen(new WTapSettingsGui(this));
+                }
+                return;
+            }
             if (selectedRank != PermissionService.Rank.PUBLIC
                     && !PermissionService.hasAccess(module.getCategory().getRequiredRank())) return;
             if ("staffmods".equals(module.getId())) {
                 mc.displayGuiScreen(new BhopSettingsGui(this));
                 return;
-            }
-            if ("w-tap-assistance".equals(module.getId())
-                    && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                    && module.isImplemented() && module.isUnlocked()) {
-                mc.displayGuiScreen(new WTapSettingsGui(this));
             }
         }
     }
