@@ -45,6 +45,8 @@ public final class LegacyPvpFeatureCatalog {
                 "Adds a 1.7.10-style first-person sword swing transform; independently configurable from blockhit."),
         new Feature("bow-animation", "Legacy 1.7.10 bow animation", Scope.CLIENT_VISUAL, Status.CONFIGURABLE,
                 "Restores the 1.7.10 bow swing and midpoint-anchored draw stretch; can be switched off for vanilla 1.8.9 bow transforms."),
+        new Feature("rod-animation", "Legacy Fishing Rod Animation", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
+                "The first-person fishing rod render hook needs to be implemented before this animation can be enabled."),
         new Feature("food-drink-animation", "Legacy food and potion-drinking swing", Scope.CLIENT_VISUAL, Status.CONFIGURABLE,
                 "Independently restores the legacy first-person swing while eating food or drinking a potion."),
         new Feature("hit-effects", "Legacy hit and damage effects", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
