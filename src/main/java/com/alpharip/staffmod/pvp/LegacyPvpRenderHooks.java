@@ -187,6 +187,41 @@ public final class LegacyPvpRenderHooks {
     }
 
     /**
+     * Adds the classic 1.7.10-style first-person sword swing offsets before
+     * vanilla's 1.8.9 item transform. The setting is independent of blockhit.
+     */
+    public static void applyLegacySwordSwing(Object renderer, float equipProgress, float swingProgress) {
+        try {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc == null || mc.thePlayer == null || mc.theWorld == null
+                    || mc.currentScreen != null || swingProgress <= 0.0F
+                    || !LegacyPvpSettings.isLegacySwordSwingEnabled()) {
+                return;
+            }
+
+            AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
+            if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()) {
+                return;
+            }
+
+            ItemStack held = mc.thePlayer.getHeldItem();
+            if (held == null || !(held.getItem() instanceof ItemSword)) {
+                return;
+            }
+
+            float swing = MathHelper.sqrt_float(swingProgress);
+            float sinSwing = MathHelper.sin(swing * (float) Math.PI);
+            float sinRoot = MathHelper.sin(swing * (float) Math.PI);
+            GlStateManager.translate(-0.32F * sinRoot, 0.18F * sinSwing, 0.0F);
+            GlStateManager.rotate(35.0F * sinRoot, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(-18.0F * sinSwing, 0.0F, 0.0F, 1.0F);
+            GlStateManager.rotate(-8.0F * sinRoot, 1.0F, 0.0F, 0.0F);
+        } catch (RuntimeException error) {
+            System.err.println("[AlphaClient] Could not apply Legacy Sword Swing: " + error.getMessage());
+        }
+    }
+
+    /**
      * Supplies swing progress only for an actual sword blockhit:
      * the module is enabled, right-click is held, the player is using a sword,
      * and an attack swing is already in progress. Do not require a block target:
