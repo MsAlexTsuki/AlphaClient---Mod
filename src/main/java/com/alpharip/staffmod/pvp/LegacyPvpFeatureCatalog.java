@@ -43,8 +43,6 @@ public final class LegacyPvpFeatureCatalog {
                 "Optionally clears the local miss-in-air click delay while targeting air; block and entity timing are preserved."),
         new Feature("sword-swing", "Legacy sword swing", Scope.CLIENT_VISUAL, Status.CONFIGURABLE,
                 "Adds a 1.7.10-style first-person sword swing transform; independently configurable from blockhit."),
-        new Feature("item-transform", "Legacy first-person item position / rotation", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
-                "Must preserve bow, food, drink and map rendering."),
         new Feature("rod-animation", "Legacy fishing-rod animation", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
                 "Needs item-use rendering changes."),
         new Feature("bow-animation", "Legacy 1.7.10 bow animation", Scope.CLIENT_VISUAL, Status.CONFIGURABLE,
