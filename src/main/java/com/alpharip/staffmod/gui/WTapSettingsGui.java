@@ -18,7 +18,7 @@ public final class WTapSettingsGui extends GuiScreen {
     private static final int COOLDOWN = 15;
     private static final int REQUIRE_W = 16;
 
-    private static final String[] MODES = {"LEGIT", "STANDARD", "AGGRESSIVE", "MANUAL"};
+    private static final String[] MODES = {"LEGIT", "STANDARD", "AGGRESSIVE", "MANUAL", "CUSTOM"};
     private static final String[] TRIGGERS = {"ON HIT", "ON ATTACK"};
     private static final String[] TARGETS = {"PLAYERS", "ALL LIVING ENTITIES"};
 
