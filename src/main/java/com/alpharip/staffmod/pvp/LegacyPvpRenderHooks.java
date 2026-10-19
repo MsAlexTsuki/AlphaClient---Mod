@@ -209,13 +209,16 @@ public final class LegacyPvpRenderHooks {
                 return;
             }
 
+            // Keep the legacy motion subtle: this hook runs before Minecraft's
+            // vanilla first-person transform, so large offsets are amplified by
+            // the remaining transform sequence and can push the sword off-screen.
             float swing = MathHelper.sqrt_float(swingProgress);
             float sinSwing = MathHelper.sin(swing * (float) Math.PI);
             float sinRoot = MathHelper.sin(swing * (float) Math.PI);
-            GlStateManager.translate(-0.32F * sinRoot, 0.18F * sinSwing, 0.0F);
-            GlStateManager.rotate(35.0F * sinRoot, 0.0F, 1.0F, 0.0F);
-            GlStateManager.rotate(-18.0F * sinSwing, 0.0F, 0.0F, 1.0F);
-            GlStateManager.rotate(-8.0F * sinRoot, 1.0F, 0.0F, 0.0F);
+            GlStateManager.translate(-0.045F * sinRoot, 0.025F * sinSwing, 0.0F);
+            GlStateManager.rotate(8.0F * sinRoot, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(-5.0F * sinSwing, 0.0F, 0.0F, 1.0F);
+            GlStateManager.rotate(-2.0F * sinRoot, 1.0F, 0.0F, 0.0F);
         } catch (RuntimeException error) {
             System.err.println("[AlphaClient] Could not apply Legacy Sword Swing: " + error.getMessage());
         }
