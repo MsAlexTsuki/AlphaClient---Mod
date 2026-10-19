@@ -18,6 +18,7 @@ public final class LegacyPvpSettings {
     private static final String KEY_POTION_PUNCH_ANIMATION = "potionPunchAnimation";
     private static final String KEY_FOOD_DRINK_ANIMATION = "foodDrinkAnimation";
     private static final String KEY_LEGACY_SWORD_SWING = "legacySwordSwing";
+    private static final String KEY_LEGACY_ROD_ANIMATION = "legacyRodAnimation";
     private static boolean loaded;
     private static boolean disableViewBobbing = true;
     private static boolean enableBlockhit = true;
@@ -26,6 +27,7 @@ public final class LegacyPvpSettings {
     private static boolean potionPunchAnimation = true;
     private static boolean foodDrinkAnimation = true;
     private static boolean legacySwordSwing = true;
+    private static boolean legacyRodAnimation = true;
 
     private LegacyPvpSettings() { }
 
@@ -61,6 +63,9 @@ public final class LegacyPvpSettings {
             }
             if (root.has(KEY_LEGACY_SWORD_SWING)) {
                 legacySwordSwing = root.get(KEY_LEGACY_SWORD_SWING).getAsBoolean();
+            }
+            if (root.has(KEY_LEGACY_ROD_ANIMATION)) {
+                legacyRodAnimation = root.get(KEY_LEGACY_ROD_ANIMATION).getAsBoolean();
             }
         } catch (Exception e) {
             System.out.println("[AlphaClient] Could not load Legacy PvP settings: " + e.getMessage());
@@ -148,6 +153,17 @@ public final class LegacyPvpSettings {
         save();
     }
 
+    public static synchronized boolean isLegacyRodAnimationEnabled() {
+        load();
+        return legacyRodAnimation;
+    }
+
+    public static synchronized void setLegacyRodAnimationEnabled(boolean value) {
+        load();
+        legacyRodAnimation = value;
+        save();
+    }
+
     public static synchronized void save() {
         FileWriter writer = null;
         try {
@@ -162,6 +178,7 @@ public final class LegacyPvpSettings {
             root.addProperty(KEY_POTION_PUNCH_ANIMATION, potionPunchAnimation);
             root.addProperty(KEY_FOOD_DRINK_ANIMATION, foodDrinkAnimation);
             root.addProperty(KEY_LEGACY_SWORD_SWING, legacySwordSwing);
+            root.addProperty(KEY_LEGACY_ROD_ANIMATION, legacyRodAnimation);
             writer = new FileWriter(file);
             writer.write(root.toString());
             writer.flush();
