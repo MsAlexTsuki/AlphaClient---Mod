@@ -7,6 +7,7 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
+import net.minecraft.item.ItemFishingRod;
 import net.minecraft.item.EnumAction;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
@@ -184,6 +185,41 @@ public final class LegacyPvpRenderHooks {
 
         AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
         return module != null && module.isImplemented() && module.isUnlocked() && module.isEnabled();
+    }
+
+    /**
+     * Applies a restrained legacy first-person fishing-rod swing transform.
+     * Only the held fishing rod is affected; other items keep vanilla rendering.
+     */
+    public static void applyLegacyFishingRodAnimation(Object renderer, float equipProgress, float swingProgress) {
+        try {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc == null || mc.thePlayer == null || mc.theWorld == null
+                    || mc.currentScreen != null || swingProgress <= 0.0F
+                    || !LegacyPvpSettings.isLegacyRodAnimationEnabled()) {
+                return;
+            }
+
+            AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
+            if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()) {
+                return;
+            }
+
+            ItemStack held = mc.thePlayer.getHeldItem();
+            if (held == null || !(held.getItem() instanceof ItemFishingRod)) {
+                return;
+            }
+
+            float swing = MathHelper.sqrt_float(swingProgress);
+            float sin = MathHelper.sin(swing * (float) Math.PI);
+            float sinRoot = MathHelper.sin(swing * (float) Math.PI);
+            GlStateManager.translate(0.10F * sinRoot, 0.015F * sin, 0.0F);
+            GlStateManager.rotate(5.0F * sinRoot, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(-3.0F * sin, 0.0F, 0.0F, 1.0F);
+            GlStateManager.rotate(-1.5F * sinRoot, 1.0F, 0.0F, 0.0F);
+        } catch (RuntimeException error) {
+            System.err.println("[AlphaClient] Could not apply Legacy Fishing Rod Animation: " + error.getMessage());
+        }
     }
 
     /**
