@@ -19,6 +19,7 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
     private static final int TOGGLE_BLOCKHIT = 3;
     private static final int TOGGLE_BOW_ANIMATION = 4;
     private static final int TOGGLE_POTION_PUNCH = 5;
+    private static final int TOGGLE_FOOD_DRINK = 6;
     private static final int ROW_HEIGHT = 24;
     private static final int LIST_TOP = 124;
     private static final int LIST_BOTTOM_MARGIN = 42;
@@ -58,6 +59,13 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
                 && LegacyPvpTransformer.isBowAnimationInstalled()) {
             buttonList.add(new ModernButton(TOGGLE_BOW_ANIMATION, getToggleX(), bowY + 1, 94, 20,
                     LegacyPvpSettings.isLegacyBowAnimationEnabled() ? "LEGACY BOW: ON" : "LEGACY BOW: OFF"));
+        }
+
+        int foodDrinkIndex = indexOf("food-drink-animation", features);
+        int foodDrinkY = LIST_TOP + (foodDrinkIndex - scrollOffset) * ROW_HEIGHT;
+        if (foodDrinkIndex >= scrollOffset && foodDrinkIndex < scrollOffset + visibleRows) {
+            buttonList.add(new ModernButton(TOGGLE_FOOD_DRINK, getToggleX(), foodDrinkY + 1, 94, 20,
+                    LegacyPvpSettings.isFoodDrinkAnimationEnabled() ? "FOOD/DRINK: ON" : "FOOD/DRINK: OFF"));
         }
 
         int potionPunchIndex = indexOf("potion-punch", features);
@@ -112,6 +120,9 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
         } else if (button.id == TOGGLE_POTION_PUNCH) {
             LegacyPvpSettings.setPotionPunchAnimationEnabled(!LegacyPvpSettings.isPotionPunchAnimationEnabled());
             initGui();
+        } else if (button.id == TOGGLE_FOOD_DRINK) {
+            LegacyPvpSettings.setFoodDrinkAnimationEnabled(!LegacyPvpSettings.isFoodDrinkAnimationEnabled());
+            initGui();
         } else if (button.id == CLOSE) {
             mc.displayGuiScreen(parent);
         }
@@ -131,6 +142,7 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
                     && ((index == indexOf("camera-bobbing", features))
                     || (index == indexOf("blockhit", features) && LegacyPvpTransformer.isInstalled())
                     || (index == indexOf("bow-animation", features) && LegacyPvpTransformer.isBowAnimationInstalled())
+                    || index == indexOf("food-drink-animation", features)
                     || index == indexOf("potion-punch", features));
             if (insideRow && !onToggle && index >= 0 && index < features.length) {
                 mc.displayGuiScreen(new LegacyPvpFeatureGui(this, features[index].id));
@@ -213,7 +225,7 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
                     status = "HOOK NOT LOADED";
                     statusColor = 0xFFFFD866;
                 }
-            } else if (feature.id.equals("potion-punch")) {
+            } else if (feature.id.equals("potion-punch") || feature.id.equals("food-drink-animation")) {
                 status = "CONFIGURABLE";
                 statusColor = 0xFF9CE2AC;
             }
