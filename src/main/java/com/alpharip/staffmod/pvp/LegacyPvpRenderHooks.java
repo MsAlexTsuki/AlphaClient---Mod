@@ -175,7 +175,10 @@ public final class LegacyPvpRenderHooks {
 
         EnumAction action = active.getItemUseAction();
         if (action != EnumAction.EAT && action != EnumAction.DRINK) return 0.0F;
-        return mc.thePlayer.getSwingProgress(partialTicks);
+        // Food and potion use should visually keep up with rapid clicks.
+        // Accelerate only the rendered swing progress; vanilla item-use duration
+        // and the player's actual swing state remain untouched.
+        return Math.min(1.0F, mc.thePlayer.getSwingProgress(partialTicks) * 1.75F);
     }
 
     private static boolean isLegacyBowAnimationActive() {
