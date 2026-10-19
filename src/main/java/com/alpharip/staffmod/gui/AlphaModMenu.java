@@ -364,6 +364,7 @@ public final class AlphaModMenu extends GuiScreen {
                         mc.displayGuiScreen(new CpsSettingsGui(this));
                         return;
                     }
+                    if ("w-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new WTapSettingsGui(this)); return; }
                     if ("legacy-pvp".equals(clickedModule.getId())
                             && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         mc.displayGuiScreen(new LegacyPvpSettingsGui(this));
