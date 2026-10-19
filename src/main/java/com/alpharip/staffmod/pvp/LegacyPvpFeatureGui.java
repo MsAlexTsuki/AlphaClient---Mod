@@ -41,7 +41,7 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
         return "blockhit".equals(id) || "camera-bobbing".equals(id)
                 || "missed-swing-delay".equals(id) || "bow-animation".equals(id)
                 || "potion-punch".equals(id) || "food-drink-animation".equals(id)
-                || "sword-swing".equals(id);
+                || "sword-swing".equals(id) || "rod-animation".equals(id);
     }
 
     private boolean isToggleAvailable(String id) {
@@ -49,6 +49,7 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
         if ("missed-swing-delay".equals(id)) return LegacyPvpTransformer.isMissedSwingDelayInstalled();
         if ("bow-animation".equals(id)) return LegacyPvpTransformer.isBowAnimationInstalled();
         if ("sword-swing".equals(id)) return LegacyPvpTransformer.isSwordSwingInstalled();
+        if ("rod-animation".equals(id)) return LegacyPvpTransformer.isRodAnimationInstalled();
         if ("potion-punch".equals(id)) return true;
         return "camera-bobbing".equals(id);
     }
@@ -68,6 +69,9 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
         }
         if ("sword-swing".equals(id)) {
             return LegacyPvpSettings.isLegacySwordSwingEnabled() ? "SWORD SWING: ON" : "SWORD SWING: OFF";
+        }
+        if ("rod-animation".equals(id)) {
+            return LegacyPvpSettings.isLegacyRodAnimationEnabled() ? "ROD ANIMATION: ON" : "ROD ANIMATION: OFF";
         }
         if ("food-drink-animation".equals(id)) {
             return LegacyPvpSettings.isFoodDrinkAnimationEnabled() ? "FOOD/DRINK ANIMATION: ON" : "FOOD/DRINK ANIMATION: OFF";
@@ -104,6 +108,10 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
                     && LegacyPvpTransformer.isSwordSwingInstalled()) {
                 LegacyPvpSettings.setLegacySwordSwingEnabled(
                         !LegacyPvpSettings.isLegacySwordSwingEnabled());
+            } else if ("rod-animation".equals(featureId)
+                    && LegacyPvpTransformer.isRodAnimationInstalled()) {
+                LegacyPvpSettings.setLegacyRodAnimationEnabled(
+                        !LegacyPvpSettings.isLegacyRodAnimationEnabled());
             } else if ("food-drink-animation".equals(featureId)) {
                 LegacyPvpSettings.setFoodDrinkAnimationEnabled(
                         !LegacyPvpSettings.isFoodDrinkAnimationEnabled());
@@ -139,6 +147,9 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
                 status = "HOOK NOT LOADED";
             } else if ("sword-swing".equals(feature.id)
                     && !LegacyPvpTransformer.isSwordSwingInstalled()) {
+                status = "HOOK NOT LOADED";
+            } else if ("rod-animation".equals(feature.id)
+                    && !LegacyPvpTransformer.isRodAnimationInstalled()) {
                 status = "HOOK NOT LOADED";
             }
             drawCenteredString(fontRendererObj, status, width / 2, top + 38,
@@ -179,6 +190,13 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
                 if (!LegacyPvpTransformer.isSwordSwingInstalled()) {
                     drawCenteredString(fontRendererObj, "The sword swing render hook is not loaded; vanilla rendering is unchanged.",
+                            width / 2, bottom - 88, 0xFFFFD866);
+                }
+            } else if ("rod-animation".equals(feature.id)) {
+                drawWrapped("Adds a subtle 1.7.10-style first-person swing transform while holding a fishing rod. It changes client-side rendering only; fishing behavior and server interactions are unchanged.",
+                        left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
+                if (!LegacyPvpTransformer.isRodAnimationInstalled()) {
+                    drawCenteredString(fontRendererObj, "The fishing rod render hook is not loaded; vanilla rendering is unchanged.",
                             width / 2, bottom - 88, 0xFFFFD866);
                 }
             } else {
