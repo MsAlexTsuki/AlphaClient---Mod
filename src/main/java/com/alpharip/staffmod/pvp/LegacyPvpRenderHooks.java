@@ -188,6 +188,8 @@ public final class LegacyPvpRenderHooks {
         foodDrinkClickWasDown = clickDown;
 
         if (foodDrinkSwingStart == 0L) return 0.0F;
+        // Shift the food/drink swing toward the right side of the screen.
+        GlStateManager.translate(0.18F, 0.0F, 0.0F);
         float progress = (now - foodDrinkSwingStart + partialTicks * 50.0F) / 125.0F;
         if (progress >= 1.0F) {
             foodDrinkSwingStart = 0L;
