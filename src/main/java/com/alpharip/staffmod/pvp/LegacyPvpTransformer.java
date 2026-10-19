@@ -61,6 +61,40 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             boolean changed = false;
             boolean bowChanged = false;
             boolean bowSwingChanged = false;
+            boolean swordSwingChanged = false;
+
+            // Hook the dedicated first-person item transform method.
+            for (MethodNode method : classNode.methods) {
+                if (!"(FF)V".equals(method.desc)
+                        || !("transformFirstPersonItem".equals(method.name)
+                        || "func_178096_b".equals(method.name)
+                        || "b".equals(method.name))) {
+                    continue;
+                }
+                boolean hasGlTransform = false;
+                for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                    if (instruction instanceof MethodInsnNode) {
+                        MethodInsnNode call = (MethodInsnNode) instruction;
+                        if (call.owner.endsWith("/GlStateManager")
+                                && ("rotate".equals(call.name) || "translate".equals(call.name)
+                                || "scale".equals(call.name)
+                                || "func_179109_b".equals(call.name))) {
+                            hasGlTransform = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasGlTransform) continue;
+                org.objectweb.asm.tree.InsnList hook = new org.objectweb.asm.tree.InsnList();
+                hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                hook.add(new VarInsnNode(Opcodes.FLOAD, 1));
+                hook.add(new VarInsnNode(Opcodes.FLOAD, 2));
+                hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK_OWNER,
+                        "applyLegacySwordSwing", "(Ljava/lang/Object;FF)V", false));
+                method.instructions.insert(hook);
+                swordSwingChanged = true;
+                break;
+            }
 
             for (MethodNode method : classNode.methods) {
                 if (!containsFirstPersonBlockTransform(classNode.name, method)) {
@@ -251,7 +285,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                 if (bowChanged) break;
             }
 
-            if (!changed && !bowChanged && !bowSwingChanged) {
+            if (!changed && !bowChanged && !bowSwingChanged && !swordSwingChanged) {
                 System.err.println("[AlphaClient] Legacy PvP could not find the expected ItemRenderer render patterns; vanilla rendering was left unchanged.");
                 return basicClass;
             }
@@ -269,6 +303,12 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                 System.out.println("[AlphaClient] Installed Legacy PvP legacy bow animation and swing hooks.");
             } else {
                 System.err.println("[AlphaClient] Legacy PvP bow render patterns were not both found; bow legacy animation remains unavailable.");
+            }
+            if (swordSwingChanged) {
+                swordSwingInstalled = true;
+                System.out.println("[AlphaClient] Installed Legacy PvP legacy sword swing hook.");
+            } else {
+                System.err.println("[AlphaClient] Legacy PvP sword swing render pattern was not found; vanilla sword rendering remains unchanged.");
             }
             return writer.toByteArray();
         } catch (Throwable error) {
