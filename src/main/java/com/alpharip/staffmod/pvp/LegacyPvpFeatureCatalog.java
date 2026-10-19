@@ -59,8 +59,6 @@ public final class LegacyPvpFeatureCatalog {
                 "Must be validated against 1.8.9 input and server acceptance."),
         new Feature("attack-use", "Combine attacking and item use", Scope.CLIENT_INPUT, Status.INPUT_HOOK_REQUIRED,
                 "Only valid for compatible item/action combinations."),
-        new Feature("sprint-reset", "Sprint reset / W-tapping assistance", Scope.CLIENT_INPUT, Status.INPUT_HOOK_REQUIRED,
-                "Input behavior cannot guarantee server-side knockback."),
         new Feature("attack-place", "Attack and block-placement interaction", Scope.CLIENT_INPUT, Status.INPUT_HOOK_REQUIRED,
                 "Server still validates attacks and placement."),
         new Feature("rod-hotbar", "Rod and hotbar switching behavior", Scope.CLIENT_INPUT, Status.INPUT_HOOK_REQUIRED,
