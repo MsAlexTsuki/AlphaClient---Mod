@@ -84,7 +84,8 @@ public final class AlphaModMenu extends GuiScreen {
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
             if (category != AlphaModule.Category.PUBLIC
                     && category != AlphaModule.Category.BETA
-                    && category != AlphaModule.Category.DONATOR) continue;
+                    && category != AlphaModule.Category.DONATOR
+                    && category != AlphaModule.Category.FOUNDER) continue;
             if (!PermissionService.hasAccess(category.getRequiredRank())) continue;
             String label;
             switch (category) {
