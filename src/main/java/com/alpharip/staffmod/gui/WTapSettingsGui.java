@@ -5,9 +5,7 @@ import net.minecraft.client.gui.GuiScreen;
 import com.alpharip.staffmod.movement.WTapAssistance;
 import java.io.IOException;
 
-/**
- * Dedicated W-Tap Assistance settings connected to the live input handler.
- */
+/** Dedicated W-Tap Assistance settings connected to the live input handler. */
 public final class WTapSettingsGui extends GuiScreen {
     private static final int BACK = 1;
     private static final int ENABLED = 10;
@@ -17,6 +15,9 @@ public final class WTapSettingsGui extends GuiScreen {
     private static final int TARGET = 14;
     private static final int COOLDOWN = 15;
     private static final int REQUIRE_W = 16;
+    private static final int RECORD = 17;
+    private static final int STOP = 18;
+    private static final int PLAY = 19;
 
     private static final String[] MODES = {"LEGIT", "STANDARD", "AGGRESSIVE", "MANUAL", "CUSTOM"};
     private static final String[] TRIGGERS = {"ON HIT", "ON ATTACK"};
@@ -24,63 +25,53 @@ public final class WTapSettingsGui extends GuiScreen {
 
     private final GuiScreen parent;
 
-    public WTapSettingsGui(GuiScreen parent) {
-        this.parent = parent;
-    }
+    public WTapSettingsGui(GuiScreen parent) { this.parent = parent; }
 
     @Override
     public void initGui() {
         buttonList.clear();
         int buttonWidth = Math.min(250, width - 24);
         int x = (width - buttonWidth) / 2;
-        int gap = 25;
-        int totalHeight = gap * 7;
-        int y = Math.max(42, (height - totalHeight) / 2 - 4);
+        int gap = 23;
+        int y = Math.max(40, (height - 190) / 2);
 
         buttonList.add(new AlphaButton(ENABLED, x, y, buttonWidth, 20, "ENABLED: " + onOff(WTapAssistance.isEnabled())));
-        buttonList.add(new AlphaButton(DELAY, x, y + gap, buttonWidth, 20, "DELAY: " + WTapAssistance.getDelay() + " TICKS"));
-        buttonList.add(new AlphaButton(MODE, x, y + gap * 2, buttonWidth, 20, "MODE: " + MODES[WTapAssistance.getMode()]));
-        buttonList.add(new AlphaButton(TRIGGER, x, y + gap * 3, buttonWidth, 20, "TRIGGER: " + TRIGGERS[WTapAssistance.getTrigger()]));
-        buttonList.add(new AlphaButton(TARGET, x, y + gap * 4, buttonWidth, 20, "TARGETS: " + TARGETS[WTapAssistance.getTarget()]));
-        buttonList.add(new AlphaButton(COOLDOWN, x, y + gap * 5, buttonWidth, 20, "COOLDOWN: " + WTapAssistance.getCooldown() + " TICKS"));
-        buttonList.add(new AlphaButton(REQUIRE_W, x, y + gap * 6, buttonWidth, 20, "REQUIRE W KEY: " + onOff(WTapAssistance.isRequireW())));
+        buttonList.add(new AlphaButton(MODE, x, y + gap, buttonWidth, 20, "MODE: " + MODES[WTapAssistance.getMode()]));
+
+        if (WTapAssistance.getMode() == 4) {
+            buttonList.add(new AlphaButton(RECORD, x, y + gap * 2, buttonWidth, 20,
+                    WTapAssistance.isRecording() ? "RECORDING W-TAPS..." : "RECORD"));
+            buttonList.add(new AlphaButton(STOP, x, y + gap * 3, buttonWidth, 20, "STOP & SAVE"));
+            buttonList.add(new AlphaButton(PLAY, x, y + gap * 4, buttonWidth, 20,
+                    WTapAssistance.isPlaying() ? "PLAYING..." : "PLAYBACK"));
+        } else {
+            buttonList.add(new AlphaButton(DELAY, x, y + gap * 2, buttonWidth, 20, "DELAY: " + WTapAssistance.getDelay() + " TICKS"));
+            buttonList.add(new AlphaButton(TRIGGER, x, y + gap * 3, buttonWidth, 20, "TRIGGER: " + TRIGGERS[WTapAssistance.getTrigger()]));
+            buttonList.add(new AlphaButton(TARGET, x, y + gap * 4, buttonWidth, 20, "TARGETS: " + TARGETS[WTapAssistance.getTarget()]));
+            buttonList.add(new AlphaButton(COOLDOWN, x, y + gap * 5, buttonWidth, 20, "COOLDOWN: " + WTapAssistance.getCooldown() + " TICKS"));
+            buttonList.add(new AlphaButton(REQUIRE_W, x, y + gap * 6, buttonWidth, 20, "REQUIRE W KEY: " + onOff(WTapAssistance.isRequireW())));
+        }
         buttonList.add(new AlphaButton(BACK, width / 2 - 55, height - 27, 110, 18, "BACK"));
     }
 
-    private String onOff(boolean value) {
-        return value ? "ON" : "OFF";
-    }
+    private String onOff(boolean value) { return value ? "ON" : "OFF"; }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         switch (button.id) {
-            case BACK:
-                mc.displayGuiScreen(parent);
-                return;
-            case ENABLED:
-                WTapAssistance.setEnabled(!WTapAssistance.isEnabled());
-                break;
-            case DELAY:
-                WTapAssistance.setDelay(WTapAssistance.getDelay() >= 10 ? 0 : WTapAssistance.getDelay() + 1);
-                break;
-            case MODE:
-                WTapAssistance.setMode((WTapAssistance.getMode() + 1) % MODES.length);
-                break;
-            case TRIGGER:
-                WTapAssistance.setTrigger((WTapAssistance.getTrigger() + 1) % TRIGGERS.length);
-                break;
-            case TARGET:
-                WTapAssistance.setTarget((WTapAssistance.getTarget() + 1) % TARGETS.length);
-                break;
-            case COOLDOWN:
-                WTapAssistance.setCooldown(WTapAssistance.getCooldown() >= 20 ? 0 : WTapAssistance.getCooldown() + 1);
-                break;
-            case REQUIRE_W:
-                WTapAssistance.setRequireW(!WTapAssistance.isRequireW());
-                break;
-            default:
-                return;
+            case BACK: mc.displayGuiScreen(parent); return;
+            case ENABLED: WTapAssistance.setEnabled(!WTapAssistance.isEnabled()); break;
+            case DELAY: WTapAssistance.setDelay(WTapAssistance.getDelay() >= 10 ? 0 : WTapAssistance.getDelay() + 1); break;
+            case MODE: WTapAssistance.setMode((WTapAssistance.getMode() + 1) % MODES.length); break;
+            case TRIGGER: WTapAssistance.setTrigger((WTapAssistance.getTrigger() + 1) % TRIGGERS.length); break;
+            case TARGET: WTapAssistance.setTarget((WTapAssistance.getTarget() + 1) % TARGETS.length); break;
+            case COOLDOWN: WTapAssistance.setCooldown(WTapAssistance.getCooldown() >= 20 ? 0 : WTapAssistance.getCooldown() + 1); break;
+            case REQUIRE_W: WTapAssistance.setRequireW(!WTapAssistance.isRequireW()); break;
+            case RECORD: WTapAssistance.startRecording(); break;
+            case STOP: WTapAssistance.stopRecording(); WTapAssistance.stopPlayback(); break;
+            case PLAY: WTapAssistance.startPlayback(); break;
+            default: return;
         }
         initGui();
     }
@@ -97,19 +88,14 @@ public final class WTapSettingsGui extends GuiScreen {
         drawRect(left, top + 2, left + 1, top + panelHeight, 0x554B515D);
         drawRect(left + panelWidth - 1, top + 2, left + panelWidth, top + panelHeight, 0x554B515D);
         String title = "W-TAP ASSISTANCE";
-        drawString(fontRendererObj, title, width / 2 - fontRendererObj.getStringWidth(title) / 2,
-                top + 10, 0xFFFFD866);
+        drawString(fontRendererObj, title, width / 2 - fontRendererObj.getStringWidth(title) / 2, top + 10, 0xFFFFD866);
         String subtitle = "FOUNDER MODS";
-        drawString(fontRendererObj, subtitle, width / 2 - fontRendererObj.getStringWidth(subtitle) / 2,
-                top + 22, 0xFFB8BDC8);
+        drawString(fontRendererObj, subtitle, width / 2 - fontRendererObj.getStringWidth(subtitle) / 2, top + 22, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
         String note = WTapAssistance.isEnabled() ? "W-TAP ACTIVE" : "W-TAP DISABLED";
-        drawString(fontRendererObj, note, width / 2 - fontRendererObj.getStringWidth(note) / 2,
-                top + panelHeight - 12, 0xFFB8BDC8);
+        drawString(fontRendererObj, note, width / 2 - fontRendererObj.getStringWidth(note) / 2, top + panelHeight - 12, 0xFFB8BDC8);
     }
 
     @Override
-    public boolean doesGuiPauseGame() {
-        return false;
-    }
+    public boolean doesGuiPauseGame() { return false; }
 }
