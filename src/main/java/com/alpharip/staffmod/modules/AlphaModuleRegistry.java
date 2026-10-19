@@ -102,6 +102,16 @@ public final class AlphaModuleRegistry {
                 true
         ));
         MODULES.add(bhop);
+
+        AlphaModule wTap = new AlphaModule(
+                "w-tap-assistance",
+                "W-Tap Assistance",
+                "Configure W-Tap Assistance options.",
+                AlphaModule.Category.FOUNDER,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(wTap);
     }
 
     private AlphaModuleRegistry() {
