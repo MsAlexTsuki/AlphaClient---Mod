@@ -7,23 +7,18 @@ import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 
-/**
- * Legacy PvP settings and capability inventory.
- * Only settings backed by real behavior are interactive; planned/server-bound
- * mechanics are displayed with their actual implementation requirements.
- */
+/** Navigation grid for the Legacy PvP feature settings. */
 public final class LegacyPvpSettingsGui extends GuiScreen {
+    private static final int FEATURE_BUTTON_BASE = 1000;
+    private static final int BACK = 2;
+    private static final int GRID_TOP = 78;
+    private static final int BUTTON_HEIGHT = 22;
+    private static final int ROW_GAP = 7;
+    private static final int COLUMN_GAP = 7;
+    private static final int COLUMNS = 3;
+
     private final GuiScreen parent;
-    private static final int TOGGLE_VIEW_BOBBING = 1;
-    private static final int CLOSE = 2;
-    private static final int TOGGLE_BLOCKHIT = 3;
-    private static final int TOGGLE_BOW_ANIMATION = 4;
-    private static final int TOGGLE_POTION_PUNCH = 5;
-    private static final int TOGGLE_FOOD_DRINK = 6;
-    private static final int ROW_HEIGHT = 24;
-    private static final int LIST_TOP = 124;
-    private static final int LIST_BOTTOM_MARGIN = 42;
-    private int scrollOffset;
+    private int scrollRow;
 
     public LegacyPvpSettingsGui(GuiScreen parent) {
         this.parent = parent;
@@ -33,74 +28,53 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
     public void initGui() {
         buttonList.clear();
         LegacyPvpSettings.load();
-        int centerX = width / 2;
+
         LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
+        int rows = getTotalRows(features.length);
+        scrollRow = Math.max(0, Math.min(scrollRow, Math.max(0, rows - getVisibleRows())));
+
+        int panelLeft = getPanelLeft();
+        int panelRight = getPanelRight();
+        int innerLeft = panelLeft + 10;
+        int innerWidth = panelRight - panelLeft - 20;
+        int buttonWidth = (innerWidth - COLUMN_GAP * (COLUMNS - 1)) / COLUMNS;
         int visibleRows = getVisibleRows();
-        scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, features.length - visibleRows)));
 
-        int cameraIndex = indexOf("camera-bobbing", features);
-        int cameraY = LIST_TOP + (cameraIndex - scrollOffset) * ROW_HEIGHT;
-        if (cameraIndex >= scrollOffset && cameraIndex < scrollOffset + visibleRows) {
-            buttonList.add(new ModernButton(TOGGLE_VIEW_BOBBING, getToggleX(), cameraY + 1, 94, 20,
-                    LegacyPvpSettings.isDisableViewBobbing() ? "BOBBING OFF" : "BOBBING ON"));
+        for (int row = 0; row < visibleRows; row++) {
+            int featureRow = scrollRow + row;
+            for (int column = 0; column < COLUMNS; column++) {
+                int index = featureRow * COLUMNS + column;
+                if (index >= features.length) break;
+                int x = innerLeft + column * (buttonWidth + COLUMN_GAP);
+                int y = GRID_TOP + row * (BUTTON_HEIGHT + ROW_GAP);
+                String label = fitLabel(features[index].label, buttonWidth - 12);
+                buttonList.add(new ModernButton(FEATURE_BUTTON_BASE + index,
+                        x, y, buttonWidth, BUTTON_HEIGHT, label));
+            }
         }
 
-        int blockhitIndex = indexOf("blockhit", features);
-        int blockhitY = LIST_TOP + (blockhitIndex - scrollOffset) * ROW_HEIGHT;
-        if (blockhitIndex >= scrollOffset && blockhitIndex < scrollOffset + visibleRows
-                && LegacyPvpTransformer.isInstalled()) {
-            buttonList.add(new ModernButton(TOGGLE_BLOCKHIT, getToggleX(), blockhitY + 1, 94, 20,
-                    LegacyPvpSettings.isBlockhitEnabled() ? "BLOCKHIT: ON" : "BLOCKHIT: OFF"));
-        }
-
-        int bowIndex = indexOf("bow-animation", features);
-        int bowY = LIST_TOP + (bowIndex - scrollOffset) * ROW_HEIGHT;
-        if (bowIndex >= scrollOffset && bowIndex < scrollOffset + visibleRows
-                && LegacyPvpTransformer.isBowAnimationInstalled()) {
-            buttonList.add(new ModernButton(TOGGLE_BOW_ANIMATION, getToggleX(), bowY + 1, 94, 20,
-                    LegacyPvpSettings.isLegacyBowAnimationEnabled() ? "LEGACY BOW: ON" : "LEGACY BOW: OFF"));
-        }
-
-        int foodDrinkIndex = indexOf("food-drink-animation", features);
-        int foodDrinkY = LIST_TOP + (foodDrinkIndex - scrollOffset) * ROW_HEIGHT;
-        if (foodDrinkIndex >= scrollOffset && foodDrinkIndex < scrollOffset + visibleRows) {
-            buttonList.add(new ModernButton(TOGGLE_FOOD_DRINK, getToggleX(), foodDrinkY + 1, 94, 20,
-                    LegacyPvpSettings.isFoodDrinkAnimationEnabled() ? "FOOD/DRINK: ON" : "FOOD/DRINK: OFF"));
-        }
-
-        int potionPunchIndex = indexOf("potion-punch", features);
-        int potionPunchY = LIST_TOP + (potionPunchIndex - scrollOffset) * ROW_HEIGHT;
-        if (potionPunchIndex >= scrollOffset && potionPunchIndex < scrollOffset + visibleRows) {
-            buttonList.add(new ModernButton(TOGGLE_POTION_PUNCH, getToggleX(), potionPunchY + 1, 94, 20,
-                    LegacyPvpSettings.isPotionPunchAnimationEnabled() ? "POTION PUNCH: ON" : "POTION PUNCH: OFF"));
-        }
-        buttonList.add(new ModernButton(CLOSE, centerX - 70, height - 30, 140, 20, "BACK"));
+        buttonList.add(new ModernButton(BACK, width / 2 - 70, height - 29, 140, 20, "BACK"));
     }
 
-    private int indexOf(String id, LegacyPvpFeatureCatalog.Feature[] features) {
-        for (int i = 0; i < features.length; i++) {
-            if (features[i].id.equals(id)) return i;
-        }
-        return -1;
+    private int getPanelLeft() {
+        return Math.max(8, width / 2 - 190);
+    }
+
+    private int getPanelRight() {
+        return Math.min(width - 8, width / 2 + 190);
+    }
+
+    private int getTotalRows(int featureCount) {
+        return (featureCount + COLUMNS - 1) / COLUMNS;
     }
 
     private int getVisibleRows() {
-        return Math.max(1, (height - 183) / ROW_HEIGHT);
-    }
-
-    private int getToggleX() {
-        int panelRight = Math.min(width - 8, width / 2 + 180);
-        return panelRight - 102;
+        return Math.max(1, (height - GRID_TOP - 62) / (BUTTON_HEIGHT + ROW_GAP));
     }
 
     private String fitLabel(String label, int maxWidth) {
-        if (label == null || fontRendererObj == null || maxWidth <= 0) {
-            return "";
-        }
-        if (fontRendererObj.getStringWidth(label) <= maxWidth) {
-            return label;
-        }
-
+        if (label == null || fontRendererObj == null || maxWidth <= 0) return "";
+        if (fontRendererObj.getStringWidth(label) <= maxWidth) return label;
         String ellipsis = "...";
         int textWidth = Math.max(0, maxWidth - fontRendererObj.getStringWidth(ellipsis));
         return fontRendererObj.trimStringToWidth(label, textWidth) + ellipsis;
@@ -108,48 +82,17 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if (button.id == TOGGLE_VIEW_BOBBING) {
-            LegacyPvpSettings.setDisableViewBobbing(!LegacyPvpSettings.isDisableViewBobbing());
-            initGui();
-        } else if (button.id == TOGGLE_BLOCKHIT) {
-            LegacyPvpSettings.setBlockhitEnabled(!LegacyPvpSettings.isBlockhitEnabled());
-            initGui();
-        } else if (button.id == TOGGLE_BOW_ANIMATION) {
-            LegacyPvpSettings.setLegacyBowAnimationEnabled(!LegacyPvpSettings.isLegacyBowAnimationEnabled());
-            initGui();
-        } else if (button.id == TOGGLE_POTION_PUNCH) {
-            LegacyPvpSettings.setPotionPunchAnimationEnabled(!LegacyPvpSettings.isPotionPunchAnimationEnabled());
-            initGui();
-        } else if (button.id == TOGGLE_FOOD_DRINK) {
-            LegacyPvpSettings.setFoodDrinkAnimationEnabled(!LegacyPvpSettings.isFoodDrinkAnimationEnabled());
-            initGui();
-        } else if (button.id == CLOSE) {
+        if (button == null) return;
+        if (button.id == BACK) {
             mc.displayGuiScreen(parent);
+            return;
         }
-    }
 
-    @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        if (mouseButton == 0 && mouseY >= LIST_TOP && mouseY < Math.min(height - 24 - 35,
-                LIST_TOP + getVisibleRows() * ROW_HEIGHT)) {
-            int row = (mouseY - LIST_TOP) / ROW_HEIGHT;
-            int index = scrollOffset + row;
-            LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
-            int panelLeft = Math.max(8, width / 2 - 180);
-            int panelRight = Math.min(width - 8, width / 2 + 180);
-            boolean insideRow = mouseX >= panelLeft + 8 && mouseX < panelRight - 8;
-            boolean onToggle = mouseX >= getToggleX() && mouseX < getToggleX() + 94
-                    && ((index == indexOf("camera-bobbing", features))
-                    || (index == indexOf("blockhit", features) && LegacyPvpTransformer.isInstalled())
-                    || (index == indexOf("bow-animation", features) && LegacyPvpTransformer.isBowAnimationInstalled())
-                    || index == indexOf("food-drink-animation", features)
-                    || index == indexOf("potion-punch", features));
-            if (insideRow && !onToggle && index >= 0 && index < features.length) {
-                mc.displayGuiScreen(new LegacyPvpFeatureGui(this, features[index].id));
-                return;
-            }
+        int index = button.id - FEATURE_BUTTON_BASE;
+        LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
+        if (index >= 0 && index < features.length) {
+            mc.displayGuiScreen(new LegacyPvpFeatureGui(this, features[index].id));
         }
-        super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -157,8 +100,9 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
         if (wheel != 0) {
-            int maxOffset = Math.max(0, LegacyPvpFeatureCatalog.getAll().length - getVisibleRows());
-            scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset + (wheel < 0 ? 2 : -2)));
+            LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
+            int maxScroll = Math.max(0, getTotalRows(features.length) - getVisibleRows());
+            scrollRow = Math.max(0, Math.min(maxScroll, scrollRow + (wheel < 0 ? 1 : -1)));
             initGui();
         }
     }
@@ -166,77 +110,27 @@ public final class LegacyPvpSettingsGui extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x88000000);
+        int panelLeft = getPanelLeft();
+        int panelRight = getPanelRight();
+        int panelBottom = height - 20;
         int centerX = width / 2;
-        int panelLeft = Math.max(8, centerX - 180);
-        int panelRight = Math.min(width - 8, centerX + 180);
-        int panelBottom = height - 24;
-        drawRect(panelLeft, 12, panelRight, panelBottom, 0xDD0C0C0C);
-        drawRect(panelLeft, 12, panelRight, 13, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "LEGACY PVP SETTINGS", centerX, 24, 0xFFFFFFFF);
-        drawCenteredString(fontRendererObj, "Only implemented settings are interactive.", centerX, 39, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Client-side mechanics only.", centerX, 51, 0xFFB8BDC8);
 
-        drawRect(panelLeft + 8, 68, panelRight - 8, 69, 0x553F424A);
-        drawString(fontRendererObj, "FEATURE", panelLeft + 13, 76, 0xFFFFD866);
-        drawString(fontRendererObj, "IMPLEMENTATION STATUS", centerX + 4, 76, 0xFFFFD866);
+        drawRect(panelLeft, 12, panelRight, panelBottom, 0xDD0C0C0C);
+        drawRect(panelLeft, 12, panelRight, 14, 0xFFFFD866);
+        drawCenteredString(fontRendererObj, "LEGACY PVP", centerX, 24, 0xFFFFFFFF);
+        drawCenteredString(fontRendererObj, "Select a module to open its settings", centerX, 41, 0xFFB8BDC8);
+        drawRect(panelLeft + 10, 62, panelRight - 10, 63, 0x553F424A);
 
         LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
-        int visibleRows = getVisibleRows();
-        int listBottom = Math.min(panelBottom - 35, LIST_TOP + visibleRows * ROW_HEIGHT);
-        for (int row = 0; row < visibleRows; row++) {
-            int index = scrollOffset + row;
-            if (index >= features.length) break;
-            LegacyPvpFeatureCatalog.Feature feature = features[index];
-            int y = LIST_TOP + row * ROW_HEIGHT;
-            if (y + ROW_HEIGHT > listBottom) break;
-
-            int background = (row % 2 == 0) ? 0x332A2D35 : 0x221A1C22;
-            drawRect(panelLeft + 8, y, panelRight - 8, y + ROW_HEIGHT - 1, background);
-            drawString(fontRendererObj, fitLabel(feature.label, centerX - panelLeft - 20), panelLeft + 13, y + 4, 0xFFE7E9EE);
-
-            String status = LegacyPvpFeatureCatalog.getStatusLabel(feature.status);
-            int statusColor = feature.status == LegacyPvpFeatureCatalog.Status.CONFIGURABLE
-                    ? 0xFF9CE2AC : 0xFFB8BDC8;
-            int statusX = centerX + 4;
-            if (feature.id.equals("camera-bobbing")) {
-                status = "CONFIGURABLE";
-                statusColor = 0xFF9CE2AC;
-            } else if (feature.id.equals("blockhit")) {
-                if (LegacyPvpTransformer.isInstalled()) {
-                    status = "CONFIGURABLE";
-                    statusColor = 0xFF9CE2AC;
-                } else {
-                    status = "HOOK NOT LOADED";
-                    statusColor = 0xFFFFD866;
-                }
-            } else if (feature.id.equals("missed-swing-delay")) {
-                if (LegacyPvpTransformer.isMissedSwingDelayInstalled()) {
-                    status = "CONFIGURABLE";
-                    statusColor = 0xFF9CE2AC;
-                } else {
-                    status = "HOOK NOT LOADED";
-                    statusColor = 0xFFFFD866;
-                }
-            } else if (feature.id.equals("bow-animation")) {
-                if (LegacyPvpTransformer.isBowAnimationInstalled()) {
-                    status = "CONFIGURABLE";
-                    statusColor = 0xFF9CE2AC;
-                } else {
-                    status = "HOOK NOT LOADED";
-                    statusColor = 0xFFFFD866;
-                }
-            } else if (feature.id.equals("potion-punch") || feature.id.equals("food-drink-animation")) {
-                status = "CONFIGURABLE";
-                statusColor = 0xFF9CE2AC;
-            }
-            drawString(fontRendererObj, status, statusX, y + 4, statusColor);
+        int totalRows = getTotalRows(features.length);
+        int first = features.length == 0 ? 0 : scrollRow * COLUMNS + 1;
+        int last = Math.min(features.length, (scrollRow + getVisibleRows()) * COLUMNS);
+        drawString(fontRendererObj, first + "-" + last + " of " + features.length,
+                panelLeft + 12, panelBottom - 15, 0xFFB8BDC8);
+        if (totalRows > getVisibleRows()) {
+            drawString(fontRendererObj, "Scroll to see more modules",
+                    panelRight - 142, panelBottom - 15, 0xFFB8BDC8);
         }
-
-        int total = features.length;
-        int first = total == 0 ? 0 : scrollOffset + 1;
-        int last = Math.min(total, scrollOffset + visibleRows);
-        drawString(fontRendererObj, first + "-" + last + " of " + total,
-                panelLeft + 13, panelBottom - 26, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
