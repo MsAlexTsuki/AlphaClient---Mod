@@ -10,6 +10,8 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Client-side W-Tap helper. Settings are shared with the W-Tap GUI. */
 public final class WTapAssistance {
@@ -20,6 +22,13 @@ public final class WTapAssistance {
     private static int mode;
     private static int trigger;
     private static int target;
+    private static final List<Integer> customPattern = new ArrayList<Integer>();
+    private static boolean recording;
+    private static boolean playing;
+    private static boolean lastPhysicalW;
+    private static int recordTicks;
+    private static int playbackIndex;
+    private static int playbackTicks;
     private int pendingDelay = -1;
     private int releaseTicks;
     private int cooldownTicks;
@@ -38,6 +47,33 @@ public final class WTapAssistance {
     public static void setTrigger(int value) { trigger = Math.max(0, Math.min(1, value)); }
     public static int getTarget() { return target; }
     public static void setTarget(int value) { target = Math.max(0, Math.min(1, value)); }
+    public static boolean isRecording() { return recording; }
+    public static boolean isPlaying() { return playing; }
+    public static boolean hasCustomPattern() { return !customPattern.isEmpty(); }
+
+    public static void startRecording() {
+        customPattern.clear();
+        recording = true;
+        playing = false;
+        recordTicks = 0;
+        lastPhysicalW = Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindForward.getKeyCode());
+    }
+
+    public static void stopRecording() {
+        if (recording && recordTicks > 0) customPattern.add(recordTicks);
+        recording = false;
+        recordTicks = 0;
+    }
+
+    public static void startPlayback() {
+        stopRecording();
+        if (customPattern.isEmpty()) return;
+        playing = true;
+        playbackIndex = 0;
+        playbackTicks = customPattern.get(0);
+    }
+
+    public static void stopPlayback() { playing = false; }
 
     @SubscribeEvent
     public void onAttackEntity(AttackEntityEvent event) {
@@ -59,15 +95,46 @@ public final class WTapAssistance {
         if (mc == null || mc.thePlayer == null || mc.gameSettings == null) {
             pendingDelay = -1;
             releaseTicks = 0;
+            playing = false;
             return;
         }
+        int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
+        boolean physicalW = Keyboard.isKeyDown(keyCode);
+
+        if (recording && mc.currentScreen == null) {
+            recordTicks++;
+            if (physicalW != lastPhysicalW) {
+                customPattern.add(recordTicks);
+                recordTicks = 0;
+                lastPhysicalW = physicalW;
+            }
+        }
+
         if (!enabled || !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                || mc.currentScreen != null || mode >= 3) {
+                || mc.currentScreen != null || mode == 3) {
             restoreForwardKey(mc);
             pendingDelay = -1;
             releaseTicks = 0;
+            if (playing) stopPlayback();
             return;
         }
+
+        if (mode == 4 && playing) {
+            if (playbackTicks > 0) playbackTicks--;
+            if (playbackTicks <= 0) {
+                playbackIndex++;
+                if (playbackIndex >= customPattern.size()) {
+                    stopPlayback();
+                    restoreForwardKey(mc);
+                } else {
+                    playbackTicks = customPattern.get(playbackIndex);
+                    if (playbackIndex % 2 == 0) KeyBinding.setKeyBindState(keyCode, physicalW);
+                    else KeyBinding.setKeyBindState(keyCode, false);
+                }
+            }
+            return;
+        }
+
         if (cooldownTicks > 0) cooldownTicks--;
         if (pendingDelay > 0) {
             pendingDelay--;
@@ -75,8 +142,8 @@ public final class WTapAssistance {
         }
         if (pendingDelay == 0) {
             pendingDelay = -1;
-            if (!requireW || Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode())) {
-                KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+            if (!requireW || physicalW) {
+                KeyBinding.setKeyBindState(keyCode, false);
                 releaseTicks = 1 + mode;
                 cooldownTicks = cooldown;
             }
