@@ -152,7 +152,8 @@ public final class LegacyPvpRenderHooks {
         }
 
         AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
-        if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()) {
+        if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()
+                || !LegacyPvpSettings.isFoodDrinkAnimationEnabled()) {
             return 0.0F;
         }
 
