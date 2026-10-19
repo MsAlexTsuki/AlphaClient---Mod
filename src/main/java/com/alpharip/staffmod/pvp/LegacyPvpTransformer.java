@@ -43,6 +43,10 @@ public final class LegacyPvpTransformer implements IClassTransformer {
         return swordSwingInstalled;
     }
 
+    public static boolean isRodAnimationInstalled() {
+        return false;
+    }
+
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
         if (basicClass == null) {
