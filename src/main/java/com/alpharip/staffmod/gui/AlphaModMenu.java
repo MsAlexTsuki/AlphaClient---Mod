@@ -32,6 +32,7 @@ public final class AlphaModMenu extends GuiScreen {
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
     private static final int STAFF_MODS = 306;
+    private static final int W_TAP_SETTINGS = 307;
     private static final int PROFILE_SELECT_BASE = 400;
     private static final int PROFILE_CREATE = 430;
     private static final int PROFILE_EDIT = 431;
@@ -110,6 +111,10 @@ public final class AlphaModMenu extends GuiScreen {
             buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, categoryY,
                     sidebarWidth - 10, 20, "STAFFMODS"));
             categoryY += 23;
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
+            buttonList.add(new AlphaButton(W_TAP_SETTINGS, panelLeft + 5, categoryY,
+                    sidebarWidth - 10, 20, "W-TAP"));
         }
 
         if (true) {
@@ -318,6 +323,15 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == STAFF_MODS) {
             if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) {
                 mc.displayGuiScreen(new StaffModsMenuGui(this));
+            }
+            return;
+        }
+        if (button.id == W_TAP_SETTINGS) {
+            if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
+                AlphaModule module = AlphaModuleRegistry.find("w-tap-assistance");
+                if (module != null && module.isImplemented() && module.isUnlocked()) {
+                    mc.displayGuiScreen(new WTapSettingsGui(this));
+                }
             }
             return;
         }
