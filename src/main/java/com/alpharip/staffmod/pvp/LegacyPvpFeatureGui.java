@@ -40,13 +40,15 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
     private boolean isConfigurable(String id) {
         return "blockhit".equals(id) || "camera-bobbing".equals(id)
                 || "missed-swing-delay".equals(id) || "bow-animation".equals(id)
-                || "potion-punch".equals(id) || "food-drink-animation".equals(id);
+                || "potion-punch".equals(id) || "food-drink-animation".equals(id)
+                || "sword-swing".equals(id);
     }
 
     private boolean isToggleAvailable(String id) {
         if ("blockhit".equals(id)) return LegacyPvpTransformer.isInstalled();
         if ("missed-swing-delay".equals(id)) return LegacyPvpTransformer.isMissedSwingDelayInstalled();
         if ("bow-animation".equals(id)) return LegacyPvpTransformer.isBowAnimationInstalled();
+        if ("sword-swing".equals(id)) return LegacyPvpTransformer.isSwordSwingInstalled();
         if ("potion-punch".equals(id)) return true;
         return "camera-bobbing".equals(id);
     }
@@ -63,6 +65,9 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
         }
         if ("potion-punch".equals(id)) {
             return LegacyPvpSettings.isPotionPunchAnimationEnabled() ? "POTION PUNCH: ON" : "POTION PUNCH: OFF";
+        }
+        if ("sword-swing".equals(id)) {
+            return LegacyPvpSettings.isLegacySwordSwingEnabled() ? "SWORD SWING: ON" : "SWORD SWING: OFF";
         }
         if ("food-drink-animation".equals(id)) {
             return LegacyPvpSettings.isFoodDrinkAnimationEnabled() ? "FOOD/DRINK ANIMATION: ON" : "FOOD/DRINK ANIMATION: OFF";
@@ -95,6 +100,10 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
             } else if ("potion-punch".equals(featureId)) {
                 LegacyPvpSettings.setPotionPunchAnimationEnabled(
                         !LegacyPvpSettings.isPotionPunchAnimationEnabled());
+            } else if ("sword-swing".equals(featureId)
+                    && LegacyPvpTransformer.isSwordSwingInstalled()) {
+                LegacyPvpSettings.setLegacySwordSwingEnabled(
+                        !LegacyPvpSettings.isLegacySwordSwingEnabled());
             } else if ("food-drink-animation".equals(featureId)) {
                 LegacyPvpSettings.setFoodDrinkAnimationEnabled(
                         !LegacyPvpSettings.isFoodDrinkAnimationEnabled());
@@ -127,6 +136,9 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
                 status = "HOOK NOT LOADED";
             } else if ("bow-animation".equals(feature.id)
                     && !LegacyPvpTransformer.isBowAnimationInstalled()) {
+                status = "HOOK NOT LOADED";
+            } else if ("sword-swing".equals(feature.id)
+                    && !LegacyPvpTransformer.isSwordSwingInstalled()) {
                 status = "HOOK NOT LOADED";
             }
             drawCenteredString(fontRendererObj, status, width / 2, top + 38,
@@ -162,6 +174,13 @@ public final class LegacyPvpFeatureGui extends GuiScreen {
             } else if ("potion-punch".equals(feature.id)) {
                 drawWrapped("When enabled, left-clicking while holding a splash potion and keeping right-click held queues a local arm swing. The normal Minecraft mouse events are left untouched; the server still decides whether an attack succeeds.",
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
+            } else if ("sword-swing".equals(feature.id)) {
+                drawWrapped("Adds a 1.7.10-style first-person sword swing transform. This option is independent of blockhit.",
+                        left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
+                if (!LegacyPvpTransformer.isSwordSwingInstalled()) {
+                    drawCenteredString(fontRendererObj, "The sword swing render hook is not loaded; vanilla rendering is unchanged.",
+                            width / 2, bottom - 88, 0xFFFFD866);
+                }
             } else {
                 drawWrapped("This feature does not have a working client-side implementation yet, so no toggle is exposed.",
                         left + 16, top + 112, panelWidth - 32, 0xFFB8BDC8);
