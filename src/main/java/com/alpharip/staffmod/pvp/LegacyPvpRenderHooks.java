@@ -153,6 +153,9 @@ public final class LegacyPvpRenderHooks {
         return action == EnumAction.BOW ? swingProgress : 0.0F;
     }
 
+    private static boolean foodDrinkClickWasDown;
+    private static long foodDrinkSwingStart;
+
     /**
      * Restores the legacy first-person swing while eating or drinking.
      * This is independent of the bow-animation setting.
@@ -175,10 +178,22 @@ public final class LegacyPvpRenderHooks {
 
         EnumAction action = active.getItemUseAction();
         if (action != EnumAction.EAT && action != EnumAction.DRINK) return 0.0F;
-        // Food and potion use should visually keep up with rapid clicks.
-        // Accelerate only the rendered swing progress; vanilla item-use duration
-        // and the player's actual swing state remain untouched.
-        return Math.min(1.0F, mc.thePlayer.getSwingProgress(partialTicks) * 1.75F);
+        // Use the actual left-click edge as the animation trigger instead of
+        // vanilla swingProgress, whose fixed duration can lag behind rapid clicks.
+        boolean clickDown = Mouse.isButtonDown(0);
+        long now = System.currentTimeMillis();
+        if (clickDown && !foodDrinkClickWasDown) {
+            foodDrinkSwingStart = now;
+        }
+        foodDrinkClickWasDown = clickDown;
+
+        if (foodDrinkSwingStart == 0L) return 0.0F;
+        float progress = (now - foodDrinkSwingStart + partialTicks * 50.0F) / 125.0F;
+        if (progress >= 1.0F) {
+            foodDrinkSwingStart = 0L;
+            return 0.0F;
+        }
+        return Math.max(0.0F, progress);
     }
 
     private static boolean isLegacyBowAnimationActive() {
