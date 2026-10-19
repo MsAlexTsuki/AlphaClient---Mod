@@ -26,7 +26,6 @@ public final class LegacyPvpTransformer implements IClassTransformer {
     private static volatile boolean missedSwingDelayInstalled;
     private static volatile boolean bowAnimationInstalled;
     private static volatile boolean swordSwingInstalled;
-    private static volatile boolean rodAnimationInstalled;
 
     public static boolean isInstalled() {
         return installed;
@@ -42,10 +41,6 @@ public final class LegacyPvpTransformer implements IClassTransformer {
 
     public static boolean isSwordSwingInstalled() {
         return swordSwingInstalled;
-    }
-
-    public static boolean isRodAnimationInstalled() {
-        return rodAnimationInstalled;
     }
 
     @Override
@@ -67,7 +62,6 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             boolean bowChanged = false;
             boolean bowSwingChanged = false;
             boolean swordSwingChanged = false;
-            boolean rodAnimationChanged = false;
 
             // Hook the dedicated first-person item transform method.
             for (MethodNode method : classNode.methods) {
@@ -85,14 +79,8 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                 hook.add(new VarInsnNode(Opcodes.FLOAD, 2));
                 hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK_OWNER,
                         "applyLegacySwordSwing", "(Ljava/lang/Object;FF)V", false));
-                hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                hook.add(new VarInsnNode(Opcodes.FLOAD, 1));
-                hook.add(new VarInsnNode(Opcodes.FLOAD, 2));
-                hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK_OWNER,
-                        "applyLegacyFishingRodAnimation", "(Ljava/lang/Object;FF)V", false));
                 method.instructions.insert(hook);
                 swordSwingChanged = true;
-                rodAnimationChanged = true;
                 break;
             }
 
@@ -285,7 +273,7 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                 if (bowChanged) break;
             }
 
-            if (!changed && !bowChanged && !bowSwingChanged && !swordSwingChanged && !rodAnimationChanged) {
+            if (!changed && !bowChanged && !bowSwingChanged && !swordSwingChanged) {
                 System.err.println("[AlphaClient] Legacy PvP could not find the expected ItemRenderer render patterns; vanilla rendering was left unchanged.");
                 return basicClass;
             }
@@ -309,10 +297,6 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                 System.out.println("[AlphaClient] Installed Legacy PvP legacy sword swing hook.");
             } else {
                 System.err.println("[AlphaClient] Legacy PvP sword swing render pattern was not found; vanilla sword rendering remains unchanged.");
-            }
-            if (rodAnimationChanged) {
-                rodAnimationInstalled = true;
-                System.out.println("[AlphaClient] Installed Legacy PvP legacy fishing rod animation hook.");
             }
             return writer.toByteArray();
         } catch (Throwable error) {
