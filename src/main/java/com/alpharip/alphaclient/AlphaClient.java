@@ -14,6 +14,7 @@ import com.alpharip.staffmod.optimization.FpsOptimization;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
+import com.alpharip.staffmod.movement.WTapAssistance;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
@@ -69,6 +70,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new FpsMod());
         MinecraftForge.EVENT_BUS.register(new CpsMod());
         MinecraftForge.EVENT_BUS.register(new LegacyPvpMod());
+        MinecraftForge.EVENT_BUS.register(new WTapAssistance());
         RankCache.INSTANCE.start();
 
         // Load every implemented HUD's persisted position before registering its renderer.
