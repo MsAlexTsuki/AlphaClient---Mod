@@ -71,20 +71,8 @@ public final class LegacyPvpTransformer implements IClassTransformer {
                         || "b".equals(method.name))) {
                     continue;
                 }
-                boolean hasGlTransform = false;
-                for (AbstractInsnNode instruction : method.instructions.toArray()) {
-                    if (instruction instanceof MethodInsnNode) {
-                        MethodInsnNode call = (MethodInsnNode) instruction;
-                        if (call.owner.endsWith("/GlStateManager")
-                                && ("rotate".equals(call.name) || "translate".equals(call.name)
-                                || "scale".equals(call.name)
-                                || "func_179109_b".equals(call.name))) {
-                            hasGlTransform = true;
-                            break;
-                        }
-                    }
-                }
-                if (!hasGlTransform) continue;
+                // The method name and descriptor identify the dedicated transform;
+                // do not inspect GlStateManager names because those may be obfuscated.
                 org.objectweb.asm.tree.InsnList hook = new org.objectweb.asm.tree.InsnList();
                 hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
                 hook.add(new VarInsnNode(Opcodes.FLOAD, 1));
