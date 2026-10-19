@@ -33,7 +33,7 @@ public final class WTapAssistance {
     public static int getCooldown() { return cooldown; }
     public static void setCooldown(int value) { cooldown = Math.max(0, Math.min(20, value)); }
     public static int getMode() { return mode; }
-    public static void setMode(int value) { mode = Math.max(0, Math.min(3, value)); }
+    public static void setMode(int value) { mode = Math.max(0, Math.min(4, value)); }
     public static int getTrigger() { return trigger; }
     public static void setTrigger(int value) { trigger = Math.max(0, Math.min(1, value)); }
     public static int getTarget() { return target; }
@@ -42,7 +42,7 @@ public final class WTapAssistance {
     @SubscribeEvent
     public void onAttackEntity(AttackEntityEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (!enabled || mode == 3 || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer) return;
+        if (!enabled || mode >= 3 || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer) return;
         if (!PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) return;
         Entity victim = event.target;
         if (!(victim instanceof EntityLivingBase)) return;
@@ -62,7 +62,7 @@ public final class WTapAssistance {
             return;
         }
         if (!enabled || !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                || mc.currentScreen != null || mode == 3) {
+                || mc.currentScreen != null || mode >= 3) {
             restoreForwardKey(mc);
             pendingDelay = -1;
             releaseTicks = 0;
