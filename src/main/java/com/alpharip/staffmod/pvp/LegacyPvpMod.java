@@ -16,11 +16,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
  * knockback remain controlled by Minecraft and the server.
  */
 public final class LegacyPvpMod {
-    private boolean wasEnabled;
     private boolean pendingUseSwing;
     private boolean pendingPotionPunchSwing;
-    private boolean previousViewBobbing;
-    private boolean bobbingOverridden;
 
     /**
      * Legacy use-and-swing input: while right mouse is held and Minecraft is
@@ -60,7 +57,7 @@ public final class LegacyPvpMod {
         if (event.phase != TickEvent.Phase.END) return;
 
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.gameSettings == null) return;
+        if (mc == null) return;
 
         if (pendingPotionPunchSwing) {
             pendingPotionPunchSwing = false;
@@ -82,26 +79,5 @@ public final class LegacyPvpMod {
                 }
             }
         }
-
-        AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
-        boolean enabled = module != null && module.isImplemented()
-                && module.isUnlocked() && module.isEnabled()
-                && LegacyPvpSettings.isDisableViewBobbing();
-
-        if (enabled) {
-            if (!bobbingOverridden) {
-                // Capture the real user setting once, before overriding it.
-                previousViewBobbing = mc.gameSettings.viewBobbing;
-                bobbingOverridden = true;
-            }
-            mc.gameSettings.viewBobbing = false;
-        } else if (bobbingOverridden) {
-            // Restore the original setting even if the option was toggled off
-            // before the next tick or the module was disabled from another GUI.
-            mc.gameSettings.viewBobbing = previousViewBobbing;
-            bobbingOverridden = false;
-        }
-
-        wasEnabled = enabled;
     }
 }
