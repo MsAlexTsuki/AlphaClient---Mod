@@ -106,13 +106,22 @@ public final class WTapAssistance {
     @SubscribeEvent
     public void onAttackEntity(AttackEntityEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (!enabled || mode >= 3 || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer
+        if (!enabled || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer
                 || mc.currentScreen != null) return;
         if (!PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) return;
         Entity victim = event.target;
         if (!(victim instanceof EntityLivingBase)) return;
         if (target == 0 && !(victim instanceof EntityPlayer)) return;
-        if (requireW && !Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode())) return;
+
+        // Custom mode automatically replays the saved W-key pattern on each eligible attack.
+        if (mode == 4) {
+            if (!customPattern.isEmpty() && !playing && (!requireW || Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode()))) {
+                startPlayback();
+            }
+            return;
+        }
+
+        if (mode == 3 || (requireW && !Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode()))) return;
         if (cooldownTicks > 0 || releaseTicks > 0 || pendingDelay >= 0) return;
         pendingDelay = delay;
     }
