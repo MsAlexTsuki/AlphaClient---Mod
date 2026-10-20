@@ -15,10 +15,7 @@ public final class WTapSettingsGui extends GuiScreen {
     private static final int TARGET = 14;
     private static final int COOLDOWN = 15;
     private static final int REQUIRE_W = 16;
-    private static final int RECORD = 17;
-    private static final int STOP = 18;
-
-    private static final String[] MODES = {"LEGIT", "STANDARD", "AGGRESSIVE", "MANUAL", "CUSTOM"};
+    private static final String[] MODES = {"LEGIT", "STANDARD", "AGGRESSIVE", "MANUAL"};
     private static final String[] TRIGGERS = {"ON HIT", "ON ATTACK"};
     private static final String[] TARGETS = {"PLAYERS", "ALL LIVING ENTITIES"};
 
@@ -37,17 +34,11 @@ public final class WTapSettingsGui extends GuiScreen {
         buttonList.add(new AlphaButton(ENABLED, x, y, buttonWidth, 20, "ENABLED: " + onOff(WTapAssistance.isEnabled())));
         buttonList.add(new AlphaButton(MODE, x, y + gap, buttonWidth, 20, "MODE: " + MODES[WTapAssistance.getMode()]));
 
-        if (WTapAssistance.getMode() == 4) {
-            buttonList.add(new AlphaButton(RECORD, x, y + gap * 2, buttonWidth, 20,
-                    WTapAssistance.isRecording() ? "RECORDING W-TAPS..." : "RECORD"));
-            buttonList.add(new AlphaButton(STOP, x, y + gap * 3, buttonWidth, 20, "STOP & SAVE"));
-        } else {
-            buttonList.add(new AlphaButton(DELAY, x, y + gap * 2, buttonWidth, 20, "DELAY: " + WTapAssistance.getDelay() + " TICKS"));
-            buttonList.add(new AlphaButton(TRIGGER, x, y + gap * 3, buttonWidth, 20, "TRIGGER: " + TRIGGERS[WTapAssistance.getTrigger()]));
-            buttonList.add(new AlphaButton(TARGET, x, y + gap * 4, buttonWidth, 20, "TARGETS: " + TARGETS[WTapAssistance.getTarget()]));
-            buttonList.add(new AlphaButton(COOLDOWN, x, y + gap * 5, buttonWidth, 20, "COOLDOWN: " + WTapAssistance.getCooldown() + " TICKS"));
-            buttonList.add(new AlphaButton(REQUIRE_W, x, y + gap * 6, buttonWidth, 20, "REQUIRE W KEY: " + onOff(WTapAssistance.isRequireW())));
-        }
+        buttonList.add(new AlphaButton(DELAY, x, y + gap * 2, buttonWidth, 20, "DELAY: " + WTapAssistance.getDelay() + " TICKS"));
+        buttonList.add(new AlphaButton(TRIGGER, x, y + gap * 3, buttonWidth, 20, "TRIGGER: " + TRIGGERS[WTapAssistance.getTrigger()]));
+        buttonList.add(new AlphaButton(TARGET, x, y + gap * 4, buttonWidth, 20, "TARGETS: " + TARGETS[WTapAssistance.getTarget()]));
+        buttonList.add(new AlphaButton(COOLDOWN, x, y + gap * 5, buttonWidth, 20, "COOLDOWN: " + WTapAssistance.getCooldown() + " TICKS"));
+        buttonList.add(new AlphaButton(REQUIRE_W, x, y + gap * 6, buttonWidth, 20, "REQUIRE W KEY: " + onOff(WTapAssistance.isRequireW())));
         buttonList.add(new AlphaButton(BACK, width / 2 - 55, height - 27, 110, 18, "BACK"));
     }
 
@@ -65,8 +56,6 @@ public final class WTapSettingsGui extends GuiScreen {
             case TARGET: WTapAssistance.setTarget((WTapAssistance.getTarget() + 1) % TARGETS.length); break;
             case COOLDOWN: WTapAssistance.setCooldown(WTapAssistance.getCooldown() >= 20 ? 0 : WTapAssistance.getCooldown() + 1); break;
             case REQUIRE_W: WTapAssistance.setRequireW(!WTapAssistance.isRequireW()); break;
-            case RECORD: WTapAssistance.startRecording(); break;
-            case STOP: WTapAssistance.stopRecording(); WTapAssistance.stopPlayback(); break;
             default: return;
         }
         initGui();
