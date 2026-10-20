@@ -55,7 +55,6 @@ public final class AlphaClient {
 
     private KeyBinding openModMenuKey;
     private KeyBinding toggleBhopKey;
-    private KeyBinding wTapPlaybackKey;
     private int partnerAutoConnectTicks = -1;
     private boolean partnerAutoConnectConsumed;
     private boolean fpsOptimizationInitialized;
@@ -95,7 +94,6 @@ public final class AlphaClient {
         );
         ClientRegistry.registerKeyBinding(openModMenuKey);
         syncBhopKeyBindingVisibility();
-        syncWTapPlaybackKeyBindingVisibility();
 
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
     }
@@ -107,7 +105,6 @@ public final class AlphaClient {
 
         // Keep the BHOP key visible in Minecraft Controls only while community-authenticated.
         syncBhopKeyBindingVisibility();
-        syncWTapPlaybackKeyBindingVisibility();
 
         // Apply FPS defaults once when Minecraft's settings are ready, independent of HUD toggles.
         if (!fpsOptimizationInitialized) {
@@ -145,19 +142,6 @@ public final class AlphaClient {
         if (openModMenuKey != null && openModMenuKey.isPressed()) {
             if (minecraft.currentScreen == null) {
                 minecraft.displayGuiScreen(new AlphaModMenu(null));
-            }
-            return;
-        }
-
-        if (wTapPlaybackKey != null && wTapPlaybackKey.isPressed()) {
-            if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                    && WTapAssistance.isEnabled() && WTapAssistance.getMode() == 4
-                    && WTapAssistance.hasCustomPattern() && minecraft.currentScreen == null) {
-                WTapAssistance.startPlayback();
-                if (minecraft.thePlayer != null) {
-                    minecraft.thePlayer.addChatMessage(new net.minecraft.util.ChatComponentText(
-                            "§7[AlphaClient] §aW-Tap playback activated."));
-                }
             }
             return;
         }
@@ -217,53 +201,6 @@ public final class AlphaClient {
             int index = 0;
             for (KeyBinding binding : bindings) {
                 if (binding != toggleBhopKey) {
-                    filtered[index++] = binding;
-                }
-            }
-            minecraft.gameSettings.keyBindings = filtered;
-        }
-    }
-
-    /**
-     * Shows the custom W-Tap playback binding in Minecraft Controls for Founder only.
-     * No default key is assigned; Founders choose their own binding in Options.
-     */
-    private void syncWTapPlaybackKeyBindingVisibility() {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || minecraft.gameSettings == null) return;
-
-        boolean shouldBeVisible = PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
-
-        if (shouldBeVisible && wTapPlaybackKey == null) {
-            wTapPlaybackKey = new KeyBinding(
-                    "AlphaClient: W-Tap Playback",
-                    0,
-                    "AlphaClient"
-            );
-            ClientRegistry.registerKeyBinding(wTapPlaybackKey);
-        }
-
-        if (wTapPlaybackKey == null) return;
-
-        KeyBinding[] bindings = minecraft.gameSettings.keyBindings;
-        boolean isRegisteredInControls = false;
-        for (KeyBinding binding : bindings) {
-            if (binding == wTapPlaybackKey) {
-                isRegisteredInControls = true;
-                break;
-            }
-        }
-
-        if (shouldBeVisible && !isRegisteredInControls) {
-            KeyBinding[] expanded = new KeyBinding[bindings.length + 1];
-            System.arraycopy(bindings, 0, expanded, 0, bindings.length);
-            expanded[bindings.length] = wTapPlaybackKey;
-            minecraft.gameSettings.keyBindings = expanded;
-        } else if (!shouldBeVisible && isRegisteredInControls) {
-            KeyBinding[] filtered = new KeyBinding[bindings.length - 1];
-            int index = 0;
-            for (KeyBinding binding : bindings) {
-                if (binding != wTapPlaybackKey) {
                     filtered[index++] = binding;
                 }
             }
