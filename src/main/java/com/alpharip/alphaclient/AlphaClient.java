@@ -154,6 +154,10 @@ public final class AlphaClient {
                     && WTapAssistance.isEnabled() && WTapAssistance.getMode() == 4
                     && WTapAssistance.hasCustomPattern() && minecraft.currentScreen == null) {
                 WTapAssistance.startPlayback();
+                if (minecraft.thePlayer != null) {
+                    minecraft.thePlayer.addChatMessage(new net.minecraft.util.ChatComponentText(
+                            "§7[AlphaClient] §aW-Tap playback activated."));
+                }
             }
             return;
         }
