@@ -6,14 +6,12 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /** Client-side W-Tap helper. Settings are shared with the W-Tap GUI. */
@@ -125,7 +123,6 @@ public final class WTapAssistance {
         playing = false;
         playbackInRelease = false;
         restoreForwardKey(Minecraft.getMinecraft());
-        reportPlaybackTiming();
     }
 
     public static void stopPlayback() {
@@ -212,7 +209,11 @@ public final class WTapAssistance {
         }
 
         // Custom playback is driven by RenderTickEvent and a monotonic clock, not game ticks.
-        if (mode == 4 && playing) return;
+        if (mode == 4 && playing) {
+            // Keep the simulated release active even if Minecraft processes a physical key event.
+            if (playbackInRelease) KeyBinding.setKeyBindState(keyCode, false);
+            return;
+        }
 
         if (cooldownTicks > 0) cooldownTicks--;
         if (pendingDelay > 0) {
@@ -229,8 +230,11 @@ public final class WTapAssistance {
             return;
         }
         if (releaseTicks > 0) {
+            // Reassert the release for the whole tap; physical W key events must not cancel it early.
+            KeyBinding.setKeyBindState(keyCode, false);
             releaseTicks--;
             if (releaseTicks == 0) restoreForwardKey(mc);
+            return;
         }
     }
 
@@ -249,7 +253,10 @@ public final class WTapAssistance {
 
         long now = System.nanoTime();
         if (playbackInRelease) {
-            if (now < playbackDeadlineNanos) return;
+            if (now < playbackDeadlineNanos) {
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+                return;
+            }
             playbackLatenessNanos.add(now - playbackDeadlineNanos);
             restoreForwardKey(mc);
             playbackIndex++;
@@ -263,30 +270,6 @@ public final class WTapAssistance {
 
         // Ensure W is pressed for at least one rendered frame between recorded releases.
         if (renderFrame >= nextReleaseFrame) beginPlaybackRelease(now);
-    }
-
-    private static void reportPlaybackTiming() {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.thePlayer == null || playbackLatenessNanos.isEmpty()) return;
-        List<Long> sorted = new ArrayList<Long>(playbackLatenessNanos);
-        Collections.sort(sorted);
-        long total = 0L;
-        long max = 0L;
-        for (Long lateness : sorted) {
-            total += lateness;
-            if (lateness > max) max = lateness;
-        }
-        long p95 = sorted.get(Math.min(sorted.size() - 1, (int) Math.ceil(sorted.size() * 0.95) - 1));
-        mc.thePlayer.addChatMessage(new ChatComponentText(
-                "§7[AlphaClient] W-Tap timing: §f" + sorted.size()
-                        + " releases, avg +" + formatMillis(total / (double) sorted.size())
-                        + " ms, P95 +" + formatMillis(p95)
-                        + " ms, max +" + formatMillis(max) + " ms"));
-        playbackLatenessNanos.clear();
-    }
-
-    private static String formatMillis(double nanos) {
-        return String.format(java.util.Locale.ROOT, "%.2f", nanos / 1000000.0);
     }
 
     private static void restoreForwardKey(Minecraft mc) {
