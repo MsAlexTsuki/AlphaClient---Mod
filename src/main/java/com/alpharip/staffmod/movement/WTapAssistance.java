@@ -7,7 +7,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentText;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -122,7 +121,7 @@ public final class WTapAssistance {
         playbackDeadlineNanos = now + Math.max(1L, customPattern.get(playbackIndex));
     }
 
-    private void finishPlayback() {
+    private static void finishPlayback() {
         playing = false;
         playbackInRelease = false;
         restoreForwardKey(Minecraft.getMinecraft());
@@ -262,7 +261,7 @@ public final class WTapAssistance {
         if (renderFrame >= nextReleaseFrame) beginPlaybackRelease(now);
     }
 
-    private void reportPlaybackTiming() {
+    private static void reportPlaybackTiming() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null || playbackLatenessNanos.isEmpty()) return;
         List<Long> sorted = new ArrayList<Long>(playbackLatenessNanos);
@@ -282,11 +281,11 @@ public final class WTapAssistance {
         playbackLatenessNanos.clear();
     }
 
-    private String formatMillis(double nanos) {
+    private static String formatMillis(double nanos) {
         return String.format(java.util.Locale.ROOT, "%.2f", nanos / 1000000.0);
     }
 
-    private void restoreForwardKey(Minecraft mc) {
+    private static void restoreForwardKey(Minecraft mc) {
         if (mc == null || mc.gameSettings == null) return;
         int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
         KeyBinding.setKeyBindState(keyCode, Keyboard.isKeyDown(keyCode));
