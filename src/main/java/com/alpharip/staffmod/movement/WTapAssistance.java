@@ -22,6 +22,7 @@ public final class WTapAssistance {
     private static int mode;
     private static int trigger;
     private static int target;
+    // Each entry stores a duration: positive means W held, negative means W released.
     private static final List<Integer> customPattern = new ArrayList<Integer>();
     private static boolean recording;
     private static boolean playing;
@@ -46,7 +47,6 @@ public final class WTapAssistance {
     public static int getTrigger() { return trigger; }
     public static void setTrigger(int value) { trigger = Math.max(0, Math.min(1, value)); }
     public static int getTarget() { return target; }
-    public static void setTarget(int value) { target = Math.max(0, Math.min(1, value)); }
     public static boolean isRecording() { return recording; }
     public static boolean isPlaying() { return playing; }
     public static boolean hasCustomPattern() { return !customPattern.isEmpty(); }
@@ -62,9 +62,14 @@ public final class WTapAssistance {
     }
 
     public static void stopRecording() {
-        if (recording && recordTicks > 0) customPattern.add(recordTicks);
+        if (recording && recordTicks > 0) saveSegment();
         recording = false;
         recordTicks = 0;
+    }
+
+    private static void saveSegment() {
+        if (recordTicks <= 0) return;
+        customPattern.add(lastPhysicalW ? recordTicks : -recordTicks);
     }
 
     public static void startPlayback() {
@@ -72,10 +77,30 @@ public final class WTapAssistance {
         if (customPattern.isEmpty()) return;
         playing = true;
         playbackIndex = 0;
-        playbackTicks = customPattern.get(0);
+        applyPlaybackSegment();
     }
 
-    public static void stopPlayback() { playing = false; }
+    private static void applyPlaybackSegment() {
+        if (playbackIndex >= customPattern.size()) {
+            playing = false;
+            return;
+        }
+        int segment = customPattern.get(playbackIndex);
+        playbackTicks = Math.max(1, Math.abs(segment));
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc != null && mc.gameSettings != null) {
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), segment > 0);
+        }
+    }
+
+    public static void stopPlayback() {
+        playing = false;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc != null && mc.gameSettings != null) {
+            int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
+            KeyBinding.setKeyBindState(keyCode, Keyboard.isKeyDown(keyCode));
+        }
+    }
 
     @SubscribeEvent
     public void onAttackEntity(AttackEntityEvent event) {
@@ -107,18 +132,18 @@ public final class WTapAssistance {
         if (recording && mc.currentScreen == null) {
             recordTicks++;
             if (physicalW != lastPhysicalW) {
-                customPattern.add(recordTicks);
+                saveSegment();
                 recordTicks = 0;
                 lastPhysicalW = physicalW;
             }
         }
 
-        // Never propagate the physical W key into Minecraft's movement binding while a GUI/chat is open.
+        // Don't let the W-Tap module feed movement input while chat or another GUI is open.
         if (mc.currentScreen != null) {
             KeyBinding.setKeyBindState(keyCode, false);
             pendingDelay = -1;
             releaseTicks = 0;
-            if (playing) stopPlayback();
+            if (playing) playing = false;
             return;
         }
 
@@ -131,16 +156,13 @@ public final class WTapAssistance {
         }
 
         if (mode == 4 && playing) {
-            if (playbackTicks > 0) playbackTicks--;
-            if (playbackTicks <= 0) {
+            if (--playbackTicks <= 0) {
                 playbackIndex++;
                 if (playbackIndex >= customPattern.size()) {
                     stopPlayback();
                     restoreForwardKey(mc);
                 } else {
-                    playbackTicks = customPattern.get(playbackIndex);
-                    if (playbackIndex % 2 == 0) KeyBinding.setKeyBindState(keyCode, physicalW);
-                    else KeyBinding.setKeyBindState(keyCode, false);
+                    applyPlaybackSegment();
                 }
             }
             return;
