@@ -52,11 +52,13 @@ public final class WTapAssistance {
     public static boolean hasCustomPattern() { return !customPattern.isEmpty(); }
 
     public static void startRecording() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.gameSettings == null) return;
         customPattern.clear();
         recording = true;
         playing = false;
         recordTicks = 0;
-        lastPhysicalW = Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindForward.getKeyCode());
+        lastPhysicalW = Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode());
     }
 
     public static void stopRecording() {
@@ -78,7 +80,8 @@ public final class WTapAssistance {
     @SubscribeEvent
     public void onAttackEntity(AttackEntityEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (!enabled || mode >= 3 || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer) return;
+        if (!enabled || mode >= 3 || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer
+                || mc.currentScreen != null) return;
         if (!PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) return;
         Entity victim = event.target;
         if (!(victim instanceof EntityLivingBase)) return;
@@ -110,8 +113,16 @@ public final class WTapAssistance {
             }
         }
 
-        if (!enabled || !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                || mc.currentScreen != null || mode == 3) {
+        // Never propagate the physical W key into Minecraft's movement binding while a GUI/chat is open.
+        if (mc.currentScreen != null) {
+            KeyBinding.setKeyBindState(keyCode, false);
+            pendingDelay = -1;
+            releaseTicks = 0;
+            if (playing) stopPlayback();
+            return;
+        }
+
+        if (!enabled || !PermissionService.hasAccess(PermissionService.Rank.FOUNDER) || mode == 3) {
             restoreForwardKey(mc);
             pendingDelay = -1;
             releaseTicks = 0;
