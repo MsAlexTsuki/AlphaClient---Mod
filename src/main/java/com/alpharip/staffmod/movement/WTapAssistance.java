@@ -22,7 +22,7 @@ public final class WTapAssistance {
     private static int mode;
     private static int trigger;
     private static int target;
-    // Each entry stores a duration: positive means W held, negative means W released.
+    // Each entry stores only the duration for which W is released.
     private static final List<Integer> customPattern = new ArrayList<Integer>();
     private static boolean recording;
     private static boolean playing;
@@ -63,14 +63,14 @@ public final class WTapAssistance {
     }
 
     public static void stopRecording() {
-        if (recording && recordTicks > 0) saveSegment();
+        if (recording && !lastPhysicalW && recordTicks > 0) saveSegment();
         recording = false;
         recordTicks = 0;
     }
 
     private static void saveSegment() {
-        if (recordTicks <= 0) return;
-        customPattern.add(lastPhysicalW ? recordTicks : -recordTicks);
+        if (recordTicks <= 0 || lastPhysicalW) return;
+        customPattern.add(-recordTicks);
     }
 
     public static void startPlayback() {
@@ -113,7 +113,7 @@ public final class WTapAssistance {
         if (!(victim instanceof EntityLivingBase)) return;
         if (target == 0 && !(victim instanceof EntityPlayer)) return;
 
-        // Custom mode automatically replays the saved W-key pattern on each eligible attack.
+        // Custom mode automatically replays the saved W-release durations on eligible attacks.
         if (mode == 4) {
             if (!customPattern.isEmpty() && !playing && (!requireW || Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode()))) {
                 startPlayback();
@@ -142,7 +142,7 @@ public final class WTapAssistance {
         if (recording && mc.currentScreen == null) {
             recordTicks++;
             if (physicalW != lastPhysicalW) {
-                saveSegment();
+                if (!lastPhysicalW) saveSegment();
                 recordTicks = 0;
                 lastPhysicalW = physicalW;
             }
