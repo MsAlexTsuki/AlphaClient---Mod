@@ -51,8 +51,6 @@ public final class LegacyPvpFeatureCatalog {
                 "Independently restores the legacy first-person swing while eating food or drinking a potion."),
         new Feature("hit-effects", "Legacy hit and damage effects", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
                 "Visual effects only; does not change damage."),
-        new Feature("camera-bobbing", "Disable camera bobbing", Scope.CLIENT_VISUAL, Status.CONFIGURABLE,
-                "Implemented: restores the previous game setting when disabled."),
         new Feature("sneak-walk", "Legacy sneak and walk visuals", Scope.CLIENT_VISUAL, Status.RENDER_HOOK_REQUIRED,
                 "Visual animation only; not movement speed."),
         new Feature("attack-block", "Combine attacking and blocking", Scope.CLIENT_INPUT, Status.INPUT_HOOK_REQUIRED,
