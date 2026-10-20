@@ -86,23 +86,6 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(cps);
 
-        AlphaModule bhop = new AlphaModule(
-                "staffmods",
-                "BHOP",
-                "Retained AlphaClient movement module.",
-                AlphaModule.Category.MOD,
-                true,
-                DEFAULT_MODULE_ENABLED
-        );
-        bhop.addFeature(new AlphaModuleFeature(
-                "bhop",
-                "BHOP",
-                "Retained movement module.",
-                PermissionService.Rank.MOD,
-                true
-        ));
-        MODULES.add(bhop);
-
         AlphaModule wTap = new AlphaModule(
                 "w-tap-assistance",
                 "W-Tap Assistance",
