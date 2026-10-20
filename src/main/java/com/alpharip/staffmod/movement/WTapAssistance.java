@@ -210,9 +210,16 @@ public final class WTapAssistance {
 
         // Custom playback is driven by RenderTickEvent and a monotonic clock, not game ticks.
         if (mode == 4 && playing) {
-            // Keep the simulated release active even if Minecraft processes a physical key event.
-            if (playbackInRelease) KeyBinding.setKeyBindState(keyCode, false);
+            // During a release, W-Tap owns the key state. Between releases, follow the physical key.
+            KeyBinding.setKeyBindState(keyCode, playbackInRelease ? false : physicalW);
             return;
+        }
+
+        // Outside an active release, keep Minecraft's forward state synchronized with the real key.
+        // This restores movement on the next client tick even if the physical key never generated
+        // another key-down event after W-Tap temporarily released it.
+        if (releaseTicks <= 0 && pendingDelay < 0) {
+            KeyBinding.setKeyBindState(keyCode, physicalW);
         }
 
         if (cooldownTicks > 0) cooldownTicks--;
