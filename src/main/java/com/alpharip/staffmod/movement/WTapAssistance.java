@@ -70,7 +70,8 @@ public final class WTapAssistance {
     }
 
     public static void stopRecording() {
-        if (recording && !lastPhysicalW) saveReleaseDuration(System.nanoTime());
+        // Only complete W-release intervals count. Do not record the unfinished interval
+        // between the final W release and the moment recording is stopped.
         recording = false;
         releaseStartedNanos = 0L;
     }
