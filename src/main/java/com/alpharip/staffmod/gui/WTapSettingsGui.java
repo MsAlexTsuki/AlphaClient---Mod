@@ -17,7 +17,6 @@ public final class WTapSettingsGui extends GuiScreen {
     private static final int REQUIRE_W = 16;
     private static final int RECORD = 17;
     private static final int STOP = 18;
-    private static final int PLAY = 19;
 
     private static final String[] MODES = {"LEGIT", "STANDARD", "AGGRESSIVE", "MANUAL", "CUSTOM"};
     private static final String[] TRIGGERS = {"ON HIT", "ON ATTACK"};
@@ -42,8 +41,6 @@ public final class WTapSettingsGui extends GuiScreen {
             buttonList.add(new AlphaButton(RECORD, x, y + gap * 2, buttonWidth, 20,
                     WTapAssistance.isRecording() ? "RECORDING W-TAPS..." : "RECORD"));
             buttonList.add(new AlphaButton(STOP, x, y + gap * 3, buttonWidth, 20, "STOP & SAVE"));
-            buttonList.add(new AlphaButton(PLAY, x, y + gap * 4, buttonWidth, 20,
-                    WTapAssistance.isPlaying() ? "PLAYING..." : "PLAYBACK"));
         } else {
             buttonList.add(new AlphaButton(DELAY, x, y + gap * 2, buttonWidth, 20, "DELAY: " + WTapAssistance.getDelay() + " TICKS"));
             buttonList.add(new AlphaButton(TRIGGER, x, y + gap * 3, buttonWidth, 20, "TRIGGER: " + TRIGGERS[WTapAssistance.getTrigger()]));
@@ -70,7 +67,6 @@ public final class WTapSettingsGui extends GuiScreen {
             case REQUIRE_W: WTapAssistance.setRequireW(!WTapAssistance.isRequireW()); break;
             case RECORD: WTapAssistance.startRecording(); break;
             case STOP: WTapAssistance.stopRecording(); WTapAssistance.stopPlayback(); break;
-            case PLAY: WTapAssistance.startPlayback(); break;
             default: return;
         }
         initGui();
