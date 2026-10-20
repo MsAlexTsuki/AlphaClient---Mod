@@ -194,8 +194,12 @@ public final class WTapAssistance {
         if (mc.currentScreen != null) {
             pendingDelay = -1;
             releaseTicks = 0;
-            if (playing) stopPlayback();
-            else restoreForwardKey(mc);
+            if (playing) {
+                playing = false;
+                playbackInRelease = false;
+                playbackLatenessNanos.clear();
+            }
+            KeyBinding.setKeyBindState(keyCode, false);
             return;
         }
 
