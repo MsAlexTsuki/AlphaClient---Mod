@@ -6,11 +6,15 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraft.util.ChatComponentText;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /** Client-side W-Tap helper. Settings are shared with the W-Tap GUI. */
@@ -22,14 +26,19 @@ public final class WTapAssistance {
     private static int mode;
     private static int trigger;
     private static int target;
-    // Each entry stores only the duration for which W is released.
-    private static final List<Integer> customPattern = new ArrayList<Integer>();
+
+    // Recorded values contain only W-release durations, in nanoseconds.
+    private static final List<Long> customPattern = new ArrayList<Long>();
+    private static final List<Long> playbackLatenessNanos = new ArrayList<Long>();
     private static boolean recording;
     private static boolean playing;
     private static boolean lastPhysicalW;
-    private static int recordTicks;
+    private static long releaseStartedNanos;
     private static int playbackIndex;
-    private static int playbackTicks;
+    private static long playbackDeadlineNanos;
+    private static boolean playbackInRelease;
+    private static long renderFrame;
+    private static long nextReleaseFrame;
     private int pendingDelay = -1;
     private int releaseTicks;
     private int cooldownTicks;
@@ -55,56 +64,94 @@ public final class WTapAssistance {
     public static void startRecording() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.gameSettings == null) return;
+        stopPlayback();
         customPattern.clear();
         recording = true;
-        playing = false;
-        recordTicks = 0;
+        long now = System.nanoTime();
         lastPhysicalW = Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode());
+        releaseStartedNanos = lastPhysicalW ? 0L : now;
     }
 
     public static void stopRecording() {
-        if (recording && !lastPhysicalW && recordTicks > 0) saveSegment();
+        if (recording && !lastPhysicalW) saveReleaseDuration(System.nanoTime());
         recording = false;
-        recordTicks = 0;
+        releaseStartedNanos = 0L;
     }
 
-    private static void saveSegment() {
-        if (recordTicks <= 0 || lastPhysicalW) return;
-        customPattern.add(-recordTicks);
+    private static void saveReleaseDuration(long now) {
+        if (lastPhysicalW || releaseStartedNanos <= 0L) return;
+        long duration = now - releaseStartedNanos;
+        if (duration > 0L) customPattern.add(duration);
+        releaseStartedNanos = 0L;
+    }
+
+    private static void recordPhysicalTransition(boolean physicalW, long now) {
+        if (!recording || physicalW == lastPhysicalW) return;
+        if (!lastPhysicalW) {
+            saveReleaseDuration(now);
+        } else {
+            releaseStartedNanos = now;
+        }
+        lastPhysicalW = physicalW;
     }
 
     public static void startPlayback() {
         stopRecording();
         if (customPattern.isEmpty()) return;
+        playbackLatenessNanos.clear();
         playing = true;
         playbackIndex = 0;
-        applyPlaybackSegment();
+        playbackInRelease = false;
+        nextReleaseFrame = renderFrame;
+        beginPlaybackRelease(System.nanoTime());
     }
 
-    private static void applyPlaybackSegment() {
+    private static void beginPlaybackRelease(long now) {
         if (playbackIndex >= customPattern.size()) {
+            finishPlayback();
+            return;
+        }
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.gameSettings == null) {
             playing = false;
             return;
         }
-        int segment = customPattern.get(playbackIndex);
-        playbackTicks = Math.max(1, Math.abs(segment));
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc != null && mc.gameSettings != null) {
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), segment > 0);
-        }
+        int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
+        KeyBinding.setKeyBindState(keyCode, false);
+        playbackInRelease = true;
+        playbackDeadlineNanos = now + Math.max(1L, customPattern.get(playbackIndex));
+    }
+
+    private void finishPlayback() {
+        playing = false;
+        playbackInRelease = false;
+        restoreForwardKey(Minecraft.getMinecraft());
+        reportPlaybackTiming();
     }
 
     public static void stopPlayback() {
+        boolean wasPlaying = playing;
         playing = false;
+        playbackInRelease = false;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc != null && mc.gameSettings != null) {
             int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
             KeyBinding.setKeyBindState(keyCode, Keyboard.isKeyDown(keyCode));
         }
+        if (wasPlaying) playbackLatenessNanos.clear();
     }
 
     @SubscribeEvent
-    public void onAttackEntity(AttackEntityEvent event) {
+    public void onKeyInput(InputEvent.KeyInputEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!recording || mc == null || mc.gameSettings == null || mc.currentScreen != null) return;
+        int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
+        if (keyCode < 0 || Keyboard.getEventKey() != keyCode) return;
+        recordPhysicalTransition(Keyboard.getEventKeyState(), System.nanoTime());
+    }
+
+    @SubscribeEvent
+    public void onAttackEntity(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
         if (!enabled || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer
                 || mc.currentScreen != null) return;
@@ -115,7 +162,8 @@ public final class WTapAssistance {
 
         // Custom mode automatically replays the saved W-release durations on eligible attacks.
         if (mode == 4) {
-            if (!customPattern.isEmpty() && !playing && (!requireW || Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode()))) {
+            if (!customPattern.isEmpty() && !playing
+                    && (!requireW || Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode()))) {
                 startPlayback();
             }
             return;
@@ -133,27 +181,22 @@ public final class WTapAssistance {
         if (mc == null || mc.thePlayer == null || mc.gameSettings == null) {
             pendingDelay = -1;
             releaseTicks = 0;
-            playing = false;
+            if (playing) stopPlayback();
             return;
         }
         int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
         boolean physicalW = Keyboard.isKeyDown(keyCode);
 
+        // Fallback synchronization handles focus changes while the recorder's GUI is open.
         if (recording && mc.currentScreen == null) {
-            recordTicks++;
-            if (physicalW != lastPhysicalW) {
-                if (!lastPhysicalW) saveSegment();
-                recordTicks = 0;
-                lastPhysicalW = physicalW;
-            }
+            recordPhysicalTransition(physicalW, System.nanoTime());
         }
 
-        // Don't let the W-Tap module feed movement input while chat or another GUI is open.
         if (mc.currentScreen != null) {
-            KeyBinding.setKeyBindState(keyCode, false);
             pendingDelay = -1;
             releaseTicks = 0;
-            if (playing) playing = false;
+            if (playing) stopPlayback();
+            else restoreForwardKey(mc);
             return;
         }
 
@@ -165,18 +208,8 @@ public final class WTapAssistance {
             return;
         }
 
-        if (mode == 4 && playing) {
-            if (--playbackTicks <= 0) {
-                playbackIndex++;
-                if (playbackIndex >= customPattern.size()) {
-                    stopPlayback();
-                    restoreForwardKey(mc);
-                } else {
-                    applyPlaybackSegment();
-                }
-            }
-            return;
-        }
+        // Custom playback is driven by RenderTickEvent and a monotonic clock, not game ticks.
+        if (mode == 4 && playing) return;
 
         if (cooldownTicks > 0) cooldownTicks--;
         if (pendingDelay > 0) {
@@ -198,8 +231,63 @@ public final class WTapAssistance {
         }
     }
 
+    @SubscribeEvent
+    public void onRenderTick(TickEvent.RenderTickEvent event) {
+        if (event.phase != TickEvent.Phase.START) return;
+        renderFrame++;
+        if (!playing) return;
+
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null || mc.gameSettings == null || mc.currentScreen != null
+                || !enabled || !PermissionService.hasAccess(PermissionService.Rank.FOUNDER) || mode != 4) {
+            stopPlayback();
+            return;
+        }
+
+        long now = System.nanoTime();
+        if (playbackInRelease) {
+            if (now < playbackDeadlineNanos) return;
+            playbackLatenessNanos.add(now - playbackDeadlineNanos);
+            restoreForwardKey(mc);
+            playbackIndex++;
+            playbackInRelease = false;
+            nextReleaseFrame = renderFrame + 1L;
+            if (playbackIndex >= customPattern.size()) {
+                finishPlayback();
+            }
+            return;
+        }
+
+        // Ensure W is pressed for at least one rendered frame between recorded releases.
+        if (renderFrame >= nextReleaseFrame) beginPlaybackRelease(now);
+    }
+
+    private void reportPlaybackTiming() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null || playbackLatenessNanos.isEmpty()) return;
+        List<Long> sorted = new ArrayList<Long>(playbackLatenessNanos);
+        Collections.sort(sorted);
+        long total = 0L;
+        long max = 0L;
+        for (Long lateness : sorted) {
+            total += lateness;
+            if (lateness > max) max = lateness;
+        }
+        long p95 = sorted.get(Math.min(sorted.size() - 1, (int) Math.ceil(sorted.size() * 0.95) - 1));
+        mc.thePlayer.addChatMessage(new ChatComponentText(
+                "§7[AlphaClient] W-Tap timing: §f" + sorted.size()
+                        + " releases, avg +" + formatMillis(total / (double) sorted.size())
+                        + " ms, P95 +" + formatMillis(p95)
+                        + " ms, max +" + formatMillis(max) + " ms"));
+        playbackLatenessNanos.clear();
+    }
+
+    private String formatMillis(double nanos) {
+        return String.format(java.util.Locale.ROOT, "%.2f", nanos / 1000000.0);
+    }
+
     private void restoreForwardKey(Minecraft mc) {
-        if (mc.gameSettings == null) return;
+        if (mc == null || mc.gameSettings == null) return;
         int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
         KeyBinding.setKeyBindState(keyCode, Keyboard.isKeyDown(keyCode));
     }
