@@ -49,7 +49,7 @@ public final class WTapAssistance {
     public static int getCooldown() { return cooldown; }
     public static void setCooldown(int value) { cooldown = Math.max(0, Math.min(20, value)); }
     public static int getMode() { return mode; }
-    public static void setMode(int value) { mode = Math.max(0, Math.min(4, value)); }
+    public static void setMode(int value) { mode = Math.max(0, Math.min(3, value)); }
     public static int getTrigger() { return trigger; }
     public static void setTrigger(int value) { trigger = Math.max(0, Math.min(1, value)); }
     public static int getTarget() { return target; }
