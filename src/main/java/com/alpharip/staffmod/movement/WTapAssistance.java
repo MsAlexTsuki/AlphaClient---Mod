@@ -47,6 +47,7 @@ public final class WTapAssistance {
     public static int getTrigger() { return trigger; }
     public static void setTrigger(int value) { trigger = Math.max(0, Math.min(1, value)); }
     public static int getTarget() { return target; }
+    public static void setTarget(int value) { target = Math.max(0, Math.min(1, value)); }
     public static boolean isRecording() { return recording; }
     public static boolean isPlaying() { return playing; }
     public static boolean hasCustomPattern() { return !customPattern.isEmpty(); }
