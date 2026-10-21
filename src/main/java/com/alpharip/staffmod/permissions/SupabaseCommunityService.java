@@ -43,6 +43,7 @@ public final class SupabaseCommunityService {
     private static volatile String signedInUserId;
     private static volatile long accessTokenExpiresAt;
     private static volatile String signedInEmail;
+    private static volatile String signedInAlphaName;
     private static volatile String signedInRankLabel;
     private static volatile String signedInRankKey;
     private static volatile boolean signedInFounder;
@@ -147,10 +148,11 @@ public final class SupabaseCommunityService {
         signedInUserId = userId;
         accessTokenExpiresAt = (System.currentTimeMillis() / 1000L) + Math.max(60L, getLong(auth, "expires_in", 3600L));
         signedInEmail = email.trim();
+        signedInAlphaName = resolveAlphaName(user, signedInEmail);
         sessionStatus = "Signed in. Saving Alpha Account session...";
         persistRefreshToken();
         synchronizeVerifiedAccount();
-        sessionStatus = "Signed in as " + signedInEmail + ". Rank and permissions are synchronized.";
+        sessionStatus = "Signed in as " + getSignedInAlphaName() + ".";
         linkCurrentMinecraftUuid(accessToken);
     }
 
@@ -178,6 +180,7 @@ public final class SupabaseCommunityService {
         refreshToken = nextRefreshToken;
         signedInUserId = userId;
         if (email != null) signedInEmail = email;
+        if (user != null) signedInAlphaName = resolveAlphaName(user, signedInEmail);
         accessTokenExpiresAt = (System.currentTimeMillis() / 1000L) + Math.max(60L, getLong(auth, "expires_in", 3600L));
         persistRefreshToken();
     }
@@ -260,6 +263,7 @@ public final class SupabaseCommunityService {
         signedInUserId = null;
         accessTokenExpiresAt = 0L;
         signedInEmail = null;
+        signedInAlphaName = null;
         signedInRankLabel = null;
         signedInRankKey = null;
         signedInFounder = false;
@@ -288,6 +292,10 @@ public final class SupabaseCommunityService {
             refreshToken = getString(saved, "refresh_token");
             signedInUserId = getString(saved, "user_id");
             signedInEmail = getString(saved, "email");
+            signedInAlphaName = getString(saved, "alpha_name");
+            if (signedInAlphaName == null || signedInAlphaName.trim().isEmpty()) {
+                signedInAlphaName = resolveAlphaName(null, signedInEmail);
+            }
         } finally {
             reader.close();
         }
@@ -305,6 +313,7 @@ public final class SupabaseCommunityService {
         saved.addProperty("refresh_token", refreshToken);
         saved.addProperty("user_id", signedInUserId);
         if (signedInEmail != null) saved.addProperty("email", signedInEmail);
+        if (signedInAlphaName != null) saved.addProperty("alpha_name", signedInAlphaName);
         FileWriter writer = null;
         try {
             writer = new FileWriter(file);
@@ -328,6 +337,11 @@ public final class SupabaseCommunityService {
 
     public static boolean isSignedIn() { return accessToken != null; }
     public static String getSignedInEmail() { return signedInEmail; }
+    public static String getSignedInAlphaName() {
+        String name = signedInAlphaName;
+        if (name != null && !name.trim().isEmpty()) return name.trim();
+        return resolveAlphaName(null, signedInEmail);
+    }
     public static String getSignedInRankLabel() { return signedInRankLabel == null ? "No Rank" : signedInRankLabel; }
 
     /** Returns the badge rank for the currently authenticated Alpha account, if any. */
@@ -337,6 +351,24 @@ public final class SupabaseCommunityService {
             return com.alpharip.staffmod.rankviewer.AlphaRank.FOUNDER;
         }
         return com.alpharip.staffmod.rankviewer.AlphaRank.fromString(signedInRankKey);
+    }
+
+    /** Resolves the player's Alpha display name from Supabase auth metadata. */
+    private static String resolveAlphaName(JsonObject user, String email) {
+        if (user != null && user.has("user_metadata") && user.get("user_metadata").isJsonObject()) {
+            JsonObject metadata = user.getAsJsonObject("user_metadata");
+            String[] keys = { "alpha_name", "alphaName", "username", "display_name", "full_name", "name" };
+            for (String key : keys) {
+                String value = getString(metadata, key);
+                if (value != null && !value.trim().isEmpty()) return value.trim();
+            }
+        }
+        if (email != null && !email.trim().isEmpty()) {
+            int at = email.indexOf('@');
+            String localPart = at > 0 ? email.substring(0, at) : email;
+            if (!localPart.trim().isEmpty()) return localPart.trim();
+        }
+        return "Unknown";
     }
 
     private static String formatRankLabel(String rankKey, boolean founder) {
