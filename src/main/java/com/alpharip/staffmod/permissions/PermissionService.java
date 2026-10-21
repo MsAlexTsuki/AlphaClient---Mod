@@ -41,6 +41,7 @@ public final class PermissionService {
     private static volatile Rank verifiedOnlineRank = Rank.PUBLIC;
     private static volatile boolean onlineRankVerified = false;
     private static volatile Set<String> verifiedModEntitlements = Collections.emptySet();
+    private static volatile java.util.Map<String, Boolean> verifiedModPermissions = Collections.emptyMap();
     private static volatile boolean modEntitlementsVerified = false;
 
     private PermissionService() {
@@ -98,11 +99,37 @@ public final class PermissionService {
             return;
         }
         verifiedModEntitlements = Collections.unmodifiableSet(new HashSet<String>(modIds));
+        java.util.Map<String, Boolean> permissions = new java.util.HashMap<String, Boolean>();
+        for (String modId : modIds) {
+            if (modId != null && !modId.trim().isEmpty()) permissions.put(modId, Boolean.TRUE);
+        }
+        verifiedModPermissions = Collections.unmodifiableMap(permissions);
+        modEntitlementsVerified = true;
+    }
+
+    /** Installs the complete authenticated per-mod permission result, including explicit denials. */
+    public static void setVerifiedModPermissions(java.util.Map<String, Boolean> permissions) {
+        if (permissions == null) {
+            clearVerifiedModEntitlements();
+            return;
+        }
+        java.util.Map<String, Boolean> safe = new java.util.HashMap<String, Boolean>();
+        Set<String> allowed = new HashSet<String>();
+        for (java.util.Map.Entry<String, Boolean> entry : permissions.entrySet()) {
+            String modId = entry.getKey();
+            if (modId == null || modId.trim().isEmpty()) continue;
+            boolean enabled = Boolean.TRUE.equals(entry.getValue());
+            safe.put(modId, enabled);
+            if (enabled) allowed.add(modId);
+        }
+        verifiedModPermissions = Collections.unmodifiableMap(safe);
+        verifiedModEntitlements = Collections.unmodifiableSet(allowed);
         modEntitlementsVerified = true;
     }
 
     public static void clearVerifiedModEntitlements() {
         verifiedModEntitlements = Collections.emptySet();
+        verifiedModPermissions = Collections.emptyMap();
         modEntitlementsVerified = false;
     }
 
@@ -110,8 +137,13 @@ public final class PermissionService {
     public static boolean hasModAccess(String modId) {
         if (modId == null || modId.trim().isEmpty()) return false;
         if (isOfflineTestSession()) return true;
-        if (!modEntitlementsVerified) return false;
-        return verifiedModEntitlements.contains(modId);
+        Boolean explicit = verifiedModPermissions.get(modId);
+        if (explicit != null) return explicit.booleanValue();
+        return modEntitlementsVerified && verifiedModEntitlements.contains(modId);
+    }
+
+    public static boolean hasExplicitModPermission(String modId) {
+        return modId != null && verifiedModPermissions.containsKey(modId);
     }
 
     public static boolean areModEntitlementsVerified() {
