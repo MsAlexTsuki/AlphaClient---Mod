@@ -171,6 +171,8 @@ public final class StaffModsMenuGui extends GuiScreen {
             // Founder and Owner receive every module. The Founder category remains
             // exclusive to Founder; Owner must never inherit Founder-only modules.
             for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+                // Bhop is only shown in StaffMods -> General, never in a rank folder.
+                if ("staffmods".equals(module.getId())) continue;
                 if (module.getCategory() == AlphaModule.Category.FOUNDER
                         && selectedRank != PermissionService.Rank.FOUNDER) continue;
                 modules.add(module);
@@ -194,6 +196,8 @@ public final class StaffModsMenuGui extends GuiScreen {
             AlphaModule.Category category = categoryForRank(assignedRank);
             if (category == null) continue;
             for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
+                // Bhop is exclusive to General, even for Founder and Owner.
+                if ("staffmods".equals(module.getId())) continue;
                 if (module.getCategory() == AlphaModule.Category.FOUNDER
                         && !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) continue;
                 if (!modules.contains(module)) modules.add(module);
