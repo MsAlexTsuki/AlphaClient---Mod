@@ -170,9 +170,13 @@ public final class StaffModsMenuGui extends GuiScreen {
             return modules;
         }
 
-        // Founder sees every registered module except Bhop, which belongs only in General.
-        // Owner sees every non-Founder module. Other staff ranks see modules belonging
-        // to their own staff level and every lower staff level, not just directly assigned ranks.
+        // Owner and Founder are permission tiers, not destinations for ordinary modules.
+        // Their own folders must not duplicate modules from lower-rank folders.
+        // Founder-only modules remain in Founder; Owner has no Owner-specific module list.
+        if (selectedRank == PermissionService.Rank.OWNER) {
+            return modules;
+        }
+
         int selectedLevel = staffFolderLevel(selectedRank);
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             if ("staffmods".equals(module.getId())) continue;
@@ -195,12 +199,9 @@ public final class StaffModsMenuGui extends GuiScreen {
                 continue;
             }
 
-            if (selectedRank == PermissionService.Rank.FOUNDER
-                    || selectedRank == PermissionService.Rank.OWNER) {
-                modules.add(module);
-                continue;
-            }
-
+            // Founder can open all lower-rank folders through rank access, but
+            // ordinary modules are shown only in their assigned folder.
+            // Founder-only modules were handled above and stay exclusive.
             PermissionService.Rank required = module.getCategory().getRequiredRank();
             int moduleLevel = staffFolderLevel(required);
             if (moduleLevel >= 0 && selectedLevel >= moduleLevel) {
