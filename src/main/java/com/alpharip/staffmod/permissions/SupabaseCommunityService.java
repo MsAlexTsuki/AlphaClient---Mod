@@ -374,13 +374,38 @@ public final class SupabaseCommunityService {
     }
     public static String getSignedInRankLabel() { return signedInRankLabel == null ? "No Rank" : signedInRankLabel; }
 
-    /** Returns the badge rank for the currently authenticated Alpha account, if any. */
+    /** Returns the badge for the highest verified assigned rank, not only profiles.rank_key. */
     public static com.alpharip.staffmod.rankviewer.AlphaRank getSignedInDisplayRank() {
         if (accessToken == null) return null;
-        if (signedInFounder || "founder".equalsIgnoreCase(signedInRankKey)) {
+        if (signedInFounder || PermissionService.getEffectiveRank() == PermissionService.Rank.FOUNDER) {
             return com.alpharip.staffmod.rankviewer.AlphaRank.FOUNDER;
         }
-        return com.alpharip.staffmod.rankviewer.AlphaRank.fromString(signedInRankKey);
+        switch (PermissionService.getEffectiveRank()) {
+            case OWNER:
+                return com.alpharip.staffmod.rankviewer.AlphaRank.OWNER;
+            case MANAGER:
+            case PLAT_ADMIN:
+            case MANAGEMENT:
+                return com.alpharip.staffmod.rankviewer.AlphaRank.MANAGEMENT;
+            case SR_ADMIN:
+                return com.alpharip.staffmod.rankviewer.AlphaRank.SENIOR_ADMIN;
+            case ADMIN:
+                return com.alpharip.staffmod.rankviewer.AlphaRank.ADMIN;
+            case SR_MOD:
+                return com.alpharip.staffmod.rankviewer.AlphaRank.SENIOR_MODERATOR;
+            case MOD:
+                return com.alpharip.staffmod.rankviewer.AlphaRank.MODERATOR;
+            case T_MOD:
+                return com.alpharip.staffmod.rankviewer.AlphaRank.TRIAL_MODERATOR;
+            case BETA:
+                return com.alpharip.staffmod.rankviewer.AlphaRank.BETA;
+            case DONATOR:
+                return "alpha_plus".equalsIgnoreCase(signedInRankKey)
+                        ? com.alpharip.staffmod.rankviewer.AlphaRank.ALPHA_PLUS
+                        : com.alpharip.staffmod.rankviewer.AlphaRank.ALPHA;
+            default:
+                return com.alpharip.staffmod.rankviewer.AlphaRank.fromString(signedInRankKey);
+        }
     }
 
     /** Resolves the player's Alpha display name from Supabase auth metadata. */
