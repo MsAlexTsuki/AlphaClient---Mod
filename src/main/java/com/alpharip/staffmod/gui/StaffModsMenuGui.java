@@ -158,44 +158,55 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private List<AlphaModule> getModulesForSelectedRank() {
         List<AlphaModule> modules = new ArrayList<AlphaModule>();
-        if (selectedRank == PermissionService.Rank.FOUNDER
-                || selectedRank == PermissionService.Rank.OWNER) {
-            // Founder and Owner receive every module. The Founder category remains
-            // exclusive to Founder; Owner must never inherit Founder-only modules.
-            for (AlphaModule module : AlphaModuleRegistry.getAll()) {
-                // Bhop is only shown in StaffMods -> General, never in a rank folder.
-                if ("staffmods".equals(module.getId())) continue;
-                if (module.getCategory() == AlphaModule.Category.FOUNDER
-                        && selectedRank != PermissionService.Rank.FOUNDER) continue;
-                modules.add(module);
-            }
-            return modules;
-        }
+
         if (selectedRank == PermissionService.Rank.PUBLIC) {
-            // BHOP remains available from General through its existing settings screen.
+            // Bhop is available only from General.
             AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
             if (bhop != null) modules.add(bhop);
             return modules;
         }
 
-        // Show one rank folder (the highest rank), but combine modules granted by
-        // every assigned rank. Rank display and permission aggregation are separate.
-        Set<PermissionService.Rank> assignedRanks = PermissionService.getVerifiedOnlineRanks();
-        if (PermissionService.isOfflineTestSession()) {
-            assignedRanks = java.util.Collections.singleton(PermissionService.Rank.FOUNDER);
-        }
-        for (PermissionService.Rank assignedRank : assignedRanks) {
-            AlphaModule.Category category = categoryForRank(assignedRank);
-            if (category == null) continue;
-            for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
-                // Bhop is exclusive to General, even for Founder and Owner.
-                if ("staffmods".equals(module.getId())) continue;
-                if (module.getCategory() == AlphaModule.Category.FOUNDER
-                        && !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) continue;
-                if (!modules.contains(module)) modules.add(module);
+        // Founder sees every registered module except Bhop, which belongs only in General.
+        // Owner sees every non-Founder module. Other staff ranks see modules belonging
+        // to their own staff level and every lower staff level, not just directly assigned ranks.
+        int selectedLevel = staffFolderLevel(selectedRank);
+        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            if ("staffmods".equals(module.getId())) continue;
+
+            if (module.getCategory() == AlphaModule.Category.FOUNDER) {
+                if (selectedRank == PermissionService.Rank.FOUNDER) modules.add(module);
+                continue;
+            }
+
+            if (selectedRank == PermissionService.Rank.FOUNDER
+                    || selectedRank == PermissionService.Rank.OWNER) {
+                modules.add(module);
+                continue;
+            }
+
+            PermissionService.Rank required = module.getCategory().getRequiredRank();
+            int moduleLevel = staffFolderLevel(required);
+            if (moduleLevel >= 0 && selectedLevel >= moduleLevel) {
+                modules.add(module);
             }
         }
         return modules;
+    }
+
+    private int staffFolderLevel(PermissionService.Rank rank) {
+        switch (rank) {
+            case FOUNDER: return 9;
+            case OWNER: return 8;
+            case MANAGER: return 7;
+            case PLAT_ADMIN:
+            case MANAGEMENT: return 6;
+            case SR_ADMIN: return 5;
+            case ADMIN: return 4;
+            case SR_MOD: return 3;
+            case MOD: return 2;
+            case T_MOD: return 1;
+            default: return -1;
+        }
     }
 
     private AlphaModule.Category categoryForRank(PermissionService.Rank rank) {
