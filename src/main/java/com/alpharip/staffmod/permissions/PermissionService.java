@@ -242,14 +242,14 @@ public final class PermissionService {
             case MOD: return 10;
             case T_MOD: return 9;
             case THE_NIBBLER: return 8;
-            case ALPHA_PLUS: return 7;
-            case ALPHA: return 6;
-            case ELITE: return 5;
-            case ROGUE: return 4;
-            case SCOUT: return 3;
-            case DONATOR: return 2; // Legacy compatibility only.
-            case PUBLIC: return 1; // Member.
-            case BETA: return 0;
+            case BETA: return 7; // Beta Tester ranks immediately below The Nibbler.
+            case ALPHA_PLUS: return 6;
+            case ALPHA: return 5;
+            case ELITE: return 4;
+            case ROGUE: return 3;
+            case SCOUT: return 2;
+            case DONATOR: return 1; // Legacy compatibility only.
+            case PUBLIC: return 0; // Member.
             default: return -1;
         }
     }
