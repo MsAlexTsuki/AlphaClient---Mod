@@ -182,7 +182,7 @@ public final class PermissionService {
         }
         if (!onlineRankVerified || verifiedOnlineRanks.isEmpty()) return Rank.PUBLIC;
         Rank strongest = Rank.PUBLIC;
-        int strongestPriority = rankPriority(Rank.PUBLIC);
+        int strongestPriority = -1;
         for (Rank rank : verifiedOnlineRanks) {
             int priority = rankPriority(rank);
             if (priority > strongestPriority) {
