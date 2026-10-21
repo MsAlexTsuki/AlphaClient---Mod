@@ -40,6 +40,7 @@ public final class StaffModsMenuGui extends GuiScreen {
     private final GuiScreen parent;
     private PermissionService.Rank selectedRank = PermissionService.Rank.PUBLIC;
     private PermissionService.Rank openFolderRank;
+    private boolean managementSubfolders;
     private int panelLeft, panelTop, panelWidth, panelHeight;
     private int contentLeft, contentTop, contentRight, contentBottom;
     private int scrollOffset;
@@ -67,17 +68,28 @@ public final class StaffModsMenuGui extends GuiScreen {
             int columns = 3;
             int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
             int tileHeight = 38;
-            int index = 0;
-            for (int i = 0; i < RANKS.length; i++) {
-                PermissionService.Rank rank = RANKS[i];
-                if (rank != PermissionService.Rank.PUBLIC && !PermissionService.hasAccess(rank)) {
-                    continue;
+            if (managementSubfolders) {
+                if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) {
+                    buttonList.add(new AlphaButton(CATEGORY_BASE + 100, contentLeft, contentTop,
+                            tileWidth, tileHeight, "PLATFORM ADMIN"));
                 }
-                int x = contentLeft + (index % columns) * (tileWidth + gap);
-                int y = contentTop + (index / columns) * (tileHeight + gap);
-                buttonList.add(new AlphaButton(CATEGORY_BASE + i, x, y, tileWidth, tileHeight,
-                        LABELS[i]));
-                index++;
+                if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+                    buttonList.add(new AlphaButton(CATEGORY_BASE + 101, contentLeft + tileWidth + gap, contentTop,
+                            tileWidth, tileHeight, "MANAGER"));
+                }
+            } else {
+                int index = 0;
+                for (int i = 0; i < RANKS.length; i++) {
+                    PermissionService.Rank rank = RANKS[i];
+                    if (rank != PermissionService.Rank.PUBLIC && !PermissionService.hasAccess(rank)) {
+                        continue;
+                    }
+                    int x = contentLeft + (index % columns) * (tileWidth + gap);
+                    int y = contentTop + (index / columns) * (tileHeight + gap);
+                    buttonList.add(new AlphaButton(CATEGORY_BASE + i, x, y, tileWidth, tileHeight,
+                            LABELS[i]));
+                    index++;
+                }
             }
         } else {
             visibleModules = getModulesForSelectedRank();
@@ -134,6 +146,8 @@ public final class StaffModsMenuGui extends GuiScreen {
             case ADMIN: return AlphaModule.Category.ADMIN;
             case SR_ADMIN: return AlphaModule.Category.SR_ADMIN;
             case MANAGEMENT: return AlphaModule.Category.MANAGEMENT;
+            case PLAT_ADMIN: return AlphaModule.Category.PLAT_ADMIN;
+            case MANAGER: return AlphaModule.Category.MANAGER;
             case OWNER: return AlphaModule.Category.OWNER;
             case FOUNDER: return AlphaModule.Category.FOUNDER;
             default: return null;
@@ -148,6 +162,15 @@ public final class StaffModsMenuGui extends GuiScreen {
             // Always replace the current screen rather than reinitializing a stale button list.
             // Folder contents -> fresh rank chooser; rank chooser -> parent Mods menu.
             if (openFolderRank != null) {
+                if (selectedRank == PermissionService.Rank.PLAT_ADMIN
+                        || selectedRank == PermissionService.Rank.MANAGER) {
+                    StaffModsMenuGui previous = new StaffModsMenuGui(parent);
+                    previous.managementSubfolders = true;
+                    mc.displayGuiScreen(previous);
+                } else {
+                    mc.displayGuiScreen(new StaffModsMenuGui(parent));
+                }
+            } else if (managementSubfolders) {
                 mc.displayGuiScreen(new StaffModsMenuGui(parent));
             } else {
                 mc.displayGuiScreen(parent);
@@ -155,13 +178,33 @@ public final class StaffModsMenuGui extends GuiScreen {
             return;
         }
 
-        if (openFolderRank == null && button.id >= CATEGORY_BASE && button.id < CATEGORY_BASE + RANKS.length) {
-            PermissionService.Rank rank = RANKS[button.id - CATEGORY_BASE];
-            if (rank == PermissionService.Rank.PUBLIC || PermissionService.hasAccess(rank)) {
+        if (openFolderRank == null && managementSubfolders
+                && (button.id == CATEGORY_BASE + 100 || button.id == CATEGORY_BASE + 101)) {
+            PermissionService.Rank rank = button.id == CATEGORY_BASE + 100
+                    ? PermissionService.Rank.PLAT_ADMIN : PermissionService.Rank.MANAGER;
+            if (PermissionService.hasAccess(rank)) {
                 selectedRank = rank;
                 openFolderRank = rank;
+                managementSubfolders = false;
                 scrollOffset = 0;
                 initGui();
+            }
+            return;
+        }
+
+        if (openFolderRank == null && !managementSubfolders
+                && button.id >= CATEGORY_BASE && button.id < CATEGORY_BASE + RANKS.length) {
+            PermissionService.Rank rank = RANKS[button.id - CATEGORY_BASE];
+            if (rank == PermissionService.Rank.PUBLIC || PermissionService.hasAccess(rank)) {
+                if (rank == PermissionService.Rank.MANAGEMENT) {
+                    managementSubfolders = true;
+                    initGui();
+                } else {
+                    selectedRank = rank;
+                    openFolderRank = rank;
+                    scrollOffset = 0;
+                    initGui();
+                }
             }
             return;
         }
@@ -208,6 +251,9 @@ public final class StaffModsMenuGui extends GuiScreen {
             drawString(fontRendererObj, LABELS[indexOf(selectedRank)] + "  /  MODS",
                     contentLeft, panelTop + 57, ACCENT);
             drawFolderContents(mouseX, mouseY);
+        } else if (managementSubfolders) {
+            drawString(fontRendererObj, "MANAGEMENT", contentLeft, panelTop + 57, ACCENT);
+            drawManagementSubfolders(mouseX, mouseY);
         } else {
             drawString(fontRendererObj, "STAFF RANKS MODS", contentLeft, panelTop + 57, 0xFFB8BDC8);
             drawFolderCards(mouseX, mouseY);
@@ -230,6 +276,19 @@ public final class StaffModsMenuGui extends GuiScreen {
             int y = contentTop + (index / columns) * (tileHeight + gap);
             drawCard(x, y, tileWidth, tileHeight, LABELS[i], mouseX, mouseY);
             index++;
+        }
+    }
+
+    private void drawManagementSubfolders(int mouseX, int mouseY) {
+        int gap = 8;
+        int columns = 3;
+        int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
+        int tileHeight = 38;
+        if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) {
+            drawCard(contentLeft, contentTop, tileWidth, tileHeight, "PLATFORM ADMIN", mouseX, mouseY);
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+            drawCard(contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "MANAGER", mouseX, mouseY);
         }
     }
 
