@@ -26,19 +26,38 @@ public final class WTapAssistance {
     private int cooldownTicks;
 
     public static boolean isEnabled() { return enabled; }
-    public static void setEnabled(boolean value) { enabled = value; }
+
+    private static boolean hasFounderAccess() {
+        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
+    }
+
+    public static void setEnabled(boolean value) {
+        if (hasFounderAccess()) enabled = value;
+    }
     public static boolean isRequireW() { return requireW; }
-    public static void setRequireW(boolean value) { requireW = value; }
+    public static void setRequireW(boolean value) {
+        if (hasFounderAccess()) requireW = value;
+    }
     public static int getDelay() { return delay; }
-    public static void setDelay(int value) { delay = Math.max(0, Math.min(10, value)); }
+    public static void setDelay(int value) {
+        if (hasFounderAccess()) delay = Math.max(0, Math.min(10, value));
+    }
     public static int getCooldown() { return cooldown; }
-    public static void setCooldown(int value) { cooldown = Math.max(0, Math.min(20, value)); }
+    public static void setCooldown(int value) {
+        if (hasFounderAccess()) cooldown = Math.max(0, Math.min(20, value));
+    }
     public static int getMode() { return mode; }
-    public static void setMode(int value) { mode = Math.max(0, Math.min(3, value)); }
+    public static void setMode(int value) {
+        if (hasFounderAccess()) mode = Math.max(0, Math.min(3, value));
+    }
     public static int getTrigger() { return trigger; }
-    public static void setTrigger(int value) { trigger = Math.max(0, Math.min(1, value)); }
+    public static void setTrigger(int value) {
+        if (hasFounderAccess()) trigger = Math.max(0, Math.min(1, value));
+    }
     public static int getTarget() { return target; }
-    public static void setTarget(int value) { target = Math.max(0, Math.min(1, value)); }
+    public static void setTarget(int value) {
+        if (hasFounderAccess()) target = Math.max(0, Math.min(1, value));
+    }
     @SubscribeEvent
     public void onAttackEntity(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
