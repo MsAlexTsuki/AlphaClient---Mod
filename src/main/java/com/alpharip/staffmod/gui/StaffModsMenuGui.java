@@ -128,6 +128,17 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private List<AlphaModule> getModulesForSelectedRank() {
         List<AlphaModule> modules = new ArrayList<AlphaModule>();
+        if (selectedRank == PermissionService.Rank.FOUNDER
+                || selectedRank == PermissionService.Rank.OWNER) {
+            // Founder and Owner receive every module. The Founder category remains
+            // exclusive to Founder; Owner must never inherit Founder-only modules.
+            for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+                if (module.getCategory() == AlphaModule.Category.FOUNDER
+                        && selectedRank != PermissionService.Rank.FOUNDER) continue;
+                modules.add(module);
+            }
+            return modules;
+        }
         if (selectedRank == PermissionService.Rank.PUBLIC) {
             // BHOP remains available from General through its existing settings screen.
             AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
@@ -155,6 +166,12 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private AlphaModule.Category categoryForRank(PermissionService.Rank rank) {
         switch (rank) {
+            case BETA: return AlphaModule.Category.BETA;
+            case ALPHA_PLUS:
+            case ALPHA:
+            case ELITE:
+            case ROGUE:
+            case SCOUT: return AlphaModule.Category.DONATOR;
             case T_MOD: return AlphaModule.Category.T_MOD;
             case MOD: return AlphaModule.Category.MOD;
             case SR_MOD: return AlphaModule.Category.SR_MOD;
