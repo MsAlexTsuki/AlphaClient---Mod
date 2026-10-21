@@ -72,6 +72,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new LegacyPvpMod());
         MinecraftForge.EVENT_BUS.register(new WTapAssistance());
         RankCache.INSTANCE.start();
+        // Restore the Alpha Account session and keep rank/module permissions in sync.
+        SupabaseCommunityService.start();
 
         // Load every implemented HUD's persisted position before registering its renderer.
         AlphaClientConfig.load();
