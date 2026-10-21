@@ -10,6 +10,7 @@ import org.lwjgl.input.Mouse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * StaffMods folder browser. Rank folders contain the modules assigned to them.
@@ -81,7 +82,7 @@ public final class StaffModsMenuGui extends GuiScreen {
                 int index = 0;
                 for (int i = 0; i < RANKS.length; i++) {
                     PermissionService.Rank rank = RANKS[i];
-                    if (rank != PermissionService.Rank.PUBLIC && !PermissionService.hasAccess(rank)) {
+                    if (!isVisibleRank(rank)) {
                         continue;
                     }
                     int x = contentLeft + (index % columns) * (tileWidth + gap);
@@ -118,6 +119,11 @@ public final class StaffModsMenuGui extends GuiScreen {
                 panelTop + panelHeight - 31, 80, 20, "BACK"));
     }
 
+    private boolean isVisibleRank(PermissionService.Rank rank) {
+        if (rank == PermissionService.Rank.PUBLIC) return true;
+        return rank == PermissionService.getEffectiveRank();
+    }
+
     private List<AlphaModule> getModulesForSelectedRank() {
         List<AlphaModule> modules = new ArrayList<AlphaModule>();
         if (selectedRank == PermissionService.Rank.PUBLIC) {
@@ -127,24 +133,19 @@ public final class StaffModsMenuGui extends GuiScreen {
             return modules;
         }
 
-        AlphaModule.Category category = categoryForRank(selectedRank);
-        if (category == null) return modules;
-
-        // Founder is a special, isolated folder: never expose its modules through
-        // another rank folder, even if the rank hierarchy changes in the future.
-        if (category == AlphaModule.Category.FOUNDER
-                && !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
-            return modules;
+        // Show one rank folder (the highest rank), but combine modules granted by
+        // every assigned rank. Rank display and permission aggregation are separate.
+        Set<PermissionService.Rank> assignedRanks = PermissionService.getVerifiedOnlineRanks();
+        if (PermissionService.isOfflineTestSession()) {
+            assignedRanks = java.util.Collections.singleton(PermissionService.Rank.FOUNDER);
         }
-
-        for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
-            if (module.getCategory() == AlphaModule.Category.FOUNDER
-                    && !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
-                continue;
-            }
-            if (PermissionService.hasAccess(selectedRank)
-                    && PermissionService.hasAccess(module.getCategory().getRequiredRank())) {
-                modules.add(module);
+        for (PermissionService.Rank assignedRank : assignedRanks) {
+            AlphaModule.Category category = categoryForRank(assignedRank);
+            if (category == null) continue;
+            for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
+                if (module.getCategory() == AlphaModule.Category.FOUNDER
+                        && !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) continue;
+                if (!modules.contains(module)) modules.add(module);
             }
         }
         return modules;
@@ -289,7 +290,7 @@ public final class StaffModsMenuGui extends GuiScreen {
         int index = 0;
         for (int i = 0; i < RANKS.length; i++) {
             PermissionService.Rank rank = RANKS[i];
-            if (rank != PermissionService.Rank.PUBLIC && !PermissionService.hasAccess(rank)) continue;
+            if (!isVisibleRank(rank)) continue;
             int x = contentLeft + (index % columns) * (tileWidth + gap);
             int y = contentTop + (index / columns) * (tileHeight + gap);
             drawCard(x, y, tileWidth, tileHeight, LABELS[i], mouseX, mouseY);
