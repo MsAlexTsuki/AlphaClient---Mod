@@ -51,6 +51,7 @@ public final class AlphaModMenu extends GuiScreen {
     private GuiTextField searchField;
     private String searchText = "";
     private boolean searchFocused;
+    private String accessFingerprint = "";
 
     public AlphaModMenu(GuiScreen parent) { this.parent = parent; }
 
@@ -151,7 +152,25 @@ public final class AlphaModMenu extends GuiScreen {
                     module, module.getId().equals(selectedModuleId)));
         }
 
+        accessFingerprint = buildAccessFingerprint();
+    }
 
+    private String buildAccessFingerprint() {
+        StringBuilder fingerprint = new StringBuilder(PermissionService.getEffectiveRank().name());
+        fingerprint.append('|').append(PermissionService.areModEntitlementsVerified());
+        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            fingerprint.append('|').append(module.getId()).append('=').append(module.isUnlocked());
+        }
+        return fingerprint.toString();
+    }
+
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        String current = buildAccessFingerprint();
+        if (!current.equals(accessFingerprint)) {
+            initGui();
+        }
     }
 
     private List<AlphaModule> getFilteredModules() {
