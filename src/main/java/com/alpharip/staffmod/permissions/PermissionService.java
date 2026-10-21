@@ -201,6 +201,14 @@ public final class PermissionService {
         if (required == Rank.FOUNDER) return ranks.contains(Rank.FOUNDER);
         if (ranks.contains(Rank.FOUNDER) || ranks.contains(Rank.OWNER)) return true;
         if (required == Rank.PUBLIC) return true;
+        if (required == Rank.DONATOR
+                && (ranks.contains(Rank.ALPHA_PLUS)
+                    || ranks.contains(Rank.ALPHA)
+                    || ranks.contains(Rank.ELITE)
+                    || ranks.contains(Rank.ROGUE)
+                    || ranks.contains(Rank.SCOUT))) {
+            return true;
+        }
         for (Rank actual : ranks) {
             if (actual == required) return true;
             if (actual == Rank.BETA || actual == Rank.DONATOR) continue;
