@@ -27,10 +27,9 @@ public final class CommunityLoginGui extends GuiScreen {
 
     @Override
     public void initGui() {
+        status = SupabaseCommunityService.getSessionStatus();
         if (SupabaseCommunityService.isRestoringSession()) {
             status = "Restoring your saved Alpha Account session...";
-        } else if (SupabaseCommunityService.isSignedIn()) {
-            status = "Saved Alpha Account session restored.";
         }
         int center = width / 2;
         int fieldWidth = Math.min(270, width - 48);
@@ -88,16 +87,16 @@ public final class CommunityLoginGui extends GuiScreen {
 
         drawRect(left + 14, 232, right - 14, 233, 0xFF292D36);
         drawCenteredString(fontRendererObj, status, width / 2, 241, 0xFFB8BDC8);
-        if (SupabaseCommunityService.isSignedIn()) {
-            drawCenteredString(fontRendererObj, SupabaseCommunityService.getSignedInRankLabel(),
-                    width / 2, 258, 0xFFFFD866);
-        } else {
-            drawCenteredString(fontRendererObj, "RANK NOT VERIFIED",
-                    width / 2, 258, 0xFFFFD866);
-        }
+        String rankText = SupabaseCommunityService.isSignedIn()
+                ? "VERIFIED RANK: " + SupabaseCommunityService.getSignedInRankLabel()
+                : (SupabaseCommunityService.isRestoringSession() ? "RESTORING SESSION..." : "RANK NOT VERIFIED");
+        drawCenteredString(fontRendererObj, rankText, width / 2, 258, 0xFFFFD866);
         if (SupabaseCommunityService.isSignedIn()) {
             drawCenteredString(fontRendererObj, "Signed in as " + SupabaseCommunityService.getSignedInEmail(),
                     width / 2, 275, 0xFF8DDBA4);
+        } else if (!SupabaseCommunityService.isRestoringSession()) {
+            drawCenteredString(fontRendererObj, SupabaseCommunityService.getSessionStatus(),
+                    width / 2, 275, 0xFFFFD866);
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
