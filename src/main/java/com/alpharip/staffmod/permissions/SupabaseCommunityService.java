@@ -235,8 +235,10 @@ public final class SupabaseCommunityService {
 
         signedInRankKey = rankKey;
         signedInFounder = founder || assignedRanks.contains(PermissionService.Rank.FOUNDER);
-        signedInRankLabel = formatRankLabel(rankKey, signedInFounder);
         PermissionService.setVerifiedOnlineRanks(assignedRanks);
+        // Display only the highest assigned rank; assignedRanks still retains every
+        // rank so their permissions can be combined independently.
+        signedInRankLabel = formatRankLabel(PermissionService.getEffectiveRank().name().toLowerCase(java.util.Locale.ROOT), signedInFounder);
 
         JsonArray permissionRows = requestArray("POST", "/rest/v1/rpc/get_my_client_mod_permissions", token, "{}");
         Map<String, Boolean> modulePermissions = new HashMap<String, Boolean>();
