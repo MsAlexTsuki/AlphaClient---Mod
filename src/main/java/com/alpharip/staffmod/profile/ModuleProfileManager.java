@@ -1409,7 +1409,7 @@ public class ModuleProfileManager {
         if (profile == null || applyingModuleStates) return;
 
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
-            profile.getModule(module.getId()).addProperty("enabled", module.isEnabled());
+            profile.getModule(module.getId()).addProperty("enabled", module.isConfiguredEnabled());
         }
         save();
     }
@@ -1444,7 +1444,7 @@ public class ModuleProfileManager {
                         && savedEnabled.getAsJsonPrimitive().isBoolean()) {
                     // Preserve explicit user choices stored in the profile.
                     try {
-                        module.setEnabled(savedEnabled.getAsBoolean());
+                        module.restoreEnabledState(savedEnabled.getAsBoolean());
                     } catch (Exception ignored) {
                     }
                     continue;
@@ -1455,10 +1455,10 @@ public class ModuleProfileManager {
                  * to OFF. This also covers modules added after the profile was made.
                  * Existing explicit ON/OFF choices are never overwritten.
                  */
-                boolean enabled = defaultProfile ? false : module.isEnabled();
+                boolean enabled = defaultProfile ? false : module.isConfiguredEnabled();
                 settings.addProperty("enabled", enabled);
                 if (defaultProfile) {
-                    module.setEnabled(false);
+                    module.restoreEnabledState(false);
                 }
             }
         } finally {
