@@ -86,6 +86,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(cps);
 
+        // Shared Bhop entry used by General and authorized staff-rank folders.
+        MODULES.add(new AlphaModule(
+                "staffmods",
+                "Bhop",
+                "Configure the existing AlphaClient Bhop module.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule wTap = new AlphaModule(
                 "w-tap-assistance",
                 "W-Tap Assistance",
