@@ -38,7 +38,7 @@ public final class PermissionService {
         OFFLINE_TEST
     }
 
-    private static volatile Rank verifiedOnlineRank = Rank.PUBLIC;
+    private static volatile Set<Rank> verifiedOnlineRanks = Collections.singleton(Rank.PUBLIC);
     private static volatile boolean onlineRankVerified = false;
     private static volatile Set<String> verifiedModEntitlements = Collections.emptySet();
     private static volatile java.util.Map<String, Boolean> verifiedModPermissions = Collections.emptyMap();
@@ -74,16 +74,36 @@ public final class PermissionService {
      */
     public static void setVerifiedOnlineRank(Rank rank) {
         if (rank == null) {
-            verifiedOnlineRank = Rank.PUBLIC;
+            clearVerifiedOnlineRank();
+            return;
+        }
+        setVerifiedOnlineRanks(Collections.singleton(rank));
+    }
+
+    /** Sets the complete, authenticated set of ranks assigned to the signed-in account. */
+    public static void setVerifiedOnlineRanks(Set<Rank> ranks) {
+        if (ranks == null || ranks.isEmpty()) {
+            verifiedOnlineRanks = Collections.singleton(Rank.PUBLIC);
             onlineRankVerified = false;
             return;
         }
-        verifiedOnlineRank = rank;
+        Set<Rank> safe = new HashSet<Rank>(ranks);
+        safe.remove(null);
+        if (safe.isEmpty()) {
+            verifiedOnlineRanks = Collections.singleton(Rank.PUBLIC);
+            onlineRankVerified = false;
+            return;
+        }
+        verifiedOnlineRanks = Collections.unmodifiableSet(safe);
         onlineRankVerified = true;
     }
 
+    public static Set<Rank> getVerifiedOnlineRanks() {
+        return verifiedOnlineRanks;
+    }
+
     public static void clearVerifiedOnlineRank() {
-        verifiedOnlineRank = Rank.PUBLIC;
+        verifiedOnlineRanks = Collections.singleton(Rank.PUBLIC);
         onlineRankVerified = false;
         clearVerifiedModEntitlements();
     }
@@ -154,41 +174,40 @@ public final class PermissionService {
         if (isOfflineTestSession()) {
             return Rank.FOUNDER;
         }
-        return onlineRankVerified ? verifiedOnlineRank : Rank.PUBLIC;
+        if (!onlineRankVerified || verifiedOnlineRanks.isEmpty()) return Rank.PUBLIC;
+        if (verifiedOnlineRanks.contains(Rank.FOUNDER)) return Rank.FOUNDER;
+        if (verifiedOnlineRanks.contains(Rank.OWNER)) return Rank.OWNER;
+        Rank strongest = Rank.PUBLIC;
+        int strongestLevel = -1;
+        for (Rank rank : verifiedOnlineRanks) {
+            int level = staffLevel(rank);
+            if (level > strongestLevel) {
+                strongestLevel = level;
+                strongest = rank;
+            }
+        }
+        if (strongestLevel >= 0) return strongest;
+        if (verifiedOnlineRanks.contains(Rank.DONATOR)) return Rank.DONATOR;
+        if (verifiedOnlineRanks.contains(Rank.BETA)) return Rank.BETA;
+        return Rank.PUBLIC;
     }
 
     public static boolean hasAccess(Rank required) {
-        if (required == null) {
-            return false;
+        if (required == null) return false;
+        Set<Rank> ranks = isOfflineTestSession()
+                ? Collections.singleton(Rank.FOUNDER)
+                : (onlineRankVerified ? verifiedOnlineRanks : Collections.singleton(Rank.PUBLIC));
+        if (required == Rank.FOUNDER) return ranks.contains(Rank.FOUNDER);
+        if (ranks.contains(Rank.FOUNDER) || ranks.contains(Rank.OWNER)) return true;
+        if (required == Rank.PUBLIC) return true;
+        for (Rank actual : ranks) {
+            if (actual == required) return true;
+            if (actual == Rank.BETA || actual == Rank.DONATOR) continue;
+            int actualLevel = staffLevel(actual);
+            int requiredLevel = staffLevel(required);
+            if (actualLevel >= 0 && requiredLevel >= 0 && actualLevel >= requiredLevel) return true;
         }
-
-        Rank actual = getEffectiveRank();
-
-        // Founder is an exclusive client/launcher-creator permission.
-        // Check it before the hierarchy so no higher/future regular rank can inherit it.
-        if (required == Rank.FOUNDER) {
-            return actual == Rank.FOUNDER;
-        }
-
-        // Founder has every permission. Alpha.rip Owners have every regular
-        // client permission, including Beta/Donator and future non-Founder categories.
-        if (actual == Rank.FOUNDER || actual == Rank.OWNER) {
-            return true;
-        }
-
-        if (required == Rank.PUBLIC) {
-            return true;
-        }
-
-        // Beta and Donator are separate entitlements for non-staff ranks.
-        if (actual == Rank.BETA || actual == Rank.DONATOR) {
-            return actual == required;
-        }
-
-        // Staff ranks inherit categories below their own rank.
-        int actualLevel = staffLevel(actual);
-        int requiredLevel = staffLevel(required);
-        return actualLevel >= 0 && requiredLevel >= 0 && actualLevel >= requiredLevel;
+        return false;
     }
 
     private static int staffLevel(Rank rank) {
@@ -221,6 +240,6 @@ public final class PermissionService {
         if (!onlineRankVerified) {
             return "COMMUNITY RANK NOT VERIFIED";
         }
-        return verifiedOnlineRank.name();
+        return getEffectiveRank().name();
     }
 }

@@ -83,9 +83,6 @@ public final class AlphaModMenu extends GuiScreen {
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
-            if (category != AlphaModule.Category.PUBLIC
-                    && category != AlphaModule.Category.BETA
-                    && category != AlphaModule.Category.DONATOR) continue;
             if (!PermissionService.hasAccess(category.getRequiredRank())) continue;
             String label;
             switch (category) {
@@ -98,6 +95,8 @@ public final class AlphaModMenu extends GuiScreen {
                 case ADMIN: label = "ADMIN"; break;
                 case SR_ADMIN: label = "SR-ADMIN"; break;
                 case MANAGEMENT: label = "MANAGEMENT"; break;
+                case PLAT_ADMIN: label = "PLAT-ADMIN"; break;
+                case MANAGER: label = "MANAGER"; break;
                 case OWNER: label = "OWNER"; break;
                 case FOUNDER: label = "FOUNDER"; break;
                 default: continue;

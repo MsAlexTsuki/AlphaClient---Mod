@@ -216,13 +216,27 @@ public final class SupabaseCommunityService {
 
         String rankKey = getString(profile, "rank_key");
         boolean founder = getBoolean(profile, "is_founder");
-        PermissionService.Rank rank = mapRank(rankKey, founder);
 
-        // The profile's current rank is authoritative; never trust a cached UI badge.
+        // Merge the legacy profile rank with every assigned rank from the rank-management system.
+        Set<PermissionService.Rank> assignedRanks = new HashSet<PermissionService.Rank>();
+        PermissionService.Rank legacyRank = mapRank(rankKey, false);
+        if (legacyRank != PermissionService.Rank.PUBLIC) assignedRanks.add(legacyRank);
+        String assignedQuery = "/rest/v1/profile_ranks?select=rank_key&profile_id=eq."
+                + java.net.URLEncoder.encode(userId, "UTF-8");
+        JsonArray rankRows = requestArray("GET", assignedQuery, token);
+        for (JsonElement element : rankRows) {
+            if (!element.isJsonObject()) continue;
+            String assignedKey = getString(element.getAsJsonObject(), "rank_key");
+            PermissionService.Rank assignedRank = mapRank(assignedKey, false);
+            if (assignedRank != PermissionService.Rank.PUBLIC) assignedRanks.add(assignedRank);
+        }
+        if (founder) assignedRanks.add(PermissionService.Rank.FOUNDER);
+        if (assignedRanks.isEmpty()) assignedRanks.add(PermissionService.Rank.PUBLIC);
+
         signedInRankKey = rankKey;
-        signedInFounder = founder;
-        signedInRankLabel = formatRankLabel(rankKey, founder);
-        PermissionService.setVerifiedOnlineRank(rank);
+        signedInFounder = founder || assignedRanks.contains(PermissionService.Rank.FOUNDER);
+        signedInRankLabel = formatRankLabel(rankKey, signedInFounder);
+        PermissionService.setVerifiedOnlineRanks(assignedRanks);
 
         JsonArray permissionRows = requestArray("POST", "/rest/v1/rpc/get_my_client_mod_permissions", token, "{}");
         Map<String, Boolean> modulePermissions = new HashMap<String, Boolean>();
