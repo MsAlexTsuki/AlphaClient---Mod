@@ -3,6 +3,7 @@ package com.alpharip.staffmod.gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import com.alpharip.staffmod.movement.WTapAssistance;
+import com.alpharip.staffmod.permissions.PermissionService;
 import java.io.IOException;
 
 /** Dedicated W-Tap Assistance settings connected to the live input handler. */
@@ -25,6 +26,10 @@ public final class WTapSettingsGui extends GuiScreen {
 
     @Override
     public void initGui() {
+        if (!PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
         buttonList.clear();
         int buttonWidth = Math.min(250, width - 24);
         int x = (width - buttonWidth) / 2;
@@ -47,6 +52,10 @@ public final class WTapSettingsGui extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
+        if (!PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
         switch (button.id) {
             case BACK: mc.displayGuiScreen(parent); return;
             case ENABLED: WTapAssistance.setEnabled(!WTapAssistance.isEnabled()); break;
