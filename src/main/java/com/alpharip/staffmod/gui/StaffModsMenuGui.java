@@ -22,6 +22,7 @@ public final class StaffModsMenuGui extends GuiScreen {
     private static final int MODULE_BASE = 50;
     private static final int ACCENT = 0xFFFFD866;
 
+    // Keep every rank folder in canonical hierarchy order. Visibility is inherited downward.
     private static final PermissionService.Rank[] RANKS = {
         PermissionService.Rank.PUBLIC,
         PermissionService.Rank.FOUNDER,
@@ -32,11 +33,19 @@ public final class StaffModsMenuGui extends GuiScreen {
         PermissionService.Rank.ADMIN,
         PermissionService.Rank.SR_MOD,
         PermissionService.Rank.MOD,
-        PermissionService.Rank.T_MOD
+        PermissionService.Rank.T_MOD,
+        PermissionService.Rank.THE_NIBBLER,
+        PermissionService.Rank.BETA,
+        PermissionService.Rank.ALPHA_PLUS,
+        PermissionService.Rank.ALPHA,
+        PermissionService.Rank.ELITE,
+        PermissionService.Rank.ROGUE,
+        PermissionService.Rank.SCOUT
     };
     private static final String[] LABELS = {
         "GENERAL", "FOUNDER", "OWNER", "MANAGER", "PLATFORM ADMIN",
-        "SR ADMIN", "ADMIN", "SR MOD", "MOD", "T-MOD"
+        "SR ADMIN", "ADMIN", "SR MOD", "MOD", "T-MOD", "THE NIBBLER",
+        "BETA", "ALPHA+", "ALPHA", "ELITE", "ROGUE", "SCOUT"
     };
 
     private final GuiScreen parent;
@@ -121,9 +130,38 @@ public final class StaffModsMenuGui extends GuiScreen {
     }
 
     private boolean isVisibleRank(PermissionService.Rank rank) {
-        // General is always available. Staff sees only their single highest assigned rank.
+        // General is always available. Every rank can see its own folder and all folders
+        // below it in the canonical hierarchy; higher folders remain hidden.
         if (rank == PermissionService.Rank.PUBLIC) return true;
-        return rank == PermissionService.getEffectiveRank();
+        if (rank == PermissionService.Rank.FOUNDER) {
+            return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
+        }
+        PermissionService.Rank effective = PermissionService.getEffectiveRank();
+        return hierarchyPriority(effective) >= hierarchyPriority(rank);
+    }
+
+    private int hierarchyPriority(PermissionService.Rank rank) {
+        switch (rank) {
+            case FOUNDER: return 17;
+            case OWNER: return 16;
+            case MANAGER: return 15;
+            case PLAT_ADMIN:
+            case MANAGEMENT: return 14;
+            case SR_ADMIN: return 13;
+            case ADMIN: return 12;
+            case SR_MOD: return 11;
+            case MOD: return 10;
+            case T_MOD: return 9;
+            case THE_NIBBLER: return 8;
+            case BETA: return 7;
+            case ALPHA_PLUS: return 6;
+            case ALPHA: return 5;
+            case ELITE: return 4;
+            case ROGUE: return 3;
+            case SCOUT: return 2;
+            case PUBLIC: return 0;
+            default: return -1;
+        }
     }
 
     private List<AlphaModule> getModulesForSelectedRank() {
@@ -172,6 +210,7 @@ public final class StaffModsMenuGui extends GuiScreen {
             case ELITE:
             case ROGUE:
             case SCOUT: return AlphaModule.Category.DONATOR;
+            case THE_NIBBLER: return AlphaModule.Category.T_MOD;
             case T_MOD: return AlphaModule.Category.T_MOD;
             case MOD: return AlphaModule.Category.MOD;
             case SR_MOD: return AlphaModule.Category.SR_MOD;
