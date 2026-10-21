@@ -33,8 +33,12 @@ public enum AlphaRank {
         this.label = label;
         this.color = color;
         this.emblem = emblem;
+        String textureName = key;
+        if ("elite".equals(key) || "rogue".equals(key) || "scout".equals(key)) {
+            textureName += "_64";
+        }
         this.texture = new ResourceLocation(
-                "alphastaffmod", "textures/ranks/" + key + ".png");
+                "alphastaffmod", "textures/ranks/" + textureName + ".png");
     }
 
     public String key() { return key; }
