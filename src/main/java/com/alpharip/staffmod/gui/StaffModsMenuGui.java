@@ -24,18 +24,19 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private static final PermissionService.Rank[] RANKS = {
         PermissionService.Rank.PUBLIC,
-        PermissionService.Rank.T_MOD,
-        PermissionService.Rank.MOD,
-        PermissionService.Rank.SR_MOD,
-        PermissionService.Rank.ADMIN,
-        PermissionService.Rank.SR_ADMIN,
-        PermissionService.Rank.MANAGEMENT,
+        PermissionService.Rank.FOUNDER,
         PermissionService.Rank.OWNER,
-        PermissionService.Rank.FOUNDER
+        PermissionService.Rank.MANAGER,
+        PermissionService.Rank.PLAT_ADMIN,
+        PermissionService.Rank.SR_ADMIN,
+        PermissionService.Rank.ADMIN,
+        PermissionService.Rank.SR_MOD,
+        PermissionService.Rank.MOD,
+        PermissionService.Rank.T_MOD
     };
     private static final String[] LABELS = {
-        "GENERAL", "T-MOD", "MOD", "SR MOD", "ADMIN",
-        "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
+        "GENERAL", "FOUNDER", "OWNER", "MANAGER", "PLATFORM ADMIN",
+        "SR ADMIN", "ADMIN", "SR MOD", "MOD", "T-MOD"
     };
 
     private final GuiScreen parent;
@@ -120,18 +121,9 @@ public final class StaffModsMenuGui extends GuiScreen {
     }
 
     private boolean isVisibleRank(PermissionService.Rank rank) {
-        PermissionService.Rank effective = PermissionService.getEffectiveRank();
+        // General is always available. Staff sees only their single highest assigned rank.
         if (rank == PermissionService.Rank.PUBLIC) return true;
-
-        // MANAGEMENT is the parent folder for both Platform Admin and Manager.
-        // Keep that entry visible for either effective rank so the rank menu
-        // never hides the player's only valid rank path.
-        if (rank == PermissionService.Rank.MANAGEMENT) {
-            return effective == PermissionService.Rank.MANAGEMENT
-                    || effective == PermissionService.Rank.PLAT_ADMIN
-                    || effective == PermissionService.Rank.MANAGER;
-        }
-        return rank == effective;
+        return rank == PermissionService.getEffectiveRank();
     }
 
     private List<AlphaModule> getModulesForSelectedRank() {
