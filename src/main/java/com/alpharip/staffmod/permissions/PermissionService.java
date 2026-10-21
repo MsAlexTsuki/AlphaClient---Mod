@@ -26,6 +26,8 @@ public final class PermissionService {
         SR_MOD,
         ADMIN,
         SR_ADMIN,
+        PLAT_ADMIN,
+        MANAGER,
         MANAGEMENT,
         OWNER,
         FOUNDER
@@ -147,9 +149,11 @@ public final class PermissionService {
             case SR_MOD: return 3;
             case ADMIN: return 4;
             case SR_ADMIN: return 5;
-            case MANAGEMENT: return 6;
-            case OWNER: return 7;
-            case FOUNDER: return 8;
+            case PLAT_ADMIN: return 6;
+            case MANAGEMENT: return 6; // Legacy rank key; equivalent to Platform Admin.
+            case MANAGER: return 7;
+            case OWNER: return 8;
+            case FOUNDER: return 9;
             default: return -1;
         }
     }
