@@ -130,14 +130,6 @@ public final class StaffModsMenuGui extends GuiScreen {
         AlphaModule.Category category = categoryForRank(selectedRank);
         if (category == null) return modules;
 
-        // Bhop is a shared staff tool: show it to every staff rank that inherits
-        // T-Mod access, not only inside the T-Mod folder.
-        if (selectedRank != PermissionService.Rank.T_MOD
-                && PermissionService.hasAccess(PermissionService.Rank.T_MOD)) {
-            AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
-            if (bhop != null) modules.add(bhop);
-        }
-
         // Founder is a special, isolated folder: never expose its modules through
         // another rank folder, even if the rank hierarchy changes in the future.
         if (category == AlphaModule.Category.FOUNDER

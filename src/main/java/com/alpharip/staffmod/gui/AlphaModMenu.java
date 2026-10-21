@@ -86,7 +86,7 @@ public final class AlphaModMenu extends GuiScreen {
             boolean categoryAllowed = PermissionService.hasAccess(category.getRequiredRank());
             if (!categoryAllowed) {
                 for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
-                    if (module.isUnlocked()) {
+                    if (!"staffmods".equals(module.getId()) && module.isUnlocked()) {
                         categoryAllowed = true;
                         break;
                     }
@@ -187,6 +187,8 @@ public final class AlphaModMenu extends GuiScreen {
         List<AlphaModule> result = new ArrayList<AlphaModule>();
         String query = searchField == null ? "" : searchField.getText().trim().toLowerCase(Locale.ROOT);
         for (AlphaModule module : AlphaModuleRegistry.getForCategory(selectedCategory)) {
+            // Bhop is exclusive to STAFFMODS -> GENERAL, never a rank-category module.
+            if ("staffmods".equals(module.getId())) continue;
             if (query.isEmpty() || module.getName().toLowerCase(Locale.ROOT).contains(query)
                     || module.getDescription().toLowerCase(Locale.ROOT).contains(query)) result.add(module);
         }
@@ -384,7 +386,8 @@ public final class AlphaModMenu extends GuiScreen {
             return;
         }
         if (button.id == STAFF_MODS) {
-            if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) {
+            if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)
+                    || PermissionService.hasModAccess("staff.bhop")) {
                 mc.displayGuiScreen(new StaffModsMenuGui(this));
             }
             return;

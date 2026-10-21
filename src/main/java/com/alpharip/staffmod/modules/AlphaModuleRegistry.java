@@ -86,7 +86,8 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(cps);
 
-        // Shared Bhop entry used by General and authorized staff-rank folders.
+        // Bhop is registered for access checks/settings only. The StaffMods menu
+        // explicitly exposes it in General and filters it from every rank folder.
         MODULES.add(new AlphaModule(
                 "staffmods",
                 "Bhop",
