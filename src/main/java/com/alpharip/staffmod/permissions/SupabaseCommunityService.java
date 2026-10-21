@@ -47,6 +47,7 @@ public final class SupabaseCommunityService {
     private static volatile String signedInRankKey;
     private static volatile boolean signedInFounder;
     private static volatile boolean restoringSession;
+    private static volatile String sessionStatus = "Alpha Account has not been signed in on this installation.";
     private static ScheduledExecutorService syncExecutor;
 
     private SupabaseCommunityService() {
@@ -68,10 +69,15 @@ public final class SupabaseCommunityService {
                 try {
                     loadSavedRefreshToken();
                     if (refreshToken != null) {
+                        sessionStatus = "Restoring saved Alpha Account session...";
                         refreshSessionToken();
                         synchronizeVerifiedAccount();
+                        sessionStatus = "Alpha Account session restored.";
+                    } else {
+                        sessionStatus = "No saved Alpha Account session. Sign in once to save this account.";
                     }
                 } catch (Exception exception) {
+                    sessionStatus = "Session restore failed: " + (exception.getMessage() == null ? "unknown error" : exception.getMessage());
                     System.err.println("[AlphaClient] Could not restore Alpha Account session: "
                             + exception.getMessage());
                     // Keep the refresh token for a later retry if this was a network failure.
@@ -103,6 +109,10 @@ public final class SupabaseCommunityService {
 
     public static boolean isRestoringSession() {
         return restoringSession;
+    }
+
+    public static String getSessionStatus() {
+        return sessionStatus;
     }
 
     public static synchronized void signIn(String email, String password) throws Exception {
@@ -137,8 +147,10 @@ public final class SupabaseCommunityService {
         signedInUserId = userId;
         accessTokenExpiresAt = (System.currentTimeMillis() / 1000L) + Math.max(60L, getLong(auth, "expires_in", 3600L));
         signedInEmail = email.trim();
+        sessionStatus = "Signed in. Saving Alpha Account session...";
         persistRefreshToken();
         synchronizeVerifiedAccount();
+        sessionStatus = "Signed in as " + signedInEmail + ". Rank and permissions are synchronized.";
         linkCurrentMinecraftUuid(accessToken);
     }
 
@@ -230,6 +242,7 @@ public final class SupabaseCommunityService {
     public static synchronized void signOut() {
         String token = accessToken;
         clearInMemorySession();
+        sessionStatus = "Signed out. This Alpha Account session was removed from this installation.";
         deleteSavedSession();
         PermissionService.clearVerifiedOnlineRank();
         if (token != null) {
