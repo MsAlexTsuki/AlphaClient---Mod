@@ -83,6 +83,8 @@ public final class AlphaModMenu extends GuiScreen {
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
+            // Staff rank folders belong exclusively inside StaffMods, not in the regular Mods sidebar.
+            if (isStaffRankCategory(category)) continue;
             boolean categoryAllowed = PermissionService.hasAccess(category.getRequiredRank());
             if (!categoryAllowed) {
                 for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
@@ -179,6 +181,24 @@ public final class AlphaModMenu extends GuiScreen {
         String current = buildAccessFingerprint();
         if (!current.equals(accessFingerprint)) {
             initGui();
+        }
+    }
+
+    private boolean isStaffRankCategory(AlphaModule.Category category) {
+        switch (category) {
+            case T_MOD:
+            case MOD:
+            case SR_MOD:
+            case ADMIN:
+            case SR_ADMIN:
+            case MANAGEMENT:
+            case PLAT_ADMIN:
+            case MANAGER:
+            case OWNER:
+            case FOUNDER:
+                return true;
+            default:
+                return false;
         }
     }
 
