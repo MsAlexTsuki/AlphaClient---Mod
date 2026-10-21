@@ -27,6 +27,11 @@ public final class CommunityLoginGui extends GuiScreen {
 
     @Override
     public void initGui() {
+        if (SupabaseCommunityService.isRestoringSession()) {
+            status = "Restoring your saved Alpha Account session...";
+        } else if (SupabaseCommunityService.isSignedIn()) {
+            status = "Saved Alpha Account session restored.";
+        }
         int center = width / 2;
         int fieldWidth = Math.min(270, width - 48);
         int fieldLeft = center - fieldWidth / 2;
@@ -150,6 +155,10 @@ public final class CommunityLoginGui extends GuiScreen {
             return;
         }
         if (button.id == SIGN_IN) {
+            if (SupabaseCommunityService.isRestoringSession()) {
+                status = "Restoring your saved Alpha Account session. Please wait...";
+                return;
+            }
             if (SupabaseCommunityService.isSignedIn()) {
                 status = "Already signed in. Sign out before switching accounts.";
                 return;
@@ -190,7 +199,8 @@ public final class CommunityLoginGui extends GuiScreen {
         if (emailField != null) emailField.updateCursorCounter();
         if (passwordField != null) passwordField.updateCursorCounter();
         if (buttonList != null && !buttonList.isEmpty()) {
-            buttonList.get(0).enabled = !busy && !SupabaseCommunityService.isSignedIn();
+            buttonList.get(0).enabled = !busy && !SupabaseCommunityService.isSignedIn()
+                    && !SupabaseCommunityService.isRestoringSession();
         }
     }
 
