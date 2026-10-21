@@ -153,7 +153,6 @@ public final class SupabaseCommunityService {
         persistRefreshToken();
         synchronizeVerifiedAccount();
         sessionStatus = "Signed in as " + getSignedInAlphaName() + ".";
-        linkCurrentMinecraftUuid(accessToken);
     }
 
     /**
@@ -249,6 +248,10 @@ public final class SupabaseCommunityService {
             if (modId != null) modulePermissions.put(modId, getBoolean(row, "allowed"));
         }
         PermissionService.setVerifiedModPermissions(modulePermissions);
+
+        // Re-link the currently active Minecraft UUID whenever the authenticated
+        // Alpha account syncs. This also covers restored sessions and Microsoft-account switches.
+        linkCurrentMinecraftUuid(token);
     }
 
     /**
