@@ -38,7 +38,7 @@ public final class AlphaClientConfig {
                         JsonElement value = modules.get(module.getId());
                         if (value != null && value.isJsonPrimitive()) {
                             try {
-                                module.setEnabled(value.getAsBoolean());
+                                module.restoreEnabledState(value.getAsBoolean());
                             } catch (Exception ignored) {
                             }
                         }
@@ -70,7 +70,7 @@ public final class AlphaClientConfig {
         JsonObject root = new JsonObject();
         JsonObject modules = new JsonObject();
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
-            modules.addProperty(module.getId(), module.isEnabled());
+            modules.addProperty(module.getId(), module.isConfiguredEnabled());
         }
         root.add("modules", modules);
         FileWriter writer = null;
