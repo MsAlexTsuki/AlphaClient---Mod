@@ -33,19 +33,11 @@ public final class StaffModsMenuGui extends GuiScreen {
         PermissionService.Rank.ADMIN,
         PermissionService.Rank.SR_MOD,
         PermissionService.Rank.MOD,
-        PermissionService.Rank.T_MOD,
-        PermissionService.Rank.THE_NIBBLER,
-        PermissionService.Rank.BETA,
-        PermissionService.Rank.ALPHA_PLUS,
-        PermissionService.Rank.ALPHA,
-        PermissionService.Rank.ELITE,
-        PermissionService.Rank.ROGUE,
-        PermissionService.Rank.SCOUT
+        PermissionService.Rank.T_MOD
     };
     private static final String[] LABELS = {
         "GENERAL", "FOUNDER", "OWNER", "MANAGER", "PLATFORM ADMIN",
-        "SR ADMIN", "ADMIN", "SR MOD", "MOD", "T-MOD", "THE NIBBLER",
-        "BETA", "ALPHA+", "ALPHA", "ELITE", "ROGUE", "SCOUT"
+        "SR ADMIN", "ADMIN", "SR MOD", "MOD", "T-MOD"
     };
 
     private final GuiScreen parent;
