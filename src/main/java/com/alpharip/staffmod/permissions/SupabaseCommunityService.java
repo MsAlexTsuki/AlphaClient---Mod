@@ -191,7 +191,7 @@ public final class SupabaseCommunityService {
         String userId = signedInUserId;
         if (token == null || userId == null) return;
 
-        String query = "/rest/v1/profiles?select=rank_key,is_founder&id=eq."
+        String query = "/rest/v1/profiles?select=username,display_name,rank_key,is_founder&id=eq."
                 + java.net.URLEncoder.encode(userId, "UTF-8") + "&limit=1";
         JsonArray profiles = requestArray("GET", query, token);
         if (profiles.size() == 0 || !profiles.get(0).isJsonObject()) {
@@ -200,6 +200,20 @@ public final class SupabaseCommunityService {
         }
 
         JsonObject profile = profiles.get(0).getAsJsonObject();
+
+        // The community profile is the source of truth for the registered Alpha username.
+        // Auth metadata and the locally saved session may contain an older/test name.
+        String profileUsername = getString(profile, "username");
+        String profileDisplayName = getString(profile, "display_name");
+        if (profileUsername != null && !profileUsername.trim().isEmpty()) {
+            signedInAlphaName = profileUsername.trim();
+        } else if (profileDisplayName != null && !profileDisplayName.trim().isEmpty()) {
+            signedInAlphaName = profileDisplayName.trim();
+        } else {
+            signedInAlphaName = resolveAlphaName(null, signedInEmail);
+        }
+        persistRefreshToken();
+
         String rankKey = getString(profile, "rank_key");
         boolean founder = getBoolean(profile, "is_founder");
         PermissionService.Rank rank = mapRank(rankKey, founder);
