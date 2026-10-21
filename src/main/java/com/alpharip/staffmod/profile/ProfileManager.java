@@ -522,10 +522,8 @@ public final class ProfileManager {
 
 
                     if (profile.getProfileName() != null
-                            && !profile.getProfileName()
-                            .trim()
-                            .isEmpty()
-                            && findProfile(profile.getProfileName()) == null) {
+                            && !profile.getProfileName().trim().isEmpty()
+                            && !containsProfile(profile.getProfileName())) {
 
                         profiles.add(profile);
                     }
@@ -553,6 +551,22 @@ public final class ProfileManager {
                 }
             }
         }
+    }
+
+
+    private boolean containsProfile(String profileName) {
+        if (profileName == null) {
+            return false;
+        }
+
+        for (Profile existing : profiles) {
+            if (existing != null
+                    && existing.getProfileName() != null
+                    && existing.getProfileName().equalsIgnoreCase(profileName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

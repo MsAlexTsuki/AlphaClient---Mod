@@ -357,12 +357,12 @@ public class ModuleProfileManager {
                     BhopProfile profile = new BhopProfile(profileName, bhopName, color,
                             bhopEnabled, shiftUpEnabled, speedLevel);
                     if (profileObject.has("modules") && profileObject.get("modules").isJsonObject()) {
-                        profile.modules = profileObject.getAsJsonObject("modules").deepCopy();
+                        profile.modules = copyJsonObject(profileObject.getAsJsonObject("modules"));
                     }
                     if (profileObject.has("colors") && profileObject.get("colors").isJsonObject()) {
                         if (!profile.modules.has(MOD_COLORS_MODULE)) {
                             profile.modules.add(MOD_COLORS_MODULE,
-                                    profileObject.getAsJsonObject("colors").deepCopy());
+                                    copyJsonObject(profileObject.getAsJsonObject("colors")));
                         }
                     }
                     if (findProfile(profileName) == null) profiles.add(profile);
@@ -407,6 +407,10 @@ public class ModuleProfileManager {
         }
     }
 
+    private static JsonObject copyJsonObject(JsonObject source) {
+        return new JsonParser().parse(source.toString()).getAsJsonObject();
+    }
+
     private static File getLegacyProfileFile() {
         return new File(getDirectory(), "profiles.json");
     }
@@ -447,11 +451,11 @@ public class ModuleProfileManager {
                         getBoolean(source, "shiftUpEnabled", false), speed);
 
                 if (source.has("modules") && source.get("modules").isJsonObject()) {
-                    profile.modules = source.getAsJsonObject("modules").deepCopy();
+                    profile.modules = copyJsonObject(source.getAsJsonObject("modules"));
                 }
                 if (source.has("colors") && source.get("colors").isJsonObject()
                         && !profile.modules.has(MOD_COLORS_MODULE)) {
-                    profile.modules.add(MOD_COLORS_MODULE, source.getAsJsonObject("colors").deepCopy());
+                    profile.modules.add(MOD_COLORS_MODULE, copyJsonObject(source.getAsJsonObject("colors")));
                 }
                 profiles.add(profile);
             }
