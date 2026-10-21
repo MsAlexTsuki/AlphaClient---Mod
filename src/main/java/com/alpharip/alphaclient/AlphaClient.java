@@ -210,10 +210,12 @@ public final class AlphaClient {
         }
     }
 
-    /** Keeps the temporary BHOP implementation connected to its module toggle. */
+    /**
+     * Kept for compatibility with profile screens. Do not overwrite the saved BHOP
+     * preference based on a module-registry entry: BHOP has its own profile state.
+     * BhopMode checks the latest server permission on every client tick.
+     */
     public static void syncBhopModuleState() {
-        AlphaModule staffmods = AlphaModuleRegistry.find("staffmods");
-        BhopMode.setEnabled(staffmods != null && staffmods.isEnabled()
-                && PermissionService.hasModAccess("staff.bhop"));
+        // Intentionally preserve BhopMode's configured state.
     }
 }
