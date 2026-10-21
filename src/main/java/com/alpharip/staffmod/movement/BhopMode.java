@@ -68,9 +68,8 @@ public class BhopMode {
 
         EntityPlayer player = mc.thePlayer;
 
-        // A server-side per-player denial takes effect without restarting the client.
-        if (PermissionService.hasExplicitModPermission("staff.bhop")
-                && !PermissionService.hasModAccess("staff.bhop")) return;
+        // Require verified permission at runtime. Saved preferences remain intact while locked.
+        if (!PermissionService.hasModAccess("staff.bhop")) return;
         if (!enabled) return;
 
         if (!player.capabilities.isCreativeMode) return;
@@ -344,11 +343,6 @@ public class BhopMode {
 
 
     public static void toggle() {
-        if (PermissionService.hasExplicitModPermission("staff.bhop")
-                && !PermissionService.hasModAccess("staff.bhop")) {
-            enabled = false;
-            return;
-        }
         enabled = !enabled;
     }
 
@@ -361,11 +355,7 @@ public class BhopMode {
     public static void setEnabled(
             boolean value) {
 
-        if (value && PermissionService.hasExplicitModPermission("staff.bhop")
-                && !PermissionService.hasModAccess("staff.bhop")) {
-            enabled = false;
-            return;
-        }
+        // Preserve the user preference; onClientTick enforces live access before running BHOP.
         enabled = value;
     }
 
