@@ -129,9 +129,21 @@ public final class StaffModsMenuGui extends GuiScreen {
 
         AlphaModule.Category category = categoryForRank(selectedRank);
         if (category == null) return modules;
+
+        // Founder is a special, isolated folder: never expose its modules through
+        // another rank folder, even if the rank hierarchy changes in the future.
+        if (category == AlphaModule.Category.FOUNDER
+                && !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
+            return modules;
+        }
+
         for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
+            if (module.getCategory() == AlphaModule.Category.FOUNDER
+                    && !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
+                continue;
+            }
             if (PermissionService.hasAccess(selectedRank)
-                    && PermissionService.hasAccess(category.getRequiredRank())) {
+                    && PermissionService.hasAccess(module.getCategory().getRequiredRank())) {
                 modules.add(module);
             }
         }
@@ -216,6 +228,9 @@ public final class StaffModsMenuGui extends GuiScreen {
         }
 
         if (openFolderRank != null && button.id >= MODULE_BASE && button.id < MODULE_BASE + 100) {
+            // Re-check access at click time; hiding a folder in the UI is not security.
+            if (selectedRank == PermissionService.Rank.FOUNDER
+                    && !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) return;
             int index = button.id - MODULE_BASE;
             if (index < 0 || index >= visibleModules.size()) return;
             AlphaModule module = visibleModules.get(index);
