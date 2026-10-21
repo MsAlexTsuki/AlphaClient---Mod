@@ -105,6 +105,7 @@ public final class AlphaModule {
         // These stable IDs match the current AlphaLauncher permission catalog.
         if ("fps".equals(id)) return "public.performance_monitor";
         if ("cps".equals(id)) return "public.custom_hud";
+        if ("staffmods".equals(id)) return "staff.bhop";
         return id;
     }
 

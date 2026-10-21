@@ -238,7 +238,7 @@ public final class SupabaseCommunityService {
         PermissionService.setVerifiedOnlineRanks(assignedRanks);
         // Display only the highest assigned rank; assignedRanks still retains every
         // rank so their permissions can be combined independently.
-        signedInRankLabel = formatRankLabel(PermissionService.getEffectiveRank().name().toLowerCase(java.util.Locale.ROOT), signedInFounder);
+        signedInRankLabel = formatEffectiveRankLabel(PermissionService.getEffectiveRank(), signedInFounder);
 
         JsonArray permissionRows = requestArray("POST", "/rest/v1/rpc/get_my_client_mod_permissions", token, "{}");
         Map<String, Boolean> modulePermissions = new HashMap<String, Boolean>();
@@ -377,34 +377,59 @@ public final class SupabaseCommunityService {
     /** Returns the badge for the highest verified assigned rank, not only profiles.rank_key. */
     public static com.alpharip.staffmod.rankviewer.AlphaRank getSignedInDisplayRank() {
         if (accessToken == null) return null;
-        if (signedInFounder || PermissionService.getEffectiveRank() == PermissionService.Rank.FOUNDER) {
+        PermissionService.Rank rank = PermissionService.getEffectiveRank();
+        if (signedInFounder || rank == PermissionService.Rank.FOUNDER) {
             return com.alpharip.staffmod.rankviewer.AlphaRank.FOUNDER;
         }
-        switch (PermissionService.getEffectiveRank()) {
-            case OWNER:
-                return com.alpharip.staffmod.rankviewer.AlphaRank.OWNER;
+        switch (rank) {
+            case OWNER: return com.alpharip.staffmod.rankviewer.AlphaRank.OWNER;
             case MANAGER:
             case PLAT_ADMIN:
-            case MANAGEMENT:
-                return com.alpharip.staffmod.rankviewer.AlphaRank.MANAGEMENT;
-            case SR_ADMIN:
-                return com.alpharip.staffmod.rankviewer.AlphaRank.SENIOR_ADMIN;
-            case ADMIN:
-                return com.alpharip.staffmod.rankviewer.AlphaRank.ADMIN;
-            case SR_MOD:
-                return com.alpharip.staffmod.rankviewer.AlphaRank.SENIOR_MODERATOR;
-            case MOD:
-                return com.alpharip.staffmod.rankviewer.AlphaRank.MODERATOR;
-            case T_MOD:
-                return com.alpharip.staffmod.rankviewer.AlphaRank.TRIAL_MODERATOR;
-            case BETA:
-                return com.alpharip.staffmod.rankviewer.AlphaRank.BETA;
+            case MANAGEMENT: return com.alpharip.staffmod.rankviewer.AlphaRank.MANAGEMENT;
+            case SR_ADMIN: return com.alpharip.staffmod.rankviewer.AlphaRank.SENIOR_ADMIN;
+            case ADMIN: return com.alpharip.staffmod.rankviewer.AlphaRank.ADMIN;
+            case SR_MOD: return com.alpharip.staffmod.rankviewer.AlphaRank.SENIOR_MODERATOR;
+            case MOD: return com.alpharip.staffmod.rankviewer.AlphaRank.MODERATOR;
+            case T_MOD: return com.alpharip.staffmod.rankviewer.AlphaRank.TRIAL_MODERATOR;
+            case THE_NIBBLER: return com.alpharip.staffmod.rankviewer.AlphaRank.THE_NIBBLER;
+            case BETA: return com.alpharip.staffmod.rankviewer.AlphaRank.BETA;
+            case ALPHA_PLUS: return com.alpharip.staffmod.rankviewer.AlphaRank.ALPHA_PLUS;
+            case ALPHA: return com.alpharip.staffmod.rankviewer.AlphaRank.ALPHA;
+            case ELITE: return com.alpharip.staffmod.rankviewer.AlphaRank.ELITE;
+            case ROGUE: return com.alpharip.staffmod.rankviewer.AlphaRank.ROGUE;
+            case SCOUT: return com.alpharip.staffmod.rankviewer.AlphaRank.SCOUT;
             case DONATOR:
                 return "alpha_plus".equalsIgnoreCase(signedInRankKey)
                         ? com.alpharip.staffmod.rankviewer.AlphaRank.ALPHA_PLUS
                         : com.alpharip.staffmod.rankviewer.AlphaRank.ALPHA;
-            default:
-                return com.alpharip.staffmod.rankviewer.AlphaRank.fromString(signedInRankKey);
+            case PUBLIC:
+            default: return com.alpharip.staffmod.rankviewer.AlphaRank.MEMBER;
+        }
+    }
+
+    private static String formatEffectiveRankLabel(PermissionService.Rank rank, boolean founder) {
+        if (founder || rank == PermissionService.Rank.FOUNDER) return "Founder";
+        switch (rank) {
+            case OWNER: return "Owner";
+            case MANAGER: return "Manager";
+            case PLAT_ADMIN:
+            case MANAGEMENT: return "Platform Admin";
+            case SR_ADMIN: return "Sr Admin";
+            case ADMIN: return "Admin";
+            case SR_MOD: return "Sr Mod";
+            case MOD: return "Mod";
+            case T_MOD: return "T-Mod";
+            case THE_NIBBLER: return "The Nibbler";
+            case BETA: return "Beta";
+            case ALPHA_PLUS: return "Alpha+";
+            case ALPHA: return "Alpha";
+            case ELITE: return "Elite";
+            case ROGUE: return "Rogue";
+            case SCOUT: return "Scout";
+            case DONATOR:
+                return "alpha_plus".equalsIgnoreCase(signedInRankKey) ? "Alpha+" : "Alpha";
+            case PUBLIC:
+            default: return "Member";
         }
     }
 

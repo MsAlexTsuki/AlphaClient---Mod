@@ -27,8 +27,7 @@ public final class StaffModsMenuGui extends GuiScreen {
         PermissionService.Rank.PUBLIC,
         PermissionService.Rank.FOUNDER,
         PermissionService.Rank.OWNER,
-        PermissionService.Rank.MANAGER,
-        PermissionService.Rank.PLAT_ADMIN,
+        PermissionService.Rank.MANAGEMENT,
         PermissionService.Rank.SR_ADMIN,
         PermissionService.Rank.ADMIN,
         PermissionService.Rank.SR_MOD,
@@ -36,7 +35,7 @@ public final class StaffModsMenuGui extends GuiScreen {
         PermissionService.Rank.T_MOD
     };
     private static final String[] LABELS = {
-        "GENERAL", "FOUNDER", "OWNER", "MANAGER", "PLATFORM ADMIN",
+        "GENERAL", "FOUNDER", "OWNER", "MANAGEMENT",
         "SR ADMIN", "ADMIN", "SR MOD", "MOD", "T-MOD"
     };
 
@@ -128,6 +127,10 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (rank == PermissionService.Rank.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
+        if (rank == PermissionService.Rank.MANAGEMENT) {
+            return PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
+                    || PermissionService.hasAccess(PermissionService.Rank.MANAGER);
+        }
         PermissionService.Rank effective = PermissionService.getEffectiveRank();
         return hierarchyPriority(effective) >= hierarchyPriority(rank);
     }
@@ -160,9 +163,9 @@ public final class StaffModsMenuGui extends GuiScreen {
         List<AlphaModule> modules = new ArrayList<AlphaModule>();
 
         if (selectedRank == PermissionService.Rank.PUBLIC) {
-            // Bhop is available only from General.
+            // Bhop is only exposed in General and only when its explicit permission allows it.
             AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
-            if (bhop != null) modules.add(bhop);
+            if (bhop != null && bhop.isUnlocked()) modules.add(bhop);
             return modules;
         }
 
@@ -172,6 +175,7 @@ public final class StaffModsMenuGui extends GuiScreen {
         int selectedLevel = staffFolderLevel(selectedRank);
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             if ("staffmods".equals(module.getId())) continue;
+            if (!module.isUnlocked()) continue;
 
             if (module.getCategory() == AlphaModule.Category.FOUNDER) {
                 if (selectedRank == PermissionService.Rank.FOUNDER) modules.add(module);
@@ -307,8 +311,7 @@ public final class StaffModsMenuGui extends GuiScreen {
                 }
                 return;
             }
-            if (selectedRank != PermissionService.Rank.PUBLIC
-                    && !PermissionService.hasAccess(module.getCategory().getRequiredRank())) return;
+            if (!module.isUnlocked()) return;
             if ("staffmods".equals(module.getId())) {
                 mc.displayGuiScreen(new BhopSettingsGui(this));
                 return;
