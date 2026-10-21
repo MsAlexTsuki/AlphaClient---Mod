@@ -1369,6 +1369,13 @@ public class ModuleProfileManager {
         BhopProfile profile = findProfile(selectedProfile);
         if (profile == null || applyingModuleStates) return;
 
+        // Keep BHOP settings in the same profile store as the module toggles.
+        profile.bhopName = BhopMode.getBhopName();
+        profile.color = BhopMode.getColor();
+        profile.bhopEnabled = BhopMode.isEnabled();
+        profile.shiftUpEnabled = BhopMode.isShiftUpEnabled();
+        profile.speedLevel = BhopMode.getSpeedLevel();
+
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             profile.getModule(module.getId()).addProperty("enabled", module.isConfiguredEnabled());
         }

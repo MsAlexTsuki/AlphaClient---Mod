@@ -1,6 +1,6 @@
 package com.alpharip.staffmod.movement;
 
-import com.alpharip.staffmod.profile.ProfileManager;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.PermissionService;
 
 import net.minecraft.client.Minecraft;
@@ -486,9 +486,19 @@ public class BhopMode {
 
 
     public static void loadSelectedProfile() {
+        ModuleProfileManager.BhopProfile profile =
+                ModuleProfileManager.getSelectedProfile();
 
-        ProfileManager
-                .getInstance()
-                .applySelectedProfile();
+        if (profile == null) {
+            return;
+        }
+
+        // The active profile menu uses ModuleProfileManager, so BHOP must load
+        // from that same selected profile instead of the legacy ProfileManager.
+        setBhopName(profile.getBhopName());
+        setColor(profile.getColor());
+        setEnabled(profile.isBhopEnabled());
+        setShiftUpEnabled(profile.isShiftUpEnabled());
+        setSpeedLevel(profile.getSpeedLevel());
     }
 }
