@@ -307,171 +307,73 @@ public class ModuleProfileManager {
      */
 
     public static void load() {
-
-        if (loaded) {
-            return;
-        }
-
+        if (loaded) return;
         loaded = true;
 
-        File file =
-                getFile();
+        File file = getFile();
+        File legacyFile = getLegacyProfileFile();
 
         if (!file.exists()) {
-
-            createDefaultProfile();
-
+            if (!mergeLegacyProfileFile(legacyFile, true)) {
+                createDefaultProfile();
+            }
             migrateProfileColors();
-
             save();
-
             return;
         }
 
         try {
-
-            FileReader reader =
-                    new FileReader(file);
-
-            JsonElement root =
-                    new JsonParser().parse(reader);
-
-            reader.close();
-
+            JsonElement root;
+            FileReader reader = new FileReader(file);
+            try {
+                root = new JsonParser().parse(reader);
+            } finally {
+                reader.close();
+            }
             if (!root.isJsonObject()) {
-
-                createDefaultProfile();
-
-                migrateProfileColors();
-
-                save();
-
-                return;
+                throw new IllegalStateException("Profile file is not a JSON object.");
             }
 
-            JsonObject object =
-                    root.getAsJsonObject();
-
-            if (object.has(
-                    "selectedProfile"
-            )) {
-
-                selectedProfile =
-                        object.get(
-                                "selectedProfile"
-                        ).getAsString();
+            JsonObject object = root.getAsJsonObject();
+            if (object.has("selectedProfile")) {
+                selectedProfile = object.get("selectedProfile").getAsString();
             }
 
             profiles.clear();
+            if (object.has("profiles") && object.get("profiles").isJsonArray()) {
+                JsonArray array = object.getAsJsonArray("profiles");
+                for (JsonElement element : array) {
+                    if (!element.isJsonObject()) continue;
+                    JsonObject profileObject = element.getAsJsonObject();
+                    String profileName = getString(profileObject, "profileName", "Default");
+                    String bhopName = getString(profileObject, "bhopName", "BHOP");
+                    String color = getString(profileObject, "color",
+                            getString(profileObject, "bhopColor", DEFAULT_COLOR));
+                    boolean bhopEnabled = getBoolean(profileObject, "bhopEnabled", false);
+                    boolean shiftUpEnabled = getBoolean(profileObject, "shiftUpEnabled", false);
+                    int speedLevel = getInt(profileObject, "speedLevel", 2);
+                    if (speedLevel < 1 || speedLevel > 20) speedLevel = 2;
 
-            if (object.has("profiles")
-                    && object.get(
-                    "profiles"
-            ).isJsonArray()) {
-
-                JsonArray array =
-                        object.getAsJsonArray(
-                                "profiles"
-                        );
-
-                for (JsonElement element :
-                        array) {
-
-                    if (!element.isJsonObject()) {
-                        continue;
+                    BhopProfile profile = new BhopProfile(profileName, bhopName, color,
+                            bhopEnabled, shiftUpEnabled, speedLevel);
+                    if (profileObject.has("modules") && profileObject.get("modules").isJsonObject()) {
+                        profile.modules = profileObject.getAsJsonObject("modules").deepCopy();
                     }
-
-                    JsonObject profileObject =
-                            element.getAsJsonObject();
-
-                    String profileName =
-                            getString(
-                                    profileObject,
-                                    "profileName",
-                                    "Default"
-                            );
-
-                    String bhopName =
-                            getString(
-                                    profileObject,
-                                    "bhopName",
-                                    "BHOP"
-                            );
-
-                    String color =
-                            getString(
-                                    profileObject,
-                                    "color",
-                                    DEFAULT_COLOR
-                            );
-
-                    boolean bhopEnabled =
-                            getBoolean(
-                                    profileObject,
-                                    "bhopEnabled",
-                                    false
-                            );
-
-                    boolean shiftUpEnabled =
-                            getBoolean(
-                                    profileObject,
-                                    "shiftUpEnabled",
-                                    false
-                            );
-
-                    /*
-                     * Definitive BHOP system:
-                     *
-                     * Speed I - XX
-                     */
-                    int speedLevel =
-                            getInt(
-                                    profileObject,
-                                    "speedLevel",
-                                    2
-                            );
-
-                    if (speedLevel < 1
-                            || speedLevel > 20) {
-
-                        speedLevel = 2;
+                    if (profileObject.has("colors") && profileObject.get("colors").isJsonObject()) {
+                        if (!profile.modules.has(MOD_COLORS_MODULE)) {
+                            profile.modules.add(MOD_COLORS_MODULE,
+                                    profileObject.getAsJsonObject("colors").deepCopy());
+                        }
                     }
-
-                    BhopProfile profile =
-                            new BhopProfile(
-                                    profileName,
-                                    bhopName,
-                                    color,
-                                    bhopEnabled,
-                                    shiftUpEnabled,
-                                    speedLevel
-                            );
-
-                    /*
-                     * Generic module data.
-                     *
-                     * Old profiles simply don't have
-                     * this field, which is fine.
-                     */
-                    if (profileObject.has(
-                            "modules"
-                    )
-                            && profileObject.get(
-                            "modules"
-                    ).isJsonObject()) {
-
-                        profile.modules =
-                                profileObject
-                                        .getAsJsonObject(
-                                                "modules"
-                                        );
-                    }
-
-                    profiles.add(
-                            profile
-                    );
+                    if (findProfile(profileName) == null) profiles.add(profile);
                 }
             }
+
+            // Merge profiles from the older profiles.json store without replacing
+            // current entries or changing the currently selected profile.
+            String currentSelection = selectedProfile;
+            mergeLegacyProfileFile(legacyFile, false);
+            selectedProfile = currentSelection;
 
             if (profiles.isEmpty()) {
                 createDefaultProfile();
@@ -480,43 +382,98 @@ public class ModuleProfileManager {
             }
 
             if (findProfile(selectedProfile) == null) {
-
-                selectedProfile =
-                        profiles.get(0)
-                                .getProfileName();
+                selectedProfile = profiles.get(0).getProfileName();
             }
 
-            /*
-             * Zorg dat ieder profiel zijn
-             * eigen modColors-sectie heeft.
-             *
-             * Bestaande waarden worden nooit
-             * overschreven.
-             */
-            boolean colorsChanged =
-                    migrateProfileColors();
-
-            if (colorsChanged) {
-
-                save();
-            }
+            boolean colorsChanged = migrateProfileColors();
+            // Persist only after a successful parse and merge.
+            if (colorsChanged || legacyFile.exists()) save();
 
         } catch (Exception e) {
-
-            System.out.println(
-                    "[AlphaStaffMod] Could not load profiles."
-            );
-
+            System.out.println("[AlphaStaffMod] Could not load profiles; preserving the unreadable file.");
             e.printStackTrace();
-
             profiles.clear();
 
-            createDefaultProfile();
+            if (!backupUnreadableProfileFile(file)) {
+                System.out.println("[AlphaStaffMod] Backup failed; refusing to overwrite profile data.");
+                return;
+            }
 
+            if (!mergeLegacyProfileFile(legacyFile, true)) {
+                createDefaultProfile();
+            }
             migrateProfileColors();
-
             save();
         }
+    }
+
+    private static File getLegacyProfileFile() {
+        return new File(getDirectory(), "profiles.json");
+    }
+
+    private static boolean mergeLegacyProfileFile(File legacyFile, boolean useLegacySelection) {
+        if (legacyFile == null || !legacyFile.isFile()) return false;
+
+        FileReader reader = null;
+        int before = profiles.size();
+        try {
+            reader = new FileReader(legacyFile);
+            JsonElement root = new JsonParser().parse(reader);
+            if (root == null || !root.isJsonObject()) return false;
+            JsonObject object = root.getAsJsonObject();
+
+            if (useLegacySelection && object.has("selectedProfile")) {
+                String legacySelection = object.get("selectedProfile").getAsString();
+                if (legacySelection != null && !legacySelection.trim().isEmpty()) {
+                    selectedProfile = legacySelection;
+                }
+            }
+
+            if (!object.has("profiles") || !object.get("profiles").isJsonArray()) return false;
+            for (JsonElement element : object.getAsJsonArray("profiles")) {
+                if (!element.isJsonObject()) continue;
+                JsonObject source = element.getAsJsonObject();
+                String name = getString(source, "profileName", "");
+                if (name.trim().isEmpty() || findProfile(name) != null) continue;
+
+                String bhopName = getString(source, "bhopName", "BHOP");
+                String color = getString(source, "color",
+                        getString(source, "bhopColor", DEFAULT_COLOR));
+                int speed = getInt(source, "speedLevel", 2);
+                if (speed < 1 || speed > 20) speed = 2;
+
+                BhopProfile profile = new BhopProfile(name, bhopName, color,
+                        getBoolean(source, "bhopEnabled", false),
+                        getBoolean(source, "shiftUpEnabled", false), speed);
+
+                if (source.has("modules") && source.get("modules").isJsonObject()) {
+                    profile.modules = source.getAsJsonObject("modules").deepCopy();
+                }
+                if (source.has("colors") && source.get("colors").isJsonObject()
+                        && !profile.modules.has(MOD_COLORS_MODULE)) {
+                    profile.modules.add(MOD_COLORS_MODULE, source.getAsJsonObject("colors").deepCopy());
+                }
+                profiles.add(profile);
+            }
+            return profiles.size() > before || !profiles.isEmpty();
+        } catch (Exception e) {
+            System.out.println("[AlphaStaffMod] Could not import legacy profiles: " + e.getMessage());
+            return false;
+        } finally {
+            if (reader != null) {
+                try { reader.close(); } catch (Exception ignored) { }
+            }
+        }
+    }
+
+    private static boolean backupUnreadableProfileFile(File file) {
+        File backup = new File(file.getParentFile(),
+                file.getName() + ".unreadable-" + System.currentTimeMillis());
+        boolean moved = file.renameTo(backup);
+        if (moved) {
+            System.out.println("[AlphaStaffMod] Preserved profile data at " + backup.getAbsolutePath());
+        }
+        return moved;
     }
 
 
