@@ -248,7 +248,10 @@ public final class StaffModsMenuGui extends GuiScreen {
         drawString(fontRendererObj, "ALPHA CLIENT", panelLeft + 14, panelTop + 14, 0xFFF0F1F4);
         drawString(fontRendererObj, "STAFFMODS", panelLeft + 14, panelTop + 34, ACCENT);
         if (openFolderRank != null) {
-            drawString(fontRendererObj, LABELS[indexOf(selectedRank)] + "  /  MODS",
+            String folderLabel = selectedRank == PermissionService.Rank.PLAT_ADMIN
+                    ? "PLATFORM ADMIN" : selectedRank == PermissionService.Rank.MANAGER
+                    ? "MANAGER" : LABELS[indexOf(selectedRank)];
+            drawString(fontRendererObj, folderLabel + "  /  MODS",
                     contentLeft, panelTop + 57, ACCENT);
             drawFolderContents(mouseX, mouseY);
         } else if (managementSubfolders) {
