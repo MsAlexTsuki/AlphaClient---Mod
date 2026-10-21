@@ -107,6 +107,13 @@ public final class AlphaModule {
         }
     }
 
+    private String getPermissionId() {
+        // These stable IDs match the current AlphaLauncher permission catalog.
+        if ("fps".equals(id)) return "public.performance_monitor";
+        if ("cps".equals(id)) return "public.custom_hud";
+        return id;
+    }
+
     public boolean isUnlocked() {
         // Founder remains a separate, exclusive category regardless of database grants.
         if (category == Category.FOUNDER) {
@@ -114,8 +121,9 @@ public final class AlphaModule {
         }
         // Use an explicit server decision when this module has a matching catalog entry.
         // Modules not yet present in the backend catalog retain their rank-category gate.
-        if (PermissionService.hasExplicitModPermission(id)) {
-            return PermissionService.hasModAccess(id);
+        String permissionId = getPermissionId();
+        if (PermissionService.hasExplicitModPermission(permissionId)) {
+            return PermissionService.hasModAccess(permissionId);
         }
         return PermissionService.hasAccess(category.getRequiredRank());
     }
