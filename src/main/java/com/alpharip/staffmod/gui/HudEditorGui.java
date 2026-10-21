@@ -7,6 +7,7 @@ import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.permissions.PermissionService;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
@@ -24,6 +25,11 @@ public final class HudEditorGui extends GuiScreen {
     private int dragX, dragY;
 
     public HudEditorGui(GuiScreen parent) { this.parent = parent; }
+
+    private static boolean hasBhopAccess() {
+        AlphaModule module = AlphaModuleRegistry.find("staffmods");
+        return module != null && module.isUnlocked();
+    }
 
     private static boolean isCpsModuleEnabled() {
         AlphaModule module = AlphaModuleRegistry.find("cps");
@@ -58,7 +64,9 @@ public final class HudEditorGui extends GuiScreen {
         drawString(fontRendererObj, "Drag any HUD preview to reposition it.", left + 16, top + 48, 0xFFB9C0CB);
         drawString(fontRendererObj, "Use RESET ALL to restore default HUD positions.", left + 16, top + 65, 0xFFB8BDC8);
 
-        BhopHud.renderEditorPreview();
+        if (hasBhopAccess()) {
+            BhopHud.renderEditorPreview();
+        }
 
         AfkTimerHud.renderEditorPreview();
 
@@ -116,7 +124,7 @@ public final class HudEditorGui extends GuiScreen {
         }
 
         int x = BhopHud.getHudX(), y = BhopHud.getHudY(), w = Math.max(110, BhopHud.getHudWidth());
-        if (mouseButton == 0 && mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + 28) {
+        if (hasBhopAccess() && mouseButton == 0 && mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + 28) {
             dragging = true;
             dragX = mouseX - x;
             dragY = mouseY - y;
