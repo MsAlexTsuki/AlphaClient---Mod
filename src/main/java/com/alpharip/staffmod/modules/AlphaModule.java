@@ -21,7 +21,9 @@ public final class AlphaModule {
         SR_MOD("Sr-Mod", PermissionService.Rank.SR_MOD),
         ADMIN("Admin", PermissionService.Rank.ADMIN),
         SR_ADMIN("Sr-Admin", PermissionService.Rank.SR_ADMIN),
-        MANAGEMENT("Management", PermissionService.Rank.MANAGEMENT),
+        MANAGEMENT("Management", PermissionService.Rank.PLAT_ADMIN),
+        PLAT_ADMIN("Platform Admin", PermissionService.Rank.PLAT_ADMIN),
+        MANAGER("Manager", PermissionService.Rank.MANAGER),
         OWNER("Owner", PermissionService.Rank.OWNER),
         FOUNDER("Founder", PermissionService.Rank.FOUNDER);
 
