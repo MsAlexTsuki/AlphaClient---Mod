@@ -112,7 +112,7 @@ public final class AlphaModMenu extends GuiScreen {
                     sidebarWidth - 10, 20, "STAFFMODS"));
             categoryY += 23;
         }
-        if (true) {
+        if ("staffmods".equals(selectedModuleId)) {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
             int actionY = panelTop + panelHeight - 48;
             int profileTop = panelTop + 86;
@@ -189,6 +189,11 @@ public final class AlphaModMenu extends GuiScreen {
 
     private AlphaModule getSelectedModule() {
         AlphaModule module = AlphaModuleRegistry.find(selectedModuleId);
+        if ("staffmods".equals(selectedModuleId)
+                && (module == null || module.getCategory() != selectedCategory)) {
+            // Keep the profile manager visible until the user chooses a module category.
+            return null;
+        }
         if (module == null || module.getCategory() != selectedCategory) {
             List<AlphaModule> modules = AlphaModuleRegistry.getForCategory(selectedCategory);
             return modules.isEmpty() ? null : modules.get(0);
