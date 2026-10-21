@@ -129,12 +129,29 @@ public final class PermissionService {
         if (required == null) {
             return false;
         }
-        Rank actual = getEffectiveRank();
-        if (actual == Rank.FOUNDER) return true;
-        if (required == Rank.PUBLIC) return true;
 
-        // Beta and Donator are separate entitlements, except for staff and Founder.
-        if (actual == Rank.BETA || actual == Rank.DONATOR) return actual == required;
+        Rank actual = getEffectiveRank();
+
+        // Founder is an exclusive client/launcher-creator permission.
+        // Check it before the hierarchy so no higher/future regular rank can inherit it.
+        if (required == Rank.FOUNDER) {
+            return actual == Rank.FOUNDER;
+        }
+
+        // Founder has every permission. Alpha.rip Owners have every regular
+        // client permission, including Beta/Donator and future non-Founder categories.
+        if (actual == Rank.FOUNDER || actual == Rank.OWNER) {
+            return true;
+        }
+
+        if (required == Rank.PUBLIC) {
+            return true;
+        }
+
+        // Beta and Donator are separate entitlements for non-staff ranks.
+        if (actual == Rank.BETA || actual == Rank.DONATOR) {
+            return actual == required;
+        }
 
         // Staff ranks inherit categories below their own rank.
         int actualLevel = staffLevel(actual);
