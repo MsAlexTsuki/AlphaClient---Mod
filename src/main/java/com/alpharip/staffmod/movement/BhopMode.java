@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.movement;
 
 import com.alpharip.staffmod.profile.ProfileManager;
+import com.alpharip.staffmod.permissions.PermissionService;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -67,6 +68,9 @@ public class BhopMode {
 
         EntityPlayer player = mc.thePlayer;
 
+        // A server-side per-player denial takes effect without restarting the client.
+        if (PermissionService.hasExplicitModPermission("staff.bhop")
+                && !PermissionService.hasModAccess("staff.bhop")) return;
         if (!enabled) return;
 
         if (!player.capabilities.isCreativeMode) return;
@@ -340,6 +344,11 @@ public class BhopMode {
 
 
     public static void toggle() {
+        if (PermissionService.hasExplicitModPermission("staff.bhop")
+                && !PermissionService.hasModAccess("staff.bhop")) {
+            enabled = false;
+            return;
+        }
         enabled = !enabled;
     }
 
@@ -352,6 +361,11 @@ public class BhopMode {
     public static void setEnabled(
             boolean value) {
 
+        if (value && PermissionService.hasExplicitModPermission("staff.bhop")
+                && !PermissionService.hasModAccess("staff.bhop")) {
+            enabled = false;
+            return;
+        }
         enabled = value;
     }
 
