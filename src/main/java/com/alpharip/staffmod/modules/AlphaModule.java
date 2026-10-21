@@ -35,13 +35,8 @@ public final class AlphaModule {
             this.requiredRank = requiredRank;
         }
 
-        public String getTitle() {
-            return title;
-        }
-
-        public PermissionService.Rank getRequiredRank() {
-            return requiredRank;
-        }
+        public String getTitle() { return title; }
+        public PermissionService.Rank getRequiredRank() { return requiredRank; }
     }
 
     private final String id;
@@ -53,8 +48,7 @@ public final class AlphaModule {
     private final List<AlphaModuleFeature> features = new ArrayList<AlphaModuleFeature>();
 
     public AlphaModule(String id, String name, String description,
-                       Category category, boolean implemented,
-                       boolean defaultEnabled) {
+                       Category category, boolean implemented, boolean defaultEnabled) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -96,7 +90,7 @@ public final class AlphaModule {
     }
 
     public void setEnabled(boolean enabled) {
-        if (implemented && (!enabled || PermissionService.hasAccess(category.getRequiredRank()))) {
+        if (implemented && (!enabled || isUnlocked())) {
             if (this.enabled != enabled) {
                 this.enabled = enabled;
                 AlphaClientConfig.saveModuleState(id, enabled);
@@ -115,12 +109,20 @@ public final class AlphaModule {
     }
 
     public boolean isUnlocked() {
-        // Founder remains a separate, exclusive category regardless of database grants.
+        // Founder-only modules remain exclusive and cannot be granted to Owner by hierarchy.
         if (category == Category.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
-        // Use an explicit server decision when this module has a matching catalog entry.
-        // Modules not yet present in the backend catalog retain their rank-category gate.
+
+        // Founder and Owner have access to every regular module. Per-module backend
+        // denials must not accidentally hide normal modules such as BHOP from them.
+        if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                || PermissionService.hasAccess(PermissionService.Rank.OWNER)) {
+            return true;
+        }
+
+        // For other ranks, honor an explicit server decision when one exists.
+        // Modules absent from the backend catalog use their category rank gate.
         String permissionId = getPermissionId();
         if (PermissionService.hasExplicitModPermission(permissionId)) {
             return PermissionService.hasModAccess(permissionId);
@@ -129,12 +131,8 @@ public final class AlphaModule {
     }
 
     public String getStatusLabel() {
-        if (!isUnlocked()) {
-            return "LOCKED";
-        }
-        if (!implemented) {
-            return "COMING SOON";
-        }
+        if (!isUnlocked()) return "LOCKED";
+        if (!implemented) return "COMING SOON";
         return enabled ? "ON" : "OFF";
     }
 }
