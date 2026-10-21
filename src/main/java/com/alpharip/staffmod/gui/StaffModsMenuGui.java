@@ -120,10 +120,18 @@ public final class StaffModsMenuGui extends GuiScreen {
     }
 
     private boolean isVisibleRank(PermissionService.Rank rank) {
+        PermissionService.Rank effective = PermissionService.getEffectiveRank();
         if (rank == PermissionService.Rank.PUBLIC) return true;
-        return rank == PermissionService.getEffectiveRank()
-                || (rank == PermissionService.Rank.MANAGEMENT
-                && PermissionService.getEffectiveRank() == PermissionService.Rank.PLAT_ADMIN);
+
+        // MANAGEMENT is the parent folder for both Platform Admin and Manager.
+        // Keep that entry visible for either effective rank so the rank menu
+        // never hides the player's only valid rank path.
+        if (rank == PermissionService.Rank.MANAGEMENT) {
+            return effective == PermissionService.Rank.MANAGEMENT
+                    || effective == PermissionService.Rank.PLAT_ADMIN
+                    || effective == PermissionService.Rank.MANAGER;
+        }
+        return rank == effective;
     }
 
     private List<AlphaModule> getModulesForSelectedRank() {
