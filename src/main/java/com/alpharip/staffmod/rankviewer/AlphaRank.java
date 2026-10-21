@@ -14,6 +14,9 @@ public enum AlphaRank {
     MODERATOR("moderator", "Moderator", 0xFF39E85B, "M"),
     TRIAL_MODERATOR("trial_moderator", "Trial Moderator", 0xFF159BFF, "T"),
     THE_NIBBLER("the_nibbler", "The Nibbler", 0xFFC3BFE0, "N"),
+    ELITE("elite", "Elite", 0xFF00D9FF, "E"),
+    ROGUE("rogue", "Rogue", 0xFFA855F7, "R"),
+    SCOUT("scout", "Scout", 0xFFFFD700, "S"),
     BETA("beta", "Beta", 0xFFFF922E, "B"),
     ALPHA_PLUS("alpha_plus", "Alpha+", 0xFF00D9D9, "A+"),
     ALPHA("alpha", "Alpha", 0xFF777BFF, "A"),
@@ -31,8 +34,7 @@ public enum AlphaRank {
         this.color = color;
         this.emblem = emblem;
         this.texture = new ResourceLocation(
-                "alphastaffmod", "textures/ranks/" + key
-                        + ".png");
+                "alphastaffmod", "textures/ranks/" + key + ".png");
     }
 
     public String key() { return key; }
