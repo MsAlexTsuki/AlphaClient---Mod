@@ -7,7 +7,6 @@ import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
-import com.alpharip.staffmod.permissions.PermissionService;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
