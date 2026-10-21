@@ -20,6 +20,12 @@ public final class PermissionService {
     public enum Rank {
         PUBLIC,
         BETA,
+        SCOUT,
+        ROGUE,
+        ELITE,
+        ALPHA,
+        ALPHA_PLUS,
+        THE_NIBBLER,
         DONATOR,
         T_MOD,
         MOD,
@@ -175,21 +181,16 @@ public final class PermissionService {
             return Rank.FOUNDER;
         }
         if (!onlineRankVerified || verifiedOnlineRanks.isEmpty()) return Rank.PUBLIC;
-        if (verifiedOnlineRanks.contains(Rank.FOUNDER)) return Rank.FOUNDER;
-        if (verifiedOnlineRanks.contains(Rank.OWNER)) return Rank.OWNER;
         Rank strongest = Rank.PUBLIC;
-        int strongestLevel = -1;
+        int strongestPriority = rankPriority(Rank.PUBLIC);
         for (Rank rank : verifiedOnlineRanks) {
-            int level = staffLevel(rank);
-            if (level > strongestLevel) {
-                strongestLevel = level;
+            int priority = rankPriority(rank);
+            if (priority > strongestPriority) {
+                strongestPriority = priority;
                 strongest = rank;
             }
         }
-        if (strongestLevel >= 0) return strongest;
-        if (verifiedOnlineRanks.contains(Rank.DONATOR)) return Rank.DONATOR;
-        if (verifiedOnlineRanks.contains(Rank.BETA)) return Rank.BETA;
-        return Rank.PUBLIC;
+        return strongest;
     }
 
     public static boolean hasAccess(Rank required) {
@@ -210,6 +211,7 @@ public final class PermissionService {
         return false;
     }
 
+    /** Staff-only inheritance order. Supporter ranks never inherit staff access. */
     private static int staffLevel(Rank rank) {
         switch (rank) {
             case T_MOD: return 1;
@@ -217,11 +219,37 @@ public final class PermissionService {
             case SR_MOD: return 3;
             case ADMIN: return 4;
             case SR_ADMIN: return 5;
-            case PLAT_ADMIN: return 6;
-            case MANAGEMENT: return 6; // Legacy rank key; equivalent to Platform Admin.
+            case PLAT_ADMIN:
+            case MANAGEMENT: return 6; // Legacy key maps to Platform Admin.
             case MANAGER: return 7;
             case OWNER: return 8;
             case FOUNDER: return 9;
+            default: return -1;
+        }
+    }
+
+    /** Canonical Alpha Community ordering: higher value means higher displayed rank. */
+    private static int rankPriority(Rank rank) {
+        switch (rank) {
+            case FOUNDER: return 17;
+            case OWNER: return 16;
+            case MANAGER: return 15;
+            case PLAT_ADMIN:
+            case MANAGEMENT: return 14;
+            case SR_ADMIN: return 13;
+            case ADMIN: return 12;
+            case SR_MOD: return 11;
+            case MOD: return 10;
+            case T_MOD: return 9;
+            case THE_NIBBLER: return 8;
+            case ALPHA_PLUS: return 7;
+            case ALPHA: return 6;
+            case ELITE: return 5;
+            case ROGUE: return 4;
+            case SCOUT: return 3;
+            case DONATOR: return 2; // Legacy compatibility only.
+            case PUBLIC: return 1; // Member.
+            case BETA: return 0;
             default: return -1;
         }
     }
