@@ -124,7 +124,7 @@ public final class AlphaModMenu extends GuiScreen {
         buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, categoryY,
                 sidebarWidth - 10, 20, "STAFFMODS"));
         categoryY += 23;
-        if ("staffmods".equals(selectedModuleId)) {
+        {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
             int actionY = panelTop + panelHeight - 48;
             int profileTop = panelTop + 86;
@@ -262,64 +262,26 @@ public final class AlphaModMenu extends GuiScreen {
         drawString(fontRendererObj, "BROWSE", panelLeft + 6, panelTop + 57, 0xFFB8BDC8);
         drawString(fontRendererObj, selectedCategory.getTitle().toUpperCase(Locale.ROOT),
                 contentLeft + 3, contentTop - 9, ACCENT);
-        AlphaModule selected = getSelectedModule();
-        if (selected == null) {
-            drawString(fontRendererObj, "PROFILES",
-                    settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
-            List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-            String activeProfile = ModuleProfileManager.getSelectedProfileName();
-            int profileTop = panelTop + 67;
-            int actionY = panelTop + panelHeight - 48;
-            int profileBottom = actionY - 8;
-            int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
-            drawString(fontRendererObj, "Select a profile", settingsLeft + 7, panelTop + 55, 0xFFF3F4F6);
-            if (profiles.isEmpty()) {
-                drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, profileTop + 4, 0xFFB8BDC8);
-            } else {
-                if (hasBhopAccess()) {
-                    drawString(fontRendererObj, "Active: " + activeProfile, settingsLeft + 7,
-                            panelTop + panelHeight - 27, 0xFF9CE2AC);
-                }
-                if (profiles.size() > visibleProfiles) {
-                    drawString(fontRendererObj, "Scroll for more (" + (profileScrollOffset + 1) + "-"
-                            + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + "/" + profiles.size() + ")",
-                            settingsLeft + 7, panelTop + 68, 0xFFB8BDC8);
-                }
-            }
+        drawString(fontRendererObj, "PROFILES",
+                settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
+        List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
+        String activeProfile = ModuleProfileManager.getSelectedProfileName();
+        int profileTop = panelTop + 67;
+        int actionY = panelTop + panelHeight - 48;
+        int profileBottom = actionY - 8;
+        int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
+        drawString(fontRendererObj, "Select a profile", settingsLeft + 7, panelTop + 55, 0xFFF3F4F6);
+        if (profiles.isEmpty()) {
+            drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, profileTop + 4, 0xFFB8BDC8);
         } else {
-            drawString(fontRendererObj, "DETAILS", settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
-            drawRect(settingsLeft + 4, panelTop + 57, right - 6, panelTop + 89, 0xB5161820);
-            drawString(fontRendererObj, selected.getName(), settingsLeft + 9, panelTop + 64, 0xFFF3F4F6);
-            String selectedStatus = "quality".equals(selected.getId()) ? "FOLDER" : selected.getStatusLabel();
-            drawString(fontRendererObj, selectedStatus, settingsLeft + 9, panelTop + 77,
-                    "ON".equals(selectedStatus) ? 0xFF9CE2AC
-                            : ("LOCKED".equals(selectedStatus) || "COMING SOON".equals(selectedStatus)
-                            ? ACCENT : 0xFF9A9EAA));
-            drawWrappedTextLimited(selected.getDescription(), settingsLeft + 5, panelTop + 97,
-                    Math.max(70, right - settingsLeft - 16), 0xFFB9BDC6, 3);
-
-            drawRect(settingsLeft + 4, panelTop + 132, right - 6, panelTop + 133, 0x553F424A);
-            drawString(fontRendererObj, "OPTIONS", settingsLeft + 5, panelTop + 140, ACCENT);
-            int y = panelTop + 156;
-            drawString(fontRendererObj, "Status", settingsLeft + 7, y, 0xFFB8BDC8);
-            String status = "quality".equals(selected.getId()) ? "FOLDER" : selected.getStatusLabel();
-            int statusColor = "ON".equals(status) ? 0xFF9CE2AC
-                    : ("LOCKED".equals(status) || "COMING SOON".equals(status) ? ACCENT : 0xFFB9BDC6);
-            drawString(fontRendererObj, status, settingsLeft + 49, y, statusColor);
-            y += 11;
-
-            List<AlphaModuleFeature> features = selected.getFeatures();
-            if (features.isEmpty()) {
-                drawWrappedText(selected.isImplemented() ? "No extra options available yet."
-                        : "Not implemented yet.", settingsLeft + 10, y,
-                        Math.max(100, right - settingsLeft - 22), 0xFFB8BDC8);
-            } else {
-                for (int i = 0; i < features.size() && y < contentBottom - 18; i++) {
-                    AlphaModuleFeature feature = features.get(i);
-                    drawString(fontRendererObj, feature.getName(), settingsLeft + 7, y,
-                            feature.isAvailable() ? 0xFF9CE2AC : 0xFFB9BDC6);
-                    y += 13;
-                }
+            if (hasBhopAccess()) {
+                drawString(fontRendererObj, "Active: " + activeProfile, settingsLeft + 7,
+                        panelTop + panelHeight - 27, 0xFF9CE2AC);
+            }
+            if (profiles.size() > visibleProfiles) {
+                drawString(fontRendererObj, "Scroll for more (" + (profileScrollOffset + 1) + "-"
+                        + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + "/" + profiles.size() + ")",
+                        settingsLeft + 7, panelTop + 68, 0xFFB8BDC8);
             }
         }
         String rankText = "RANK: " + (SupabaseCommunityService.isSignedIn()
