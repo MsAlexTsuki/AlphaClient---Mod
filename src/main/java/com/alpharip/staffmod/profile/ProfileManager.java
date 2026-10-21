@@ -173,54 +173,53 @@ public final class ProfileManager {
 
         profiles.clear();
 
-        File file =
-                getProfileFile();
+        File file = getProfileFile();
+        File oldFile = getOldProfileFile();
 
-        /*
-         * New profile file exists.
-         */
+        // Load the current file first. If the legacy file still exists, merge
+        // profiles that are missing from the current file instead of hiding them.
         if (file.exists()) {
-
             if (loadFile(file)) {
-
+                String currentSelection = selectedProfile;
+                if (oldFile.exists()) {
+                    migrateOldProfiles(oldFile);
+                    selectedProfile = currentSelection;
+                }
                 ensureDefaultProfile();
                 save();
                 applySelectedProfile();
+                return;
+            }
 
+            // Never silently replace a file that failed to parse. Preserve it
+            // before trying recovery from the legacy profile file.
+            profiles.clear();
+            if (!backupUnreadableProfileFile(file)) {
+                System.out.println("[AlphaStaffMod] Could not back up unreadable profiles.json; leaving it untouched.");
                 return;
             }
         }
 
-
-        /*
-         * No new profile file.
-         *
-         * Try to migrate the existing BHOP profile file.
-         */
-        File oldFile =
-                getOldProfileFile();
-
-        if (oldFile.exists()) {
-
-            if (migrateOldProfiles(oldFile)) {
-
-                ensureDefaultProfile();
-                save();
-                applySelectedProfile();
-
-                return;
-            }
+        if (oldFile.exists() && migrateOldProfiles(oldFile)) {
+            ensureDefaultProfile();
+            save();
+            applySelectedProfile();
+            return;
         }
 
-
-        /*
-         * Completely new installation.
-         */
         createDefaultProfile();
-
         save();
-
         applySelectedProfile();
+    }
+
+    private boolean backupUnreadableProfileFile(File file) {
+        File backup = new File(file.getParentFile(),
+                FILE_NAME + ".unreadable-" + System.currentTimeMillis());
+        boolean moved = file.renameTo(backup);
+        if (moved) {
+            System.out.println("[AlphaStaffMod] Preserved unreadable profile data at " + backup.getAbsolutePath());
+        }
+        return moved;
     }
 
 
@@ -525,7 +524,8 @@ public final class ProfileManager {
                     if (profile.getProfileName() != null
                             && !profile.getProfileName()
                             .trim()
-                            .isEmpty()) {
+                            .isEmpty()
+                            && findProfile(profile.getProfileName()) == null) {
 
                         profiles.add(profile);
                     }

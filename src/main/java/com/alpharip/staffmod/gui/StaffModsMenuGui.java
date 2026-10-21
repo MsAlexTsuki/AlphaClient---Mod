@@ -23,20 +23,21 @@ public final class StaffModsMenuGui extends GuiScreen {
     private static final int ACCENT = 0xFFFFD866;
 
     // Keep every rank folder in canonical hierarchy order. Visibility is inherited downward.
+    // Display ranks from lowest to highest. Backend rank priority remains unchanged.
     private static final PermissionService.Rank[] RANKS = {
         PermissionService.Rank.PUBLIC,
-        PermissionService.Rank.FOUNDER,
-        PermissionService.Rank.OWNER,
-        PermissionService.Rank.MANAGEMENT,
-        PermissionService.Rank.SR_ADMIN,
-        PermissionService.Rank.ADMIN,
-        PermissionService.Rank.SR_MOD,
+        PermissionService.Rank.T_MOD,
         PermissionService.Rank.MOD,
-        PermissionService.Rank.T_MOD
+        PermissionService.Rank.SR_MOD,
+        PermissionService.Rank.ADMIN,
+        PermissionService.Rank.SR_ADMIN,
+        PermissionService.Rank.MANAGEMENT,
+        PermissionService.Rank.OWNER,
+        PermissionService.Rank.FOUNDER
     };
     private static final String[] LABELS = {
-        "GENERAL", "FOUNDER", "OWNER", "MANAGEMENT",
-        "SR ADMIN", "ADMIN", "SR MOD", "MOD", "T-MOD"
+        "GENERAL", "T-MOD", "MOD", "SR MOD",
+        "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
     };
 
     private final GuiScreen parent;
@@ -175,10 +176,22 @@ public final class StaffModsMenuGui extends GuiScreen {
         int selectedLevel = staffFolderLevel(selectedRank);
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             if ("staffmods".equals(module.getId())) continue;
-            if (!module.isUnlocked()) continue;
 
+            // W-Tap Assistance is a Founder-only tool and must never leak into
+            // another rank folder, even when the current account is Founder.
+            if ("w-tap-assistance".equals(module.getId())) {
+                if (selectedRank == PermissionService.Rank.FOUNDER
+                        && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                        && module.isUnlocked()) {
+                    modules.add(module);
+                }
+                continue;
+            }
+
+            if (!module.isUnlocked()) continue;
             if (module.getCategory() == AlphaModule.Category.FOUNDER) {
-                if (selectedRank == PermissionService.Rank.FOUNDER) modules.add(module);
+                if (selectedRank == PermissionService.Rank.FOUNDER
+                        && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) modules.add(module);
                 continue;
             }
 
