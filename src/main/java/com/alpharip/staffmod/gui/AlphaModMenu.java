@@ -79,7 +79,9 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setDisabledTextColour(0xFFB8BDC8);
         buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + 5, 16, 16, ""));
         buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + 5, 16, 16, ""));
-        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 36, 64, 14, "HUD EDITOR"));
+        if (hasBhopAccess()) {
+            buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 36, 64, 14, "HUD EDITOR"));
+        }
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
@@ -184,6 +186,11 @@ public final class AlphaModMenu extends GuiScreen {
         }
     }
 
+    private boolean hasBhopAccess() {
+        AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
+        return bhop != null && bhop.isUnlocked();
+    }
+
     private boolean isStaffRankCategory(AlphaModule.Category category) {
         switch (category) {
             case T_MOD:
@@ -269,8 +276,10 @@ public final class AlphaModMenu extends GuiScreen {
             if (profiles.isEmpty()) {
                 drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, profileTop + 4, 0xFFB8BDC8);
             } else {
-                drawString(fontRendererObj, "Active: " + activeProfile, settingsLeft + 7,
-                        panelTop + panelHeight - 27, 0xFF9CE2AC);
+                if (hasBhopAccess()) {
+                    drawString(fontRendererObj, "Active: " + activeProfile, settingsLeft + 7,
+                            panelTop + panelHeight - 27, 0xFF9CE2AC);
+                }
                 if (profiles.size() > visibleProfiles) {
                     drawString(fontRendererObj, "Scroll for more (" + (profileScrollOffset + 1) + "-"
                             + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + "/" + profiles.size() + ")",
@@ -381,7 +390,10 @@ public final class AlphaModMenu extends GuiScreen {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
         if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
-        if (button.id == HUD_EDITOR) { mc.displayGuiScreen(new HudEditorGui(this)); return; }
+        if (button.id == HUD_EDITOR) {
+            if (hasBhopAccess()) mc.displayGuiScreen(new HudEditorGui(this));
+            return;
+        }
         if (button.id == PROFILE_CREATE) {
             mc.displayGuiScreen(new ProfileNameGui(this, false, ""));
             return;
