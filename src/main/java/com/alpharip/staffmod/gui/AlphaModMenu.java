@@ -83,7 +83,16 @@ public final class AlphaModMenu extends GuiScreen {
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
-            if (!PermissionService.hasAccess(category.getRequiredRank())) continue;
+            boolean categoryAllowed = PermissionService.hasAccess(category.getRequiredRank());
+            if (!categoryAllowed) {
+                for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
+                    if (module.isUnlocked()) {
+                        categoryAllowed = true;
+                        break;
+                    }
+                }
+            }
+            if (!categoryAllowed) continue;
             String label;
             switch (category) {
                 case PUBLIC: label = "GENERAL"; break;
@@ -106,7 +115,8 @@ public final class AlphaModMenu extends GuiScreen {
                     label, category == selectedCategory));
             categoryY += 23;
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) {
+        if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)
+                || PermissionService.hasModAccess("staff.bhop")) {
             buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, categoryY,
                     sidebarWidth - 10, 20, "STAFFMODS"));
             categoryY += 23;
@@ -156,6 +166,7 @@ public final class AlphaModMenu extends GuiScreen {
 
     private String buildAccessFingerprint() {
         StringBuilder fingerprint = new StringBuilder(PermissionService.getEffectiveRank().name());
+        fingerprint.append('|').append(PermissionService.getVerifiedOnlineRanks());
         fingerprint.append('|').append(PermissionService.areModEntitlementsVerified());
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             fingerprint.append('|').append(module.getId()).append('=').append(module.isUnlocked());
