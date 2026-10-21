@@ -121,7 +121,9 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private boolean isVisibleRank(PermissionService.Rank rank) {
         if (rank == PermissionService.Rank.PUBLIC) return true;
-        return rank == PermissionService.getEffectiveRank();
+        return rank == PermissionService.getEffectiveRank()
+                || (rank == PermissionService.Rank.MANAGEMENT
+                && PermissionService.getEffectiveRank() == PermissionService.Rank.PLAT_ADMIN);
     }
 
     private List<AlphaModule> getModulesForSelectedRank() {
