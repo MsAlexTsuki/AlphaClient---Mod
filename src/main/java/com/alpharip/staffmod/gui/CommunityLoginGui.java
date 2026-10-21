@@ -86,13 +86,15 @@ public final class CommunityLoginGui extends GuiScreen {
         passwordField.setSelectionPos(Math.min(selection, raw.length()));
 
         drawRect(left + 14, 232, right - 14, 233, 0xFF292D36);
-        drawCenteredString(fontRendererObj, status, width / 2, 241, 0xFFB8BDC8);
+        if (!SupabaseCommunityService.isSignedIn() && status != null && !status.trim().isEmpty()) {
+            drawCenteredString(fontRendererObj, status, width / 2, 241, 0xFFB8BDC8);
+        }
         String rankText = SupabaseCommunityService.isSignedIn()
                 ? "VERIFIED RANK: " + SupabaseCommunityService.getSignedInRankLabel()
                 : (SupabaseCommunityService.isRestoringSession() ? "RESTORING SESSION..." : "RANK NOT VERIFIED");
         drawCenteredString(fontRendererObj, rankText, width / 2, 258, 0xFFFFD866);
         if (SupabaseCommunityService.isSignedIn()) {
-            drawCenteredString(fontRendererObj, "Signed in as " + SupabaseCommunityService.getSignedInEmail(),
+            drawCenteredString(fontRendererObj, "Logged in as " + SupabaseCommunityService.getSignedInAlphaName(),
                     width / 2, 275, 0xFF8DDBA4);
         } else if (!SupabaseCommunityService.isRestoringSession()) {
             drawCenteredString(fontRendererObj, SupabaseCommunityService.getSessionStatus(),
