@@ -83,7 +83,17 @@ public final class AlphaModule {
     public String getDescription() { return description; }
     public Category getCategory() { return category; }
     public boolean isImplemented() { return implemented; }
-    public boolean isEnabled() { return enabled; }
+
+    /** Effective state: a saved ON choice cannot activate while access is locked. */
+    public boolean isEnabled() { return enabled && isUnlocked(); }
+
+    /** Raw saved preference, used only when serializing/restoring configuration. */
+    public boolean isConfiguredEnabled() { return enabled; }
+
+    /** Restores a saved preference without treating startup as a user toggle. */
+    public void restoreEnabledState(boolean enabled) {
+        if (implemented) this.enabled = enabled;
+    }
 
     public void setEnabled(boolean enabled) {
         if (implemented && (!enabled || PermissionService.hasAccess(category.getRequiredRank()))) {
@@ -98,6 +108,15 @@ public final class AlphaModule {
     }
 
     public boolean isUnlocked() {
+        // Founder remains a separate, exclusive category regardless of database grants.
+        if (category == Category.FOUNDER) {
+            return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
+        }
+        // Use an explicit server decision when this module has a matching catalog entry.
+        // Modules not yet present in the backend catalog retain their rank-category gate.
+        if (PermissionService.hasExplicitModPermission(id)) {
+            return PermissionService.hasModAccess(id);
+        }
         return PermissionService.hasAccess(category.getRequiredRank());
     }
 
