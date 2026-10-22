@@ -119,11 +119,12 @@ public final class AlphaModMenu extends GuiScreen {
                     label, category == selectedCategory));
             categoryY += 23;
         }
-        // Keep the StaffMods folder visible independently of rank-sync state.
-        // Rank-specific folders and modules still enforce their own permissions.
-        buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, categoryY,
-                sidebarWidth - 10, 20, "STAFFMODS"));
-        categoryY += 23;
+        // StaffMods is visible only to authenticated staff ranks.
+        if (PermissionService.hasStaffModsAccess()) {
+            buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, categoryY,
+                    sidebarWidth - 10, 20, "STAFFMODS"));
+            categoryY += 23;
+        }
         {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
             int actionY = panelTop + panelHeight - 48;
@@ -381,7 +382,9 @@ public final class AlphaModMenu extends GuiScreen {
             return;
         }
         if (button.id == STAFF_MODS) {
-            mc.displayGuiScreen(new StaffModsMenuGui(this));
+            if (PermissionService.hasStaffModsAccess()) {
+                mc.displayGuiScreen(new StaffModsMenuGui(this));
+            }
             return;
         }
         if (button.id >= CATEGORY_BASE
@@ -403,7 +406,9 @@ public final class AlphaModMenu extends GuiScreen {
                     return;
                 }
                 if ("staffmods".equals(clickedModule.getId())) {
-                    mc.displayGuiScreen(new StaffModsMenuGui(this));
+                    if (PermissionService.hasStaffModsAccess()) {
+                        mc.displayGuiScreen(new StaffModsMenuGui(this));
+                    }
                     return;
                 }
                 if (button instanceof ModuleTileButton && ((ModuleTileButton) button).wasSwitchClicked()) {
