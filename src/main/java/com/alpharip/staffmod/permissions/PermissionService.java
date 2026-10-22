@@ -223,6 +223,15 @@ public final class PermissionService {
                     || ranks.contains(Rank.SCOUT))) {
             return true;
         }
+        // Donator ranks inherit every lower Donator rank:
+        // Scout < Rogue < Elite < Alpha < Alpha+.
+        if (isDonatorRank(required)) {
+            for (Rank actual : ranks) {
+                if (isDonatorRank(actual) && donatorRankLevel(actual) >= donatorRankLevel(required)) {
+                    return true;
+                }
+            }
+        }
         for (Rank actual : ranks) {
             if (actual == required) return true;
             if (actual == Rank.BETA || actual == Rank.DONATOR) continue;
@@ -231,6 +240,22 @@ public final class PermissionService {
             if (actualLevel >= 0 && requiredLevel >= 0 && actualLevel >= requiredLevel) return true;
         }
         return false;
+    }
+
+    private static boolean isDonatorRank(Rank rank) {
+        return rank == Rank.SCOUT || rank == Rank.ROGUE || rank == Rank.ELITE
+                || rank == Rank.ALPHA || rank == Rank.ALPHA_PLUS;
+    }
+
+    private static int donatorRankLevel(Rank rank) {
+        switch (rank) {
+            case SCOUT: return 1;
+            case ROGUE: return 2;
+            case ELITE: return 3;
+            case ALPHA: return 4;
+            case ALPHA_PLUS: return 5;
+            default: return -1;
+        }
     }
 
     /** Staff-only inheritance order. Supporter ranks never inherit staff access. */
