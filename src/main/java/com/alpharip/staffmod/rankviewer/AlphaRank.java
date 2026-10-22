@@ -38,7 +38,8 @@ public enum AlphaRank {
         this.color = color;
         this.emblem = emblem;
         String textureName = key;
-        if ("elite".equals(key) || "rogue".equals(key) || "scout".equals(key)) {
+        if ("elite".equals(key) || "rogue".equals(key) || "scout".equals(key)
+                || "developer".equals(key) || "media".equals(key)) {
             textureName += "_64";
         }
         this.texture = new ResourceLocation(
