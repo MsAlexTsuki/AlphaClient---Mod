@@ -115,6 +115,12 @@ public final class AlphaModule {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
 
+        // Every module in General is public for every existing and future community rank.
+        // Public category access takes precedence over per-module backend denials.
+        if (category == Category.PUBLIC) {
+            return true;
+        }
+
         // Founder and Owner have access to every regular module. Per-module backend
         // denials must not accidentally hide normal modules such as BHOP from them.
         if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
