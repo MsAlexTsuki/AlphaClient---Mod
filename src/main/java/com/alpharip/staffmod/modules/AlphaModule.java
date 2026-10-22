@@ -122,19 +122,26 @@ public final class AlphaModule {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
 
-        // General modules remain public.
-        if (category == Category.PUBLIC) {
-            return true;
-        }
-
-        // Owner and Founder retain their normal access to non-Founder modules.
+        // Owner and Founder retain access to every non-Founder module.
         if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
                 || PermissionService.hasAccess(PermissionService.Rank.OWNER)) {
             return true;
         }
 
-        // A staff rank OR an explicit allow for this exact mod grants access.
-        // Explicit per-mod grants are also used to reveal the module in its menu folder.
+        // An explicit per-mod result from AlphaLauncher is authoritative, including
+        // an explicit denial. This lets saved rank folders replace inherited
+        // category access instead of only granting extra access.
+        String permissionId = getPermissionId();
+        if (PermissionService.hasExplicitModPermission(permissionId)) {
+            return PermissionService.hasModAccess(permissionId);
+        }
+
+        // Preserve public access only when no explicit per-mod result exists.
+        if (category == Category.PUBLIC) {
+            return true;
+        }
+
+        // Fallback for modules not yet added to the permission catalog.
         return PermissionService.hasAccess(category.getRequiredRank()) || hasExplicitModAccess();
     }
 
