@@ -126,15 +126,21 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             categoryY += 23;
         }
         if (selectedCategory == AlphaModule.Category.DONATOR) {
-            String[] donorLabels = { "Scout", "Rogue", "Elite", "Alpha", "Alpha+" };
+            AlphaModule.Category[] donorCategories = {
+                AlphaModule.Category.SCOUT, AlphaModule.Category.ROGUE, AlphaModule.Category.ELITE,
+                AlphaModule.Category.ALPHA, AlphaModule.Category.ALPHA_PLUS
+            };
             int gap = 8;
             int tileWidth = Math.max(50, (contentRight - contentLeft - gap * 2) / 3);
             int tileHeight = 38;
-            for (int i = 0; i < donorLabels.length; i++) {
+            for (int i = 0; i < donorCategories.length; i++) {
+                AlphaModule.Category donorCategory = donorCategories[i];
+                // A subfolder is shown only to accounts assigned that rank (or Owner/Founder).
+                if (!PermissionService.hasAccess(donorCategory.getRequiredRank())) continue;
                 int x = contentLeft + (i % 3) * (tileWidth + gap);
                 int y = contentTop + (i / 3) * (tileHeight + gap);
                 buttonList.add(new AlphaButton(DONATOR_SUBFOLDER_BASE + i, x, y,
-                        tileWidth, tileHeight, donorLabels[i]));
+                        tileWidth, tileHeight, donorCategory.getTitle()));
             }
         }
 
@@ -237,6 +243,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         for (AlphaModule module : AlphaModuleRegistry.getForCategory(selectedCategory)) {
             // Bhop is exclusive to STAFFMODS -> GENERAL, never a rank-category module.
             if ("staffmods".equals(module.getId())) continue;
+            // Do not render locked modules; visibility must match the effective permission result.
+            if (!module.isUnlocked()) continue;
             if (query.isEmpty() || module.getName().toLowerCase(Locale.ROOT).contains(query)
                     || module.getDescription().toLowerCase(Locale.ROOT).contains(query)) result.add(module);
         }
@@ -415,7 +423,14 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 AlphaModule.Category.SCOUT, AlphaModule.Category.ROGUE, AlphaModule.Category.ELITE,
                 AlphaModule.Category.ALPHA, AlphaModule.Category.ALPHA_PLUS
             };
-            selectedCategory = donorCategories[button.id - DONATOR_SUBFOLDER_BASE];
+            AlphaModule.Category targetCategory = donorCategories[button.id - DONATOR_SUBFOLDER_BASE];
+            if (!PermissionService.hasAccess(targetCategory.getRequiredRank())) {
+                selectedCategory = AlphaModule.Category.DONATOR;
+                selectedModuleId = "";
+                initGui();
+                return;
+            }
+            selectedCategory = targetCategory;
             selectedModuleId = "";
             initGui();
             return;
@@ -432,6 +447,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int index = button.id - MODULE_BASE;
             if (index >= 0 && index < modules.size()) {
                 AlphaModule clickedModule = modules.get(index);
+                // Re-check access at the action boundary, not only when drawing the list.
+                if (!clickedModule.isUnlocked()) {
+                    selectedModuleId = "";
+                    initGui();
+                    return;
+                }
                 if ("quality".equals(clickedModule.getId())) {
                     searchFocused = false;
                     if (searchField != null) searchField.setFocused(false);
