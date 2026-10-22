@@ -3,6 +3,8 @@ package com.alpharip.staffmod.hud;
 import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.profile.ProfileManager;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -20,6 +22,12 @@ public class BhopHud {
     private static boolean enabled = true;
 
     private static boolean editorPreviewMode = false;
+
+    /** Bhop HUD visibility follows the same staff permission as the Bhop module. */
+    private static boolean hasBhopPermission() {
+        AlphaModule module = AlphaModuleRegistry.find("staffmods");
+        return module != null && module.isUnlocked();
+    }
 
 
     /*
@@ -306,6 +314,10 @@ public class BhopHud {
             return;
         }
 
+        if (!hasBhopPermission()) {
+            return;
+        }
+
         if (!enabled) {
             return;
         }
@@ -345,6 +357,9 @@ public class BhopHud {
 
     /** Draws the live BHOP HUD style inside the HUD editor preview. */
     public static void renderEditorPreview() {
+        if (!hasBhopPermission() || !enabled) {
+            return;
+        }
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.fontRendererObj == null) {
             return;
