@@ -27,7 +27,6 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
     private static final PermissionService.Rank[] RANKS = {
         PermissionService.Rank.PUBLIC,
         PermissionService.Rank.BETA,
-        PermissionService.Rank.DONATOR,
         PermissionService.Rank.T_MOD,
         PermissionService.Rank.MOD,
         PermissionService.Rank.SR_MOD,
@@ -38,7 +37,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         PermissionService.Rank.FOUNDER
     };
     private static final String[] LABELS = {
-        "GENERAL", "BETA", "DONATOR", "T-MOD", "MOD", "SR MOD",
+        "GENERAL", "BETA", "T-MOD", "MOD", "SR MOD",
         "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
     };
 
@@ -446,20 +445,16 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
 
         drawString(fontRendererObj, "ALPHA CLIENT", panelLeft + 14, panelTop + 14, 0xFFF0F1F4);
         drawString(fontRendererObj, "STAFFMODS", panelLeft + 14, panelTop + 34, ACCENT);
+        // AlphaButton renders each label itself. Do not draw a second copy of
+        // folder/module cards here; that caused overlapping duplicate text.
         if (openFolderRank != null) {
             String folderLabel = folderLabel(selectedRank);
             drawString(fontRendererObj, folderLabel + "  /  MODS",
                     contentLeft, panelTop + 57, ACCENT);
-            drawFolderContents(mouseX, mouseY);
         } else if (managementSubfolders) {
             drawString(fontRendererObj, "MANAGEMENT", contentLeft, panelTop + 57, ACCENT);
-            drawManagementSubfolders(mouseX, mouseY);
-        } else if (donatorSubfolders) {
-            drawString(fontRendererObj, "DONATOR RANKS", contentLeft, panelTop + 57, ACCENT);
-            drawDonatorSubfolders(mouseX, mouseY);
         } else {
             drawString(fontRendererObj, "STAFF RANKS MODS", contentLeft, panelTop + 57, 0xFFB8BDC8);
-            drawFolderCards(mouseX, mouseY);
         }
         drawString(fontRendererObj, "RANK ACCESS: " + PermissionService.getEffectiveRank().name(),
                 panelLeft + 14, bottom - 22, 0xFFB8BDC8);
