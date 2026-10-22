@@ -197,9 +197,14 @@ public final class PermissionService {
         return strongest;
     }
 
-    /** StaffMods is restricted to staff ranks; community/supporter ranks never qualify. */
+    /** StaffMods is available to staff ranks or accounts with an explicit staff-mod grant. */
     public static boolean hasStaffModsAccess() {
-        return hasAccess(Rank.T_MOD);
+        if (hasAccess(Rank.T_MOD)) return true;
+        if (!modEntitlementsVerified) return false;
+        for (java.util.Map.Entry<String, Boolean> entry : verifiedModPermissions.entrySet()) {
+            if (entry.getKey().startsWith("staff.") && Boolean.TRUE.equals(entry.getValue())) return true;
+        }
+        return false;
     }
 
     public static boolean hasAccess(Rank required) {
