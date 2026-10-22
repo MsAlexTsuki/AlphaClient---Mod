@@ -24,13 +24,24 @@ public final class RankViewerRenderer {
                 || minecraft.fontRendererObj == null) return;
 
         EntityPlayer player = event.entityPlayer;
+        if (player.isInvisible()) return;
+
         boolean renderingLocalPlayer = minecraft.thePlayer != null
                 && minecraft.thePlayer.getUniqueID().equals(player.getUniqueID());
-        // The local player's name is rendered by the Name Viewer below.
-        if (renderingLocalPlayer || player.isInvisible()) return;
-
-        AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
-        if (rank == null) return;
+        AlphaRank rank;
+        if (renderingLocalPlayer) {
+            // Render the local player's badge in the same world-space event as other players.
+            // Name Viewer controls whether the local badge is shown in third-person.
+            if (minecraft.gameSettings == null || minecraft.gameSettings.thirdPersonView == 0) return;
+            AlphaModule module = AlphaModuleRegistry.find("name-viewer");
+            if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
+            rank = SupabaseCommunityService.getSignedInDisplayRank();
+            if (rank == null) rank = RankCache.INSTANCE.get(player.getUniqueID());
+            if (rank == null) rank = AlphaRank.MEMBER;
+        } else {
+            rank = RankCache.INSTANCE.get(player.getUniqueID());
+            if (rank == null) return;
+        }
 
         drawNameWithBadge(minecraft, rank, player.getName(), event.x,
                 event.y + player.height + 0.72D, event.z,
@@ -40,36 +51,9 @@ public final class RankViewerRenderer {
 
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null
-                || minecraft.gameSettings == null || minecraft.fontRendererObj == null) return;
-        // Render the local Name Viewer in both F5 views, but never in first-person.
-        if (minecraft.gameSettings.thirdPersonView == 0) return;
-
-        AlphaModule module = AlphaModuleRegistry.find("name-viewer");
-        if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
-
-        EntityPlayer player = minecraft.thePlayer;
-        if (player.isInvisible()) return;
-
-        double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * event.partialTicks;
-        double y = player.lastTickPosY + (player.posY - player.lastTickPosY) * event.partialTicks;
-        double z = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * event.partialTicks;
-        net.minecraft.client.renderer.entity.RenderManager renderManager = minecraft.getRenderManager();
-        x -= renderManager.viewerPosX;
-        y -= renderManager.viewerPosY;
-        z -= renderManager.viewerPosZ;
-
-        // The local badge follows the currently signed-in Alpha account, not an arbitrary
-        // Minecraft-UUID association (one UUID may be linked to multiple Alpha accounts).
-        AlphaRank rank = SupabaseCommunityService.getSignedInDisplayRank();
-        if (rank == null) rank = RankCache.INSTANCE.get(player.getUniqueID());
-        // Keep the badge slot visible while account rank data is unavailable; a valid
-        // signed-in rank or cached Minecraft UUID rank always takes precedence.
-        if (rank == null) rank = AlphaRank.MEMBER;
-        drawNameWithBadge(minecraft, rank, player.getName(), x,
-                y + player.height + 0.5D, z,
-                renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
+        // The local player's badge is rendered from RenderPlayerEvent.Specials.Pre above,
+        // using the same interpolated world-space coordinates as every other player's badge.
+        // Do not render it a second time from RenderWorldLastEvent.
     }
 
     private void drawNameWithBadge(Minecraft minecraft, AlphaRank rank, String name,
