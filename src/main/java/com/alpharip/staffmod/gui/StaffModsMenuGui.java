@@ -46,6 +46,7 @@ public final class StaffModsMenuGui extends GuiScreen {
     private PermissionService.Rank selectedRank = PermissionService.Rank.PUBLIC;
     private PermissionService.Rank openFolderRank;
     private boolean managementSubfolders;
+    private boolean donatorSubfolders;
     private int panelLeft, panelTop, panelWidth, panelHeight;
     private int contentLeft, contentTop, contentRight, contentBottom;
     private int scrollOffset;
@@ -86,6 +87,12 @@ public final class StaffModsMenuGui extends GuiScreen {
                     buttonList.add(new AlphaButton(CATEGORY_BASE + 101, contentLeft + tileWidth + gap, contentTop,
                             tileWidth, tileHeight, "MANAGER"));
                 }
+            } else if (donatorSubfolders) {
+                addDonatorSubfolderButton(0, PermissionService.Rank.SCOUT, "SCOUT", contentLeft, tileWidth, tileHeight);
+                addDonatorSubfolderButton(1, PermissionService.Rank.ROGUE, "ROGUE", contentLeft + tileWidth + gap, tileWidth, tileHeight);
+                addDonatorSubfolderButton(2, PermissionService.Rank.ELITE, "ELITE", contentLeft + (tileWidth + gap) * 2, tileWidth, tileHeight);
+                addDonatorSubfolderButton(3, PermissionService.Rank.ALPHA, "ALPHA", contentLeft, tileWidth, tileHeight, contentTop + tileHeight + gap);
+                addDonatorSubfolderButton(4, PermissionService.Rank.ALPHA_PLUS, "ALPHA+", contentLeft + tileWidth + gap, tileWidth, tileHeight, contentTop + tileHeight + gap);
             } else {
                 int index = 0;
                 for (int i = 0; i < RANKS.length; i++) {
@@ -125,6 +132,18 @@ public final class StaffModsMenuGui extends GuiScreen {
 
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94,
                 panelTop + panelHeight - 31, 80, 20, "BACK"));
+    }
+
+    private void addDonatorSubfolderButton(int index, PermissionService.Rank rank, String label,
+                                           int x, int tileWidth, int tileHeight) {
+        addDonatorSubfolderButton(index, rank, label, x, tileWidth, tileHeight, contentTop);
+    }
+
+    private void addDonatorSubfolderButton(int index, PermissionService.Rank rank, String label,
+                                           int x, int tileWidth, int tileHeight, int y) {
+        if (hasFolderAccess(rank)) {
+            buttonList.add(new AlphaButton(CATEGORY_BASE + 102 + index, x, y, tileWidth, tileHeight, label));
+        }
     }
 
     private boolean isVisibleRank(PermissionService.Rank rank) {
@@ -213,7 +232,12 @@ public final class StaffModsMenuGui extends GuiScreen {
         // Beta and Donator modules belong only in their own folders. Rank access
         // or an explicit grant unlocks only the matching module, not the whole category.
         if (selectedRank == PermissionService.Rank.BETA
-                || selectedRank == PermissionService.Rank.DONATOR) {
+                || selectedRank == PermissionService.Rank.DONATOR
+                || selectedRank == PermissionService.Rank.SCOUT
+                || selectedRank == PermissionService.Rank.ROGUE
+                || selectedRank == PermissionService.Rank.ELITE
+                || selectedRank == PermissionService.Rank.ALPHA
+                || selectedRank == PermissionService.Rank.ALPHA_PLUS) {
             AlphaModule.Category selectedCategory = categoryForRank(selectedRank);
             for (AlphaModule module : AlphaModuleRegistry.getAll()) {
                 if (module.getCategory() == selectedCategory && module.isUnlocked()) {
@@ -278,11 +302,12 @@ public final class StaffModsMenuGui extends GuiScreen {
     private AlphaModule.Category categoryForRank(PermissionService.Rank rank) {
         switch (rank) {
             case BETA: return AlphaModule.Category.BETA;
-            case ALPHA_PLUS:
-            case ALPHA:
-            case ELITE:
-            case ROGUE:
-            case SCOUT: return AlphaModule.Category.DONATOR;
+            case SCOUT: return AlphaModule.Category.SCOUT;
+            case ROGUE: return AlphaModule.Category.ROGUE;
+            case ELITE: return AlphaModule.Category.ELITE;
+            case ALPHA: return AlphaModule.Category.ALPHA;
+            case ALPHA_PLUS: return AlphaModule.Category.ALPHA_PLUS;
+            case DONATOR: return AlphaModule.Category.DONATOR;
             case THE_NIBBLER: return AlphaModule.Category.T_MOD;
             case T_MOD: return AlphaModule.Category.T_MOD;
             case MOD: return AlphaModule.Category.MOD;
@@ -315,13 +340,34 @@ public final class StaffModsMenuGui extends GuiScreen {
                     StaffModsMenuGui previous = new StaffModsMenuGui(parent);
                     previous.managementSubfolders = true;
                     mc.displayGuiScreen(previous);
+                } else if (isDonatorRank(selectedRank)) {
+                    StaffModsMenuGui previous = new StaffModsMenuGui(parent);
+                    previous.donatorSubfolders = true;
+                    mc.displayGuiScreen(previous);
                 } else {
                     mc.displayGuiScreen(new StaffModsMenuGui(parent));
                 }
-            } else if (managementSubfolders) {
+            } else if (managementSubfolders || donatorSubfolders) {
                 mc.displayGuiScreen(new StaffModsMenuGui(parent));
             } else {
                 mc.displayGuiScreen(parent);
+            }
+            return;
+        }
+
+        if (openFolderRank == null && donatorSubfolders
+                && button.id >= CATEGORY_BASE + 102 && button.id <= CATEGORY_BASE + 106) {
+            PermissionService.Rank[] donorRanks = {
+                PermissionService.Rank.SCOUT, PermissionService.Rank.ROGUE, PermissionService.Rank.ELITE,
+                PermissionService.Rank.ALPHA, PermissionService.Rank.ALPHA_PLUS
+            };
+            PermissionService.Rank rank = donorRanks[button.id - (CATEGORY_BASE + 102)];
+            if (hasFolderAccess(rank)) {
+                selectedRank = rank;
+                openFolderRank = rank;
+                donatorSubfolders = false;
+                scrollOffset = 0;
+                initGui();
             }
             return;
         }
@@ -346,6 +392,9 @@ public final class StaffModsMenuGui extends GuiScreen {
             if (rank == PermissionService.Rank.PUBLIC || hasFolderAccess(rank)) {
                 if (rank == PermissionService.Rank.MANAGEMENT) {
                     managementSubfolders = true;
+                    initGui();
+                } else if (rank == PermissionService.Rank.DONATOR) {
+                    donatorSubfolders = true;
                     initGui();
                 } else {
                     selectedRank = rank;
@@ -407,6 +456,9 @@ public final class StaffModsMenuGui extends GuiScreen {
         } else if (managementSubfolders) {
             drawString(fontRendererObj, "MANAGEMENT", contentLeft, panelTop + 57, ACCENT);
             drawManagementSubfolders(mouseX, mouseY);
+        } else if (donatorSubfolders) {
+            drawString(fontRendererObj, "DONATOR RANKS", contentLeft, panelTop + 57, ACCENT);
+            drawDonatorSubfolders(mouseX, mouseY);
         } else {
             drawString(fontRendererObj, "STAFF RANKS MODS", contentLeft, panelTop + 57, 0xFFB8BDC8);
             drawFolderCards(mouseX, mouseY);
@@ -443,6 +495,30 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (hasFolderAccess(PermissionService.Rank.MANAGER)) {
             drawCard(contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "MANAGER", mouseX, mouseY);
         }
+    }
+
+    private void drawDonatorSubfolders(int mouseX, int mouseY) {
+        int gap = 8;
+        int columns = 3;
+        int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
+        int tileHeight = 38;
+        PermissionService.Rank[] ranks = {
+            PermissionService.Rank.SCOUT, PermissionService.Rank.ROGUE, PermissionService.Rank.ELITE,
+            PermissionService.Rank.ALPHA, PermissionService.Rank.ALPHA_PLUS
+        };
+        String[] labels = { "SCOUT", "ROGUE", "ELITE", "ALPHA", "ALPHA+" };
+        for (int i = 0; i < ranks.length; i++) {
+            if (!hasFolderAccess(ranks[i])) continue;
+            int x = contentLeft + (i % columns) * (tileWidth + gap);
+            int y = contentTop + (i / columns) * (tileHeight + gap);
+            drawCard(x, y, tileWidth, tileHeight, labels[i], mouseX, mouseY);
+        }
+    }
+
+    private boolean isDonatorRank(PermissionService.Rank rank) {
+        return rank == PermissionService.Rank.SCOUT || rank == PermissionService.Rank.ROGUE
+                || rank == PermissionService.Rank.ELITE || rank == PermissionService.Rank.ALPHA
+                || rank == PermissionService.Rank.ALPHA_PLUS;
     }
 
     private void drawFolderContents(int mouseX, int mouseY) {
