@@ -249,8 +249,8 @@ public final class PermissionService {
     /** Canonical Alpha Community ordering: higher value means higher displayed rank. */
     private static int rankPriority(Rank rank) {
         switch (rank) {
-            case FOUNDER: return 18;
-            case OWNER: return 17;
+            case FOUNDER: return 21;
+            case OWNER: return 20;
             case DEVELOPER: return 19;
             case MANAGER: return 18;
             case PLAT_ADMIN:
