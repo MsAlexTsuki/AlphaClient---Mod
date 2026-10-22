@@ -27,7 +27,11 @@ public final class StaffModsMenuGui extends GuiScreen {
     private static final PermissionService.Rank[] RANKS = {
         PermissionService.Rank.PUBLIC,
         PermissionService.Rank.BETA,
-        PermissionService.Rank.DONATOR,
+        PermissionService.Rank.SCOUT,
+        PermissionService.Rank.ROGUE,
+        PermissionService.Rank.ELITE,
+        PermissionService.Rank.ALPHA,
+        PermissionService.Rank.ALPHA_PLUS,
         PermissionService.Rank.T_MOD,
         PermissionService.Rank.MOD,
         PermissionService.Rank.SR_MOD,
@@ -38,8 +42,8 @@ public final class StaffModsMenuGui extends GuiScreen {
         PermissionService.Rank.FOUNDER
     };
     private static final String[] LABELS = {
-        "GENERAL", "BETA", "DONATOR", "T-MOD", "MOD", "SR MOD",
-        "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
+        "GENERAL", "BETA", "SCOUT", "ROGUE", "ELITE", "ALPHA", "ALPHA+",
+        "T-MOD", "MOD", "SR MOD", "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
     };
 
     private final GuiScreen parent;
@@ -153,9 +157,15 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (rank == PermissionService.Rank.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
-        // Beta and Donator are independent access folders, not staff hierarchy tiers.
-        // Show them only to their rank or to accounts with a grant for a mod in that folder.
-        if (rank == PermissionService.Rank.BETA || rank == PermissionService.Rank.DONATOR) {
+        // Community ranks are independent folders, never inherited through the staff hierarchy.
+        // Show only the exact assigned community rank (or a grant explicitly tied to that folder).
+        if (rank == PermissionService.Rank.BETA
+                || rank == PermissionService.Rank.SCOUT
+                || rank == PermissionService.Rank.ROGUE
+                || rank == PermissionService.Rank.ELITE
+                || rank == PermissionService.Rank.ALPHA
+                || rank == PermissionService.Rank.ALPHA_PLUS
+                || rank == PermissionService.Rank.DONATOR) {
             return hasFolderAccess(rank);
         }
         if (rank == PermissionService.Rank.MANAGEMENT) {
@@ -392,9 +402,6 @@ public final class StaffModsMenuGui extends GuiScreen {
             if (rank == PermissionService.Rank.PUBLIC || hasFolderAccess(rank)) {
                 if (rank == PermissionService.Rank.MANAGEMENT) {
                     managementSubfolders = true;
-                    initGui();
-                } else if (rank == PermissionService.Rank.DONATOR) {
-                    donatorSubfolders = true;
                     initGui();
                 } else {
                     selectedRank = rank;
