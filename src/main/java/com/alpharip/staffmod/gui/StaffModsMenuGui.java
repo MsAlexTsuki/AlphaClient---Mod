@@ -126,18 +126,36 @@ public final class StaffModsMenuGui extends GuiScreen {
     }
 
     private boolean isVisibleRank(PermissionService.Rank rank) {
-        // General is always available. Every rank can see its own folder and all folders
-        // below it in the canonical hierarchy; higher folders remain hidden.
+        // General is always available. Rank access keeps the existing hierarchy;
+        // an explicit per-mod grant can independently reveal its assigned folder.
         if (rank == PermissionService.Rank.PUBLIC) return true;
         if (rank == PermissionService.Rank.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
         if (rank == PermissionService.Rank.MANAGEMENT) {
-            return PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
-                    || PermissionService.hasAccess(PermissionService.Rank.MANAGER);
+            if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
+                    || PermissionService.hasAccess(PermissionService.Rank.MANAGER)) return true;
+            return hasExplicitGrantInFolder(rank);
         }
         PermissionService.Rank effective = PermissionService.getEffectiveRank();
-        return hierarchyPriority(effective) >= hierarchyPriority(rank);
+        return hierarchyPriority(effective) >= hierarchyPriority(rank) || hasExplicitGrantInFolder(rank);
+    }
+
+    private boolean hasExplicitGrantInFolder(PermissionService.Rank rank) {
+        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            if (module.getCategory() == AlphaModule.Category.FOUNDER) continue;
+            PermissionService.Rank required = module.getCategory().getRequiredRank();
+            boolean matches = required == rank
+                    || (rank == PermissionService.Rank.MANAGEMENT
+                        && (required == PermissionService.Rank.PLAT_ADMIN
+                            || required == PermissionService.Rank.MANAGER));
+            if (matches && module.hasExplicitModAccess()) return true;
+        }
+        return false;
+    }
+
+    private boolean hasFolderAccess(PermissionService.Rank rank) {
+        return PermissionService.hasAccess(rank) || hasExplicitGrantInFolder(rank);
     }
 
     private int hierarchyPriority(PermissionService.Rank rank) {
@@ -300,7 +318,7 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (openFolderRank == null && !managementSubfolders
                 && button.id >= CATEGORY_BASE && button.id < CATEGORY_BASE + RANKS.length) {
             PermissionService.Rank rank = RANKS[button.id - CATEGORY_BASE];
-            if (rank == PermissionService.Rank.PUBLIC || PermissionService.hasAccess(rank)) {
+            if (rank == PermissionService.Rank.PUBLIC || hasFolderAccess(rank)) {
                 if (rank == PermissionService.Rank.MANAGEMENT) {
                     managementSubfolders = true;
                     initGui();
