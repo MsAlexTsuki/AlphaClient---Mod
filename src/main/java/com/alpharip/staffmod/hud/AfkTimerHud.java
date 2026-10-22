@@ -89,7 +89,7 @@ public final class AfkTimerHud {
         int textWidth = mc.fontRendererObj.getStringWidth(text) + 10;
         Gui.drawRect(x - 3, y - 3, x + textWidth, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
         Gui.drawRect(x - 3, y - 3, x + textWidth, y - 2, 0xFFFFD866);
-        mc.fontRendererObj.drawStringWithShadow(text, x, y, getTextColor());
+        mc.fontRendererObj.drawStringWithShadow(com.alpharip.staffmod.gui.UiText.normalize(text), x, y, getTextColor());
     }
 
     public static int getHudX() {

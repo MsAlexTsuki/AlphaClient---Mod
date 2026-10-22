@@ -233,7 +233,7 @@ public class BhopHud {
                 || bhopName.trim().isEmpty()
                 || bhopName.equalsIgnoreCase("BHOP")) {
 
-            return "ALPHA'S BHOP";
+            return "Alpha's Bhop";
         }
 
         return bhopName;

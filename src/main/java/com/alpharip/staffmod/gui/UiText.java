@@ -19,6 +19,10 @@ public final class UiText {
             String replacement;
             if ("CPS".equals(word) || "FPS".equals(word)) {
                 replacement = word;
+            } else if ("STAFFMODS".equals(word)) {
+                replacement = "StaffMods";
+            } else if ("ALPHACLIENT".equals(word)) {
+                replacement = "AlphaClient";
             } else {
                 String lower = word.toLowerCase(Locale.ROOT);
                 replacement = Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
