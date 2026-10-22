@@ -79,9 +79,8 @@ public final class AlphaModMenu extends GuiScreen {
         searchField.setDisabledTextColour(0xFFB8BDC8);
         buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + 5, 16, 16, ""));
         buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + 5, 16, 16, ""));
-        if (hasBhopAccess()) {
-            buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 36, 64, 14, "HUD EDITOR"));
-        }
+        // Keep the HUD editor available at the bottom-left of the Mods menu.
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 36, 76, 16, "HUD EDITOR"));
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
@@ -356,7 +355,7 @@ public final class AlphaModMenu extends GuiScreen {
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
         if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == HUD_EDITOR) {
-            if (hasBhopAccess()) mc.displayGuiScreen(new HudEditorGui(this));
+            mc.displayGuiScreen(new HudEditorGui(this));
             return;
         }
         if (button.id == PROFILE_CREATE) {
