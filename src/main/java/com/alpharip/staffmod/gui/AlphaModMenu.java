@@ -36,6 +36,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int PROFILE_CREATE = 430;
     private static final int PROFILE_EDIT = 431;
     private static final int PROFILE_DELETE = 432;
+    private static final int DONATOR_SUBFOLDER_BASE = 500;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -85,7 +86,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
             // Staff rank folders belong exclusively inside StaffMods, not in the regular Mods sidebar.
-            if (isStaffRankCategory(category)) continue;
+            if (isStaffRankCategory(category) || isDonatorRankCategory(category)) continue;
             boolean categoryAllowed = PermissionService.hasAccess(category.getRequiredRank());
             if (!categoryAllowed) {
                 for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
@@ -124,6 +125,19 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     sidebarWidth - 10, 20, "STAFFMODS"));
             categoryY += 23;
         }
+        if (selectedCategory == AlphaModule.Category.DONATOR) {
+            String[] donorLabels = { "Scout", "Rogue", "Elite", "Alpha", "Alpha+" };
+            int gap = 8;
+            int tileWidth = Math.max(50, (contentRight - contentLeft - gap * 2) / 3);
+            int tileHeight = 38;
+            for (int i = 0; i < donorLabels.length; i++) {
+                int x = contentLeft + (i % 3) * (tileWidth + gap);
+                int y = contentTop + (i / 3) * (tileHeight + gap);
+                buttonList.add(new AlphaButton(DONATOR_SUBFOLDER_BASE + i, x, y,
+                        tileWidth, tileHeight, donorLabels[i]));
+            }
+        }
+
         {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
             int actionY = panelTop + panelHeight - 49;
@@ -189,6 +203,14 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private boolean hasBhopAccess() {
         AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
         return bhop != null && bhop.isUnlocked();
+    }
+
+    private boolean isDonatorRankCategory(AlphaModule.Category category) {
+        return category == AlphaModule.Category.SCOUT
+                || category == AlphaModule.Category.ROGUE
+                || category == AlphaModule.Category.ELITE
+                || category == AlphaModule.Category.ALPHA
+                || category == AlphaModule.Category.ALPHA_PLUS;
     }
 
     private boolean isStaffRankCategory(AlphaModule.Category category) {
@@ -262,6 +284,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         drawString(fontRendererObj, "BROWSE", panelLeft + 6, panelTop + 57, 0xFFB8BDC8);
         drawString(fontRendererObj, selectedCategory.getTitle().toUpperCase(Locale.ROOT),
                 contentLeft + 3, contentTop - 9, ACCENT);
+        if (selectedCategory == AlphaModule.Category.DONATOR) {
+            drawString(fontRendererObj, "DONATOR RANKS", contentLeft + 3, contentTop - 9, ACCENT);
+        }
         drawString(fontRendererObj, "PROFILES",
                 settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
         List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
@@ -384,6 +409,16 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             if (PermissionService.hasStaffModsAccess()) {
                 mc.displayGuiScreen(new StaffModsMenuGui(this));
             }
+            return;
+        }
+        if (button.id >= DONATOR_SUBFOLDER_BASE && button.id < DONATOR_SUBFOLDER_BASE + 5) {
+            AlphaModule.Category[] donorCategories = {
+                AlphaModule.Category.SCOUT, AlphaModule.Category.ROGUE, AlphaModule.Category.ELITE,
+                AlphaModule.Category.ALPHA, AlphaModule.Category.ALPHA_PLUS
+            };
+            selectedCategory = donorCategories[button.id - DONATOR_SUBFOLDER_BASE];
+            selectedModuleId = "";
+            initGui();
             return;
         }
         if (button.id >= CATEGORY_BASE
