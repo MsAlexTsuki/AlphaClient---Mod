@@ -447,9 +447,7 @@ public final class StaffModsMenuGui extends GuiScreen {
         drawString(fontRendererObj, "ALPHA CLIENT", panelLeft + 14, panelTop + 14, 0xFFF0F1F4);
         drawString(fontRendererObj, "STAFFMODS", panelLeft + 14, panelTop + 34, ACCENT);
         if (openFolderRank != null) {
-            String folderLabel = selectedRank == PermissionService.Rank.PLAT_ADMIN
-                    ? "PLATFORM ADMIN" : selectedRank == PermissionService.Rank.MANAGER
-                    ? "MANAGER" : LABELS[indexOf(selectedRank)];
+            String folderLabel = folderLabel(selectedRank);
             drawString(fontRendererObj, folderLabel + "  /  MODS",
                     contentLeft, panelTop + 57, ACCENT);
             drawFolderContents(mouseX, mouseY);
@@ -551,6 +549,17 @@ public final class StaffModsMenuGui extends GuiScreen {
         int titleX = x + (w - fontRendererObj.getStringWidth(title)) / 2;
         int titleY = y + (h - fontRendererObj.FONT_HEIGHT) / 2;
         drawString(fontRendererObj, title, titleX, titleY, 0xFFFFFFFF);
+    }
+
+    private String folderLabel(PermissionService.Rank rank) {
+        if (rank == PermissionService.Rank.PLAT_ADMIN) return "PLATFORM ADMIN";
+        if (rank == PermissionService.Rank.MANAGER) return "MANAGER";
+        if (rank == PermissionService.Rank.SCOUT) return "SCOUT";
+        if (rank == PermissionService.Rank.ROGUE) return "ROGUE";
+        if (rank == PermissionService.Rank.ELITE) return "ELITE";
+        if (rank == PermissionService.Rank.ALPHA) return "ALPHA";
+        if (rank == PermissionService.Rank.ALPHA_PLUS) return "ALPHA+";
+        return LABELS[indexOf(rank)];
     }
 
     private int indexOf(PermissionService.Rank rank) {
