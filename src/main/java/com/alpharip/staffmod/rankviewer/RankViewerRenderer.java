@@ -8,7 +8,6 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderPlayerEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
@@ -27,52 +26,31 @@ public final class RankViewerRenderer {
         EntityPlayer player = event.entityPlayer;
         boolean renderingLocalPlayer = minecraft.thePlayer != null
                 && minecraft.thePlayer.getUniqueID().equals(player.getUniqueID());
-        // The local player's name is rendered by the Name Viewer below.
-        if (renderingLocalPlayer || player.isInvisible()) return;
-
-        AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
-        if (rank == null) return;
-
-        // RenderPlayerEvent.Specials.Pre already runs with the entity transform applied.
-        // Use local entity coordinates here; event.x/y/z would apply the position twice.
-        drawNameWithBadge(minecraft, rank, player.getName(), 0.0D,
-                player.height + 0.72D, 0.0D,
-                minecraft.getRenderManager().playerViewY,
-                minecraft.getRenderManager().playerViewX, 0.02F);
-    }
-
-    @SubscribeEvent
-    public void onRenderWorldLast(RenderWorldLastEvent event) {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null
-                || minecraft.gameSettings == null || minecraft.fontRendererObj == null) return;
-        // Name Viewer controls both the local player's name and rank badge in F5.
-        if (minecraft.gameSettings.thirdPersonView == 0) return;
-        AlphaModule module = AlphaModuleRegistry.find("name-viewer");
-        if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
-
-        EntityPlayer player = minecraft.thePlayer;
         if (player.isInvisible()) return;
 
-        double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * event.partialTicks;
-        double y = player.lastTickPosY + (player.posY - player.lastTickPosY) * event.partialTicks;
-        double z = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * event.partialTicks;
-        net.minecraft.client.renderer.entity.RenderManager renderManager = minecraft.getRenderManager();
-        x -= renderManager.viewerPosX;
-        y -= renderManager.viewerPosY;
-        z -= renderManager.viewerPosZ;
+        AlphaRank rank;
+        if (renderingLocalPlayer) {
+            // The local nameplate must render during the player's own entity pass so its
+            // position and billboard rotation follow the F5 camera naturally.
+            if (minecraft.gameSettings == null || minecraft.gameSettings.thirdPersonView == 0) return;
+            AlphaModule module = AlphaModuleRegistry.find("name-viewer");
+            if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
 
-        // The local badge follows the currently signed-in Alpha account, not an arbitrary
-        // Minecraft-UUID association (one UUID may be linked to multiple Alpha accounts).
-        AlphaRank rank = SupabaseCommunityService.getSignedInDisplayRank();
-        if (rank == null) rank = RankCache.INSTANCE.get(player.getUniqueID());
-        // Keep the badge slot visible while account rank data is unavailable; a valid
-        // signed-in rank or cached Minecraft UUID rank always takes precedence.
-        if (rank == null) rank = AlphaRank.MEMBER;
-        // Name Viewer displays the player's name together with their rank badge.
-        drawNameWithBadge(minecraft, rank, player.getName(), x,
-                y + player.height + 0.5D, z,
-                renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
+            rank = SupabaseCommunityService.getSignedInDisplayRank();
+            if (rank == null) rank = RankCache.INSTANCE.get(player.getUniqueID());
+            if (rank == null) rank = AlphaRank.MEMBER;
+        } else {
+            rank = RankCache.INSTANCE.get(player.getUniqueID());
+            if (rank == null) return;
+        }
+
+        // Specials.Pre runs with the entity transform applied, so the nameplate stays
+        // attached to the player as the camera and cursor move in third person.
+        drawNameWithBadge(minecraft, rank, player.getName(), 0.0D,
+                player.height + (renderingLocalPlayer ? 0.5D : 0.72D), 0.0D,
+                minecraft.getRenderManager().playerViewY,
+                minecraft.getRenderManager().playerViewX,
+                renderingLocalPlayer ? 0.026666668F : 0.02F);
     }
 
     private void drawNameWithBadge(Minecraft minecraft, AlphaRank rank, String name,
