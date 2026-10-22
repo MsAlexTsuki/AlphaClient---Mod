@@ -11,6 +11,7 @@ import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
 
 /** Renders the rank's image badge immediately before the player's name. */
 public final class RankViewerRenderer {
@@ -86,6 +87,11 @@ public final class RankViewerRenderer {
         boolean depthEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
         boolean lightingEnabled = GL11.glIsEnabled(GL11.GL_LIGHTING);
         boolean textureEnabled = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
+        boolean blendEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
+        int blendSrcRgb = GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB);
+        int blendDstRgb = GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
+        int blendSrcAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
+        int blendDstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
         boolean depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
         java.nio.FloatBuffer previousColor = org.lwjgl.BufferUtils.createFloatBuffer(16);
         GL11.glGetFloat(GL11.GL_CURRENT_COLOR, previousColor);
@@ -102,6 +108,10 @@ public final class RankViewerRenderer {
             GlStateManager.scale(-scale, -scale, scale);
             GlStateManager.disableLighting();
             GlStateManager.disableDepth();
+            // Rank textures contain transparent pixels; blend them instead of relying on
+            // whatever blend state the previous world renderer left active.
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
             GlStateManager.depthMask(false);
 
             int cursor = -totalWidth / 2;
@@ -127,6 +137,8 @@ public final class RankViewerRenderer {
             restoreCapability(GL11.GL_DEPTH_TEST, depthEnabled);
             restoreCapability(GL11.GL_LIGHTING, lightingEnabled);
             restoreCapability(GL11.GL_TEXTURE_2D, textureEnabled);
+            GlStateManager.tryBlendFuncSeparate(blendSrcRgb, blendDstRgb, blendSrcAlpha, blendDstAlpha);
+            restoreCapability(GL11.GL_BLEND, blendEnabled);
             GlStateManager.color(red, green, blue, alpha);
             GlStateManager.popMatrix();
         }
@@ -145,6 +157,10 @@ public final class RankViewerRenderer {
             case GL11.GL_TEXTURE_2D:
                 if (enabled) GlStateManager.enableTexture2D();
                 else GlStateManager.disableTexture2D();
+                break;
+            case GL11.GL_BLEND:
+                if (enabled) GlStateManager.enableBlend();
+                else GlStateManager.disableBlend();
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported OpenGL capability: " + capability);
