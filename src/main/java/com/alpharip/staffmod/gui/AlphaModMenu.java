@@ -101,7 +101,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             switch (category) {
                 case PUBLIC: label = "GENERAL"; break;
                 case BETA: label = "BETA"; break;
-                case DONATOR: label = "DONATOR"; break;
+                case DONATOR: label = "Donator"; break;
                 case T_MOD: label = "T-MOD"; break;
                 case MOD: label = "MOD"; break;
                 case SR_MOD: label = "SR-MOD"; break;
@@ -282,11 +282,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         searchField.drawTextBox();
 
         drawString(fontRendererObj, "BROWSE", panelLeft + 6, panelTop + 57, 0xFFB8BDC8);
-        drawString(fontRendererObj, selectedCategory.getTitle().toUpperCase(Locale.ROOT),
+        drawString(fontRendererObj,
+                selectedCategory == AlphaModule.Category.DONATOR
+                        ? "Donator ranks" : selectedCategory.getTitle().toUpperCase(Locale.ROOT),
                 contentLeft + 3, contentTop - 9, ACCENT);
-        if (selectedCategory == AlphaModule.Category.DONATOR) {
-            drawString(fontRendererObj, "DONATOR RANKS", contentLeft + 3, contentTop - 9, ACCENT);
-        }
         drawString(fontRendererObj, "PROFILES",
                 settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
         List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
