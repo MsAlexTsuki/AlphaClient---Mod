@@ -109,32 +109,33 @@ public final class AlphaModule {
         return id;
     }
 
+    /** True only when this exact module has an explicit authenticated allow grant. */
+    public boolean hasExplicitModAccess() {
+        String permissionId = getPermissionId();
+        return PermissionService.hasExplicitModPermission(permissionId)
+                && PermissionService.hasModAccess(permissionId);
+    }
+
     public boolean isUnlocked() {
-        // Founder-only modules remain exclusive and cannot be granted to Owner by hierarchy.
+        // Founder-only modules remain exclusive and cannot be granted to other ranks.
         if (category == Category.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
 
-        // Every module in General is public for every existing and future community rank.
-        // Public category access takes precedence over per-module backend denials.
+        // General modules remain public.
         if (category == Category.PUBLIC) {
             return true;
         }
 
-        // Founder and Owner have access to every regular module. Per-module backend
-        // denials must not accidentally hide normal modules such as BHOP from them.
+        // Owner and Founder retain their normal access to non-Founder modules.
         if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
                 || PermissionService.hasAccess(PermissionService.Rank.OWNER)) {
             return true;
         }
 
-        // For other ranks, honor an explicit server decision when one exists.
-        // Modules absent from the backend catalog use their category rank gate.
-        String permissionId = getPermissionId();
-        if (PermissionService.hasExplicitModPermission(permissionId)) {
-            return PermissionService.hasModAccess(permissionId);
-        }
-        return PermissionService.hasAccess(category.getRequiredRank());
+        // A staff rank OR an explicit allow for this exact mod grants access.
+        // Explicit per-mod grants are also used to reveal the module in its menu folder.
+        return PermissionService.hasAccess(category.getRequiredRank()) || hasExplicitModAccess();
     }
 
     public String getStatusLabel() {
