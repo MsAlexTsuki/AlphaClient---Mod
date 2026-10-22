@@ -8,7 +8,7 @@ import org.lwjgl.input.Mouse;
 import java.io.IOException;
 
 /** Navigation grid for the Legacy PvP feature settings. */
-public final class LegacyPvpSettingsGui extends GuiScreen {
+public final class LegacyPvpSettingsGui extends AlphaGuiScreen {
     private static final int FEATURE_BUTTON_BASE = 1000;
     private static final int BACK = 2;
     private static final int GRID_TOP = 78;

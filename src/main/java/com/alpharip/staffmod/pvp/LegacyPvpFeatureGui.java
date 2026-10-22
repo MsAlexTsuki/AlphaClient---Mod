@@ -7,7 +7,7 @@ import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
 /** Details screen opened by selecting an individual Legacy PvP feature. */
-public final class LegacyPvpFeatureGui extends GuiScreen {
+public final class LegacyPvpFeatureGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int TOGGLE = 2;
     private final GuiScreen parent;

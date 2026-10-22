@@ -9,7 +9,7 @@ import java.io.IOException;
  * Legacy settings entry point. Only BHOP remains available here;
  * the other legacy modules are no longer exposed in this menu.
  */
-public class ModSettingsGui extends GuiScreen {
+public class ModSettingsGui extends AlphaGuiScreen {
 
     private static final int BUTTON_BHOP = 2;
     private static final int BUTTON_CLOSE = 5;
