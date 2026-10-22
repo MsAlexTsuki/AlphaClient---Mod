@@ -26,6 +26,9 @@ public final class PermissionService {
         ALPHA,
         ALPHA_PLUS,
         THE_NIBBLER,
+        MEDIA,
+        FAMOUS,
+        PARTNER,
         DONATOR,
         T_MOD,
         MOD,
@@ -248,15 +251,18 @@ public final class PermissionService {
         switch (rank) {
             case FOUNDER: return 18;
             case OWNER: return 17;
-            case DEVELOPER: return 16;
-            case MANAGER: return 15;
+            case DEVELOPER: return 19;
+            case MANAGER: return 18;
             case PLAT_ADMIN:
-            case MANAGEMENT: return 14;
-            case SR_ADMIN: return 13;
-            case ADMIN: return 12;
-            case SR_MOD: return 11;
-            case MOD: return 10;
-            case T_MOD: return 9;
+            case MANAGEMENT: return 17;
+            case SR_ADMIN: return 16;
+            case ADMIN: return 15;
+            case SR_MOD: return 14;
+            case MOD: return 13;
+            case T_MOD: return 12;
+            case PARTNER: return 11;
+            case FAMOUS: return 10;
+            case MEDIA: return 9;
             case THE_NIBBLER: return 8;
             case BETA: return 7; // Beta Tester ranks immediately below The Nibbler.
             case ALPHA_PLUS: return 6;
