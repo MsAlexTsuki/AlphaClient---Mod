@@ -32,8 +32,11 @@ public final class RankViewerRenderer {
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
         if (rank == null) return;
 
-        drawNameWithBadge(minecraft, rank, player.getName(), event.x,
-                event.y + player.height + 0.72D, event.z,
+        // Specials.Pre runs inside RenderLivingBase after the entity's position has
+        // already been applied to the model-view matrix. Use local entity coordinates here;
+        // translating by event.x/y/z again offsets the badge away from the player.
+        drawNameWithBadge(minecraft, rank, player.getName(), 0.0D,
+                player.height + 0.72D, 0.0D,
                 minecraft.getRenderManager().playerViewY,
                 minecraft.getRenderManager().playerViewX, 0.02F);
     }
