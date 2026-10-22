@@ -242,6 +242,18 @@ public final class PermissionService {
         return false;
     }
 
+    /** True when the verified account has a Donator rank above the requested tier. */
+    public static boolean hasHigherDonatorRankThan(Rank required) {
+        if (!isDonatorRank(required)) return false;
+        Set<Rank> ranks = isOfflineTestSession()
+                ? Collections.singleton(Rank.FOUNDER)
+                : (onlineRankVerified ? verifiedOnlineRanks : Collections.singleton(Rank.PUBLIC));
+        for (Rank actual : ranks) {
+            if (isDonatorRank(actual) && donatorRankLevel(actual) > donatorRankLevel(required)) return true;
+        }
+        return false;
+    }
+
     private static boolean isDonatorRank(Rank rank) {
         return rank == Rank.SCOUT || rank == Rank.ROGUE || rank == Rank.ELITE
                 || rank == Rank.ALPHA || rank == Rank.ALPHA_PLUS;
