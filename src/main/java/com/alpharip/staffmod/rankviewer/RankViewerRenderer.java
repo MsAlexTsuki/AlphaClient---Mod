@@ -1,5 +1,7 @@
 package com.alpharip.staffmod.rankviewer;
 
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -43,8 +45,10 @@ public final class RankViewerRenderer {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null
                 || minecraft.gameSettings == null || minecraft.fontRendererObj == null) return;
-        // Render the local rank badge in both F5 views, but never in first-person.
+        // Name Viewer controls both the local player's name and rank badge in F5.
         if (minecraft.gameSettings.thirdPersonView == 0) return;
+        AlphaModule module = AlphaModuleRegistry.find("name-viewer");
+        if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
 
         EntityPlayer player = minecraft.thePlayer;
         if (player.isInvisible()) return;
@@ -64,9 +68,8 @@ public final class RankViewerRenderer {
         // Keep the badge slot visible while account rank data is unavailable; a valid
         // signed-in rank or cached Minecraft UUID rank always takes precedence.
         if (rank == null) rank = AlphaRank.MEMBER;
-        // The local rank emblem is a core client identity marker, not a Name Viewer feature.
-        // Draw only the badge above the local player's head, like a client logo.
-        drawNameWithBadge(minecraft, rank, "", x,
+        // Name Viewer displays the player's name together with their rank badge.
+        drawNameWithBadge(minecraft, rank, player.getName(), x,
                 y + player.height + 0.5D, z,
                 renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
     }
