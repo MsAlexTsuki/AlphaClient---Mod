@@ -26,6 +26,8 @@ public final class StaffModsMenuGui extends GuiScreen {
     // Display ranks from lowest to highest. Backend rank priority remains unchanged.
     private static final PermissionService.Rank[] RANKS = {
         PermissionService.Rank.PUBLIC,
+        PermissionService.Rank.BETA,
+        PermissionService.Rank.DONATOR,
         PermissionService.Rank.T_MOD,
         PermissionService.Rank.MOD,
         PermissionService.Rank.SR_MOD,
@@ -36,7 +38,7 @@ public final class StaffModsMenuGui extends GuiScreen {
         PermissionService.Rank.FOUNDER
     };
     private static final String[] LABELS = {
-        "GENERAL", "T-MOD", "MOD", "SR MOD",
+        "GENERAL", "BETA", "DONATOR", "T-MOD", "MOD", "SR MOD",
         "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
     };
 
@@ -132,6 +134,11 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (rank == PermissionService.Rank.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
+        // Beta and Donator are independent access folders, not staff hierarchy tiers.
+        // Show them only to their rank or to accounts with a grant for a mod in that folder.
+        if (rank == PermissionService.Rank.BETA || rank == PermissionService.Rank.DONATOR) {
+            return hasFolderAccess(rank);
+        }
         if (rank == PermissionService.Rank.MANAGEMENT) {
             if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
                     || PermissionService.hasAccess(PermissionService.Rank.MANAGER)) return true;
@@ -200,6 +207,19 @@ public final class StaffModsMenuGui extends GuiScreen {
             return modules;
         }
 
+        // Beta and Donator modules belong only in their own folders. Rank access
+        // or an explicit grant unlocks only the matching module, not the whole category.
+        if (selectedRank == PermissionService.Rank.BETA
+                || selectedRank == PermissionService.Rank.DONATOR) {
+            AlphaModule.Category selectedCategory = categoryForRank(selectedRank);
+            for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+                if (module.getCategory() == selectedCategory && module.isUnlocked()) {
+                    modules.add(module);
+                }
+            }
+            return modules;
+        }
+
         int selectedLevel = staffFolderLevel(selectedRank);
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             if ("staffmods".equals(module.getId())) continue;
@@ -237,6 +257,8 @@ public final class StaffModsMenuGui extends GuiScreen {
     private int staffFolderLevel(PermissionService.Rank rank) {
         switch (rank) {
             case FOUNDER: return 9;
+            case BETA:
+            case DONATOR: return -1;
             case OWNER: return 8;
             case MANAGER: return 7;
             case PLAT_ADMIN:
