@@ -151,6 +151,9 @@ public final class StaffModsMenuGui extends GuiScreen {
     private boolean hasExplicitGrantInFolder(PermissionService.Rank rank) {
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             if (module.getCategory() == AlphaModule.Category.FOUNDER) continue;
+            // Bhop's staff.bhop grant unlocks only StaffMods -> General -> Bhop.
+            // It must never reveal the T-Mod (or any other rank) folder.
+            if ("staffmods".equals(module.getId())) continue;
             PermissionService.Rank required = module.getCategory().getRequiredRank();
             boolean matches = required == rank
                     || (rank == PermissionService.Rank.MANAGEMENT
