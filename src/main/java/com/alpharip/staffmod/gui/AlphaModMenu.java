@@ -284,7 +284,9 @@ public final class AlphaModMenu extends GuiScreen {
                         settingsLeft + 7, panelTop + 68, 0xFFB8BDC8);
             }
         }
-        String rankText = "RANK: " + (SupabaseCommunityService.isSignedIn()
+        // Keep the community rank directly beneath the fixed Profiles panel.
+        // Community Login and Exit remain as the existing top-right icon buttons.
+        String rankText = "COMMUNITY RANK: " + (SupabaseCommunityService.isSignedIn()
                 ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK");
         int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 14 - settingsLeft);
         while (rankText.length() > 1 && fontRendererObj.getStringWidth(rankText) > rankMaxWidth) {
