@@ -108,7 +108,7 @@ public final class RankViewerRenderer {
                     GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                     Gui.drawModalRectWithCustomSizedTexture(
                             cursor, 0, 0.0F, 0.0F,
-                            BADGE_SIZE, BADGE_SIZE, BADGE_SIZE, BADGE_SIZE);
+                            BADGE_SIZE, BADGE_SIZE, 64, 64);
                 } finally {
                     GlStateManager.popMatrix();
                 }
