@@ -79,7 +79,7 @@ public final class StaffModsMenuGui extends GuiScreen {
 
         if (openFolderRank == null) {
             int gap = 8;
-            int columns = 3;
+            int columns = 4;
             int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
             int tileHeight = 38;
             if (managementSubfolders) {
@@ -475,7 +475,7 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private void drawFolderCards(int mouseX, int mouseY) {
         int gap = 8;
-        int columns = 3;
+        int columns = 4;
         int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
         int tileHeight = 38;
         int index = 0;
