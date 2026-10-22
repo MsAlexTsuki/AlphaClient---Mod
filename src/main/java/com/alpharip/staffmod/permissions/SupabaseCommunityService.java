@@ -482,6 +482,9 @@ public final class SupabaseCommunityService {
             case "alpha_plus": return PermissionService.Rank.ALPHA_PLUS;
             case "the_nibbler":
             case "nibbler": return PermissionService.Rank.THE_NIBBLER;
+            case "media": return PermissionService.Rank.MEDIA;
+            case "famous": return PermissionService.Rank.FAMOUS;
+            case "partner": return PermissionService.Rank.PARTNER;
             case "donator": return PermissionService.Rank.DONATOR;
             case "t_mod":
             case "trial_mod":
