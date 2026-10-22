@@ -386,6 +386,10 @@ public final class SupabaseCommunityService {
         }
         switch (rank) {
             case OWNER: return com.alpharip.staffmod.rankviewer.AlphaRank.OWNER;
+            case DEVELOPER: return com.alpharip.staffmod.rankviewer.AlphaRank.DEVELOPER;
+            case PARTNER: return com.alpharip.staffmod.rankviewer.AlphaRank.PARTNER;
+            case FAMOUS: return com.alpharip.staffmod.rankviewer.AlphaRank.FAMOUS;
+            case MEDIA: return com.alpharip.staffmod.rankviewer.AlphaRank.MEDIA;
             case MANAGER:
             case PLAT_ADMIN:
             case MANAGEMENT: return com.alpharip.staffmod.rankviewer.AlphaRank.MANAGEMENT;
@@ -414,6 +418,10 @@ public final class SupabaseCommunityService {
         if (founder || rank == PermissionService.Rank.FOUNDER) return "Founder";
         switch (rank) {
             case OWNER: return "Owner";
+            case DEVELOPER: return "Developer";
+            case PARTNER: return "Partner";
+            case FAMOUS: return "Famous";
+            case MEDIA: return "Media";
             case MANAGER: return "Manager";
             case PLAT_ADMIN:
             case MANAGEMENT: return "Platform Admin";
