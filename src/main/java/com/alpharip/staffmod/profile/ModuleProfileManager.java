@@ -375,10 +375,16 @@ public class ModuleProfileManager {
             mergeLegacyProfileFile(legacyFile, false);
             selectedProfile = currentSelection;
 
+            boolean defaultProfileAdded = false;
             if (profiles.isEmpty()) {
                 createDefaultProfile();
+                defaultProfileAdded = true;
             } else if (findProfile("Default") == null) {
-                profiles.add(0, new BhopProfile("Default", "BHOP", DEFAULT_COLOR, false, false, 2));
+                BhopProfile defaultProfile =
+                        new BhopProfile("Default", "BHOP", DEFAULT_COLOR, false, false, 2);
+                initializeModuleDefaults(defaultProfile);
+                profiles.add(0, defaultProfile);
+                defaultProfileAdded = true;
             }
 
             if (findProfile(selectedProfile) == null) {
@@ -386,8 +392,9 @@ public class ModuleProfileManager {
             }
 
             boolean colorsChanged = migrateProfileColors();
-            // Persist only after a successful parse and merge.
-            if (colorsChanged || legacyFile.exists()) save();
+            // Persist a newly added Default profile immediately, even when no legacy
+            // file or color migration exists. Otherwise it only exists in memory.
+            if (defaultProfileAdded || colorsChanged || legacyFile.exists()) save();
 
         } catch (Exception e) {
             System.out.println("[AlphaStaffMod] Could not load profiles; preserving the unreadable file.");
