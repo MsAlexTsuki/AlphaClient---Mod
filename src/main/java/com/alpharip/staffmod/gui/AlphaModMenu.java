@@ -80,7 +80,7 @@ public final class AlphaModMenu extends GuiScreen {
         buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + 5, 16, 16, ""));
         buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + 5, 16, 16, ""));
         // Keep the HUD editor available at the bottom-left of the Mods menu.
-        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 36, 76, 16, "HUD EDITOR"));
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 37, 76, 18, "HUD EDITOR"));
 
         int categoryY = panelTop + 68;
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
@@ -126,7 +126,7 @@ public final class AlphaModMenu extends GuiScreen {
         }
         {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-            int actionY = panelTop + panelHeight - 48;
+            int actionY = panelTop + panelHeight - 49;
             int profileTop = panelTop + 86;
             int profileBottom = actionY - 8;
             int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
@@ -142,9 +142,9 @@ public final class AlphaModMenu extends GuiScreen {
                         18, profile.getProfileName(),
                         profile.getProfileName().equalsIgnoreCase(ModuleProfileManager.getSelectedProfileName())));
             }
-            buttonList.add(new AlphaButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 15, "CREATE"));
-            buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 15, "EDIT"));
-            buttonList.add(new AlphaButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 15, "DELETE"));
+            buttonList.add(new AlphaButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 18, "CREATE"));
+            buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 18, "EDIT"));
+            buttonList.add(new AlphaButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 18, "DELETE"));
         }
 
         List<AlphaModule> filtered = getFilteredModules();
@@ -267,7 +267,7 @@ public final class AlphaModMenu extends GuiScreen {
         List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
         String activeProfile = ModuleProfileManager.getSelectedProfileName();
         int profileTop = panelTop + 67;
-        int actionY = panelTop + panelHeight - 48;
+        int actionY = panelTop + panelHeight - 49;
         int profileBottom = actionY - 8;
         int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
         drawString(fontRendererObj, "Select a profile", settingsLeft + 7, panelTop + 55, 0xFFF3F4F6);
