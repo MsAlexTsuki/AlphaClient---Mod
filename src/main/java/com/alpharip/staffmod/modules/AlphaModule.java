@@ -137,9 +137,7 @@ public final class AlphaModule {
         // This inheritance is checked before per-mod grants so a higher tier keeps
         // access to lower-tier modules even if those modules have their own rank entries.
         if (isDonatorCategory(category)
-                && PermissionService.hasAccess(category.getRequiredRank())
-                && PermissionService.getEffectiveRank() != PermissionService.Rank.PUBLIC
-                && isHigherDonatorTier(PermissionService.getEffectiveRank(), category.getRequiredRank())) {
+                && PermissionService.hasHigherDonatorRankThan(category.getRequiredRank())) {
             return true;
         }
 
@@ -163,21 +161,6 @@ public final class AlphaModule {
         return category == Category.SCOUT || category == Category.ROGUE
                 || category == Category.ELITE || category == Category.ALPHA
                 || category == Category.ALPHA_PLUS;
-    }
-
-    private boolean isHigherDonatorTier(PermissionService.Rank actual, PermissionService.Rank required) {
-        return donatorRankLevel(actual) > donatorRankLevel(required);
-    }
-
-    private int donatorRankLevel(PermissionService.Rank rank) {
-        switch (rank) {
-            case SCOUT: return 1;
-            case ROGUE: return 2;
-            case ELITE: return 3;
-            case ALPHA: return 4;
-            case ALPHA_PLUS: return 5;
-            default: return -1;
-        }
     }
 
     public String getStatusLabel() {
