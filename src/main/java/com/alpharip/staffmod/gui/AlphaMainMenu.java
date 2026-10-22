@@ -11,7 +11,7 @@ import net.minecraft.util.ResourceLocation;
 import java.io.IOException;
 
 /** Fully custom AlphaClient menu; deliberately does not render GuiMainMenu or its panorama. */
-public final class AlphaMainMenu extends GuiScreen {
+public final class AlphaMainMenu extends AlphaGuiScreen {
     private static final int PLAY = 10;
     private static final int MULTIPLAYER = 11;
     private static final int MODULES = 12;

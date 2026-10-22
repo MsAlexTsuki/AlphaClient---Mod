@@ -7,7 +7,7 @@ import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
 /** AlphaClient settings hub; Minecraft's native options remain available as a sub-screen. */
-public final class AlphaSettingsMenu extends GuiScreen {
+public final class AlphaSettingsMenu extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int MINECRAFT_OPTIONS = 4;
     private final GuiScreen parent;

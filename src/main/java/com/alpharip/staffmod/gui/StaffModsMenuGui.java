@@ -16,7 +16,7 @@ import java.util.Set;
  * StaffMods folder browser. Rank folders contain the modules assigned to them.
  * Existing module settings screens are reused instead of creating duplicate settings.
  */
-public final class StaffModsMenuGui extends GuiScreen {
+public final class StaffModsMenuGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int CATEGORY_BASE = 20;
     private static final int MODULE_BASE = 50;
@@ -27,11 +27,7 @@ public final class StaffModsMenuGui extends GuiScreen {
     private static final PermissionService.Rank[] RANKS = {
         PermissionService.Rank.PUBLIC,
         PermissionService.Rank.BETA,
-        PermissionService.Rank.SCOUT,
-        PermissionService.Rank.ROGUE,
-        PermissionService.Rank.ELITE,
-        PermissionService.Rank.ALPHA,
-        PermissionService.Rank.ALPHA_PLUS,
+        PermissionService.Rank.DONATOR,
         PermissionService.Rank.T_MOD,
         PermissionService.Rank.MOD,
         PermissionService.Rank.SR_MOD,
@@ -42,8 +38,8 @@ public final class StaffModsMenuGui extends GuiScreen {
         PermissionService.Rank.FOUNDER
     };
     private static final String[] LABELS = {
-        "GENERAL", "BETA", "SCOUT", "ROGUE", "ELITE", "ALPHA", "ALPHA+",
-        "T-MOD", "MOD", "SR MOD", "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
+        "GENERAL", "BETA", "DONATOR", "T-MOD", "MOD", "SR MOD",
+        "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
     };
 
     private final GuiScreen parent;
@@ -79,7 +75,7 @@ public final class StaffModsMenuGui extends GuiScreen {
 
         if (openFolderRank == null) {
             int gap = 8;
-            int columns = 4;
+            int columns = 3;
             int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
             int tileHeight = 38;
             if (managementSubfolders) {
@@ -157,15 +153,9 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (rank == PermissionService.Rank.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
-        // Community ranks are independent folders, never inherited through the staff hierarchy.
-        // Show only the exact assigned community rank (or a grant explicitly tied to that folder).
-        if (rank == PermissionService.Rank.BETA
-                || rank == PermissionService.Rank.SCOUT
-                || rank == PermissionService.Rank.ROGUE
-                || rank == PermissionService.Rank.ELITE
-                || rank == PermissionService.Rank.ALPHA
-                || rank == PermissionService.Rank.ALPHA_PLUS
-                || rank == PermissionService.Rank.DONATOR) {
+        // Beta and Donator are independent access folders, not staff hierarchy tiers.
+        // Show them only to their rank or to accounts with a grant for a mod in that folder.
+        if (rank == PermissionService.Rank.BETA || rank == PermissionService.Rank.DONATOR) {
             return hasFolderAccess(rank);
         }
         if (rank == PermissionService.Rank.MANAGEMENT) {
@@ -403,6 +393,9 @@ public final class StaffModsMenuGui extends GuiScreen {
                 if (rank == PermissionService.Rank.MANAGEMENT) {
                     managementSubfolders = true;
                     initGui();
+                } else if (rank == PermissionService.Rank.DONATOR) {
+                    donatorSubfolders = true;
+                    initGui();
                 } else {
                     selectedRank = rank;
                     openFolderRank = rank;
@@ -475,7 +468,7 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private void drawFolderCards(int mouseX, int mouseY) {
         int gap = 8;
-        int columns = 4;
+        int columns = 3;
         int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
         int tileHeight = 38;
         int index = 0;

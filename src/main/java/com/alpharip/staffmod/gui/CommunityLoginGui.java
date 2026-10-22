@@ -10,7 +10,7 @@ import net.minecraft.client.gui.GuiTextField;
 import java.io.IOException;
 
 /** In-client sign-in so the launcher does not need to be modified. */
-public final class CommunityLoginGui extends GuiScreen {
+public final class CommunityLoginGui extends AlphaGuiScreen {
     private static final int SIGN_IN = 1;
     private static final int SIGN_OUT = 2;
     private static final int BACK = 3;

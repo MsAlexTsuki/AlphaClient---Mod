@@ -24,7 +24,7 @@ import java.util.Locale;
  * Minecraft remains visible around a translucent window, with categories,
  * searchable module tiles, and selected-module settings on the right.
  */
-public final class AlphaModMenu extends GuiScreen {
+public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int CATEGORY_BASE = 20;
     private static final int MODULE_BASE = 100;
     private static final int EXIT = 300;
