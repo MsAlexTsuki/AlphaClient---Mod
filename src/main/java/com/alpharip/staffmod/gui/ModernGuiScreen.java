@@ -311,6 +311,7 @@ public class ModernGuiScreen extends AlphaGuiScreen {
             int y,
             int scale) {
 
+        text = UiText.normalize(text);
         int textWidth =
                 this.fontRendererObj
                         .getStringWidth(text);
