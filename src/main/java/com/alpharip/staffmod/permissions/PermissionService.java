@@ -34,6 +34,7 @@ public final class PermissionService {
         SR_ADMIN,
         PLAT_ADMIN,
         MANAGER,
+        DEVELOPER,
         MANAGEMENT,
         OWNER,
         FOUNDER
@@ -193,6 +194,11 @@ public final class PermissionService {
         return strongest;
     }
 
+    /** StaffMods is restricted to staff ranks; community/supporter ranks never qualify. */
+    public static boolean hasStaffModsAccess() {
+        return hasAccess(Rank.T_MOD);
+    }
+
     public static boolean hasAccess(Rank required) {
         if (required == null) return false;
         Set<Rank> ranks = isOfflineTestSession()
@@ -230,8 +236,9 @@ public final class PermissionService {
             case PLAT_ADMIN:
             case MANAGEMENT: return 6; // Legacy key maps to Platform Admin.
             case MANAGER: return 7;
-            case OWNER: return 8;
-            case FOUNDER: return 9;
+            case DEVELOPER: return 8;
+            case OWNER: return 9;
+            case FOUNDER: return 10;
             default: return -1;
         }
     }
@@ -239,8 +246,9 @@ public final class PermissionService {
     /** Canonical Alpha Community ordering: higher value means higher displayed rank. */
     private static int rankPriority(Rank rank) {
         switch (rank) {
-            case FOUNDER: return 17;
-            case OWNER: return 16;
+            case FOUNDER: return 18;
+            case OWNER: return 17;
+            case DEVELOPER: return 16;
             case MANAGER: return 15;
             case PLAT_ADMIN:
             case MANAGEMENT: return 14;
