@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Rank-filtered entry point for staff tools. Rank entitlements fail closed online. */
-public final class StaffRankMenuGui extends GuiScreen {
+public final class StaffRankMenuGui extends AlphaGuiScreen {
     private static final int CATEGORY_BASE = 40;
     private static final int BHOP = 80;
     private static final int BACK = 90;

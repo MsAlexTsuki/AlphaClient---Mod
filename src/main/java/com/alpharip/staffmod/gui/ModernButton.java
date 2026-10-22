@@ -22,7 +22,7 @@ public class ModernButton extends GuiButton {
                 y,
                 width,
                 height,
-                text
+                UiText.normalize(text)
         );
     }
 

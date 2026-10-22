@@ -7,7 +7,7 @@ import com.alpharip.staffmod.permissions.PermissionService;
 import java.io.IOException;
 
 /** Dedicated W-Tap Assistance settings connected to the live input handler. */
-public final class WTapSettingsGui extends GuiScreen {
+public final class WTapSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int ENABLED = 10;
     private static final int DELAY = 11;

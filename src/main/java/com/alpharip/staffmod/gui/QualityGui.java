@@ -7,7 +7,7 @@ import org.lwjgl.input.Mouse;
 import java.io.IOException;
 
 /** Browser for the planned AlphaClient Quality of Life features. */
-public final class QualityGui extends GuiScreen {
+public final class QualityGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int AFK_TIMER = 2;
     private static final int AFK_TIMER_INDEX = 6;

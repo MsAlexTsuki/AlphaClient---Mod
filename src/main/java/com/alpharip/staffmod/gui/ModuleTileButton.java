@@ -41,7 +41,7 @@ public final class ModuleTileButton extends GuiButton {
             String state = module.getStatusLabel();
             int stateColor = "ON".equals(state) ? YELLOW
                     : ("LOCKED".equals(state) || "COMING SOON".equals(state) ? 0xFF8A8F99 : 0xFFB8BDC8);
-            mc.fontRendererObj.drawString(state, xPosition + 7, yPosition + 4, stateColor, false);
+            mc.fontRendererObj.drawString(UiText.normalize(state), xPosition + 7, yPosition + 4, stateColor, false);
             int sw = SWITCH_WIDTH, sh = SWITCH_HEIGHT;
             int sx = xPosition + width - sw - 7, sy = yPosition + 6;
             int switchBg = on ? YELLOW : 0xFF454A54;
@@ -62,7 +62,7 @@ public final class ModuleTileButton extends GuiButton {
             }
             name += "...";
         }
-        mc.fontRendererObj.drawString(name,
+        mc.fontRendererObj.drawString(UiText.normalize(name),
                 xPosition + (width - mc.fontRendererObj.getStringWidth(name)) / 2,
                 yPosition + height - 11, 0xFFF0F1F4, false);
     }

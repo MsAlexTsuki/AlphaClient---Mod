@@ -12,7 +12,7 @@ public final class AlphaButton extends GuiButton {
     }
 
     public AlphaButton(int id, int x, int y, int width, int height, String label, boolean primary) {
-        super(id, x, y, width, height, label);
+        super(id, x, y, width, height, UiText.normalize(label));
         this.primary = primary;
     }
 

@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL11;
  *
  * Author: MsAlexTsuki
  */
-public class ModernGuiScreen extends GuiScreen {
+public class ModernGuiScreen extends AlphaGuiScreen {
 
     protected static final int GUI_WIDTH = 520;
     protected static final int GUI_HEIGHT = 300;
