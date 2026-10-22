@@ -32,8 +32,10 @@ public final class RankViewerRenderer {
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
         if (rank == null) return;
 
-        drawNameWithBadge(minecraft, rank, player.getName(), event.x,
-                event.y + player.height + 0.72D, event.z,
+        // RenderPlayerEvent.Specials.Pre already runs with the entity transform applied.
+        // Use local entity coordinates here; event.x/y/z would apply the position twice.
+        drawNameWithBadge(minecraft, rank, player.getName(), 0.0D,
+                player.height + 0.72D, 0.0D,
                 minecraft.getRenderManager().playerViewY,
                 minecraft.getRenderManager().playerViewX, 0.02F);
     }
