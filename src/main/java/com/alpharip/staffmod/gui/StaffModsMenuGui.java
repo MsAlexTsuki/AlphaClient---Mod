@@ -76,11 +76,11 @@ public final class StaffModsMenuGui extends GuiScreen {
             int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
             int tileHeight = 38;
             if (managementSubfolders) {
-                if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) {
+                if (hasFolderAccess(PermissionService.Rank.PLAT_ADMIN)) {
                     buttonList.add(new AlphaButton(CATEGORY_BASE + 100, contentLeft, contentTop,
                             tileWidth, tileHeight, "PLATFORM ADMIN"));
                 }
-                if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+                if (hasFolderAccess(PermissionService.Rank.MANAGER)) {
                     buttonList.add(new AlphaButton(CATEGORY_BASE + 101, contentLeft + tileWidth + gap, contentTop,
                             tileWidth, tileHeight, "MANAGER"));
                 }
@@ -305,7 +305,7 @@ public final class StaffModsMenuGui extends GuiScreen {
                 && (button.id == CATEGORY_BASE + 100 || button.id == CATEGORY_BASE + 101)) {
             PermissionService.Rank rank = button.id == CATEGORY_BASE + 100
                     ? PermissionService.Rank.PLAT_ADMIN : PermissionService.Rank.MANAGER;
-            if (PermissionService.hasAccess(rank)) {
+            if (hasFolderAccess(rank)) {
                 selectedRank = rank;
                 openFolderRank = rank;
                 managementSubfolders = false;
@@ -412,10 +412,10 @@ public final class StaffModsMenuGui extends GuiScreen {
         int columns = 3;
         int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
         int tileHeight = 38;
-        if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) {
+        if (hasFolderAccess(PermissionService.Rank.PLAT_ADMIN)) {
             drawCard(contentLeft, contentTop, tileWidth, tileHeight, "PLATFORM ADMIN", mouseX, mouseY);
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+        if (hasFolderAccess(PermissionService.Rank.MANAGER)) {
             drawCard(contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "MANAGER", mouseX, mouseY);
         }
     }
