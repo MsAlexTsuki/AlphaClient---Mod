@@ -63,8 +63,8 @@ public final class CommunityLoginGui extends GuiScreen {
         drawRect(left, 38, left + 3, Math.min(height - 32, 286), 0xFFFFD866);
 
         drawString(fontRendererObj, "ALPHA COMMUNITY", left + 14, 51, 0xFFFFD866);
-        drawString(fontRendererObj, "Sign in to verify your community rank", left + 14, 67, 0xFFF4F5F8);
-        drawString(fontRendererObj, "Your verified rank controls module access.", left + 14, 81, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Sign in to view your Alpha Rank", left + 14, 67, 0xFFF4F5F8);
+        drawString(fontRendererObj, "Your Alpha Rank controls module access.", left + 14, 81, 0xFFB8BDC8);
         drawRect(left + 14, 96, right - 14, 97, 0xFF292D36);
 
         drawString(fontRendererObj, "EMAIL ADDRESS", width / 2 - Math.min(270, width - 48) / 2, 109, 0xFFB8BDC8);
@@ -90,8 +90,8 @@ public final class CommunityLoginGui extends GuiScreen {
             drawCenteredString(fontRendererObj, status, width / 2, 241, 0xFFB8BDC8);
         }
         String rankText = SupabaseCommunityService.isSignedIn()
-                ? "VERIFIED RANK: " + SupabaseCommunityService.getSignedInRankLabel()
-                : (SupabaseCommunityService.isRestoringSession() ? "RESTORING SESSION..." : "RANK NOT VERIFIED");
+                ? "ALPHA RANK: " + SupabaseCommunityService.getSignedInRankLabel()
+                : (SupabaseCommunityService.isRestoringSession() ? "RESTORING SESSION..." : "ALPHA RANK UNAVAILABLE");
         drawCenteredString(fontRendererObj, rankText, width / 2, 258, 0xFFFFD866);
         if (SupabaseCommunityService.isSignedIn()) {
             drawCenteredString(fontRendererObj, "Logged in as " + SupabaseCommunityService.getSignedInAlphaName(),
@@ -175,7 +175,7 @@ public final class CommunityLoginGui extends GuiScreen {
                 public void run() {
                     try {
                         SupabaseCommunityService.signIn(email, password);
-                        status = "Signed in. Community rank verified.";
+                        status = "Signed in. Alpha Rank loaded.";
                         mc.addScheduledTask(new Runnable() {
                             @Override
                             public void run() {
