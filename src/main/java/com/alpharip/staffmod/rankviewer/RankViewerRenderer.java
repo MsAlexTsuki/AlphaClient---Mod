@@ -64,6 +64,9 @@ public final class RankViewerRenderer {
         // Minecraft-UUID association (one UUID may be linked to multiple Alpha accounts).
         AlphaRank rank = SupabaseCommunityService.getSignedInDisplayRank();
         if (rank == null) rank = RankCache.INSTANCE.get(player.getUniqueID());
+        // Keep the badge slot visible while account rank data is unavailable; a valid
+        // signed-in rank or cached Minecraft UUID rank always takes precedence.
+        if (rank == null) rank = AlphaRank.MEMBER;
         drawNameWithBadge(minecraft, rank, player.getName(), x,
                 y + player.height + 0.5D, z,
                 renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
