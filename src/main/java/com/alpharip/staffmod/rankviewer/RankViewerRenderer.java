@@ -43,7 +43,7 @@ public final class RankViewerRenderer {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null
                 || minecraft.gameSettings == null || minecraft.fontRendererObj == null) return;
-        // Render the local Name Viewer in both F5 views, but never in first-person.
+        // Render the local rank badge in both F5 views, but never in first-person.
         if (minecraft.gameSettings.thirdPersonView == 0) return;
 
         EntityPlayer player = minecraft.thePlayer;
