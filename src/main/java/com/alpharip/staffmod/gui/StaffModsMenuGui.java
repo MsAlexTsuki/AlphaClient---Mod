@@ -57,6 +57,10 @@ public final class StaffModsMenuGui extends GuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
+        if (!PermissionService.hasStaffModsAccess()) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
         panelWidth = Math.min(560, Math.max(360, width - 32));
         panelHeight = Math.min(330, Math.max(230, height - 32));
         panelLeft = (width - panelWidth) / 2;
@@ -253,6 +257,10 @@ public final class StaffModsMenuGui extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
+        if (!PermissionService.hasStaffModsAccess()) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
 
         if (button.id == BACK) {
             // Always replace the current screen rather than reinitializing a stale button list.
