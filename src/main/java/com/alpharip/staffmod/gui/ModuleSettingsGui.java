@@ -13,7 +13,7 @@ import java.util.List;
  * their dedicated screens; this screen prevents other module tiles from only
  * selecting a tile without opening a settings page.
  */
-public final class ModuleSettingsGui extends GuiScreen {
+public final class ModuleSettingsGui extends AlphaGuiScreen {
     private static final int TOGGLE_MODULE = 1;
     private static final int BACK = 2;
 

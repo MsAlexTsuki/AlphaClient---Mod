@@ -6,7 +6,7 @@ import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
 /** Appearance settings for the FPS module; module enablement is controlled in the module menu. */
-public final class FpsSettingsGui extends GuiScreen {
+public final class FpsSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int BACKGROUND = 3;
     private static final int COLOR = 5;

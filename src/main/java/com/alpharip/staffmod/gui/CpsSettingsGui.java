@@ -6,7 +6,7 @@ import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
 /** CPS HUD settings with a click-to-expand display-mode dropdown. */
-public final class CpsSettingsGui extends GuiScreen {
+public final class CpsSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1, BACKGROUND = 2, COLOR = 3, MODE = 4;
     private static final int OPTION_BOTH = 10, OPTION_LEFT = 11, OPTION_RIGHT = 12;
     private final GuiScreen parent;

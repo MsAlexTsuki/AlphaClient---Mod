@@ -9,7 +9,7 @@ import java.io.IOException;
  * Account-switcher information screen.
  * Microsoft authentication and saved account tokens remain managed by AlphaLauncher.
  */
-public final class AccountInfoGui extends GuiScreen {
+public final class AccountInfoGui extends AlphaGuiScreen {
     private final GuiScreen parent;
 
     public AccountInfoGui(GuiScreen parent) {

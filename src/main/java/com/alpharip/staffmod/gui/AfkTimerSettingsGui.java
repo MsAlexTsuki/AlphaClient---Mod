@@ -7,7 +7,7 @@ import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
 /** Settings for the AFK timer, opened from the Quality page. */
-public final class AfkTimerSettingsGui extends GuiScreen {
+public final class AfkTimerSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int ENABLE = 2;
     private static final int DISPLAY_MODE = 3;
