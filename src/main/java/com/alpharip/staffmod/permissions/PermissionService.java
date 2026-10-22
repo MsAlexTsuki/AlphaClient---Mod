@@ -223,6 +223,12 @@ public final class PermissionService {
                     || ranks.contains(Rank.SCOUT))) {
             return true;
         }
+        // Partner may open the Donator category and all five Donator tier folders,
+        // but does not inherit any staff permissions.
+        if (ranks.contains(Rank.PARTNER)
+                && (required == Rank.DONATOR || isDonatorRank(required))) {
+            return true;
+        }
         // Donator ranks inherit every lower Donator rank:
         // Scout < Rogue < Elite < Alpha < Alpha+.
         if (isDonatorRank(required)) {
