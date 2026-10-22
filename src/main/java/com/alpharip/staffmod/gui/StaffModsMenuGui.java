@@ -142,8 +142,9 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private int hierarchyPriority(PermissionService.Rank rank) {
         switch (rank) {
-            case FOUNDER: return 17;
-            case OWNER: return 16;
+            case FOUNDER: return 18;
+            case OWNER: return 17;
+            case DEVELOPER: return 16;
             case MANAGER: return 15;
             case PLAT_ADMIN:
             case MANAGEMENT: return 14;
