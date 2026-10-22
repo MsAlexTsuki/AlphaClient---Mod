@@ -7,7 +7,7 @@ import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
 /** Settings screen for the optional local Name Vieuwer display. */
-public final class NameViewerSettingsGui extends GuiScreen {
+public final class NameViewerSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int TOGGLE = 2;
     private static final int ACCENT = 0xFFFFD866;

@@ -9,7 +9,7 @@ import org.lwjgl.input.Keyboard;
 import java.io.IOException;
 
 /** Small in-game dialog used to create or rename a profile. */
-public final class ProfileNameGui extends GuiScreen {
+public final class ProfileNameGui extends AlphaGuiScreen {
     private static final int SAVE = 1;
     private static final int CANCEL = 2;
 
