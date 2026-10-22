@@ -501,6 +501,7 @@ public final class SupabaseCommunityService {
             case "plat_admin":
             case "platform_admin": return PermissionService.Rank.PLAT_ADMIN;
             case "manager": return PermissionService.Rank.MANAGER;
+            case "developer": return PermissionService.Rank.DEVELOPER;
             case "owner": return PermissionService.Rank.OWNER;
             default: return PermissionService.Rank.PUBLIC;
         }
