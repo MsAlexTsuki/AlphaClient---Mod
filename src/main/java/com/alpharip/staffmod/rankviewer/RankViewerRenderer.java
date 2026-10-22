@@ -101,14 +101,19 @@ public final class RankViewerRenderer {
 
             int cursor = -totalWidth / 2;
             if (rank != null) {
+                // Draw the badge from rank metadata instead of loading a PNG texture.
+                // This avoids Minecraft's magenta missing-texture square when an asset
+                // is absent or unreadable, including the Developer and Media badges.
+                Gui.drawRect(cursor, 0, cursor + BADGE_SIZE, BADGE_SIZE, rank.color());
+                String emblem = rank.emblem();
+                int emblemWidth = minecraft.fontRendererObj.getStringWidth(emblem);
+                float emblemScale = Math.min(1.0F, (BADGE_SIZE - 2.0F) / Math.max(1, emblemWidth));
                 GlStateManager.pushMatrix();
                 try {
-                    minecraft.getTextureManager().bindTexture(rank.texture());
-                    GlStateManager.enableTexture2D();
-                    GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                    Gui.drawModalRectWithCustomSizedTexture(
-                            cursor, 0, 0.0F, 0.0F,
-                            BADGE_SIZE, BADGE_SIZE, 64, 64);
+                    GlStateManager.translate(cursor + BADGE_SIZE / 2.0F, BADGE_SIZE / 2.0F, 0.0F);
+                    GlStateManager.scale(emblemScale, emblemScale, 1.0F);
+                    minecraft.fontRendererObj.drawStringWithShadow(
+                            emblem, -emblemWidth / 2, -4, 0xFFFFFFFF);
                 } finally {
                     GlStateManager.popMatrix();
                 }
