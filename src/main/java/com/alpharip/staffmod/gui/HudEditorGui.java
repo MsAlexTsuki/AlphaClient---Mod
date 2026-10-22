@@ -135,6 +135,10 @@ public final class HudEditorGui extends GuiScreen {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
         if (dragging && button == 0) {
+            if (!afkTimerDragging && !fpsDragging && !cpsDragging && !hasBhopAccess()) {
+                dragging = false;
+                return;
+            }
             int x = mouseX - dragX;
             int y = mouseY - dragY;
             if (afkTimerDragging) {
