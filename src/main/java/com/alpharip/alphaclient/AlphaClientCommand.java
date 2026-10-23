@@ -668,15 +668,16 @@ public final class AlphaClientCommand extends CommandBase {
     private boolean hasBhopAccess() {
         Boolean override = PermissionService.getCommandPermissionOverride("command.bhop");
         if (override != null) return override.booleanValue();
-        return PermissionService.hasAccess(PermissionService.Rank.T_MOD)
-                && PermissionService.hasModAccess("staff.bhop");
+        return PermissionService.hasModAccess("staff.bhop")
+                || PermissionService.hasAccess(PermissionService.Rank.T_MOD);
     }
 
     private boolean hasWTapAccess() {
         Boolean override = PermissionService.getCommandPermissionOverride("command.wtap");
         if (override != null) return override.booleanValue();
         // Use the authenticated community profile's explicit Founder flag as well as the rank gate.
-        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+        return PermissionService.hasModAccess("w-tap-assistance")
+                || PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
                 || SupabaseCommunityService.isSignedInFounder();
     }
 
