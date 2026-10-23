@@ -74,9 +74,18 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
 
-        if ("general".equals(route)) {
+        if ("general".equals(route) || "beta".equals(route) || "donator".equals(route)) {
             Minecraft mc = Minecraft.getMinecraft();
-            if (mc != null) AlphaClient.openGuiFromCommand(new AlphaModMenu(mc.currentScreen));
+            if (mc != null) {
+                AlphaModule.Category category = "beta".equals(route)
+                        ? AlphaModule.Category.BETA
+                        : ("donator".equals(route) ? AlphaModule.Category.DONATOR : AlphaModule.Category.PUBLIC);
+                if (!PermissionService.hasAccess(category.getRequiredRank())) {
+                    reply(sender, "Access denied: your current rank does not allow the " + category.getTitle() + " category.");
+                    return;
+                }
+                AlphaClient.openGuiFromCommand(new AlphaModMenu(mc.currentScreen, category));
+            }
             return;
         }
 
@@ -176,7 +185,6 @@ public final class AlphaClientCommand extends CommandBase {
 
     private String staffFolderAlias(String name) {
         if ("staffgeneral".equals(name)) return "general";
-        if ("beta".equals(name)) return "beta";
         if ("stafftmod".equals(name)) return "tmod";
         if ("staffmod".equals(name)) return "mod";
         if ("staffsrmod".equals(name)) return "srmod";
@@ -187,7 +195,6 @@ public final class AlphaClientCommand extends CommandBase {
         if ("staffmanager".equals(name)) return "manager";
         if ("staffowner".equals(name)) return "owner";
         if ("stafffounder".equals(name)) return "founder";
-        if ("donator".equals(name)) return "donator";
         if ("scout".equals(name)) return "scout";
         if ("rogue".equals(name)) return "rogue";
         if ("elite".equals(name)) return "elite";
