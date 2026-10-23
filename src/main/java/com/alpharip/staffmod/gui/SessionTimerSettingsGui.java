@@ -39,7 +39,7 @@ public final class SessionTimerSettingsGui extends AlphaGuiScreen {
         drawCenteredString(fontRendererObj, "SESSION TIMER", width / 2, top + 17, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Tracks time in your current world session",
                 width / 2, top + 37, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "The timer resets when you leave the world",
+        drawCenteredString(fontRendererObj, "Keeps running until Minecraft is closed",
                 width / 2, bottom - 43, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
