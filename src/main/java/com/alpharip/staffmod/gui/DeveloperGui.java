@@ -1,25 +1,23 @@
 package com.alpharip.staffmod.gui;
 
-import com.alpharip.staffmod.modules.AlphaModule;
-import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.permissions.PermissionService;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
-/**
- * Restricted Developer workspace inside StaffMods.
- * Access is granted to Developer, Owner, and Founder ranks only.
- */
+/** Developer Mode gate and launcher for separate diagnostic screens. */
 public final class DeveloperGui extends AlphaGuiScreen {
-    private static final int BACK = 1;
-    private static final int REFRESH = 2;
+    private static final int TOGGLE = 1;
+    private static final int BACK = 2;
+    private static final int RANK = 10;
+    private static final int VERIFICATION = 11;
+    private static final int PERMISSIONS = 12;
+    private static final int MODULES = 13;
     private static final int ACCENT = 0xFFFFD866;
 
-    private final GuiScreen parent;
+    private final net.minecraft.client.gui.GuiScreen parent;
     private int panelLeft, panelTop, panelWidth, panelHeight;
 
-    public DeveloperGui(GuiScreen parent) {
+    public DeveloperGui(net.minecraft.client.gui.GuiScreen parent) {
         this.parent = parent;
     }
 
@@ -31,42 +29,74 @@ public final class DeveloperGui extends AlphaGuiScreen {
     public void initGui() {
         buttonList.clear();
         if (!hasDeveloperAccess()) {
+            DeveloperModeState.disable();
             mc.displayGuiScreen(parent);
             return;
         }
 
         panelWidth = Math.min(520, Math.max(340, width - 32));
-        panelHeight = Math.min(300, Math.max(230, height - 32));
+        panelHeight = Math.min(330, Math.max(250, height - 32));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
 
-        buttonList.add(new AlphaButton(REFRESH, panelLeft + panelWidth - 176,
-                panelTop + panelHeight - 31, 76, 20, "REFRESH"));
-        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 92,
-                panelTop + panelHeight - 31, 76, 20, "BACK"));
+        int left = panelLeft + 16;
+        int top = panelTop + 112;
+        int buttonWidth = (panelWidth - 40) / 2;
+        int buttonHeight = 28;
+        if (DeveloperModeState.isEnabled()) {
+            buttonList.add(new AlphaButton(RANK, left, top, buttonWidth, buttonHeight, "RANK INSPECTOR"));
+            buttonList.add(new AlphaButton(VERIFICATION, left + buttonWidth + 8, top, buttonWidth, buttonHeight, "VERIFICATION"));
+            buttonList.add(new AlphaButton(PERMISSIONS, left, top + 38, buttonWidth, buttonHeight, "PERMISSION INSPECTOR"));
+            buttonList.add(new AlphaButton(MODULES, left + buttonWidth + 8, top + 38, buttonWidth, buttonHeight, "MODULE INSPECTOR"));
+        }
+        buttonList.add(new AlphaButton(TOGGLE, left, panelTop + panelHeight - 34,
+                buttonWidth, 22, DeveloperModeState.isEnabled() ? "DISABLE DEVELOPER MODE" : "ENABLE DEVELOPER MODE"));
+        buttonList.add(new AlphaButton(BACK, left + buttonWidth + 8, panelTop + panelHeight - 34,
+                buttonWidth, 22, "BACK"));
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (!hasDeveloperAccess()) {
+            DeveloperModeState.disable();
             mc.displayGuiScreen(parent);
             return;
         }
         if (button == null) return;
         if (button.id == BACK) {
+            DeveloperModeState.disable();
             mc.displayGuiScreen(parent);
-        } else if (button.id == REFRESH) {
+        } else if (button.id == TOGGLE) {
+            DeveloperModeState.setEnabled(!DeveloperModeState.isEnabled());
             initGui();
+        } else {
+            if (!DeveloperModeState.isEnabled()) return;
+            switch (button.id) {
+                case RANK:
+                    mc.displayGuiScreen(new DeveloperToolGui(this, DeveloperToolGui.Page.RANK));
+                    break;
+                case VERIFICATION:
+                    mc.displayGuiScreen(new DeveloperToolGui(this, DeveloperToolGui.Page.VERIFICATION));
+                    break;
+                case PERMISSIONS:
+                    mc.displayGuiScreen(new DeveloperToolGui(this, DeveloperToolGui.Page.PERMISSIONS));
+                    break;
+                case MODULES:
+                    mc.displayGuiScreen(new DeveloperToolGui(this, DeveloperToolGui.Page.MODULES));
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         if (!hasDeveloperAccess()) {
+            DeveloperModeState.disable();
             mc.displayGuiScreen(parent);
             return;
         }
-
         drawRect(0, 0, width, height, 0x30000000);
         int right = panelLeft + panelWidth;
         int bottom = panelTop + panelHeight;
@@ -77,40 +107,27 @@ public final class DeveloperGui extends AlphaGuiScreen {
 
         drawString(fontRendererObj, "ALPHA CLIENT", panelLeft + 16, panelTop + 14, 0xFFF0F1F4);
         drawString(fontRendererObj, "STAFFMODS  /  DEVELOPER", panelLeft + 16, panelTop + 34, ACCENT);
-        drawString(fontRendererObj, "DEVELOPER WORKSPACE", panelLeft + 16, panelTop + 61, 0xFFFFFFFF);
-        drawString(fontRendererObj, "Active rank: " + PermissionService.getEffectiveRank().name(),
-                panelLeft + 16, panelTop + 82, 0xFFB8BDC8);
-
-        drawStatus("Community rank verification",
-                PermissionService.isOnlineRankVerified(), panelLeft + 16, panelTop + 108);
-        drawStatus("Module permissions",
-                PermissionService.areModEntitlementsVerified(), panelLeft + 16, panelTop + 128);
-        drawStatus("Command permissions",
-                PermissionService.areCommandPermissionsVerified(), panelLeft + 16, panelTop + 148);
-
-        int totalModules = AlphaModuleRegistry.getAll().size();
-        int unlockedModules = 0;
-        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
-            if (module.isUnlocked()) unlockedModules++;
+        drawString(fontRendererObj, "DEVELOPER MODE", panelLeft + 16, panelTop + 62, 0xFFFFFFFF);
+        boolean enabled = DeveloperModeState.isEnabled();
+        drawString(fontRendererObj, "Status: " + (enabled ? "ENABLED" : "DISABLED"),
+                panelLeft + 16, panelTop + 82, enabled ? 0xFF7DDBA3 : 0xFFFFC56B);
+        drawString(fontRendererObj, enabled
+                        ? "Select a separate tool below."
+                        : "Enable Developer Mode to unlock the developer folders.",
+                panelLeft + 16, panelTop + 96, 0xFFB8BDC8);
+        if (!enabled) {
+            drawString(fontRendererObj, "Rank Inspector", panelLeft + 24, panelTop + 130, 0xFFB8BDC8);
+            drawString(fontRendererObj, "Verification", panelLeft + 24, panelTop + 151, 0xFFB8BDC8);
+            drawString(fontRendererObj, "Permission Inspector", panelLeft + 24, panelTop + 172, 0xFFB8BDC8);
+            drawString(fontRendererObj, "Module Inspector", panelLeft + 24, panelTop + 193, 0xFFB8BDC8);
         }
-        drawString(fontRendererObj, "Registered modules: " + totalModules,
-                panelLeft + 16, panelTop + 180, 0xFFE7E9EE);
-        drawString(fontRendererObj, "Currently unlocked: " + unlockedModules,
-                panelLeft + 16, panelTop + 198, 0xFFE7E9EE);
-        drawString(fontRendererObj, "Use /alphahelp open to inspect available commands and access.",
-                panelLeft + 16, panelTop + 222, 0xFFB8BDC8);
-
         super.drawScreen(mouseX, mouseY, partialTicks);
-    }
-
-    private void drawStatus(String label, boolean verified, int x, int y) {
-        drawString(fontRendererObj, label + ": " + (verified ? "VERIFIED" : "NOT VERIFIED"),
-                x, y, verified ? 0xFF7DDBA3 : 0xFFFFC56B);
     }
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) {
+            DeveloperModeState.disable();
             mc.displayGuiScreen(parent);
             return;
         }
