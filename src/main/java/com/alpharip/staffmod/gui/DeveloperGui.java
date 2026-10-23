@@ -12,6 +12,7 @@ public final class DeveloperGui extends AlphaGuiScreen {
     private static final int VERIFICATION = 11;
     private static final int PERMISSIONS = 12;
     private static final int MODULES = 13;
+    private static final int DEVELOPER_STUDIO = 14;
     private static final int ACCENT = 0xFFFFD866;
 
     private final net.minecraft.client.gui.GuiScreen parent;
@@ -78,6 +79,8 @@ public final class DeveloperGui extends AlphaGuiScreen {
                 buttonList.add(new AlphaButton(PERMISSIONS, left, top + 38, buttonWidth, buttonHeight, "PERMISSION INSPECTOR"));
             if (canOpenTool("staffmods.developer.module_inspector"))
                 buttonList.add(new AlphaButton(MODULES, left + buttonWidth + 8, top + 38, buttonWidth, buttonHeight, "MODULE INSPECTOR"));
+            buttonList.add(new AlphaButton(DEVELOPER_STUDIO, left, top + 76,
+                    buttonWidth * 2 + 8, buttonHeight, "ALPHA DEVELOPER STUDIO"));
         }
         buttonList.add(new AlphaButton(TOGGLE, left, panelTop + panelHeight - 34,
                 buttonWidth, 22, DeveloperModeState.isEnabled() ? "DISABLE DEVELOPER MODE" : "ENABLE DEVELOPER MODE"));
@@ -135,6 +138,9 @@ public final class DeveloperGui extends AlphaGuiScreen {
                     break;
                 case MODULES:
                     mc.displayGuiScreen(new DeveloperToolGui(this, DeveloperToolGui.Page.MODULES));
+                    break;
+                case DEVELOPER_STUDIO:
+                    mc.displayGuiScreen(new AlphaDeveloperStudioGui(this));
                     break;
                 default:
                     break;
