@@ -61,8 +61,11 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
      * Folder access is checked here using the same checks as the visible folder browser.
      */
     public boolean openFolderCommand(String folderKey) {
-        if (!PermissionService.hasStaffModsAccess() || folderKey == null) return false;
+        if (folderKey == null) return false;
         String key = folderKey.toLowerCase(java.util.Locale.ROOT).replace("-", "").replace("_", "").replace(" ", "");
+        Boolean folderOverride = PermissionService.getCommandPermissionOverride(folderPermissionKey(key));
+        if (Boolean.FALSE.equals(folderOverride)) return false;
+        if (folderOverride == null && !PermissionService.hasStaffModsAccess()) return false;
         PermissionService.Rank rank;
         if ("general".equals(key)) rank = PermissionService.Rank.PUBLIC;
         else if ("beta".equals(key)) rank = PermissionService.Rank.BETA;
@@ -94,7 +97,8 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         else if ("alphaplus".equals(key)) rank = PermissionService.Rank.ALPHA_PLUS;
         else return false;
 
-        if (rank != PermissionService.Rank.PUBLIC && !hasFolderAccess(rank)) return false;
+        if (rank != PermissionService.Rank.PUBLIC
+                && folderOverride == null && !hasFolderAccess(rank)) return false;
         selectedRank = rank;
         openFolderRank = rank;
         managementSubfolders = false;
@@ -207,12 +211,14 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         // an explicit per-mod grant can independently reveal its assigned folder.
         if (rank == PermissionService.Rank.PUBLIC) return true;
         if (rank == PermissionService.Rank.FOUNDER) {
-            return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
+            return hasFolderAccess(rank);
         }
         // Beta and Donator are independent access folders, not staff hierarchy tiers.
         // Show them only to their rank or to accounts with a grant for a mod in that folder.
         if (rank == PermissionService.Rank.DONATOR) {
-            // Keep the Donator entry point exclusive to verified Partner accounts.
+            Boolean override = PermissionService.getCommandPermissionOverride("menu.donator");
+            if (override != null) return override.booleanValue();
+            // Keep the Donator entry point exclusive to verified Partner accounts by default.
             return PermissionService.isOnlineRankVerified()
                     && PermissionService.getVerifiedOnlineRanks().contains(PermissionService.Rank.PARTNER);
         }
@@ -245,7 +251,43 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
     }
 
     private boolean hasFolderAccess(PermissionService.Rank rank) {
+        String key = folderPermissionKey(rank);
+        Boolean override = PermissionService.getCommandPermissionOverride(key);
+        if (override != null) return override.booleanValue();
         return PermissionService.hasAccess(rank) || hasExplicitGrantInFolder(rank);
+    }
+
+    private String folderPermissionKey(PermissionService.Rank rank) {
+        if (rank == null) return "staffmods.open";
+        switch (rank) {
+            case PUBLIC: return "staffmods.general";
+            case T_MOD: return "staffmods.tmod";
+            case MOD: return "staffmods.mod";
+            case SR_MOD: return "staffmods.srmod";
+            case ADMIN: return "staffmods.admin";
+            case SR_ADMIN: return "staffmods.sradmin";
+            case PLAT_ADMIN: return "staffmods.platformadmin";
+            case MANAGEMENT: return "staffmods.management";
+            case MANAGER: return "staffmods.manager";
+            case OWNER: return "staffmods.owner";
+            case FOUNDER: return "staffmods.founder";
+            default: return "staffmods.open";
+        }
+    }
+
+    private String folderPermissionKey(String normalizedFolder) {
+        if ("general".equals(normalizedFolder)) return "staffmods.general";
+        if ("tmod".equals(normalizedFolder) || "trialmoderator".equals(normalizedFolder)) return "staffmods.tmod";
+        if ("mod".equals(normalizedFolder) || "moderator".equals(normalizedFolder)) return "staffmods.mod";
+        if ("srmod".equals(normalizedFolder) || "seniormoderator".equals(normalizedFolder)) return "staffmods.srmod";
+        if ("admin".equals(normalizedFolder)) return "staffmods.admin";
+        if ("sradmin".equals(normalizedFolder) || "senioradmin".equals(normalizedFolder)) return "staffmods.sradmin";
+        if ("platformadmin".equals(normalizedFolder) || "platadmin".equals(normalizedFolder)) return "staffmods.platformadmin";
+        if ("management".equals(normalizedFolder)) return "staffmods.management";
+        if ("manager".equals(normalizedFolder)) return "staffmods.manager";
+        if ("owner".equals(normalizedFolder)) return "staffmods.owner";
+        if ("founder".equals(normalizedFolder)) return "staffmods.founder";
+        return "staffmods.open";
     }
 
     private int hierarchyPriority(PermissionService.Rank rank) {
