@@ -31,6 +31,7 @@ public final class InfoHudModules {
     private static final int DEFAULT_COLOR = 0xFFFFFFFF;
     private static int armorX = 8, armorY = 80, armorColor = DEFAULT_COLOR, armorLayout;
     private static int potionX = 8, potionY = 120, potionColor = DEFAULT_COLOR, potionMode = MODE_ICONS;
+    private static boolean armorShowNames = true, armorShowDurability = true;
     private static boolean loaded;
     private static final Minecraft MC = Minecraft.getMinecraft();
 
@@ -51,6 +52,8 @@ public final class InfoHudModules {
             armorY = integer(p, "armorY", armorY);
             armorColor = integer(p, "armorColor", armorColor);
             armorLayout = clamp(integer(p, "armorLayout", 0), 0, 1);
+            armorShowNames = Boolean.parseBoolean(p.getProperty("armorShowNames", "true"));
+            armorShowDurability = Boolean.parseBoolean(p.getProperty("armorShowDurability", "true"));
             potionX = integer(p, "potionX", potionX);
             potionY = integer(p, "potionY", potionY);
             potionColor = integer(p, "potionColor", potionColor);
@@ -82,6 +85,8 @@ public final class InfoHudModules {
         p.setProperty("armorY", String.valueOf(armorY));
         p.setProperty("armorColor", String.valueOf(armorColor));
         p.setProperty("armorLayout", String.valueOf(armorLayout));
+        p.setProperty("armorShowNames", String.valueOf(armorShowNames));
+        p.setProperty("armorShowDurability", String.valueOf(armorShowDurability));
         p.setProperty("potionX", String.valueOf(potionX));
         p.setProperty("potionY", String.valueOf(potionY));
         p.setProperty("potionColor", String.valueOf(potionColor));
@@ -103,6 +108,10 @@ public final class InfoHudModules {
     public static int getArmorEditorWidth() { load(); return armorLayout == 0 ? 210 : 120; }
     public static int getArmorEditorHeight() { load(); return armorLayout == 0 ? 18 : 70; }
     public static int getArmorLayout() { load(); return armorLayout; }
+    public static boolean getArmorShowNames() { load(); return armorShowNames; }
+    public static boolean getArmorShowDurability() { load(); return armorShowDurability; }
+    public static void toggleArmorShowNames() { load(); armorShowNames = !armorShowNames; save(); }
+    public static void toggleArmorShowDurability() { load(); armorShowDurability = !armorShowDurability; save(); }
     public static void setArmorPosition(int x, int y) { load(); armorX = Math.max(0, x); armorY = Math.max(0, y); save(); }
     public static void cycleArmorLayout() { load(); armorLayout = (armorLayout + 1) % 2; save(); }
     public static void cycleArmorColor() { load(); armorColor = nextColor(armorColor); save(); }
@@ -170,7 +179,7 @@ public final class InfoHudModules {
             int itemY = armorLayout == 0 ? 0 : i * 20;
             ItemStack stack = items[i];
             drawItem(mc, stack, itemX, itemY);
-            String label = stack == null ? "Empty" : stack.getDisplayName() + " " + durability(stack);
+            String label = stack == null ? (armorShowNames ? "Empty" : "") : ((armorShowNames ? stack.getDisplayName() : "") + (armorShowDurability ? " " + durability(stack) : "" )).trim();
             mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), itemX + 20, itemY + 5, armorColor);
         }
         GL11.glPopMatrix();
