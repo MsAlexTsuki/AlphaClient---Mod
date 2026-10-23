@@ -66,6 +66,24 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(fps);
 
+        MODULES.add(new AlphaModule(
+                "armor-hud-info",
+                "Armor HUD Info",
+                "Show held-item and equipped-armor durability in a movable horizontal or vertical HUD.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "potion-hud-info",
+                "Potion HUD Info",
+                "Display active potion effects with four selectable display modes.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
