@@ -60,21 +60,29 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
 
-        if ("staffmods".equals(route)) {
+        if ("staff".equals(route)) {
             if (args.length == 0) {
-                Minecraft mc = Minecraft.getMinecraft();
-                if (mc != null && PermissionService.hasStaffModsAccess()) {
-                    mc.displayGuiScreen(new StaffModsMenuGui(mc.currentScreen));
-                } else {
-                    reply(sender, "Access denied: StaffMods requires staff access.");
-                }
+                openStaffModsMenu(sender);
                 return;
             }
             if (args.length == 1 && !"help".equalsIgnoreCase(args[0])) {
                 openStaffFolder(sender, args[0]);
                 return;
             }
-            reply(sender, "Usage: /staffmods <general|beta|tmod|mod|srmod|admin|sradmin|management|platformadmin|manager|owner|founder|donator|scout|rogue|elite|alpha|alphaplus>");
+            reply(sender, "Usage: /staff [general|beta|tmod|mod|srmod|admin|sradmin|management|platformadmin|manager|owner|founder|donator|scout|rogue|elite|alpha|alphaplus]");
+            return;
+        }
+
+        if ("staffmods".equals(route)) {
+            if (args.length == 0) {
+                openStaffModsMenu(sender);
+                return;
+            }
+            if (args.length == 1 && !"help".equalsIgnoreCase(args[0])) {
+                openStaffFolder(sender, args[0]);
+                return;
+            }
+            reply(sender, "Usage: /staffmods [general|beta|tmod|mod|srmod|admin|sradmin|management|platformadmin|manager|owner|founder|donator|scout|rogue|elite|alpha|alphaplus]");
             return;
         }
 
@@ -145,6 +153,15 @@ public final class AlphaClientCommand extends CommandBase {
             handleTimer(sender, args, "afktimer");
         } else {
             sendHelp(sender);
+        }
+    }
+
+    private void openStaffModsMenu(ICommandSender sender) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc != null && PermissionService.hasStaffModsAccess()) {
+            mc.displayGuiScreen(new StaffModsMenuGui(mc.currentScreen));
+        } else {
+            reply(sender, "Access denied: StaffMods requires staff access.");
         }
     }
 
@@ -567,6 +584,8 @@ public final class AlphaClientCommand extends CommandBase {
     private void listModules(ICommandSender sender) {
         reply(sender, "Registered modules (LOCKED modules still require their assigned rank/permission):");
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            // These are feature groups/folders, not standalone modules.
+            if ("staffmods".equals(module.getId()) || "quality".equals(module.getId())) continue;
             reply(sender, module.getId() + " - " + (hasModuleAccess(module) ? module.getStatusLabel() : "LOCKED"));
         }
         reply(sender, "fullbright - " + (FullbrightMod.isEnabled() ? "ON" : "OFF"));
@@ -589,7 +608,8 @@ public final class AlphaClientCommand extends CommandBase {
         reply(sender, "/alphaclient legacypvp <feature> <on|off>");
         reply(sender, "HUDs: /fpshud /cpshud /playtime /sessiontimer /afktimer.");
         reply(sender, "Other shortcuts: /bhop /wtap /fullbright /nameviewer /legacypvp /quality.");
-        reply(sender, "StaffMods folders: /staffmods <folder> or /staffgeneral /staffbeta /stafftmod /staffmod /staffsrmod /staffadmin /staffsradmin /staffmanagement /staffplatformadmin /staffmanager /staffowner /stafffounder /staffdonator /staffscout /staffrogue /staffelite /staffalpha /staffalphaplus.");
+        reply(sender, "StaffMods GUI: /staff or /staffmods. Open a folder with /staff <folder> or /staffmods <folder>.");
+        reply(sender, "Folder aliases: /staffgeneral /staffbeta /stafftmod /staffmod /staffsrmod /staffadmin /staffsradmin /staffmanagement /staffplatformadmin /staffmanager /staffowner /stafffounder /staffdonator /staffscout /staffrogue /staffelite /staffalpha /staffalphaplus.");
     }
 
     private String normalizeModuleId(String id) {
@@ -645,7 +665,7 @@ public final class AlphaClientCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args,
                                                 net.minecraft.util.BlockPos pos) {
         List<String> options = new ArrayList<String>();
-        if ("staffmods".equals(commandName) && args.length == 1) {
+        if (("staff".equals(commandName) || "staffmods".equals(commandName)) && args.length == 1) {
             String[] folders = {"general","beta","tmod","mod","srmod","admin","sradmin","management","platformadmin","manager","owner","founder","donator","scout","rogue","elite","alpha","alphaplus"};
             for (String folder : folders) options.add(folder);
         } else if ("alphaclient".equals(commandName)) {
