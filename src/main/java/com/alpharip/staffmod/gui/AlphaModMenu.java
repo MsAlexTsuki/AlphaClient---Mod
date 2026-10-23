@@ -54,7 +54,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private boolean searchFocused;
     private String accessFingerprint = "";
 
-    public AlphaModMenu(GuiScreen parent) { this.parent = parent; }
+    public AlphaModMenu(GuiScreen parent) { this(parent, AlphaModule.Category.PUBLIC); }
+
+    public AlphaModMenu(GuiScreen parent, AlphaModule.Category initialCategory) {
+        this.parent = parent;
+        this.selectedCategory = initialCategory == null ? AlphaModule.Category.PUBLIC : initialCategory;
+    }
 
     @Override
     public void initGui() {
