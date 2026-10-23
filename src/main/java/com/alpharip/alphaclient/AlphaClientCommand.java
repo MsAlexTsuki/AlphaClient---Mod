@@ -541,7 +541,7 @@ public final class AlphaClientCommand extends CommandBase {
 
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null) return;
-        GuiScreen parent = mc.currentScreen;
+        GuiScreen parent = mc.currentScreen instanceof net.minecraft.client.gui.GuiChat ? null : mc.currentScreen;
         GuiScreen target = null;
         if ("fps".equals(id)) target = new FpsSettingsGui(parent);
         else if ("cps".equals(id)) target = new CpsSettingsGui(parent);
