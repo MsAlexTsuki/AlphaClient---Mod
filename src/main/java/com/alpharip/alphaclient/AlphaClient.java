@@ -118,7 +118,7 @@ public final class AlphaClient {
     /** Registers the central command namespace and short aliases against shared handlers. */
     private void registerClientCommands() {
         String[] commands = {
-                "alphaclient", "alphaclient:help", "alphaclient:modules",
+                "alphaclient", "alphahelp", "alphaclient:help", "alphaclient:modules",
                 "alphaclient:settings", "alphaclient:module", "alphaclient:fps",
                 "alphaclient:cps", "alphaclient:bhop", "alphaclient:wtap",
                 "alphaclient:fullbright", "alphaclient:legacypvp", "alphaclient:playtime",
