@@ -98,12 +98,12 @@ public final class HudEditorGui extends AlphaGuiScreen {
         if (isCpsModuleEnabled()) {
             String cps = CpsMod.getDisplayText();
             int ahx = InfoHudModules.getArmorX(), ahy = InfoHudModules.getArmorY();
-        if (mouseButton == 0 && InfoHudModules.armorEnabled()
+        if (mouseButton == 0
                 && mouseX >= ahx && mouseX <= ahx + 440 && mouseY >= ahy && mouseY <= ahy + 120) {
             dragging = true; armorDragging = true; dragX = mouseX - ahx; dragY = mouseY - ahy; return;
         }
         int phx = InfoHudModules.getPotionX(), phy = InfoHudModules.getPotionY();
-        if (mouseButton == 0 && InfoHudModules.potionEnabled()
+        if (mouseButton == 0
                 && mouseX >= phx && mouseX <= phx + 220 && mouseY >= phy && mouseY <= phy + 180) {
             dragging = true; potionDragging = true; dragX = mouseX - phx; dragY = mouseY - phy; return;
         }
