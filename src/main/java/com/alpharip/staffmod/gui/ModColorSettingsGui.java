@@ -113,6 +113,11 @@ public class ModColorSettingsGui extends ModernGuiScreen {
                 DEFAULT_COLOR
         );
 
+        registerMod(
+                "SESSION_TIMER",
+                DEFAULT_COLOR
+        );
+
         rebuildModList();
     }
 
@@ -223,6 +228,10 @@ public class ModColorSettingsGui extends ModernGuiScreen {
                 "KNOCKBACK"
         );
 
+        addModToList(
+                "SESSION_TIMER"
+        );
+
         /*
          * Eventuele toekomstige mods
          * uit het actieve profiel.
@@ -320,6 +329,10 @@ public class ModColorSettingsGui extends ModernGuiScreen {
                 modName)) {
 
             return "BHOP SPEED";
+        }
+
+        if ("SESSION_TIMER".equals(modName)) {
+            return "SESSION TIMER";
         }
 
         return modName;
