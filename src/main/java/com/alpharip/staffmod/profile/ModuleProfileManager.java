@@ -414,6 +414,7 @@ public class ModuleProfileManager {
             if (!mergeLegacyProfileFile(legacyFile, true)) {
                 createDefaultProfile();
             }
+            ensureDefaultProfile();
             migrateProfileColors();
             save();
         }
