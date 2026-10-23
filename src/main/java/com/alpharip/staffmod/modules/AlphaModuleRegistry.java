@@ -41,7 +41,7 @@ public final class AlphaModuleRegistry {
         quality.addFeature(new AlphaModuleFeature("control-center", "Alpha Control Center", "Central place for AlphaClient controls.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("keybind-manager", "Keybind Manager", "Configure keybinds.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("config-profiles", "Config Profiles", "Maintain named configuration profiles.", PermissionService.Rank.PUBLIC, false));
-        quality.addFeature(new AlphaModuleFeature("session-timer", "Session Timer", "Track the current play session.", PermissionService.Rank.PUBLIC, false));
+        quality.addFeature(new AlphaModuleFeature("session-timer", "Session Timer", "Track elapsed time in the current world session.", PermissionService.Rank.PUBLIC, true));
         quality.addFeature(new AlphaModuleFeature("feature-flags", "Alpha Feature Flags", "Control experimental feature availability.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("mod-toggle-menu", "Mod Toggle Menu", "Quickly enable or disable modules.", PermissionService.Rank.PUBLIC, false));
         MODULES.add(quality);
