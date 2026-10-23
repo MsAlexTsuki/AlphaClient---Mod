@@ -238,12 +238,13 @@ public final class PermissionService {
     /** StaffMods is available to staff ranks or accounts with an explicit staff-mod grant. */
     public static boolean hasStaffModsAccess() {
         Boolean commandOverride = getCommandPermissionOverride("staffmods.open");
-        if (commandOverride != null) return commandOverride.booleanValue();
+        if (Boolean.TRUE.equals(commandOverride)) return true;
         if (commandPermissionsVerified) {
             for (java.util.Map.Entry<String, Boolean> entry : verifiedCommandPermissions.entrySet()) {
                 if (entry.getKey().startsWith("staffmods.") && Boolean.TRUE.equals(entry.getValue())) return true;
             }
         }
+        if (commandOverride != null) return false;
         if (hasAccess(Rank.T_MOD)) return true;
         if (!modEntitlementsVerified) return false;
         for (java.util.Map.Entry<String, Boolean> entry : verifiedModPermissions.entrySet()) {
