@@ -1,19 +1,22 @@
 package com.alpharip.staffmod.gui;
 
+import com.alpharip.staffmod.quality.FullbrightMod;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 
-/** Browser for the planned AlphaClient Quality of Life features. */
+/** Browser for AlphaClient Quality of Life features. */
 public final class QualityGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int AFK_TIMER = 2;
-    private static final int AFK_TIMER_INDEX = 6;
+    private static final int FULLBRIGHT = 3;
+    private static final int AFK_TIMER_INDEX = 7;
+    private static final int FULLBRIGHT_INDEX = 0;
     private static final int ACCENT = 0xFFFFD866;
     private static final String[] FEATURES = {
-            "Alpha Module Manager", "Playtime Tracker", "Auto GG", "Keybind Profiles",
+            "Fullbright", "Alpha Module Manager", "Playtime Tracker", "Auto GG", "Keybind Profiles",
             "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Mod Profiles",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
             "Alpha Update Checker", "Alpha Control Center", "Keybind Manager",
@@ -40,6 +43,12 @@ public final class QualityGui extends AlphaGuiScreen {
         int maxScroll = Math.max(0, FEATURES.length - visibleRows);
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
         buttonList.add(new GuiButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        if (FULLBRIGHT_INDEX >= scrollOffset && FULLBRIGHT_INDEX < scrollOffset + visibleRows) {
+            int fullbrightY = panelTop + 68 + (FULLBRIGHT_INDEX - scrollOffset) * 20;
+            buttonList.add(new AlphaButton(FULLBRIGHT, panelLeft + 10, fullbrightY,
+                    panelRight - panelLeft - 20, 17,
+                    "Fullbright: " + (FullbrightMod.isEnabled() ? "ON" : "OFF"), true));
+        }
         if (AFK_TIMER_INDEX >= scrollOffset && AFK_TIMER_INDEX < scrollOffset + visibleRows) {
             int timerY = panelTop + 68 + (AFK_TIMER_INDEX - scrollOffset) * 20;
             buttonList.add(new AlphaButton(AFK_TIMER, panelLeft + 10, timerY, panelRight - panelLeft - 20, 17,
@@ -56,13 +65,11 @@ public final class QualityGui extends AlphaGuiScreen {
         drawCenteredString(fontRendererObj, "QUALITY OF LIFE FEATURES", width / 2, panelTop + 30, ACCENT);
         drawString(fontRendererObj, "Features and roadmap ideas", panelLeft + 12, panelTop + 49, 0xFFB8BDC8);
 
-        int listTop = panelTop + 68;
-        int listBottom = panelBottom - 38;
         int rowHeight = 20;
         for (int i = scrollOffset; i < FEATURES.length && i < scrollOffset + visibleRows; i++) {
-            int y = listTop + (i - scrollOffset) * rowHeight;
-            if (i == AFK_TIMER_INDEX) {
-                // This roadmap entry is implemented and opens its live settings.
+            int y = panelTop + 68 + (i - scrollOffset) * rowHeight;
+            if (i == AFK_TIMER_INDEX || i == FULLBRIGHT_INDEX) {
+                // These entries have live controls rather than roadmap labels.
                 continue;
             }
             drawRect(panelLeft + 10, y, panelRight - 10, y + 17, 0xB5161820);
@@ -84,6 +91,9 @@ public final class QualityGui extends AlphaGuiScreen {
             mc.displayGuiScreen(parent);
         } else if (button.id == AFK_TIMER) {
             mc.displayGuiScreen(new AfkTimerSettingsGui(this));
+        } else if (button.id == FULLBRIGHT) {
+            FullbrightMod.setEnabled(!FullbrightMod.isEnabled());
+            initGui();
         }
     }
 
