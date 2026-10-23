@@ -86,6 +86,26 @@ public final class DeveloperGui extends AlphaGuiScreen {
     }
 
     @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        // Dispatch this screen's buttons directly. On this custom overlay the
+        // standard GuiScreen button dispatch was not reliably reaching the mode
+        // toggle in the user's runtime, leaving the status permanently DISABLED.
+        if (mouseButton == 0) {
+            for (int i = 0; i < buttonList.size(); i++) {
+                GuiButton button = (GuiButton) buttonList.get(i);
+                if (button != null && button.visible && button.enabled
+                        && mouseX >= button.xPosition && mouseY >= button.yPosition
+                        && mouseX < button.xPosition + button.width
+                        && mouseY < button.yPosition + button.height) {
+                    actionPerformed(button);
+                    return;
+                }
+            }
+        }
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+    }
+
+    @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (!hasDeveloperAccess()) {
             DeveloperModeState.disable();
