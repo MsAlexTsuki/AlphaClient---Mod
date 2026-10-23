@@ -15,10 +15,19 @@ public final class DeveloperGui extends AlphaGuiScreen {
     private static final int ACCENT = 0xFFFFD866;
 
     private final net.minecraft.client.gui.GuiScreen parent;
+    // The StaffMods menu has already authorized this folder before constructing
+    // the screen. Keep that decision for the lifetime of this screen so a second,
+    // narrower rank check cannot immediately reject the click.
+    private final boolean folderAccessGranted;
     private int panelLeft, panelTop, panelWidth, panelHeight;
 
     public DeveloperGui(net.minecraft.client.gui.GuiScreen parent) {
+        this(parent, false);
+    }
+
+    public DeveloperGui(net.minecraft.client.gui.GuiScreen parent, boolean folderAccessGranted) {
         this.parent = parent;
+        this.folderAccessGranted = folderAccessGranted;
     }
 
     private boolean isFounder() {
@@ -32,7 +41,7 @@ public final class DeveloperGui extends AlphaGuiScreen {
         // The Developer rank itself grants access to Developer Mode.
         // Founder access is unconditional; don't let a stale/explicit command
         // permission deny the rank's own folder after the menu has allowed it.
-        return isFounder() || developerRank;
+        return folderAccessGranted || isFounder() || developerRank;
     }
 
     private boolean canOpenTool(String permission) {
