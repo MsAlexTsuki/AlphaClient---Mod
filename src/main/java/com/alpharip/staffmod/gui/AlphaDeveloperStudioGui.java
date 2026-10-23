@@ -1,5 +1,6 @@
 package com.alpharip.staffmod.gui;
 
+import com.alpharip.staffmod.developer.DeveloperDiagnostics;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.permissions.PermissionService;
@@ -11,6 +12,7 @@ import org.lwjgl.input.Keyboard;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.File;
 
 /**
  * Restricted Alpha Developer Studio entry point for Developer, Owner and Founder.
@@ -21,6 +23,10 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
     private static final int TOOL_BASE = 100;
     private static final int TOOL_COUNT = 17;
     private static final int ACCENT = 0xFFFFD866;
+    private static final int RUN_TESTS = 20;
+    private static final int TOGGLE_TEST = 21;
+    private static final int TOGGLE_SANDBOX = 22;
+    private static final int EXPORT_BUNDLE = 23;
 
     private static final String[] TOOLS = {
         "Developer Console",
@@ -68,6 +74,8 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
     private int listTop, listBottom;
     private int scrollOffset;
     private String status = "Developer workspace ready.";
+    private String paletteQuery = "";
+    private int reportScroll;
 
     public AlphaDeveloperStudioGui(GuiScreen parent) {
         this.parent = parent;
@@ -105,6 +113,12 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             buttonList.add(new AlphaButton(TOOL_BASE + i, listX, listTop + row * rowHeight,
                     listWidth, 20, TOOLS[i], i == selectedTool));
         }
+        buttonList.add(new AlphaButton(RUN_TESTS, panelLeft + 14, panelTop + panelHeight - 58, 84, 20, "RUN TESTS"));
+        buttonList.add(new AlphaButton(TOGGLE_TEST, panelLeft + 104, panelTop + panelHeight - 58, 84, 20,
+                DeveloperDiagnostics.isTestMode() ? "TEST: ON" : "TEST: OFF"));
+        buttonList.add(new AlphaButton(TOGGLE_SANDBOX, panelLeft + 194, panelTop + panelHeight - 58, 100, 20,
+                DeveloperDiagnostics.isSandboxMode() ? "SANDBOX: ON" : "SANDBOX: OFF"));
+        buttonList.add(new AlphaButton(EXPORT_BUNDLE, panelLeft + 300, panelTop + panelHeight - 58, 112, 20, "EXPORT REPORT"));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94,
                 panelTop + panelHeight - 31, 80, 20, "BACK"));
     }
@@ -119,6 +133,33 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         if (button == null) return;
         if (button.id == BACK) {
             mc.displayGuiScreen(parent);
+            return;
+        }
+        if (button.id == RUN_TESTS) {
+            status = DeveloperDiagnostics.runTests().replace("\\n", " ");
+            reportScroll = 0;
+            return;
+        }
+        if (button.id == TOGGLE_TEST) {
+            DeveloperDiagnostics.setTestMode(!DeveloperDiagnostics.isTestMode());
+            status = "Developer Test Mode " + (DeveloperDiagnostics.isTestMode() ? "enabled." : "disabled.");
+            initGui();
+            return;
+        }
+        if (button.id == TOGGLE_SANDBOX) {
+            DeveloperDiagnostics.setSandboxMode(!DeveloperDiagnostics.isSandboxMode());
+            status = "Sandbox flag " + (DeveloperDiagnostics.isSandboxMode() ? "enabled." : "disabled.") + " (isolated diagnostics only).";
+            initGui();
+            return;
+        }
+        if (button.id == EXPORT_BUNDLE) {
+            try {
+                File file = DeveloperDiagnostics.exportDiagnosticBundle();
+                status = "Diagnostic bundle saved: " + file.getName();
+            } catch (Exception error) {
+                DeveloperDiagnostics.captureException("Diagnostic Bundle Export", error);
+                status = "Export failed: " + error.getMessage();
+            }
             return;
         }
         if (button.id >= TOOL_BASE && button.id < TOOL_BASE + TOOL_COUNT) {
@@ -189,31 +230,84 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         drawString(fontRendererObj, "Mod permissions verified: " + PermissionService.areModEntitlementsVerified(), detailX, y, 0xFFF0F1F4);
         y += 18;
 
-        if (selectedTool == 8 || selectedTool == 7 || selectedTool == 9) {
-            drawString(fontRendererObj, "REGISTERED ALPHA MODULES", detailX, y, 0xFFB8BDC8);
+        String report = getSelectedReport();
+        if (selectedTool == 1) {
+            drawString(fontRendererObj, "Search: " + (paletteQuery.isEmpty() ? "(type to filter actions)" : paletteQuery), detailX, y, 0xFFB8BDC8);
             y += 14;
-            List<AlphaModule> modules = AlphaModuleRegistry.getAll();
-            int maxLines = Math.max(0, (bottom - 47 - y) / 12);
-            for (int i = 0; i < modules.size() && i < maxLines; i++) {
-                AlphaModule module = modules.get(i);
-                String line = module.getName() + "  [" + module.getId() + "]  "
-                        + module.getCategory().name() + "  " + (module.isUnlocked() ? "UNLOCKED" : "LOCKED");
-                drawString(fontRendererObj, clip(line, detailWidth), detailX, y, module.isUnlocked() ? 0xFF9CE2AC : 0xFFB8BDC8);
-                y += 12;
-            }
-            if (modules.size() > maxLines) {
-                drawString(fontRendererObj, (modules.size() - maxLines) + " additional module(s) not shown.",
-                        detailX, Math.min(bottom - 48, y), 0xFFB8BDC8);
-            }
-        } else {
-            drawString(fontRendererObj, "Workspace status: catalogue entry selected", detailX, y, 0xFFB8BDC8);
-            y += 14;
-            drawWrapped("This entry is registered in the suite. Its dedicated diagnostic workflow is not yet wired into this first workspace build.",
-                    detailX, y, detailWidth, 0xFFFFC56B, 3);
+        }
+        drawString(fontRendererObj, "REPORT / LIVE OUTPUT", detailX, y, 0xFFB8BDC8);
+        y += 14;
+        List<String> lines = wrapReport(report, detailWidth);
+        int maxLines = Math.max(1, (bottom - 50 - y) / 10);
+        int start = Math.min(reportScroll, Math.max(0, lines.size() - maxLines));
+        int shown = 0;
+        for (int i = start; i < lines.size() && shown < maxLines; i++, shown++) {
+            drawString(fontRendererObj, clip(lines.get(i), detailWidth), detailX, y, 0xFFE1E4EA);
+            y += 10;
+        }
+        if (lines.size() > maxLines) {
+            drawString(fontRendererObj, "Use Page Up / Page Down to scroll output (" + lines.size() + " lines)",
+                    detailX, bottom - 46, 0xFFB8BDC8);
         }
 
         drawString(fontRendererObj, status, panelLeft + 14, bottom - 27, 0xFF9CE2AC);
         super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+
+    private String getSelectedReport() {
+        switch (selectedTool) {
+            case 0: return "Alpha Developer Console\\n" + join(DeveloperDiagnostics.logs()) + "\\nType /alphaclient to access client commands. Use RUN TESTS and EXPORT REPORT below.";
+            case 1:
+                StringBuilder palette = new StringBuilder("Available actions (type to filter):\\n");
+                for (int i = 0; i < TOOLS.length; i++) {
+                    if (TOOLS[i].toLowerCase().contains(paletteQuery.toLowerCase())) palette.append("- ").append(TOOLS[i]).append("\\n");
+                }
+                palette.append("\\nActions: run tests, toggle test/sandbox mode, export diagnostic bundle.");
+                return palette.toString();
+            case 2: return "Recent client events\\n" + join(DeveloperDiagnostics.events());
+            case 3: return "Debug overlay is controlled by the DEBUG OVERLAY button below.\\n" + DeveloperDiagnostics.profilerReport();
+            case 4: return "TEST MODE: " + DeveloperDiagnostics.isTestMode() + "\\n" + DeveloperDiagnostics.runTests();
+            case 5: return "SANDBOX MODE: " + DeveloperDiagnostics.isSandboxMode() + "\\nSandbox is an isolated developer flag; it does not alter live module/config state.";
+            case 6: return DeveloperDiagnostics.profilerReport();
+            case 7: return DeveloperDiagnostics.modReport();
+            case 8: return DeveloperDiagnostics.moduleReport();
+            case 9: return DeveloperDiagnostics.dependencyReport();
+            case 10: return DeveloperDiagnostics.configReport();
+            case 11: return DeveloperDiagnostics.errorReport() + "\\n\\nERROR DATABASE (session memory)\\n" + join(DeveloperDiagnostics.errors());
+            case 12: return "Captured exceptions\\n" + join(DeveloperDiagnostics.exceptions());
+            case 13: return "Captured stack traces\\n" + join(DeveloperDiagnostics.stackTraces());
+            case 14: return "Client logs\\n" + join(DeveloperDiagnostics.logs());
+            case 15: return "Diagnostic bundle export uses the EXPORT REPORT button below.\\nExports locally to Minecraft/logs; no data is uploaded.\\n" + DeveloperDiagnostics.profilerReport();
+            default: return "Alpha Developer Studio\\n17 registered developer tools.\\n" + DeveloperDiagnostics.profilerReport();
+        }
+    }
+
+    private String join(List<String> values) {
+        StringBuilder out = new StringBuilder();
+        for (String value : values) out.append(value).append("\\n");
+        return out.toString();
+    }
+
+    private List<String> wrapReport(String report, int maxWidth) {
+        List<String> lines = new ArrayList<String>();
+        if (report == null) return lines;
+        for (String paragraph : report.split("\\n", -1)) {
+            if (paragraph.isEmpty()) {
+                lines.add("");
+                continue;
+            }
+            StringBuilder line = new StringBuilder();
+            for (String word : paragraph.split(" ")) {
+                String candidate = line.length() == 0 ? word : line + " " + word;
+                if (fontRendererObj.getStringWidth(candidate) > maxWidth && line.length() > 0) {
+                    lines.add(line.toString());
+                    line = new StringBuilder(word);
+                } else line = new StringBuilder(candidate);
+            }
+            if (line.length() > 0) lines.add(line.toString());
+        }
+        return lines;
     }
 
     private int drawWrapped(String text, int x, int y, int maxWidth, int color, int maxLines) {
@@ -258,6 +352,14 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             mc.displayGuiScreen(parent);
             return;
         }
+        if (selectedTool == 1 && keyCode != Keyboard.KEY_ESCAPE && keyCode != Keyboard.KEY_RETURN) {
+            if (keyCode == Keyboard.KEY_BACK) {
+                if (!paletteQuery.isEmpty()) paletteQuery = paletteQuery.substring(0, paletteQuery.length() - 1);
+            } else if (!Character.isISOControl(typedChar)) {
+                paletteQuery += typedChar;
+            }
+            return;
+        }
         if (keyCode == Keyboard.KEY_UP) {
             scrollOffset = Math.max(0, scrollOffset - 1);
             initGui();
@@ -267,6 +369,14 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             int visibleRows = Math.max(1, (listBottom - listTop) / 23);
             scrollOffset = Math.min(Math.max(0, TOOLS.length - visibleRows), scrollOffset + 1);
             initGui();
+            return;
+        }
+        if (keyCode == Keyboard.KEY_PRIOR) {
+            reportScroll = Math.max(0, reportScroll - 8);
+            return;
+        }
+        if (keyCode == Keyboard.KEY_NEXT) {
+            reportScroll += 8;
             return;
         }
         super.keyTyped(typedChar, keyCode);
