@@ -53,6 +53,8 @@ public final class PermissionService {
     private static volatile Set<String> verifiedModEntitlements = Collections.emptySet();
     private static volatile java.util.Map<String, Boolean> verifiedModPermissions = Collections.emptyMap();
     private static volatile boolean modEntitlementsVerified = false;
+    private static volatile java.util.Map<String, Boolean> verifiedCommandPermissions = Collections.emptyMap();
+    private static volatile boolean commandPermissionsVerified = false;
 
     private PermissionService() {
     }
@@ -180,6 +182,42 @@ public final class PermissionService {
         return modEntitlementsVerified;
     }
 
+    /** Installs only explicitly configured command permissions returned by the authenticated API. */
+    public static void setVerifiedCommandPermissions(java.util.Map<String, Boolean> permissions) {
+        if (permissions == null) {
+            clearVerifiedCommandPermissions();
+            return;
+        }
+        java.util.Map<String, Boolean> safe = new java.util.HashMap<String, Boolean>();
+        for (java.util.Map.Entry<String, Boolean> entry : permissions.entrySet()) {
+            if (entry.getKey() != null && !entry.getKey().trim().isEmpty() && entry.getValue() != null) {
+                safe.put(entry.getKey(), entry.getValue());
+            }
+        }
+        verifiedCommandPermissions = Collections.unmodifiableMap(safe);
+        commandPermissionsVerified = true;
+    }
+
+    public static void clearVerifiedCommandPermissions() {
+        verifiedCommandPermissions = Collections.emptyMap();
+        commandPermissionsVerified = false;
+    }
+
+    /** Returns null when no server-side override/rank grant is configured for this permission. */
+    public static Boolean getCommandPermissionOverride(String permissionKey) {
+        if (!commandPermissionsVerified || permissionKey == null) return null;
+        return verifiedCommandPermissions.get(permissionKey);
+    }
+
+    public static boolean hasCommandPermission(String permissionKey, boolean fallbackAllowed) {
+        Boolean explicit = getCommandPermissionOverride(permissionKey);
+        return explicit == null ? fallbackAllowed : explicit.booleanValue();
+    }
+
+    public static boolean areCommandPermissionsVerified() {
+        return commandPermissionsVerified;
+    }
+
     public static Rank getEffectiveRank() {
         if (isOfflineTestSession()) {
             return Rank.FOUNDER;
@@ -199,6 +237,8 @@ public final class PermissionService {
 
     /** StaffMods is available to staff ranks or accounts with an explicit staff-mod grant. */
     public static boolean hasStaffModsAccess() {
+        Boolean commandOverride = getCommandPermissionOverride("staffmods.open");
+        if (commandOverride != null) return commandOverride.booleanValue();
         if (hasAccess(Rank.T_MOD)) return true;
         if (!modEntitlementsVerified) return false;
         for (java.util.Map.Entry<String, Boolean> entry : verifiedModPermissions.entrySet()) {
