@@ -31,19 +31,12 @@ public final class DeveloperToolGui extends AlphaGuiScreen {
     }
 
     private boolean hasAccess() {
-        if ((!isFounder() && (!PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
-                && !Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"))))
-                || (!isFounder() && !PermissionService.hasCommandPermission("staffmods.developer", true))
-                || !DeveloperModeState.isEnabled()) return false;
-        String key;
-        switch (page) {
-            case RANK: key = "staffmods.developer.rank_inspector"; break;
-            case VERIFICATION: key = "staffmods.developer.verification"; break;
-            case PERMISSIONS: key = "staffmods.developer.permission_inspector"; break;
-            case MODULES: key = "staffmods.developer.module_inspector"; break;
-            default: return false;
-        }
-        return isFounder() || PermissionService.hasCommandPermission(key, true);
+        boolean developerRank = PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+                || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"));
+        // Keep entry, toggle, and tool pages on the same access rule. Once a user
+        // can open Developer Mode, a stale per-tool denial must not bounce them
+        // back to the parent screen.
+        return DeveloperModeState.isEnabled() && (isFounder() || developerRank);
     }
 
     @Override
