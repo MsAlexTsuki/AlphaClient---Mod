@@ -22,6 +22,8 @@ public final class FullbrightMod {
     private static boolean originalGammaCaptured;
     private static float originalGamma;
     private static int lastObservedKeyCode = Integer.MIN_VALUE;
+    private static boolean profileStatePending;
+    private static boolean pendingEnabledState;
 
     private static KeyBinding toggleKey;
 
@@ -49,7 +51,11 @@ public final class FullbrightMod {
             KeyBinding.resetKeyBindingArrayAndHash();
             lastObservedKeyCode = keyCode;
         }
-        setEnabled(shouldEnable);
+
+        // Profile loading can happen before Minecraft's GameSettings are ready.
+        // Defer applying the saved enabled state until the first usable client tick.
+        pendingEnabledState = shouldEnable;
+        profileStatePending = true;
     }
 
     public static void setEnabled(boolean shouldEnable) {
@@ -84,6 +90,13 @@ public final class FullbrightMod {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) {
             return;
+        }
+
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (profileStatePending && minecraft != null && minecraft.gameSettings != null) {
+            boolean shouldEnable = pendingEnabledState;
+            profileStatePending = false;
+            setEnabled(shouldEnable);
         }
 
         int currentKeyCode = getToggleKeyCode();
