@@ -252,8 +252,10 @@ public final class SupabaseCommunityService {
         // Command-level permissions are synchronized from the same Alpha Account backend.
         // Unconfigured permissions are omitted so existing rank/module checks remain the fallback.
         try {
+            JsonObject commandPayload = new JsonObject();
+            commandPayload.addProperty("action", "my_permissions");
             JsonObject commandResponse = requestJson("POST", "/functions/v1/manage-client-permissions",
-                    token, "{\\"action\\":\\"my_permissions\\"}");
+                    token, commandPayload.toString());
             JsonArray commandRows = commandResponse.has("permissions") && commandResponse.get("permissions").isJsonArray()
                     ? commandResponse.getAsJsonArray("permissions") : new JsonArray();
             Map<String, Boolean> commandPermissions = new HashMap<String, Boolean>();
