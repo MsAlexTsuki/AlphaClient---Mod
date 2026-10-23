@@ -126,6 +126,7 @@ public final class AlphaPermsGui extends GuiScreen {
             }
             SupabaseCommunityService.manageCommandPermissions(request);
             status = "Updated " + selected.key + " for " + target + ".";
+            busy = false;
             loadTarget();
         } catch (Exception exception) {
             status = message(exception);
