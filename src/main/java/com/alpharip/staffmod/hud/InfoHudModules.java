@@ -124,8 +124,8 @@ public final class InfoHudModules {
     public static int getPotionEditorHeight() {
         load();
         Minecraft mc = Minecraft.getMinecraft();
-        int rows = mc == null || mc.thePlayer == null ? 1 : mc.thePlayer.getActivePotionEffects().size();
-        return Math.max(22, Math.min(180, rows * 22));
+        int rows = mc == null || mc.thePlayer == null ? 3 : mc.thePlayer.getActivePotionEffects().size();
+        return Math.max(66, Math.min(180, rows * 22));
     }
     public static int getPotionMode() { load(); return potionMode; }
     public static void setPotionPosition(int x, int y) { load(); potionX = Math.max(0, x); potionY = Math.max(0, y); save(); }
@@ -161,7 +161,7 @@ public final class InfoHudModules {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null || mc.fontRendererObj == null || mc.gameSettings.showDebugInfo) return;
         if (preview || armorEnabled()) renderArmor(mc);
-        if (preview || potionEnabled()) renderPotions(mc);
+        if (preview || potionEnabled()) renderPotions(mc, preview);
     }
 
     private static void renderArmor(Minecraft mc) {
@@ -203,8 +203,12 @@ public final class InfoHudModules {
         return mc.fontRendererObj.trimStringToWidth(value, maxWidth - mc.fontRendererObj.getStringWidth("…")) + "…";
     }
 
-    private static void renderPotions(Minecraft mc) {
+    private static void renderPotions(Minecraft mc, boolean preview) {
         Collection<PotionEffect> effects = mc.thePlayer.getActivePotionEffects();
+        if (preview && effects.isEmpty()) {
+            renderPotionPreview(mc);
+            return;
+        }
         int row = 0;
         for (PotionEffect effect : effects) {
             Potion potion = Potion.potionTypes[effect.getPotionID()];
@@ -222,6 +226,26 @@ public final class InfoHudModules {
             String level = effect.getAmplifier() > 0 ? " " + roman(effect.getAmplifier() + 1) : "";
             String line = net.minecraft.util.StatCollector.translateToLocal(potion.getName()) + level + "  " + Potion.getDurationString(effect);
             mc.fontRendererObj.drawStringWithShadow(fit(mc, line, 190), x + 20, y + 5, potionColor);
+            row++;
+        }
+    }
+
+    private static void renderPotionPreview(Minecraft mc) {
+        Potion[] samples = new Potion[] { Potion.moveSpeed, Potion.regeneration, Potion.poison };
+        String[] names = new String[] { "Speed", "Regeneration", "Poison" };
+        int row = 0;
+        for (int i = 0; i < samples.length; i++) {
+            Potion potion = samples[i];
+            if (potion == null) continue;
+            boolean bad = potion.isBadEffect();
+            if (potionMode == MODE_BUFFS && bad) continue;
+            if (potionMode == MODE_DEBUFFS && !bad) continue;
+            int x = potionX, y = potionY + row * 22;
+            drawPotionIcon(mc, potion, x, y);
+            if (potionMode != MODE_ICONS) {
+                String line = names[i] + "  1:23";
+                mc.fontRendererObj.drawStringWithShadow(fit(mc, line, 190), x + 20, y + 5, potionColor);
+            }
             row++;
         }
     }
