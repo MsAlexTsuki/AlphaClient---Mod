@@ -69,7 +69,8 @@ public class BhopMode {
         EntityPlayer player = mc.thePlayer;
 
         // Require verified permission at runtime. Saved preferences remain intact while locked.
-        if (!PermissionService.hasModAccess("staff.bhop")) return;
+        if (!PermissionService.hasModAccess("staff.bhop")
+                && !PermissionService.hasCommandPermission("command.bhop", false)) return;
         if (!enabled) return;
 
         if (!player.capabilities.isCreativeMode) return;
