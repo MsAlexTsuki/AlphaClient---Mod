@@ -58,7 +58,7 @@ public final class WTapSettingsGui extends AlphaGuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
-        if (!PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
+        if (!hasFounderAccess()) {
             mc.displayGuiScreen(parent);
             return;
         }
