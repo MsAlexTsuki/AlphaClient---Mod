@@ -616,19 +616,54 @@ public final class AlphaClientCommand extends CommandBase {
     }
 
     private void sendHelp(ICommandSender sender) {
-        reply(sender, "AlphaClient command core:");
+        reply(sender, "AlphaClient commands available to your current rank:");
         reply(sender, "/alphaclient help | modules | settings <module>");
         reply(sender, "/alphaclient module <module> <on|off|toggle>");
-        reply(sender, "/alphaclient fps|cps <background|color|position|mode> ...");
-        reply(sender, "/alphaclient bhop <on|off|toggle|speed <1-20>|shiftup <on|off>|name <text>|color <#RRGGBB>|settings>");
-        reply(sender, "/alphaclient wtap <on|off|toggle|delay|cooldown|mode|trigger|target|requirew|settings>");
-        reply(sender, "/alphaclient fullbright <on|off|toggle>");
-        reply(sender, "/alphaclient legacypvp <feature> <on|off>");
-        reply(sender, "HUDs: /fpshud /cpshud /playtime /sessiontimer /afktimer.");
-        reply(sender, "Other shortcuts: /bhop /wtap /fullbright /nameviewer /legacypvp /quality.");
-        reply(sender, "StaffMods GUI: /staffmods. Open a StaffMods folder with /staffmods <folder>. /general opens the regular Mods menu on GENERAL.");
-        reply(sender, "Staff folder commands: /staffgeneral /stafftmod /staffmod /staffsrmod /staffadmin /staffsradmin /staffmanagement /staffplatformadmin /staffmanager /staffowner /stafffounder.");
-        reply(sender, "Other folder commands: /beta /donator /scout /rogue /elite /alpha /alphaplus.");
+        reply(sender, "/general opens Mods -> General.");
+        if (PermissionService.hasAccess(PermissionService.Rank.BETA)) {
+            reply(sender, "/beta opens Mods -> Beta.");
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.DONATOR)) {
+            reply(sender, "/donator opens Mods -> Donator.");
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.SCOUT)) {
+            reply(sender, "/scout opens Mods -> Scout.");
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.ROGUE)) {
+            reply(sender, "/rogue opens Mods -> Rogue.");
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.ELITE)) {
+            reply(sender, "/elite opens Mods -> Elite.");
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.ALPHA)) {
+            reply(sender, "/alpha opens Mods -> Alpha.");
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.ALPHA_PLUS)) {
+            reply(sender, "/alphaplus opens Mods -> Alpha+.");
+        }
+        reply(sender, "Available shortcuts: /fpshud /cpshud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality.");
+        if (hasBhopAccess()) {
+            reply(sender, "BHOP: /bhop [settings|on|off|toggle|speed|shiftup|name|color].");
+        }
+        if (hasWTapAccess()) {
+            reply(sender, "W-Tap: /wtap [settings|on|off|toggle|delay|cooldown|mode|trigger|target|requirew].");
+        }
+        if (PermissionService.hasStaffModsAccess()) {
+            reply(sender, "StaffMods: /staffmods opens the StaffMods GUI; /staffgeneral opens StaffMods -> General.");
+            if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) reply(sender, "Staff folder: /stafftmod.");
+            if (PermissionService.hasAccess(PermissionService.Rank.MOD)) reply(sender, "Staff folder: /staffmod.");
+            if (PermissionService.hasAccess(PermissionService.Rank.SR_MOD)) reply(sender, "Staff folder: /staffsrmod.");
+            if (PermissionService.hasAccess(PermissionService.Rank.ADMIN)) reply(sender, "Staff folder: /staffadmin.");
+            if (PermissionService.hasAccess(PermissionService.Rank.SR_ADMIN)) reply(sender, "Staff folder: /staffsradmin.");
+            if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) reply(sender, "Staff folder: /staffplatformadmin.");
+            if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) reply(sender, "Staff folder: /staffmanager.");
+            if (PermissionService.hasAccess(PermissionService.Rank.OWNER)) reply(sender, "Staff folder: /staffowner.");
+            if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) reply(sender, "Staff folder: /stafffounder.");
+            if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
+                    || PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+                reply(sender, "Staff folder: /staffmanagement.");
+            }
+        }
     }
 
     private String normalizeModuleId(String id) {
