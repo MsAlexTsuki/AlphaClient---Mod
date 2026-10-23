@@ -209,6 +209,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
     }
 
     private boolean isVisibleRank(PermissionService.Rank rank) {
+        if (rank == PermissionService.Rank.DEVELOPER) return PermissionService.hasAccess(PermissionService.Rank.DEVELOPER);
         Boolean openOverride = PermissionService.getCommandPermissionOverride("staffmods.open");
         Boolean explicitFolderPermission = PermissionService.getCommandPermissionOverride(folderPermissionKey(rank));
         if (Boolean.FALSE.equals(openOverride)) return Boolean.TRUE.equals(explicitFolderPermission);
@@ -515,7 +516,10 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         if (openFolderRank == null && !managementSubfolders
                 && button.id >= CATEGORY_BASE && button.id < CATEGORY_BASE + RANKS.length) {
             PermissionService.Rank rank = RANKS[button.id - CATEGORY_BASE];
-            if (rank == PermissionService.Rank.PUBLIC || hasFolderAccess(rank)) {
+            if (rank == PermissionService.Rank.PUBLIC
+                    || (rank == PermissionService.Rank.DEVELOPER
+                        ? PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+                        : hasFolderAccess(rank))) {
                 if (rank == PermissionService.Rank.DEVELOPER) {
                     if (PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)) {
                         mc.displayGuiScreen(new DeveloperGui(this));
