@@ -100,6 +100,8 @@ public final class InfoHudModules {
     public static int getArmorX() { load(); return armorX; }
     public static int getArmorY() { load(); return armorY; }
     public static int getArmorColor() { load(); return armorColor; }
+    public static int getArmorEditorWidth() { load(); return armorLayout == 0 ? 440 : 200; }
+    public static int getArmorEditorHeight() { load(); return armorLayout == 0 ? 30 : 110; }
     public static int getArmorLayout() { load(); return armorLayout; }
     public static void setArmorPosition(int x, int y) { load(); armorX = Math.max(0, x); armorY = Math.max(0, y); save(); }
     public static void cycleArmorLayout() { load(); armorLayout = (armorLayout + 1) % 2; save(); }
@@ -109,6 +111,13 @@ public final class InfoHudModules {
     public static int getPotionX() { load(); return potionX; }
     public static int getPotionY() { load(); return potionY; }
     public static int getPotionColor() { load(); return potionColor; }
+    public static int getPotionEditorWidth() { load(); return potionMode == MODE_ICONS ? 18 : 210; }
+    public static int getPotionEditorHeight() {
+        load();
+        Minecraft mc = Minecraft.getMinecraft();
+        int rows = mc == null || mc.thePlayer == null ? 1 : mc.thePlayer.getActivePotionEffects().size();
+        return Math.max(22, Math.min(180, rows * 22));
+    }
     public static int getPotionMode() { load(); return potionMode; }
     public static void setPotionPosition(int x, int y) { load(); potionX = Math.max(0, x); potionY = Math.max(0, y); save(); }
     public static void cyclePotionMode() { load(); potionMode = (potionMode + 1) % 4; save(); }
