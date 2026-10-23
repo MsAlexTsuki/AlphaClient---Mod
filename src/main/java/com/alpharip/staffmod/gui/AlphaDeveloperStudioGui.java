@@ -76,6 +76,8 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
     private int scrollOffset;
     private String status = "Developer workspace ready.";
     private String paletteQuery = "";
+    private String commandInput = "";
+    private final List<String> consoleOutput = new ArrayList<String>();
     private int reportScroll;
 
     public AlphaDeveloperStudioGui(GuiScreen parent) {
@@ -102,6 +104,11 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
         listTop = panelTop + 62;
+        if (consoleOutput.isEmpty()) {
+            consoleOutput.add("Alpha Client Developer Console [Minecraft 1.8.9]");
+            consoleOutput.add("Type help to list available commands.");
+            consoleOutput.add("");
+        }
         listBottom = panelTop + panelHeight - 82;
 
         int listX = panelLeft + 14;
@@ -259,6 +266,11 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
                     detailX, bottom - 46, 0xFFB8BDC8);
         }
 
+        if (selectedTool == 0) {
+            drawRect(detailX - 4, bottom - 45, right - 10, bottom - 31, 0xFF17191E);
+            drawString(fontRendererObj, "alpha> " + commandInput + ((System.currentTimeMillis() / 500L) % 2 == 0 ? "_" : ""),
+                    detailX, bottom - 41, 0xFF9CE2AC);
+        }
         drawString(fontRendererObj, status, panelLeft + 14, bottom - 27, 0xFF9CE2AC);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
