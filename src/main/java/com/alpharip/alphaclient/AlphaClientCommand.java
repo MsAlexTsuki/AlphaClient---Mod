@@ -3,6 +3,7 @@ package com.alpharip.alphaclient;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.gui.AfkTimerSettingsGui;
+import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.BhopSettingsGui;
 import com.alpharip.staffmod.gui.CpsSettingsGui;
 import com.alpharip.staffmod.gui.FpsSettingsGui;
@@ -60,19 +61,6 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
 
-        if ("staff".equals(route)) {
-            if (args.length == 0) {
-                openStaffModsMenu(sender);
-                return;
-            }
-            if (args.length == 1 && !"help".equalsIgnoreCase(args[0])) {
-                openStaffFolder(sender, args[0]);
-                return;
-            }
-            reply(sender, "Usage: /staff [general|beta|tmod|mod|srmod|admin|sradmin|management|platformadmin|manager|owner|founder|donator|scout|rogue|elite|alpha|alphaplus]");
-            return;
-        }
-
         if ("staffmods".equals(route)) {
             if (args.length == 0) {
                 openStaffModsMenu(sender);
@@ -83,6 +71,12 @@ public final class AlphaClientCommand extends CommandBase {
                 return;
             }
             reply(sender, "Usage: /staffmods [general|beta|tmod|mod|srmod|admin|sradmin|management|platformadmin|manager|owner|founder|donator|scout|rogue|elite|alpha|alphaplus]");
+            return;
+        }
+
+        if ("general".equals(route)) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc != null) AlphaClient.openGuiFromCommand(new AlphaModMenu(mc.currentScreen));
             return;
         }
 
@@ -182,7 +176,7 @@ public final class AlphaClientCommand extends CommandBase {
 
     private String staffFolderAlias(String name) {
         if ("staffgeneral".equals(name)) return "general";
-        if ("staffbeta".equals(name)) return "beta";
+        if ("beta".equals(name)) return "beta";
         if ("stafftmod".equals(name)) return "tmod";
         if ("staffmod".equals(name)) return "mod";
         if ("staffsrmod".equals(name)) return "srmod";
@@ -193,12 +187,12 @@ public final class AlphaClientCommand extends CommandBase {
         if ("staffmanager".equals(name)) return "manager";
         if ("staffowner".equals(name)) return "owner";
         if ("stafffounder".equals(name)) return "founder";
-        if ("staffdonator".equals(name)) return "donator";
-        if ("staffscout".equals(name)) return "scout";
-        if ("staffrogue".equals(name)) return "rogue";
-        if ("staffelite".equals(name)) return "elite";
-        if ("staffalpha".equals(name)) return "alpha";
-        if ("staffalphaplus".equals(name)) return "alphaplus";
+        if ("donator".equals(name)) return "donator";
+        if ("scout".equals(name)) return "scout";
+        if ("rogue".equals(name)) return "rogue";
+        if ("elite".equals(name)) return "elite";
+        if ("alpha".equals(name)) return "alpha";
+        if ("alphaplus".equals(name)) return "alphaplus";
         return null;
     }
 
@@ -612,8 +606,9 @@ public final class AlphaClientCommand extends CommandBase {
         reply(sender, "/alphaclient legacypvp <feature> <on|off>");
         reply(sender, "HUDs: /fpshud /cpshud /playtime /sessiontimer /afktimer.");
         reply(sender, "Other shortcuts: /bhop /wtap /fullbright /nameviewer /legacypvp /quality.");
-        reply(sender, "StaffMods GUI: /staff or /staffmods. Open a folder with /staff <folder> or /staffmods <folder>.");
-        reply(sender, "Folder aliases: /staffgeneral /staffbeta /stafftmod /staffmod /staffsrmod /staffadmin /staffsradmin /staffmanagement /staffplatformadmin /staffmanager /staffowner /stafffounder /staffdonator /staffscout /staffrogue /staffelite /staffalpha /staffalphaplus.");
+        reply(sender, "StaffMods GUI: /staffmods. Open a StaffMods folder with /staffmods <folder>. /general opens the regular Mods menu on GENERAL.");
+        reply(sender, "Staff folder commands: /staffgeneral /stafftmod /staffmod /staffsrmod /staffadmin /staffsradmin /staffmanagement /staffplatformadmin /staffmanager /staffowner /stafffounder.");
+        reply(sender, "Other folder commands: /beta /donator /scout /rogue /elite /alpha /alphaplus.");
     }
 
     private String normalizeModuleId(String id) {
@@ -669,7 +664,7 @@ public final class AlphaClientCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args,
                                                 net.minecraft.util.BlockPos pos) {
         List<String> options = new ArrayList<String>();
-        if (("staff".equals(commandName) || "staffmods".equals(commandName)) && args.length == 1) {
+        if ("staffmods".equals(commandName) && args.length == 1) {
             String[] folders = {"general","beta","tmod","mod","srmod","admin","sradmin","management","platformadmin","manager","owner","founder","donator","scout","rogue","elite","alpha","alphaplus"};
             for (String folder : folders) options.add(folder);
         } else if ("alphaclient".equals(commandName)) {
