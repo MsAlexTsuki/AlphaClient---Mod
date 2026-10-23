@@ -305,6 +305,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             appendConsole("  help, clear, status, rank, permissions");
             appendConsole("  modules, mods, diagnostics, tests run");
             appendConsole("  profiler, logs, events, errors");
+            appendConsole("  exceptions, stacktraces");
             appendConsole("  report export, overlay toggle, sandbox status");
         } else if ("clear".equals(root)) {
             consoleOutput.clear();
@@ -339,6 +340,19 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             for (String line : DeveloperDiagnostics.events()) appendConsole(line);
         } else if ("errors".equals(root)) {
             for (String line : DeveloperDiagnostics.errors()) appendConsole(line);
+        } else if ("exceptions".equals(root) || "exception".equals(root)) {
+            selectedTool = 12;
+            List<String> captured = DeveloperDiagnostics.exceptions();
+            if (captured.isEmpty()) appendConsole("No exceptions captured in this session.");
+            else for (String line : captured) appendConsole(line);
+        } else if ("stacktraces".equals(root) || "stacktrace".equals(root) || "stacks".equals(root)) {
+            selectedTool = 13;
+            List<String> traces = DeveloperDiagnostics.stackTraces();
+            if (traces.isEmpty()) appendConsole("No stack traces captured in this session.");
+            else for (String trace : traces) {
+                for (String line : trace.split("\\n", -1)) appendConsole(line);
+                appendConsole("");
+            }
         } else if ("report".equals(root) && parts.length > 1 && "export".equals(parts[1])) {
             try {
                 File file = DeveloperDiagnostics.exportDiagnosticBundle();
