@@ -25,10 +25,15 @@ public final class DeveloperToolGui extends AlphaGuiScreen {
         this.page = page;
     }
 
+    private boolean isFounder() {
+        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.founder"));
+    }
+
     private boolean hasAccess() {
-        if (!PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+        if ((!isFounder() && (!PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
                 || !PermissionService.hasCommandPermission("staffmods.developer", true)
-                || !PermissionService.hasCommandPermission("staffmods.developer.mode", true)
+                || !PermissionService.hasCommandPermission("staffmods.developer.mode", true)))
                 || !DeveloperModeState.isEnabled()) return false;
         String key;
         switch (page) {
@@ -38,7 +43,7 @@ public final class DeveloperToolGui extends AlphaGuiScreen {
             case MODULES: key = "staffmods.developer.module_inspector"; break;
             default: return false;
         }
-        return PermissionService.hasCommandPermission(key, true);
+        return isFounder() || PermissionService.hasCommandPermission(key, true);
     }
 
     @Override
