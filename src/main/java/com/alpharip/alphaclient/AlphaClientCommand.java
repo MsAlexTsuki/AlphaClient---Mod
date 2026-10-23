@@ -184,7 +184,7 @@ public final class AlphaClientCommand extends CommandBase {
 
     private void handleProfileCommand(ICommandSender sender, String[] args) {
         if (args.length == 0) {
-            reply(sender, "Usage: /profile <name> | /profile create <name> | /profile edit <new name> | /profile delete <name>");
+            reply(sender, "Usage: /profile <name> | /profile create <name> | /profile edit <profile name> <new name> | /profile delete <name>");
             reply(sender, "Use /profiles to list available profiles.");
             return;
         }
@@ -205,17 +205,20 @@ public final class AlphaClientCommand extends CommandBase {
         }
 
         if ("edit".equals(action)) {
-            String newName = joinArgs(args, 1);
-            if (newName.isEmpty()) {
-                reply(sender, "Usage: /profile edit <new name>");
-                reply(sender, "This renames your currently selected profile.");
+            if (args.length < 3) {
+                reply(sender, "Usage: /profile edit <profile name> <new name>");
                 return;
             }
-            String oldName = ModuleProfileManager.getSelectedProfileName();
+            String oldName = args[1];
+            String newName = joinArgs(args, 2);
+            if (newName.isEmpty()) {
+                reply(sender, "Usage: /profile edit <profile name> <new name>");
+                return;
+            }
             if (ModuleProfileManager.renameProfile(oldName, newName)) {
-                reply(sender, "Renamed profile '" + oldName + "' to '" + ModuleProfileManager.getSelectedProfileName() + "'.");
+                reply(sender, "Renamed profile '" + oldName + "' to '" + newName + "'.");
             } else {
-                reply(sender, "Could not rename this profile. Default cannot be renamed, and profile names must be unique.");
+                reply(sender, "Could not rename profile '" + oldName + "'. It may not exist, Default cannot be renamed, or the new name is already in use.");
             }
             return;
         }
@@ -266,7 +269,7 @@ public final class AlphaClientCommand extends CommandBase {
 
     private void selectProfile(ICommandSender sender, String[] args) {
         if (args.length == 0) {
-            reply(sender, "Usage: /profile <name> | /profile create <name> | /profile edit <new name> | /profile delete <name>.");
+            reply(sender, "Usage: /profile <name> | /profile create <name> | /profile edit <profile name> <new name> | /profile delete <name>.");
             return;
         }
         StringBuilder requestedName = new StringBuilder();
