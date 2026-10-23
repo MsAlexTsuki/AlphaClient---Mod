@@ -26,8 +26,19 @@ public final class DeveloperToolGui extends AlphaGuiScreen {
     }
 
     private boolean hasAccess() {
-        return PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
-                && DeveloperModeState.isEnabled();
+        if (!PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+                || !PermissionService.hasCommandPermission("staffmods.developer", true)
+                || !PermissionService.hasCommandPermission("staffmods.developer.mode", true)
+                || !DeveloperModeState.isEnabled()) return false;
+        String key;
+        switch (page) {
+            case RANK: key = "staffmods.developer.rank_inspector"; break;
+            case VERIFICATION: key = "staffmods.developer.verification"; break;
+            case PERMISSIONS: key = "staffmods.developer.permission_inspector"; break;
+            case MODULES: key = "staffmods.developer.module_inspector"; break;
+            default: return false;
+        }
+        return PermissionService.hasCommandPermission(key, true);
     }
 
     @Override
