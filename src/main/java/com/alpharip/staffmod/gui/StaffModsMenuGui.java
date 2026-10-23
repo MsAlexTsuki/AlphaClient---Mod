@@ -56,6 +56,53 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         this.parent = parent;
     }
 
+    /**
+     * Opens one existing StaffMods folder from a client command.
+     * Folder access is checked here using the same checks as the visible folder browser.
+     */
+    public boolean openFolderCommand(String folderKey) {
+        if (!PermissionService.hasStaffModsAccess() || folderKey == null) return false;
+        String key = folderKey.toLowerCase(java.util.Locale.ROOT).replace("-", "").replace("_", "").replace(" ", "");
+        PermissionService.Rank rank;
+        if ("general".equals(key)) rank = PermissionService.Rank.PUBLIC;
+        else if ("beta".equals(key)) rank = PermissionService.Rank.BETA;
+        else if ("tmod".equals(key) || "trialmoderator".equals(key)) rank = PermissionService.Rank.T_MOD;
+        else if ("mod".equals(key) || "moderator".equals(key)) rank = PermissionService.Rank.MOD;
+        else if ("srmod".equals(key) || "seniormod".equals(key)) rank = PermissionService.Rank.SR_MOD;
+        else if ("admin".equals(key)) rank = PermissionService.Rank.ADMIN;
+        else if ("sradmin".equals(key) || "senioradmin".equals(key)) rank = PermissionService.Rank.SR_ADMIN;
+        else if ("management".equals(key)) {
+            if (!hasFolderAccess(PermissionService.Rank.MANAGEMENT)) return false;
+            managementSubfolders = true;
+            donatorSubfolders = false;
+            openFolderRank = null;
+            return true;
+        } else if ("platformadmin".equals(key) || "platadmin".equals(key)) rank = PermissionService.Rank.PLAT_ADMIN;
+        else if ("manager".equals(key)) rank = PermissionService.Rank.MANAGER;
+        else if ("owner".equals(key)) rank = PermissionService.Rank.OWNER;
+        else if ("founder".equals(key)) rank = PermissionService.Rank.FOUNDER;
+        else if ("donator".equals(key)) {
+            if (!isVisibleRank(PermissionService.Rank.DONATOR)) return false;
+            donatorSubfolders = true;
+            managementSubfolders = false;
+            openFolderRank = null;
+            return true;
+        } else if ("scout".equals(key)) rank = PermissionService.Rank.SCOUT;
+        else if ("rogue".equals(key)) rank = PermissionService.Rank.ROGUE;
+        else if ("elite".equals(key)) rank = PermissionService.Rank.ELITE;
+        else if ("alpha".equals(key)) rank = PermissionService.Rank.ALPHA;
+        else if ("alphaplus".equals(key)) rank = PermissionService.Rank.ALPHA_PLUS;
+        else return false;
+
+        if (rank != PermissionService.Rank.PUBLIC && !hasFolderAccess(rank)) return false;
+        selectedRank = rank;
+        openFolderRank = rank;
+        managementSubfolders = false;
+        donatorSubfolders = false;
+        scrollOffset = 0;
+        return true;
+    }
+
     @Override
     public void initGui() {
         buttonList.clear();
