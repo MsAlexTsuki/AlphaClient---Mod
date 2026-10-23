@@ -264,6 +264,78 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
     }
 
 
+    private void appendConsole(String line) {
+        consoleOutput.add(line == null ? "" : line);
+        while (consoleOutput.size() > 250) consoleOutput.remove(0);
+    }
+
+    private void executeConsoleCommand(String raw) {
+        String command = raw == null ? "" : raw.trim();
+        appendConsole("alpha> " + command);
+        if (command.isEmpty()) return;
+        String[] parts = command.toLowerCase().split("\\s+");
+        String root = parts[0];
+        if ("help".equals(root) || "?".equals(root)) {
+            appendConsole("Commands:");
+            appendConsole("  help, clear, status, rank, permissions");
+            appendConsole("  modules, mods, diagnostics, tests run");
+            appendConsole("  profiler, logs, events, errors");
+            appendConsole("  report export, overlay toggle, sandbox status");
+        } else if ("clear".equals(root)) {
+            consoleOutput.clear();
+        } else if ("status".equals(root)) {
+            appendConsole("Minecraft: " + Minecraft.getMinecraft().getVersion());
+            appendConsole("World loaded: " + (Minecraft.getMinecraft().theWorld != null));
+            appendConsole("Player loaded: " + (Minecraft.getMinecraft().thePlayer != null));
+            appendConsole("Developer mode: " + DeveloperModeState.isEnabled());
+        } else if ("rank".equals(root)) {
+            appendConsole("Effective rank: " + PermissionService.getEffectiveRank().name());
+            appendConsole("Online rank verified: " + PermissionService.isOnlineRankVerified());
+        } else if ("permissions".equals(root)) {
+            appendConsole("Mod entitlements verified: " + PermissionService.areModEntitlementsVerified());
+            appendConsole("Developer suite access: " + hasDeveloperSuiteAccess());
+        } else if ("modules".equals(root)) {
+            selectedTool = 8;
+            appendConsole(DeveloperDiagnostics.moduleReport());
+        } else if ("mods".equals(root)) {
+            selectedTool = 7;
+            appendConsole(DeveloperDiagnostics.modReport());
+        } else if ("diagnostics".equals(root)) {
+            appendConsole(DeveloperDiagnostics.profilerReport());
+            appendConsole("Modules: " + AlphaModuleRegistry.getAll().size());
+            appendConsole("Captured errors: " + DeveloperDiagnostics.errors().size());
+        } else if ("tests".equals(root) && parts.length > 1 && "run".equals(parts[1])) {
+            appendConsole(DeveloperDiagnostics.runTests());
+        } else if ("profiler".equals(root)) {
+            appendConsole(DeveloperDiagnostics.profilerReport());
+        } else if ("logs".equals(root)) {
+            for (String line : DeveloperDiagnostics.logs()) appendConsole(line);
+        } else if ("events".equals(root)) {
+            for (String line : DeveloperDiagnostics.events()) appendConsole(line);
+        } else if ("errors".equals(root)) {
+            for (String line : DeveloperDiagnostics.errors()) appendConsole(line);
+        } else if ("report".equals(root) && parts.length > 1 && "export".equals(parts[1])) {
+            try {
+                File file = DeveloperDiagnostics.exportDiagnosticBundle();
+                appendConsole("Report exported: " + file.getAbsolutePath());
+                status = "Diagnostic report exported.";
+            } catch (Exception error) {
+                DeveloperDiagnostics.captureException("Console report export", error);
+                appendConsole("ERROR: " + error.getMessage());
+            }
+        } else if ("overlay".equals(root) && parts.length > 1 && "toggle".equals(parts[1])) {
+            DeveloperDiagnostics.setDebugOverlayEnabled(!DeveloperDiagnostics.isDebugOverlayEnabled());
+            appendConsole("Debug overlay: " + (DeveloperDiagnostics.isDebugOverlayEnabled() ? "ON" : "OFF"));
+            initGui();
+        } else if ("sandbox".equals(root) && parts.length > 1 && "status".equals(parts[1])) {
+            appendConsole("Sandbox flag: " + DeveloperDiagnostics.isSandboxMode());
+            appendConsole("Note: this flag does not isolate runtime state.");
+        } else {
+            appendConsole("Unknown command: " + command);
+            appendConsole("Type help to list available commands.");
+        }
+    }
+
     private String getSelectedReport() {
         switch (selectedTool) {
             case 0: return "Alpha Developer Console\\n" + join(DeveloperDiagnostics.logs()) + "\\nType /alphaclient to access client commands. Use RUN TESTS and EXPORT REPORT below.";
@@ -359,6 +431,20 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == Keyboard.KEY_ESCAPE) {
             mc.displayGuiScreen(parent);
+            return;
+        }
+        if (selectedTool == 0) {
+            if (keyCode == Keyboard.KEY_RETURN) {
+                executeConsoleCommand(commandInput);
+                commandInput = "";
+                reportScroll = Math.max(0, consoleOutput.size() - 12);
+                return;
+            }
+            if (keyCode == Keyboard.KEY_BACK) {
+                if (!commandInput.isEmpty()) commandInput = commandInput.substring(0, commandInput.length() - 1);
+                return;
+            }
+            if (!Character.isISOControl(typedChar) && commandInput.length() < 160) commandInput += typedChar;
             return;
         }
         if (selectedTool == 1 && keyCode != Keyboard.KEY_ESCAPE && keyCode != Keyboard.KEY_RETURN) {
