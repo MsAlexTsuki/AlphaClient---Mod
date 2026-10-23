@@ -1,7 +1,5 @@
 package com.alpharip.staffmod.profile;
 
-import com.alpharip.staffmod.modules.LongJumpMod;
-import com.alpharip.staffmod.modules.NoFallMod;
 import com.alpharip.staffmod.movement.BhopMode;
 
 import com.google.gson.Gson;
@@ -66,14 +64,7 @@ public final class ProfileManager {
      * Dit behouden we voor backwards compatibility.
      */
 
-    private static final String MODULE_DUBBLE_JUMP =
-            "LONGJUMP";
-
-    private static final String MODULE_NOFALL =
-            "NOFALL";
-
-
-    /*
+/*
      * =========================================================
      * GSON
      * =========================================================
@@ -182,54 +173,53 @@ public final class ProfileManager {
 
         profiles.clear();
 
-        File file =
-                getProfileFile();
+        File file = getProfileFile();
+        File oldFile = getOldProfileFile();
 
-        /*
-         * New profile file exists.
-         */
+        // Load the current file first. If the legacy file still exists, merge
+        // profiles that are missing from the current file instead of hiding them.
         if (file.exists()) {
-
             if (loadFile(file)) {
-
+                String currentSelection = selectedProfile;
+                if (oldFile.exists()) {
+                    migrateOldProfiles(oldFile);
+                    selectedProfile = currentSelection;
+                }
                 ensureDefaultProfile();
                 save();
                 applySelectedProfile();
+                return;
+            }
 
+            // Never silently replace a file that failed to parse. Preserve it
+            // before trying recovery from the legacy profile file.
+            profiles.clear();
+            if (!backupUnreadableProfileFile(file)) {
+                System.out.println("[AlphaStaffMod] Could not back up unreadable profiles.json; leaving it untouched.");
                 return;
             }
         }
 
-
-        /*
-         * No new profile file.
-         *
-         * Try to migrate the existing BHOP profile file.
-         */
-        File oldFile =
-                getOldProfileFile();
-
-        if (oldFile.exists()) {
-
-            if (migrateOldProfiles(oldFile)) {
-
-                ensureDefaultProfile();
-                save();
-                applySelectedProfile();
-
-                return;
-            }
+        if (oldFile.exists() && migrateOldProfiles(oldFile)) {
+            ensureDefaultProfile();
+            save();
+            applySelectedProfile();
+            return;
         }
 
-
-        /*
-         * Completely new installation.
-         */
         createDefaultProfile();
-
         save();
-
         applySelectedProfile();
+    }
+
+    private boolean backupUnreadableProfileFile(File file) {
+        File backup = new File(file.getParentFile(),
+                FILE_NAME + ".unreadable-" + System.currentTimeMillis());
+        boolean moved = file.renameTo(backup);
+        if (moved) {
+            System.out.println("[AlphaStaffMod] Preserved unreadable profile data at " + backup.getAbsolutePath());
+        }
+        return moved;
     }
 
 
@@ -532,9 +522,8 @@ public final class ProfileManager {
 
 
                     if (profile.getProfileName() != null
-                            && !profile.getProfileName()
-                            .trim()
-                            .isEmpty()) {
+                            && !profile.getProfileName().trim().isEmpty()
+                            && !containsProfile(profile.getProfileName())) {
 
                         profiles.add(profile);
                     }
@@ -562,6 +551,22 @@ public final class ProfileManager {
                 }
             }
         }
+    }
+
+
+    private boolean containsProfile(String profileName) {
+        if (profileName == null) {
+            return false;
+        }
+
+        for (Profile existing : profiles) {
+            if (existing != null
+                    && existing.getProfileName() != null
+                    && existing.getProfileName().equalsIgnoreCase(profileName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -603,30 +608,8 @@ public final class ProfileManager {
      * Alleen als deze nog niet bestaan.
      */
 
-    private void ensureModuleDefaults(
-            Profile profile) {
-
-        if (profile == null) {
-            return;
-        }
-
-        if (!profile.getModules()
-                .has(MODULE_DUBBLE_JUMP)) {
-
-            profile.setModule(
-                    MODULE_DUBBLE_JUMP,
-                    false
-            );
-        }
-
-        if (!profile.getModules()
-                .has(MODULE_NOFALL)) {
-
-            profile.setModule(
-                    MODULE_NOFALL,
-                    false
-            );
-        }
+    private void ensureModuleDefaults(Profile profile) {
+        // Legacy module flags are ignored; profile serialization stays backward-compatible.
     }
 
 
@@ -733,25 +716,7 @@ public final class ProfileManager {
         );
 
 
-        /*
-         * Dubble Jump OFF.
-         */
-        profile.setModule(
-                MODULE_DUBBLE_JUMP,
-                false
-        );
-
-
-        /*
-         * NoFall OFF.
-         */
-        profile.setModule(
-                MODULE_NOFALL,
-                false
-        );
-
-
-        profile.setColor(
+profile.setColor(
                 "BHOP_PROFILE_NAME",
                 DEFAULT_COLOR
         );
@@ -960,22 +925,7 @@ public final class ProfileManager {
         );
 
 
-        /*
-         * Nieuwe profielen starten met
-         * alle staff modules UIT.
-         */
-        profile.setModule(
-                MODULE_DUBBLE_JUMP,
-                false
-        );
-
-        profile.setModule(
-                MODULE_NOFALL,
-                false
-        );
-
-
-        profile.setColor(
+profile.setColor(
                 "BHOP_PROFILE_NAME",
                 DEFAULT_COLOR
         );
@@ -1088,36 +1038,6 @@ public final class ProfileManager {
 
         /*
          * =====================================================
-         * DUBBLE JUMP
-         * =====================================================
-         *
-         * LONGJUMP blijft de interne module-ID.
-         */
-
-        profile.setModule(
-                MODULE_DUBBLE_JUMP,
-                LongJumpMod
-                        .getInstance()
-                        .isEnabled()
-        );
-
-
-        /*
-         * =====================================================
-         * NOFALL
-         * =====================================================
-         */
-
-        profile.setModule(
-                MODULE_NOFALL,
-                NoFallMod
-                        .getInstance()
-                        .isEnabled()
-        );
-
-
-        /*
-         * =====================================================
          * SAVE
          * =====================================================
          */
@@ -1181,33 +1101,7 @@ public final class ProfileManager {
         );
 
 
-        /*
-         * =====================================================
-         * DUBBLE JUMP
-         * =====================================================
-         */
-
-        LongJumpMod.getInstance()
-                .setEnabled(
-                        profile.getModule(
-                                MODULE_DUBBLE_JUMP
-                        )
-                );
-
-
-        /*
-         * =====================================================
-         * NOFALL
-         * =====================================================
-         */
-
-        NoFallMod.getInstance()
-                .setEnabled(
-                        profile.getModule(
-                                MODULE_NOFALL
-                        )
-                );
-    }
+}
 
 
     /*
@@ -1248,32 +1142,6 @@ public final class ProfileManager {
                 moduleName,
                 enabled
         );
-
-
-        /*
-         * Direct runtime assignment.
-         * No toggle().
-         */
-        if (MODULE_DUBBLE_JUMP.equals(
-                moduleName
-        )) {
-
-            LongJumpMod.getInstance()
-                    .setEnabled(
-                            enabled
-                    );
-        }
-
-
-        if (MODULE_NOFALL.equals(
-                moduleName
-        )) {
-
-            NoFallMod.getInstance()
-                    .setEnabled(
-                            enabled
-                    );
-        }
 
 
         save();

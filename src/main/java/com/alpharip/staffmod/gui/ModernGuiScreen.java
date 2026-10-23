@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL11;
  *
  * Author: MsAlexTsuki
  */
-public class ModernGuiScreen extends GuiScreen {
+public class ModernGuiScreen extends AlphaGuiScreen {
 
     protected static final int GUI_WIDTH = 520;
     protected static final int GUI_HEIGHT = 300;
@@ -311,6 +311,7 @@ public class ModernGuiScreen extends GuiScreen {
             int y,
             int scale) {
 
+        text = UiText.normalize(text);
         int textWidth =
                 this.fontRendererObj
                         .getStringWidth(text);

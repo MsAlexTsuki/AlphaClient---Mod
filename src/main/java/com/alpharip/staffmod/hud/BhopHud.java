@@ -3,6 +3,8 @@ package com.alpharip.staffmod.hud;
 import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.profile.ProfileManager;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -20,6 +22,12 @@ public class BhopHud {
     private static boolean enabled = true;
 
     private static boolean editorPreviewMode = false;
+
+    /** Bhop HUD visibility follows the same staff permission as the Bhop module. */
+    private static boolean hasBhopPermission() {
+        AlphaModule module = AlphaModuleRegistry.find("staffmods");
+        return module != null && module.isUnlocked();
+    }
 
 
     /*
@@ -47,13 +55,11 @@ public class BhopHud {
      * =========================================================
      */
 
-    private static final int HUD_HEIGHT = 24;
+    private static final int HUD_HEIGHT = 20;
 
     private static final int HUD_PADDING_LEFT = 8;
     private static final int HUD_PADDING_RIGHT = 8;
 
-    private static final int PROFILE_SEPARATOR_GAP = 5;
-    private static final int SPEED_SEPARATOR_GAP = 5;
 
 
     /*
@@ -227,7 +233,7 @@ public class BhopHud {
                 || bhopName.trim().isEmpty()
                 || bhopName.equalsIgnoreCase("BHOP")) {
 
-            return "ALPHA'S BHOP";
+            return "Alpha's Bhop";
         }
 
         return bhopName;
@@ -281,30 +287,13 @@ public class BhopHud {
         String bhopName =
                 getDisplayedBhopName();
 
-        String speedName =
-                getDisplayedSpeedName();
-
         int bhopNameWidth =
                 font.getStringWidth(
                         bhopName
                 );
 
-        int separatorWidth =
-                font.getStringWidth(
-                        "•"
-                );
-
-        int speedWidth =
-                font.getStringWidth(
-                        speedName
-                );
-
         return HUD_PADDING_LEFT
                 + bhopNameWidth
-                + PROFILE_SEPARATOR_GAP
-                + separatorWidth
-                + SPEED_SEPARATOR_GAP
-                + speedWidth
                 + HUD_PADDING_RIGHT;
     }
 
@@ -325,7 +314,17 @@ public class BhopHud {
             return;
         }
 
+        if (!hasBhopPermission()) {
+            return;
+        }
+
         if (!enabled) {
+            return;
+        }
+
+        // The BHOP HUD is tied to the BHOP module state.
+        // Keep editor preview independent so users can still position the HUD while BHOP is off.
+        if (!BhopMode.isEnabled() && !editorPreviewMode) {
             return;
         }
 
@@ -356,7 +355,19 @@ public class BhopHud {
      * =========================================================
      */
 
-    private void renderHud(
+    /** Draws the live BHOP HUD style inside the HUD editor preview. */
+    public static void renderEditorPreview() {
+        if (!hasBhopPermission() || !enabled) {
+            return;
+        }
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.fontRendererObj == null) {
+            return;
+        }
+        renderHud(mc);
+    }
+
+    private static void renderHud(
             Minecraft mc) {
 
         FontRenderer font =
@@ -399,123 +410,28 @@ public class BhopHud {
 
 
         /*
-         * =====================================================
-         * BACKGROUND
-         * =====================================================
+         * AlphaClient compact HUD panel.
          */
-
-        drawRect(
-                0,
-                0,
-                hudWidth,
-                HUD_HEIGHT,
-                0x8C101010
-        );
-
+        drawRect(0, 0, hudWidth, HUD_HEIGHT, 0xD9101218);
+        drawRect(0, 0, hudWidth, 2, 0xFFFFD866);
+        drawRect(0, 2, 2, HUD_HEIGHT, 0xFFFFD866);
+        drawRect(2, HUD_HEIGHT - 1, hudWidth, HUD_HEIGHT, 0x553F444E);
 
         /*
-         * =====================================================
-         * BORDER
-         * =====================================================
+         * Profile label keeps its configured color.
          */
-
-        drawRect(
-                0,
-                0,
-                1,
-                HUD_HEIGHT,
-                0x30FFFFFF
-        );
-
-        drawRect(
-                hudWidth - 1,
-                0,
-                hudWidth,
-                HUD_HEIGHT,
-                0x30FFFFFF
-        );
-
-        drawRect(
-                0,
-                HUD_HEIGHT - 1,
-                hudWidth,
-                HUD_HEIGHT,
-                0x20FFFFFF
-        );
-
-
-        /*
-         * =====================================================
-         * PROFILE NAME COLOR
-         * =====================================================
-         */
-
         int bhopNameColor =
                 parseColor(
                         ProfileManager
                                 .getInstance()
-                                .getColor(
-                                        "BHOP_PROFILE_NAME"
-                                )
+                                .getColor("BHOP_PROFILE_NAME")
                 );
-
-
         font.drawStringWithShadow(
                 bhopName,
                 HUD_PADDING_LEFT,
-                8,
+                6,
                 bhopNameColor
         );
-
-
-        /*
-         * =====================================================
-         * SEPARATOR
-         * =====================================================
-         */
-
-        int bhopNameWidth =
-                font.getStringWidth(
-                        bhopName
-                );
-
-        int separatorX =
-                HUD_PADDING_LEFT
-                        + bhopNameWidth
-                        + PROFILE_SEPARATOR_GAP;
-
-        font.drawStringWithShadow(
-                "•",
-                separatorX,
-                8,
-                0xFFFFFFFF
-        );
-
-
-        /*
-         * =====================================================
-         * SPEED COLOR
-         * =====================================================
-         */
-
-        int speedColor =
-                parseColor(
-                        ProfileManager
-                                .getInstance()
-                                .getColor(
-                                        "BHOP_SPEED"
-                                )
-                );
-
-
-        font.drawStringWithShadow(
-                speedName,
-                separatorX
-                        + separatorWidthGap(font),
-                8,
-                speedColor
-        );
-
 
         GlStateManager.popMatrix();
     }
@@ -564,22 +480,6 @@ public class BhopHud {
 
             return 0xFFF2EE4D;
         }
-    }
-
-
-    /*
-     * =========================================================
-     * SPEED TEXT GAP
-     * =========================================================
-     */
-
-    private static int separatorWidthGap(
-            FontRenderer font) {
-
-        return font.getStringWidth(
-                "•"
-        )
-                + SPEED_SEPARATOR_GAP;
     }
 
 

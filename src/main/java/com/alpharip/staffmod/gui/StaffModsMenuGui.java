@@ -16,42 +16,36 @@ import java.util.Set;
  * StaffMods folder browser. Rank folders contain the modules assigned to them.
  * Existing module settings screens are reused instead of creating duplicate settings.
  */
-public final class StaffModsMenuGui extends GuiScreen {
+public final class StaffModsMenuGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int CATEGORY_BASE = 20;
     private static final int MODULE_BASE = 50;
     private static final int ACCENT = 0xFFFFD866;
 
     // Keep every rank folder in canonical hierarchy order. Visibility is inherited downward.
+    // Display ranks from lowest to highest. Backend rank priority remains unchanged.
     private static final PermissionService.Rank[] RANKS = {
         PermissionService.Rank.PUBLIC,
-        PermissionService.Rank.FOUNDER,
-        PermissionService.Rank.OWNER,
-        PermissionService.Rank.MANAGER,
-        PermissionService.Rank.PLAT_ADMIN,
-        PermissionService.Rank.SR_ADMIN,
-        PermissionService.Rank.ADMIN,
-        PermissionService.Rank.SR_MOD,
-        PermissionService.Rank.MOD,
-        PermissionService.Rank.T_MOD,
-        PermissionService.Rank.THE_NIBBLER,
         PermissionService.Rank.BETA,
-        PermissionService.Rank.ALPHA_PLUS,
-        PermissionService.Rank.ALPHA,
-        PermissionService.Rank.ELITE,
-        PermissionService.Rank.ROGUE,
-        PermissionService.Rank.SCOUT
+        PermissionService.Rank.T_MOD,
+        PermissionService.Rank.MOD,
+        PermissionService.Rank.SR_MOD,
+        PermissionService.Rank.ADMIN,
+        PermissionService.Rank.SR_ADMIN,
+        PermissionService.Rank.MANAGEMENT,
+        PermissionService.Rank.OWNER,
+        PermissionService.Rank.FOUNDER
     };
     private static final String[] LABELS = {
-        "GENERAL", "FOUNDER", "OWNER", "MANAGER", "PLATFORM ADMIN",
-        "SR ADMIN", "ADMIN", "SR MOD", "MOD", "T-MOD", "THE NIBBLER",
-        "BETA", "ALPHA+", "ALPHA", "ELITE", "ROGUE", "SCOUT"
+        "GENERAL", "BETA", "T-MOD", "MOD", "SR MOD",
+        "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
     };
 
     private final GuiScreen parent;
     private PermissionService.Rank selectedRank = PermissionService.Rank.PUBLIC;
     private PermissionService.Rank openFolderRank;
     private boolean managementSubfolders;
+    private boolean donatorSubfolders;
     private int panelLeft, panelTop, panelWidth, panelHeight;
     private int contentLeft, contentTop, contentRight, contentBottom;
     private int scrollOffset;
@@ -65,6 +59,10 @@ public final class StaffModsMenuGui extends GuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
+        if (!PermissionService.hasStaffModsAccess()) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
         panelWidth = Math.min(560, Math.max(360, width - 32));
         panelHeight = Math.min(330, Math.max(230, height - 32));
         panelLeft = (width - panelWidth) / 2;
@@ -80,14 +78,20 @@ public final class StaffModsMenuGui extends GuiScreen {
             int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
             int tileHeight = 38;
             if (managementSubfolders) {
-                if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) {
+                if (hasFolderAccess(PermissionService.Rank.PLAT_ADMIN)) {
                     buttonList.add(new AlphaButton(CATEGORY_BASE + 100, contentLeft, contentTop,
                             tileWidth, tileHeight, "PLATFORM ADMIN"));
                 }
-                if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+                if (hasFolderAccess(PermissionService.Rank.MANAGER)) {
                     buttonList.add(new AlphaButton(CATEGORY_BASE + 101, contentLeft + tileWidth + gap, contentTop,
                             tileWidth, tileHeight, "MANAGER"));
                 }
+            } else if (donatorSubfolders) {
+                addDonatorSubfolderButton(0, PermissionService.Rank.SCOUT, "SCOUT", contentLeft, tileWidth, tileHeight);
+                addDonatorSubfolderButton(1, PermissionService.Rank.ROGUE, "ROGUE", contentLeft + tileWidth + gap, tileWidth, tileHeight);
+                addDonatorSubfolderButton(2, PermissionService.Rank.ELITE, "ELITE", contentLeft + (tileWidth + gap) * 2, tileWidth, tileHeight);
+                addDonatorSubfolderButton(3, PermissionService.Rank.ALPHA, "ALPHA", contentLeft, tileWidth, tileHeight, contentTop + tileHeight + gap);
+                addDonatorSubfolderButton(4, PermissionService.Rank.ALPHA_PLUS, "ALPHA+", contentLeft + tileWidth + gap, tileWidth, tileHeight, contentTop + tileHeight + gap);
             } else {
                 int index = 0;
                 for (int i = 0; i < RANKS.length; i++) {
@@ -129,21 +133,69 @@ public final class StaffModsMenuGui extends GuiScreen {
                 panelTop + panelHeight - 31, 80, 20, "BACK"));
     }
 
+    private void addDonatorSubfolderButton(int index, PermissionService.Rank rank, String label,
+                                           int x, int tileWidth, int tileHeight) {
+        addDonatorSubfolderButton(index, rank, label, x, tileWidth, tileHeight, contentTop);
+    }
+
+    private void addDonatorSubfolderButton(int index, PermissionService.Rank rank, String label,
+                                           int x, int tileWidth, int tileHeight, int y) {
+        if (hasFolderAccess(rank)) {
+            buttonList.add(new AlphaButton(CATEGORY_BASE + 102 + index, x, y, tileWidth, tileHeight, label));
+        }
+    }
+
     private boolean isVisibleRank(PermissionService.Rank rank) {
-        // General is always available. Every rank can see its own folder and all folders
-        // below it in the canonical hierarchy; higher folders remain hidden.
+        // General is always available. Rank access keeps the existing hierarchy;
+        // an explicit per-mod grant can independently reveal its assigned folder.
         if (rank == PermissionService.Rank.PUBLIC) return true;
         if (rank == PermissionService.Rank.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
         }
+        // Beta and Donator are independent access folders, not staff hierarchy tiers.
+        // Show them only to their rank or to accounts with a grant for a mod in that folder.
+        if (rank == PermissionService.Rank.DONATOR) {
+            // Keep the Donator entry point exclusive to verified Partner accounts.
+            return PermissionService.isOnlineRankVerified()
+                    && PermissionService.getVerifiedOnlineRanks().contains(PermissionService.Rank.PARTNER);
+        }
+        if (rank == PermissionService.Rank.BETA) {
+            return hasFolderAccess(rank);
+        }
+        if (rank == PermissionService.Rank.MANAGEMENT) {
+            if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
+                    || PermissionService.hasAccess(PermissionService.Rank.MANAGER)) return true;
+            return hasExplicitGrantInFolder(rank);
+        }
         PermissionService.Rank effective = PermissionService.getEffectiveRank();
-        return hierarchyPriority(effective) >= hierarchyPriority(rank);
+        return hierarchyPriority(effective) >= hierarchyPriority(rank) || hasExplicitGrantInFolder(rank);
+    }
+
+    private boolean hasExplicitGrantInFolder(PermissionService.Rank rank) {
+        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            if (module.getCategory() == AlphaModule.Category.FOUNDER) continue;
+            // Bhop's staff.bhop grant unlocks only StaffMods -> General -> Bhop.
+            // It must never reveal the T-Mod (or any other rank) folder.
+            if ("staffmods".equals(module.getId())) continue;
+            PermissionService.Rank required = module.getCategory().getRequiredRank();
+            boolean matches = required == rank
+                    || (rank == PermissionService.Rank.MANAGEMENT
+                        && (required == PermissionService.Rank.PLAT_ADMIN
+                            || required == PermissionService.Rank.MANAGER));
+            if (matches && module.hasExplicitModAccess()) return true;
+        }
+        return false;
+    }
+
+    private boolean hasFolderAccess(PermissionService.Rank rank) {
+        return PermissionService.hasAccess(rank) || hasExplicitGrantInFolder(rank);
     }
 
     private int hierarchyPriority(PermissionService.Rank rank) {
         switch (rank) {
-            case FOUNDER: return 17;
-            case OWNER: return 16;
+            case FOUNDER: return 18;
+            case OWNER: return 17;
+            case DEVELOPER: return 16;
             case MANAGER: return 15;
             case PLAT_ADMIN:
             case MANAGEMENT: return 14;
@@ -166,54 +218,100 @@ public final class StaffModsMenuGui extends GuiScreen {
 
     private List<AlphaModule> getModulesForSelectedRank() {
         List<AlphaModule> modules = new ArrayList<AlphaModule>();
-        if (selectedRank == PermissionService.Rank.FOUNDER
-                || selectedRank == PermissionService.Rank.OWNER) {
-            // Founder and Owner receive every module. The Founder category remains
-            // exclusive to Founder; Owner must never inherit Founder-only modules.
-            for (AlphaModule module : AlphaModuleRegistry.getAll()) {
-                // Bhop is only shown in StaffMods -> General, never in a rank folder.
-                if ("staffmods".equals(module.getId())) continue;
-                if (module.getCategory() == AlphaModule.Category.FOUNDER
-                        && selectedRank != PermissionService.Rank.FOUNDER) continue;
-                modules.add(module);
-            }
-            return modules;
-        }
+
         if (selectedRank == PermissionService.Rank.PUBLIC) {
-            // BHOP remains available from General through its existing settings screen.
+            // Bhop is only exposed in General and only when its explicit permission allows it.
             AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
-            if (bhop != null) modules.add(bhop);
+            if (bhop != null && bhop.isUnlocked()) modules.add(bhop);
             return modules;
         }
 
-        // Show one rank folder (the highest rank), but combine modules granted by
-        // every assigned rank. Rank display and permission aggregation are separate.
-        Set<PermissionService.Rank> assignedRanks = PermissionService.getVerifiedOnlineRanks();
-        if (PermissionService.isOfflineTestSession()) {
-            assignedRanks = java.util.Collections.singleton(PermissionService.Rank.FOUNDER);
+        // Owner and Founder are permission tiers, not destinations for ordinary modules.
+        // Their own folders must not duplicate modules from lower-rank folders.
+        // Founder-only modules remain in Founder; Owner has no Owner-specific module list.
+        if (selectedRank == PermissionService.Rank.OWNER) {
+            return modules;
         }
-        for (PermissionService.Rank assignedRank : assignedRanks) {
-            AlphaModule.Category category = categoryForRank(assignedRank);
-            if (category == null) continue;
-            for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
-                // Bhop is exclusive to General, even for Founder and Owner.
-                if ("staffmods".equals(module.getId())) continue;
-                if (module.getCategory() == AlphaModule.Category.FOUNDER
-                        && !PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) continue;
-                if (!modules.contains(module)) modules.add(module);
+
+        // Beta and Donator modules belong only in their own folders. Rank access
+        // or an explicit grant unlocks only the matching module, not the whole category.
+        if (selectedRank == PermissionService.Rank.BETA
+                || selectedRank == PermissionService.Rank.DONATOR
+                || selectedRank == PermissionService.Rank.SCOUT
+                || selectedRank == PermissionService.Rank.ROGUE
+                || selectedRank == PermissionService.Rank.ELITE
+                || selectedRank == PermissionService.Rank.ALPHA
+                || selectedRank == PermissionService.Rank.ALPHA_PLUS) {
+            AlphaModule.Category selectedCategory = categoryForRank(selectedRank);
+            for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+                if (module.getCategory() == selectedCategory && module.isUnlocked()) {
+                    modules.add(module);
+                }
+            }
+            return modules;
+        }
+
+        int selectedLevel = staffFolderLevel(selectedRank);
+        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            if ("staffmods".equals(module.getId())) continue;
+
+            // W-Tap Assistance is a Founder-only tool and must never leak into
+            // another rank folder, even when the current account is Founder.
+            if ("w-tap-assistance".equals(module.getId())) {
+                if (selectedRank == PermissionService.Rank.FOUNDER
+                        && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                        && module.isUnlocked()) {
+                    modules.add(module);
+                }
+                continue;
+            }
+
+            if (!module.isUnlocked()) continue;
+            if (module.getCategory() == AlphaModule.Category.FOUNDER) {
+                if (selectedRank == PermissionService.Rank.FOUNDER
+                        && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) modules.add(module);
+                continue;
+            }
+
+            // Founder can open all lower-rank folders through rank access, but
+            // ordinary modules are shown only in their assigned folder.
+            // Founder-only modules were handled above and stay exclusive.
+            PermissionService.Rank required = module.getCategory().getRequiredRank();
+            int moduleLevel = staffFolderLevel(required);
+            if (moduleLevel >= 0 && selectedLevel >= moduleLevel) {
+                modules.add(module);
             }
         }
         return modules;
     }
 
+    private int staffFolderLevel(PermissionService.Rank rank) {
+        switch (rank) {
+            case FOUNDER: return 9;
+            case BETA:
+            case DONATOR: return -1;
+            case OWNER: return 8;
+            case MANAGER: return 7;
+            case PLAT_ADMIN:
+            case MANAGEMENT: return 6;
+            case SR_ADMIN: return 5;
+            case ADMIN: return 4;
+            case SR_MOD: return 3;
+            case MOD: return 2;
+            case T_MOD: return 1;
+            default: return -1;
+        }
+    }
+
     private AlphaModule.Category categoryForRank(PermissionService.Rank rank) {
         switch (rank) {
             case BETA: return AlphaModule.Category.BETA;
-            case ALPHA_PLUS:
-            case ALPHA:
-            case ELITE:
-            case ROGUE:
-            case SCOUT: return AlphaModule.Category.DONATOR;
+            case SCOUT: return AlphaModule.Category.SCOUT;
+            case ROGUE: return AlphaModule.Category.ROGUE;
+            case ELITE: return AlphaModule.Category.ELITE;
+            case ALPHA: return AlphaModule.Category.ALPHA;
+            case ALPHA_PLUS: return AlphaModule.Category.ALPHA_PLUS;
+            case DONATOR: return AlphaModule.Category.DONATOR;
             case THE_NIBBLER: return AlphaModule.Category.T_MOD;
             case T_MOD: return AlphaModule.Category.T_MOD;
             case MOD: return AlphaModule.Category.MOD;
@@ -232,6 +330,10 @@ public final class StaffModsMenuGui extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
+        if (!PermissionService.hasStaffModsAccess()) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
 
         if (button.id == BACK) {
             // Always replace the current screen rather than reinitializing a stale button list.
@@ -242,13 +344,34 @@ public final class StaffModsMenuGui extends GuiScreen {
                     StaffModsMenuGui previous = new StaffModsMenuGui(parent);
                     previous.managementSubfolders = true;
                     mc.displayGuiScreen(previous);
+                } else if (isDonatorRank(selectedRank)) {
+                    StaffModsMenuGui previous = new StaffModsMenuGui(parent);
+                    previous.donatorSubfolders = true;
+                    mc.displayGuiScreen(previous);
                 } else {
                     mc.displayGuiScreen(new StaffModsMenuGui(parent));
                 }
-            } else if (managementSubfolders) {
+            } else if (managementSubfolders || donatorSubfolders) {
                 mc.displayGuiScreen(new StaffModsMenuGui(parent));
             } else {
                 mc.displayGuiScreen(parent);
+            }
+            return;
+        }
+
+        if (openFolderRank == null && donatorSubfolders
+                && button.id >= CATEGORY_BASE + 102 && button.id <= CATEGORY_BASE + 106) {
+            PermissionService.Rank[] donorRanks = {
+                PermissionService.Rank.SCOUT, PermissionService.Rank.ROGUE, PermissionService.Rank.ELITE,
+                PermissionService.Rank.ALPHA, PermissionService.Rank.ALPHA_PLUS
+            };
+            PermissionService.Rank rank = donorRanks[button.id - (CATEGORY_BASE + 102)];
+            if (hasFolderAccess(rank)) {
+                selectedRank = rank;
+                openFolderRank = rank;
+                donatorSubfolders = false;
+                scrollOffset = 0;
+                initGui();
             }
             return;
         }
@@ -257,7 +380,7 @@ public final class StaffModsMenuGui extends GuiScreen {
                 && (button.id == CATEGORY_BASE + 100 || button.id == CATEGORY_BASE + 101)) {
             PermissionService.Rank rank = button.id == CATEGORY_BASE + 100
                     ? PermissionService.Rank.PLAT_ADMIN : PermissionService.Rank.MANAGER;
-            if (PermissionService.hasAccess(rank)) {
+            if (hasFolderAccess(rank)) {
                 selectedRank = rank;
                 openFolderRank = rank;
                 managementSubfolders = false;
@@ -270,9 +393,12 @@ public final class StaffModsMenuGui extends GuiScreen {
         if (openFolderRank == null && !managementSubfolders
                 && button.id >= CATEGORY_BASE && button.id < CATEGORY_BASE + RANKS.length) {
             PermissionService.Rank rank = RANKS[button.id - CATEGORY_BASE];
-            if (rank == PermissionService.Rank.PUBLIC || PermissionService.hasAccess(rank)) {
+            if (rank == PermissionService.Rank.PUBLIC || hasFolderAccess(rank)) {
                 if (rank == PermissionService.Rank.MANAGEMENT) {
                     managementSubfolders = true;
+                    initGui();
+                } else if (rank == PermissionService.Rank.DONATOR) {
+                    donatorSubfolders = true;
                     initGui();
                 } else {
                     selectedRank = rank;
@@ -304,8 +430,7 @@ public final class StaffModsMenuGui extends GuiScreen {
                 }
                 return;
             }
-            if (selectedRank != PermissionService.Rank.PUBLIC
-                    && !PermissionService.hasAccess(module.getCategory().getRequiredRank())) return;
+            if (!module.isUnlocked()) return;
             if ("staffmods".equals(module.getId())) {
                 mc.displayGuiScreen(new BhopSettingsGui(this));
                 return;
@@ -325,19 +450,16 @@ public final class StaffModsMenuGui extends GuiScreen {
 
         drawString(fontRendererObj, "ALPHA CLIENT", panelLeft + 14, panelTop + 14, 0xFFF0F1F4);
         drawString(fontRendererObj, "STAFFMODS", panelLeft + 14, panelTop + 34, ACCENT);
+        // AlphaButton renders each label itself. Do not draw a second copy of
+        // folder/module cards here; that caused overlapping duplicate text.
         if (openFolderRank != null) {
-            String folderLabel = selectedRank == PermissionService.Rank.PLAT_ADMIN
-                    ? "PLATFORM ADMIN" : selectedRank == PermissionService.Rank.MANAGER
-                    ? "MANAGER" : LABELS[indexOf(selectedRank)];
+            String folderLabel = folderLabel(selectedRank);
             drawString(fontRendererObj, folderLabel + "  /  MODS",
                     contentLeft, panelTop + 57, ACCENT);
-            drawFolderContents(mouseX, mouseY);
         } else if (managementSubfolders) {
             drawString(fontRendererObj, "MANAGEMENT", contentLeft, panelTop + 57, ACCENT);
-            drawManagementSubfolders(mouseX, mouseY);
         } else {
             drawString(fontRendererObj, "STAFF RANKS MODS", contentLeft, panelTop + 57, 0xFFB8BDC8);
-            drawFolderCards(mouseX, mouseY);
         }
         drawString(fontRendererObj, "RANK ACCESS: " + PermissionService.getEffectiveRank().name(),
                 panelLeft + 14, bottom - 22, 0xFFB8BDC8);
@@ -365,12 +487,36 @@ public final class StaffModsMenuGui extends GuiScreen {
         int columns = 3;
         int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
         int tileHeight = 38;
-        if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) {
+        if (hasFolderAccess(PermissionService.Rank.PLAT_ADMIN)) {
             drawCard(contentLeft, contentTop, tileWidth, tileHeight, "PLATFORM ADMIN", mouseX, mouseY);
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+        if (hasFolderAccess(PermissionService.Rank.MANAGER)) {
             drawCard(contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "MANAGER", mouseX, mouseY);
         }
+    }
+
+    private void drawDonatorSubfolders(int mouseX, int mouseY) {
+        int gap = 8;
+        int columns = 3;
+        int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
+        int tileHeight = 38;
+        PermissionService.Rank[] ranks = {
+            PermissionService.Rank.SCOUT, PermissionService.Rank.ROGUE, PermissionService.Rank.ELITE,
+            PermissionService.Rank.ALPHA, PermissionService.Rank.ALPHA_PLUS
+        };
+        String[] labels = { "SCOUT", "ROGUE", "ELITE", "ALPHA", "ALPHA+" };
+        for (int i = 0; i < ranks.length; i++) {
+            if (!hasFolderAccess(ranks[i])) continue;
+            int x = contentLeft + (i % columns) * (tileWidth + gap);
+            int y = contentTop + (i / columns) * (tileHeight + gap);
+            drawCard(x, y, tileWidth, tileHeight, labels[i], mouseX, mouseY);
+        }
+    }
+
+    private boolean isDonatorRank(PermissionService.Rank rank) {
+        return rank == PermissionService.Rank.SCOUT || rank == PermissionService.Rank.ROGUE
+                || rank == PermissionService.Rank.ELITE || rank == PermissionService.Rank.ALPHA
+                || rank == PermissionService.Rank.ALPHA_PLUS;
     }
 
     private void drawFolderContents(int mouseX, int mouseY) {
@@ -403,6 +549,17 @@ public final class StaffModsMenuGui extends GuiScreen {
         int titleX = x + (w - fontRendererObj.getStringWidth(title)) / 2;
         int titleY = y + (h - fontRendererObj.FONT_HEIGHT) / 2;
         drawString(fontRendererObj, title, titleX, titleY, 0xFFFFFFFF);
+    }
+
+    private String folderLabel(PermissionService.Rank rank) {
+        if (rank == PermissionService.Rank.PLAT_ADMIN) return "PLATFORM ADMIN";
+        if (rank == PermissionService.Rank.MANAGER) return "MANAGER";
+        if (rank == PermissionService.Rank.SCOUT) return "SCOUT";
+        if (rank == PermissionService.Rank.ROGUE) return "ROGUE";
+        if (rank == PermissionService.Rank.ELITE) return "ELITE";
+        if (rank == PermissionService.Rank.ALPHA) return "ALPHA";
+        if (rank == PermissionService.Rank.ALPHA_PLUS) return "ALPHA+";
+        return LABELS[indexOf(rank)];
     }
 
     private int indexOf(PermissionService.Rank rank) {

@@ -1,6 +1,6 @@
 package com.alpharip.staffmod.gui;
 
-import com.alpharip.staffmod.movement.BhopProfileManager;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -240,7 +240,7 @@ public class ProfileCreateGui extends ModernGuiScreen {
         }
 
         boolean created =
-                BhopProfileManager.saveProfile(
+                ModuleProfileManager.saveProfile(
                         name,
                         "ALPHA'S BHOP",
                         "#55FF55",

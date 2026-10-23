@@ -1,6 +1,6 @@
 package com.alpharip.staffmod.gui;
 
-import com.alpharip.staffmod.movement.BhopProfileManager;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -88,7 +88,7 @@ public class ModColorSettingsGui extends ModernGuiScreen {
         this.parentScreen =
                 parentScreen;
 
-        BhopProfileManager.load();
+        ModuleProfileManager.load();
 
         /*
          * Bestaande standaardmods.
@@ -133,7 +133,7 @@ public class ModColorSettingsGui extends ModernGuiScreen {
             return;
         }
 
-        BhopProfileManager.ensureSelectedModColor(
+        ModuleProfileManager.ensureSelectedModColor(
                 modName,
                 defaultColor
         );
@@ -149,7 +149,7 @@ public class ModColorSettingsGui extends ModernGuiScreen {
     public static String getColor(
             String modName) {
 
-        return BhopProfileManager.getSelectedModColor(
+        return ModuleProfileManager.getSelectedModColor(
                 modName,
                 DEFAULT_COLOR
         );
@@ -229,7 +229,7 @@ public class ModColorSettingsGui extends ModernGuiScreen {
          */
 
         JsonObject profileColors =
-                BhopProfileManager
+                ModuleProfileManager
                         .getSelectedModColors();
 
         for (Map.Entry<String, JsonElement> entry :
@@ -1401,13 +1401,13 @@ public class ModColorSettingsGui extends ModernGuiScreen {
          * in het geselecteerde profiel.
          */
 
-        BhopProfileManager.setSelectedModColors(
+        ModuleProfileManager.setSelectedModColors(
                 updatedColors
         );
 
         System.out.println(
                 "[AlphaStaffMod] Profile mod colors updated: "
-                        + BhopProfileManager
+                        + ModuleProfileManager
                         .getSelectedProfileName()
         );
     }

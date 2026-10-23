@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.movement;
 
-import com.alpharip.staffmod.profile.ProfileManager;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
+import com.alpharip.staffmod.permissions.PermissionService;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -67,6 +68,8 @@ public class BhopMode {
 
         EntityPlayer player = mc.thePlayer;
 
+        // Require verified permission at runtime. Saved preferences remain intact while locked.
+        if (!PermissionService.hasModAccess("staff.bhop")) return;
         if (!enabled) return;
 
         if (!player.capabilities.isCreativeMode) return;
@@ -352,6 +355,7 @@ public class BhopMode {
     public static void setEnabled(
             boolean value) {
 
+        // Preserve the user preference; onClientTick enforces live access before running BHOP.
         enabled = value;
     }
 
@@ -482,9 +486,19 @@ public class BhopMode {
 
 
     public static void loadSelectedProfile() {
+        ModuleProfileManager.BhopProfile profile =
+                ModuleProfileManager.getSelectedProfile();
 
-        ProfileManager
-                .getInstance()
-                .applySelectedProfile();
+        if (profile == null) {
+            return;
+        }
+
+        // The active profile menu uses ModuleProfileManager, so BHOP must load
+        // from that same selected profile instead of the legacy ProfileManager.
+        setBhopName(profile.getBhopName());
+        setColor(profile.getColor());
+        setEnabled(profile.isBhopEnabled());
+        setShiftUpEnabled(profile.isShiftUpEnabled());
+        setSpeedLevel(profile.getSpeedLevel());
     }
 }

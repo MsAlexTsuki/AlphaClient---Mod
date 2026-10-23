@@ -1,7 +1,5 @@
 package com.alpharip.staffmod.gui;
 
-import com.alpharip.staffmod.modules.LongJumpMod;
-import com.alpharip.staffmod.modules.NoFallMod;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.profile.Profile;
 import com.alpharip.staffmod.profile.ProfileManager;
@@ -81,6 +79,13 @@ public class ProfileSettingsGui extends ModernGuiScreen {
                         250,
                         22
                 );
+
+        profileField.setTextColor(0xFFF4F5F8);
+        profileField.setDisabledTextColour(0xFFB8BDC8);
+        nameField.setTextColor(0xFFF4F5F8);
+        nameField.setDisabledTextColour(0xFFB8BDC8);
+        colorField.setTextColor(0xFFF4F5F8);
+        colorField.setDisabledTextColour(0xFFB8BDC8);
 
         profileField.setMaxStringLength(32);
         nameField.setMaxStringLength(32);
@@ -325,32 +330,6 @@ public class ProfileSettingsGui extends ModernGuiScreen {
 
         /*
          * =========================
-         * DUBBLE JUMP
-         * =========================
-         */
-
-        selectedProfile.setModule(
-                "LONGJUMP",
-                LongJumpMod
-                        .getInstance()
-                        .isEnabled()
-        );
-
-        /*
-         * =========================
-         * NOFALL
-         * =========================
-         */
-
-        selectedProfile.setModule(
-                "NOFALL",
-                NoFallMod
-                        .getInstance()
-                        .isEnabled()
-        );
-
-        /*
-         * =========================
          * SAVE
          * =========================
          */
@@ -444,12 +423,7 @@ public class ProfileSettingsGui extends ModernGuiScreen {
         profile.setBhopName("BHOP");
         profile.setBhopColor("#55FF55");
 
-        profile.setModule(
-                "LONGJUMP",
-                false
-        );
-
-        profile.setModule(
+profile.setModule(
                 "NOFALL",
                 false
         );
@@ -860,7 +834,7 @@ public class ProfileSettingsGui extends ModernGuiScreen {
                 "Select a saved profile.",
                 centerX - 125,
                 122,
-                0x888888
+                0xFFB8BDC8
         );
 
         drawTextFieldBackground(
@@ -898,7 +872,7 @@ public class ProfileSettingsGui extends ModernGuiScreen {
                 "Name shown for this BHOP profile.",
                 panelLeft + 25,
                 240,
-                0x888888
+                0xFFB8BDC8
         );
 
         drawTextFieldBackground(
@@ -923,7 +897,7 @@ public class ProfileSettingsGui extends ModernGuiScreen {
                 "Profile display color.",
                 panelRight - 275,
                 240,
-                0x888888
+                0xFFB8BDC8
         );
 
         drawTextFieldBackground(
@@ -949,7 +923,7 @@ public class ProfileSettingsGui extends ModernGuiScreen {
                         + BhopMode.getSpeedLevelName(),
                 panelLeft + 25,
                 323,
-                0xAAAAAA
+                0xFFD0D3DB
         );
 
         this.fontRendererObj.drawStringWithShadow(
@@ -972,46 +946,6 @@ public class ProfileSettingsGui extends ModernGuiScreen {
                 panelLeft + 300,
                 323,
                 BhopMode.isShiftUpEnabled()
-                        ? 0x55FF55
-                        : 0xFF5555
-        );
-
-        /*
-         * DUBBLE JUMP
-         */
-
-        this.fontRendererObj.drawStringWithShadow(
-                "Dubble Jump: "
-                        + (LongJumpMod
-                        .getInstance()
-                        .isEnabled()
-                        ? "ON"
-                        : "OFF"),
-                panelLeft + 25,
-                340,
-                LongJumpMod
-                        .getInstance()
-                        .isEnabled()
-                        ? 0x55FF55
-                        : 0xFF5555
-        );
-
-        /*
-         * NOFALL
-         */
-
-        this.fontRendererObj.drawStringWithShadow(
-                "NoFall: "
-                        + (NoFallMod
-                        .getInstance()
-                        .isEnabled()
-                        ? "ON"
-                        : "OFF"),
-                panelLeft + 180,
-                340,
-                NoFallMod
-                        .getInstance()
-                        .isEnabled()
                         ? 0x55FF55
                         : 0xFF5555
         );

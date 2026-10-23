@@ -1,0 +1,115 @@
+package com.alpharip.staffmod.gui;
+
+import com.alpharip.staffmod.quality.FullbrightMod;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import org.lwjgl.input.Mouse;
+
+import java.io.IOException;
+
+/** Browser for AlphaClient Quality of Life features. */
+public final class QualityGui extends AlphaGuiScreen {
+    private static final int BACK = 1;
+    private static final int AFK_TIMER = 2;
+    private static final int FULLBRIGHT = 3;
+    private static final int AFK_TIMER_INDEX = 7;
+    private static final int FULLBRIGHT_INDEX = 0;
+    private static final int ACCENT = 0xFFFFD866;
+    private static final String[] FEATURES = {
+            "Fullbright", "Alpha Module Manager", "Playtime Tracker", "Auto GG", "Keybind Profiles",
+            "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Mod Profiles",
+            "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
+            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager",
+            "Session Timer", "Alpha Feature Flags"
+    };
+
+    private final GuiScreen parent;
+    private int scrollOffset;
+    private int visibleRows;
+    private int panelLeft, panelRight, panelTop, panelBottom;
+
+    public QualityGui(GuiScreen parent) {
+        this.parent = parent;
+    }
+
+    @Override
+    public void initGui() {
+        buttonList.clear();
+        panelLeft = Math.max(12, width / 2 - Math.min(230, width / 2 - 12));
+        panelRight = Math.min(width - 12, panelLeft + 460);
+        panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
+        panelBottom = Math.min(height - 12, panelTop + 300);
+        visibleRows = Math.max(1, (panelBottom - panelTop - 92) / 20);
+        int maxScroll = Math.max(0, FEATURES.length - visibleRows);
+        scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
+        buttonList.add(new GuiButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        if (FULLBRIGHT_INDEX >= scrollOffset && FULLBRIGHT_INDEX < scrollOffset + visibleRows) {
+            int fullbrightY = panelTop + 68 + (FULLBRIGHT_INDEX - scrollOffset) * 20;
+            buttonList.add(new AlphaButton(FULLBRIGHT, panelLeft + 10, fullbrightY,
+                    panelRight - panelLeft - 20, 17,
+                    "Fullbright: " + (FullbrightMod.isEnabled() ? "ON" : "OFF"), true));
+        }
+        if (AFK_TIMER_INDEX >= scrollOffset && AFK_TIMER_INDEX < scrollOffset + visibleRows) {
+            int timerY = panelTop + 68 + (AFK_TIMER_INDEX - scrollOffset) * 20;
+            buttonList.add(new AlphaButton(AFK_TIMER, panelLeft + 10, timerY, panelRight - panelLeft - 20, 17,
+                    "AFK Timer", true));
+        }
+    }
+
+    @Override
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawRect(0, 0, width, height, 0x18000000);
+        drawRect(panelLeft, panelTop, panelRight, panelBottom, 0xD90A0C11);
+        drawRect(panelLeft, panelTop, panelRight, panelTop + 2, ACCENT);
+        drawCenteredString(fontRendererObj, "QUALITY", width / 2, panelTop + 13, 0xFFF3F4F6);
+        drawCenteredString(fontRendererObj, "QUALITY OF LIFE FEATURES", width / 2, panelTop + 30, ACCENT);
+        drawString(fontRendererObj, "Features and roadmap ideas", panelLeft + 12, panelTop + 49, 0xFFB8BDC8);
+
+        int rowHeight = 20;
+        for (int i = scrollOffset; i < FEATURES.length && i < scrollOffset + visibleRows; i++) {
+            int y = panelTop + 68 + (i - scrollOffset) * rowHeight;
+            if (i == AFK_TIMER_INDEX || i == FULLBRIGHT_INDEX) {
+                // These entries have live controls rather than roadmap labels.
+                continue;
+            }
+            drawRect(panelLeft + 10, y, panelRight - 10, y + 17, 0xB5161820);
+            drawString(fontRendererObj, FEATURES[i], panelLeft + 17, y + 5, 0xFFE7E9EE);
+            String status = "PLANNED";
+            drawString(fontRendererObj, status, panelRight - 17 - fontRendererObj.getStringWidth(status), y + 5, 0xFFB8BDC8);
+        }
+        if (FEATURES.length > visibleRows) {
+            drawString(fontRendererObj, "Scroll to view all " + FEATURES.length + " ideas", panelLeft + 112,
+                    panelBottom - 23, 0xFF8E95A3);
+        }
+        super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    protected void actionPerformed(GuiButton button) throws IOException {
+        if (button == null) return;
+        if (button.id == BACK) {
+            mc.displayGuiScreen(parent);
+        } else if (button.id == AFK_TIMER) {
+            mc.displayGuiScreen(new AfkTimerSettingsGui(this));
+        } else if (button.id == FULLBRIGHT) {
+            FullbrightMod.setEnabled(!FullbrightMod.isEnabled());
+            initGui();
+        }
+    }
+
+    @Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int wheel = Mouse.getEventDWheel();
+        if (wheel != 0) {
+            int maxScroll = Math.max(0, FEATURES.length - visibleRows);
+            scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset + (wheel < 0 ? 2 : -2)));
+            initGui();
+        }
+    }
+
+    @Override
+    public boolean doesGuiPauseGame() {
+        return false;
+    }
+}

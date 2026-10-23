@@ -61,7 +61,7 @@ if (currentBuildNumber <= 100) {
 
 version = "0." + versionMinor + "." + versionPatch
 
-group = "com.alpharip.staffmod"
+group = "com.alpharip.alphaclient"
 archivesBaseName = "AlphaClient"
 
 /*
@@ -139,7 +139,7 @@ task generateBuildInfo {
                 "BuildInfo.java"
         )
 
-        buildInfoFile.text = """\
+        buildInfoFile.text = """
 package com.alpharip.staffmod;
  
 public final class BuildInfo {
@@ -203,6 +203,37 @@ processResources {
 
 /*
  * ==========================================
+ * PRODUCTION JAR REOBFUSCATION
+ * ==========================================
+ *
+ * The production JAR must be remapped from
+ * Minecraft/Forge development names to the
+ * runtime names used by Minecraft 1.8.9.
+ *
+ * Finalize the normal JAR task with reobfJar so
+ * the remapping runs after the JAR is assembled.
+ * The JAR published from build/libs must be the
+ * resulting reobfuscated production artifact.
+ */
+
+jar {
+    manifest {
+        attributes(
+                'FMLCorePlugin': 'com.alpharip.staffmod.pvp.LegacyPvpCorePlugin',
+                'FMLCorePluginContainsFMLMod': 'true'
+        )
+    }
+}
+
+// Load the same narrowly scoped renderer hook during ForgeGradle development runs.
+runClient {
+    jvmArgs '-Dfml.coreMods.load=com.alpharip.staffmod.pvp.LegacyPvpCorePlugin'
+}
+
+jar.finalizedBy('reobfJar')
+
+/*
+ * ==========================================
  * BUILD NUMBER INCREMENT
  * ==========================================
  *
@@ -221,4 +252,3 @@ gradle.taskGraph.whenReady { taskGraph ->
         versionFile.text = nextBuildNumber.toString()
     }
 }
- 

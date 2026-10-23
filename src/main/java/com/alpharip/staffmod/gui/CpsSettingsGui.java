@@ -1,309 +1,91 @@
 package com.alpharip.staffmod.gui;
 
-import com.alpharip.staffmod.hud.TargetHud;
-
+import com.alpharip.staffmod.cps.CpsMod;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-
 import java.io.IOException;
 
-/**
- * Alpha's Staffing Mods
- *
- * Author: MsAlexTsuki
- */
-public class CpsSettingsGui extends ModernGuiScreen {
+/** CPS HUD settings with a click-to-expand display-mode dropdown. */
+public final class CpsSettingsGui extends AlphaGuiScreen {
+    private static final int BACK = 1, BACKGROUND = 2, COLOR = 3, MODE = 4;
+    private static final int OPTION_BOTH = 10, OPTION_LEFT = 11, OPTION_RIGHT = 12;
+    private final GuiScreen parent;
+    private int left, top, right, bottom;
+    private boolean dropdownOpen;
 
-    private static final int BUTTON_TOGGLE = 1;
-    private static final int BUTTON_EDITOR = 2;
-    private static final int BUTTON_BACK = 3;
-
-    private static final int ACTION_BUTTON_WIDTH = 174;
-    private static final int ACTION_BUTTON_HEIGHT = 30;
-
-    private final GuiScreen parentScreen;
-
-    public CpsSettingsGui(
-            GuiScreen parentScreen) {
-
-        this.parentScreen =
-                parentScreen;
-    }
+    public CpsSettingsGui(GuiScreen parent) { this.parent = parent; }
 
     @Override
     public void initGui() {
-
-        this.buttonList.clear();
-
-        int centerX =
-                this.width / 2;
-
-        int panelWidth =
-                Math.min(
-                        520,
-                        this.width - 30
-                );
-
-        int panelLeft =
-                centerX
-                        - panelWidth / 2;
-
-        int panelRight =
-                panelLeft
-                        + panelWidth;
-
-        /*
-         * =========================
-         * BUTTON POSITION
-         * =========================
-         */
-
-        int buttonX =
-                panelRight
-                        - ACTION_BUTTON_WIDTH
-                        - 14;
-
-        /*
-         * =========================
-         * CPS
-         * =========================
-         */
-
-        this.buttonList.add(
-                new ModernButton(
-                        BUTTON_TOGGLE,
-                        buttonX,
-                        165,
-                        ACTION_BUTTON_WIDTH,
-                        ACTION_BUTTON_HEIGHT,
-                        "CPS: " + getToggleText()
-                )
-        );
-
-        /*
-         * =========================
-         * HUD EDITOR
-         * =========================
-         */
-
-        this.buttonList.add(
-                new ModernButton(
-                        BUTTON_EDITOR,
-                        buttonX,
-                        201,
-                        ACTION_BUTTON_WIDTH,
-                        ACTION_BUTTON_HEIGHT,
-                        "HUD EDITOR"
-                )
-        );
-
-        /*
-         * =========================
-         * BACK
-         * =========================
-         */
-
-        this.buttonList.add(
-                new ModernButton(
-                        BUTTON_BACK,
-                        this.width / 2 - 55,
-                        this.height - 35,
-                        110,
-                        20,
-                        "BACK"
-                )
-        );
+        buttonList.clear();
+        left = width / 2 - 150;
+        right = left + 300;
+        top = Math.max(12, height / 2 - 108);
+        bottom = Math.min(height - 12, top + 216);
+        buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 58, 260, 20, backgroundLabel()));
+        buttonList.add(new AlphaButton(COLOR, left + 20, top + 86, 260, 20, "TEXT COLOR: " + CpsMod.getColorName()));
+        buttonList.add(new AlphaButton(MODE, left + 20, top + 114, 260, 20,
+                CpsMod.getDisplayModeName() + (dropdownOpen ? "  ▲" : "  ▼")));
+        if (dropdownOpen) {
+            buttonList.add(new AlphaButton(OPTION_BOTH, left + 20, top + 136, 260, 18, "LMB + RMB",
+                    CpsMod.getDisplayMode() == CpsMod.MODE_BOTH));
+            buttonList.add(new AlphaButton(OPTION_LEFT, left + 20, top + 154, 260, 18, "LMB",
+                    CpsMod.getDisplayMode() == CpsMod.MODE_LEFT));
+            buttonList.add(new AlphaButton(OPTION_RIGHT, left + 20, top + 172, 260, 18, "RMB",
+                    CpsMod.getDisplayMode() == CpsMod.MODE_RIGHT));
+            bottom = Math.min(height - 8, top + 216);
+        }
+        buttonList.add(new AlphaButton(BACK, left + 10, Math.min(height - 32, bottom - 24), 75, 18, "BACK"));
     }
 
-    private String getToggleText() {
-
-        return TargetHud.isEnabled()
-                ? "ON"
-                : "OFF";
+    private String backgroundLabel() {
+        return "HUD BACKGROUND: " + (CpsMod.isShowBackground() ? "ON" : "OFF");
     }
 
     @Override
-    protected void actionPerformed(
-            GuiButton button)
-            throws IOException {
-
-        if (button == null) {
-            return;
-        }
-
-        if (button.id ==
-                BUTTON_TOGGLE) {
-
-            TargetHud.toggle();
-
-            button.displayString =
-                    "CPS: "
-                            + getToggleText();
-
-            return;
-        }
-
-        if (button.id ==
-                BUTTON_EDITOR) {
-
-            this.mc.displayGuiScreen(
-                    new HudEditorGui(this)
-            );
-
-            return;
-        }
-
-        if (button.id ==
-                BUTTON_BACK) {
-
-            this.mc.displayGuiScreen(
-                    parentScreen
-            );
-        }
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawRect(0, 0, width, height, 0x30000000);
+        drawRect(left, top, right, bottom, 0xE00A0C11);
+        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        drawCenteredString(fontRendererObj, "CPS SETTINGS", width / 2, top + 15, 0xFFF3F4F6);
+        drawCenteredString(fontRendererObj, "Configure the CPS HUD appearance", width / 2, top + 34, 0xFFB8BDC8);
+        super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     @Override
-    public void drawScreen(
-            int mouseX,
-            int mouseY,
-            float partialTicks) {
-
-        drawModernBackground();
-
-        int centerX =
-                this.width / 2;
-
-        /*
-         * =========================
-         * PANEL
-         * =========================
-         */
-
-        int panelWidth =
-                Math.min(
-                        520,
-                        this.width - 30
-                );
-
-        int panelLeft =
-                centerX
-                        - panelWidth / 2;
-
-        int panelRight =
-                panelLeft
-                        + panelWidth;
-
-        int panelTop =
-                isSmallScreen()
-                        ? 90
-                        : 95;
-
-        int panelBottom =
-                isSmallScreen()
-                        ? 270
-                        : 255;
-
-        /*
-         * =========================
-         * TITLE
-         * =========================
-         */
-
-        drawModTitle(
-                "CPS INDICATOR",
-                centerX,
-                isSmallScreen()
-                        ? 27
-                        : 30
-        );
-
-        /*
-         * =========================
-         * TRANSPARENT PANEL
-         * =========================
-         */
-
-        drawRect(
-                panelLeft,
-                panelTop,
-                panelRight,
-                panelBottom,
-                0x50101010
-        );
-
-        int contentX =
-                panelLeft + 18;
-
-        /*
-         * =========================
-         * CPS INDICATOR
-         * =========================
-         */
-
-        drawRowLabel(
-                "CPS INDICATOR",
-                contentX,
-                panelTop + 18
-        );
-
-        this.fontRendererObj.drawStringWithShadow(
-                "Shows the CPS of the player you are looking at.",
-                contentX,
-                panelTop + 40,
-                COLOR_GRAY
-        );
-
-        /*
-         * =========================
-         * STATUS
-         * =========================
-         */
-
-        drawRowLabel(
-                "STATUS",
-                contentX,
-                panelTop + 78
-        );
-
-        this.fontRendererObj.drawStringWithShadow(
-                TargetHud.isEnabled()
-                        ? "ENABLED"
-                        : "DISABLED",
-                contentX + 65,
-                panelTop + 78,
-                TargetHud.isEnabled()
-                        ? COLOR_GREEN
-                        : COLOR_RED
-        );
-
-        /*
-         * =========================
-         * HUD EDITOR
-         * =========================
-         */
-
-        drawRowLabel(
-                "HUD EDITOR",
-                contentX,
-                panelTop + 120
-        );
-
-        /*
-         * =========================
-         * BUTTONS
-         * =========================
-         */
-
-        super.drawScreen(
-                mouseX,
-                mouseY,
-                partialTicks
-        );
+    protected void actionPerformed(GuiButton button) throws IOException {
+        if (button == null) return;
+        switch (button.id) {
+            case BACK:
+                mc.displayGuiScreen(parent);
+                return;
+            case BACKGROUND:
+                CpsMod.setShowBackground(!CpsMod.isShowBackground());
+                break;
+            case COLOR:
+                CpsMod.cycleColor();
+                break;
+            case MODE:
+                dropdownOpen = !dropdownOpen;
+                break;
+            case OPTION_BOTH:
+                CpsMod.setDisplayMode(CpsMod.MODE_BOTH);
+                dropdownOpen = false;
+                break;
+            case OPTION_LEFT:
+                CpsMod.setDisplayMode(CpsMod.MODE_LEFT);
+                dropdownOpen = false;
+                break;
+            case OPTION_RIGHT:
+                CpsMod.setDisplayMode(CpsMod.MODE_RIGHT);
+                dropdownOpen = false;
+                break;
+            default:
+                return;
+        }
+        initGui();
     }
 
     @Override
-    public boolean doesGuiPauseGame() {
-
-        return false;
-    }
+    public boolean doesGuiPauseGame() { return false; }
 }

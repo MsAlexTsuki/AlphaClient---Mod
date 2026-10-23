@@ -1,7 +1,7 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.movement.BhopMode;
-import com.alpharip.staffmod.movement.BhopProfileManager;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -59,7 +59,7 @@ public class ProfileRenameGui extends ModernGuiScreen {
          */
 
         String currentName =
-                BhopProfileManager
+                ModuleProfileManager
                         .getSelectedProfileName();
 
         if (currentName == null
@@ -334,7 +334,7 @@ public class ProfileRenameGui extends ModernGuiScreen {
          * =====================================================
          */
 
-        BhopProfileManager.saveProfile(
+        ModuleProfileManager.saveProfile(
                 newName,
                 BhopMode.getBhopName(),
                 BhopMode.getColor(),
