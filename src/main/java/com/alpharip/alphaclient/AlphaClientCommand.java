@@ -614,7 +614,7 @@ public final class AlphaClientCommand extends CommandBase {
     }
 
     @Override
-    public List<String> getTabCompletionOptions(ICommandSender sender, String[] args,
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args,
                                                 net.minecraft.util.BlockPos pos) {
         List<String> options = new ArrayList<String>();
         if ("staffmods".equals(commandName) && args.length == 1) {
