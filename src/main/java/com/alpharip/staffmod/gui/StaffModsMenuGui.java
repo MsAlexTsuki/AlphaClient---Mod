@@ -207,7 +207,9 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
     }
 
     private boolean isVisibleRank(PermissionService.Rank rank) {
+        Boolean openOverride = PermissionService.getCommandPermissionOverride("staffmods.open");
         Boolean explicitFolderPermission = PermissionService.getCommandPermissionOverride(folderPermissionKey(rank));
+        if (Boolean.FALSE.equals(openOverride)) return Boolean.TRUE.equals(explicitFolderPermission);
         if (explicitFolderPermission != null) return explicitFolderPermission.booleanValue();
         // General is always available. Rank access keeps the existing hierarchy;
         // an explicit per-mod grant can independently reveal its assigned folder.
