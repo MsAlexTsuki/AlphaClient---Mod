@@ -1,5 +1,6 @@
 package com.alpharip.staffmod.quality;
 
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -11,9 +12,8 @@ import org.lwjgl.input.Keyboard;
 /**
  * Fullbright toggle for AlphaClient.
  *
- * Raises the game's gamma while enabled and restores the user's previous
- * gamma setting when disabled. Its key binding is available in Options ->
- * Controls and deliberately starts unassigned.
+ * The enabled state and key binding are stored in the active AlphaClient profile.
+ * The key binding deliberately starts unassigned for profiles without a saved value.
  */
 public final class FullbrightMod {
     private static final float FULLBRIGHT_GAMMA = 100.0F;
@@ -21,8 +21,9 @@ public final class FullbrightMod {
     private static boolean enabled;
     private static boolean originalGammaCaptured;
     private static float originalGamma;
+    private static int lastObservedKeyCode = Integer.MIN_VALUE;
 
-    private final KeyBinding toggleKey;
+    private static KeyBinding toggleKey;
 
     public FullbrightMod() {
         toggleKey = new KeyBinding(
@@ -35,6 +36,20 @@ public final class FullbrightMod {
 
     public static boolean isEnabled() {
         return enabled;
+    }
+
+    public static int getToggleKeyCode() {
+        return toggleKey == null ? Keyboard.KEY_NONE : toggleKey.getKeyCode();
+    }
+
+    /** Apply the selected profile's Fullbright state and key binding. */
+    public static void applyProfileSettings(boolean shouldEnable, int keyCode) {
+        if (toggleKey != null) {
+            toggleKey.setKeyCode(keyCode);
+            KeyBinding.resetKeyBindingArrayAndHash();
+            lastObservedKeyCode = keyCode;
+        }
+        setEnabled(shouldEnable);
     }
 
     public static void setEnabled(boolean shouldEnable) {
@@ -52,11 +67,15 @@ public final class FullbrightMod {
             enabled = false;
             restoreGamma(minecraft);
         }
+
+        if (!ModuleProfileManager.isApplyingModuleStates()) {
+            ModuleProfileManager.setSelectedFullbrightState(enabled);
+        }
     }
 
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event) {
-        if (toggleKey.isPressed()) {
+        if (toggleKey != null && toggleKey.isPressed()) {
             setEnabled(!isEnabled());
         }
     }
@@ -70,8 +89,8 @@ public final class FullbrightMod {
         int currentKeyCode = getToggleKeyCode();
         if (currentKeyCode != lastObservedKeyCode) {
             lastObservedKeyCode = currentKeyCode;
-            if (!com.alpharip.staffmod.profile.ModuleProfileManager.isApplyingModuleStates()) {
-                com.alpharip.staffmod.profile.ModuleProfileManager.setSelectedFullbrightKeyCode(currentKeyCode);
+            if (!ModuleProfileManager.isApplyingModuleStates()) {
+                ModuleProfileManager.setSelectedFullbrightKeyCode(currentKeyCode);
             }
         }
 
