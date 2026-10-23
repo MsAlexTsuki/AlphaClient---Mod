@@ -30,23 +30,23 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
     private static final int TOGGLE_OVERLAY = 24;
 
     private static final String[] TOOLS = {
-        "Developer Console",
-        "Developer Command Palette",
-        "Developer Event Viewer",
-        "Developer Debug Overlay",
-        "Developer Test Mode",
-        "Developer Sandbox Mode",
-        "Developer Profiler",
-        "Developer Mod Inspector",
-        "Developer Module Inspector",
-        "Developer Dependency Graph",
-        "Developer Config Inspector",
-        "Developer Error Database",
-        "Developer Exception Viewer",
-        "Developer Stack Trace Viewer",
-        "Developer Log Viewer",
-        "Developer Diagnostic Bundle",
-        "Alpha Developer Studio"
+        "Console",
+        "Command Palette",
+        "Event Viewer",
+        "Debug Overlay",
+        "Test Mode",
+        "Sandbox Mode",
+        "Profiler",
+        "Mod Inspector",
+        "Module Inspector",
+        "Dependency Graph",
+        "Config Inspector",
+        "Error Database",
+        "Exception Viewer",
+        "Stack Traces",
+        "Log Viewer",
+        "Diagnostic Bundle",
+        "Studio Overview"
     };
 
     private static final String[] DESCRIPTIONS = {
@@ -101,8 +101,8 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             return;
         }
 
-        panelWidth = Math.min(700, Math.max(420, width - 20));
-        panelHeight = Math.min(410, Math.max(260, height - 20));
+        panelWidth = Math.min(1120, Math.max(560, width - 36));
+        panelHeight = Math.min(650, Math.max(320, height - 32));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
         listTop = panelTop + 62;
@@ -223,10 +223,10 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         drawRect(panelLeft, panelTop + 1, panelLeft + 1, bottom - 1, 0x554B515D);
         drawRect(right - 1, panelTop + 1, right, bottom - 1, 0x554B515D);
 
-        drawString(fontRendererObj, "ALPHA DEVELOPER STUDIO", panelLeft + 14, panelTop + 13, 0xFFF0F1F4);
-        drawString(fontRendererObj, "RESTRICTED WORKSPACE  /  DEVELOPER · OWNER · FOUNDER",
-                panelLeft + 14, panelTop + 30, ACCENT);
-        drawString(fontRendererObj, "TOOLS", panelLeft + 14, panelTop + 49, 0xFFB8BDC8);
+        drawString(fontRendererObj, "ALPHA  /  DEVELOPER STUDIO", panelLeft + 16, panelTop + 13, 0xFFF0F1F4);
+        drawString(fontRendererObj, "RESTRICTED ACCESS  •  DEVELOPER / OWNER / FOUNDER",
+                panelLeft + 16, panelTop + 30, ACCENT);
+        drawString(fontRendererObj, "WORKSPACE", panelLeft + 16, panelTop + 49, 0xFFB8BDC8);
 
         int dividerX = panelLeft + 14 + Math.max(150, Math.min(225, panelWidth / 3)) + 12;
         drawRect(dividerX, panelTop + 48, dividerX + 1, bottom - 80, 0x554B515D);
@@ -237,15 +237,15 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         drawString(fontRendererObj, TOOLS[selectedTool], detailX, y, ACCENT);
         y += 20;
         y = drawWrapped(DESCRIPTIONS[selectedTool], detailX, y, detailWidth, 0xFFE1E4EA, 3) + 8;
-        drawString(fontRendererObj, "LIVE CLIENT STATUS", detailX, y, 0xFFB8BDC8);
+        drawString(fontRendererObj, "SESSION", detailX, y, 0xFFB8BDC8);
         y += 14;
-        drawString(fontRendererObj, "Minecraft: " + Minecraft.getMinecraft().getVersion(), detailX, y, 0xFFF0F1F4);
+        drawString(fontRendererObj, "MC  " + Minecraft.getMinecraft().getVersion(), detailX, y, 0xFFF0F1F4);
         y += 12;
-        drawString(fontRendererObj, "Effective rank: " + PermissionService.getEffectiveRank().name(), detailX, y, 0xFFF0F1F4);
+        drawString(fontRendererObj, "RANK  " + PermissionService.getEffectiveRank().name()
+                + "   •   VERIFIED  " + PermissionService.isOnlineRankVerified(), detailX, y, 0xFFF0F1F4);
         y += 12;
-        drawString(fontRendererObj, "Rank verified: " + PermissionService.isOnlineRankVerified(), detailX, y, 0xFFF0F1F4);
-        y += 12;
-        drawString(fontRendererObj, "Mod permissions verified: " + PermissionService.areModEntitlementsVerified(), detailX, y, 0xFFF0F1F4);
+        drawString(fontRendererObj, "ENTITLEMENTS  " + (PermissionService.areModEntitlementsVerified() ? "VERIFIED" : "UNVERIFIED"),
+                detailX, y, PermissionService.areModEntitlementsVerified() ? 0xFF9CE2AC : 0xFFFF7777);
         y += 18;
 
         String report = getSelectedReport();
@@ -253,7 +253,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             drawString(fontRendererObj, "Search: " + (paletteQuery.isEmpty() ? "(type to filter actions)" : paletteQuery), detailX, y, 0xFFB8BDC8);
             y += 14;
         }
-        drawString(fontRendererObj, "REPORT / LIVE OUTPUT", detailX, y, 0xFFB8BDC8);
+        drawString(fontRendererObj, selectedTool == 0 ? "TERMINAL OUTPUT" : "INSPECTOR OUTPUT", detailX, y, 0xFFB8BDC8);
         y += 14;
         List<String> lines = wrapReport(report, detailWidth);
         int maxLines = Math.max(1, (bottom - 50 - y) / 10);
@@ -274,7 +274,8 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             drawString(fontRendererObj, "alpha> " + commandInput + ((System.currentTimeMillis() / 500L) % 2 == 0 ? "_" : ""),
                     detailX, bottom - 41, 0xFF9CE2AC);
         }
-        drawString(fontRendererObj, status, panelLeft + 14, bottom - 27, 0xFF9CE2AC);
+        drawRect(panelLeft + 14, bottom - 34, right - 14, bottom - 33, 0x334B515D);
+        drawString(fontRendererObj, "STATUS  " + status, panelLeft + 14, bottom - 27, 0xFF9CE2AC);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
