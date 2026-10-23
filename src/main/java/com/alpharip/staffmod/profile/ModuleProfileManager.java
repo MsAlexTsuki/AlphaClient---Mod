@@ -4,6 +4,8 @@ import com.alpharip.alphaclient.AlphaClient;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.quality.FullbrightMod;
+import org.lwjgl.input.Keyboard;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -1360,6 +1362,9 @@ public class ModuleProfileManager {
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             profile.getModule(module.getId()).addProperty("enabled", false);
         }
+        JsonObject fullbright = profile.getModule("fullbright");
+        fullbright.addProperty("enabled", false);
+        fullbright.addProperty("keyCode", Keyboard.KEY_NONE);
     }
 
     /**
@@ -1386,6 +1391,20 @@ public class ModuleProfileManager {
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             profile.getModule(module.getId()).addProperty("enabled", module.isConfiguredEnabled());
         }
+        JsonObject fullbright = profile.getModule("fullbright");
+        fullbright.addProperty("enabled", FullbrightMod.isEnabled());
+        fullbright.addProperty("keyCode", FullbrightMod.getToggleKeyCode());
+        save();
+    }
+
+    /** Store Fullbright's enabled state in the selected profile. */
+    public static void setSelectedFullbrightState(boolean enabled) {
+        if (applyingModuleStates) return;
+        load();
+        BhopProfile profile = findProfile(selectedProfile);
+        if (profile == null) return;
+        profile.getModule("fullbright").addProperty("enabled", enabled);
+        profile.getModule("fullbright").addProperty("keyCode", FullbrightMod.getToggleKeyCode());
         save();
     }
 
@@ -1436,6 +1455,19 @@ public class ModuleProfileManager {
                     module.restoreEnabledState(false);
                 }
             }
+            JsonObject fullbrightSettings = profile.getModule("fullbright");
+            JsonElement fullbrightEnabled = fullbrightSettings.get("enabled");
+            boolean shouldEnableFullbright = fullbrightEnabled != null
+                    && fullbrightEnabled.isJsonPrimitive()
+                    && fullbrightEnabled.getAsJsonPrimitive().isBoolean()
+                    && fullbrightEnabled.getAsBoolean();
+            JsonElement fullbrightKeyCode = fullbrightSettings.get("keyCode");
+            int keyCode = fullbrightKeyCode != null && fullbrightKeyCode.isJsonPrimitive()
+                    && fullbrightKeyCode.getAsJsonPrimitive().isNumber()
+                    ? fullbrightKeyCode.getAsInt() : Keyboard.KEY_NONE;
+            FullbrightMod.applyProfileSettings(shouldEnableFullbright, keyCode);
+            fullbrightSettings.addProperty("enabled", shouldEnableFullbright);
+            fullbrightSettings.addProperty("keyCode", keyCode);
         } finally {
             applyingModuleStates = false;
         }
