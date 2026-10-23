@@ -7,7 +7,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
-/** Settings screen for Armor HUD Info and Potion HUD Info. */
+/** Settings screen for Armor HUD and Potion HUD. */
 public final class InfoHudSettingsGui extends AlphaGuiScreen {
     private static final int TOGGLE = 1, PRIMARY = 2, COLOR = 3, BACK = 4;
     private final GuiScreen parent;
@@ -52,7 +52,7 @@ public final class InfoHudSettingsGui extends AlphaGuiScreen {
         int panelW = Math.min(390, width - 24), left = (width - panelW) / 2;
         drawRect(left, height / 2 - 90, left + panelW, height / 2 + 82, 0xE10D1017);
         drawRect(left, height / 2 - 90, left + panelW, height / 2 - 88, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, armor ? "ARMOR HUD INFO" : "POTION HUD INFO", width / 2, height / 2 - 72, 0xFFFFFFFF);
+        drawCenteredString(fontRendererObj, armor ? "ARMOR HUD" : "POTION HUD", width / 2, height / 2 - 72, 0xFFFFFFFF);
         drawCenteredString(fontRendererObj, armor
                 ? "Held item + helmet, chestplate, leggings and boots"
                 : "Cycle through icons, all effects, buffs and debuffs", width / 2, height / 2 - 53, 0xFFB8BDC8);
