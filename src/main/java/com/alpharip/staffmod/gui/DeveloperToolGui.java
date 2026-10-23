@@ -272,9 +272,10 @@ public final class DeveloperToolGui extends AlphaGuiScreen {
         loading = true;
         status = "Saving verification...";
         try {
-            call("set_verification", selectedUsername, Boolean.valueOf(!selectedVerified));
+            boolean nextVerified = !selectedVerified;
+            call("set_verification", selectedUsername, Boolean.valueOf(nextVerified));
             selectAccount(selectedUsername);
-            status = selectedVerified ? "Verification removed for " + selectedUsername + "." : selectedUsername + " verified successfully.";
+            status = nextVerified ? selectedUsername + " verified successfully." : "Verification removed for " + selectedUsername + ".";
         } catch (Exception ex) {
             status = readableError(ex);
             loading = false;
