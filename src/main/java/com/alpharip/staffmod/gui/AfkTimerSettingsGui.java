@@ -11,7 +11,8 @@ public final class AfkTimerSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int ENABLE = 2;
     private static final int DISPLAY_MODE = 3;
-    private static final int COLOR = 4;
+    private static final int BACKGROUND = 4;
+    private static final int COLOR = 5;
 
     private final GuiScreen parent;
     private int left, top, right, bottom;
@@ -25,14 +26,17 @@ public final class AfkTimerSettingsGui extends AlphaGuiScreen {
         buttonList.clear();
         left = width / 2 - 150;
         right = left + 300;
-        top = Math.max(12, height / 2 - 90);
-        bottom = Math.min(height - 12, top + 180);
+        top = Math.max(12, height / 2 - 105);
+        bottom = Math.min(height - 12, top + 210);
 
         buttonList.add(new AlphaButton(ENABLE, left + 20, top + 58, 260, 20,
                 "AFK TIMER: " + (AfkTimerHud.isEnabled() ? "ON" : "OFF"), AfkTimerHud.isEnabled()));
         buttonList.add(new AlphaButton(DISPLAY_MODE, left + 20, top + 86, 260, 20,
                 "DISPLAY: " + AfkTimerHud.getDisplayModeName()));
-        buttonList.add(new AlphaButton(COLOR, left + 20, top + 114, 260, 20,
+        buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 114, 260, 20,
+                "HUD BACKGROUND: " + (AfkTimerHud.isShowBackground() ? "ON" : "OFF"),
+                AfkTimerHud.isShowBackground()));
+        buttonList.add(new AlphaButton(COLOR, left + 20, top + 140, 260, 20,
                 "TEXT COLOR: " + AfkTimerHud.getColorName()));
         buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
@@ -61,6 +65,9 @@ public final class AfkTimerSettingsGui extends AlphaGuiScreen {
                 break;
             case DISPLAY_MODE:
                 AfkTimerHud.cycleDisplayMode();
+                break;
+            case BACKGROUND:
+                AfkTimerHud.setShowBackground(!AfkTimerHud.isShowBackground());
                 break;
             case COLOR:
                 AfkTimerHud.cycleColor();
