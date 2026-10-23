@@ -259,6 +259,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
     }
 
     private boolean hasFolderAccess(PermissionService.Rank rank) {
+        if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) return true;
         String key = folderPermissionKey(rank);
         Boolean override = PermissionService.getCommandPermissionOverride(key);
         if (override != null) return override.booleanValue();
