@@ -115,7 +115,7 @@ public final class AlphaClient {
                 "alphaclient", "alphaclient:help", "alphaclient:modules",
                 "alphaclient:settings", "alphaclient:module", "alphaclient:fps",
                 "alphaclient:cps", "alphaclient:bhop", "alphaclient:wtap",
-                "alphaclient:fullbright", "alphaclient:playtime",
+                "alphaclient:fullbright", "alphaclient:legacypvp", "alphaclient:playtime",
                 "alphaclient:sessiontimer", "alphaclient:afktimer",
                 "fpshud", "cpshud", "playtime", "sessiontimer", "afktimer",
                 "bhop", "wtap", "fullbright", "nameviewer", "legacypvp", "quality"
