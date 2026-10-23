@@ -29,9 +29,10 @@ public final class DeveloperGui extends AlphaGuiScreen {
     private boolean hasDeveloperAccess() {
         boolean developerRank = PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
                 || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"));
+        // Access to the Developer folder/rank is the gate for Developer Mode.
+        // Individual tools keep their own permission checks below.
         return isFounder() || (developerRank
-                && PermissionService.hasCommandPermission("staffmods.developer", true)
-                && PermissionService.hasCommandPermission("staffmods.developer.mode", true));
+                && PermissionService.hasCommandPermission("staffmods.developer", true));
     }
 
     private boolean canOpenTool(String permission) {
@@ -84,11 +85,8 @@ public final class DeveloperGui extends AlphaGuiScreen {
             DeveloperModeState.disable();
             mc.displayGuiScreen(parent);
         } else if (button.id == TOGGLE) {
-            if (!isFounder() && !PermissionService.hasCommandPermission("staffmods.developer.mode", true)) {
-                DeveloperModeState.disable();
-                initGui();
-                return;
-            }
+            // hasDeveloperAccess() already validated the Developer rank/folder.
+            // Do not require a second, separately assigned mode permission to toggle it.
             DeveloperModeState.setEnabled(!DeveloperModeState.isEnabled());
             initGui();
         } else {
