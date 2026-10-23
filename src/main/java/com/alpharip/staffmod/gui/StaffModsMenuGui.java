@@ -109,21 +109,31 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         } else {
             visibleModules = getModulesForSelectedRank();
             int gap = 8;
+            int columns = 3;
             int tileHeight = 36;
             int rowHeight = tileHeight + gap;
             visibleRows = Math.max(1, (contentBottom - contentTop) / rowHeight);
-            int maxOffset = Math.max(0, visibleModules.size() - visibleRows);
+            int totalRows = (visibleModules.size() + columns - 1) / columns;
+            int maxOffset = Math.max(0, totalRows - visibleRows);
             scrollOffset = Math.max(0, Math.min(scrollOffset, maxOffset));
-            int tileWidth = contentRight - contentLeft;
-            for (int i = scrollOffset; i < visibleModules.size() && i < scrollOffset + visibleRows; i++) {
-                int y = contentTop + (i - scrollOffset) * rowHeight;
-                buttonList.add(new AlphaButton(MODULE_BASE + i, contentLeft, y,
+            int tileWidth = (contentRight - contentLeft - gap * (columns - 1)) / columns;
+            int startIndex = scrollOffset * columns;
+            int endIndex = Math.min(visibleModules.size(), startIndex + visibleRows * columns);
+            for (int i = startIndex; i < endIndex; i++) {
+                int column = (i - startIndex) % columns;
+                int row = (i - startIndex) / columns;
+                int x = contentLeft + column * (tileWidth + gap);
+                int y = contentTop + row * rowHeight;
+                buttonList.add(new AlphaButton(MODULE_BASE + i, x, y,
                         tileWidth, tileHeight, visibleModules.get(i).getName()));
             }
             if (selectedRank == PermissionService.Rank.PUBLIC) {
-                int y = contentTop + (visibleModules.size() - scrollOffset) * rowHeight;
-                if (visibleModules.size() - scrollOffset < visibleRows) {
-                    buttonList.add(new AlphaButton(MODULE_BASE + 100, contentLeft, y,
+                int utilityIndex = visibleModules.size();
+                int utilityRow = utilityIndex / columns - scrollOffset;
+                if (utilityRow >= 0 && utilityRow < visibleRows) {
+                    int x = contentLeft + (utilityIndex % columns) * (tileWidth + gap);
+                    int y = contentTop + utilityRow * rowHeight;
+                    buttonList.add(new AlphaButton(MODULE_BASE + 100, x, y,
                             tileWidth, tileHeight, "UTILITIES"));
                 }
             }
@@ -572,7 +582,9 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
         if (openFolderRank != null && wheel != 0) {
-            int maxOffset = Math.max(0, visibleModules.size() - visibleRows);
+            int columns = 3;
+            int totalRows = (visibleModules.size() + columns - 1) / columns;
+            int maxOffset = Math.max(0, totalRows - visibleRows);
             scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset + (wheel < 0 ? 1 : -1)));
             initGui();
         }
