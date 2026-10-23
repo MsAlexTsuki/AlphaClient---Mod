@@ -1,0 +1,1 @@
+grant update (updated_at) on public.profiles to authenticated;
