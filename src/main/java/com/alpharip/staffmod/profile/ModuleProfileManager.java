@@ -713,6 +713,47 @@ public class ModuleProfileManager {
         return true;
     }
 
+    /** Renames any profile without discarding its module settings. Default is reserved. */
+    public static boolean renameProfile(String profileName, String newName) {
+        load();
+        if (profileName == null || newName == null) return false;
+        String oldName = profileName.trim();
+        String name = newName.trim();
+        BhopProfile profile = findProfile(oldName);
+        if (profile == null || name.isEmpty()
+                || "Default".equalsIgnoreCase(profile.getProfileName())
+                || "Default".equalsIgnoreCase(name)) return false;
+        BhopProfile collision = findProfile(name);
+        if (collision != null && collision != profile) return false;
+        String actualOldName = profile.getProfileName();
+        profile.profileName = name;
+        if (selectedProfile.equalsIgnoreCase(actualOldName)) selectedProfile = name;
+        save();
+        return true;
+    }
+
+    /** Deletes a named profile. Default is reserved and can never be deleted. */
+    public static boolean deleteProfile(String profileName) {
+        load();
+        if (profileName == null) return false;
+        BhopProfile profile = findProfile(profileName.trim());
+        if (profile == null || "Default".equalsIgnoreCase(profile.getProfileName())) return false;
+        boolean deletingSelected = selectedProfile.equalsIgnoreCase(profile.getProfileName());
+        if (deletingSelected) saveCurrentModuleStates();
+        profiles.remove(profile);
+        if (deletingSelected) {
+            BhopProfile defaultProfile = findProfile("Default");
+            selectedProfile = defaultProfile != null ? defaultProfile.getProfileName()
+                    : profiles.get(0).getProfileName();
+            save();
+            BhopMode.loadSelectedProfile();
+            applySelectedModuleStates();
+        } else {
+            save();
+        }
+        return true;
+    }
+
     /** Renames the selected profile without discarding its module settings. */
     public static boolean renameSelectedProfile(String newName) {
         load();
