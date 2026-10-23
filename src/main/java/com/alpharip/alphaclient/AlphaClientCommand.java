@@ -231,8 +231,25 @@ public final class AlphaClientCommand extends CommandBase {
             BhopMode.setShiftUpEnabled(value.booleanValue());
             ModuleProfileManager.saveCurrentModuleStates();
             reply(sender, "BHOP Shift-Up " + (value.booleanValue() ? "enabled." : "disabled."));
+        } else if ("name".equals(action) && args.length >= 2) {
+            StringBuilder name = new StringBuilder();
+            for (int i = 1; i < args.length; i++) {
+                if (i > 1) name.append(' ');
+                name.append(args[i]);
+            }
+            BhopMode.setBhopName(name.toString());
+            ModuleProfileManager.saveCurrentModuleStates();
+            reply(sender, "BHOP name updated.");
+        } else if ("color".equals(action) && args.length == 2) {
+            if (!args[1].matches("#[0-9a-fA-F]{6}")) {
+                reply(sender, "Usage: /bhop color <#RRGGBB>");
+                return;
+            }
+            BhopMode.setColor(args[1].toUpperCase(Locale.ROOT));
+            ModuleProfileManager.saveCurrentModuleStates();
+            reply(sender, "BHOP color updated.");
         } else {
-            reply(sender, "Usage: /bhop [settings|on|off|toggle|speed <1-20>|shiftup <on|off>]");
+            reply(sender, "Usage: /bhop [settings|on|off|toggle|speed <1-20>|shiftup <on|off>|name <text>|color <#RRGGBB>]");
         }
     }
 
@@ -287,7 +304,7 @@ public final class AlphaClientCommand extends CommandBase {
         if (!hasModuleAccess(module)) { reply(sender, "Access denied: Legacy PvP is not available to your current rank."); return; }
         if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) { openSettings(sender, "legacypvp"); return; }
         if (args.length != 2) {
-            reply(sender, "Usage: /legacypvp <blockhit|potion-punch|missed-swing-delay|sword-swing|bow-animation|rod-animation|food-drink-animation|viewbobbing> <on|off>");
+            reply(sender, "Usage: /legacypvp <blockhit|potion-punch|missed-swing-delay|sword-swing|bow-animation|rod-animation|food-drink-animation|disable-view-bobbing> <on|off>");
             return;
         }
         Boolean value = parseOnOff(args[1]);
@@ -300,7 +317,7 @@ public final class AlphaClientCommand extends CommandBase {
         else if ("bow-animation".equals(feature) || "bowanimation".equals(feature)) LegacyPvpSettings.setLegacyBowAnimationEnabled(value.booleanValue());
         else if ("rod-animation".equals(feature) || "rodanimation".equals(feature)) LegacyPvpSettings.setLegacyRodAnimationEnabled(value.booleanValue());
         else if ("food-drink-animation".equals(feature) || "fooddrinkanimation".equals(feature)) LegacyPvpSettings.setFoodDrinkAnimationEnabled(value.booleanValue());
-        else if ("viewbobbing".equals(feature) || "disable-view-bobbing".equals(feature)) LegacyPvpSettings.setDisableViewBobbing(value.booleanValue());
+        else if ("disable-view-bobbing".equals(feature) || "disableviewbobbing".equals(feature)) LegacyPvpSettings.setDisableViewBobbing(value.booleanValue());
         else { reply(sender, "Unknown or non-configurable Legacy PvP feature: " + feature + "."); return; }
         reply(sender, "Legacy PvP setting " + feature + " " + (value.booleanValue() ? "enabled." : "disabled."));
     }
@@ -457,7 +474,7 @@ public final class AlphaClientCommand extends CommandBase {
         reply(sender, "/alphaclient help | modules | settings <module>");
         reply(sender, "/alphaclient module <module> <on|off|toggle>");
         reply(sender, "/alphaclient fps|cps <background|color|position|mode> ...");
-        reply(sender, "/alphaclient bhop <on|off|toggle|speed <1-20>|shiftup <on|off>|settings>");
+        reply(sender, "/alphaclient bhop <on|off|toggle|speed <1-20>|shiftup <on|off>|name <text>|color <#RRGGBB>|settings>");
         reply(sender, "/alphaclient wtap <on|off|toggle|delay|cooldown|mode|trigger|target|requirew|settings>");
         reply(sender, "/alphaclient fullbright <on|off|toggle>");
         reply(sender, "/alphaclient legacypvp <feature> <on|off>");
