@@ -210,6 +210,9 @@ public final class PermissionService {
     }
 
     public static boolean hasCommandPermission(String permissionKey, boolean fallbackAllowed) {
+        // Founder is the unrestricted top-level rank. Per-permission overrides must
+        // never remove access from the Founder account.
+        if (hasAccess(Rank.FOUNDER)) return true;
         Boolean explicit = getCommandPermissionOverride(permissionKey);
         return explicit == null ? fallbackAllowed : explicit.booleanValue();
     }
