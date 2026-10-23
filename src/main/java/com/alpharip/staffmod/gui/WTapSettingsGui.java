@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import com.alpharip.staffmod.movement.WTapAssistance;
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import java.io.IOException;
 
 /** Dedicated W-Tap Assistance settings connected to the live input handler. */
@@ -26,7 +27,7 @@ public final class WTapSettingsGui extends AlphaGuiScreen {
 
     @Override
     public void initGui() {
-        if (!PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
+        if (!hasFounderAccess()) {
             mc.displayGuiScreen(parent);
             return;
         }
@@ -45,6 +46,11 @@ public final class WTapSettingsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(COOLDOWN, x, y + gap * 5, buttonWidth, 20, "COOLDOWN: " + WTapAssistance.getCooldown() + " TICKS"));
         buttonList.add(new AlphaButton(REQUIRE_W, x, y + gap * 6, buttonWidth, 20, "REQUIRE W KEY: " + onOff(WTapAssistance.isRequireW())));
         buttonList.add(new AlphaButton(BACK, width / 2 - 55, height - 27, 110, 18, "BACK"));
+    }
+
+    private boolean hasFounderAccess() {
+        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                || SupabaseCommunityService.isSignedInFounder();
     }
 
     private String onOff(boolean value) { return value ? "ON" : "OFF"; }
