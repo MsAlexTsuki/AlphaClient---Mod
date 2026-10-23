@@ -1408,6 +1408,16 @@ public class ModuleProfileManager {
         save();
     }
 
+    /** Store Fullbright's key binding in the selected profile. */
+    public static void setSelectedFullbrightKeyCode(int keyCode) {
+        if (applyingModuleStates) return;
+        load();
+        BhopProfile profile = findProfile(selectedProfile);
+        if (profile == null) return;
+        profile.getModule("fullbright").addProperty("keyCode", keyCode);
+        save();
+    }
+
     /** Store an explicit module toggle in the selected profile. */
     public static void setSelectedModuleEnabled(String moduleId, boolean enabled) {
         if (applyingModuleStates || moduleId == null || moduleId.trim().isEmpty()) return;
