@@ -22,6 +22,7 @@ import com.alpharip.staffmod.movement.WTapAssistance;
 import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
+import com.alpharip.staffmod.pvp.LegacyPvpSettings;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -61,12 +62,14 @@ public final class AlphaClientCommand extends CommandBase {
                 openSettings(sender, aliasModule(route));
                 return;
             }
-            if ("nameviewer".equals(route) || "legacypvp".equals(route)) {
+            if ("nameviewer".equals(route)) {
                 String[] routedArgs = new String[args.length + 1];
                 routedArgs[0] = aliasModule(route);
                 System.arraycopy(args, 0, routedArgs, 1, args.length);
                 args = routedArgs;
                 route = "alphaclient:module";
+            } else if ("legacypvp".equals(route)) {
+                route = "alphaclient:legacypvp";
             } else if ("quality".equals(route)) {
                 openSettings(sender, "quality");
                 return;
@@ -97,6 +100,8 @@ public final class AlphaClientCommand extends CommandBase {
             handleWTap(sender, args);
         } else if ("alphaclient:fullbright".equals(route)) {
             handleFullbright(sender, args);
+        } else if ("alphaclient:legacypvp".equals(route)) {
+            handleLegacyPvp(sender, args);
         } else if ("alphaclient:playtime".equals(route)) {
             handleTimer(sender, args, "playtime");
         } else if ("alphaclient:sessiontimer".equals(route)) {
@@ -277,6 +282,29 @@ public final class AlphaClientCommand extends CommandBase {
         }
     }
 
+    private void handleLegacyPvp(ICommandSender sender, String[] args) {
+        AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
+        if (!hasModuleAccess(module)) { reply(sender, "Access denied: Legacy PvP is not available to your current rank."); return; }
+        if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) { openSettings(sender, "legacypvp"); return; }
+        if (args.length != 2) {
+            reply(sender, "Usage: /legacypvp <blockhit|potion-punch|missed-swing-delay|sword-swing|bow-animation|rod-animation|food-drink-animation|viewbobbing> <on|off>");
+            return;
+        }
+        Boolean value = parseOnOff(args[1]);
+        if (value == null) { reply(sender, "Use on or off for a Legacy PvP setting."); return; }
+        String feature = args[0].toLowerCase(Locale.ROOT);
+        if ("blockhit".equals(feature)) LegacyPvpSettings.setBlockhitEnabled(value.booleanValue());
+        else if ("potion-punch".equals(feature) || "potionpunch".equals(feature)) LegacyPvpSettings.setPotionPunchAnimationEnabled(value.booleanValue());
+        else if ("missed-swing-delay".equals(feature) || "missedswingdelay".equals(feature)) LegacyPvpSettings.setRemoveMissedSwingDelayEnabled(value.booleanValue());
+        else if ("sword-swing".equals(feature) || "swordswing".equals(feature)) LegacyPvpSettings.setLegacySwordSwingEnabled(value.booleanValue());
+        else if ("bow-animation".equals(feature) || "bowanimation".equals(feature)) LegacyPvpSettings.setLegacyBowAnimationEnabled(value.booleanValue());
+        else if ("rod-animation".equals(feature) || "rodanimation".equals(feature)) LegacyPvpSettings.setLegacyRodAnimationEnabled(value.booleanValue());
+        else if ("food-drink-animation".equals(feature) || "fooddrinkanimation".equals(feature)) LegacyPvpSettings.setFoodDrinkAnimationEnabled(value.booleanValue());
+        else if ("viewbobbing".equals(feature) || "disable-view-bobbing".equals(feature)) LegacyPvpSettings.setDisableViewBobbing(value.booleanValue());
+        else { reply(sender, "Unknown or non-configurable Legacy PvP feature: " + feature + "."); return; }
+        reply(sender, "Legacy PvP setting " + feature + " " + (value.booleanValue() ? "enabled." : "disabled."));
+    }
+
     private void handleFullbright(ICommandSender sender, String[] args) {
         if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) {
             reply(sender, "Fullbright accepts: /fullbright <on|off|toggle>.");
@@ -293,9 +321,44 @@ public final class AlphaClientCommand extends CommandBase {
             openSettings(sender, timer);
             return;
         }
+        String option = args[0].toLowerCase(Locale.ROOT);
+        if ("background".equals(option) && args.length == 2) {
+            Boolean value = parseOnOff(args[1]);
+            if (value == null) { reply(sender, "Usage: background <on|off>"); return; }
+            if ("playtime".equals(timer)) PlaytimeTrackerHud.setShowBackground(value.booleanValue());
+            else if ("sessiontimer".equals(timer)) SessionTimerHud.setShowBackground(value.booleanValue());
+            else AfkTimerHud.setShowBackground(value.booleanValue());
+            reply(sender, timer + " HUD background " + (value.booleanValue() ? "enabled." : "disabled."));
+            return;
+        }
+        if ("color".equals(option) && args.length == 2 && "next".equalsIgnoreCase(args[1])) {
+            if ("playtime".equals(timer)) PlaytimeTrackerHud.cycleColor();
+            else if ("sessiontimer".equals(timer)) SessionTimerHud.cycleColor();
+            else AfkTimerHud.cycleColor();
+            reply(sender, timer + " HUD color advanced.");
+            return;
+        }
+        if ("position".equals(option) && args.length == 3) {
+            Integer x = parseInteger(args[1], 0, 100000);
+            Integer y = parseInteger(args[2], 0, 100000);
+            if (x == null || y == null) { reply(sender, "Usage: position <x> <y> with non-negative coordinates."); return; }
+            if ("playtime".equals(timer)) PlaytimeTrackerHud.setHudPosition(x.intValue(), y.intValue());
+            else if ("sessiontimer".equals(timer)) SessionTimerHud.setHudPosition(x.intValue(), y.intValue());
+            else AfkTimerHud.setHudPosition(x.intValue(), y.intValue());
+            reply(sender, timer + " HUD position set to " + x + ", " + y + ".");
+            return;
+        }
+        if ("afktimer".equals(timer) && "mode".equals(option) && args.length == 2) {
+            String mode = args[1].toLowerCase(Locale.ROOT);
+            if ("always".equals(mode)) AfkTimerHud.setDisplayMode(AfkTimerHud.MODE_ALWAYS_VISIBLE);
+            else if ("afk".equals(mode)) AfkTimerHud.setDisplayMode(AfkTimerHud.MODE_ONLY_WHILE_AFK);
+            else { reply(sender, "Usage: /afktimer mode <always|afk>"); return; }
+            reply(sender, "AFK Timer display mode: " + AfkTimerHud.getDisplayModeName() + ".");
+            return;
+        }
         if ("playtime".equals(timer)) {
             if (!"on".equalsIgnoreCase(args[0]) && !"off".equalsIgnoreCase(args[0]) && !"toggle".equalsIgnoreCase(args[0])) {
-                reply(sender, "Usage: /playtime <on|off|toggle|settings>");
+                reply(sender, "Usage: /playtime <on|off|toggle|settings|background <on|off>|color next|position <x> <y>");
                 return;
             }
             boolean enabled = "toggle".equalsIgnoreCase(args[0]) ? !PlaytimeTrackerHud.isEnabled() : "on".equalsIgnoreCase(args[0]);
@@ -304,12 +367,12 @@ public final class AlphaClientCommand extends CommandBase {
         } else if ("sessiontimer".equals(timer)) {
             boolean enabled = parseToggle(args[0], SessionTimerHud.isEnabled()) == null ? SessionTimerHud.isEnabled()
                     : parseToggle(args[0], SessionTimerHud.isEnabled()).booleanValue();
-            if (parseToggle(args[0], SessionTimerHud.isEnabled()) == null) { reply(sender, "Usage: /sessiontimer <on|off|toggle|settings>"); return; }
+            if (parseToggle(args[0], SessionTimerHud.isEnabled()) == null) { reply(sender, "Usage: /sessiontimer <on|off|toggle|settings|background <on|off>|color next|position <x> <y>"); return; }
             SessionTimerHud.setEnabled(enabled);
             reply(sender, "Session Timer " + (SessionTimerHud.isEnabled() ? "enabled." : "disabled."));
         } else {
             Boolean value = parseToggle(args[0], AfkTimerHud.isEnabled());
-            if (value == null) { reply(sender, "Usage: /afktimer <on|off|toggle|settings>"); return; }
+            if (value == null) { reply(sender, "Usage: /afktimer <on|off|toggle|settings|mode <always|afk>|background <on|off>|color next|position <x> <y>"); return; }
             AfkTimerHud.setEnabled(value.booleanValue());
             reply(sender, "AFK Timer " + (AfkTimerHud.isEnabled() ? "enabled." : "disabled."));
         }
@@ -397,6 +460,7 @@ public final class AlphaClientCommand extends CommandBase {
         reply(sender, "/alphaclient bhop <on|off|toggle|speed <1-20>|shiftup <on|off>|settings>");
         reply(sender, "/alphaclient wtap <on|off|toggle|delay|cooldown|mode|trigger|target|requirew|settings>");
         reply(sender, "/alphaclient fullbright <on|off|toggle>");
+        reply(sender, "/alphaclient legacypvp <feature> <on|off>");
         reply(sender, "HUDs: /fpshud /cpshud /playtime /sessiontimer /afktimer.");
         reply(sender, "Other shortcuts: /bhop /wtap /fullbright /nameviewer /legacypvp /quality.");
     }
