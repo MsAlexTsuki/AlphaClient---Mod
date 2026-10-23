@@ -261,6 +261,13 @@ Deno.serve(async (req: Request) => {
     if (action === "grant_user" || action === "revoke_user" || action === "clear_user") {
       const target = await getTargetProfile(body.username);
       const permission = getPermission(body.permission);
+      if (permission.startsWith("mod.") && action === "revoke_user") {
+        const { data: targetProfile } = await admin.from("profiles").select("rank_key, is_founder").eq("id", target.id).single();
+        const { data: targetRanks } = await admin.from("profile_ranks").select("rank_key").eq("profile_id", target.id);
+        const hasOwnerAccess = targetProfile?.is_founder === true || targetProfile?.rank_key === "owner" || targetProfile?.rank_key === "founder"
+          || (targetRanks ?? []).some((row: { rank_key: string }) => row.rank_key === "owner" || row.rank_key === "founder");
+        if (hasOwnerAccess) return json({ error: "Owner and Founder accounts retain their built-in module access." }, 400);
+      }
       if (permission === "staffmods.founder" && target.id !== user.id) {
         return json({ error: "Founder-folder permission is private to the Founder account and cannot be granted to other accounts." }, 403);
       }
@@ -317,6 +324,9 @@ Deno.serve(async (req: Request) => {
       }
       if (permission.startsWith("mod.")) {
         const modId = permission.substring(4);
+        if (action === "revoke_rank" && (rank.rank_key === "founder" || rank.rank_key === "owner")) {
+          return json({ error: "Owner and Founder ranks retain their built-in module access." }, 400);
+        }
         const { data: module, error: moduleError } = await admin.from("client_mods").select("mod_id").eq("mod_id", modId).maybeSingle();
         if (moduleError || !module) throw new Error("Unknown module entitlement.");
         const { error } = await admin.from("client_mod_rank_permissions").upsert({
