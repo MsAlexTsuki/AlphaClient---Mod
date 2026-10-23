@@ -668,8 +668,7 @@ public final class AlphaClientCommand extends CommandBase {
     private boolean hasBhopAccess() {
         Boolean override = PermissionService.getCommandPermissionOverride("command.bhop");
         if (override != null) return override.booleanValue();
-        return PermissionService.hasAccess(PermissionService.Rank.T_MOD)
-                && PermissionService.hasModAccess("staff.bhop");
+        return PermissionService.hasModAccess("staff.bhop");
     }
 
     private boolean hasWTapAccess() {
