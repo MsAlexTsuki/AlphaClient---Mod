@@ -161,7 +161,6 @@ public final class InfoHudModules {
         ItemStack[] items = new ItemStack[] {
                 mc.thePlayer.getHeldItem(), armor[3], armor[2], armor[1], armor[0]
         };
-        String[] labels = new String[] { "Hand", "Helmet", "Chest", "Legs", "Boots" };
         int x = armorX, y = armorY;
         GL11.glPushMatrix();
         GL11.glTranslatef(x, y, 0.0F);
@@ -171,7 +170,7 @@ public final class InfoHudModules {
             int itemY = armorLayout == 0 ? 0 : i * 20;
             ItemStack stack = items[i];
             drawItem(mc, stack, itemX, itemY);
-            String label = labels[i] + ": " + (stack == null ? "Empty" : stack.getDisplayName() + " " + durability(stack));
+            String label = stack == null ? "Empty" : stack.getDisplayName() + " " + durability(stack);
             mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), itemX + 20, itemY + 5, armorColor);
         }
         GL11.glPopMatrix();
