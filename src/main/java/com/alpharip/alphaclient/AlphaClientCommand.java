@@ -616,29 +616,30 @@ public final class AlphaClientCommand extends CommandBase {
     }
 
     private void sendHelp(ICommandSender sender) {
-        reply(sender, "AlphaClient commands available to your current rank:");
+        PermissionService.Rank rank = PermissionService.getEffectiveRank();
+        reply(sender, "AlphaClient commands available to your current rank (" + rank.name() + "):");
         reply(sender, "/alphaclient help | modules | settings <module>");
         reply(sender, "/alphaclient module <module> <on|off|toggle>");
         reply(sender, "/general opens Mods -> General.");
-        if (PermissionService.hasAccess(PermissionService.Rank.BETA)) {
+        if (rank == PermissionService.Rank.BETA) {
             reply(sender, "/beta opens Mods -> Beta.");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.DONATOR)) {
+        if (rank == PermissionService.Rank.DONATOR) {
             reply(sender, "/donator opens Mods -> Donator.");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.SCOUT)) {
+        if (rank == PermissionService.Rank.SCOUT) {
             reply(sender, "/scout opens Mods -> Scout.");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.ROGUE)) {
+        if (rank == PermissionService.Rank.ROGUE) {
             reply(sender, "/rogue opens Mods -> Rogue.");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.ELITE)) {
+        if (rank == PermissionService.Rank.ELITE) {
             reply(sender, "/elite opens Mods -> Elite.");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.ALPHA)) {
+        if (rank == PermissionService.Rank.ALPHA) {
             reply(sender, "/alpha opens Mods -> Alpha.");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.ALPHA_PLUS)) {
+        if (rank == PermissionService.Rank.ALPHA_PLUS) {
             reply(sender, "/alphaplus opens Mods -> Alpha+.");
         }
         reply(sender, "Available shortcuts: /fpshud /cpshud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality.");
@@ -650,17 +651,17 @@ public final class AlphaClientCommand extends CommandBase {
         }
         if (PermissionService.hasStaffModsAccess()) {
             reply(sender, "StaffMods: /staffmods opens the StaffMods GUI; /staffgeneral opens StaffMods -> General.");
-            if (PermissionService.hasAccess(PermissionService.Rank.T_MOD)) reply(sender, "Staff folder: /stafftmod.");
-            if (PermissionService.hasAccess(PermissionService.Rank.MOD)) reply(sender, "Staff folder: /staffmod.");
-            if (PermissionService.hasAccess(PermissionService.Rank.SR_MOD)) reply(sender, "Staff folder: /staffsrmod.");
-            if (PermissionService.hasAccess(PermissionService.Rank.ADMIN)) reply(sender, "Staff folder: /staffadmin.");
-            if (PermissionService.hasAccess(PermissionService.Rank.SR_ADMIN)) reply(sender, "Staff folder: /staffsradmin.");
-            if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) reply(sender, "Staff folder: /staffplatformadmin.");
-            if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) reply(sender, "Staff folder: /staffmanager.");
-            if (PermissionService.hasAccess(PermissionService.Rank.OWNER)) reply(sender, "Staff folder: /staffowner.");
-            if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) reply(sender, "Staff folder: /stafffounder.");
-            if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
-                    || PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+            if (rank == PermissionService.Rank.T_MOD) reply(sender, "Staff folder: /stafftmod.");
+            if (rank == PermissionService.Rank.MOD) reply(sender, "Staff folder: /staffmod.");
+            if (rank == PermissionService.Rank.SR_MOD) reply(sender, "Staff folder: /staffsrmod.");
+            if (rank == PermissionService.Rank.ADMIN) reply(sender, "Staff folder: /staffadmin.");
+            if (rank == PermissionService.Rank.SR_ADMIN) reply(sender, "Staff folder: /staffsradmin.");
+            if (rank == PermissionService.Rank.PLAT_ADMIN) reply(sender, "Staff folder: /staffplatformadmin.");
+            if (rank == PermissionService.Rank.MANAGER) reply(sender, "Staff folder: /staffmanager.");
+            if (rank == PermissionService.Rank.OWNER) reply(sender, "Staff folder: /staffowner.");
+            if (rank == PermissionService.Rank.FOUNDER) reply(sender, "Staff folder: /stafffounder.");
+            if (rank == PermissionService.Rank.PLAT_ADMIN
+                    || rank == PermissionService.Rank.MANAGER) {
                 reply(sender, "Staff folder: /staffmanagement.");
             }
         }
