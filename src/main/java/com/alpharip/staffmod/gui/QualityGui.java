@@ -48,28 +48,30 @@ public final class QualityGui extends AlphaGuiScreen {
         int maxScroll = Math.max(0, FEATURES.length - visibleRows);
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
         buttonList.add(new GuiButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
-        if (PLAYTIME_TRACKER_INDEX >= scrollOffset && PLAYTIME_TRACKER_INDEX < scrollOffset + visibleRows) {
-            int trackerY = panelTop + 68 + (PLAYTIME_TRACKER_INDEX - scrollOffset) * 20;
-            buttonList.add(new AlphaButton(PLAYTIME_TRACKER, panelLeft + 10, trackerY,
-                    panelRight - panelLeft - 20, 17, "Playtime Tracker", true));
-        }
-        if (FULLBRIGHT_INDEX >= scrollOffset && FULLBRIGHT_INDEX < scrollOffset + visibleRows) {
-            int fullbrightY = panelTop + 68 + (FULLBRIGHT_INDEX - scrollOffset) * 20;
-            buttonList.add(new AlphaButton(FULLBRIGHT, panelLeft + 10, fullbrightY,
-                    panelRight - panelLeft - 20, 17,
-                    "Fullbright: " + (FullbrightMod.isEnabled() ? "ON" : "OFF"), true));
-        }
-        if (AFK_TIMER_INDEX >= scrollOffset && AFK_TIMER_INDEX < scrollOffset + visibleRows) {
-            int timerY = panelTop + 68 + (AFK_TIMER_INDEX - scrollOffset) * 20;
-            buttonList.add(new AlphaButton(AFK_TIMER, panelLeft + 10, timerY,
-                    panelRight - panelLeft - 20, 17, "AFK Timer", true));
-        }
-        if (SESSION_TIMER_INDEX >= scrollOffset && SESSION_TIMER_INDEX < scrollOffset + visibleRows) {
-            int timerY = panelTop + 68 + (SESSION_TIMER_INDEX - scrollOffset) * 20;
-            buttonList.add(new AlphaButton(SESSION_TIMER, panelLeft + 10, timerY,
-                    panelRight - panelLeft - 20, 17,
-                    "Session Timer: " + (SessionTimerHud.isEnabled() ? "ON" : "OFF"),
-                    SessionTimerHud.isEnabled()));
+        for (int i = scrollOffset; i < FEATURES.length && i < scrollOffset + visibleRows; i++) {
+            int y = panelTop + 68 + (i - scrollOffset) * 20;
+            int buttonWidth = panelRight - panelLeft - 20;
+            if (i == PLAYTIME_TRACKER_INDEX) {
+                buttonList.add(new AlphaButton(PLAYTIME_TRACKER, panelLeft + 10, y,
+                        buttonWidth, 17, "Playtime Tracker", true));
+            } else if (i == FULLBRIGHT_INDEX) {
+                buttonList.add(new AlphaButton(FULLBRIGHT, panelLeft + 10, y,
+                        buttonWidth, 17,
+                        "Fullbright: " + (FullbrightMod.isEnabled() ? "ON" : "OFF"), true));
+            } else if (i == AFK_TIMER_INDEX) {
+                buttonList.add(new AlphaButton(AFK_TIMER, panelLeft + 10, y,
+                        buttonWidth, 17, "AFK Timer", true));
+            } else if (i == SESSION_TIMER_INDEX) {
+                buttonList.add(new AlphaButton(SESSION_TIMER, panelLeft + 10, y,
+                        buttonWidth, 17,
+                        "Session Timer: " + (SessionTimerHud.isEnabled() ? "ON" : "OFF"),
+                        SessionTimerHud.isEnabled()));
+            } else {
+                AlphaButton planned = new AlphaButton(1000 + i, panelLeft + 10, y,
+                        buttonWidth, 17, FEATURES[i] + "  -  PLANNED");
+                planned.enabled = false;
+                buttonList.add(planned);
+            }
         }
     }
 
@@ -82,18 +84,7 @@ public final class QualityGui extends AlphaGuiScreen {
         drawCenteredString(fontRendererObj, "QUALITY OF LIFE FEATURES", width / 2, panelTop + 30, ACCENT);
         drawString(fontRendererObj, "Features and roadmap ideas", panelLeft + 12, panelTop + 49, 0xFFB8BDC8);
 
-        int rowHeight = 20;
-        for (int i = scrollOffset; i < FEATURES.length && i < scrollOffset + visibleRows; i++) {
-            int y = panelTop + 68 + (i - scrollOffset) * rowHeight;
-            if (i == AFK_TIMER_INDEX || i == FULLBRIGHT_INDEX || i == SESSION_TIMER_INDEX || i == PLAYTIME_TRACKER_INDEX) {
-                // These entries have live controls rather than roadmap labels.
-                continue;
-            }
-            drawRect(panelLeft + 10, y, panelRight - 10, y + 17, 0xB5161820);
-            drawString(fontRendererObj, FEATURES[i], panelLeft + 17, y + 5, 0xFFE7E9EE);
-            String status = "PLANNED";
-            drawString(fontRendererObj, status, panelRight - 17 - fontRendererObj.getStringWidth(status), y + 5, 0xFFB8BDC8);
-        }
+        // Feature rows are rendered by AlphaButton, matching StaffMods -> General.
         if (FEATURES.length > visibleRows) {
             drawString(fontRendererObj, "Scroll to view all " + FEATURES.length + " ideas", panelLeft + 112,
                     panelBottom - 23, 0xFF8E95A3);
