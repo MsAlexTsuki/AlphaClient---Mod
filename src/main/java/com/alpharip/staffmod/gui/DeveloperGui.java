@@ -21,14 +21,19 @@ public final class DeveloperGui extends AlphaGuiScreen {
         this.parent = parent;
     }
 
+    private boolean isFounder() {
+        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.founder"));
+    }
+
     private boolean hasDeveloperAccess() {
-        return PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+        return isFounder() || (PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
                 && PermissionService.hasCommandPermission("staffmods.developer", true)
-                && PermissionService.hasCommandPermission("staffmods.developer.mode", true);
+                && PermissionService.hasCommandPermission("staffmods.developer.mode", true));
     }
 
     private boolean canOpenTool(String permission) {
-        return hasDeveloperAccess() && PermissionService.hasCommandPermission(permission, true);
+        return hasDeveloperAccess() && (isFounder() || PermissionService.hasCommandPermission(permission, true));
     }
 
     @Override
@@ -77,7 +82,7 @@ public final class DeveloperGui extends AlphaGuiScreen {
             DeveloperModeState.disable();
             mc.displayGuiScreen(parent);
         } else if (button.id == TOGGLE) {
-            if (!PermissionService.hasCommandPermission("staffmods.developer.mode", true)) {
+            if (!isFounder() && !PermissionService.hasCommandPermission("staffmods.developer.mode", true)) {
                 DeveloperModeState.disable();
                 initGui();
                 return;
