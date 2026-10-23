@@ -31,6 +31,7 @@ import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -68,6 +69,7 @@ public final class AlphaClient {
         System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
 
         MinecraftForge.EVENT_BUS.register(this);
+        registerClientCommands();
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
         MinecraftForge.EVENT_BUS.register(new RankViewerRenderer());
         MinecraftForge.EVENT_BUS.register(new FpsMod());
@@ -105,6 +107,19 @@ public final class AlphaClient {
         syncBhopKeyBindingVisibility();
 
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
+    }
+
+    /** Registers the central command namespace and short aliases against shared handlers. */
+    private void registerClientCommands() {
+        String[] commands = {
+                "alphaclient", "alphaclient:help", "alphaclient:modules",
+                "alphaclient:settings", "alphaclient:module", "alphaclient:fps",
+                "alphaclient:cps", "fpshud", "cpshud", "playtime",
+                "sessiontimer", "afktimer"
+        };
+        for (String command : commands) {
+            ClientCommandHandler.instance.registerCommand(new AlphaClientCommand(command));
+        }
     }
 
     /** Connects to the partner server only after the AlphaClient main menu has loaded. */
