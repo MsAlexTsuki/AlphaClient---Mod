@@ -8,27 +8,19 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-/** Tracks and displays elapsed time in the current connected world session. */
+/** Tracks elapsed time for the lifetime of the running Minecraft client. */
 public final class SessionTimerHud {
     private static final String MODULE_ID = "sessionTimer";
     private static long sessionStartedAt;
-    private static boolean sessionActive;
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
 
-        Minecraft mc = Minecraft.getMinecraft();
-        boolean inWorld = mc != null && mc.thePlayer != null && mc.theWorld != null;
-        if (!inWorld) {
-            sessionActive = false;
-            sessionStartedAt = 0L;
-            return;
-        }
-
-        if (!sessionActive) {
+        // Start once per Minecraft process, including time spent in menus or between worlds.
+        // Leaving a server/world must not reset the session timer.
+        if (sessionStartedAt <= 0L) {
             sessionStartedAt = System.currentTimeMillis();
-            sessionActive = true;
         }
     }
 
@@ -38,7 +30,7 @@ public final class SessionTimerHud {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null || mc.gameSettings == null
                 || mc.gameSettings.showDebugInfo || mc.gameSettings.hideGUI
-                || !isEnabled() || !sessionActive || sessionStartedAt <= 0L) return;
+                || !isEnabled() || sessionStartedAt <= 0L) return;
 
         long elapsedSeconds = Math.max(0L, (System.currentTimeMillis() - sessionStartedAt) / 1000L);
         String text = "SESSION " + formatDuration(elapsedSeconds);
