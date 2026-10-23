@@ -100,8 +100,8 @@ public final class InfoHudModules {
     public static int getArmorX() { load(); return armorX; }
     public static int getArmorY() { load(); return armorY; }
     public static int getArmorColor() { load(); return armorColor; }
-    public static int getArmorEditorWidth() { load(); return armorLayout == 0 ? 98 : 18; }
-    public static int getArmorEditorHeight() { load(); return armorLayout == 0 ? 18 : 98; }
+    public static int getArmorEditorWidth() { load(); return armorLayout == 0 ? 210 : 120; }
+    public static int getArmorEditorHeight() { load(); return armorLayout == 0 ? 18 : 70; }
     public static int getArmorLayout() { load(); return armorLayout; }
     public static void setArmorPosition(int x, int y) { load(); armorX = Math.max(0, x); armorY = Math.max(0, y); save(); }
     public static void cycleArmorLayout() { load(); armorLayout = (armorLayout + 1) % 2; save(); }
@@ -156,18 +156,25 @@ public final class InfoHudModules {
     }
 
     private static void renderArmor(Minecraft mc) {
-        // Show the held item first, followed by equipped armor from head to feet.
-        // No labels: only the actual Minecraft item icons and their vanilla overlays.
+        // Compact layout: held item first, then equipped armor from head to feet.
         ItemStack[] armor = mc.thePlayer.inventory.armorInventory;
         ItemStack[] items = new ItemStack[] {
                 mc.thePlayer.getHeldItem(), armor[3], armor[2], armor[1], armor[0]
         };
+        String[] labels = new String[] { "Hand", "Helmet", "Chest", "Legs", "Boots" };
         int x = armorX, y = armorY;
+        GL11.glPushMatrix();
+        GL11.glTranslatef(x, y, 0.0F);
+        GL11.glScalef(0.65F, 0.65F, 1.0F);
         for (int i = 0; i < items.length; i++) {
-            int itemX = armorLayout == 0 ? x + i * 20 : x;
-            int itemY = armorLayout == 0 ? y : y + i * 20;
-            drawItem(mc, items[i], itemX, itemY);
+            int itemX = armorLayout == 0 ? i * 92 : 0;
+            int itemY = armorLayout == 0 ? 0 : i * 20;
+            ItemStack stack = items[i];
+            drawItem(mc, stack, itemX, itemY);
+            String label = labels[i] + ": " + (stack == null ? "Empty" : stack.getDisplayName() + " " + durability(stack));
+            mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), itemX + 20, itemY + 5, armorColor);
         }
+        GL11.glPopMatrix();
     }
 
     private static void drawItem(Minecraft mc, ItemStack stack, int x, int y) {
@@ -176,6 +183,11 @@ public final class InfoHudModules {
         mc.getRenderItem().renderItemAndEffectIntoGUI(stack, x, y);
         mc.getRenderItem().renderItemOverlays(mc.fontRendererObj, stack, x, y);
         RenderHelper.disableStandardItemLighting();
+    }
+
+    private static String durability(ItemStack stack) {
+        if (stack == null || !stack.isItemStackDamageable()) return "";
+        return "[" + (stack.getMaxDamage() - stack.getItemDamage()) + "/" + stack.getMaxDamage() + "]";
     }
 
     private static String fit(Minecraft mc, String value, int maxWidth) {
