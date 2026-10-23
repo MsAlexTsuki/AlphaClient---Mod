@@ -7,6 +7,7 @@ import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
+import com.alpharip.staffmod.hud.InfoHudModules;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.gui.GuiButton;
@@ -25,6 +26,8 @@ public final class HudEditorGui extends AlphaGuiScreen {
     private boolean afkTimerDragging;
     private boolean sessionTimerDragging;
     private boolean playtimeTrackerDragging;
+    private boolean armorDragging;
+    private boolean potionDragging;
     private int dragX, dragY;
 
     public HudEditorGui(GuiScreen parent) { this.parent = parent; }
@@ -49,6 +52,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
         BhopHud.loadHudPosition();
         FpsMod.loadHudPosition();
         CpsMod.load();
+        InfoHudModules.load();
         buttonList.clear();
         int w = 132, gap = 10, x = (width - (w * 2 + gap)) / 2, y = height - 38;
         buttonList.add(new AlphaButton(BACK, x, y, w, 24, "BACK"));
@@ -89,9 +93,22 @@ public final class HudEditorGui extends AlphaGuiScreen {
             fontRendererObj.drawStringWithShadow(fps, fx, fy, FpsMod.getTextColor());
         }
 
+        InfoHudModules.renderEditorPreviews();
+
         if (isCpsModuleEnabled()) {
             String cps = CpsMod.getDisplayText();
-            int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
+            int ahx = InfoHudModules.getArmorX(), ahy = InfoHudModules.getArmorY();
+        if (mouseButton == 0 && InfoHudModules.armorEnabled()
+                && mouseX >= ahx && mouseX <= ahx + 440 && mouseY >= ahy && mouseY <= ahy + 120) {
+            dragging = true; armorDragging = true; dragX = mouseX - ahx; dragY = mouseY - ahy; return;
+        }
+        int phx = InfoHudModules.getPotionX(), phy = InfoHudModules.getPotionY();
+        if (mouseButton == 0 && InfoHudModules.potionEnabled()
+                && mouseX >= phx && mouseX <= phx + 220 && mouseY >= phy && mouseY <= phy + 180) {
+            dragging = true; potionDragging = true; dragX = mouseX - phx; dragY = mouseY - phy; return;
+        }
+
+        int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
             int cw = fontRendererObj.getStringWidth(cps) + 10;
             if (CpsMod.isShowBackground()) drawRect(cx - 3, cy - 3, cx + cw, cy + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
             fontRendererObj.drawStringWithShadow(cps, cx, cy, CpsMod.getTextColor());
@@ -171,7 +188,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
         if (dragging && button == 0) {
-            if (!afkTimerDragging && !fpsDragging && !cpsDragging && !sessionTimerDragging && !playtimeTrackerDragging && !hasBhopAccess()) {
+            if (!afkTimerDragging && !fpsDragging && !cpsDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !hasBhopAccess()) {
                 dragging = false;
                 return;
             }
@@ -197,6 +214,14 @@ public final class HudEditorGui extends AlphaGuiScreen {
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 SessionTimerHud.setHudPosition(x, y);
+            } else if (armorDragging) {
+                x = Math.max(0, Math.min(width - 440, x));
+                y = Math.max(0, Math.min(height - 120, y));
+                InfoHudModules.setArmorPosition(x, y);
+            } else if (potionDragging) {
+                x = Math.max(0, Math.min(width - 220, x));
+                y = Math.max(0, Math.min(height - 180, y));
+                InfoHudModules.setPotionPosition(x, y);
             } else if (playtimeTrackerDragging) {
                 int itemWidth = fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10;
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
@@ -223,6 +248,8 @@ public final class HudEditorGui extends AlphaGuiScreen {
         afkTimerDragging = false;
         sessionTimerDragging = false;
         playtimeTrackerDragging = false;
+        armorDragging = false;
+        potionDragging = false;
         super.mouseReleased(mouseX, mouseY, state);
     }
 
