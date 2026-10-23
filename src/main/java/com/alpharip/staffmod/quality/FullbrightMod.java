@@ -81,7 +81,15 @@ public final class FullbrightMod {
 
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event) {
-        if (toggleKey != null && toggleKey.isPressed()) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (toggleKey == null || minecraft == null || minecraft.currentScreen != null) {
+            return;
+        }
+
+        int boundKeyCode = toggleKey.getKeyCode();
+        if (boundKeyCode != Keyboard.KEY_NONE
+                && Keyboard.getEventKeyState()
+                && Keyboard.getEventKey() == boundKeyCode) {
             setEnabled(!isEnabled());
         }
     }
