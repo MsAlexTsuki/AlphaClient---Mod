@@ -841,8 +841,18 @@ public final class AlphaClientCommand extends CommandBase {
             String[] folders = {"general","beta","tmod","mod","srmod","admin","sradmin","management","platformadmin","manager","owner","founder","donator","scout","rogue","elite","alpha","alphaplus"};
             for (String folder : folders) options.add(folder);
         } else if ("profile".equals(commandName) && args.length == 1) {
+            options.add("create");
+            options.add("edit");
+            options.add("delete");
             for (ModuleProfileManager.BhopProfile profile : ModuleProfileManager.getProfiles()) {
                 options.add(profile.getProfileName());
+            }
+        } else if ("profile".equals(commandName) && args.length == 2
+                && ("delete".equalsIgnoreCase(args[0]) || "edit".equalsIgnoreCase(args[0]))) {
+            for (ModuleProfileManager.BhopProfile profile : ModuleProfileManager.getProfiles()) {
+                if ("delete".equalsIgnoreCase(args[0]) || !"Default".equalsIgnoreCase(profile.getProfileName())) {
+                    options.add(profile.getProfileName());
+                }
             }
         } else if ("alphaclient".equals(commandName)) {
             if (args.length == 1) {
