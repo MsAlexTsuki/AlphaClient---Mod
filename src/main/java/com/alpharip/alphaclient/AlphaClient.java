@@ -127,8 +127,8 @@ public final class AlphaClient {
                 "bhop", "wtap", "fullbright", "nameviewer", "legacypvp", "quality",
                 "staffmods", "staffgeneral", "stafftmod", "staffmod",
                 "staffsrmod", "staffadmin", "staffsradmin", "staffmanagement",
-                "staffplatformadmin", "staffmanager", "staffowner", "stafffounder",
-                "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus"
+                "staffplatformadmin", "staffplatadmin", "staffmanager", "staffowner", "stafffounder",
+                "general", "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus"
         };
         for (String command : commands) {
             ClientCommandHandler.instance.registerCommand(new AlphaClientCommand(command));
