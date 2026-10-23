@@ -27,6 +27,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
     private static final int TOGGLE_TEST = 21;
     private static final int TOGGLE_SANDBOX = 22;
     private static final int EXPORT_BUNDLE = 23;
+    private static final int TOGGLE_OVERLAY = 24;
 
     private static final String[] TOOLS = {
         "Developer Console",
@@ -113,6 +114,8 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             buttonList.add(new AlphaButton(TOOL_BASE + i, listX, listTop + row * rowHeight,
                     listWidth, 20, TOOLS[i], i == selectedTool));
         }
+        buttonList.add(new AlphaButton(TOGGLE_OVERLAY, panelLeft + panelWidth - 122, panelTop + 8, 108, 20,
+                DeveloperDiagnostics.isDebugOverlayEnabled() ? "OVERLAY: ON" : "OVERLAY: OFF"));
         buttonList.add(new AlphaButton(RUN_TESTS, panelLeft + 14, panelTop + panelHeight - 58, 84, 20, "RUN TESTS"));
         buttonList.add(new AlphaButton(TOGGLE_TEST, panelLeft + 104, panelTop + panelHeight - 58, 84, 20,
                 DeveloperDiagnostics.isTestMode() ? "TEST: ON" : "TEST: OFF"));
@@ -133,6 +136,12 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         if (button == null) return;
         if (button.id == BACK) {
             mc.displayGuiScreen(parent);
+            return;
+        }
+        if (button.id == TOGGLE_OVERLAY) {
+            DeveloperDiagnostics.setDebugOverlayEnabled(!DeveloperDiagnostics.isDebugOverlayEnabled());
+            status = "Developer Debug Overlay " + (DeveloperDiagnostics.isDebugOverlayEnabled() ? "enabled." : "disabled.");
+            initGui();
             return;
         }
         if (button.id == RUN_TESTS) {
@@ -266,7 +275,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
                 palette.append("\\nActions: run tests, toggle test/sandbox mode, export diagnostic bundle.");
                 return palette.toString();
             case 2: return "Recent client events\\n" + join(DeveloperDiagnostics.events());
-            case 3: return "Debug overlay is controlled by the DEBUG OVERLAY button below.\\n" + DeveloperDiagnostics.profilerReport();
+            case 3: return "Debug overlay: " + DeveloperDiagnostics.isDebugOverlayEnabled() + "\\nUse OVERLAY ON/OFF at the top right to toggle the live in-game overlay.\\n" + DeveloperDiagnostics.profilerReport();
             case 4: return "TEST MODE: " + DeveloperDiagnostics.isTestMode() + "\\n" + DeveloperDiagnostics.runTests();
             case 5: return "SANDBOX MODE: " + DeveloperDiagnostics.isSandboxMode() + "\\nSandbox is an isolated developer flag; it does not alter live module/config state.";
             case 6: return DeveloperDiagnostics.profilerReport();
