@@ -229,10 +229,16 @@ public final class AlphaClientCommand extends CommandBase {
         if ("alphaclient".equals(name) || "alphahelp".equals(name) || "alphaclient:help".equals(name)) {
             guideHeader(sender, "ALPHACLIENT");
             guideLine(sender, "/alphaclient help", "Show this guide");
+            guideLine(sender, "/alphaclient help", "Show this guide");
             guideLine(sender, "/alphaclient modules", "List registered modules and their status");
             guideLine(sender, "/alphaclient settings <module>", "Open a module's settings");
-            guideLine(sender, "/alphaclient module <module> <on|off|toggle>", "Change a module's state");
+            guideLine(sender, "/alphaclient module <module> <on|off|toggle>", "Change a supported module's state");
+            guideLine(sender, "/alphaclient fps|cps|bhop|wtap", "Open the corresponding module command");
+            guideLine(sender, "/alphaclient fullbright|legacypvp", "Open the corresponding feature command");
+            guideLine(sender, "/alphaclient playtime|sessiontimer|afktimer", "Use the corresponding timer command");
+            guideLine(sender, "/alphahelp", "Show the command overview");
             guideLine(sender, "/alphahelp open", "Open the scrollable command list");
+            guideLine(sender, "/alphahelp help", "Show this guide");
             guideLine(sender, "/profiles", "List saved profiles");
             guideLine(sender, "/profile <name|create|edit|delete>", "Switch or manage profiles");
             guideLine(sender, "/hudeditor", "Open the HUD editor");
@@ -245,6 +251,7 @@ public final class AlphaClientCommand extends CommandBase {
             guideHeader(sender, "MODULE SETTINGS");
             guideLine(sender, "/alphaclient:settings <module>", "Open settings for the named module");
             guideLine(sender, "/alphaclient settings <module>", "Use the main AlphaClient command route");
+            guideLine(sender, "Valid registered module IDs: quality, name-viewer, fps, legacy-pvp, cps, staffmods", "Use the ID as the module argument");
             guideLine(sender, "/fpshud settings", "Open FPS HUD settings");
             guideLine(sender, "/cpshud settings", "Open CPS HUD settings");
             guideLine(sender, "/bhop settings", "Open BHOP settings");
@@ -254,6 +261,7 @@ public final class AlphaClientCommand extends CommandBase {
             guideHeader(sender, "MODULE CONTROL");
             guideLine(sender, "/alphaclient:module <module> <on|off|toggle>", "Change a supported module's state");
             guideLine(sender, "/alphaclient module <module> <on|off|toggle>", "Use the main AlphaClient command route");
+            guideLine(sender, "Special module IDs: bhop, wtap, fullbright, playtime, sessiontimer, afktimer", "These use dedicated command handlers");
             guideLine(sender, "/alphaclient:modules", "List available modules");
             guideLine(sender, "/staffmods", "Open StaffMods; it is a folder, not a single module");
         } else if ("fpshud".equals(name) || "alphaclient:fps".equals(name)) {
@@ -299,9 +307,13 @@ public final class AlphaClientCommand extends CommandBase {
             guideHeader(sender, "NAME VIEWER");
             guideLine(sender, "/nameviewer", "Open Name Viewer settings");
             guideLine(sender, "/nameviewer settings", "Open Name Viewer settings");
+            guideLine(sender, "/nameviewer help", "Show this guide");
+            guideLine(sender, "/alphaclient module name-viewer <on|off|toggle>", "Change the Name Viewer module state");
         } else if ("quality".equals(name)) {
             guideHeader(sender, "QUALITY");
-            guideLine(sender, "/quality", "Open Quality settings");
+            guideLine(sender, "/quality", "Open the Quality feature-group screen");
+            guideLine(sender, "/quality help", "Show this guide");
+            guideLine(sender, "/alphaclient settings quality", "Open Quality through the module settings command");
         } else if ("profiles".equals(name)) {
             guideHeader(sender, "PROFILES");
             guideLine(sender, "/profiles", "List available profiles");
@@ -351,8 +363,9 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/alphaperms rank <rank> grant|revoke|clear <permission>", "Manage a rank permission");
         } else {
             guideHeader(sender, name.toUpperCase(Locale.ROOT) + " COMMAND");
-            guideLine(sender, "/" + name, "Run this command");
+            guideLine(sender, "/" + name, "Run the command's default action");
             guideLine(sender, "/" + name + " help", "Show this guide");
+            guideLine(sender, "No additional arguments are documented for this command.", "Use the command overview for supported commands");
         }
         reply(sender, "§8Tip: append §fhelp §8to any AlphaClient command to view its guide.");
     }
