@@ -63,7 +63,19 @@ public final class FullbrightMod {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !enabled) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+
+        int currentKeyCode = getToggleKeyCode();
+        if (currentKeyCode != lastObservedKeyCode) {
+            lastObservedKeyCode = currentKeyCode;
+            if (!com.alpharip.staffmod.profile.ModuleProfileManager.isApplyingModuleStates()) {
+                com.alpharip.staffmod.profile.ModuleProfileManager.setSelectedFullbrightKeyCode(currentKeyCode);
+            }
+        }
+
+        if (!enabled) {
             return;
         }
 
