@@ -27,7 +27,6 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
     private static final PermissionService.Rank[] RANKS = {
         PermissionService.Rank.PUBLIC,
         PermissionService.Rank.BETA,
-        PermissionService.Rank.DONATOR,
         PermissionService.Rank.T_MOD,
         PermissionService.Rank.MOD,
         PermissionService.Rank.SR_MOD,
@@ -38,7 +37,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         PermissionService.Rank.FOUNDER
     };
     private static final String[] LABELS = {
-        "GENERAL", "BETA", "DONATOR", "T-MOD", "MOD", "SR MOD",
+        "GENERAL", "BETA", "T-MOD", "MOD", "SR MOD",
         "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
     };
 
