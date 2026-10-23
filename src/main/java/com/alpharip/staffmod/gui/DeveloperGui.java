@@ -29,14 +29,17 @@ public final class DeveloperGui extends AlphaGuiScreen {
     private boolean hasDeveloperAccess() {
         boolean developerRank = PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
                 || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"));
-        // Access to the Developer folder/rank is the gate for Developer Mode.
-        // Individual tools keep their own permission checks below.
-        return isFounder() || (developerRank
-                && PermissionService.hasCommandPermission("staffmods.developer", true));
+        // The Developer rank itself grants access to Developer Mode.
+        // Founder access is unconditional; don't let a stale/explicit command
+        // permission deny the rank's own folder after the menu has allowed it.
+        return isFounder() || developerRank;
     }
 
     private boolean canOpenTool(String permission) {
-        return hasDeveloperAccess() && (isFounder() || PermissionService.hasCommandPermission(permission, true));
+        // Developer Mode is the gate for its tools. Tool-specific command
+        // overrides previously hid the buttons or immediately closed their pages,
+        // even after the Developer folder had granted access.
+        return hasDeveloperAccess();
     }
 
     @Override
