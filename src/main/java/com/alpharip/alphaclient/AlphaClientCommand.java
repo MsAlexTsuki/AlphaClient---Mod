@@ -74,7 +74,7 @@ public final class AlphaClientCommand extends CommandBase {
         }
 
         if ("profile".equals(route)) {
-            selectProfile(sender, args);
+            handleProfileCommand(sender, args);
             return;
         }
 
@@ -182,6 +182,72 @@ public final class AlphaClientCommand extends CommandBase {
         }
     }
 
+    private void handleProfileCommand(ICommandSender sender, String[] args) {
+        if (args.length == 0) {
+            reply(sender, "Usage: /profile <name> | /profile create <name> | /profile edit <new name> | /profile delete <name>");
+            reply(sender, "Use /profiles to list available profiles.");
+            return;
+        }
+
+        String action = args[0].toLowerCase(Locale.ROOT);
+        if ("create".equals(action)) {
+            String name = joinArgs(args, 1);
+            if (name.isEmpty()) {
+                reply(sender, "Usage: /profile create <name>");
+                return;
+            }
+            if (ModuleProfileManager.createProfile(name)) {
+                reply(sender, "Created and switched to profile: " + ModuleProfileManager.getSelectedProfileName());
+            } else {
+                reply(sender, "Could not create profile. The name may be empty or already in use.");
+            }
+            return;
+        }
+
+        if ("edit".equals(action)) {
+            String newName = joinArgs(args, 1);
+            if (newName.isEmpty()) {
+                reply(sender, "Usage: /profile edit <new name>");
+                reply(sender, "This renames your currently selected profile.");
+                return;
+            }
+            String oldName = ModuleProfileManager.getSelectedProfileName();
+            if (ModuleProfileManager.renameProfile(oldName, newName)) {
+                reply(sender, "Renamed profile '" + oldName + "' to '" + ModuleProfileManager.getSelectedProfileName() + "'.");
+            } else {
+                reply(sender, "Could not rename this profile. Default cannot be renamed, and profile names must be unique.");
+            }
+            return;
+        }
+
+        if ("delete".equals(action)) {
+            String name = joinArgs(args, 1);
+            if (name.isEmpty()) {
+                reply(sender, "Usage: /profile delete <name>");
+                return;
+            }
+            if (ModuleProfileManager.deleteProfile(name)) {
+                reply(sender, "Deleted profile: " + name);
+                reply(sender, "Active profile: " + ModuleProfileManager.getSelectedProfileName());
+            } else {
+                reply(sender, "Could not delete profile '" + name + "'. It may not exist, or Default cannot be deleted.");
+            }
+            return;
+        }
+
+        selectProfile(sender, args);
+    }
+
+    private String joinArgs(String[] args, int start) {
+        if (args == null || start >= args.length) return "";
+        StringBuilder value = new StringBuilder();
+        for (int i = start; i < args.length; i++) {
+            if (i > start) value.append(' ');
+            value.append(args[i]);
+        }
+        return value.toString().trim();
+    }
+
     private void listProfiles(ICommandSender sender) {
         List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
         String active = ModuleProfileManager.getSelectedProfileName();
@@ -200,7 +266,7 @@ public final class AlphaClientCommand extends CommandBase {
 
     private void selectProfile(ICommandSender sender, String[] args) {
         if (args.length == 0) {
-            reply(sender, "Usage: /profile <profile name>. Use /profiles to list available profiles.");
+            reply(sender, "Usage: /profile <name> | /profile create <name> | /profile edit <new name> | /profile delete <name>.");
             return;
         }
         StringBuilder requestedName = new StringBuilder();
@@ -693,7 +759,7 @@ public final class AlphaClientCommand extends CommandBase {
         if (rank == PermissionService.Rank.ALPHA_PLUS) {
             reply(sender, "/alphaplus opens Mods -> Alpha+.");
         }
-        reply(sender, "Available shortcuts: /fpshud /cpshud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality /hudeditor /profiles /profile <name>.");
+        reply(sender, "Available shortcuts: /fpshud /cpshud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality /hudeditor /profiles /profile <name|create|edit|delete>.");
         if (hasBhopAccess()) {
             reply(sender, "BHOP: /bhop [settings|on|off|toggle|speed|shiftup|name|color].");
         }
