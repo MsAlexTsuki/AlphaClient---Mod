@@ -210,7 +210,7 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
         String action = args[0].toLowerCase(Locale.ROOT);
-        if ("on".equals(action) || "off".equals(action) || "toggle".equals(action)) {
+        if (args.length == 1 && ("on".equals(action) || "off".equals(action) || "toggle".equals(action))) {
             boolean enabled = "toggle".equals(action) ? !BhopMode.isEnabled() : "on".equals(action);
             BhopMode.setEnabled(enabled);
             ModuleProfileManager.saveCurrentModuleStates();
@@ -257,7 +257,7 @@ public final class AlphaClientCommand extends CommandBase {
         if (!hasWTapAccess()) { reply(sender, "Access denied: W-Tap Assistance is Founder-only."); return; }
         if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) { openSettings(sender, "wtap"); return; }
         String action = args[0].toLowerCase(Locale.ROOT);
-        if ("on".equals(action) || "off".equals(action) || "toggle".equals(action)) {
+        if (args.length == 1 && ("on".equals(action) || "off".equals(action) || "toggle".equals(action))) {
             boolean enabled = "toggle".equals(action) ? !WTapAssistance.isEnabled() : "on".equals(action);
             WTapAssistance.setEnabled(enabled);
             reply(sender, "W-Tap Assistance " + (WTapAssistance.isEnabled() ? "enabled." : "disabled."));
@@ -333,6 +333,7 @@ public final class AlphaClientCommand extends CommandBase {
             reply(sender, "Fullbright accepts: /fullbright <on|off|toggle>.");
             return;
         }
+        if (args.length != 1) { reply(sender, "Usage: /fullbright <on|off|toggle>"); return; }
         Boolean enabled = parseToggle(args[0], FullbrightMod.isEnabled());
         if (enabled == null) { reply(sender, "Usage: /fullbright <on|off|toggle>"); return; }
         FullbrightMod.setEnabled(enabled.booleanValue());
@@ -379,6 +380,10 @@ public final class AlphaClientCommand extends CommandBase {
             reply(sender, "AFK Timer display mode: " + AfkTimerHud.getDisplayModeName() + ".");
             return;
         }
+        if (args.length != 1) {
+            reply(sender, "Use one action or one setting at a time.");
+            return;
+        }
         if ("playtime".equals(timer)) {
             if (!"on".equalsIgnoreCase(args[0]) && !"off".equalsIgnoreCase(args[0]) && !"toggle".equalsIgnoreCase(args[0])) {
                 reply(sender, "Usage: /playtime <on|off|toggle|settings|background <on|off>|color next|position <x> <y>");
@@ -406,7 +411,7 @@ public final class AlphaClientCommand extends CommandBase {
         if (!hasModuleAccess(module)) { reply(sender, "Access denied: this HUD is not available to your current rank."); return; }
         if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) { openSettings(sender, fps ? "fps" : "cps"); return; }
         String setting = args[0].toLowerCase(Locale.ROOT);
-        if ("on".equals(setting) || "off".equals(setting) || "toggle".equals(setting)) {
+        if (args.length == 1 && ("on".equals(setting) || "off".equals(setting) || "toggle".equals(setting))) {
             Boolean enabled = parseToggle(setting, module.isEnabled());
             module.setEnabled(enabled.booleanValue());
             reply(sender, (fps ? "FPS" : "CPS") + " module " + (module.isEnabled() ? "enabled." : "disabled."));
