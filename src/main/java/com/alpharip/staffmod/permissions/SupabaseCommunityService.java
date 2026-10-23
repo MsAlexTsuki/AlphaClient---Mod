@@ -249,6 +249,30 @@ public final class SupabaseCommunityService {
         }
         PermissionService.setVerifiedModPermissions(modulePermissions);
 
+        // Command-level permissions are synchronized from the same Alpha Account backend.
+        // Unconfigured permissions are omitted so existing rank/module checks remain the fallback.
+        try {
+            JsonObject commandResponse = requestJson("POST", "/functions/v1/manage-client-permissions",
+                    token, "{\\"action\\":\\"my_permissions\\"}");
+            JsonArray commandRows = commandResponse.has("permissions") && commandResponse.get("permissions").isJsonArray()
+                    ? commandResponse.getAsJsonArray("permissions") : new JsonArray();
+            Map<String, Boolean> commandPermissions = new HashMap<String, Boolean>();
+            for (JsonElement element : commandRows) {
+                if (!element.isJsonObject()) continue;
+                JsonObject row = element.getAsJsonObject();
+                String permissionKey = getString(row, "permission_key");
+                boolean configured = getBoolean(row, "configured");
+                if (permissionKey != null && configured) {
+                    commandPermissions.put(permissionKey, Boolean.valueOf(getBoolean(row, "allowed")));
+                }
+            }
+            PermissionService.setVerifiedCommandPermissions(commandPermissions);
+        } catch (Exception permissionException) {
+            PermissionService.clearVerifiedCommandPermissions();
+            System.err.println("[AlphaClient] Command permissions could not be synchronized: "
+                    + permissionException.getMessage());
+        }
+
         // Re-link the currently active Minecraft UUID whenever the authenticated
         // Alpha account syncs. This also covers restored sessions and Microsoft-account switches.
         linkCurrentMinecraftUuid(token);
@@ -369,6 +393,17 @@ public final class SupabaseCommunityService {
     }
 
     public static boolean isSignedIn() { return accessToken != null; }
+
+    /** Calls the server-side command permission API using the current authenticated Alpha Account session. */
+    public static synchronized JsonObject manageCommandPermissions(JsonObject payload) throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalStateException("Sign in to your Alpha Account before managing permissions.");
+        }
+        if (payload == null) throw new IllegalArgumentException("Missing permission request.");
+        return requestJson("POST", "/functions/v1/manage-client-permissions", token, payload.toString());
+    }
+
     /** True only when the authenticated Alpha community profile has verified Founder status. */
     public static boolean isSignedInFounder() { return accessToken != null && signedInFounder; }
     public static String getSignedInEmail() { return signedInEmail; }
