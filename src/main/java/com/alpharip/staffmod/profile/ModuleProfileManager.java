@@ -1040,53 +1040,6 @@ public class ModuleProfileManager {
 
     /*
      * =========================================================
-     * DELETE PROFILE
-     * =========================================================
-     */
-
-    public static boolean deleteProfile(
-            String name) {
-
-        load();
-
-        BhopProfile profile =
-                findProfile(name);
-
-        if (profile == null) {
-            return false;
-        }
-
-        if (profile.getProfileName()
-                .equalsIgnoreCase("Default")) {
-
-            return false;
-        }
-
-        profiles.remove(profile);
-
-        if (selectedProfile
-                .equalsIgnoreCase(name)) {
-
-            if (!profiles.isEmpty()) {
-
-                selectedProfile =
-                        profiles.get(0)
-                                .getProfileName();
-
-            } else {
-
-                createDefaultProfile();
-            }
-        }
-
-        save();
-
-        return true;
-    }
-
-
-    /*
-     * =========================================================
      * SELECTED MOD COLORS
      * =========================================================
      */
