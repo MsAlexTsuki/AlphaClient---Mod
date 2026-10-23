@@ -207,6 +207,8 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
     }
 
     private boolean isVisibleRank(PermissionService.Rank rank) {
+        Boolean explicitFolderPermission = PermissionService.getCommandPermissionOverride(folderPermissionKey(rank));
+        if (explicitFolderPermission != null) return explicitFolderPermission.booleanValue();
         // General is always available. Rank access keeps the existing hierarchy;
         // an explicit per-mod grant can independently reveal its assigned folder.
         if (rank == PermissionService.Rank.PUBLIC) return true;
@@ -261,6 +263,13 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         if (rank == null) return "staffmods.open";
         switch (rank) {
             case PUBLIC: return "staffmods.general";
+            case BETA: return "menu.beta";
+            case DONATOR: return "menu.donator";
+            case SCOUT: return "menu.scout";
+            case ROGUE: return "menu.rogue";
+            case ELITE: return "menu.elite";
+            case ALPHA: return "menu.alpha";
+            case ALPHA_PLUS: return "menu.alphaplus";
             case T_MOD: return "staffmods.tmod";
             case MOD: return "staffmods.mod";
             case SR_MOD: return "staffmods.srmod";
@@ -277,6 +286,13 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
 
     private String folderPermissionKey(String normalizedFolder) {
         if ("general".equals(normalizedFolder)) return "staffmods.general";
+        if ("beta".equals(normalizedFolder)) return "menu.beta";
+        if ("donator".equals(normalizedFolder)) return "menu.donator";
+        if ("scout".equals(normalizedFolder)) return "menu.scout";
+        if ("rogue".equals(normalizedFolder)) return "menu.rogue";
+        if ("elite".equals(normalizedFolder)) return "menu.elite";
+        if ("alpha".equals(normalizedFolder)) return "menu.alpha";
+        if ("alphaplus".equals(normalizedFolder)) return "menu.alphaplus";
         if ("tmod".equals(normalizedFolder) || "trialmoderator".equals(normalizedFolder)) return "staffmods.tmod";
         if ("mod".equals(normalizedFolder) || "moderator".equals(normalizedFolder)) return "staffmods.mod";
         if ("srmod".equals(normalizedFolder) || "seniormoderator".equals(normalizedFolder)) return "staffmods.srmod";
