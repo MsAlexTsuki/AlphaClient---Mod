@@ -257,8 +257,13 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         return false;
     }
 
+    private boolean isFounderAccount() {
+        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.founder"));
+    }
+
     private boolean hasFolderAccess(PermissionService.Rank rank) {
-        if (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) return true;
+        if (isFounderAccount()) return true;
         String key = folderPermissionKey(rank);
         Boolean override = PermissionService.getCommandPermissionOverride(key);
         if (override != null) return override.booleanValue();
