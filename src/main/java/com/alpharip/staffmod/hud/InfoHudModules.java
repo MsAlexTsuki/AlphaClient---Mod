@@ -203,7 +203,7 @@ public final class InfoHudModules {
             }
             drawPotionIcon(mc, potion, x, y);
             String level = effect.getAmplifier() > 0 ? " " + roman(effect.getAmplifier() + 1) : "";
-            String line = potion.getName() + level + "  " + Potion.getDurationString(effect);
+            String line = net.minecraft.util.StatCollector.translateToLocal(potion.getName()) + level + "  " + Potion.getDurationString(effect);
             mc.fontRendererObj.drawStringWithShadow(fit(mc, line, 190), x + 20, y + 5, potionColor);
             row++;
         }
