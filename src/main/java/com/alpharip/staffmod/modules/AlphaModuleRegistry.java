@@ -68,7 +68,7 @@ public final class AlphaModuleRegistry {
 
         MODULES.add(new AlphaModule(
                 "armor-hud-info",
-                "Armor HUD Info",
+                "Armor HUD",
                 "Show held-item and equipped-armor durability in a movable horizontal or vertical HUD.",
                 AlphaModule.Category.PUBLIC,
                 true,
@@ -77,7 +77,7 @@ public final class AlphaModuleRegistry {
 
         MODULES.add(new AlphaModule(
                 "potion-hud-info",
-                "Potion HUD Info",
+                "Potion HUD",
                 "Display active potion effects with four selectable display modes.",
                 AlphaModule.Category.PUBLIC,
                 true,
