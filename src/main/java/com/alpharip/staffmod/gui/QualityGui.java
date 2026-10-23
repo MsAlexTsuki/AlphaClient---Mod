@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.hud.SessionTimerHud;
+import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -14,8 +15,10 @@ public final class QualityGui extends AlphaGuiScreen {
     private static final int AFK_TIMER = 2;
     private static final int FULLBRIGHT = 3;
     private static final int SESSION_TIMER = 4;
+    private static final int PLAYTIME_TRACKER = 5;
     private static final int AFK_TIMER_INDEX = 7;
     private static final int SESSION_TIMER_INDEX = 8;
+    private static final int PLAYTIME_TRACKER_INDEX = 2;
     private static final int FULLBRIGHT_INDEX = 0;
     private static final int ACCENT = 0xFFFFD866;
     private static final String[] FEATURES = {
@@ -45,6 +48,11 @@ public final class QualityGui extends AlphaGuiScreen {
         int maxScroll = Math.max(0, FEATURES.length - visibleRows);
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
         buttonList.add(new GuiButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        if (PLAYTIME_TRACKER_INDEX >= scrollOffset && PLAYTIME_TRACKER_INDEX < scrollOffset + visibleRows) {
+            int trackerY = panelTop + 68 + (PLAYTIME_TRACKER_INDEX - scrollOffset) * 20;
+            buttonList.add(new AlphaButton(PLAYTIME_TRACKER, panelLeft + 10, trackerY,
+                    panelRight - panelLeft - 20, 17, "Playtime Tracker", true));
+        }
         if (FULLBRIGHT_INDEX >= scrollOffset && FULLBRIGHT_INDEX < scrollOffset + visibleRows) {
             int fullbrightY = panelTop + 68 + (FULLBRIGHT_INDEX - scrollOffset) * 20;
             buttonList.add(new AlphaButton(FULLBRIGHT, panelLeft + 10, fullbrightY,
@@ -77,7 +85,7 @@ public final class QualityGui extends AlphaGuiScreen {
         int rowHeight = 20;
         for (int i = scrollOffset; i < FEATURES.length && i < scrollOffset + visibleRows; i++) {
             int y = panelTop + 68 + (i - scrollOffset) * rowHeight;
-            if (i == AFK_TIMER_INDEX || i == FULLBRIGHT_INDEX || i == SESSION_TIMER_INDEX) {
+            if (i == AFK_TIMER_INDEX || i == FULLBRIGHT_INDEX || i == SESSION_TIMER_INDEX || i == PLAYTIME_TRACKER_INDEX) {
                 // These entries have live controls rather than roadmap labels.
                 continue;
             }
@@ -102,6 +110,8 @@ public final class QualityGui extends AlphaGuiScreen {
             mc.displayGuiScreen(new AfkTimerSettingsGui(this));
         } else if (button.id == SESSION_TIMER) {
             mc.displayGuiScreen(new SessionTimerSettingsGui(this));
+        } else if (button.id == PLAYTIME_TRACKER) {
+            mc.displayGuiScreen(new PlaytimeTrackerSettingsGui(this));
         } else if (button.id == FULLBRIGHT) {
             FullbrightMod.setEnabled(!FullbrightMod.isEnabled());
             initGui();
