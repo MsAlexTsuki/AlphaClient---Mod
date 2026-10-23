@@ -1017,6 +1017,9 @@ public final class AlphaClientCommand extends CommandBase {
         if (hasWTapAccess()) {
             reply(sender, "W-Tap: /wtap [settings|on|off|toggle|delay|cooldown|mode|trigger|target|requirew].");
         }
+        if (SupabaseCommunityService.isSignedInFounder()) {
+            reply(sender, "Founder-only permission manager: /alphaperms help.");
+        }
         if (PermissionService.hasStaffModsAccess()) {
             reply(sender, "StaffMods: /staffmods opens the StaffMods GUI; /staffgeneral opens StaffMods -> General.");
             if (rank == PermissionService.Rank.T_MOD) reply(sender, "Staff folder: /stafftmod.");
