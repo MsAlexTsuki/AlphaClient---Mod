@@ -10,9 +10,18 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.awt.Color;
 
+import java.awt.Color;
+
 /** Tracks elapsed time for the lifetime of the running Minecraft client. */
 public final class SessionTimerHud {
     private static final String MODULE_ID = "sessionTimer";
+    private static final String[] COLOR_NAMES = {
+            "White", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Pink", "Rainbow"
+    };
+    private static final int[] COLORS = {
+            0xFFFFFFFF, 0xFFFF5555, 0xFFFFAA00, 0xFFFFFF55, 0xFF55FF55,
+            0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA
+    };
     private static final String[] COLOR_NAMES = {
             "White", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Pink", "Rainbow"
     };
@@ -66,6 +75,30 @@ public final class SessionTimerHud {
             Gui.drawRect(x - 3, y - 3, x + textWidth, y - 2, 0xFFFFD866);
         }
         mc.fontRendererObj.drawStringWithShadow(text, x, y, getTextColor());
+    }
+
+    public static String getColorName() {
+        return COLOR_NAMES[getColorIndex()];
+    }
+
+    public static void cycleColor() {
+        getSettings().addProperty("colorIndex", (getColorIndex() + 1) % COLOR_NAMES.length);
+        ModuleProfileManager.save();
+    }
+
+    private static int getColorIndex() {
+        JsonObject settings = getSettings();
+        int index = settings.has("colorIndex") ? settings.get("colorIndex").getAsInt() : 3;
+        return index < 0 || index >= COLOR_NAMES.length ? 3 : index;
+    }
+
+    private static int getTextColor() {
+        int index = getColorIndex();
+        if (index == COLOR_NAMES.length - 1) {
+            float hue = (System.currentTimeMillis() % 4000L) / 4000.0F;
+            return 0xFF000000 | (Color.HSBtoRGB(hue, 1.0F, 1.0F) & 0x00FFFFFF);
+        }
+        return COLORS[index];
     }
 
     public static String getColorName() {
