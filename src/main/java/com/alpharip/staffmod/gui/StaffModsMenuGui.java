@@ -524,9 +524,12 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
             if (rank == PermissionService.Rank.PUBLIC
                     || hasFolderAccess(rank)) {
                 if (rank == PermissionService.Rank.DEVELOPER) {
-                    boolean developerAccess = PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
-                            || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"))
-                            || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.founder"));
+                    // Founder must be able to open Developer even when no separate
+                    // Developer rank or folder override is stored for the account.
+                    boolean developerAccess = PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                            || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.founder"))
+                            || PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+                            || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"));
                     if (developerAccess) {
                         mc.displayGuiScreen(new DeveloperGui(this));
                     }
