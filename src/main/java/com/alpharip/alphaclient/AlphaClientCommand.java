@@ -168,7 +168,7 @@ public final class AlphaClientCommand extends CommandBase {
     private void openStaffModsMenu(ICommandSender sender) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc != null && PermissionService.hasStaffModsAccess()) {
-            mc.displayGuiScreen(new StaffModsMenuGui(mc.currentScreen));
+            AlphaClient.openGuiFromCommand(new StaffModsMenuGui(mc.currentScreen));
         } else {
             reply(sender, "Access denied: StaffMods requires staff access.");
         }
@@ -186,7 +186,7 @@ public final class AlphaClientCommand extends CommandBase {
             reply(sender, "Access denied: your current rank or module permissions do not allow the StaffMods folder '" + folder + "'.");
             return;
         }
-        mc.displayGuiScreen(menu);
+        AlphaClient.openGuiFromCommand(menu);
     }
 
     private AlphaModule.Category regularCategoryAlias(String name) {
