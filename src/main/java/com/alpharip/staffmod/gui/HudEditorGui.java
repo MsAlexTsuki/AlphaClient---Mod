@@ -143,8 +143,8 @@ public final class HudEditorGui extends AlphaGuiScreen {
         }
 
         int ahx = InfoHudModules.getArmorX(), ahy = InfoHudModules.getArmorY();
-        if (mouseButton == 0 && mouseX >= ahx && mouseX <= ahx + 440
-                && mouseY >= ahy && mouseY <= ahy + 120) {
+        if (mouseButton == 0 && mouseX >= ahx && mouseX <= ahx + InfoHudModules.getArmorEditorWidth()
+                && mouseY >= ahy && mouseY <= ahy + InfoHudModules.getArmorEditorHeight()) {
             dragging = true;
             armorDragging = true;
             dragX = mouseX - ahx;
@@ -153,8 +153,8 @@ public final class HudEditorGui extends AlphaGuiScreen {
         }
 
         int phx = InfoHudModules.getPotionX(), phy = InfoHudModules.getPotionY();
-        if (mouseButton == 0 && mouseX >= phx && mouseX <= phx + 220
-                && mouseY >= phy && mouseY <= phy + 180) {
+        if (mouseButton == 0 && mouseX >= phx && mouseX <= phx + InfoHudModules.getPotionEditorWidth()
+                && mouseY >= phy && mouseY <= phy + InfoHudModules.getPotionEditorHeight()) {
             dragging = true;
             potionDragging = true;
             dragX = mouseX - phx;
@@ -224,12 +224,12 @@ public final class HudEditorGui extends AlphaGuiScreen {
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 SessionTimerHud.setHudPosition(x, y);
             } else if (armorDragging) {
-                x = Math.max(0, Math.min(width - 440, x));
-                y = Math.max(0, Math.min(height - 120, y));
+                x = Math.max(0, Math.min(Math.max(0, width - InfoHudModules.getArmorEditorWidth()), x));
+                y = Math.max(0, Math.min(Math.max(0, height - InfoHudModules.getArmorEditorHeight()), y));
                 InfoHudModules.setArmorPosition(x, y);
             } else if (potionDragging) {
-                x = Math.max(0, Math.min(width - 220, x));
-                y = Math.max(0, Math.min(height - 180, y));
+                x = Math.max(0, Math.min(Math.max(0, width - InfoHudModules.getPotionEditorWidth()), x));
+                y = Math.max(0, Math.min(Math.max(0, height - InfoHudModules.getPotionEditorHeight()), y));
                 InfoHudModules.setPotionPosition(x, y);
             } else if (playtimeTrackerDragging) {
                 int itemWidth = fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10;
