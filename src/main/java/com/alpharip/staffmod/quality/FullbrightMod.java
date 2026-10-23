@@ -111,7 +111,6 @@ public final class FullbrightMod {
             return;
         }
 
-        Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.gameSettings == null) {
             return;
         }
