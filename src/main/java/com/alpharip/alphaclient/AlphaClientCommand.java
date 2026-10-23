@@ -321,6 +321,7 @@ public final class AlphaClientCommand extends CommandBase {
 
     private void handleWTap(ICommandSender sender, String[] args) {
         if (!hasWTapAccess()) { reply(sender, "Access denied: W-Tap Assistance is Founder-only."); return; }
+        if (args.length > 0 && "help".equalsIgnoreCase(args[0])) { sendWTapHelp(sender); return; }
         if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) { openSettings(sender, "wtap"); return; }
         String action = args[0].toLowerCase(Locale.ROOT);
         if (args.length == 1 && ("on".equals(action) || "off".equals(action) || "toggle".equals(action))) {
@@ -361,8 +362,26 @@ public final class AlphaClientCommand extends CommandBase {
             WTapAssistance.setRequireW(value.booleanValue());
             reply(sender, "W-Tap Require W " + (value.booleanValue() ? "enabled." : "disabled."));
         } else {
-            reply(sender, "Usage: /wtap [settings|on|off|toggle|delay <0-10>|cooldown <0-20>|mode <legit|standard|aggressive|manual>|trigger <hit|attack>|target <players|all>|requirew <on|off>]");
+            sendWTapHelp(sender);
         }
+    }
+
+    private void sendWTapHelp(ICommandSender sender) {
+        reply(sender, "§6§lW-TAP ASSISTANCE §8| §7Command Guide");
+        reply(sender, "§7Quick actions");
+        reply(sender, "§f/wtap on §8- §aEnable W-Tap");
+        reply(sender, "§f/wtap off §8- §cDisable W-Tap");
+        reply(sender, "§f/wtap toggle §8- §7Switch enabled state");
+        reply(sender, "§f/wtap settings §8- §7Open the settings menu");
+        reply(sender, "§7Timing");
+        reply(sender, "§f/wtap delay <0-10> §8- §7Set delay in ticks");
+        reply(sender, "§f/wtap cooldown <0-20> §8- §7Set cooldown in ticks");
+        reply(sender, "§7Behaviour");
+        reply(sender, "§f/wtap mode <legit|standard|aggressive|manual>");
+        reply(sender, "§f/wtap trigger <hit|attack> §8- §7Choose activation trigger");
+        reply(sender, "§f/wtap target <players|all> §8- §7Choose valid targets");
+        reply(sender, "§f/wtap requirew <on|off> §8- §7Require the W key");
+        reply(sender, "§8Tip: use §f/wtap help §8to show this guide again.");
     }
 
     private void handleLegacyPvp(ICommandSender sender, String[] args) {
