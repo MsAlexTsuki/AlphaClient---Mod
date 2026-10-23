@@ -46,15 +46,13 @@ public final class DeveloperToolGui extends AlphaGuiScreen {
     }
 
     private boolean isFounder() {
-        return SupabaseCommunityService.isSignedInFounder()
-                && (PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                    || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.founder")));
+        return SupabaseCommunityService.isSignedInFounder();
     }
 
     private boolean hasAccess() {
-        boolean developerRank = PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
-                || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"));
-        return DeveloperModeState.isEnabled() && (isFounder() || developerRank);
+        // These account-wide inspection and verification actions are Founder-only.
+        // The Edge Function enforces the same rule server-side.
+        return DeveloperModeState.isEnabled() && isFounder();
     }
 
     @Override
