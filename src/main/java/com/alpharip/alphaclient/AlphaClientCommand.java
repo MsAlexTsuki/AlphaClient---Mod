@@ -303,9 +303,26 @@ public final class AlphaClientCommand extends CommandBase {
 
     private String commandPermissionForRoute(String route, String[] args) {
         if (route == null) return null;
+        if ("alphaclient".equals(route)) {
+            if (args == null || args.length == 0 || "help".equalsIgnoreCase(args[0])) return "command.help";
+            String subcommand = args[0].toLowerCase(Locale.ROOT);
+            if ("modules".equals(subcommand)) return "command.modules";
+            if ("settings".equals(subcommand)) return "command.settings";
+            if ("module".equals(subcommand) && args.length > 1) return moduleCommandPermission(args[1]);
+            if ("fps".equals(subcommand)) return "command.fpshud";
+            if ("cps".equals(subcommand)) return "command.cpshud";
+            if ("bhop".equals(subcommand)) return "command.bhop";
+            if ("wtap".equals(subcommand)) return "command.wtap";
+            if ("fullbright".equals(subcommand)) return "command.fullbright";
+            if ("legacypvp".equals(subcommand)) return "command.legacypvp";
+            if ("playtime".equals(subcommand)) return "command.playtime";
+            if ("sessiontimer".equals(subcommand)) return "command.sessiontimer";
+            if ("afktimer".equals(subcommand)) return "command.afktimer";
+        }
         if ("alphahelp".equals(route) || "alphaclient:help".equals(route)) return "command.help";
         if ("alphaclient:modules".equals(route)) return "command.modules";
         if ("alphaclient:settings".equals(route)) return "command.settings";
+        if ("alphaclient:module".equals(route) && args != null && args.length > 0) return moduleCommandPermission(args[0]);
         if ("hudeditor".equals(route)) return "command.hudeditor";
         if ("profiles".equals(route)) return "command.profiles.list";
         if ("profile".equals(route)) {
@@ -354,6 +371,13 @@ public final class AlphaClientCommand extends CommandBase {
 
     private String staffFolderPermission(String folder) {
         if ("general".equals(folder)) return "staffmods.general";
+        if ("beta".equals(folder)) return "menu.beta";
+        if ("donator".equals(folder)) return "menu.donator";
+        if ("scout".equals(folder)) return "menu.scout";
+        if ("rogue".equals(folder)) return "menu.rogue";
+        if ("elite".equals(folder)) return "menu.elite";
+        if ("alpha".equals(folder)) return "menu.alpha";
+        if ("alphaplus".equals(folder)) return "menu.alphaplus";
         if ("tmod".equals(folder) || "trial_moderator".equals(folder)) return "staffmods.tmod";
         if ("mod".equals(folder) || "moderator".equals(folder)) return "staffmods.mod";
         if ("srmod".equals(folder) || "senior_moderator".equals(folder)) return "staffmods.srmod";
