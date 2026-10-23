@@ -369,6 +369,8 @@ public final class SupabaseCommunityService {
     }
 
     public static boolean isSignedIn() { return accessToken != null; }
+    /** True only when the authenticated Alpha community profile has verified Founder status. */
+    public static boolean isSignedInFounder() { return accessToken != null && signedInFounder; }
     public static String getSignedInEmail() { return signedInEmail; }
     public static String getSignedInAlphaName() {
         String name = signedInAlphaName;
