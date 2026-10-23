@@ -189,7 +189,10 @@ public final class AlphaClientCommand extends CommandBase {
         else if ("sessiontimer".equals(id) || "session-timer".equals(id)) mc.displayGuiScreen(new SessionTimerSettingsGui(parent));
         else if ("afktimer".equals(id) || "afk-timer".equals(id)) mc.displayGuiScreen(new AfkTimerSettingsGui(parent));
         else {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("§6[AlphaClient] §cNo settings screen exists for " + module + "."));
+            Minecraft mcClient = Minecraft.getMinecraft();
+            if (mcClient != null && mcClient.thePlayer != null) {
+                mcClient.thePlayer.addChatMessage(new ChatComponentText("§6[AlphaClient] §cNo settings screen exists for " + module + "."));
+            }
         }
     }
 
