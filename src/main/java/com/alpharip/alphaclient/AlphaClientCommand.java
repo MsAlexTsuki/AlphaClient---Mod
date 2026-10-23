@@ -369,6 +369,7 @@ public final class AlphaClientCommand extends CommandBase {
         if ("staffmanager".equals(route)) return "staffmods.manager";
         if ("staffowner".equals(route)) return "staffmods.owner";
         if ("stafffounder".equals(route)) return "staffmods.founder";
+        if ("staffdeveloper".equals(route)) return "staffmods.developer";
         if ("general".equals(route)) return "menu.general";
         if ("beta".equals(route)) return "menu.beta";
         if ("donator".equals(route)) return "menu.donator";
@@ -399,6 +400,7 @@ public final class AlphaClientCommand extends CommandBase {
         if ("manager".equals(folder)) return "staffmods.manager";
         if ("owner".equals(folder)) return "staffmods.owner";
         if ("founder".equals(folder)) return "staffmods.founder";
+        if ("developer".equals(folder)) return "staffmods.developer";
         return "staffmods.open";
     }
 
