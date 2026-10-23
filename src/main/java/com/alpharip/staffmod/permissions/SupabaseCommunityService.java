@@ -627,6 +627,7 @@ public final class SupabaseCommunityService {
                 if (parsed.isJsonObject()) {
                     String detail = getString(parsed.getAsJsonObject(), "msg");
                     if (detail == null) detail = getString(parsed.getAsJsonObject(), "message");
+                    if (detail == null) detail = getString(parsed.getAsJsonObject(), "error");
                     if (detail != null && !detail.trim().isEmpty()) message = detail;
                 }
             } catch (Exception ignored) { }
