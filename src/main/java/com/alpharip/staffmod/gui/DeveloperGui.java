@@ -27,7 +27,9 @@ public final class DeveloperGui extends AlphaGuiScreen {
     }
 
     private boolean hasDeveloperAccess() {
-        return isFounder() || (PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+        boolean developerRank = PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+                || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"));
+        return isFounder() || (developerRank
                 && PermissionService.hasCommandPermission("staffmods.developer", true)
                 && PermissionService.hasCommandPermission("staffmods.developer.mode", true));
     }
