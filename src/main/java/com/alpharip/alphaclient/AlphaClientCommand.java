@@ -63,13 +63,22 @@ public final class AlphaClientCommand extends CommandBase {
         String route = commandName.toLowerCase(Locale.ROOT);
 
         if ("alphaperms".equals(route)) {
-            handleAlphaPerms(sender, args);
+            if (args != null && args.length > 0 && "help".equalsIgnoreCase(args[0])) {
+                showCommandGuide(sender, route);
+            } else {
+                handleAlphaPerms(sender, args);
+            }
             return;
         }
 
         String permissionKey = commandPermissionForRoute(route, args);
         if (permissionKey != null && Boolean.FALSE.equals(PermissionService.getCommandPermissionOverride(permissionKey))) {
             reply(sender, "Access denied: your Alpha Account does not have " + permissionKey + ".");
+            return;
+        }
+
+        if (args != null && args.length == 1 && "help".equalsIgnoreCase(args[0])) {
+            showCommandGuide(sender, route);
             return;
         }
 
@@ -209,6 +218,137 @@ public final class AlphaClientCommand extends CommandBase {
         } else {
             sendHelp(sender);
         }
+    }
+
+    /**
+     * Shared, consistently formatted in-chat command guides.
+     * Any registered AlphaClient command can show its guide with the "help" argument.
+     */
+    private void showCommandGuide(ICommandSender sender, String route) {
+        String name = route == null ? "" : route.toLowerCase(Locale.ROOT);
+        if ("alphaclient".equals(name) || "alphahelp".equals(name) || "alphaclient:help".equals(name)) {
+            guideHeader(sender, "ALPHACLIENT");
+            guideLine(sender, "/alphaclient help", "Show this guide");
+            guideLine(sender, "/alphaclient modules", "List registered modules and their status");
+            guideLine(sender, "/alphaclient settings <module>", "Open a module's settings");
+            guideLine(sender, "/alphaclient module <module> <on|off|toggle>", "Change a module's state");
+            guideLine(sender, "/alphahelp open", "Open the scrollable command list");
+            guideLine(sender, "/profiles", "List saved profiles");
+            guideLine(sender, "/profile <name|create|edit|delete>", "Switch or manage profiles");
+            guideLine(sender, "/hudeditor", "Open the HUD editor");
+        } else if ("fpshud".equals(name) || "alphaclient:fps".equals(name)) {
+            guideHeader(sender, "FPS HUD");
+            guideLine(sender, "/fpshud [on|off|toggle]", "Enable or disable the FPS HUD");
+            guideLine(sender, "/fpshud settings", "Open FPS settings");
+            guideLine(sender, "/fpshud background <on|off>", "Toggle the HUD background");
+            guideLine(sender, "/fpshud color next", "Cycle the HUD color");
+            guideLine(sender, "/fpshud position <x> <y>", "Set HUD coordinates");
+        } else if ("cpshud".equals(name) || "alphaclient:cps".equals(name)) {
+            guideHeader(sender, "CPS HUD");
+            guideLine(sender, "/cpshud [on|off|toggle]", "Enable or disable the CPS HUD");
+            guideLine(sender, "/cpshud settings", "Open CPS settings");
+            guideLine(sender, "/cpshud background <on|off>", "Toggle the HUD background");
+            guideLine(sender, "/cpshud color next", "Cycle the HUD color");
+            guideLine(sender, "/cpshud mode <both|left|right>", "Choose which clicks are shown");
+            guideLine(sender, "/cpshud position <x> <y>", "Set HUD coordinates");
+        } else if ("bhop".equals(name) || "alphaclient:bhop".equals(name)) {
+            guideHeader(sender, "BHOP");
+            guideLine(sender, "/bhop [on|off|toggle]", "Enable or disable BHOP");
+            guideLine(sender, "/bhop settings", "Open BHOP settings");
+            guideLine(sender, "/bhop speed <1-20>", "Set the speed level");
+            guideLine(sender, "/bhop shiftup <on|off>", "Toggle Shift-Up");
+            guideLine(sender, "/bhop name <text>", "Set the displayed name");
+            guideLine(sender, "/bhop color <#RRGGBB>", "Set the display color");
+        } else if ("wtap".equals(name) || "alphaclient:wtap".equals(name)) {
+            sendWTapHelp(sender);
+        } else if ("fullbright".equals(name) || "alphaclient:fullbright".equals(name)) {
+            guideHeader(sender, "FULLBRIGHT");
+            guideLine(sender, "/fullbright <on|off|toggle>", "Change Fullbright state");
+        } else if ("playtime".equals(name) || "alphaclient:playtime".equals(name)) {
+            guideTimer(sender, "PLAYTIME TRACKER", "/playtime", false);
+        } else if ("sessiontimer".equals(name) || "alphaclient:sessiontimer".equals(name)) {
+            guideTimer(sender, "SESSION TIMER", "/sessiontimer", false);
+        } else if ("afktimer".equals(name) || "alphaclient:afktimer".equals(name)) {
+            guideTimer(sender, "AFK TIMER", "/afktimer", true);
+        } else if ("legacypvp".equals(name) || "alphaclient:legacypvp".equals(name)) {
+            guideHeader(sender, "LEGACY PVP");
+            guideLine(sender, "/legacypvp [on|off|toggle]", "Enable or disable Legacy PvP");
+            guideLine(sender, "/legacypvp settings", "Open Legacy PvP settings");
+            guideLine(sender, "/legacypvp <feature> <on|off>", "Toggle blockhit, potion-punch, swing, bow, rod, food/drink animations or view bobbing");
+        } else if ("nameviewer".equals(name)) {
+            guideHeader(sender, "NAME VIEWER");
+            guideLine(sender, "/nameviewer", "Open Name Viewer settings");
+            guideLine(sender, "/nameviewer settings", "Open Name Viewer settings");
+        } else if ("quality".equals(name)) {
+            guideHeader(sender, "QUALITY");
+            guideLine(sender, "/quality", "Open Quality settings");
+        } else if ("profiles".equals(name)) {
+            guideHeader(sender, "PROFILES");
+            guideLine(sender, "/profiles", "List available profiles");
+            guideLine(sender, "/profile <name>", "Switch to a profile");
+            guideLine(sender, "/profile create <name>", "Create and select a profile");
+            guideLine(sender, "/profile edit <old name> <new name>", "Rename a profile");
+            guideLine(sender, "/profile delete <name>", "Delete a profile");
+        } else if ("profile".equals(name)) {
+            showCommandGuide(sender, "profiles");
+        } else if ("hudeditor".equals(name)) {
+            guideHeader(sender, "HUD EDITOR");
+            guideLine(sender, "/hudeditor", "Open the HUD editor");
+        } else if ("staffmods".equals(name)) {
+            guideHeader(sender, "STAFFMODS");
+            guideLine(sender, "/staffmods", "Open the StaffMods menu");
+            guideLine(sender, "/staffmods <folder>", "Open an accessible StaffMods folder");
+            guideLine(sender, "/staffmods help", "Show this guide");
+            guideLine(sender, "/staffgeneral", "Open StaffMods → General");
+            guideLine(sender, "/stafftmod /staffmod /staffsrmod", "Open your permitted staff-rank folder");
+            guideLine(sender, "/staffadmin /staffsradmin", "Open your permitted admin folder");
+            guideLine(sender, "/staffmanagement", "Open Management (Platform Admin / Manager)");
+            guideLine(sender, "/staffplatformadmin /staffmanager", "Open your rank-specific Management folder");
+            guideLine(sender, "/staffowner /stafffounder", "Open restricted staff folders");
+        } else if ("general".equals(name) || "beta".equals(name) || "donator".equals(name)
+                || "scout".equals(name) || "rogue".equals(name) || "elite".equals(name)
+                || "alpha".equals(name) || "alphaplus".equals(name)) {
+            guideHeader(sender, name.toUpperCase(Locale.ROOT) + " MENU");
+            guideLine(sender, "/" + name, "Open the " + name + " module category");
+        } else if ("staffgeneral".equals(name) || "stafftmod".equals(name) || "staffmod".equals(name)
+                || "staffsrmod".equals(name) || "staffadmin".equals(name) || "staffsradmin".equals(name)
+                || "staffmanagement".equals(name) || "staffplatformadmin".equals(name) || "staffplatadmin".equals(name)
+                || "staffmanager".equals(name) || "staffowner".equals(name) || "stafffounder".equals(name)) {
+            guideHeader(sender, "STAFFMODS FOLDER");
+            guideLine(sender, "/" + name, "Open this StaffMods folder if your account has access");
+            guideLine(sender, "/staffmods", "Open the StaffMods menu");
+        } else if ("alphaperms".equals(name)) {
+            guideHeader(sender, "FOUNDER PERMISSION MANAGER");
+            guideLine(sender, "/alphaperms open", "Open the permission manager");
+            guideLine(sender, "/alphaperms list", "List permission catalog entries");
+            guideLine(sender, "/alphaperms <alpha-name> list", "List account permissions");
+            guideLine(sender, "/alphaperms <alpha-name> grant|revoke|clear <permission>", "Manage an account permission");
+            guideLine(sender, "/alphaperms rank <rank> list", "List rank permissions");
+            guideLine(sender, "/alphaperms rank <rank> grant|revoke|clear <permission>", "Manage a rank permission");
+        } else {
+            guideHeader(sender, name.toUpperCase(Locale.ROOT) + " COMMAND");
+            guideLine(sender, "/" + name, "Run this command");
+            guideLine(sender, "/" + name + " help", "Show this guide");
+        }
+        reply(sender, "§8Tip: append §fhelp §8to any AlphaClient command to view its guide.");
+    }
+
+    private void guideTimer(ICommandSender sender, String title, String command, boolean afk) {
+        guideHeader(sender, title);
+        guideLine(sender, command + " <on|off|toggle>", "Enable or disable the timer HUD");
+        guideLine(sender, command + " settings", "Open timer settings");
+        guideLine(sender, command + " background <on|off>", "Toggle the HUD background");
+        guideLine(sender, command + " color next", "Cycle the HUD color");
+        guideLine(sender, command + " position <x> <y>", "Set HUD coordinates");
+        if (afk) guideLine(sender, command + " mode <always|afk>", "Choose when the timer is visible");
+    }
+
+    private void guideHeader(ICommandSender sender, String title) {
+        reply(sender, "§6§l" + title + " §8| §7Command Guide");
+    }
+
+    private void guideLine(ICommandSender sender, String command, String description) {
+        reply(sender, "§f" + command + " §8- §7" + description);
     }
 
     private void handleProfileCommand(ICommandSender sender, String[] args) {
