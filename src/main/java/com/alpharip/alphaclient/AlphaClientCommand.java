@@ -3,6 +3,7 @@ package com.alpharip.alphaclient;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.gui.AlphaPermsGui;
+import com.alpharip.staffmod.gui.AlphaHelpGui;
 import com.alpharip.staffmod.gui.AfkTimerSettingsGui;
 import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.BhopSettingsGui;
@@ -73,7 +74,16 @@ public final class AlphaClientCommand extends CommandBase {
         }
 
         if ("alphahelp".equals(route)) {
-            sendHelp(sender);
+            if (args != null && args.length == 1 && "open".equalsIgnoreCase(args[0])) {
+                Minecraft mc = Minecraft.getMinecraft();
+                if (mc != null) AlphaClient.openGuiFromCommand(new AlphaHelpGui(mc.currentScreen));
+                return;
+            }
+            if (args == null || args.length == 0 || (args.length == 1 && "help".equalsIgnoreCase(args[0]))) {
+                sendHelp(sender);
+                return;
+            }
+            reply(sender, "Usage: /alphahelp [open]");
             return;
         }
 
