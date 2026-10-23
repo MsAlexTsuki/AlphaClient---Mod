@@ -8,6 +8,7 @@ import com.alpharip.staffmod.gui.AlphaMainMenu;
 import com.alpharip.staffmod.hud.BhopHud;
 import com.alpharip.staffmod.hud.AfkTimerHud;
 import com.alpharip.staffmod.hud.SessionTimerHud;
+import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.pvp.LegacyPvpMod;
@@ -86,6 +87,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new BhopHud());
         MinecraftForge.EVENT_BUS.register(new AfkTimerHud());
         MinecraftForge.EVENT_BUS.register(new SessionTimerHud());
+        PlaytimeTrackerHud.initialize();
+        MinecraftForge.EVENT_BUS.register(new PlaytimeTrackerHud());
 
         bhopMode = new BhopMode();
         // Restore per-profile module toggles after the registry and BHOP mode exist.
