@@ -53,13 +53,15 @@ Deno.serve(async (req: Request) => {
     if (authError || !user) return json({ error: "Alpha Account session is invalid or expired." }, 401);
 
     const { data: actor, error: actorError } = await admin
-      .from("profiles").select("id, username, is_founder, rank_key").eq("id", user.id).maybeSingle();
+      .from("profiles").select("id, username").eq("id", user.id).maybeSingle();
     if (actorError || !actor) return json({ error: "No Alpha community profile is linked to this account." }, 403);
 
-    const { data: actorRanks } = await admin.from("profile_ranks")
-      .select("rank_key").eq("profile_id", user.id);
-    const isFounder = actor.is_founder === true || actor.rank_key === "founder"
-      || (actorRanks ?? []).some((row: { rank_key: string }) => row.rank_key === "founder");
+    // Founder authorization uses the server-managed developer_admins allowlist.
+    // Do not trust profiles.is_founder, profiles.rank_key, or user-editable JWT metadata.
+    const { data: founderRecord, error: founderError } = await admin.from("developer_admins")
+      .select("user_id").eq("user_id", user.id).maybeSingle();
+    if (founderError) throw new Error("Could not verify Founder authorization.");
+    const isFounder = !!founderRecord;
 
     const body = await req.json().catch(() => null) as Record<string, unknown> | null;
     if (!body || typeof body.action !== "string") return json({ error: "Missing action." }, 400);
