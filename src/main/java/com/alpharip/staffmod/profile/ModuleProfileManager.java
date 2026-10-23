@@ -319,6 +319,7 @@ public class ModuleProfileManager {
             if (!mergeLegacyProfileFile(legacyFile, true)) {
                 createDefaultProfile();
             }
+            ensureDefaultProfile();
             migrateProfileColors();
             save();
             return;
@@ -393,6 +394,7 @@ public class ModuleProfileManager {
                 selectedProfile = profiles.get(0).getProfileName();
             }
 
+            ensureDefaultProfile();
             boolean colorsChanged = migrateProfileColors();
             // Persist a newly added Default profile immediately, even when no legacy
             // file or color migration exists. Otherwise it only exists in memory.
@@ -405,6 +407,7 @@ public class ModuleProfileManager {
 
             if (!backupUnreadableProfileFile(file)) {
                 System.out.println("[AlphaStaffMod] Backup failed; refusing to overwrite profile data.");
+                ensureDefaultProfile();
                 return;
             }
 
@@ -598,6 +601,16 @@ public class ModuleProfileManager {
      * DEFAULT PROFILE
      * =========================================================
      */
+
+    /** Ensures Default always exists and the active selection points to a valid profile. */
+    private static void ensureDefaultProfile() {
+        if (findProfile("Default") == null) {
+            createDefaultProfile();
+        }
+        if (findProfile(selectedProfile) == null) {
+            selectedProfile = "Default";
+        }
+    }
 
     private static void createDefaultProfile() {
 
