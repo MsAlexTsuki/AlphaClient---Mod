@@ -78,6 +78,8 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
     private String paletteQuery = "";
     private String commandInput = "";
     private final List<String> consoleOutput = new ArrayList<String>();
+    private final List<String> commandHistory = new ArrayList<String>();
+    private int commandHistoryIndex = -1;
     private int reportScroll;
 
     public AlphaDeveloperStudioGui(GuiScreen parent) {
@@ -255,6 +257,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         y += 14;
         List<String> lines = wrapReport(report, detailWidth);
         int maxLines = Math.max(1, (bottom - 50 - y) / 10);
+        if (selectedTool == 0 && reportScroll == Integer.MAX_VALUE) reportScroll = Math.max(0, lines.size() - maxLines);
         int start = Math.min(reportScroll, Math.max(0, lines.size() - maxLines));
         int shown = 0;
         for (int i = start; i < lines.size() && shown < maxLines; i++, shown++) {
@@ -378,14 +381,14 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
 
     private String join(List<String> values) {
         StringBuilder out = new StringBuilder();
-        for (String value : values) out.append(value).append("\\n");
+        for (String value : values) out.append(value).append("\n");
         return out.toString();
     }
 
     private List<String> wrapReport(String report, int maxWidth) {
         List<String> lines = new ArrayList<String>();
         if (report == null) return lines;
-        for (String paragraph : report.split("\\n", -1)) {
+        for (String paragraph : report.split("\n", -1)) {
             if (paragraph.isEmpty()) {
                 lines.add("");
                 continue;
@@ -446,10 +449,40 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             return;
         }
         if (selectedTool == 0) {
+            if (keyCode == Keyboard.KEY_PRIOR) {
+                reportScroll = Math.max(0, reportScroll - 8);
+                return;
+            }
+            if (keyCode == Keyboard.KEY_NEXT) {
+                reportScroll = Math.min(Math.max(0, wrapReport(getSelectedReport(), panelWidth).size() - 1), reportScroll + 8);
+                return;
+            }
+            if (keyCode == Keyboard.KEY_UP) {
+                if (!commandHistory.isEmpty()) {
+                    commandHistoryIndex = Math.min(commandHistoryIndex + 1, commandHistory.size() - 1);
+                    commandInput = commandHistory.get(commandHistory.size() - 1 - commandHistoryIndex);
+                }
+                return;
+            }
+            if (keyCode == Keyboard.KEY_DOWN) {
+                if (commandHistoryIndex > 0) {
+                    commandHistoryIndex--;
+                    commandInput = commandHistory.get(commandHistory.size() - 1 - commandHistoryIndex);
+                } else {
+                    commandHistoryIndex = -1;
+                    commandInput = "";
+                }
+                return;
+            }
             if (keyCode == Keyboard.KEY_RETURN) {
+                if (!commandInput.trim().isEmpty()) {
+                    commandHistory.add(commandInput.trim());
+                    if (commandHistory.size() > 100) commandHistory.remove(0);
+                }
                 executeConsoleCommand(commandInput);
                 commandInput = "";
-                reportScroll = Math.max(0, consoleOutput.size() - 12);
+                commandHistoryIndex = -1;
+                reportScroll = Integer.MAX_VALUE;
                 return;
             }
             if (keyCode == Keyboard.KEY_BACK) {
