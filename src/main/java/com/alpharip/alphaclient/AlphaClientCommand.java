@@ -21,6 +21,7 @@ import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.movement.WTapAssistance;
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
 import com.alpharip.staffmod.pvp.LegacyPvpSettings;
@@ -266,7 +267,9 @@ public final class AlphaClientCommand extends CommandBase {
     }
 
     private boolean hasWTapAccess() {
-        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
+        // Use the authenticated community profile's explicit Founder flag as well as the rank gate.
+        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                || SupabaseCommunityService.isSignedInFounder();
     }
 
     private void handleBhop(ICommandSender sender, String[] args) {
