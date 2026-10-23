@@ -36,6 +36,7 @@ public final class DeveloperDiagnostics {
     private static long sampledTicks;
     private static boolean testMode;
     private static boolean sandboxMode;
+    private static boolean debugOverlayEnabled;
     private static String lastTestReport = "No tests have been run.";
     private static String lastError = "No errors captured by Alpha Developer Studio.";
     private static String lastException = "No exceptions captured by Alpha Developer Studio.";
@@ -210,6 +211,17 @@ public final class DeveloperDiagnostics {
         event("Sandbox mode changed: " + enabled);
     }
     public static synchronized boolean isSandboxMode() { return sandboxMode; }
+
+    public static synchronized void setDebugOverlayEnabled(boolean enabled) {
+        debugOverlayEnabled = enabled;
+        log("INFO", "Developer Debug Overlay " + (enabled ? "enabled" : "disabled") + ".");
+        event("Debug overlay changed: " + enabled);
+    }
+    public static synchronized boolean isDebugOverlayEnabled() { return debugOverlayEnabled; }
+    public static synchronized String profilerOverlayLine() {
+        return "Tick: " + (latestTickNanos / 1000000L) + " ms | Heap: "
+                + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576L) + " MiB";
+    }
 
     public static synchronized String errorReport() {
         return "Latest error:\n" + lastError + "\n\nLatest exception:\n" + lastException
