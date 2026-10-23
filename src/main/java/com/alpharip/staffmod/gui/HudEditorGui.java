@@ -125,7 +125,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
         }
 
         int px = PlaytimeTrackerHud.getHudX(), py = PlaytimeTrackerHud.getHudY();
-        String playtimeText = "PLAYTIME 1 year and 2 months";
+        String playtimeText = "PLAYTIME 1 Y and 2 Mo";
         int pw = fontRendererObj.getStringWidth(playtimeText) + 10;
         if (PlaytimeTrackerHud.isEnabled() && mouseButton == 0 && mouseX >= px - 3 && mouseX <= px + pw
                 && mouseY >= py - 3 && mouseY <= py + fontRendererObj.FONT_HEIGHT + 3) {
@@ -198,7 +198,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 SessionTimerHud.setHudPosition(x, y);
             } else if (playtimeTrackerDragging) {
-                int itemWidth = fontRendererObj.getStringWidth("PLAYTIME 1 year and 2 months") + 10;
+                int itemWidth = fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10;
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 PlaytimeTrackerHud.setHudPosition(x, y);
