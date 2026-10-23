@@ -101,17 +101,17 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             return;
         }
 
-        panelWidth = Math.min(1120, Math.max(560, width - 36));
-        panelHeight = Math.min(650, Math.max(320, height - 32));
+        panelWidth = Math.min(1120, Math.max(Math.min(420, width - 16), width - 36));
+        panelHeight = Math.min(650, Math.max(150, height - 16));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
-        listTop = panelTop + 62;
+        listTop = panelTop + Math.min(62, Math.max(44, panelHeight / 4));
         if (consoleOutput.isEmpty()) {
             consoleOutput.add("Alpha Client Developer Console [Minecraft 1.8.9]");
             consoleOutput.add("Type help to list available commands.");
             consoleOutput.add("");
         }
-        listBottom = panelTop + panelHeight - 82;
+        listBottom = panelTop + Math.max(listTop - panelTop + 23, panelHeight - 82);
 
         int listX = panelLeft + 14;
         int listWidth = Math.max(150, Math.min(225, panelWidth / 3));
@@ -125,14 +125,15 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         }
         buttonList.add(new AlphaButton(TOGGLE_OVERLAY, panelLeft + panelWidth - 122, panelTop + 8, 108, 20,
                 DeveloperDiagnostics.isDebugOverlayEnabled() ? "OVERLAY: ON" : "OVERLAY: OFF"));
-        buttonList.add(new AlphaButton(RUN_TESTS, panelLeft + 14, panelTop + panelHeight - 58, 84, 20, "RUN TESTS"));
-        buttonList.add(new AlphaButton(TOGGLE_TEST, panelLeft + 104, panelTop + panelHeight - 58, 84, 20,
+        int footerY = panelTop + Math.max(8, panelHeight - 58);
+        buttonList.add(new AlphaButton(RUN_TESTS, panelLeft + 14, footerY, 84, 20, "RUN TESTS"));
+        buttonList.add(new AlphaButton(TOGGLE_TEST, panelLeft + 104, footerY, 84, 20,
                 DeveloperDiagnostics.isTestMode() ? "TEST: ON" : "TEST: OFF"));
-        buttonList.add(new AlphaButton(TOGGLE_SANDBOX, panelLeft + 194, panelTop + panelHeight - 58, 100, 20,
+        buttonList.add(new AlphaButton(TOGGLE_SANDBOX, panelLeft + 194, footerY, 100, 20,
                 DeveloperDiagnostics.isSandboxMode() ? "SANDBOX: ON" : "SANDBOX: OFF"));
-        buttonList.add(new AlphaButton(EXPORT_BUNDLE, panelLeft + 300, panelTop + panelHeight - 58, 112, 20, "EXPORT REPORT"));
+        buttonList.add(new AlphaButton(EXPORT_BUNDLE, panelLeft + 300, footerY, 112, 20, "EXPORT REPORT"));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94,
-                panelTop + panelHeight - 31, 80, 20, "BACK"));
+                panelTop + Math.max(8, panelHeight - 31), 80, 20, "BACK"));
     }
 
     @Override
