@@ -303,8 +303,14 @@ public final class AlphaClientCommand extends CommandBase {
         AlphaModule module = AlphaModuleRegistry.find("legacy-pvp");
         if (!hasModuleAccess(module)) { reply(sender, "Access denied: Legacy PvP is not available to your current rank."); return; }
         if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) { openSettings(sender, "legacypvp"); return; }
+        if (args.length == 1 && ("on".equalsIgnoreCase(args[0]) || "off".equalsIgnoreCase(args[0]) || "toggle".equalsIgnoreCase(args[0]))) {
+            Boolean enabled = parseToggle(args[0], module.isEnabled());
+            module.setEnabled(enabled.booleanValue());
+            reply(sender, "Legacy PvP " + (module.isEnabled() ? "enabled." : "disabled."));
+            return;
+        }
         if (args.length != 2) {
-            reply(sender, "Usage: /legacypvp <blockhit|potion-punch|missed-swing-delay|sword-swing|bow-animation|rod-animation|food-drink-animation|disable-view-bobbing> <on|off>");
+            reply(sender, "Usage: /legacypvp [on|off|toggle] or /legacypvp <blockhit|potion-punch|missed-swing-delay|sword-swing|bow-animation|rod-animation|food-drink-animation|disable-view-bobbing> <on|off>");
             return;
         }
         Boolean value = parseOnOff(args[1]);
@@ -400,7 +406,11 @@ public final class AlphaClientCommand extends CommandBase {
         if (!hasModuleAccess(module)) { reply(sender, "Access denied: this HUD is not available to your current rank."); return; }
         if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) { openSettings(sender, fps ? "fps" : "cps"); return; }
         String setting = args[0].toLowerCase(Locale.ROOT);
-        if ("background".equals(setting) && args.length == 2) {
+        if ("on".equals(setting) || "off".equals(setting) || "toggle".equals(setting)) {
+            Boolean enabled = parseToggle(setting, module.isEnabled());
+            module.setEnabled(enabled.booleanValue());
+            reply(sender, (fps ? "FPS" : "CPS") + " module " + (module.isEnabled() ? "enabled." : "disabled."));
+        } else if ("background".equals(setting) && args.length == 2) {
             Boolean value = parseOnOff(args[1]);
             if (value == null) { reply(sender, "Usage: background <on|off>"); return; }
             if (fps) FpsMod.setShowBackground(value); else CpsMod.setShowBackground(value);
