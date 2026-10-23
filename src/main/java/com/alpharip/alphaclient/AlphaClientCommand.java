@@ -451,8 +451,10 @@ public final class AlphaClientCommand extends CommandBase {
             }
             JsonObject response = SupabaseCommunityService.manageCommandPermissions(payload);
             if (payload.has("permission")) {
-                reply(sender, "Permission request successful: " + payload.get("action").getAsString()
-                        + " " + payload.get("permission").getAsString() + ".");
+                String targetLabel = payload.has("username") ? payload.get("username").getAsString()
+                        : (payload.has("rank") ? "rank " + payload.get("rank").getAsString() : "target");
+                reply(sender, "Permission updated for " + targetLabel + ": "
+                        + payload.get("action").getAsString() + " " + payload.get("permission").getAsString() + ".");
             } else if (response.has("permissions") && response.get("permissions").isJsonArray()) {
                 JsonArray rows = response.getAsJsonArray("permissions");
                 reply(sender, "Permissions (" + rows.size() + "):");
@@ -461,12 +463,14 @@ public final class AlphaClientCommand extends CommandBase {
                     JsonObject row = element.getAsJsonObject();
                     String key = getJsonString(row, "permission_key");
                     String display = getJsonString(row, "display_name");
+                    String category = getJsonString(row, "category");
                     String status = row.has("configured") && !row.get("configured").isJsonNull()
                             && row.get("configured").getAsBoolean()
                             ? (row.has("allowed") && row.get("allowed").getAsBoolean() ? "ALLOW" : "DENY")
                             : "DEFAULT";
                     String source = getJsonString(row, "source");
-                    reply(sender, (display == null ? key : display) + " [" + key + "]: " + status
+                    reply(sender, (category == null ? "" : "[" + category + "] ")
+                            + (display == null ? key : display) + " [" + key + "]: " + status
                             + (source == null ? "" : " (" + source + ")"));
                 }
             } else {
