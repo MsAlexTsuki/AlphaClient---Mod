@@ -61,7 +61,18 @@ public final class AlphaClientCommand extends CommandBase {
                 openSettings(sender, aliasModule(route));
                 return;
             }
-            route = aliasRoute(route);
+            if ("nameviewer".equals(route) || "legacypvp".equals(route)) {
+                String[] routedArgs = new String[args.length + 1];
+                routedArgs[0] = aliasModule(route);
+                System.arraycopy(args, 0, routedArgs, 1, args.length);
+                args = routedArgs;
+                route = "alphaclient:module";
+            } else if ("quality".equals(route)) {
+                openSettings(sender, "quality");
+                return;
+            } else {
+                route = aliasRoute(route);
+            }
         }
 
         if ("alphaclient:help".equals(route)) {
@@ -134,10 +145,11 @@ public final class AlphaClientCommand extends CommandBase {
             reply(sender, "Usage: /alphaclient module <module> <on|off|toggle>");
             return;
         }
-        String id = normalizeModuleId(args[0]);
-        if ("bhop".equals(id)) { handleBhop(sender, new String[] { args[1] }); return; }
-        if ("wtap".equals(id)) { handleWTap(sender, new String[] { args[1] }); return; }
-        if ("fullbright".equals(id)) { handleFullbright(sender, new String[] { args[1] }); return; }
+        String rawId = args[0].toLowerCase(Locale.ROOT);
+        if ("bhop".equals(rawId) || "staffmods".equals(rawId)) { handleBhop(sender, new String[] { args[1] }); return; }
+        if ("wtap".equals(rawId) || "w-tap".equals(rawId) || "w-tap-assistance".equals(rawId)) { handleWTap(sender, new String[] { args[1] }); return; }
+        if ("fullbright".equals(rawId)) { handleFullbright(sender, new String[] { args[1] }); return; }
+        String id = normalizeModuleId(rawId);
         if ("playtime".equals(id) || "playtime-tracker".equals(id)
                 || "sessiontimer".equals(id) || "session-timer".equals(id)
                 || "afktimer".equals(id) || "afk-timer".equals(id)) {
