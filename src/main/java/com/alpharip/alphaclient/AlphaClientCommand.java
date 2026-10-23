@@ -11,6 +11,7 @@ import com.alpharip.staffmod.gui.NameViewerSettingsGui;
 import com.alpharip.staffmod.gui.PlaytimeTrackerSettingsGui;
 import com.alpharip.staffmod.gui.QualityGui;
 import com.alpharip.staffmod.gui.SessionTimerSettingsGui;
+import com.alpharip.staffmod.gui.StaffModsMenuGui;
 import com.alpharip.staffmod.gui.WTapSettingsGui;
 import com.alpharip.staffmod.hud.AfkTimerHud;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
@@ -52,6 +53,34 @@ public final class AlphaClientCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
+
+        if ("staffmods".equals(route)) {
+            if (args.length == 0) {
+                Minecraft mc = Minecraft.getMinecraft();
+                if (mc != null && PermissionService.hasStaffModsAccess()) {
+                    mc.displayGuiScreen(new StaffModsMenuGui(mc.currentScreen));
+                } else {
+                    reply(sender, "Access denied: StaffMods requires staff access.");
+                }
+                return;
+            }
+            if (args.length == 1 && !"help".equalsIgnoreCase(args[0])) {
+                openStaffFolder(sender, args[0]);
+                return;
+            }
+            reply(sender, "Usage: /staffmods <general|beta|tmod|mod|srmod|admin|sradmin|management|platformadmin|manager|owner|founder|donator|scout|rogue|elite|alpha|alphaplus>");
+            return;
+        }
+
+        String staffFolder = staffFolderAlias(route);
+        if (staffFolder != null) {
+            if (args.length != 0) {
+                reply(sender, "Usage: /" + route);
+                return;
+            }
+            openStaffFolder(sender, staffFolder);
+            return;
+        }
 
         if ("alphaclient".equals(route)) {
             if (args.length == 0) { sendHelp(sender); return; }
@@ -111,6 +140,43 @@ public final class AlphaClientCommand extends CommandBase {
         } else {
             sendHelp(sender);
         }
+    }
+
+    private void openStaffFolder(ICommandSender sender, String folder) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null) return;
+        if (!PermissionService.hasStaffModsAccess()) {
+            reply(sender, "Access denied: StaffMods requires staff access.");
+            return;
+        }
+        StaffModsMenuGui menu = new StaffModsMenuGui(mc.currentScreen);
+        if (!menu.openFolderCommand(folder)) {
+            reply(sender, "Access denied: your current rank or module permissions do not allow the StaffMods folder '" + folder + "'.");
+            return;
+        }
+        mc.displayGuiScreen(menu);
+    }
+
+    private String staffFolderAlias(String name) {
+        if ("staffgeneral".equals(name)) return "general";
+        if ("staffbeta".equals(name)) return "beta";
+        if ("stafftmod".equals(name)) return "tmod";
+        if ("staffmod".equals(name)) return "mod";
+        if ("staffsrmod".equals(name)) return "srmod";
+        if ("staffadmin".equals(name)) return "admin";
+        if ("staffsradmin".equals(name)) return "sradmin";
+        if ("staffmanagement".equals(name)) return "management";
+        if ("staffplatformadmin".equals(name)) return "platformadmin";
+        if ("staffmanager".equals(name)) return "manager";
+        if ("staffowner".equals(name)) return "owner";
+        if ("stafffounder".equals(name)) return "founder";
+        if ("staffdonator".equals(name)) return "donator";
+        if ("staffscout".equals(name)) return "scout";
+        if ("staffrogue".equals(name)) return "rogue";
+        if ("staffelite".equals(name)) return "elite";
+        if ("staffalpha".equals(name)) return "alpha";
+        if ("staffalphaplus".equals(name)) return "alphaplus";
+        return null;
     }
 
     private boolean isAlias(String name) {
@@ -495,6 +561,7 @@ public final class AlphaClientCommand extends CommandBase {
         reply(sender, "/alphaclient legacypvp <feature> <on|off>");
         reply(sender, "HUDs: /fpshud /cpshud /playtime /sessiontimer /afktimer.");
         reply(sender, "Other shortcuts: /bhop /wtap /fullbright /nameviewer /legacypvp /quality.");
+        reply(sender, "StaffMods folders: /staffmods <folder> or /staffgeneral /staffbeta /stafftmod /staffmod /staffsrmod /staffadmin /staffsradmin /staffmanagement /staffplatformadmin /staffmanager /staffowner /stafffounder /staffdonator /staffscout /staffrogue /staffelite /staffalpha /staffalphaplus.");
     }
 
     private String normalizeModuleId(String id) {
@@ -549,7 +616,10 @@ public final class AlphaClientCommand extends CommandBase {
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args) {
         List<String> options = new ArrayList<String>();
-        if ("alphaclient".equals(commandName)) {
+        if ("staffmods".equals(commandName) && args.length == 1) {
+            String[] folders = {"general","beta","tmod","mod","srmod","admin","sradmin","management","platformadmin","manager","owner","founder","donator","scout","rogue","elite","alpha","alphaplus"};
+            for (String folder : folders) options.add(folder);
+        } else if ("alphaclient".equals(commandName)) {
             if (args.length == 1) {
                 String[] values = {"help","modules","settings","module","fps","cps","bhop","wtap","fullbright"};
                 for (String value : values) options.add(value);
