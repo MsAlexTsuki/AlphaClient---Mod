@@ -14,8 +14,8 @@ const json = (body: unknown, status = 200) =>
 const normalizeRank = (value: string) => {
   const key = value.trim().toLowerCase().replace(/[\s-]+/g, "_");
   const aliases: Record<string, string> = {
-    tmod: "trial_moderator", trial_mod: "trial_moderator",
-    mod: "moderator", srmod: "senior_moderator", sr_mod: "senior_moderator",
+    tmod: "trial_moderator", t_mod: "trial_moderator", trial_mod: "trial_moderator",
+    mod: "moderator", srmod: "senior_moderator", sr_mod: "senior_moderator", senior_mod: "senior_moderator",
     sradmin: "senior_admin", sr_admin: "senior_admin",
     platform_admin: "plat_admin", platformadmin: "plat_admin",
   };
