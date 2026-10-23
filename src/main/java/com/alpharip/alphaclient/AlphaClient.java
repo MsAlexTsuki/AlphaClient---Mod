@@ -2,6 +2,7 @@ package com.alpharip.alphaclient;
 
 import com.alpharip.staffmod.BuildInfo;
 import com.alpharip.staffmod.config.AlphaClientConfig;
+import com.alpharip.staffmod.developer.DeveloperDiagnostics;
 import com.alpharip.staffmod.gui.AlphaClientGuiHandler;
 import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.AlphaMainMenu;
@@ -70,6 +71,8 @@ public final class AlphaClient {
         System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
 
         MinecraftForge.EVENT_BUS.register(this);
+        DeveloperDiagnostics.initialize();
+        MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         registerClientCommands();
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
         MinecraftForge.EVENT_BUS.register(new RankViewerRenderer());
