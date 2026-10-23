@@ -149,6 +149,10 @@ public final class AlphaClientCommand extends CommandBase {
         if ("bhop".equals(rawId) || "staffmods".equals(rawId)) { handleBhop(sender, new String[] { args[1] }); return; }
         if ("wtap".equals(rawId) || "w-tap".equals(rawId) || "w-tap-assistance".equals(rawId)) { handleWTap(sender, new String[] { args[1] }); return; }
         if ("fullbright".equals(rawId)) { handleFullbright(sender, new String[] { args[1] }); return; }
+        if ("quality".equals(rawId)) {
+            reply(sender, "Quality is a feature group, not a single toggle. Use /quality to open its settings.");
+            return;
+        }
         String id = normalizeModuleId(rawId);
         if ("playtime".equals(id) || "playtime-tracker".equals(id)
                 || "sessiontimer".equals(id) || "session-timer".equals(id)
