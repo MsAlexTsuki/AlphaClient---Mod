@@ -55,6 +55,11 @@ public final class AlphaClientCommand extends CommandBase {
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
 
+        if ("alphahelp".equals(route)) {
+            sendHelp(sender);
+            return;
+        }
+
         if ("staffmods".equals(route)) {
             if (args.length == 0) {
                 Minecraft mc = Minecraft.getMinecraft();
