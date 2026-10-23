@@ -240,7 +240,11 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
         String rawId = args[0].toLowerCase(Locale.ROOT);
-        if ("bhop".equals(rawId) || "staffmods".equals(rawId)) { handleBhop(sender, new String[] { args[1] }); return; }
+        if ("staffmods".equals(rawId)) {
+            reply(sender, "StaffMods is a folder, not a module. Use /staffmods to open it.");
+            return;
+        }
+        if ("bhop".equals(rawId)) { handleBhop(sender, new String[] { args[1] }); return; }
         if ("wtap".equals(rawId) || "w-tap".equals(rawId) || "w-tap-assistance".equals(rawId)) { handleWTap(sender, new String[] { args[1] }); return; }
         if ("fullbright".equals(rawId)) { handleFullbright(sender, new String[] { args[1] }); return; }
         if ("quality".equals(rawId)) {
@@ -673,7 +677,10 @@ public final class AlphaClientCommand extends CommandBase {
                 String[] values = {"help","modules","settings","module","fps","cps","bhop","wtap","fullbright"};
                 for (String value : values) options.add(value);
             } else if (args.length == 2 && "module".equalsIgnoreCase(args[0])) {
-                for (AlphaModule module : AlphaModuleRegistry.getAll()) options.add(module.getId());
+                for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+                    if ("staffmods".equals(module.getId()) || "quality".equals(module.getId())) continue;
+                    options.add(module.getId());
+                }
                 String[] extra = {"bhop","wtap","fullbright","playtime","sessiontimer","afktimer"};
                 for (String value : extra) options.add(value);
             } else if (args.length == 2 && "settings".equalsIgnoreCase(args[0])) {
