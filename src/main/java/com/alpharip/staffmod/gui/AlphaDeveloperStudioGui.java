@@ -154,7 +154,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             return;
         }
         if (button.id == RUN_TESTS) {
-            status = DeveloperDiagnostics.runTests().replace("\\n", " ");
+            status = DeveloperDiagnostics.runTests().replace("\n", " ");
             reportScroll = 0;
             return;
         }
@@ -356,27 +356,27 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         switch (selectedTool) {
             case 0: return join(consoleOutput);
             case 1:
-                StringBuilder palette = new StringBuilder("Available actions (type to filter):\\n");
+                StringBuilder palette = new StringBuilder("Available actions (type to filter):\n");
                 for (int i = 0; i < TOOLS.length; i++) {
-                    if (TOOLS[i].toLowerCase().contains(paletteQuery.toLowerCase())) palette.append("- ").append(TOOLS[i]).append("\\n");
+                    if (TOOLS[i].toLowerCase().contains(paletteQuery.toLowerCase())) palette.append("- ").append(TOOLS[i]).append("\n");
                 }
-                palette.append("\\nActions: run tests, toggle test/sandbox mode, export diagnostic bundle.");
+                palette.append("\nActions: run tests, toggle test/sandbox mode, export diagnostic bundle.");
                 return palette.toString();
-            case 2: return "Recent client events\\n" + join(DeveloperDiagnostics.events());
-            case 3: return "Debug overlay: " + DeveloperDiagnostics.isDebugOverlayEnabled() + "\\nUse OVERLAY ON/OFF at the top right to toggle the live in-game overlay.\\n" + DeveloperDiagnostics.profilerReport();
-            case 4: return "TEST MODE: " + DeveloperDiagnostics.isTestMode() + "\\n" + DeveloperDiagnostics.lastTestReport();
-            case 5: return "SANDBOX MODE: " + DeveloperDiagnostics.isSandboxMode() + "\\nSandbox is an isolated developer flag; it does not alter live module/config state.";
+            case 2: return "Recent client events\n" + join(DeveloperDiagnostics.events());
+            case 3: return "Debug overlay: " + DeveloperDiagnostics.isDebugOverlayEnabled() + "\nUse OVERLAY ON/OFF at the top right to toggle the live in-game overlay.\n" + DeveloperDiagnostics.profilerReport();
+            case 4: return "TEST MODE: " + DeveloperDiagnostics.isTestMode() + "\n" + DeveloperDiagnostics.lastTestReport();
+            case 5: return "SANDBOX MODE: " + DeveloperDiagnostics.isSandboxMode() + "\nSandbox is an isolated developer flag; it does not alter live module/config state.";
             case 6: return DeveloperDiagnostics.profilerReport();
             case 7: return DeveloperDiagnostics.modReport();
             case 8: return DeveloperDiagnostics.moduleReport();
             case 9: return DeveloperDiagnostics.dependencyReport();
             case 10: return DeveloperDiagnostics.configReport();
-            case 11: return DeveloperDiagnostics.errorReport() + "\\n\\nERROR DATABASE (session memory)\\n" + join(DeveloperDiagnostics.errors());
-            case 12: return "Captured exceptions\\n" + join(DeveloperDiagnostics.exceptions());
-            case 13: return "Captured stack traces\\n" + join(DeveloperDiagnostics.stackTraces());
-            case 14: return "Client logs\\n" + join(DeveloperDiagnostics.logs());
-            case 15: return "Diagnostic bundle export uses the EXPORT REPORT button below.\\nExports locally to Minecraft/logs; no data is uploaded.\\n" + DeveloperDiagnostics.profilerReport();
-            default: return "Alpha Developer Studio\\n17 registered developer tools.\\n" + DeveloperDiagnostics.profilerReport();
+            case 11: return DeveloperDiagnostics.errorReport() + "\n\nERROR DATABASE (session memory)\n" + join(DeveloperDiagnostics.errors());
+            case 12: return "Captured exceptions\n" + join(DeveloperDiagnostics.exceptions());
+            case 13: return "Captured stack traces\n" + join(DeveloperDiagnostics.stackTraces());
+            case 14: return "Client logs\n" + join(DeveloperDiagnostics.logs());
+            case 15: return "Diagnostic bundle export uses the EXPORT REPORT button below.\nExports locally to Minecraft/logs; no data is uploaded.\n" + DeveloperDiagnostics.profilerReport();
+            default: return "Alpha Developer Studio\n17 registered developer tools.\n" + DeveloperDiagnostics.profilerReport();
         }
     }
 
