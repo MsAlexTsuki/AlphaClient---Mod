@@ -114,8 +114,11 @@ public final class AlphaClient {
         String[] commands = {
                 "alphaclient", "alphaclient:help", "alphaclient:modules",
                 "alphaclient:settings", "alphaclient:module", "alphaclient:fps",
-                "alphaclient:cps", "fpshud", "cpshud", "playtime",
-                "sessiontimer", "afktimer"
+                "alphaclient:cps", "alphaclient:bhop", "alphaclient:wtap",
+                "alphaclient:fullbright", "alphaclient:playtime",
+                "alphaclient:sessiontimer", "alphaclient:afktimer",
+                "fpshud", "cpshud", "playtime", "sessiontimer", "afktimer",
+                "bhop", "wtap", "fullbright", "nameviewer", "legacypvp", "quality"
         };
         for (String command : commands) {
             ClientCommandHandler.instance.registerCommand(new AlphaClientCommand(command));
