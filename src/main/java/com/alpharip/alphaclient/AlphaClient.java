@@ -62,6 +62,7 @@ public final class AlphaClient {
     private int partnerAutoConnectTicks = -1;
     private boolean partnerAutoConnectConsumed;
     private boolean fpsOptimizationInitialized;
+    private static volatile GuiScreen pendingCommandGui;
 
     @Mod.EventHandler
     public void initialize(FMLInitializationEvent event) {
@@ -109,6 +110,11 @@ public final class AlphaClient {
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
     }
 
+    /** Opens a command-requested GUI after Minecraft has finished closing the chat screen. */
+    public static void openGuiFromCommand(GuiScreen screen) {
+        pendingCommandGui = screen;
+    }
+
     /** Registers the central command namespace and short aliases against shared handlers. */
     private void registerClientCommands() {
         String[] commands = {
@@ -134,6 +140,14 @@ public final class AlphaClient {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
+
+        // Client commands run while GuiChat is closing; defer requested screens until the next tick.
+        GuiScreen requestedGui = pendingCommandGui;
+        if (requestedGui != null) {
+            pendingCommandGui = null;
+            Minecraft guiMinecraft = Minecraft.getMinecraft();
+            if (guiMinecraft != null) guiMinecraft.displayGuiScreen(requestedGui);
+        }
 
         // Keep the BHOP key visible in Minecraft Controls only while community-authenticated.
         syncBhopKeyBindingVisibility();
