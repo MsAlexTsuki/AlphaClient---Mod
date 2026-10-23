@@ -28,7 +28,7 @@ import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
 import com.alpharip.staffmod.pvp.LegacyPvpSettings;
 import com.alpharip.staffmod.quality.FullbrightMod;
-import net.minecraft.client.Minecraft;
+import com.google.gson.JsonArray;\nimport com.google.gson.JsonElement;\nimport com.google.gson.JsonObject;\nimport net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -56,6 +56,17 @@ public final class AlphaClientCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
+
+        if ("alphaperms".equals(route)) {
+            handleAlphaPerms(sender, args);
+            return;
+        }
+
+        String permissionKey = commandPermissionForRoute(route, args);
+        if (permissionKey != null && Boolean.FALSE.equals(PermissionService.getCommandPermissionOverride(permissionKey))) {
+            reply(sender, "Access denied: your Alpha Account does not have " + permissionKey + ".");
+            return;
+        }
 
         if ("alphahelp".equals(route)) {
             sendHelp(sender);
@@ -95,8 +106,12 @@ public final class AlphaClientCommand extends CommandBase {
         if (regularCategory != null) {
             Minecraft mc = Minecraft.getMinecraft();
             if (mc == null) return;
-            boolean categoryAllowed = PermissionService.hasAccess(regularCategory.getRequiredRank());
-            if (!categoryAllowed) {
+            String categoryPermission = categoryPermissionKey(regularCategory);
+            Boolean categoryOverride = PermissionService.getCommandPermissionOverride(categoryPermission);
+            boolean categoryAllowed = categoryOverride != null
+                    ? categoryOverride.booleanValue()
+                    : PermissionService.hasAccess(regularCategory.getRequiredRank());
+            if (categoryOverride == null && !categoryAllowed) {
                 for (AlphaModule module : AlphaModuleRegistry.getForCategory(regularCategory)) {
                     if (!"staffmods".equals(module.getId()) && module.isUnlocked()) {
                         categoryAllowed = true;
@@ -249,6 +264,199 @@ public final class AlphaClientCommand extends CommandBase {
             value.append(args[i]);
         }
         return value.toString().trim();
+    }
+
+    private String categoryPermissionKey(AlphaModule.Category category) {
+        if (category == null) return null;
+        switch (category) {
+            case PUBLIC: return "menu.general";
+            case BETA: return "menu.beta";
+            case DONATOR: return "menu.donator";
+            case SCOUT: return "menu.scout";
+            case ROGUE: return "menu.rogue";
+            case ELITE: return "menu.elite";
+            case ALPHA: return "menu.alpha";
+            case ALPHA_PLUS: return "menu.alphaplus";
+            default: return null;
+        }
+    }
+
+    private String moduleCommandPermission(String moduleId) {
+        if (moduleId == null) return null;
+        String id = moduleId.toLowerCase(Locale.ROOT);
+        if ("fps".equals(id)) return "command.fpshud";
+        if ("cps".equals(id)) return "command.cpshud";
+        if ("staffmods".equals(id) || "bhop".equals(id)) return "command.bhop";
+        if ("w-tap-assistance".equals(id) || "wtap".equals(id)) return "command.wtap";
+        if ("fullbright".equals(id)) return "command.fullbright";
+        if ("name-viewer".equals(id) || "nameviewer".equals(id)) return "command.nameviewer";
+        if ("legacy-pvp".equals(id) || "legacypvp".equals(id)) return "command.legacypvp";
+        if ("playtime".equals(id) || "playtime-tracker".equals(id)) return "command.playtime";
+        if ("sessiontimer".equals(id) || "session-timer".equals(id)) return "command.sessiontimer";
+        if ("afktimer".equals(id) || "afk-timer".equals(id)) return "command.afktimer";
+        if ("quality".equals(id)) return "command.quality";
+        return null;
+    }
+
+    private String commandPermissionForRoute(String route, String[] args) {
+        if (route == null) return null;
+        if ("alphahelp".equals(route) || "alphaclient:help".equals(route)) return "command.help";
+        if ("alphaclient:modules".equals(route)) return "command.modules";
+        if ("alphaclient:settings".equals(route)) return "command.settings";
+        if ("hudeditor".equals(route)) return "command.hudeditor";
+        if ("profiles".equals(route)) return "command.profiles.list";
+        if ("profile".equals(route)) {
+            String action = args != null && args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "";
+            if ("create".equals(action)) return "command.profiles.create";
+            if ("edit".equals(action)) return "command.profiles.edit";
+            if ("delete".equals(action)) return "command.profiles.delete";
+            return "command.profiles.switch";
+        }
+        if ("fpshud".equals(route) || "alphaclient:fps".equals(route)) return "command.fpshud";
+        if ("cpshud".equals(route) || "alphaclient:cps".equals(route)) return "command.cpshud";
+        if ("bhop".equals(route) || "alphaclient:bhop".equals(route)) return "command.bhop";
+        if ("wtap".equals(route) || "alphaclient:wtap".equals(route)) return "command.wtap";
+        if ("fullbright".equals(route) || "alphaclient:fullbright".equals(route)) return "command.fullbright";
+        if ("nameviewer".equals(route)) return "command.nameviewer";
+        if ("legacypvp".equals(route) || "alphaclient:legacypvp".equals(route)) return "command.legacypvp";
+        if ("playtime".equals(route) || "alphaclient:playtime".equals(route)) return "command.playtime";
+        if ("sessiontimer".equals(route) || "alphaclient:sessiontimer".equals(route)) return "command.sessiontimer";
+        if ("afktimer".equals(route) || "alphaclient:afktimer".equals(route)) return "command.afktimer";
+        if ("quality".equals(route)) return "command.quality";
+        if ("staffmods".equals(route)) {
+            String folder = args != null && args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "";
+            return staffFolderPermission(folder);
+        }
+        if ("staffgeneral".equals(route)) return "staffmods.general";
+        if ("stafftmod".equals(route)) return "staffmods.tmod";
+        if ("staffmod".equals(route)) return "staffmods.mod";
+        if ("staffsrmod".equals(route)) return "staffmods.srmod";
+        if ("staffadmin".equals(route)) return "staffmods.admin";
+        if ("staffsradmin".equals(route)) return "staffmods.sradmin";
+        if ("staffplatformadmin".equals(route) || "staffplatadmin".equals(route)) return "staffmods.platformadmin";
+        if ("staffmanagement".equals(route)) return "staffmods.management";
+        if ("staffmanager".equals(route)) return "staffmods.manager";
+        if ("staffowner".equals(route)) return "staffmods.owner";
+        if ("stafffounder".equals(route)) return "staffmods.founder";
+        if ("general".equals(route)) return "menu.general";
+        if ("beta".equals(route)) return "menu.beta";
+        if ("donator".equals(route)) return "menu.donator";
+        if ("scout".equals(route)) return "menu.scout";
+        if ("rogue".equals(route)) return "menu.rogue";
+        if ("elite".equals(route)) return "menu.elite";
+        if ("alpha".equals(route)) return "menu.alpha";
+        if ("alphaplus".equals(route)) return "menu.alphaplus";
+        return null;
+    }
+
+    private String staffFolderPermission(String folder) {
+        if ("general".equals(folder)) return "staffmods.general";
+        if ("tmod".equals(folder) || "trial_moderator".equals(folder)) return "staffmods.tmod";
+        if ("mod".equals(folder) || "moderator".equals(folder)) return "staffmods.mod";
+        if ("srmod".equals(folder) || "senior_moderator".equals(folder)) return "staffmods.srmod";
+        if ("admin".equals(folder)) return "staffmods.admin";
+        if ("sradmin".equals(folder) || "senior_admin".equals(folder)) return "staffmods.sradmin";
+        if ("platformadmin".equals(folder) || "platadmin".equals(folder)) return "staffmods.platformadmin";
+        if ("management".equals(folder)) return "staffmods.management";
+        if ("manager".equals(folder)) return "staffmods.manager";
+        if ("owner".equals(folder)) return "staffmods.owner";
+        if ("founder".equals(folder)) return "staffmods.founder";
+        return "staffmods.open";
+    }
+
+    private void handleAlphaPerms(ICommandSender sender, String[] args) {
+        if (!SupabaseCommunityService.isSignedInFounder()) {
+            reply(sender, "FOUNDER-ONLY: sign in with the Founder Alpha Account to manage permissions.");
+            return;
+        }
+        if (args.length == 0 || "help".equalsIgnoreCase(args[0])) {
+            reply(sender, "Founder-only command permission manager.");
+            reply(sender, "/alphaperms list");
+            reply(sender, "/alphaperms <alpha-name> list");
+            reply(sender, "/alphaperms <alpha-name> grant <permission>");
+            reply(sender, "/alphaperms <alpha-name> revoke <permission>");
+            reply(sender, "/alphaperms <alpha-name> clear <permission>");
+            reply(sender, "/alphaperms rank <rank> list");
+            reply(sender, "/alphaperms rank <rank> grant <permission>");
+            reply(sender, "/alphaperms rank <rank> revoke <permission>");
+            return;
+        }
+        try {
+            JsonObject payload = new JsonObject();
+            if ("list".equalsIgnoreCase(args[0]) && args.length == 1) {
+                payload.addProperty("action", "list");
+                payload.addProperty("target", "catalog");
+            } else if ("rank".equalsIgnoreCase(args[0])) {
+                if (args.length < 3) {
+                    reply(sender, "Usage: /alphaperms rank <rank> <list|grant|revoke> [permission]");
+                    return;
+                }
+                String action = args[2].toLowerCase(Locale.ROOT);
+                if (!"list".equals(action) && !"grant".equals(action) && !"revoke".equals(action)) {
+                    reply(sender, "Use list, grant, or revoke.");
+                    return;
+                }
+                payload.addProperty("target", "rank");
+                payload.addProperty("rank", args[1]);
+                payload.addProperty("action", "list".equals(action) ? "list" : ("grant".equals(action) ? "grant_rank" : "revoke_rank"));
+                if (!"list".equals(action)) {
+                    if (args.length != 4) {
+                        reply(sender, "Usage: /alphaperms rank <rank> <grant|revoke> <permission>");
+                        return;
+                    }
+                    payload.addProperty("permission", args[3]);
+                }
+            } else {
+                if (args.length < 2) {
+                    reply(sender, "Usage: /alphaperms <alpha-name> <list|grant|revoke|clear> [permission]");
+                    return;
+                }
+                String action = args[1].toLowerCase(Locale.ROOT);
+                payload.addProperty("username", args[0]);
+                if ("list".equals(action) && args.length == 2) payload.addProperty("action", "list");
+                else if (("grant".equals(action) || "revoke".equals(action) || "clear".equals(action)) && args.length == 3) {
+                    payload.addProperty("action", "grant".equals(action) ? "grant_user" : ("revoke".equals(action) ? "revoke_user" : "clear_user"));
+                    payload.addProperty("permission", args[2]);
+                } else {
+                    reply(sender, "Usage: /alphaperms <alpha-name> <list|grant|revoke|clear> [permission]");
+                    return;
+                }
+            }
+            JsonObject response = SupabaseCommunityService.manageCommandPermissions(payload);
+            if (payload.has("permission")) {
+                reply(sender, "Permission request successful: " + payload.get("action").getAsString()
+                        + " " + payload.get("permission").getAsString() + ".");
+            } else if (response.has("permissions") && response.get("permissions").isJsonArray()) {
+                JsonArray rows = response.getAsJsonArray("permissions");
+                reply(sender, "Permissions (" + rows.size() + "):");
+                for (JsonElement element : rows) {
+                    if (!element.isJsonObject()) continue;
+                    JsonObject row = element.getAsJsonObject();
+                    String key = getJsonString(row, "permission_key");
+                    String display = getJsonString(row, "display_name");
+                    String status = row.has("configured") && !row.get("configured").isJsonNull()
+                            && row.get("configured").getAsBoolean()
+                            ? (row.has("allowed") && row.get("allowed").getAsBoolean() ? "ALLOW" : "DENY")
+                            : "DEFAULT";
+                    String source = getJsonString(row, "source");
+                    reply(sender, (display == null ? key : display) + " [" + key + "]: " + status
+                            + (source == null ? "" : " (" + source + ")"));
+                }
+            } else {
+                reply(sender, "Command permissions updated.");
+            }
+        } catch (Exception exception) {
+            reply(sender, "Permission request failed: " + (exception.getMessage() == null ? "unknown error" : exception.getMessage()));
+        }
+    }
+
+    private String getJsonString(JsonObject object, String key) {
+        try {
+            JsonElement value = object.get(key);
+            return value == null || value.isJsonNull() ? null : value.getAsString();
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private void listProfiles(ICommandSender sender) {
@@ -420,18 +628,26 @@ public final class AlphaClientCommand extends CommandBase {
     }
 
     private boolean hasModuleAccess(AlphaModule module) {
-        if (module == null || !module.isUnlocked()) return false;
+        if (module == null) return false;
+        String permissionKey = moduleCommandPermission(module.getId());
+        Boolean commandOverride = PermissionService.getCommandPermissionOverride(permissionKey);
+        if (commandOverride != null) return commandOverride.booleanValue();
+        if (!module.isUnlocked()) return false;
         if ("staffmods".equals(module.getId())) return hasBhopAccess();
         if ("w-tap-assistance".equals(module.getId())) return hasWTapAccess();
         return true;
     }
 
     private boolean hasBhopAccess() {
+        Boolean override = PermissionService.getCommandPermissionOverride("command.bhop");
+        if (override != null) return override.booleanValue();
         return PermissionService.hasAccess(PermissionService.Rank.T_MOD)
                 && PermissionService.hasModAccess("staff.bhop");
     }
 
     private boolean hasWTapAccess() {
+        Boolean override = PermissionService.getCommandPermissionOverride("command.wtap");
+        if (override != null) return override.booleanValue();
         // Use the authenticated community profile's explicit Founder flag as well as the rank gate.
         return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
                 || SupabaseCommunityService.isSignedInFounder();
