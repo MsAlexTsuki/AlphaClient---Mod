@@ -313,6 +313,22 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true, action, username: target.username, permission });
     }
 
+    if (action === "clear_rank") {
+      const rank = await getRank(body.rank);
+      const permission = getPermission(body.permission);
+      if (permission.startsWith("mod.")) {
+        return json({ error: "Module rank permissions have seeded defaults. Use grant or revoke to change them." }, 400);
+      }
+      if (permission === "staffmods.founder" && rank.rank_key !== "founder") {
+        return json({ error: "Founder-folder permission cannot be assigned to any non-Founder rank." }, 403);
+      }
+      const { error } = await admin.from("client_command_rank_permissions").delete()
+        .eq("rank_key", rank.rank_key).eq("permission_key", permission);
+      if (error) throw new Error("Could not clear rank permission override.");
+      await writeAudit(action, null, rank.rank_name, { rank_key: rank.rank_key, permission_key: permission });
+      return json({ ok: true, action, rank: rank.rank_name, permission });
+    }
+
     if (action === "grant_rank" || action === "revoke_rank") {
       const rank = await getRank(body.rank);
       const permission = getPermission(body.permission);
@@ -345,7 +361,7 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true, action, rank: rank.rank_name, permission });
     }
 
-    return json({ error: "Unknown action. Use my_permissions, list, grant_user, revoke_user, clear_user, grant_rank, or revoke_rank." }, 400);
+    return json({ error: "Unknown action. Use my_permissions, list, grant_user, revoke_user, clear_user, grant_rank, revoke_rank, or clear_rank." }, 400);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Permission request failed.";
     return json({ error: message }, 400);
