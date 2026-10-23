@@ -69,8 +69,12 @@ public final class AlphaClientCommand extends CommandBase {
         }
 
         if ("profiles".equals(route)) {
-            Minecraft mc = Minecraft.getMinecraft();
-            if (mc != null) AlphaClient.openGuiFromCommand(new AlphaModMenu(mc.currentScreen));
+            listProfiles(sender);
+            return;
+        }
+
+        if ("profile".equals(route)) {
+            selectProfile(sender, args);
             return;
         }
 
@@ -175,6 +179,40 @@ public final class AlphaClientCommand extends CommandBase {
             handleTimer(sender, args, "afktimer");
         } else {
             sendHelp(sender);
+        }
+    }
+
+    private void listProfiles(ICommandSender sender) {
+        List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
+        String active = ModuleProfileManager.getSelectedProfileName();
+        reply(sender, "Available profiles (active profile marked with *):");
+        boolean defaultFound = false;
+        for (ModuleProfileManager.BhopProfile profile : profiles) {
+            String name = profile.getProfileName();
+            if ("Default".equalsIgnoreCase(name)) defaultFound = true;
+            reply(sender, (name.equalsIgnoreCase(active) ? "* " : "  ") + name);
+        }
+        if (!defaultFound) {
+            reply(sender, ("Default".equalsIgnoreCase(active) ? "* " : "  ") + "Default");
+        }
+        reply(sender, "Switch profile with /profile <profile name>.");
+    }
+
+    private void selectProfile(ICommandSender sender, String[] args) {
+        if (args.length == 0) {
+            reply(sender, "Usage: /profile <profile name>. Use /profiles to list available profiles.");
+            return;
+        }
+        StringBuilder requestedName = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if (i > 0) requestedName.append(' ');
+            requestedName.append(args[i]);
+        }
+        String name = requestedName.toString().trim();
+        if (ModuleProfileManager.selectProfile(name)) {
+            reply(sender, "Switched to profile: " + ModuleProfileManager.getSelectedProfileName());
+        } else {
+            reply(sender, "Profile not found: " + name + ". Use /profiles to list available profiles.");
         }
     }
 
@@ -655,7 +693,7 @@ public final class AlphaClientCommand extends CommandBase {
         if (rank == PermissionService.Rank.ALPHA_PLUS) {
             reply(sender, "/alphaplus opens Mods -> Alpha+.");
         }
-        reply(sender, "Available shortcuts: /fpshud /cpshud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality /hudeditor /profiles.");
+        reply(sender, "Available shortcuts: /fpshud /cpshud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality /hudeditor /profiles /profile <name>.");
         if (hasBhopAccess()) {
             reply(sender, "BHOP: /bhop [settings|on|off|toggle|speed|shiftup|name|color].");
         }
@@ -736,6 +774,10 @@ public final class AlphaClientCommand extends CommandBase {
         if ("staffmods".equals(commandName) && args.length == 1) {
             String[] folders = {"general","beta","tmod","mod","srmod","admin","sradmin","management","platformadmin","manager","owner","founder","donator","scout","rogue","elite","alpha","alphaplus"};
             for (String folder : folders) options.add(folder);
+        } else if ("profile".equals(commandName) && args.length == 1) {
+            for (ModuleProfileManager.BhopProfile profile : ModuleProfileManager.getProfiles()) {
+                options.add(profile.getProfileName());
+            }
         } else if ("alphaclient".equals(commandName)) {
             if (args.length == 1) {
                 String[] values = {"help","modules","settings","module","fps","cps","bhop","wtap","fullbright"};
