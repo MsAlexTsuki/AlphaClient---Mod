@@ -375,7 +375,12 @@ public final class AlphaClientCommand extends CommandBase {
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             reply(sender, module.getId() + " - " + (hasModuleAccess(module) ? module.getStatusLabel() : "LOCKED"));
         }
-        reply(sender, "Implemented standalone modules: fullbright, playtimeTracker, sessionTimer, afkTimer.");
+        reply(sender, "fullbright - " + (FullbrightMod.isEnabled() ? "ON" : "OFF"));
+        reply(sender, "playtimeTracker - " + (PlaytimeTrackerHud.isEnabled() ? "ON" : "OFF"));
+        reply(sender, "sessionTimer - " + (SessionTimerHud.isEnabled() ? "ON" : "OFF"));
+        reply(sender, "afkTimer - " + (AfkTimerHud.isEnabled() ? "ON" : "OFF"));
+        reply(sender, "bhop - " + (hasBhopAccess() ? (BhopMode.isEnabled() ? "ON" : "OFF") : "LOCKED"));
+        reply(sender, "wtap - " + (hasWTapAccess() ? (WTapAssistance.isEnabled() ? "ON" : "OFF") : "LOCKED"));
         reply(sender, "Aliases: /fpshud /cpshud /bhop /wtap /fullbright /nameviewer /legacypvp /playtime /sessiontimer /afktimer /quality.");
         reply(sender, "Planned features remain unavailable until implemented.");
     }
