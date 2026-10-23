@@ -125,11 +125,10 @@ public final class AlphaClient {
                 "alphaclient:sessiontimer", "alphaclient:afktimer",
                 "fpshud", "cpshud", "playtime", "sessiontimer", "afktimer",
                 "bhop", "wtap", "fullbright", "nameviewer", "legacypvp", "quality",
-                "staffmods", "staffgeneral", "staffbeta", "stafftmod", "staffmod",
+                "staffmods", "staffgeneral", "stafftmod", "staffmod",
                 "staffsrmod", "staffadmin", "staffsradmin", "staffmanagement",
                 "staffplatformadmin", "staffmanager", "staffowner", "stafffounder",
-                "staffdonator", "staffscout", "staffrogue", "staffelite",
-                "staffalpha", "staffalphaplus"
+                "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus"
         };
         for (String command : commands) {
             ClientCommandHandler.instance.registerCommand(new AlphaClientCommand(command));
