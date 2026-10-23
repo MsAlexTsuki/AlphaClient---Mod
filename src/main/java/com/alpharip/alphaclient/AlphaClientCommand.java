@@ -159,7 +159,7 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
         String id = normalizeModuleId(rawId);
-        if ("playtime".equals(id) || "playtime-tracker".equals(id)
+        if ("playtime".equals(id) || "playtime-tracker".equals(id) || "playtimetracker".equals(id)
                 || "sessiontimer".equals(id) || "session-timer".equals(id)
                 || "afktimer".equals(id) || "afk-timer".equals(id)) {
             String timer = id.startsWith("playtime") ? "playtime" : (id.startsWith("session") ? "sessiontimer" : "afktimer");
@@ -496,7 +496,7 @@ public final class AlphaClientCommand extends CommandBase {
         String value = id == null ? "" : id.toLowerCase(Locale.ROOT);
         if ("fpshud".equals(value)) return "fps";
         if ("cpshud".equals(value)) return "cps";
-        if ("playtime".equals(value) || "playtime-tracker".equals(value)) return "playtime";
+        if ("playtime".equals(value) || "playtime-tracker".equals(value) || "playtimetracker".equals(value)) return "playtime";
         if ("session-timer".equals(value) || "sessiontimer".equals(value)) return "sessiontimer";
         if ("afk-timer".equals(value) || "afktimer".equals(value)) return "afktimer";
         if ("bhop".equals(value)) return "staffmods";
