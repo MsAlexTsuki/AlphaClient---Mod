@@ -100,8 +100,8 @@ public final class InfoHudModules {
     public static int getArmorX() { load(); return armorX; }
     public static int getArmorY() { load(); return armorY; }
     public static int getArmorColor() { load(); return armorColor; }
-    public static int getArmorEditorWidth() { load(); return armorLayout == 0 ? 440 : 200; }
-    public static int getArmorEditorHeight() { load(); return armorLayout == 0 ? 30 : 110; }
+    public static int getArmorEditorWidth() { load(); return armorLayout == 0 ? 98 : 18; }
+    public static int getArmorEditorHeight() { load(); return armorLayout == 0 ? 18 : 98; }
     public static int getArmorLayout() { load(); return armorLayout; }
     public static void setArmorPosition(int x, int y) { load(); armorX = Math.max(0, x); armorY = Math.max(0, y); save(); }
     public static void cycleArmorLayout() { load(); armorLayout = (armorLayout + 1) % 2; save(); }
@@ -156,32 +156,18 @@ public final class InfoHudModules {
     }
 
     private static void renderArmor(Minecraft mc) {
-        // Show the held item and every equipped armor slot, as requested.
-        ItemStack held = mc.thePlayer.getHeldItem();
+        // Show the held item first, followed by equipped armor from head to feet.
+        // No labels: only the actual Minecraft item icons and their vanilla overlays.
         ItemStack[] armor = mc.thePlayer.inventory.armorInventory;
-        ItemStack[] items = new ItemStack[] { held, armor[3], armor[2], armor[1], armor[0] };
-        String[] labels = new String[] { "Hand", "Helmet", "Chest", "Legs", "Boots" };
+        ItemStack[] items = new ItemStack[] {
+                mc.thePlayer.getHeldItem(), armor[3], armor[2], armor[1], armor[0]
+        };
         int x = armorX, y = armorY;
         for (int i = 0; i < items.length; i++) {
-            ItemStack stack = items[i];
-            String label = labels[i] + ": " + (stack == null ? "Empty"
-                    : stack.getDisplayName() + " " + durability(stack));
-            if (armorLayout == 0) {
-                int itemX = x + i * 88;
-                drawItem(mc, stack, itemX, y);
-                mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 82), itemX, y + 18, armorColor);
-            } else {
-                drawItem(mc, stack, x, y + i * 22);
-                mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), x + 20, y + i * 22 + 5, armorColor);
-            }
+            int itemX = armorLayout == 0 ? x + i * 20 : x;
+            int itemY = armorLayout == 0 ? y : y + i * 20;
+            drawItem(mc, items[i], itemX, itemY);
         }
-    }
-
-    private static String durability(ItemStack stack) {
-        if (stack == null || !stack.isItemStackDamageable()) return "";
-        int max = stack.getMaxDamage();
-        int remaining = Math.max(0, max - stack.getItemDamage());
-        return "[" + remaining + "/" + max + "]";
     }
 
     private static void drawItem(Minecraft mc, ItemStack stack, int x, int y) {
