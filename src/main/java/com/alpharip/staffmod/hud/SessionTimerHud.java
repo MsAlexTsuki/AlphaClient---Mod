@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.hud;
 
 import com.alpharip.staffmod.profile.ModuleProfileManager;
+import com.alpharip.staffmod.gui.ModColorSettingsGui;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -36,10 +37,37 @@ public final class SessionTimerHud {
         String text = "SESSION " + formatDuration(elapsedSeconds);
         int x = getHudX();
         int y = getHudY();
+        renderHud(mc, text);
+    }
+
+    /** Draws a selectable preview in the HUD editor without changing the session clock. */
+    public static void renderEditorPreview() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.fontRendererObj == null) return;
+        long elapsedSeconds = sessionStartedAt > 0L
+                ? Math.max(0L, (System.currentTimeMillis() - sessionStartedAt) / 1000L) : 0L;
+        renderHud(mc, "SESSION " + formatDuration(elapsedSeconds));
+    }
+
+    private static void renderHud(Minecraft mc, String text) {
+        int x = getHudX();
+        int y = getHudY();
         int textWidth = mc.fontRendererObj.getStringWidth(text) + 10;
-        Gui.drawRect(x - 3, y - 3, x + textWidth, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-        Gui.drawRect(x - 3, y - 3, x + textWidth, y - 2, 0xFFFFD866);
-        mc.fontRendererObj.drawStringWithShadow(text, x, y, 0xFFFFFFFF);
+        if (isShowBackground()) {
+            Gui.drawRect(x - 3, y - 3, x + textWidth, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            Gui.drawRect(x - 3, y - 3, x + textWidth, y - 2, 0xFFFFD866);
+        }
+        mc.fontRendererObj.drawStringWithShadow(text, x, y, 0xFF000000 | ModColorSettingsGui.getColorInt("SESSION_TIMER"));
+    }
+
+    public static boolean isShowBackground() {
+        JsonObject settings = getSettings();
+        return !settings.has("showBackground") || settings.get("showBackground").getAsBoolean();
+    }
+
+    public static void setShowBackground(boolean show) {
+        getSettings().addProperty("showBackground", show);
+        ModuleProfileManager.save();
     }
 
     public static boolean isEnabled() {
@@ -60,6 +88,13 @@ public final class SessionTimerHud {
     public static int getHudY() {
         JsonObject settings = getSettings();
         return settings.has("hudY") ? Math.max(0, settings.get("hudY").getAsInt()) : 22;
+    }
+
+    public static void setHudPosition(int x, int y) {
+        JsonObject settings = getSettings();
+        settings.addProperty("hudX", Math.max(0, x));
+        settings.addProperty("hudY", Math.max(0, y));
+        ModuleProfileManager.save();
     }
 
     private static JsonObject getSettings() {
