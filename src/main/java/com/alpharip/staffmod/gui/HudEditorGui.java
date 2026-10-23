@@ -3,6 +3,7 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.hud.BhopHud;
 import com.alpharip.staffmod.hud.AfkTimerHud;
 import com.alpharip.staffmod.hud.SessionTimerHud;
+import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
@@ -23,6 +24,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
     private boolean cpsDragging;
     private boolean afkTimerDragging;
     private boolean sessionTimerDragging;
+    private boolean playtimeTrackerDragging;
     private int dragX, dragY;
 
     public HudEditorGui(GuiScreen parent) { this.parent = parent; }
@@ -75,6 +77,10 @@ public final class HudEditorGui extends AlphaGuiScreen {
             SessionTimerHud.renderEditorPreview();
         }
 
+        if (PlaytimeTrackerHud.isEnabled()) {
+            PlaytimeTrackerHud.renderEditorPreview();
+        }
+
         if (isFpsModuleEnabled()) {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
             int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
@@ -85,7 +91,19 @@ public final class HudEditorGui extends AlphaGuiScreen {
 
         if (isCpsModuleEnabled()) {
             String cps = CpsMod.getDisplayText();
-            int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
+            int px = PlaytimeTrackerHud.getHudX(), py = PlaytimeTrackerHud.getHudY();
+        String playtimeText = "PLAYTIME 1 year and 2 months";
+        int pw = fontRendererObj.getStringWidth(playtimeText) + 10;
+        if (PlaytimeTrackerHud.isEnabled() && mouseButton == 0 && mouseX >= px - 3 && mouseX <= px + pw
+                && mouseY >= py - 3 && mouseY <= py + fontRendererObj.FONT_HEIGHT + 3) {
+            dragging = true;
+            dragX = mouseX - px;
+            dragY = mouseY - py;
+            playtimeTrackerDragging = true;
+            return;
+        }
+
+        int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
             int cw = fontRendererObj.getStringWidth(cps) + 10;
             if (CpsMod.isShowBackground()) drawRect(cx - 3, cy - 3, cx + cw, cy + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
             fontRendererObj.drawStringWithShadow(cps, cx, cy, CpsMod.getTextColor());
@@ -153,7 +171,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
         if (dragging && button == 0) {
-            if (!afkTimerDragging && !fpsDragging && !cpsDragging && !sessionTimerDragging && !hasBhopAccess()) {
+            if (!afkTimerDragging && !fpsDragging && !cpsDragging && !sessionTimerDragging && !playtimeTrackerDragging && !hasBhopAccess()) {
                 dragging = false;
                 return;
             }
@@ -179,6 +197,11 @@ public final class HudEditorGui extends AlphaGuiScreen {
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 SessionTimerHud.setHudPosition(x, y);
+            } else if (playtimeTrackerDragging) {
+                int itemWidth = fontRendererObj.getStringWidth("PLAYTIME 1 year and 2 months") + 10;
+                x = Math.max(3, Math.min(width - itemWidth - 3, x));
+                y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
+                PlaytimeTrackerHud.setHudPosition(x, y);
             } else {
                 float scale = BhopHud.getVisualScale();
                 int itemWidth = (int) Math.ceil(BhopHud.getHudWidth() * scale);
@@ -199,6 +222,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
         cpsDragging = false;
         afkTimerDragging = false;
         sessionTimerDragging = false;
+        playtimeTrackerDragging = false;
         super.mouseReleased(mouseX, mouseY, state);
     }
 
@@ -214,6 +238,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
             CpsMod.setHudPosition(5, 28);
             AfkTimerHud.setHudPosition(6, 6);
             SessionTimerHud.setHudPosition(6, 22);
+            PlaytimeTrackerHud.setHudPosition(6, 38);
         }
     }
 
