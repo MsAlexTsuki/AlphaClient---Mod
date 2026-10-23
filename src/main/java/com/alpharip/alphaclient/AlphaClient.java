@@ -20,6 +20,7 @@ import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.rankviewer.RankCache;
 import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
+import com.alpharip.staffmod.quality.FullbrightMod;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -71,6 +72,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new CpsMod());
         MinecraftForge.EVENT_BUS.register(new LegacyPvpMod());
         MinecraftForge.EVENT_BUS.register(new WTapAssistance());
+        MinecraftForge.EVENT_BUS.register(new FullbrightMod());
         RankCache.INSTANCE.start();
         // Restore the Alpha Account session and keep rank/module permissions in sync.
         SupabaseCommunityService.start();
