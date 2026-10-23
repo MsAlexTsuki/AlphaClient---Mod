@@ -2,6 +2,7 @@ package com.alpharip.alphaclient;
 
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.fps.FpsMod;
+import com.alpharip.staffmod.gui.AlphaPermsGui;
 import com.alpharip.staffmod.gui.AfkTimerSettingsGui;
 import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.BhopSettingsGui;
@@ -396,8 +397,23 @@ public final class AlphaClientCommand extends CommandBase {
             reply(sender, "FOUNDER-ONLY: sign in with the Founder Alpha Account to manage permissions.");
             return;
         }
+        if (args.length > 0 && "open".equalsIgnoreCase(args[0])) {
+            if (args.length != 1) {
+                reply(sender, "Usage: /alphaperms open");
+                return;
+            }
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc == null) {
+                reply(sender, "Could not open the permission manager GUI.");
+                return;
+            }
+            GuiScreen parent = mc.currentScreen instanceof net.minecraft.client.gui.GuiChat ? null : mc.currentScreen;
+            AlphaClient.openGuiFromCommand(new AlphaPermsGui(parent));
+            return;
+        }
         if (args.length == 0 || "help".equalsIgnoreCase(args[0])) {
             reply(sender, "Founder-only command permission manager.");
+            reply(sender, "/alphaperms open");
             reply(sender, "/alphaperms list");
             reply(sender, "/alphaperms <alpha-name> list");
             reply(sender, "/alphaperms <alpha-name> grant <permission>");
