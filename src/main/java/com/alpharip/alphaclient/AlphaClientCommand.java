@@ -416,23 +416,26 @@ public final class AlphaClientCommand extends CommandBase {
                 payload.addProperty("target", "catalog");
             } else if ("rank".equalsIgnoreCase(args[0])) {
                 if (args.length < 3) {
-                    reply(sender, "Usage: /alphaperms rank <rank> <list|grant|revoke> [permission]");
+                    reply(sender, "Usage: /alphaperms rank <rank name> <list|grant|revoke|clear> [permission]");
                     return;
                 }
-                String action = args[2].toLowerCase(Locale.ROOT);
+                boolean listAction = "list".equalsIgnoreCase(args[args.length - 1]);
+                String action = listAction ? "list" : args[args.length - 2].toLowerCase(Locale.ROOT);
                 if (!"list".equals(action) && !"grant".equals(action) && !"revoke".equals(action) && !"clear".equals(action)) {
-                    reply(sender, "Use list, grant, or revoke.");
+                    reply(sender, "Use list, grant, revoke, or clear.");
+                    return;
+                }
+                int rankEnd = listAction ? args.length - 1 : args.length - 2;
+                String rankName = joinArgsRange(args, 1, rankEnd);
+                if (rankName.isEmpty() || (!listAction && args.length < 4)) {
+                    reply(sender, "Usage: /alphaperms rank <rank name> <grant|revoke|clear> <permission>");
                     return;
                 }
                 payload.addProperty("target", "rank");
-                payload.addProperty("rank", args[1]);
+                payload.addProperty("rank", rankName);
                 payload.addProperty("action", "list".equals(action) ? "list" : ("grant".equals(action) ? "grant_rank" : ("revoke".equals(action) ? "revoke_rank" : "clear_rank")));
                 if (!"list".equals(action)) {
-                    if (args.length != 4) {
-                        reply(sender, "Usage: /alphaperms rank <rank> <grant|revoke|clear> <permission>");
-                        return;
-                    }
-                    payload.addProperty("permission", args[3]);
+                    payload.addProperty("permission", args[args.length - 1]);
                 }
             } else {
                 if (args.length < 2) {
@@ -489,6 +492,17 @@ public final class AlphaClientCommand extends CommandBase {
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    private String joinArgsRange(String[] args, int start, int endExclusive) {
+        if (args == null || start >= args.length || endExclusive <= start) return "";
+        StringBuilder value = new StringBuilder();
+        int end = Math.min(args.length, endExclusive);
+        for (int i = start; i < end; i++) {
+            if (i > start) value.append(' ');
+            value.append(args[i]);
+        }
+        return value.toString().trim();
     }
 
     private void listProfiles(ICommandSender sender) {
