@@ -338,7 +338,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
 
     private String getSelectedReport() {
         switch (selectedTool) {
-            case 0: return "Alpha Developer Console\\n" + join(DeveloperDiagnostics.logs()) + "\\nType /alphaclient to access client commands. Use RUN TESTS and EXPORT REPORT below.";
+            case 0: return join(consoleOutput);
             case 1:
                 StringBuilder palette = new StringBuilder("Available actions (type to filter):\\n");
                 for (int i = 0; i < TOOLS.length; i++) {
