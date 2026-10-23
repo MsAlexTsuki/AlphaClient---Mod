@@ -41,7 +41,7 @@ public final class DeveloperDiagnostics {
     private static String lastError = "No errors captured by Alpha Developer Studio.";
     private static String lastException = "No exceptions captured by Alpha Developer Studio.";
 
-    private DeveloperDiagnostics() { }
+    public DeveloperDiagnostics() { }
 
     public static synchronized void initialize() {
         log("INFO", "Developer diagnostics initialized.");
