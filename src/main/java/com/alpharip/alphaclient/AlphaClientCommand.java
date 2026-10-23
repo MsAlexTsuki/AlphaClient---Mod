@@ -236,6 +236,26 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/profiles", "List saved profiles");
             guideLine(sender, "/profile <name|create|edit|delete>", "Switch or manage profiles");
             guideLine(sender, "/hudeditor", "Open the HUD editor");
+        } else if ("alphaclient:modules".equals(name)) {
+            guideHeader(sender, "MODULE LIST");
+            guideLine(sender, "/alphaclient:modules", "List registered modules and their current status");
+            guideLine(sender, "/alphaclient module <module> <on|off|toggle>", "Change a supported module's state");
+            guideLine(sender, "/alphaclient:settings <module>", "Open a module's settings");
+        } else if ("alphaclient:settings".equals(name)) {
+            guideHeader(sender, "MODULE SETTINGS");
+            guideLine(sender, "/alphaclient:settings <module>", "Open settings for the named module");
+            guideLine(sender, "/alphaclient settings <module>", "Use the main AlphaClient command route");
+            guideLine(sender, "/fpshud settings", "Open FPS HUD settings");
+            guideLine(sender, "/cpshud settings", "Open CPS HUD settings");
+            guideLine(sender, "/bhop settings", "Open BHOP settings");
+            guideLine(sender, "/wtap settings", "Open W-Tap settings");
+            guideLine(sender, "/legacypvp settings", "Open Legacy PvP settings");
+        } else if ("alphaclient:module".equals(name)) {
+            guideHeader(sender, "MODULE CONTROL");
+            guideLine(sender, "/alphaclient:module <module> <on|off|toggle>", "Change a supported module's state");
+            guideLine(sender, "/alphaclient module <module> <on|off|toggle>", "Use the main AlphaClient command route");
+            guideLine(sender, "/alphaclient:modules", "List available modules");
+            guideLine(sender, "/staffmods", "Open StaffMods; it is a folder, not a single module");
         } else if ("fpshud".equals(name) || "alphaclient:fps".equals(name)) {
             guideHeader(sender, "FPS HUD");
             guideLine(sender, "/fpshud [on|off|toggle]", "Enable or disable the FPS HUD");
@@ -298,6 +318,9 @@ public final class AlphaClientCommand extends CommandBase {
             guideHeader(sender, "STAFFMODS");
             guideLine(sender, "/staffmods", "Open the StaffMods menu");
             guideLine(sender, "/staffmods <folder>", "Open an accessible StaffMods folder");
+            guideLine(sender, "/staffmods general|beta|donator|scout|rogue|elite|alpha|alphaplus", "Open an accessible community or donator folder");
+            guideLine(sender, "/staffmods tmod|mod|srmod|admin|sradmin", "Open an accessible staff-rank folder");
+            guideLine(sender, "/staffmods management|platformadmin|manager|owner|founder", "Open an accessible senior staff folder");
             guideLine(sender, "/staffmods help", "Show this guide");
             guideLine(sender, "/staffgeneral", "Open StaffMods → General");
             guideLine(sender, "/stafftmod /staffmod /staffsrmod", "Open your permitted staff-rank folder");
@@ -317,6 +340,7 @@ public final class AlphaClientCommand extends CommandBase {
             guideHeader(sender, "STAFFMODS FOLDER");
             guideLine(sender, "/" + name, "Open this StaffMods folder if your account has access");
             guideLine(sender, "/staffmods", "Open the StaffMods menu");
+            guideLine(sender, "/staffmods <folder>", "Open another folder only if your account has access");
         } else if ("alphaperms".equals(name)) {
             guideHeader(sender, "FOUNDER PERMISSION MANAGER");
             guideLine(sender, "/alphaperms open", "Open the permission manager");
