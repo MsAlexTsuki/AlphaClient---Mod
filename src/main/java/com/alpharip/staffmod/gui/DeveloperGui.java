@@ -22,7 +22,13 @@ public final class DeveloperGui extends AlphaGuiScreen {
     }
 
     private boolean hasDeveloperAccess() {
-        return PermissionService.hasAccess(PermissionService.Rank.DEVELOPER);
+        return PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+                && PermissionService.hasCommandPermission("staffmods.developer", true)
+                && PermissionService.hasCommandPermission("staffmods.developer.mode", true);
+    }
+
+    private boolean canOpenTool(String permission) {
+        return hasDeveloperAccess() && PermissionService.hasCommandPermission(permission, true);
     }
 
     @Override
@@ -44,10 +50,14 @@ public final class DeveloperGui extends AlphaGuiScreen {
         int buttonWidth = (panelWidth - 40) / 2;
         int buttonHeight = 28;
         if (DeveloperModeState.isEnabled()) {
-            buttonList.add(new AlphaButton(RANK, left, top, buttonWidth, buttonHeight, "RANK INSPECTOR"));
-            buttonList.add(new AlphaButton(VERIFICATION, left + buttonWidth + 8, top, buttonWidth, buttonHeight, "VERIFICATION"));
-            buttonList.add(new AlphaButton(PERMISSIONS, left, top + 38, buttonWidth, buttonHeight, "PERMISSION INSPECTOR"));
-            buttonList.add(new AlphaButton(MODULES, left + buttonWidth + 8, top + 38, buttonWidth, buttonHeight, "MODULE INSPECTOR"));
+            if (canOpenTool("staffmods.developer.rank_inspector"))
+                buttonList.add(new AlphaButton(RANK, left, top, buttonWidth, buttonHeight, "RANK INSPECTOR"));
+            if (canOpenTool("staffmods.developer.verification"))
+                buttonList.add(new AlphaButton(VERIFICATION, left + buttonWidth + 8, top, buttonWidth, buttonHeight, "VERIFICATION"));
+            if (canOpenTool("staffmods.developer.permission_inspector"))
+                buttonList.add(new AlphaButton(PERMISSIONS, left, top + 38, buttonWidth, buttonHeight, "PERMISSION INSPECTOR"));
+            if (canOpenTool("staffmods.developer.module_inspector"))
+                buttonList.add(new AlphaButton(MODULES, left + buttonWidth + 8, top + 38, buttonWidth, buttonHeight, "MODULE INSPECTOR"));
         }
         buttonList.add(new AlphaButton(TOGGLE, left, panelTop + panelHeight - 34,
                 buttonWidth, 22, DeveloperModeState.isEnabled() ? "DISABLE DEVELOPER MODE" : "ENABLE DEVELOPER MODE"));
@@ -67,6 +77,11 @@ public final class DeveloperGui extends AlphaGuiScreen {
             DeveloperModeState.disable();
             mc.displayGuiScreen(parent);
         } else if (button.id == TOGGLE) {
+            if (!PermissionService.hasCommandPermission("staffmods.developer.mode", true)) {
+                DeveloperModeState.disable();
+                initGui();
+                return;
+            }
             DeveloperModeState.setEnabled(!DeveloperModeState.isEnabled());
             initGui();
         } else {
