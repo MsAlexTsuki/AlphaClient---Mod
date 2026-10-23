@@ -37,12 +37,11 @@ public final class DeveloperGui extends AlphaGuiScreen {
     }
 
     private boolean hasDeveloperAccess() {
-        boolean developerRank = PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
-                || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"));
-        // The Developer rank itself grants access to Developer Mode.
-        // Founder access is unconditional; don't let a stale/explicit command
-        // permission deny the rank's own folder after the menu has allowed it.
-        return folderAccessGranted || isFounder() || developerRank;
+        // The Developer workspace is restricted to these three ranks only.
+        // Folder visibility and command overrides must not grant access to other ranks.
+        return PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
+                || PermissionService.hasAccess(PermissionService.Rank.OWNER)
+                || PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
     }
 
     private boolean canOpenTool(String permission) {
