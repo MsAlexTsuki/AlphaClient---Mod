@@ -33,12 +33,13 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         PermissionService.Rank.ADMIN,
         PermissionService.Rank.SR_ADMIN,
         PermissionService.Rank.MANAGEMENT,
+        PermissionService.Rank.DEVELOPER,
         PermissionService.Rank.OWNER,
         PermissionService.Rank.FOUNDER
     };
     private static final String[] LABELS = {
         "GENERAL", "BETA", "T-MOD", "MOD", "SR MOD",
-        "ADMIN", "SR ADMIN", "MANAGEMENT", "OWNER", "FOUNDER"
+        "ADMIN", "SR ADMIN", "MANAGEMENT", "DEVELOPER", "OWNER", "FOUNDER"
     };
 
     private final GuiScreen parent;
@@ -82,6 +83,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
             return true;
         } else if ("platformadmin".equals(key) || "platadmin".equals(key)) rank = PermissionService.Rank.PLAT_ADMIN;
         else if ("manager".equals(key)) rank = PermissionService.Rank.MANAGER;
+        else if ("developer".equals(key)) rank = PermissionService.Rank.DEVELOPER;
         else if ("owner".equals(key)) rank = PermissionService.Rank.OWNER;
         else if ("founder".equals(key)) rank = PermissionService.Rank.FOUNDER;
         else if ("donator".equals(key)) {
@@ -214,6 +216,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         // General is always available. Rank access keeps the existing hierarchy;
         // an explicit per-mod grant can independently reveal its assigned folder.
         if (rank == PermissionService.Rank.PUBLIC) return true;
+        if (rank == PermissionService.Rank.DEVELOPER) return PermissionService.hasAccess(PermissionService.Rank.DEVELOPER);
         if (rank == PermissionService.Rank.FOUNDER) {
             return hasFolderAccess(rank);
         }
@@ -280,6 +283,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
             case PLAT_ADMIN: return "staffmods.platformadmin";
             case MANAGEMENT: return "staffmods.management";
             case MANAGER: return "staffmods.manager";
+            case DEVELOPER: return "staffmods.developer";
             case OWNER: return "staffmods.owner";
             case FOUNDER: return "staffmods.founder";
             default: return "staffmods.open";
@@ -303,6 +307,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         if ("platformadmin".equals(normalizedFolder) || "platadmin".equals(normalizedFolder)) return "staffmods.platformadmin";
         if ("management".equals(normalizedFolder)) return "staffmods.management";
         if ("manager".equals(normalizedFolder)) return "staffmods.manager";
+        if ("developer".equals(normalizedFolder)) return "staffmods.developer";
         if ("owner".equals(normalizedFolder)) return "staffmods.owner";
         if ("founder".equals(normalizedFolder)) return "staffmods.founder";
         return "staffmods.open";
@@ -511,7 +516,11 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                 && button.id >= CATEGORY_BASE && button.id < CATEGORY_BASE + RANKS.length) {
             PermissionService.Rank rank = RANKS[button.id - CATEGORY_BASE];
             if (rank == PermissionService.Rank.PUBLIC || hasFolderAccess(rank)) {
-                if (rank == PermissionService.Rank.MANAGEMENT) {
+                if (rank == PermissionService.Rank.DEVELOPER) {
+                    if (PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)) {
+                        mc.displayGuiScreen(new DeveloperGui(this));
+                    }
+                } else if (rank == PermissionService.Rank.MANAGEMENT) {
                     managementSubfolders = true;
                     initGui();
                 } else if (rank == PermissionService.Rank.DONATOR) {
