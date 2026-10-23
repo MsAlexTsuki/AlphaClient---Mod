@@ -18,12 +18,12 @@ public final class QualityGui extends AlphaGuiScreen {
     private static final int PLAYTIME_TRACKER = 5;
     private static final int AFK_TIMER_INDEX = 7;
     private static final int SESSION_TIMER_INDEX = 8;
-    private static final int PLAYTIME_TRACKER_INDEX = 2;
+    private static final int PLAYTIME_TRACKER_INDEX = 9;
     private static final int FULLBRIGHT_INDEX = 0;
     private static final int ACCENT = 0xFFFFD866;
     private static final String[] FEATURES = {
-            "Fullbright", "Alpha Module Manager", "Playtime Tracker", "Auto GG", "Keybind Profiles",
-            "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Session Timer", "Mod Profiles",
+            "Fullbright", "Alpha Module Manager", "Mod Profiles", "Auto GG", "Keybind Profiles",
+            "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Session Timer", "Playtime Tracker",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
             "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags"
     };
