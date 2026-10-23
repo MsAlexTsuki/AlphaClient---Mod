@@ -275,6 +275,11 @@ public final class AlphaClientCommand extends CommandBase {
             requestedName.append(args[i]);
         }
         String name = requestedName.toString().trim();
+        String activeProfile = ModuleProfileManager.getSelectedProfileName();
+        if (activeProfile != null && activeProfile.equalsIgnoreCase(name)) {
+            reply(sender, "You are already on the profile: " + activeProfile);
+            return;
+        }
         if (ModuleProfileManager.selectProfile(name)) {
             reply(sender, "Switched to profile: " + ModuleProfileManager.getSelectedProfileName());
         } else {
