@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.Properties;
 
 /**
- * Rendering and persisted settings for the new public Armor HUD Info and Potion HUD Info modules.
+ * Rendering and persisted settings for the public Armor HUD and Potion HUD modules.
  * HUD backgrounds are intentionally never drawn.
  */
 public final class InfoHudModules {
@@ -89,7 +89,7 @@ public final class InfoHudModules {
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(getFile());
-            p.store(out, "AlphaClient Armor HUD Info and Potion HUD Info");
+            p.store(out, "AlphaClient Armor HUD and Potion HUD");
         } catch (Exception e) {
             System.err.println("[AlphaClient] Could not save Armor/Potion HUD settings: " + e.getMessage());
         } finally {
