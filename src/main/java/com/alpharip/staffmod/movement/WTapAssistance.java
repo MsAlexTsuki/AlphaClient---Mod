@@ -28,7 +28,9 @@ public final class WTapAssistance {
     public static boolean isEnabled() { return enabled; }
 
     private static boolean hasFounderAccess() {
-        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
+        return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                || PermissionService.hasModAccess("w-tap-assistance")
+                || PermissionService.hasCommandPermission("command.wtap", false);
     }
 
     public static void setEnabled(boolean value) {
@@ -63,7 +65,7 @@ public final class WTapAssistance {
         Minecraft mc = Minecraft.getMinecraft();
         if (!enabled || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer
                 || mc.currentScreen != null) return;
-        if (!PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) return;
+        if (!hasFounderAccess()) return;
         Entity victim = event.target;
         if (!(victim instanceof EntityLivingBase)) return;
         if (target == 0 && !(victim instanceof EntityPlayer)) return;
@@ -92,7 +94,7 @@ public final class WTapAssistance {
             return;
         }
 
-        if (!enabled || !PermissionService.hasAccess(PermissionService.Rank.FOUNDER) || mode == 3) {
+        if (!enabled || !hasFounderAccess() || mode == 3) {
             restoreForwardKey(mc);
             pendingDelay = -1;
             releaseTicks = 0;
