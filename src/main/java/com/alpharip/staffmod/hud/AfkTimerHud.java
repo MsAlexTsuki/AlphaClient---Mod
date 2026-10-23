@@ -87,8 +87,10 @@ public final class AfkTimerHud {
         int x = getHudX();
         int y = getHudY();
         int textWidth = mc.fontRendererObj.getStringWidth(text) + 10;
-        Gui.drawRect(x - 3, y - 3, x + textWidth, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-        Gui.drawRect(x - 3, y - 3, x + textWidth, y - 2, 0xFFFFD866);
+        if (isShowBackground()) {
+            Gui.drawRect(x - 3, y - 3, x + textWidth, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            Gui.drawRect(x - 3, y - 3, x + textWidth, y - 2, 0xFFFFD866);
+        }
         mc.fontRendererObj.drawStringWithShadow(com.alpharip.staffmod.gui.UiText.normalize(text), x, y, getTextColor());
     }
 
@@ -106,6 +108,16 @@ public final class AfkTimerHud {
         JsonObject settings = getSettings();
         settings.addProperty("hudX", Math.max(0, x));
         settings.addProperty("hudY", Math.max(0, y));
+        saveSettings();
+    }
+
+    public static boolean isShowBackground() {
+        JsonObject settings = getSettings();
+        return !settings.has("showBackground") || settings.get("showBackground").getAsBoolean();
+    }
+
+    public static void setShowBackground(boolean show) {
+        getSettings().addProperty("showBackground", show);
         saveSettings();
     }
 
