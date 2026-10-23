@@ -7,6 +7,7 @@ import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.BhopSettingsGui;
 import com.alpharip.staffmod.gui.CpsSettingsGui;
 import com.alpharip.staffmod.gui.FpsSettingsGui;
+import com.alpharip.staffmod.gui.HudEditorGui;
 import com.alpharip.staffmod.gui.ModuleSettingsGui;
 import com.alpharip.staffmod.gui.NameViewerSettingsGui;
 import com.alpharip.staffmod.gui.PlaytimeTrackerSettingsGui;
@@ -58,6 +59,18 @@ public final class AlphaClientCommand extends CommandBase {
 
         if ("alphahelp".equals(route)) {
             sendHelp(sender);
+            return;
+        }
+
+        if ("hudeditor".equals(route)) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc != null) AlphaClient.openGuiFromCommand(new HudEditorGui(mc.currentScreen));
+            return;
+        }
+
+        if ("profiles".equals(route)) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc != null) AlphaClient.openGuiFromCommand(new AlphaModMenu(mc.currentScreen));
             return;
         }
 
@@ -642,7 +655,7 @@ public final class AlphaClientCommand extends CommandBase {
         if (rank == PermissionService.Rank.ALPHA_PLUS) {
             reply(sender, "/alphaplus opens Mods -> Alpha+.");
         }
-        reply(sender, "Available shortcuts: /fpshud /cpshud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality.");
+        reply(sender, "Available shortcuts: /fpshud /cpshud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality /hudeditor /profiles.");
         if (hasBhopAccess()) {
             reply(sender, "BHOP: /bhop [settings|on|off|toggle|speed|shiftup|name|color].");
         }
