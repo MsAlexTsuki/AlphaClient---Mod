@@ -223,6 +223,8 @@ public final class DeveloperDiagnostics {
                 + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576L) + " MiB";
     }
 
+    public static synchronized String lastTestReport() { return lastTestReport; }
+
     public static synchronized String errorReport() {
         return "Latest error:\n" + lastError + "\n\nLatest exception:\n" + lastException
                 + "\n\nCaptured errors: " + ERRORS.size()
