@@ -147,17 +147,24 @@ public final class InfoHudModules {
     }
 
     private static void renderArmor(Minecraft mc) {
-        // This HUD intentionally reports only the currently held item, not equipped armor slots.
+        // Show the held item and every equipped armor slot, as requested.
         ItemStack held = mc.thePlayer.getHeldItem();
-        String label = held == null ? "Held item: Empty"
-                : "Held item: " + held.getDisplayName() + " " + durability(held);
+        ItemStack[] armor = mc.thePlayer.inventory.armorInventory;
+        ItemStack[] items = new ItemStack[] { held, armor[3], armor[2], armor[1], armor[0] };
+        String[] labels = new String[] { "Hand", "Helmet", "Chest", "Legs", "Boots" };
         int x = armorX, y = armorY;
-        if (armorLayout == 0) {
-            drawItem(mc, held, x, y);
-            mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 240), x + 20, y + 5, armorColor);
-        } else {
-            drawItem(mc, held, x, y);
-            mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 240), x, y + 20, armorColor);
+        for (int i = 0; i < items.length; i++) {
+            ItemStack stack = items[i];
+            String label = labels[i] + ": " + (stack == null ? "Empty"
+                    : stack.getDisplayName() + " " + durability(stack));
+            if (armorLayout == 0) {
+                int itemX = x + i * 88;
+                drawItem(mc, stack, itemX, y);
+                mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 82), itemX, y + 18, armorColor);
+            } else {
+                drawItem(mc, stack, x, y + i * 22);
+                mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), x + 20, y + i * 22 + 5, armorColor);
+            }
         }
     }
 
