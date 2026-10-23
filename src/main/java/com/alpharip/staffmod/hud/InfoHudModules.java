@@ -34,7 +34,7 @@ public final class InfoHudModules {
     private static boolean loaded;
     private static final Minecraft MC = Minecraft.getMinecraft();
 
-    private InfoHudModules() { }
+    public InfoHudModules() { }
 
     public static void load() {
         if (loaded) return;
