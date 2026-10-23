@@ -2,6 +2,7 @@ package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.hud.BhopHud;
 import com.alpharip.staffmod.hud.AfkTimerHud;
+import com.alpharip.staffmod.hud.SessionTimerHud;
 import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
@@ -21,6 +22,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
     private boolean fpsDragging;
     private boolean cpsDragging;
     private boolean afkTimerDragging;
+    private boolean sessionTimerDragging;
     private int dragX, dragY;
 
     public HudEditorGui(GuiScreen parent) { this.parent = parent; }
@@ -69,6 +71,10 @@ public final class HudEditorGui extends AlphaGuiScreen {
 
         AfkTimerHud.renderEditorPreview();
 
+        if (SessionTimerHud.isEnabled()) {
+            SessionTimerHud.renderEditorPreview();
+        }
+
         if (isFpsModuleEnabled()) {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
             int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
@@ -97,6 +103,18 @@ public final class HudEditorGui extends AlphaGuiScreen {
             dragX = mouseX - ax;
             dragY = mouseY - ay;
             afkTimerDragging = true;
+            return;
+        }
+
+        int sx = SessionTimerHud.getHudX(), sy = SessionTimerHud.getHudY();
+        String sessionText = "SESSION 00:00:00";
+        int sw = fontRendererObj.getStringWidth(sessionText) + 10;
+        if (SessionTimerHud.isEnabled() && mouseButton == 0 && mouseX >= sx - 3 && mouseX <= sx + sw
+                && mouseY >= sy - 3 && mouseY <= sy + fontRendererObj.FONT_HEIGHT + 3) {
+            dragging = true;
+            dragX = mouseX - sx;
+            dragY = mouseY - sy;
+            sessionTimerDragging = true;
             return;
         }
 
@@ -135,7 +153,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
         if (dragging && button == 0) {
-            if (!afkTimerDragging && !fpsDragging && !cpsDragging && !hasBhopAccess()) {
+            if (!afkTimerDragging && !fpsDragging && !cpsDragging && !sessionTimerDragging && !hasBhopAccess()) {
                 dragging = false;
                 return;
             }
@@ -156,6 +174,11 @@ public final class HudEditorGui extends AlphaGuiScreen {
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 CpsMod.setHudPosition(x, y);
+            } else if (sessionTimerDragging) {
+                int itemWidth = fontRendererObj.getStringWidth("SESSION 00:00:00") + 10;
+                x = Math.max(3, Math.min(width - itemWidth - 3, x));
+                y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
+                SessionTimerHud.setHudPosition(x, y);
             } else {
                 float scale = BhopHud.getVisualScale();
                 int itemWidth = (int) Math.ceil(BhopHud.getHudWidth() * scale);
@@ -175,6 +198,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
         fpsDragging = false;
         cpsDragging = false;
         afkTimerDragging = false;
+        sessionTimerDragging = false;
         super.mouseReleased(mouseX, mouseY, state);
     }
 
@@ -189,6 +213,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
             FpsMod.setHudPosition(6, 6);
             CpsMod.setHudPosition(5, 28);
             AfkTimerHud.setHudPosition(6, 6);
+            SessionTimerHud.setHudPosition(6, 22);
         }
     }
 
