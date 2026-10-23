@@ -15,7 +15,7 @@ import org.lwjgl.opengl.GL14;
 
 /** Renders the rank's image badge immediately before the player's name. */
 public final class RankViewerRenderer {
-    private static final int BADGE_SIZE = 8;
+    private static final int BADGE_SIZE = 12;
     private static final int BADGE_GAP = 3;
 
     @SubscribeEvent
