@@ -213,7 +213,7 @@ public final class InfoHudModules {
         if (!potion.hasStatusIcon()) return;
         mc.getTextureManager().bindTexture(new net.minecraft.util.ResourceLocation("textures/gui/container/inventory.png"));
         int icon = potion.getStatusIconIndex();
-        Gui.drawTexturedModalRect(x, y, 0 + (icon % 8) * 18, 198 + (icon / 8) * 18, 18, 18);
+        Gui.drawModalRectWithCustomSizedTexture(x, y, (icon % 8) * 18, 198 + (icon / 8) * 18, 18, 18, 256.0F, 256.0F);
     }
 
     private static String roman(int value) {
