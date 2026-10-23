@@ -226,9 +226,16 @@ public final class AlphaClientCommand extends CommandBase {
      */
     private void showCommandGuide(ICommandSender sender, String route) {
         String name = route == null ? "" : route.toLowerCase(Locale.ROOT);
-        if ("alphaclient".equals(name) || "alphahelp".equals(name) || "alphaclient:help".equals(name)) {
+        if ("alphahelp".equals(name)) {
+            guideHeader(sender, "ALPHAHELP | COMMAND OVERVIEW");
+            guideLine(sender, "/alphahelp", "List commands available to your current rank");
+            guideLine(sender, "/alphahelp open", "Open the scrollable command-list GUI");
+            guideLine(sender, "/alphahelp help", "Show this AlphaHelp guide");
+            guideLine(sender, "/alphaclient help", "Show the main AlphaClient command guide");
+            guideLine(sender, "/staffmods help", "Show StaffMods folder commands");
+            guideLine(sender, "/alphaperms help", "Show the Founder permission-manager guide");
+        } else if ("alphaclient".equals(name) || "alphaclient:help".equals(name)) {
             guideHeader(sender, "ALPHACLIENT");
-            guideLine(sender, "/alphaclient help", "Show this guide");
             guideLine(sender, "/alphaclient help", "Show this guide");
             guideLine(sender, "/alphaclient modules", "List registered modules and their status");
             guideLine(sender, "/alphaclient settings <module>", "Open a module's settings");
@@ -236,9 +243,7 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/alphaclient fps|cps|bhop|wtap", "Open the corresponding module command");
             guideLine(sender, "/alphaclient fullbright|legacypvp", "Open the corresponding feature command");
             guideLine(sender, "/alphaclient playtime|sessiontimer|afktimer", "Use the corresponding timer command");
-            guideLine(sender, "/alphahelp", "Show the command overview");
-            guideLine(sender, "/alphahelp open", "Open the scrollable command list");
-            guideLine(sender, "/alphahelp help", "Show this guide");
+            guideLine(sender, "/alphahelp", "Show the rank-filtered command overview");
             guideLine(sender, "/profiles", "List saved profiles");
             guideLine(sender, "/profile <name|create|edit|delete>", "Switch or manage profiles");
             guideLine(sender, "/hudeditor", "Open the HUD editor");
