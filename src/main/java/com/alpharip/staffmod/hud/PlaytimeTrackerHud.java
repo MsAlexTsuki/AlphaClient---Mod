@@ -216,11 +216,11 @@ public final class PlaytimeTrackerHud {
         return new File(new File(base, "config"), "alphaclient-playtime.txt");
     }
 
-    /** Formats elapsed playtime using at most two non-zero units and English plurals. */
+    /** Formats elapsed playtime using at most two non-zero, abbreviated units. */
     public static String formatDuration(long totalSeconds) {
         long remaining = Math.max(0L, totalSeconds);
         long[] sizes = { YEAR, MONTH, DAY, HOUR, MINUTE, SECOND };
-        String[] singular = { "year", "month", "day", "hour", "minute", "second" };
+        String[] abbreviations = { "Y", "Mo", "D", "H", "M", "S" };
         StringBuilder result = new StringBuilder();
         int unitsAdded = 0;
         for (int i = 0; i < sizes.length && unitsAdded < 2; i++) {
@@ -228,10 +228,9 @@ public final class PlaytimeTrackerHud {
             if (amount <= 0L) continue;
             remaining %= sizes[i];
             if (unitsAdded > 0) result.append(" and ");
-            result.append(amount).append(' ').append(singular[i]);
-            if (amount != 1L) result.append('s');
+            result.append(amount).append(' ').append(abbreviations[i]);
             unitsAdded++;
         }
-        return result.length() == 0 ? "0 seconds" : result.toString();
+        return result.length() == 0 ? "0 S" : result.toString();
     }
 }
