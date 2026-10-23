@@ -1,7 +1,6 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.hud.SessionTimerHud;
-import com.alpharip.staffmod.gui.ModColorSettingsGui;
 import net.minecraft.client.gui.GuiButton;
 
 import java.io.IOException;
@@ -34,7 +33,7 @@ public final class SessionTimerSettingsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 84, 260, 20,
                 "HUD BACKGROUND: " + (SessionTimerHud.isShowBackground() ? "ON" : "OFF"),
                 SessionTimerHud.isShowBackground()));
-        buttonList.add(new AlphaButton(COLORS, left + 20, top + 110, 260, 20, "HUD TEXT COLOR"));
+        buttonList.add(new AlphaButton(COLORS, left + 20, top + 110, 260, 20, "HUD COLOR: " + SessionTimerHud.getColorName()));
         buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
@@ -65,7 +64,8 @@ public final class SessionTimerSettingsGui extends AlphaGuiScreen {
             SessionTimerHud.setShowBackground(!SessionTimerHud.isShowBackground());
             initGui();
         } else if (button.id == COLORS) {
-            mc.displayGuiScreen(new ModColorSettingsGui(this));
+            SessionTimerHud.cycleColor();
+            initGui();
         }
     }
 
