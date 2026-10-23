@@ -97,18 +97,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
 
         if (isCpsModuleEnabled()) {
             String cps = CpsMod.getDisplayText();
-            int ahx = InfoHudModules.getArmorX(), ahy = InfoHudModules.getArmorY();
-        if (mouseButton == 0
-                && mouseX >= ahx && mouseX <= ahx + 440 && mouseY >= ahy && mouseY <= ahy + 120) {
-            dragging = true; armorDragging = true; dragX = mouseX - ahx; dragY = mouseY - ahy; return;
-        }
-        int phx = InfoHudModules.getPotionX(), phy = InfoHudModules.getPotionY();
-        if (mouseButton == 0
-                && mouseX >= phx && mouseX <= phx + 220 && mouseY >= phy && mouseY <= phy + 180) {
-            dragging = true; potionDragging = true; dragX = mouseX - phx; dragY = mouseY - phy; return;
-        }
-
-        int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
+            int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
             int cw = fontRendererObj.getStringWidth(cps) + 10;
             if (CpsMod.isShowBackground()) drawRect(cx - 3, cy - 3, cx + cw, cy + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
             fontRendererObj.drawStringWithShadow(cps, cx, cy, CpsMod.getTextColor());
@@ -150,6 +139,26 @@ public final class HudEditorGui extends AlphaGuiScreen {
             dragX = mouseX - px;
             dragY = mouseY - py;
             playtimeTrackerDragging = true;
+            return;
+        }
+
+        int ahx = InfoHudModules.getArmorX(), ahy = InfoHudModules.getArmorY();
+        if (mouseButton == 0 && mouseX >= ahx && mouseX <= ahx + 440
+                && mouseY >= ahy && mouseY <= ahy + 120) {
+            dragging = true;
+            armorDragging = true;
+            dragX = mouseX - ahx;
+            dragY = mouseY - ahy;
+            return;
+        }
+
+        int phx = InfoHudModules.getPotionX(), phy = InfoHudModules.getPotionY();
+        if (mouseButton == 0 && mouseX >= phx && mouseX <= phx + 220
+                && mouseY >= phy && mouseY <= phy + 180) {
+            dragging = true;
+            potionDragging = true;
+            dragX = mouseX - phx;
+            dragY = mouseY - phy;
             return;
         }
 
