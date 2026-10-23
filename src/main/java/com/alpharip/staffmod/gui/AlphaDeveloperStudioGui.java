@@ -111,7 +111,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             consoleOutput.add("Type help to list available commands.");
             consoleOutput.add("");
         }
-        listBottom = panelTop + Math.max(listTop - panelTop + 23, panelHeight - 82);
+        listBottom = panelTop + Math.max(95, panelHeight - 100);
 
         int listX = panelLeft + 14;
         int listWidth = Math.max(150, Math.min(225, panelWidth / 3));
@@ -125,15 +125,21 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         }
         buttonList.add(new AlphaButton(TOGGLE_OVERLAY, panelLeft + panelWidth - 122, panelTop + 8, 108, 20,
                 DeveloperDiagnostics.isDebugOverlayEnabled() ? "OVERLAY: ON" : "OVERLAY: OFF"));
-        int footerY = panelTop + Math.max(8, panelHeight - 58);
-        buttonList.add(new AlphaButton(RUN_TESTS, panelLeft + 14, footerY, 84, 20, "RUN TESTS"));
-        buttonList.add(new AlphaButton(TOGGLE_TEST, panelLeft + 104, footerY, 84, 20,
+        int footerY = panelTop + panelHeight - 58;
+        int footerButtonWidth = 84;
+        int footerGap = 6;
+        int footerX = panelLeft + 14;
+        buttonList.add(new AlphaButton(RUN_TESTS, footerX, footerY, footerButtonWidth, 20, "RUN TESTS"));
+        footerX += footerButtonWidth + footerGap;
+        buttonList.add(new AlphaButton(TOGGLE_TEST, footerX, footerY, footerButtonWidth, 20,
                 DeveloperDiagnostics.isTestMode() ? "TEST: ON" : "TEST: OFF"));
-        buttonList.add(new AlphaButton(TOGGLE_SANDBOX, panelLeft + 194, footerY, 100, 20,
+        footerX += footerButtonWidth + footerGap;
+        buttonList.add(new AlphaButton(TOGGLE_SANDBOX, footerX, footerY, 100, 20,
                 DeveloperDiagnostics.isSandboxMode() ? "SANDBOX: ON" : "SANDBOX: OFF"));
-        buttonList.add(new AlphaButton(EXPORT_BUNDLE, panelLeft + 300, footerY, 112, 20, "EXPORT REPORT"));
+        footerX += 106;
+        buttonList.add(new AlphaButton(EXPORT_BUNDLE, footerX, footerY, 112, 20, "EXPORT REPORT"));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94,
-                panelTop + Math.max(8, panelHeight - 31), 80, 20, "BACK"));
+                panelTop + panelHeight - 31, 80, 20, "BACK"));
     }
 
     @Override
@@ -234,6 +240,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         int detailX = dividerX + 12;
         int detailWidth = right - detailX - 14;
         int y = panelTop + 58;
+        int contentBottom = bottom - 104;
 
         drawString(fontRendererObj, TOOLS[selectedTool], detailX, y, ACCENT);
         y += 20;
@@ -257,7 +264,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         drawString(fontRendererObj, selectedTool == 0 ? "TERMINAL OUTPUT" : "INSPECTOR OUTPUT", detailX, y, 0xFFB8BDC8);
         y += 14;
         List<String> lines = wrapReport(report, detailWidth);
-        int maxLines = Math.max(1, (bottom - 50 - y) / 10);
+        int maxLines = Math.max(1, (contentBottom - y) / 10);
         if (selectedTool == 0 && reportScroll == Integer.MAX_VALUE) reportScroll = Math.max(0, lines.size() - maxLines);
         int start = Math.min(reportScroll, Math.max(0, lines.size() - maxLines));
         int shown = 0;
@@ -266,17 +273,18 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
             y += 10;
         }
         if (lines.size() > maxLines) {
-            drawString(fontRendererObj, "Use Page Up / Page Down to scroll output (" + lines.size() + " lines)",
-                    detailX, bottom - 46, 0xFFB8BDC8);
+            drawString(fontRendererObj, "Page Up / Page Down to scroll (" + lines.size() + " lines)",
+                    detailX, contentBottom + 2, 0xFFB8BDC8);
         }
 
         if (selectedTool == 0) {
-            drawRect(detailX - 4, bottom - 45, right - 10, bottom - 31, 0xFF17191E);
+            int promptTop = bottom - 78;
+            drawRect(detailX - 4, promptTop, right - 10, promptTop + 18, 0xFF17191E);
             drawString(fontRendererObj, "alpha> " + commandInput + ((System.currentTimeMillis() / 500L) % 2 == 0 ? "_" : ""),
-                    detailX, bottom - 41, 0xFF9CE2AC);
+                    detailX, promptTop + 4, 0xFF9CE2AC);
         }
-        drawRect(panelLeft + 14, bottom - 34, right - 14, bottom - 33, 0x334B515D);
-        drawString(fontRendererObj, "STATUS  " + status, panelLeft + 14, bottom - 27, 0xFF9CE2AC);
+        drawRect(panelLeft + 14, bottom - 36, right - 14, bottom - 35, 0x334B515D);
+        drawString(fontRendererObj, "STATUS  " + status, panelLeft + 14, bottom - 25, 0xFF9CE2AC);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
