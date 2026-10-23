@@ -276,7 +276,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
                 return palette.toString();
             case 2: return "Recent client events\\n" + join(DeveloperDiagnostics.events());
             case 3: return "Debug overlay: " + DeveloperDiagnostics.isDebugOverlayEnabled() + "\\nUse OVERLAY ON/OFF at the top right to toggle the live in-game overlay.\\n" + DeveloperDiagnostics.profilerReport();
-            case 4: return "TEST MODE: " + DeveloperDiagnostics.isTestMode() + "\\n" + DeveloperDiagnostics.runTests();
+            case 4: return "TEST MODE: " + DeveloperDiagnostics.isTestMode() + "\\n" + DeveloperDiagnostics.lastTestReport();
             case 5: return "SANDBOX MODE: " + DeveloperDiagnostics.isSandboxMode() + "\\nSandbox is an isolated developer flag; it does not alter live module/config state.";
             case 6: return DeveloperDiagnostics.profilerReport();
             case 7: return DeveloperDiagnostics.modReport();
