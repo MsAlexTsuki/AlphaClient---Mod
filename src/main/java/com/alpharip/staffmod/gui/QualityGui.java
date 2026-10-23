@@ -1,5 +1,6 @@
 package com.alpharip.staffmod.gui;
 
+import com.alpharip.staffmod.hud.SessionTimerHud;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -12,15 +13,16 @@ public final class QualityGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int AFK_TIMER = 2;
     private static final int FULLBRIGHT = 3;
+    private static final int SESSION_TIMER = 4;
     private static final int AFK_TIMER_INDEX = 7;
+    private static final int SESSION_TIMER_INDEX = 8;
     private static final int FULLBRIGHT_INDEX = 0;
     private static final int ACCENT = 0xFFFFD866;
     private static final String[] FEATURES = {
             "Fullbright", "Alpha Module Manager", "Playtime Tracker", "Auto GG", "Keybind Profiles",
-            "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Mod Profiles",
+            "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Session Timer", "Mod Profiles",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
-            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager",
-            "Session Timer", "Alpha Feature Flags"
+            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags"
     };
 
     private final GuiScreen parent;
@@ -51,8 +53,15 @@ public final class QualityGui extends AlphaGuiScreen {
         }
         if (AFK_TIMER_INDEX >= scrollOffset && AFK_TIMER_INDEX < scrollOffset + visibleRows) {
             int timerY = panelTop + 68 + (AFK_TIMER_INDEX - scrollOffset) * 20;
-            buttonList.add(new AlphaButton(AFK_TIMER, panelLeft + 10, timerY, panelRight - panelLeft - 20, 17,
-                    "AFK Timer", true));
+            buttonList.add(new AlphaButton(AFK_TIMER, panelLeft + 10, timerY,
+                    panelRight - panelLeft - 20, 17, "AFK Timer", true));
+        }
+        if (SESSION_TIMER_INDEX >= scrollOffset && SESSION_TIMER_INDEX < scrollOffset + visibleRows) {
+            int timerY = panelTop + 68 + (SESSION_TIMER_INDEX - scrollOffset) * 20;
+            buttonList.add(new AlphaButton(SESSION_TIMER, panelLeft + 10, timerY,
+                    panelRight - panelLeft - 20, 17,
+                    "Session Timer: " + (SessionTimerHud.isEnabled() ? "ON" : "OFF"),
+                    SessionTimerHud.isEnabled()));
         }
     }
 
@@ -68,7 +77,7 @@ public final class QualityGui extends AlphaGuiScreen {
         int rowHeight = 20;
         for (int i = scrollOffset; i < FEATURES.length && i < scrollOffset + visibleRows; i++) {
             int y = panelTop + 68 + (i - scrollOffset) * rowHeight;
-            if (i == AFK_TIMER_INDEX || i == FULLBRIGHT_INDEX) {
+            if (i == AFK_TIMER_INDEX || i == FULLBRIGHT_INDEX || i == SESSION_TIMER_INDEX) {
                 // These entries have live controls rather than roadmap labels.
                 continue;
             }
@@ -91,6 +100,8 @@ public final class QualityGui extends AlphaGuiScreen {
             mc.displayGuiScreen(parent);
         } else if (button.id == AFK_TIMER) {
             mc.displayGuiScreen(new AfkTimerSettingsGui(this));
+        } else if (button.id == SESSION_TIMER) {
+            mc.displayGuiScreen(new SessionTimerSettingsGui(this));
         } else if (button.id == FULLBRIGHT) {
             FullbrightMod.setEnabled(!FullbrightMod.isEnabled());
             initGui();
