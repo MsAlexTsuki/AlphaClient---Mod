@@ -531,7 +531,10 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                             || PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)
                             || Boolean.TRUE.equals(PermissionService.getCommandPermissionOverride("staffmods.developer"));
                     if (developerAccess) {
-                        mc.displayGuiScreen(new DeveloperGui(this));
+                        // hasFolderAccess(rank) has already passed above. Carry that
+                        // authorization into DeveloperGui instead of re-checking it
+                        // against a narrower set of rank flags.
+                        mc.displayGuiScreen(new DeveloperGui(this, true));
                     }
                 } else if (rank == PermissionService.Rank.MANAGEMENT) {
                     managementSubfolders = true;
