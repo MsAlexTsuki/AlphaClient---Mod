@@ -239,6 +239,11 @@ public final class PermissionService {
     public static boolean hasStaffModsAccess() {
         Boolean commandOverride = getCommandPermissionOverride("staffmods.open");
         if (commandOverride != null) return commandOverride.booleanValue();
+        if (commandPermissionsVerified) {
+            for (java.util.Map.Entry<String, Boolean> entry : verifiedCommandPermissions.entrySet()) {
+                if (entry.getKey().startsWith("staffmods.") && Boolean.TRUE.equals(entry.getValue())) return true;
+            }
+        }
         if (hasAccess(Rank.T_MOD)) return true;
         if (!modEntitlementsVerified) return false;
         for (java.util.Map.Entry<String, Boolean> entry : verifiedModPermissions.entrySet()) {
