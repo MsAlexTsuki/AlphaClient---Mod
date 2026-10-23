@@ -102,7 +102,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
         listTop = panelTop + 62;
-        listBottom = panelTop + panelHeight - 42;
+        listBottom = panelTop + panelHeight - 82;
 
         int listX = panelLeft + 14;
         int listWidth = Math.max(150, Math.min(225, panelWidth / 3));
@@ -220,7 +220,7 @@ public final class AlphaDeveloperStudioGui extends AlphaGuiScreen {
         drawString(fontRendererObj, "TOOLS", panelLeft + 14, panelTop + 49, 0xFFB8BDC8);
 
         int dividerX = panelLeft + 14 + Math.max(150, Math.min(225, panelWidth / 3)) + 12;
-        drawRect(dividerX, panelTop + 48, dividerX + 1, bottom - 40, 0x554B515D);
+        drawRect(dividerX, panelTop + 48, dividerX + 1, bottom - 80, 0x554B515D);
         int detailX = dividerX + 12;
         int detailWidth = right - detailX - 14;
         int y = panelTop + 58;
