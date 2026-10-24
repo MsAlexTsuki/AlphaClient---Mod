@@ -199,8 +199,8 @@ public final class RankViewerRenderer {
         }
         if (targetTeam != null) {
             EnumChatFormatting format = targetTeam.getChatFormat();
-            if (format != null && format.getColor() != null) {
-                return 0xFF000000 | format.getColor();
+            if (format != null && format.getColorIndex() >= 0) {
+                return 0xFF000000 | getFormattingColor(format);
             }
         }
         return 0xFFFFFFFF;
