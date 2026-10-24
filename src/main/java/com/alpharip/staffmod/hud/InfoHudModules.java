@@ -235,7 +235,8 @@ public final class InfoHudModules {
         int x = armorX, y = armorY;
         GL11.glPushMatrix();
         GL11.glTranslatef(x, y, 0.0F);
-        GL11.glScalef(0.65F, 0.65F, 1.0F);
+        float armorScale = 0.65F * HudScaleConfig.get("armor");
+        GL11.glScalef(armorScale, armorScale, 1.0F);
         for (int i = 0; i < items.length; i++) {
             int itemX = armorLayout == 0 ? i * 92 : 0;
             int itemY = armorLayout == 0 ? 0 : i * 20;
