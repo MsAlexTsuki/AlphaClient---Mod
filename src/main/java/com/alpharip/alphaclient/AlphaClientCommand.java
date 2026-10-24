@@ -399,6 +399,12 @@ public final class AlphaClientCommand extends CommandBase {
         guideLine(sender, command + " background <on|off>", "Toggle the HUD background");
         guideLine(sender, command + " color next", "Cycle the HUD color");
         guideLine(sender, command + " position <x> <y>", "Set HUD coordinates");
+        if ("playtime".equals(command)) {
+            guideLine(sender, "/playtime name <name>", "Change the Playtime HUD label");
+            guideLine(sender, "/playtime format <mode>", "Choose a Playtime HUD time format");
+            guideLine(sender, "/playtime formatlist", "List available Playtime HUD formats");
+            guideLine(sender, "/playtime check", "Show your exact tracked playtime");
+        }
         if (afk) guideLine(sender, command + " mode <always|afk>", "Choose when the timer is visible");
     }
 
@@ -1153,6 +1159,17 @@ public final class AlphaClientCommand extends CommandBase {
             if (name.isEmpty()) { reply(sender, "Usage: /playtime name <name>"); return; }
             PlaytimeTrackerHud.setDisplayName(name);
             reply(sender, "Playtime HUD name set to: " + PlaytimeTrackerHud.getDisplayName());
+            return;
+        }
+        if ("playtime".equals(timer) && args.length > 0 && "formatlist".equalsIgnoreCase(args[0])) {
+            reply(sender, "Available Playtime HUD formats:");
+            reply(sender, "years_months - Years & months");
+            reply(sender, "months_days - Months & days");
+            reply(sender, "days_hours - Days & hours");
+            reply(sender, "hours_minutes - Hours & minutes");
+            reply(sender, "minutes_seconds - Minutes & seconds");
+            reply(sender, "seconds_millis - Seconds & milliseconds");
+            reply(sender, "Use /playtime format <mode> to select one.");
             return;
         }
         if ("playtime".equals(timer) && args.length > 0 && "format".equalsIgnoreCase(args[0])) {
