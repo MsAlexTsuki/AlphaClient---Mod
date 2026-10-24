@@ -1,7 +1,6 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.modules.AlphaModule;
-import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
