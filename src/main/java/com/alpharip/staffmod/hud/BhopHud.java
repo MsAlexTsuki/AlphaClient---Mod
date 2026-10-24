@@ -357,7 +357,7 @@ public class BhopHud {
 
     /** Draws the live BHOP HUD style inside the HUD editor preview. */
     public static void renderEditorPreview() {
-        if (!hasBhopPermission() || !enabled) {
+        if (!hasBhopPermission() || !enabled || !BhopMode.isEnabled()) {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
