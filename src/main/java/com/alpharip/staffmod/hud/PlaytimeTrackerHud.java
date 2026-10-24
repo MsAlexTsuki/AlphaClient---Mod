@@ -12,7 +12,8 @@ import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;\nimport java.util.Locale;
+import java.io.FileWriter;
+import java.util.Locale;
 
 /** Tracks cumulative Minecraft process runtime independently of the HUD toggle. */
 public final class PlaytimeTrackerHud {
