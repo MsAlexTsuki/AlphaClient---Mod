@@ -203,7 +203,13 @@ public final class InfoHudModules {
         renderEnabled(false);
     }
 
-    public static void renderEditorPreviews() { renderEnabled(true); }
+    public static void renderEditorPreviews() {
+        load();
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null || mc.fontRendererObj == null || mc.gameSettings.showDebugInfo) return;
+        if (armorEnabled()) renderArmor(mc, true);
+        if (potionEnabled()) renderPotions(mc, true);
+    }
 
     private static void renderEnabled(boolean preview) {
         load();
