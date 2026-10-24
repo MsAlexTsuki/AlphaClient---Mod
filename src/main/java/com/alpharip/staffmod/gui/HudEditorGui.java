@@ -226,7 +226,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
         if (dragging && button == 0) {
-            if (!afkTimerDragging && !fpsDragging && !cpsDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !hasBhopAccess()) {
+            if (!afkTimerDragging && !fpsDragging && !pingDragging && !cpsDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !hasBhopAccess()) {
                 dragging = false;
                 return;
             }
