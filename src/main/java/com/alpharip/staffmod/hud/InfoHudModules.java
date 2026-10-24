@@ -282,8 +282,13 @@ public final class InfoHudModules {
 
     private static void renderPotions(Minecraft mc, boolean preview) {
         Collection<PotionEffect> effects = mc.thePlayer.getActivePotionEffects();
+        GL11.glPushMatrix();
+        GL11.glTranslatef(potionX, potionY, 0.0F);
+        float scale = HudScaleConfig.get("potion");
+        GL11.glScalef(scale, scale, 1.0F);
         if (preview && effects.isEmpty()) {
             renderPotionPreview(mc);
+            GL11.glPopMatrix();
             return;
         }
         int row = 0;
@@ -293,7 +298,7 @@ public final class InfoHudModules {
             boolean bad = potion.isBadEffect();
             if (potionMode == MODE_BUFFS && bad) continue;
             if (potionMode == MODE_DEBUFFS && !bad) continue;
-            int x = potionX, y = potionY + row * 22;
+            int x = 0, y = row * 22;
             if (potionMode == MODE_ICONS) {
                 drawPotionIcon(mc, potion, x, y);
                 row++;
@@ -307,6 +312,7 @@ public final class InfoHudModules {
             mc.fontRendererObj.drawStringWithShadow(line, textX, y + 5, getPotionColor());
             row++;
         }
+        GL11.glPopMatrix();
     }
 
     private static void renderPotionPreview(Minecraft mc) {
@@ -319,7 +325,7 @@ public final class InfoHudModules {
             boolean bad = potion.isBadEffect();
             if (potionMode == MODE_BUFFS && bad) continue;
             if (potionMode == MODE_DEBUFFS && !bad) continue;
-            int x = potionX, y = potionY + row * 22;
+            int x = 0, y = row * 22;
             drawPotionIcon(mc, potion, x, y);
             if (potionMode != MODE_ICONS) {
                 String line = fit(mc, names[i] + "  1:23", 190);
