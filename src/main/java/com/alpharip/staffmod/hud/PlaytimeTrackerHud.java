@@ -97,6 +97,11 @@ public final class PlaytimeTrackerHud {
         mc.fontRendererObj.drawStringWithShadow(text, x, y, getTextColor());
     }
 
+    public static synchronized long getTotalPlaytimeMillis() {
+        if (!initialized) initialize();
+        return savedPlaytimeSeconds * 1000L + Math.max(0L, System.currentTimeMillis() - sessionStartedAt);
+    }
+
     public static synchronized long getTotalPlaytimeSeconds() {
         if (!initialized) initialize();
         long elapsed = Math.max(0L, (System.currentTimeMillis() - sessionStartedAt) / 1000L);
