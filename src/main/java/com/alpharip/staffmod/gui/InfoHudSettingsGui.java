@@ -34,7 +34,7 @@ public final class InfoHudSettingsGui extends AlphaGuiScreen {
                     "DURABILITY: " + (InfoHudModules.getArmorShowDurability() ? "ON" : "OFF")));
             buttonList.add(new AlphaButton(PRIMARY, width / 2 - 100, height / 2 + 23, 200, 20,
                     "LAYOUT: " + InfoHudModules.getArmorLayoutName()));
-            buttonList.add(new AlphaButton(COLOR, width / 2 - 100, height / 2 + 49, 200, 20, "CYCLE HUD COLOR"));
+            buttonList.add(new AlphaButton(COLOR, width / 2 - 100, height / 2 + 49, 200, 20, "HUD COLOR: " + (InfoHudModules.isArmorRainbow() ? "RAINBOW" : "FIXED") + " (CYCLE)"));
             buttonList.add(new AlphaButton(BACK, width / 2 - 60, height / 2 + 76, 120, 20, "BACK"));
         } else {
             buttonList.add(new AlphaButton(PRIMARY, width / 2 - 100, height / 2 - 8, 200, 20,
