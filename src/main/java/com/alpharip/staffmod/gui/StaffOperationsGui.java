@@ -1,6 +1,9 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import net.minecraft.client.gui.GuiButton;
 import java.io.IOException;
 
@@ -22,6 +25,9 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
     private Section section = Section.DASHBOARD;
     private int panelLeft, panelTop, panelWidth, panelHeight;
     private int contentLeft, contentTop, contentRight, contentBottom;
+    private JsonArray records = new JsonArray();
+    private String dataStatus = "Sign in to load shared staff data.";
+    private long lastRefreshAt = 0L;
 
     private enum Section {
         DASHBOARD("STAFF DASHBOARD"),
@@ -63,6 +69,7 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         contentRight = panelLeft + panelWidth - 16;
         contentTop = panelTop + 78;
         contentBottom = panelTop + panelHeight - 43;
+        refreshRecords(false);
 
         int gap = 8;
         int columns = 2;
@@ -99,8 +106,7 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         else if (button.id == PRESENCE) section = Section.PRESENCE;
         else if (button.id == AUDIT) section = Section.AUDIT;
         else if (button.id == REFRESH) {
-            // Rebuild the view from the current provider state when the live data
-            // adapter is connected. Do not fabricate local team records.
+            refreshRecords(true);
         } else return;
         initGui();
     }
@@ -134,9 +140,9 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         int y = contentTop + 2 * (34 + 8) + 12;
         drawString(fontRendererObj, "TEAM OVERVIEW", contentLeft, y, 0xFFE6E8ED);
         drawString(fontRendererObj, "Cases, shifts, presence and audit activity", contentLeft, y + 14, 0xFFB8BDC8);
-        drawString(fontRendererObj, "LIVE DATA: NOT CONNECTED", contentLeft, y + 34, 0xFFFFD866);
-        drawString(fontRendererObj, "Shared staff records will appear here when the authenticated", contentLeft, y + 49, 0xFFB8BDC8);
-        drawString(fontRendererObj, "community data provider is configured.", contentLeft, y + 61, 0xFFB8BDC8);
+        drawString(fontRendererObj, "SHARED RECORDS: " + records.size(), contentLeft, y + 34, 0xFFFFD866);
+        drawString(fontRendererObj, dataStatus, contentLeft, y + 49, 0xFFB8BDC8);
+        drawRecordCounts(contentLeft, y + 66);
     }
 
     private void drawSectionDetails() {
@@ -155,7 +161,66 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         } else if (section == Section.AUDIT) {
             drawString(fontRendererObj, "Audit viewer, timeline, search, filters and export.", contentLeft, y, 0xFFB8BDC8);
         }
-        drawString(fontRendererObj, "LIVE DATA: NOT CONNECTED", contentLeft, y + 42, 0xFFFFD866);
-        drawString(fontRendererObj, "This section will use shared records, not local mock data.", contentLeft, y + 57, 0xFFB8BDC8);
+        drawString(fontRendererObj, "SHARED RECORDS: " + countRecords(section), contentLeft, y + 42, 0xFFFFD866);
+        drawString(fontRendererObj, dataStatus, contentLeft, y + 57, 0xFFB8BDC8);
+        drawRecentRecords(contentLeft, y + 75, section);
     }
+
+    private void refreshRecords(boolean showStatus) {
+        if (!SupabaseCommunityService.isSignedIn()) {
+            records = new JsonArray();
+            dataStatus = "Sign in to your Alpha Account to load live shared data.";
+            return;
+        }
+        try {
+            records = SupabaseCommunityService.getStaffOperationsRecords();
+            dataStatus = "Synced with the shared Alpha staff database.";
+            lastRefreshAt = System.currentTimeMillis();
+        } catch (Exception exception) {
+            dataStatus = "Shared data unavailable: " + safeMessage(exception.getMessage());
+            if (showStatus) System.err.println("[AlphaClient] Staff Operations refresh failed: " + dataStatus);
+        }
+    }
+
+    private String safeMessage(String message) {
+        if (message == null || message.trim().isEmpty()) return "request failed";
+        String clean = message.replace('\n', ' ').replace('\r', ' ');
+        return clean.length() > 72 ? clean.substring(0, 72) : clean;
+    }
+
+    private int countRecords(Section target) {
+        String type = target == Section.CASES ? "case" : target == Section.SHIFTS ? "shift"
+                : target == Section.PRESENCE ? "presence" : target == Section.AUDIT ? "audit" : "";
+        int count = 0;
+        for (int i = 0; i < records.size(); i++) {
+            if (records.get(i).isJsonObject() && type.equals(records.get(i).getAsJsonObject().get("record_type").getAsString())) count++;
+        }
+        return count;
+    }
+
+    private void drawRecordCounts(int x, int y) {
+        drawString(fontRendererObj, "Cases: " + countRecords(Section.CASES), x, y, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Shifts: " + countRecords(Section.SHIFTS), x + 120, y, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Presence: " + countRecords(Section.PRESENCE), x + 240, y, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Audit: " + countRecords(Section.AUDIT), x + 360, y, 0xFFB8BDC8);
+    }
+
+    private void drawRecentRecords(int x, int y, Section target) {
+        String type = target == Section.CASES ? "case" : target == Section.SHIFTS ? "shift"
+                : target == Section.PRESENCE ? "presence" : "audit";
+        int shown = 0;
+        for (int i = 0; i < records.size() && shown < 5; i++) {
+            if (!records.get(i).isJsonObject()) continue;
+            JsonObject record = records.get(i).getAsJsonObject();
+            if (!type.equals(record.has("record_type") ? record.get("record_type").getAsString() : "")) continue;
+            String title = record.has("title") ? record.get("title").getAsString() : "(untitled)";
+            String status = record.has("status") ? record.get("status").getAsString() : "";
+            String line = title + " [" + status + "]";
+            if (line.length() > 68) line = line.substring(0, 65) + "...";
+            drawString(fontRendererObj, line, x, y + shown * 13, 0xFFE6E8ED);
+            shown++;
+        }
+        if (shown == 0) drawString(fontRendererObj, "No shared " + type + " records yet.", x, y, 0xFFB8BDC8);
+    }
+
 }
