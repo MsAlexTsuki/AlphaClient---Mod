@@ -13,6 +13,7 @@ import com.alpharip.staffmod.hud.InfoHudModules;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
@@ -104,16 +105,22 @@ public final class HudEditorGui extends AlphaGuiScreen {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
             int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
             int fw = fontRendererObj.getStringWidth(fps) + 10;
-            if (FpsMod.isShowBackground()) drawRect(fx - 3, fy - 3, fx + fw, fy + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-            fontRendererObj.drawStringWithShadow(fps, fx, fy, FpsMod.getTextColor());
+            float scale = HudScaleConfig.get("fps");
+            GlStateManager.pushMatrix(); GlStateManager.translate(fx, fy, 0.0F); GlStateManager.scale(scale, scale, 1.0F);
+            if (FpsMod.isShowBackground()) drawRect(-3, -3, fw, fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            fontRendererObj.drawStringWithShadow(fps, 0, 0, FpsMod.getTextColor());
+            GlStateManager.popMatrix();
         }
 
         if (isPingModuleEnabled()) {
             String ping = PingMod.getDisplayText();
             int px = PingMod.getHudX(), py = PingMod.getHudY();
             int pw = fontRendererObj.getStringWidth(ping) + 10;
-            if (PingMod.isShowBackground()) drawRect(px - 3, py - 3, px + pw, py + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-            fontRendererObj.drawStringWithShadow(ping, px, py, PingMod.getTextColor());
+            float scale = HudScaleConfig.get("ping");
+            GlStateManager.pushMatrix(); GlStateManager.translate(px, py, 0.0F); GlStateManager.scale(scale, scale, 1.0F);
+            if (PingMod.isShowBackground()) drawRect(-3, -3, pw, fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            fontRendererObj.drawStringWithShadow(ping, 0, 0, PingMod.getTextColor());
+            GlStateManager.popMatrix();
         }
 
         InfoHudModules.renderEditorPreviews();
@@ -122,8 +129,11 @@ public final class HudEditorGui extends AlphaGuiScreen {
             String cps = CpsMod.getDisplayText();
             int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
             int cw = fontRendererObj.getStringWidth(cps) + 10;
-            if (CpsMod.isShowBackground()) drawRect(cx - 3, cy - 3, cx + cw, cy + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-            fontRendererObj.drawStringWithShadow(cps, cx, cy, CpsMod.getTextColor());
+            float scale = HudScaleConfig.get("cps");
+            GlStateManager.pushMatrix(); GlStateManager.translate(cx, cy, 0.0F); GlStateManager.scale(scale, scale, 1.0F);
+            if (CpsMod.isShowBackground()) drawRect(-3, -3, cw, fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            fontRendererObj.drawStringWithShadow(cps, 0, 0, CpsMod.getTextColor());
+            GlStateManager.popMatrix();
         }
         if (hasBhopAccess() && BhopHud.isEnabled()) drawScaleHandle(BhopHud.getHudX(), BhopHud.getHudY(), (int)(BhopHud.getHudWidth() * BhopHud.getVisualScale() * HudScaleConfig.get("bhop")), 20);
         if (AfkTimerHud.isEnabled()) drawScaleHandle(AfkTimerHud.getHudX(), AfkTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("AFK 00:00") + 10) * HudScaleConfig.get("afkTimer")), fontRendererObj.FONT_HEIGHT + 6);
