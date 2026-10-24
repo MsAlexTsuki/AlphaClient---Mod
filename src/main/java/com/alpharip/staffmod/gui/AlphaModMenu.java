@@ -557,10 +557,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     @Override
     public void handleMouseInput() throws IOException {
-        // Capture the wheel delta before GuiScreen processes the event queue.
-        // Calling getEventDWheel() after super can return zero because the base
-        // handler has already consumed the mouse event.
-        int wheel = org.lwjgl.input.Mouse.getEventDWheel();
+        // Read the accumulated wheel delta before GuiScreen consumes queued events.
+        // getEventDWheel() is only valid while Mouse.next() is advancing the event queue;
+        // reading it here can return zero/stale data, preventing the list from scrolling.
+        int wheel = org.lwjgl.input.Mouse.getDWheel();
         super.handleMouseInput();
         if (wheel != 0) {
             int mouseX = org.lwjgl.input.Mouse.getEventX() * width / mc.displayWidth;
