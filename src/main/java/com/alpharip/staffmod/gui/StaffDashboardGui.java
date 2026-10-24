@@ -30,11 +30,11 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private long lastRefreshAt = 0L;
 
     private enum Section {
-        DASHBOARD("STAFF DASHBOARD"),
-        CASES("CASES"),
-        SHIFTS("SHIFTS"),
-        PRESENCE("PRESENCE"),
-        AUDIT("AUDIT");
+        DASHBOARD("Dashboard"),
+        CASES("Cases"),
+        SHIFTS("Shifts"),
+        PRESENCE("Presence"),
+        AUDIT("Activity and audit");
 
         private final String title;
         Section(String title) { this.title = title; }
@@ -85,16 +85,16 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         int tileHeight = 34;
 
         if (section == Section.DASHBOARD) {
-            buttonList.add(new AlphaButton(CASES, contentLeft, contentTop, tileWidth, tileHeight, "CASES"));
-            buttonList.add(new AlphaButton(SHIFTS, contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "SHIFTS"));
-            buttonList.add(new AlphaButton(PRESENCE, contentLeft, contentTop + tileHeight + gap, tileWidth, tileHeight, "PRESENCE"));
-            buttonList.add(new AlphaButton(AUDIT, contentLeft + tileWidth + gap, contentTop + tileHeight + gap, tileWidth, tileHeight, "AUDIT"));
-            buttonList.add(new AlphaButton(REFRESH, contentLeft, contentBottom - 27, tileWidth, 22, "REFRESH DASHBOARD"));
+            buttonList.add(new AlphaButton(CASES, contentLeft, contentTop, tileWidth, tileHeight, "Cases"));
+            buttonList.add(new AlphaButton(SHIFTS, contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "Shifts"));
+            buttonList.add(new AlphaButton(PRESENCE, contentLeft, contentTop + tileHeight + gap, tileWidth, tileHeight, "Presence"));
+            buttonList.add(new AlphaButton(AUDIT, contentLeft + tileWidth + gap, contentTop + tileHeight + gap, tileWidth, tileHeight, "Activity and audit"));
+            buttonList.add(new AlphaButton(REFRESH, contentLeft, contentBottom - 27, tileWidth, 22, "Refresh dashboard"));
         } else {
-            buttonList.add(new AlphaButton(DASHBOARD, contentLeft, contentBottom - 27, tileWidth, 22, "DASHBOARD"));
-            buttonList.add(new AlphaButton(REFRESH, contentLeft + tileWidth + gap, contentBottom - 27, tileWidth, 22, "REFRESH"));
+            buttonList.add(new AlphaButton(DASHBOARD, contentLeft, contentBottom - 27, tileWidth, 22, "Dashboard"));
+            buttonList.add(new AlphaButton(REFRESH, contentLeft + tileWidth + gap, contentBottom - 27, tileWidth, 22, "Refresh"));
         }
-        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94, panelTop + panelHeight - 31, 80, 20, "BACK"));
+        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94, panelTop + panelHeight - 31, 80, 20, "Back"));
     }
 
     @Override
@@ -132,8 +132,8 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
 
         // Match Alpha Developer Studio's hierarchy and restrained workspace styling,
         // while retaining Staff Operations' existing panel dimensions and controls.
-        drawString(fontRendererObj, "ALPHA  /  STAFF DASHBOARD", panelLeft + 16, panelTop + 13, 0xFFF0F1F4);
-        drawString(fontRendererObj, "STAFF OVERVIEW WORKSPACE", panelLeft + 16, panelTop + 30, ACCENT);
+        drawString(fontRendererObj, "Alpha  /  Staff dashboard", panelLeft + 16, panelTop + 13, 0xFFF0F1F4);
+        drawString(fontRendererObj, "Staff information and management", panelLeft + 16, panelTop + 30, ACCENT);
         drawString(fontRendererObj, section.title, panelLeft + 16, panelTop + 49, 0xFFB8BDC8);
 
         int dividerY = panelTop + 66;
@@ -146,15 +146,15 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         }
 
         drawRect(panelLeft + 14, bottom - 36, right - 14, bottom - 35, 0x334B515D);
-        drawString(fontRendererObj, "STATUS  " + dataStatus, panelLeft + 14, bottom - 25, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Status: " + dataStatus, panelLeft + 14, bottom - 25, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     private void drawDashboardSummary() {
         int y = contentTop + 2 * (34 + 8) + 12;
-        drawString(fontRendererObj, "TEAM OVERVIEW", contentLeft, y, 0xFFE6E8ED);
-        drawString(fontRendererObj, "Cases, shifts, presence and audit activity", contentLeft, y + 14, 0xFFB8BDC8);
-        drawString(fontRendererObj, "SHARED RECORDS: " + records.size(), contentLeft, y + 34, 0xFFFFD866);
+        drawString(fontRendererObj, "Team overview", contentLeft, y, 0xFFE6E8ED);
+        drawString(fontRendererObj, "Shared staff records and recorded activity", contentLeft, y + 14, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Shared records: " + records.size(), contentLeft, y + 34, 0xFFFFD866);
         drawString(fontRendererObj, dataStatus, contentLeft, y + 49, 0xFFB8BDC8);
         drawRecordCounts(contentLeft, y + 66);
     }
