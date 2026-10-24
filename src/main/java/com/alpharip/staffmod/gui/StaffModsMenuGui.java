@@ -208,15 +208,6 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                     buttonList.add(new AlphaButton(MODULE_BASE + 101, x, y,
                             tileWidth, tileHeight, "STAFF OPERATIONS", true));
                 }
-                int dashboardIndex = visibleModules.size() + 2;
-                int dashboardRow = dashboardIndex / columns - scrollOffset;
-                if (dashboardRow >= 0 && dashboardRow < visibleRows
-                        && PermissionService.hasStaffModsAccess()) {
-                    int x = contentLeft + (dashboardIndex % columns) * (tileWidth + gap);
-                    int y = contentTop + dashboardRow * rowHeight;
-                    buttonList.add(new AlphaButton(MODULE_BASE + 102, x, y,
-                            tileWidth, tileHeight, "STAFF DASHBOARD", true));
-                }
             }
         }
 
@@ -591,13 +582,6 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                 && selectedRank == PermissionService.Rank.PUBLIC) {
             if (PermissionService.hasStaffModsAccess()) {
                 mc.displayGuiScreen(new StaffOperationsGui(this));
-            }
-            return;
-        }
-        if (openFolderRank != null && button.id == MODULE_BASE + 102
-                && selectedRank == PermissionService.Rank.PUBLIC) {
-            if (PermissionService.hasStaffModsAccess()) {
-                mc.displayGuiScreen(new StaffDashboardGui(this));
             }
             return;
         }
