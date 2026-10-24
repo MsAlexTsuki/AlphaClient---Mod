@@ -130,7 +130,7 @@ public final class InfoHudModules {
     public static int getPotionMode() { load(); return potionMode; }
     public static void setPotionPosition(int x, int y) { load(); potionX = Math.max(0, x); potionY = Math.max(0, y); save(); }
     public static void cyclePotionMode() { load(); potionMode = (potionMode + 1) % 4; save(); }
-    public static void cyclePotionColor() { load(); potionColor = nextColor(potionColor); save(); }
+    public static void cyclePotionColor() { load(); potionColor = nextPotionColor(potionColor); save(); }
     public static String getPotionModeName() {
         switch (getPotionMode()) {
             case MODE_ALL: return "All effects";
@@ -140,6 +140,12 @@ public final class InfoHudModules {
         }
     }
     private static int nextColor(int color) {
+        int[] colors = {0xFFFFFFFF, 0xFFFF5555, 0xFFFFAA00, 0xFFFFFF55, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};
+        for (int i = 0; i < colors.length; i++) if (colors[i] == color) return colors[(i + 1) % colors.length];
+        return colors[0];
+    }
+
+    private static int nextPotionColor(int color) {
         int[] colors = {0xFFFFFFFF, 0xFFB8BDC8, 0xFFFFD866, 0xFFFFAA00, 0xFFFF5555};
         for (int i = 0; i < colors.length; i++) if (colors[i] == color) return colors[(i + 1) % colors.length];
         return colors[0];
