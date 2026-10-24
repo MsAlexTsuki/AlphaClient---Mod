@@ -77,6 +77,11 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
 
+        if ("pothud".equals(route)) {
+            handlePotionHud(sender, args);
+            return;
+        }
+
         if (args != null && args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             showCommandGuide(sender, route);
             return;
@@ -525,6 +530,7 @@ public final class AlphaClientCommand extends CommandBase {
             if ("delete".equals(action)) return "command.profiles.delete";
             return "command.profiles.switch";
         }
+        if ("pothud".equals(route)) return "hud.potion";
         if ("fpshud".equals(route) || "alphaclient:fps".equals(route)) return "command.fpshud";
         if ("cpshud".equals(route) || "alphaclient:cps".equals(route)) return "command.cpshud";
         if ("bhop".equals(route) || "alphaclient:bhop".equals(route)) return "command.bhop";
@@ -915,6 +921,28 @@ public final class AlphaClientCommand extends CommandBase {
         if (enabled == null) { reply(sender, "Use on, off, or toggle."); return; }
         module.setEnabled(enabled.booleanValue());
         reply(sender, module.getName() + " " + (module.isEnabled() ? "enabled." : "disabled."));
+    }
+
+    private void handlePotionHud(ICommandSender sender, String[] args) {
+        AlphaModule module = AlphaModuleRegistry.find("potion-hud-info");
+        if (module == null) {
+            reply(sender, "Potion HUD module is unavailable.");
+            return;
+        }
+        if (args == null || args.length == 0) {
+            module.setEnabled(!module.isEnabled());
+        } else if (args.length == 1) {
+            Boolean enabled = parseToggle(args[0], module.isEnabled());
+            if (enabled == null) {
+                reply(sender, "Usage: /pothud [on|off|toggle]");
+                return;
+            }
+            module.setEnabled(enabled.booleanValue());
+        } else {
+            reply(sender, "Usage: /pothud [on|off|toggle]");
+            return;
+        }
+        reply(sender, "Potion HUD " + (module.isEnabled() ? "enabled." : "disabled."));
     }
 
     private boolean hasModuleAccess(AlphaModule module) {
