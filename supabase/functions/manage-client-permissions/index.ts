@@ -148,6 +148,67 @@ Deno.serve(async (req: Request) => {
 
     if (!isFounder) return json({ error: "FOUNDER-ONLY: only the authenticated Founder can manage command permissions." }, 403);
 
+    const validPermissionId = (value: unknown): string => {
+      if (typeof value !== "string" || !/^[a-z][a-z0-9_.-]{0,99}$/.test(value)) throw new Error("Invalid permission ID format.");
+      return value;
+    };
+    if (action === "create_id") {
+      const permission = validPermissionId(body.permission);
+      if (permissionKeys.has(permission)) throw new Error("That permission ID already exists.");
+      const { error } = await admin.from("client_command_permission_catalog").insert({ permission_key: permission, display_name: permission, category: "Custom", description: "" });
+      if (error) throw new Error("Could not create permission ID: " + error.message);
+      await writeAudit(action, null, permission, { permission_key: permission });
+      return json({ ok: true, action, permission });
+    }
+    if (action === "edit_id") {
+      const oldKey = validPermissionId(body.permission), newKey = validPermissionId(body.new_permission);
+      if (!permissionKeys.has(oldKey)) throw new Error("The original permission ID does not exist.");
+      if (permissionKeys.has(newKey)) throw new Error("The new permission ID already exists.");
+      const { error } = await admin.from("client_command_permission_catalog").update({ permission_key: newKey }).eq("permission_key", oldKey);
+      if (error) throw new Error("Could not rename permission ID: " + error.message);
+      await writeAudit(action, null, newKey, { old_permission_key: oldKey, new_permission_key: newKey });
+      return json({ ok: true, action, old_permission: oldKey, permission: newKey });
+    }
+    if (action === "delete_id") {
+      const permission = validPermissionId(body.permission);
+      if (!permissionKeys.has(permission)) throw new Error("That permission ID does not exist.");
+      await writeAudit(action, null, permission, { permission_key: permission });
+      const { error } = await admin.from("client_command_permission_catalog").delete().eq("permission_key", permission);
+      if (error) throw new Error("Could not delete permission ID: " + error.message);
+      return json({ ok: true, action, permission });
+    }
+    if (action === "add_note" || action === "list_notes" || action === "clear_note") {
+      const permission = validPermissionId(body.permission);
+      if (!permissionKeys.has(permission)) throw new Error("That permission ID does not exist.");
+      if (action === "add_note") {
+        if (typeof body.note !== "string" || !body.note.trim() || body.note.trim().length > 1000) throw new Error("Notes must contain 1-1000 characters.");
+        const { error } = await admin.from("client_command_permission_notes").insert({ permission_key: permission, note: body.note.trim(), created_by: user.id });
+        if (error) throw new Error("Could not add note: " + error.message);
+        await writeAudit(action, null, permission, { permission_key: permission });
+        return json({ ok: true, action, permission });
+      }
+      if (action === "list_notes") {
+        const { data, error } = await admin.from("client_command_permission_notes").select("id,note,created_at").eq("permission_key", permission).order("id");
+        if (error) throw new Error("Could not load notes.");
+        return json({ ok: true, action, permission, notes: data ?? [] });
+      }
+      if (body.clear_all === true) {
+        const { error } = await admin.from("client_command_permission_notes").delete().eq("permission_key", permission);
+        if (error) throw new Error("Could not clear notes.");
+        await writeAudit(action, null, permission, { permission_key: permission, clear_all: true });
+        return json({ ok: true, action, permission, clear_all: true });
+      }
+      const number = body.note_number;
+      if (!Number.isInteger(number) || (number as number) < 1) throw new Error("Provide a note number of 1 or greater, or use clear all.");
+      const { data: notes, error: readError } = await admin.from("client_command_permission_notes").select("id").eq("permission_key", permission).order("id");
+      if (readError) throw new Error("Could not find the selected note.");
+      const selected = (notes ?? [])[(number as number) - 1];
+      if (!selected) throw new Error("That note number does not exist.");
+      const { error } = await admin.from("client_command_permission_notes").delete().eq("permission_key", permission).eq("id", selected.id);
+      if (error) throw new Error("Could not delete the selected note.");
+      await writeAudit(action, null, permission, { permission_key: permission, note_number: number });
+      return json({ ok: true, action, permission, note_number: number });
+    }
     if (action === "list") {
       if (body.target === "catalog") {
         return json({ ok: true, target: "catalog", permissions: catalog.map((item: Record<string, unknown>) => ({
@@ -361,7 +422,7 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true, action, rank: rank.rank_name, permission });
     }
 
-    return json({ error: "Unknown action. Use my_permissions, list, grant_user, revoke_user, clear_user, grant_rank, revoke_rank, or clear_rank." }, 400);
+    return json({ error: "Unknown action. Use my_permissions, list, grant_user, revoke_user, clear_user, grant_rank, revoke_rank, clear_rank, create_id, edit_id, delete_id, add_note, list_notes, or clear_note." }, 400);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Permission request failed.";
     return json({ error: message }, 400);
