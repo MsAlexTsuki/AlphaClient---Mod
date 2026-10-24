@@ -71,11 +71,13 @@ public final class HudEditorGui extends AlphaGuiScreen {
         drawString(fontRendererObj, "Drag any HUD preview to reposition it.", left + 16, top + 48, 0xFFB9C0CB);
         drawString(fontRendererObj, "Use RESET ALL to restore default HUD positions.", left + 16, top + 65, 0xFFB8BDC8);
 
-        if (hasBhopAccess()) {
+        if (hasBhopAccess() && BhopHud.isEnabled()) {
             BhopHud.renderEditorPreview();
         }
 
-        AfkTimerHud.renderEditorPreview();
+        if (AfkTimerHud.isEnabled()) {
+            AfkTimerHud.renderEditorPreview();
+        }
 
         if (SessionTimerHud.isEnabled()) {
             SessionTimerHud.renderEditorPreview();
