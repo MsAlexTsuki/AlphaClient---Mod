@@ -48,6 +48,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private int sidebarWidth, contentLeft, contentRight, contentTop, contentBottom;
     private int settingsLeft;
     private int scrollOffset;
+    private int categoryScrollOffset;
     private int profileScrollOffset;
     private GuiTextField searchField;
     private String searchText = "";
@@ -88,7 +89,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         // Keep the HUD editor available at the bottom-left of the Mods menu.
         buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 37, 76, 18, "HUD EDITOR"));
 
-        int categoryY = panelTop + 68;
+        List<AlphaModule.Category> sidebarCategories = new ArrayList<AlphaModule.Category>();
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
             // Staff rank folders belong exclusively inside StaffMods, not in the regular Mods sidebar.
             if (isStaffRankCategory(category) || isDonatorRankCategory(category)) continue;
@@ -101,7 +102,18 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     }
                 }
             }
-            if (!categoryAllowed) continue;
+            if (categoryAllowed) sidebarCategories.add(category);
+        }
+        boolean showStaffMods = PermissionService.hasStaffModsAccess();
+        int categoryY = panelTop + 68;
+        int categoryBottom = panelTop + panelHeight - 43;
+        int visibleCategorySlots = Math.max(1, (categoryBottom - categoryY) / 23);
+        int sidebarItemCount = sidebarCategories.size() + (showStaffMods ? 1 : 0);
+        int maxCategoryScroll = Math.max(0, sidebarItemCount - visibleCategorySlots);
+        categoryScrollOffset = Math.max(0, Math.min(categoryScrollOffset, maxCategoryScroll));
+        for (int i = categoryScrollOffset; i < sidebarCategories.size()
+                && i < categoryScrollOffset + visibleCategorySlots; i++) {
+            AlphaModule.Category category = sidebarCategories.get(i);
             String label;
             switch (category) {
                 case PUBLIC: label = "GENERAL"; break;
@@ -124,11 +136,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     label, category == selectedCategory));
             categoryY += 23;
         }
-        // StaffMods is visible only to authenticated staff ranks.
-        if (PermissionService.hasStaffModsAccess()) {
-            buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, categoryY,
+        if (showStaffMods && sidebarCategories.size() >= categoryScrollOffset
+                && sidebarCategories.size() < categoryScrollOffset + visibleCategorySlots) {
+            int staffY = panelTop + 68 + (sidebarCategories.size() - categoryScrollOffset) * 23;
+            buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, staffY,
                     sidebarWidth - 10, 20, "STAFFMODS"));
-            categoryY += 23;
         }
         if (selectedCategory == AlphaModule.Category.DONATOR) {
             AlphaModule.Category[] donorCategories = {
@@ -546,6 +558,29 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         super.handleMouseInput();
         int wheel = org.lwjgl.input.Mouse.getEventDWheel();
         if (wheel != 0) {
+            int mouseX = org.lwjgl.input.Mouse.getX() * width / mc.displayWidth;
+            int mouseY = height - org.lwjgl.input.Mouse.getY() * height / mc.displayHeight - 1;
+            if (mouseX >= panelLeft && mouseX <= panelLeft + sidebarWidth
+                    && mouseY >= panelTop + 65 && mouseY <= panelTop + panelHeight - 40) {
+                int sidebarCount = 0;
+                for (AlphaModule.Category category : AlphaModule.Category.values()) {
+                    if (isStaffRankCategory(category) || isDonatorRankCategory(category)) continue;
+                    boolean allowed = PermissionService.hasAccess(category.getRequiredRank());
+                    if (!allowed) {
+                        for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
+                            if (!"staffmods".equals(module.getId()) && module.isUnlocked()) { allowed = true; break; }
+                        }
+                    }
+                    if (allowed) sidebarCount++;
+                }
+                if (PermissionService.hasStaffModsAccess()) sidebarCount++;
+                int slots = Math.max(1, (panelTop + panelHeight - 43 - (panelTop + 68)) / 23);
+                int maxCategoryOffset = Math.max(0, sidebarCount - slots);
+                categoryScrollOffset = Math.max(0, Math.min(maxCategoryOffset,
+                        categoryScrollOffset + (wheel < 0 ? 1 : -1)));
+                initGui();
+                return;
+            }
             AlphaModule selected = getSelectedModule();
             if ("staffmods".equals(selectedModuleId) || (selected != null && "quality".equals(selected.getId()))) {
                 List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
