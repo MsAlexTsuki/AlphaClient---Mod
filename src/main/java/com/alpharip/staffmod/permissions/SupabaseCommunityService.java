@@ -656,4 +656,34 @@ public final class SupabaseCommunityService {
             return value == null || value.isJsonNull() ? fallback : value.getAsLong();
         } catch (Exception ignored) { return fallback; }
     }
+
+    /** Reads the authenticated staff team's shared operations records from Supabase. */
+    public static synchronized JsonArray getStaffOperationsRecords() throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalStateException("Sign in to your Alpha Account to load Staff Operations.");
+        }
+        return requestArray("GET", "/rest/v1/staff_operations_records?select=id,record_type,title,status,payload,created_by,assigned_to,created_at,updated_at&order=updated_at.desc&limit=100", token);
+    }
+
+    /** Creates a shared Staff Operations record. Audit records are server-generated and cannot be submitted here. */
+    public static synchronized JsonObject createStaffOperationsRecord(String type, String title, String status, JsonObject payload) throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalStateException("Sign in to your Alpha Account to use Staff Operations.");
+        }
+        if (type == null || !("case".equals(type) || "shift".equals(type) || "presence".equals(type))) {
+            throw new IllegalArgumentException("Unsupported Staff Operations record type.");
+        }
+        JsonObject body = new JsonObject();
+        body.addProperty("record_type", type);
+        body.addProperty("title", title == null ? "" : title);
+        body.addProperty("status", status == null ? "open" : status);
+        body.addProperty("created_by", signedInUserId);
+        body.add("payload", payload == null ? new JsonObject() : payload);
+        JsonArray result = requestArray("POST", "/rest/v1/staff_operations_records?select=id,record_type,title,status,payload,created_by,assigned_to,created_at,updated_at", token, body.toString());
+        if (result.size() == 0 || !result.get(0).isJsonObject()) throw new IllegalStateException("Supabase did not return the created record.");
+        return result.get(0).getAsJsonObject();
+    }
+
 }
