@@ -45,7 +45,7 @@ public final class PingMod {
 
     public static String getDisplayText() {
         int ping = getPing();
-        return ping < 0 ? "PING -- ms" : "PING " + ping + " ms";
+        return ping < 0 ? "-- ms" : ping + " ms";
     }
 
     public static int getHudX() { load(); return hudX; }
