@@ -49,39 +49,45 @@ public final class QualityGui extends AlphaGuiScreen {
         panelRight = Math.min(width - 12, panelLeft + 460);
         panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
         panelBottom = Math.min(height - 12, panelTop + 300);
-        visibleRows = Math.max(1, (panelBottom - panelTop - 92) / 20);
-        int maxScroll = Math.max(0, FEATURES.length - visibleRows);
+        int gap = 8;
+        int columns = 3;
+        int tileWidth = (panelRight - panelLeft - 24 - gap * (columns - 1)) / columns;
+        int tileHeight = 36;
+        int rowHeight = tileHeight + gap;
+        visibleRows = Math.max(1, (panelBottom - panelTop - 100) / rowHeight);
+        int totalRows = (FEATURES.length + columns - 1) / columns;
+        int maxScroll = Math.max(0, totalRows - visibleRows);
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
-        buttonList.add(new GuiButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
-        for (int i = scrollOffset; i < FEATURES.length && i < scrollOffset + visibleRows; i++) {
-            int y = panelTop + 68 + (i - scrollOffset) * 20;
-            int buttonWidth = panelRight - panelLeft - 20;
+        buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        int startIndex = scrollOffset * columns;
+        int endIndex = Math.min(FEATURES.length, startIndex + visibleRows * columns);
+        for (int i = startIndex; i < endIndex; i++) {
+            int local = i - startIndex;
+            int x = panelLeft + 12 + (local % columns) * (tileWidth + gap);
+            int y = panelTop + 68 + (local / columns) * rowHeight;
             if (i == PLAYTIME_TRACKER_INDEX) {
-                buttonList.add(new AlphaButton(PLAYTIME_TRACKER, panelLeft + 10, y,
-                        buttonWidth, 17, "Playtime Tracker", true));
+                buttonList.add(new AlphaButton(PLAYTIME_TRACKER, x, y,
+                        tileWidth, tileHeight, "Playtime Tracker", true));
             } else if (i == 3) {
-                buttonList.add(new AlphaButton(AUTO_GG, panelLeft + 10, y,
-                        buttonWidth, 17, "Auto GG: " + (AutoGGMod.isEnabled() ? "ON" : "OFF"),
+                buttonList.add(new AlphaButton(AUTO_GG, x, y,
+                        tileWidth, tileHeight, "Auto GG: " + (AutoGGMod.isEnabled() ? "ON" : "OFF"),
                         AutoGGMod.isEnabled()));
             } else if (i == AUTO_RECONNECT_INDEX) {
-                buttonList.add(new AlphaButton(AUTO_RECONNECT, panelLeft + 10, y,
-                        buttonWidth, 17, "Auto Reconnect: " + (AutoReconnectMod.isEnabled() ? "ON" : "OFF"),
+                buttonList.add(new AlphaButton(AUTO_RECONNECT, x, y, tileWidth, tileHeight,
+                        "Auto Reconnect: " + (AutoReconnectMod.isEnabled() ? "ON" : "OFF"),
                         AutoReconnectMod.isEnabled()));
             } else if (i == FULLBRIGHT_INDEX) {
-                buttonList.add(new AlphaButton(FULLBRIGHT, panelLeft + 10, y,
-                        buttonWidth, 17,
+                buttonList.add(new AlphaButton(FULLBRIGHT, x, y, tileWidth, tileHeight,
                         "Fullbright: " + (FullbrightMod.isEnabled() ? "ON" : "OFF"), true));
             } else if (i == AFK_TIMER_INDEX) {
-                buttonList.add(new AlphaButton(AFK_TIMER, panelLeft + 10, y,
-                        buttonWidth, 17, "AFK Timer", true));
+                buttonList.add(new AlphaButton(AFK_TIMER, x, y, tileWidth, tileHeight, "AFK Timer", true));
             } else if (i == SESSION_TIMER_INDEX) {
-                buttonList.add(new AlphaButton(SESSION_TIMER, panelLeft + 10, y,
-                        buttonWidth, 17,
+                buttonList.add(new AlphaButton(SESSION_TIMER, x, y, tileWidth, tileHeight,
                         "Session Timer: " + (SessionTimerHud.isEnabled() ? "ON" : "OFF"),
                         SessionTimerHud.isEnabled()));
             } else {
-                AlphaButton planned = new AlphaButton(1000 + i, panelLeft + 10, y,
-                        buttonWidth, 17, FEATURES[i] + "  -  PLANNED");
+                AlphaButton planned = new AlphaButton(1000 + i, x, y,
+                        tileWidth, tileHeight, FEATURES[i] + "  -  PLANNED");
                 planned.enabled = false;
                 buttonList.add(planned);
             }
@@ -131,8 +137,10 @@ public final class QualityGui extends AlphaGuiScreen {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
         if (wheel != 0) {
-            int maxScroll = Math.max(0, FEATURES.length - visibleRows);
-            scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset + (wheel < 0 ? 2 : -2)));
+            int columns = 3;
+            int totalRows = (FEATURES.length + columns - 1) / columns;
+            int maxScroll = Math.max(0, totalRows - visibleRows);
+            scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset + (wheel < 0 ? 1 : -1)));
             initGui();
         }
     }
