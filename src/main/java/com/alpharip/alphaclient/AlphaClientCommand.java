@@ -30,6 +30,7 @@ import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
 import com.alpharip.staffmod.pvp.LegacyPvpSettings;
 import com.alpharip.staffmod.quality.FullbrightMod;
+import com.alpharip.staffmod.quality.AutoGGMod;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -61,6 +62,11 @@ public final class AlphaClientCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
+
+        if ("autogg".equals(route)) {
+            handleAutoGG(sender, args);
+            return;
+        }
 
         if ("alphaperms".equals(route)) {
             if (args != null && args.length > 0 && "help".equalsIgnoreCase(args[0])) {
@@ -1133,6 +1139,39 @@ public final class AlphaClientCommand extends CommandBase {
         else if ("disable-view-bobbing".equals(feature) || "disableviewbobbing".equals(feature)) LegacyPvpSettings.setDisableViewBobbing(value.booleanValue());
         else { reply(sender, "Unknown or non-configurable Legacy PvP feature: " + feature + "."); return; }
         reply(sender, "Legacy PvP setting " + feature + " " + (value.booleanValue() ? "enabled." : "disabled."));
+    }
+
+    private void handleAutoGG(ICommandSender sender, String[] args) {
+        if (args == null || args.length == 0) {
+            reply(sender, "Usage: /autogg on | off | delay <seconds>");
+            return;
+        }
+
+        if (args.length == 1 && "on".equalsIgnoreCase(args[0])) {
+            AutoGGMod.setEnabled(true);
+            reply(sender, "Auto GG is ON.");
+            return;
+        }
+        if (args.length == 1 && "off".equalsIgnoreCase(args[0])) {
+            AutoGGMod.setEnabled(false);
+            reply(sender, "Auto GG is OFF.");
+            return;
+        }
+        if (args.length == 2 && "delay".equalsIgnoreCase(args[0])) {
+            try {
+                double seconds = Double.parseDouble(args[1]);
+                if (Double.isNaN(seconds) || Double.isInfinite(seconds) || seconds < 0.0D || seconds > 10.0D) {
+                    reply(sender, "Auto GG delay must be between 0 and 10 seconds.");
+                    return;
+                }
+                AutoGGMod.setDelaySeconds(seconds);
+                reply(sender, "Auto GG delay set to " + String.format(Locale.ROOT, "%.1f", AutoGGMod.getDelaySeconds()) + " seconds.");
+            } catch (NumberFormatException e) {
+                reply(sender, "Usage: /autogg delay <seconds>");
+            }
+            return;
+        }
+        reply(sender, "Usage: /autogg on | off | delay <seconds>");
     }
 
     private void handleFullbright(ICommandSender sender, String[] args) {
