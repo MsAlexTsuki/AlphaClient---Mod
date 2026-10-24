@@ -139,8 +139,6 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
 
         drawRect(panelLeft + 14, bottom - 36, right - 14, bottom - 35, 0x334B515D);
         drawString(fontRendererObj, "STATUS  " + dataStatus, panelLeft + 14, bottom - 25, 0xFFB8BDC8);
-        drawString(fontRendererObj, "RANK  " + PermissionService.getEffectiveRank().name(),
-                panelLeft + 14, bottom - 12, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
