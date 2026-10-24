@@ -49,6 +49,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
     private int panelLeft, panelTop, panelWidth, panelHeight;
     private int contentLeft, contentTop, contentRight, contentBottom;
     private int scrollOffset;
+    private int rankScrollOffset;
     private int visibleRows;
     private List<AlphaModule> visibleModules = new ArrayList<AlphaModule>();
 
@@ -145,17 +146,24 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                 addDonatorSubfolderButton(3, PermissionService.Rank.ALPHA, "ALPHA", contentLeft, tileWidth, tileHeight, contentTop + tileHeight + gap);
                 addDonatorSubfolderButton(4, PermissionService.Rank.ALPHA_PLUS, "ALPHA+", contentLeft + tileWidth + gap, tileWidth, tileHeight, contentTop + tileHeight + gap);
             } else {
-                int index = 0;
+                List<Integer> visibleRankIndexes = new ArrayList<Integer>();
                 for (int i = 0; i < RANKS.length; i++) {
-                    PermissionService.Rank rank = RANKS[i];
-                    if (!isVisibleRank(rank)) {
-                        continue;
-                    }
-                    int x = contentLeft + (index % columns) * (tileWidth + gap);
-                    int y = contentTop + (index / columns) * (tileHeight + gap);
-                    buttonList.add(new AlphaButton(CATEGORY_BASE + i, x, y, tileWidth, tileHeight,
-                            LABELS[i]));
-                    index++;
+                    if (isVisibleRank(RANKS[i])) visibleRankIndexes.add(i);
+                }
+                int rowHeight = tileHeight + gap;
+                int visibleRankRows = Math.max(1, (contentBottom - contentTop) / rowHeight);
+                int totalRankRows = (visibleRankIndexes.size() + columns - 1) / columns;
+                rankScrollOffset = Math.max(0, Math.min(rankScrollOffset,
+                        Math.max(0, totalRankRows - visibleRankRows)));
+                int start = rankScrollOffset * columns;
+                int end = Math.min(visibleRankIndexes.size(), start + visibleRankRows * columns);
+                for (int index = start; index < end; index++) {
+                    int rankIndex = visibleRankIndexes.get(index);
+                    int local = index - start;
+                    int x = contentLeft + (local % columns) * (tileWidth + gap);
+                    int y = contentTop + (local / columns) * rowHeight;
+                    buttonList.add(new AlphaButton(CATEGORY_BASE + rankIndex, x, y, tileWidth, tileHeight,
+                            LABELS[rankIndex]));
                 }
             }
         } else {
@@ -713,6 +721,19 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
+        if (wheel != 0 && openFolderRank == null && !managementSubfolders && !donatorSubfolders
+                && Mouse.getX() * width / mc.displayWidth >= contentLeft
+                && Mouse.getX() * width / mc.displayWidth <= contentRight
+                && height - Mouse.getY() * height / mc.displayHeight - 1 >= contentTop
+                && height - Mouse.getY() * height / mc.displayHeight - 1 <= contentBottom) {
+            int visibleCount = 0;
+            for (PermissionService.Rank rank : RANKS) if (isVisibleRank(rank)) visibleCount++;
+            int visibleRankRows = Math.max(1, (contentBottom - contentTop) / 46);
+            int maxRankOffset = Math.max(0, (visibleCount + 2) / 3 - visibleRankRows);
+            rankScrollOffset = Math.max(0, Math.min(maxRankOffset, rankScrollOffset + (wheel < 0 ? 1 : -1)));
+            initGui();
+            return;
+        }
         if (openFolderRank != null && wheel != 0) {
             int columns = 3;
             int totalRows = (visibleModules.size() + columns - 1) / columns;
