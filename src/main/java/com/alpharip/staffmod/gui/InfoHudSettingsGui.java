@@ -39,7 +39,7 @@ public final class InfoHudSettingsGui extends AlphaGuiScreen {
         } else {
             buttonList.add(new AlphaButton(PRIMARY, width / 2 - 100, height / 2 - 8, 200, 20,
                     "MODE: " + InfoHudModules.getPotionModeName()));
-            buttonList.add(new AlphaButton(COLOR, width / 2 - 100, height / 2 + 18, 200, 20, "CYCLE TEXT COLOR"));
+            buttonList.add(new AlphaButton(COLOR, width / 2 - 100, height / 2 + 18, 200, 20, "TEXT COLOR: " + (InfoHudModules.isPotionRainbow() ? "RAINBOW" : "FIXED") + " (CYCLE)"));
             buttonList.add(new AlphaButton(BACK, width / 2 - 60, height / 2 + 48, 120, 20, "BACK"));
         }
     }
