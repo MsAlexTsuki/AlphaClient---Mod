@@ -12,7 +12,7 @@ import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileWriter;\nimport java.util.Locale;
 
 /** Tracks cumulative Minecraft process runtime independently of the HUD toggle. */
 public final class PlaytimeTrackerHud {
@@ -75,7 +75,7 @@ public final class PlaytimeTrackerHud {
                 || mc.gameSettings.showDebugInfo || mc.gameSettings.hideGUI
                 || !isEnabled()) return;
         if (!initialized) initialize();
-        renderHud(mc, "PLAYTIME " + formatDuration(getTotalPlaytimeSeconds()));
+        renderHud(mc, getDisplayName() + ": " + formatDuration(getTotalPlaytimeSeconds(), getFormatMode()));
     }
 
     /** Draws a draggable HUD preview without affecting the stored playtime. */
@@ -83,7 +83,7 @@ public final class PlaytimeTrackerHud {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.fontRendererObj == null) return;
         if (!initialized) initialize();
-        renderHud(mc, "PLAYTIME " + formatDuration(getTotalPlaytimeSeconds()));
+        renderHud(mc, getDisplayName() + ": " + formatDuration(getTotalPlaytimeSeconds(), getFormatMode()));
     }
 
     private static void renderHud(Minecraft mc, String text) {
@@ -101,6 +101,44 @@ public final class PlaytimeTrackerHud {
         if (!initialized) initialize();
         long elapsed = Math.max(0L, (System.currentTimeMillis() - sessionStartedAt) / 1000L);
         return savedPlaytimeSeconds + elapsed;
+    }
+
+    public static String getDisplayName() {
+        JsonObject settings = getSettings();
+        String name = settings.has("displayName") ? settings.get("displayName").getAsString() : "playtime";
+        return name == null || name.trim().isEmpty() ? "playtime" : name.trim();
+    }
+    public static void setDisplayName(String name) {
+        String value = name == null ? "" : name.trim();
+        if (value.isEmpty()) value = "playtime";
+        getSettings().addProperty("displayName", value);
+        ModuleProfileManager.save();
+    }
+    public static String getFormatMode() {
+        JsonObject settings = getSettings();
+        return settings.has("formatMode") ? settings.get("formatMode").getAsString() : "years_months";
+    }
+    public static void setFormatMode(String mode) {
+        String value = mode == null ? "" : mode.toLowerCase(Locale.ROOT);
+        if (!isValidFormatMode(value)) value = "years_months";
+        getSettings().addProperty("formatMode", value);
+        ModuleProfileManager.save();
+    }
+    public static boolean isValidFormatMode(String mode) {
+        return "years_months".equals(mode) || "months_days".equals(mode) || "days_hours".equals(mode)
+                || "hours_minutes".equals(mode) || "minutes_seconds".equals(mode) || "seconds_millis".equals(mode);
+    }
+    public static String formatExactDuration(long totalMillis) {
+        long remaining = Math.max(0L, totalMillis);
+        long years = remaining / (YEAR * 1000L); remaining %= YEAR * 1000L;
+        long months = remaining / (MONTH * 1000L); remaining %= MONTH * 1000L;
+        long days = remaining / (DAY * 1000L); remaining %= DAY * 1000L;
+        long hours = remaining / (HOUR * 1000L); remaining %= HOUR * 1000L;
+        long minutes = remaining / (MINUTE * 1000L); remaining %= MINUTE * 1000L;
+        long seconds = remaining / 1000L;
+        long millis = remaining % 1000L;
+        return years + " Y & " + months + " Mo & " + days + " D & " + hours
+                + " H & " + minutes + " Min & " + seconds + " Sec & " + millis + " ms";
     }
 
     public static String getColorName() {
@@ -216,21 +254,30 @@ public final class PlaytimeTrackerHud {
         return new File(new File(base, "config"), "alphaclient-playtime.txt");
     }
 
-    /** Formats elapsed playtime using at most two non-zero, abbreviated units. */
+    /** Formats playtime using the selected display mode. */
     public static String formatDuration(long totalSeconds) {
+        return formatDuration(totalSeconds, getFormatMode());
+    }
+    public static String formatDuration(long totalSeconds, String mode) {
         long remaining = Math.max(0L, totalSeconds);
-        long[] sizes = { YEAR, MONTH, DAY, HOUR, MINUTE, SECOND };
-        String[] abbreviations = { "Y", "Mo", "D", "H", "M", "S" };
+        long[] sizes;
+        String[] abbreviations;
+        if ("months_days".equals(mode)) { sizes = new long[]{MONTH, DAY, HOUR}; abbreviations = new String[]{"Mo", "D", "H"}; }
+        else if ("days_hours".equals(mode)) { sizes = new long[]{DAY, HOUR, MINUTE}; abbreviations = new String[]{"D", "H", "Min"}; }
+        else if ("hours_minutes".equals(mode)) { sizes = new long[]{HOUR, MINUTE, SECOND}; abbreviations = new String[]{"H", "Min", "Sec"}; }
+        else if ("minutes_seconds".equals(mode)) { sizes = new long[]{MINUTE, SECOND}; abbreviations = new String[]{"Min", "Sec"}; }
+        else if ("seconds_millis".equals(mode)) { sizes = new long[]{SECOND, 1L}; abbreviations = new String[]{"Sec", "ms"}; remaining *= 1000L; }
+        else { sizes = new long[]{YEAR, MONTH, DAY, HOUR, MINUTE, SECOND}; abbreviations = new String[]{"Y", "Mo", "D", "H", "Min", "Sec"}; }
         StringBuilder result = new StringBuilder();
         int unitsAdded = 0;
         for (int i = 0; i < sizes.length && unitsAdded < 2; i++) {
             long amount = remaining / sizes[i];
             if (amount <= 0L) continue;
             remaining %= sizes[i];
-            if (unitsAdded > 0) result.append(" and ");
+            if (unitsAdded > 0) result.append(" & ");
             result.append(amount).append(' ').append(abbreviations[i]);
             unitsAdded++;
         }
-        return result.length() == 0 ? "0 S" : result.toString();
+        return result.length() == 0 ? "0 Sec" : result.toString();
     }
 }
