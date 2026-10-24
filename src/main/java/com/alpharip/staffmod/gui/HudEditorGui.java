@@ -97,18 +97,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
 
         if (isFpsModuleEnabled()) {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
-            int pingX = PingMod.getHudX(), pingY = PingMod.getHudY();
-        int pingWidth = fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10;
-        if (isPingModuleEnabled() && mouseButton == 0 && mouseX >= pingX - 3 && mouseX <= pingX + pingWidth
-                && mouseY >= pingY - 3 && mouseY <= pingY + fontRendererObj.FONT_HEIGHT + 3) {
-            dragging = true;
-            dragX = mouseX - pingX;
-            dragY = mouseY - pingY;
-            pingDragging = true;
-            return;
-        }
-
-        int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
+            int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
             int fw = fontRendererObj.getStringWidth(fps) + 10;
             if (FpsMod.isShowBackground()) drawRect(fx - 3, fy - 3, fx + fw, fy + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
             fontRendererObj.drawStringWithShadow(fps, fx, fy, FpsMod.getTextColor());
@@ -199,6 +188,17 @@ public final class HudEditorGui extends AlphaGuiScreen {
             dragX = mouseX - cx;
             dragY = mouseY - cy;
             cpsDragging = true;
+            return;
+        }
+
+        int pingX = PingMod.getHudX(), pingY = PingMod.getHudY();
+        int pingWidth = fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10;
+        if (isPingModuleEnabled() && mouseButton == 0 && mouseX >= pingX - 3 && mouseX <= pingX + pingWidth
+                && mouseY >= pingY - 3 && mouseY <= pingY + fontRendererObj.FONT_HEIGHT + 3) {
+            dragging = true;
+            dragX = mouseX - pingX;
+            dragY = mouseY - pingY;
+            pingDragging = true;
             return;
         }
 
