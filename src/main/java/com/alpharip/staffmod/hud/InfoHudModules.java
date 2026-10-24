@@ -324,7 +324,7 @@ public final class InfoHudModules {
                 String line = fit(mc, names[i] + "  1:23", 190);
                 boolean alignLeft = potionX > new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth() / 2;
                 int textX = alignLeft ? x - 2 - mc.fontRendererObj.getStringWidth(line) : x + 20;
-                mc.fontRendererObj.drawStringWithShadow(line, textX, y + 5, potionColor);
+                mc.fontRendererObj.drawStringWithShadow(line, textX, y + 5, getPotionColor());
             }
             row++;
         }
