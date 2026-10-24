@@ -120,16 +120,17 @@ public final class RankViewerRenderer {
 
             int cursor = -totalWidth / 2;
 
-            // Barely visible glass panel fitted tightly around badge and name.
-            int left = cursor - 2;
-            int right = cursor + totalWidth + 2;
-            int top = -2;
-            int bottom = BADGE_SIZE + 3;
-            Gui.drawRect(left, top, right, bottom, 0x18000000);
-            Gui.drawRect(left, top, right, top + 1, 0x26000000);
-            Gui.drawRect(left, bottom - 1, right, bottom, 0x26000000);
-            Gui.drawRect(left, top, left + 1, bottom, 0x26000000);
-            Gui.drawRect(right - 1, top, right, bottom, 0x26000000);
+            // Keep the panel almost flush with the badge and name: one pixel of
+            // outer padding and a low-opacity border, so it does not dominate the nametag.
+            int left = cursor - 1;
+            int right = cursor + totalWidth + 1;
+            int top = -1;
+            int bottom = BADGE_SIZE + 1;
+            Gui.drawRect(left, top, right, bottom, 0x10000000);
+            Gui.drawRect(left, top, right, top + 1, 0x18000000);
+            Gui.drawRect(left, bottom - 1, right, bottom, 0x18000000);
+            Gui.drawRect(left, top, left + 1, bottom, 0x18000000);
+            Gui.drawRect(right - 1, top, right, bottom, 0x18000000);
 
             if (rank != null) {
                 GlStateManager.pushMatrix();
