@@ -140,7 +140,13 @@ public final class InfoHudModules {
     public static int getPotionY() { load(); return potionY; }
     public static int getPotionColor() { load(); return potionRainbow ? rainbowColor() : potionColor; }
     public static boolean isPotionRainbow() { load(); return potionRainbow; }
-    public static int getPotionEditorWidth() { load(); return potionMode == MODE_ICONS ? 18 : 210; }
+    public static int getPotionEditorWidth() {
+        load();
+        if (potionMode == MODE_ICONS) return 18;
+        Minecraft mc = Minecraft.getMinecraft();
+        int screenWidth = mc == null ? 854 : new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth();
+        return potionX > screenWidth / 2 ? 210 : 210;
+    }
     public static int getPotionEditorHeight() {
         load();
         Minecraft mc = Minecraft.getMinecraft();
@@ -266,8 +272,10 @@ public final class InfoHudModules {
             }
             drawPotionIcon(mc, potion, x, y);
             String level = effect.getAmplifier() > 0 ? " " + roman(effect.getAmplifier() + 1) : "";
-            String line = net.minecraft.util.StatCollector.translateToLocal(potion.getName()) + level + "  " + Potion.getDurationString(effect);
-            mc.fontRendererObj.drawStringWithShadow(fit(mc, line, 190), x + 20, y + 5, potionColor);
+            String line = fit(mc, net.minecraft.util.StatCollector.translateToLocal(potion.getName()) + level + "  " + Potion.getDurationString(effect), 190);
+            boolean alignLeft = potionX > new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth() / 2;
+            int textX = alignLeft ? x - 2 - mc.fontRendererObj.getStringWidth(line) : x + 20;
+            mc.fontRendererObj.drawStringWithShadow(line, textX, y + 5, potionColor);
             row++;
         }
     }
@@ -285,8 +293,10 @@ public final class InfoHudModules {
             int x = potionX, y = potionY + row * 22;
             drawPotionIcon(mc, potion, x, y);
             if (potionMode != MODE_ICONS) {
-                String line = names[i] + "  1:23";
-                mc.fontRendererObj.drawStringWithShadow(fit(mc, line, 190), x + 20, y + 5, potionColor);
+                String line = fit(mc, names[i] + "  1:23", 190);
+                boolean alignLeft = potionX > new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth() / 2;
+                int textX = alignLeft ? x - 2 - mc.fontRendererObj.getStringWidth(line) : x + 20;
+                mc.fontRendererObj.drawStringWithShadow(line, textX, y + 5, potionColor);
             }
             row++;
         }
