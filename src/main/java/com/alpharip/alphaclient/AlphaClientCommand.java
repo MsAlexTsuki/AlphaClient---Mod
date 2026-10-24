@@ -617,11 +617,35 @@ public final class AlphaClientCommand extends CommandBase {
             reply(sender, "/alphaperms rank <rank> grant <permission>");
             reply(sender, "/alphaperms rank <rank> revoke <permission>");
             reply(sender, "/alphaperms rank <rank> clear <permission>");
+            reply(sender, "/alphaperms createid <id>");
+            reply(sender, "/alphaperms editid <old-id> <new-id>");
+            reply(sender, "/alphaperms deleteid <id>");
+            reply(sender, "/alphaperms setnoteid <id> add <note>");
+            reply(sender, "/alphaperms setnoteid <id> list");
+            reply(sender, "/alphaperms setnoteid <id> clear <number|all>");
             return;
         }
         try {
             JsonObject payload = new JsonObject();
-            if ("list".equalsIgnoreCase(args[0]) && args.length == 1) {
+            if ("createid".equalsIgnoreCase(args[0]) && args.length == 2) {
+                payload.addProperty("action", "create_id"); payload.addProperty("permission", args[1]);
+            } else if ("editid".equalsIgnoreCase(args[0]) && args.length == 3) {
+                payload.addProperty("action", "edit_id"); payload.addProperty("permission", args[1]); payload.addProperty("new_permission", args[2]);
+            } else if ("deleteid".equalsIgnoreCase(args[0]) && args.length == 2) {
+                payload.addProperty("action", "delete_id"); payload.addProperty("permission", args[1]);
+            } else if ("setnoteid".equalsIgnoreCase(args[0]) && args.length >= 3) {
+                payload.addProperty("permission", args[1]);
+                String noteAction = args[2].toLowerCase(Locale.ROOT);
+                if ("add".equals(noteAction) && args.length >= 4) {
+                    payload.addProperty("action", "add_note"); payload.addProperty("note", joinArgsRange(args, 3, args.length));
+                } else if ("list".equals(noteAction) && args.length == 3) payload.addProperty("action", "list_notes");
+                else if ("clear".equals(noteAction) && args.length == 4) {
+                    payload.addProperty("action", "clear_note");
+                    if ("all".equalsIgnoreCase(args[3])) payload.addProperty("clear_all", true);
+                    else { try { payload.addProperty("note_number", Integer.parseInt(args[3])); }
+                    catch (NumberFormatException ex) { reply(sender, "Note number must be an integer or all."); return; } }
+                } else { reply(sender, "Usage: /alphaperms setnoteid <id> add <note...>|list|clear <number|all>"); return; }
+            } else if ("list".equalsIgnoreCase(args[0]) && args.length == 1) {
                 payload.addProperty("action", "list");
                 payload.addProperty("target", "catalog");
             } else if ("rank".equalsIgnoreCase(args[0])) {
@@ -664,7 +688,17 @@ public final class AlphaClientCommand extends CommandBase {
                 }
             }
             JsonObject response = SupabaseCommunityService.manageCommandPermissions(payload);
-            if (payload.has("permission")) {
+            String resultAction = payload.get("action").getAsString();
+            if ("create_id".equals(resultAction)) reply(sender, "Created permission ID: " + payload.get("permission").getAsString() + ".");
+            else if ("edit_id".equals(resultAction)) reply(sender, "Renamed permission ID: " + payload.get("permission").getAsString() + " -> " + payload.get("new_permission").getAsString() + ".");
+            else if ("delete_id".equals(resultAction)) reply(sender, "Deleted permission ID: " + payload.get("permission").getAsString() + ".");
+            else if ("add_note".equals(resultAction)) reply(sender, "Added note to " + payload.get("permission").getAsString() + ".");
+            else if ("clear_note".equals(resultAction)) reply(sender, payload.has("clear_all") && payload.get("clear_all").getAsBoolean() ? "Cleared all notes for " + payload.get("permission").getAsString() + "." : "Cleared note " + payload.get("note_number").getAsInt() + " for " + payload.get("permission").getAsString() + ".");
+            else if ("list_notes".equals(resultAction)) {
+                JsonArray notes = response.has("notes") && response.get("notes").isJsonArray() ? response.getAsJsonArray("notes") : new JsonArray();
+                reply(sender, "Notes for " + payload.get("permission").getAsString() + " (" + notes.size() + "):");
+                for (int i = 0; i < notes.size(); i++) if (notes.get(i).isJsonObject()) reply(sender, (i + 1) + ". " + getJsonString(notes.get(i).getAsJsonObject(), "note"));
+            } else if (payload.has("permission")) {
                 String targetLabel = payload.has("username") ? payload.get("username").getAsString()
                         : (payload.has("rank") ? "rank " + payload.get("rank").getAsString() : "target");
                 reply(sender, "Permission updated for " + targetLabel + ": "
