@@ -581,8 +581,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 initGui();
                 return;
             }
-            AlphaModule selected = getSelectedModule();
-            if ("staffmods".equals(selectedModuleId) || (selected != null && "quality".equals(selected.getId()))) {
+            // Scroll the profile list only when the mouse is over the right-hand
+            // profile/settings panel. Otherwise the wheel must scroll module tiles.
+            if (mouseX >= settingsLeft && mouseX <= panelLeft + panelWidth - 8
+                    && mouseY >= panelTop + 62 && mouseY <= panelTop + panelHeight - 42
+                    && ("staffmods".equals(selectedModuleId)
+                        || "quality".equals(selectedModuleId))) {
                 List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
                 int profileTop = panelTop + 86;
                 int actionY = panelTop + panelHeight - 48;
@@ -593,6 +597,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 initGui();
                 return;
             }
+            // Ignore wheel events outside the module grid; inside it, scroll the
+            // complete filtered module list so lower entries such as CPS remain reachable.
+            if (mouseX < contentLeft || mouseX > contentRight
+                    || mouseY < contentTop || mouseY > contentBottom) return;
             List<AlphaModule> modules = getFilteredModules();
             int maxOffset = Math.max(0, modules.size() - visibleRows() * 2);
             scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset + (wheel < 0 ? 2 : -2)));
