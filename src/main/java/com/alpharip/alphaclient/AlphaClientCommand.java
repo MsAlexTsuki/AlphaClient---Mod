@@ -31,6 +31,7 @@ import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
 import com.alpharip.staffmod.pvp.LegacyPvpSettings;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
+import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -65,6 +66,10 @@ public final class AlphaClientCommand extends CommandBase {
 
         if ("autogg".equals(route)) {
             handleAutoGG(sender, args);
+            return;
+        }
+        if ("autoreconnect".equals(route)) {
+            handleAutoReconnect(sender, args);
             return;
         }
 
@@ -1172,6 +1177,38 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
         reply(sender, "Usage: /autogg on | off | delay <seconds>");
+    }
+
+    private void handleAutoReconnect(ICommandSender sender, String[] args) {
+        if (args == null || args.length == 0) {
+            reply(sender, "Usage: /autoreconnect on | off | delay <seconds>");
+            return;
+        }
+        if (args.length == 1 && "on".equalsIgnoreCase(args[0])) {
+            AutoReconnectMod.setEnabled(true);
+            reply(sender, "Auto Reconnect is ON.");
+            return;
+        }
+        if (args.length == 1 && "off".equalsIgnoreCase(args[0])) {
+            AutoReconnectMod.setEnabled(false);
+            reply(sender, "Auto Reconnect is OFF.");
+            return;
+        }
+        if (args.length == 2 && "delay".equalsIgnoreCase(args[0])) {
+            try {
+                double seconds = Double.parseDouble(args[1]);
+                if (Double.isNaN(seconds) || Double.isInfinite(seconds) || seconds < 0.0D || seconds > 30.0D) {
+                    reply(sender, "Auto Reconnect delay must be between 0 and 30 seconds.");
+                    return;
+                }
+                AutoReconnectMod.setDelaySeconds(seconds);
+                reply(sender, "Auto Reconnect delay set to " + String.format(Locale.ROOT, "%.1f", AutoReconnectMod.getDelaySeconds()) + " seconds.");
+            } catch (NumberFormatException e) {
+                reply(sender, "Usage: /autoreconnect delay <seconds>");
+            }
+            return;
+        }
+        reply(sender, "Usage: /autoreconnect on | off | delay <seconds>");
     }
 
     private void handleFullbright(ICommandSender sender, String[] args) {
