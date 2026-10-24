@@ -1,6 +1,8 @@
 package com.alpharip.staffmod.ping;
 
 import com.alpharip.staffmod.config.HudPositionConfig;
+import com.alpharip.staffmod.config.HudScaleConfig;
+import net.minecraft.client.renderer.GlStateManager;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
@@ -87,11 +89,16 @@ public final class PingMod {
         if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
 
         String line = getDisplayText();
+        float scale = HudScaleConfig.get("ping");
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(hudX, hudY, 0.0F);
+        GlStateManager.scale(scale, scale, 1.0F);
         int width = mc.fontRendererObj.getStringWidth(line) + 10;
         if (showBackground) {
-            Gui.drawRect(hudX - 3, hudY - 3, hudX + width, hudY + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-            Gui.drawRect(hudX - 3, hudY - 3, hudX + width, hudY - 2, 0xFFFFD866);
+            Gui.drawRect(-3, -3, width, mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            Gui.drawRect(-3, -3, width, -2, 0xFFFFD866);
         }
-        mc.fontRendererObj.drawStringWithShadow(line, hudX, hudY, getTextColor());
+        mc.fontRendererObj.drawStringWithShadow(line, 0, 0, getTextColor());
+        GlStateManager.popMatrix();
     }
 }
