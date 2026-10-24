@@ -26,6 +26,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private int panelLeft, panelTop, panelWidth, panelHeight;
     private int contentLeft, contentTop, contentRight, contentBottom;
     private JsonArray records = new JsonArray();
+    private JsonArray auditLogs = new JsonArray();
     private String dataStatus = "Sign in to load shared staff data.";
     private long lastRefreshAt = 0L;
 
@@ -183,11 +184,14 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private void refreshRecords(boolean showStatus) {
         if (!SupabaseCommunityService.isSignedIn()) {
             records = new JsonArray();
+            auditLogs = new JsonArray();
             dataStatus = "Sign in to your Alpha Account to load live shared data.";
             return;
         }
         try {
             records = SupabaseCommunityService.getStaffOperationsRecords();
+            try { auditLogs = SupabaseCommunityService.getStaffAuditLogs(); }
+            catch (Exception auditException) { auditLogs = new JsonArray(); }
             dataStatus = "Synced with the shared Alpha staff database.";
             lastRefreshAt = System.currentTimeMillis();
         } catch (Exception exception) {
@@ -220,21 +224,52 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     }
 
     private void drawRecentRecords(int x, int y, Section target) {
-        String type = target == Section.CASES ? "case" : target == Section.SHIFTS ? "shift"
-                : target == Section.PRESENCE ? "presence" : "audit";
+        if (target == Section.AUDIT) {
+            int shown = 0;
+            for (int i = 0; i < auditLogs.size() && shown < 7; i++) {
+                if (!auditLogs.get(i).isJsonObject()) continue;
+                JsonObject event = auditLogs.get(i).getAsJsonObject();
+                String actor = value(event, "actor_label", value(event, "actor_id", "Unknown staff"));
+                String action = value(event, "action", "Recorded event");
+                String category = value(event, "category", value(event, "product", "client"));
+                String outcome = value(event, "outcome", "success");
+                String when = value(event, "occurred_at", "");
+                String line = actor + "  /  " + category + "  /  " + action + "  /  " + outcome;
+                if (line.length() > 84) line = line.substring(0, 81) + "...";
+                drawString(fontRendererObj, line, x, y + shown * 13, 0xFFE6E8ED);
+                if (!when.isEmpty()) {
+                    String time = when.replace('T', ' ');
+                    if (time.length() > 19) time = time.substring(0, 19);
+                    drawString(fontRendererObj, time, x + 8, y + shown * 13 + 9, 0xFF9299A6);
+                }
+                shown++;
+            }
+            if (shown == 0) drawString(fontRendererObj, "No readable audit events returned. Check account access and audit policies.", x, y, 0xFFB8BDC8);
+            return;
+        }
+        String type = target == Section.CASES ? "case" : target == Section.SHIFTS ? "shift" : "presence";
         int shown = 0;
-        for (int i = 0; i < records.size() && shown < 5; i++) {
+        for (int i = 0; i < records.size() && shown < 7; i++) {
             if (!records.get(i).isJsonObject()) continue;
             JsonObject record = records.get(i).getAsJsonObject();
             if (!type.equals(record.has("record_type") ? record.get("record_type").getAsString() : "")) continue;
-            String title = record.has("title") ? record.get("title").getAsString() : "(untitled)";
-            String status = record.has("status") ? record.get("status").getAsString() : "";
-            String line = title + " [" + status + "]";
-            if (line.length() > 68) line = line.substring(0, 65) + "...";
+            String title = value(record, "title", "(untitled)");
+            String status = value(record, "status", "unknown");
+            String actor = value(record, "created_by", "unknown staff");
+            String assigned = value(record, "assigned_to", "unassigned");
+            String line = title + " [" + status + "] by " + actor + " -> " + assigned;
+            if (line.length() > 84) line = line.substring(0, 81) + "...";
             drawString(fontRendererObj, line, x, y + shown * 13, 0xFFE6E8ED);
             shown++;
         }
         if (shown == 0) drawString(fontRendererObj, "No shared " + type + " records yet.", x, y, 0xFFB8BDC8);
+    }
+
+    private String value(JsonObject object, String key, String fallback) {
+        try {
+            return object != null && object.has(key) && !object.get(key).isJsonNull()
+                    ? object.get(key).getAsString() : fallback;
+        } catch (Exception ignored) { return fallback; }
     }
 
 }
