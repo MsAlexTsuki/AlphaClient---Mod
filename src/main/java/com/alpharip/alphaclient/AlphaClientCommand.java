@@ -550,7 +550,7 @@ public final class AlphaClientCommand extends CommandBase {
         if ("fullbright".equals(route) || "alphaclient:fullbright".equals(route)) return "command.fullbright";
         if ("nameviewer".equals(route)) return "command.nameviewer";
         if ("legacypvp".equals(route) || "alphaclient:legacypvp".equals(route)) return "command.legacypvp";
-        if ("playtime".equals(route) || "alphaclient:playtime".equals(route)) return "command.playtime";
+        if ("playtime".equals(route) || "alphaclient:playtime".equals(route)) return args != null && args.length > 0 && "check".equalsIgnoreCase(args[0]) ? "playtime.check" : "command.playtime";
         if ("sessiontimer".equals(route) || "alphaclient:sessiontimer".equals(route)) return "command.sessiontimer";
         if ("afktimer".equals(route) || "alphaclient:afktimer".equals(route)) return "command.afktimer";
         if ("quality".equals(route)) return "command.quality";
@@ -1140,6 +1140,30 @@ public final class AlphaClientCommand extends CommandBase {
     }
 
     private void handleTimer(ICommandSender sender, String[] args, String timer) {
+        if ("playtime".equals(timer) && args.length > 0 && "check".equalsIgnoreCase(args[0])) {
+            if (!PermissionService.hasCommandPermission("playtime.check", false)) {
+                reply(sender, "Access denied: missing permission playtime.check.");
+                return;
+            }
+            reply(sender, "Playtime: " + PlaytimeTrackerHud.formatExactDuration(PlaytimeTrackerHud.getTotalPlaytimeSeconds() * 1000L));
+            return;
+        }
+        if ("playtime".equals(timer) && args.length > 0 && "name".equalsIgnoreCase(args[0])) {
+            String name = joinArgs(args, 1);
+            if (name.isEmpty()) { reply(sender, "Usage: /playtime name <name>"); return; }
+            PlaytimeTrackerHud.setDisplayName(name);
+            reply(sender, "Playtime HUD name set to: " + PlaytimeTrackerHud.getDisplayName());
+            return;
+        }
+        if ("playtime".equals(timer) && args.length > 0 && "format".equalsIgnoreCase(args[0])) {
+            if (args.length != 2 || !PlaytimeTrackerHud.isValidFormatMode(args[1].toLowerCase(Locale.ROOT))) {
+                reply(sender, "Usage: /playtime format <years_months|months_days|days_hours|hours_minutes|minutes_seconds|seconds_millis>");
+                return;
+            }
+            PlaytimeTrackerHud.setFormatMode(args[1]);
+            reply(sender, "Playtime format set to: " + PlaytimeTrackerHud.getFormatMode());
+            return;
+        }
         if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) {
             openSettings(sender, timer);
             return;
@@ -1185,7 +1209,7 @@ public final class AlphaClientCommand extends CommandBase {
         }
         if ("playtime".equals(timer)) {
             if (!"on".equalsIgnoreCase(args[0]) && !"off".equalsIgnoreCase(args[0]) && !"toggle".equalsIgnoreCase(args[0])) {
-                reply(sender, "Usage: /playtime <on|off|toggle|settings|background <on|off>|color next|position <x> <y>");
+                reply(sender, "Usage: /playtime <on|off|toggle|settings|name <name>|format <mode>|check|background <on|off>|color next|position <x> <y>");
                 return;
             }
             boolean enabled = "toggle".equalsIgnoreCase(args[0]) ? !PlaytimeTrackerHud.isEnabled() : "on".equalsIgnoreCase(args[0]);
