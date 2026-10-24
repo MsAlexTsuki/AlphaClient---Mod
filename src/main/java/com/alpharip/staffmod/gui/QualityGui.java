@@ -4,6 +4,7 @@ import com.alpharip.staffmod.hud.SessionTimerHud;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
+import com.alpharip.staffmod.quality.AutoReconnectMod;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -18,9 +19,11 @@ public final class QualityGui extends AlphaGuiScreen {
     private static final int SESSION_TIMER = 4;
     private static final int PLAYTIME_TRACKER = 5;
     private static final int AUTO_GG = 6;
+    private static final int AUTO_RECONNECT = 7;
     private static final int AFK_TIMER_INDEX = 7;
     private static final int SESSION_TIMER_INDEX = 8;
     private static final int PLAYTIME_TRACKER_INDEX = 9;
+    private static final int AUTO_RECONNECT_INDEX = 11;
     private static final int FULLBRIGHT_INDEX = 0;
     private static final int ACCENT = 0xFFFFD866;
     private static final String[] FEATURES = {
@@ -60,6 +63,10 @@ public final class QualityGui extends AlphaGuiScreen {
                 buttonList.add(new AlphaButton(AUTO_GG, panelLeft + 10, y,
                         buttonWidth, 17, "Auto GG: " + (AutoGGMod.isEnabled() ? "ON" : "OFF"),
                         AutoGGMod.isEnabled()));
+            } else if (i == AUTO_RECONNECT_INDEX) {
+                buttonList.add(new AlphaButton(AUTO_RECONNECT, panelLeft + 10, y,
+                        buttonWidth, 17, "Auto Reconnect: " + (AutoReconnectMod.isEnabled() ? "ON" : "OFF"),
+                        AutoReconnectMod.isEnabled()));
             } else if (i == FULLBRIGHT_INDEX) {
                 buttonList.add(new AlphaButton(FULLBRIGHT, panelLeft + 10, y,
                         buttonWidth, 17,
@@ -111,6 +118,8 @@ public final class QualityGui extends AlphaGuiScreen {
             mc.displayGuiScreen(new PlaytimeTrackerSettingsGui(this));
         } else if (button.id == AUTO_GG) {
             mc.displayGuiScreen(new AutoGGSettingsGui(this));
+        } else if (button.id == AUTO_RECONNECT) {
+            mc.displayGuiScreen(new AutoReconnectSettingsGui(this));
         } else if (button.id == FULLBRIGHT) {
             FullbrightMod.setEnabled(!FullbrightMod.isEnabled());
             initGui();
