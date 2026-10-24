@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.init.Items;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -226,19 +227,25 @@ public final class InfoHudModules {
             int itemX = armorLayout == 0 ? i * 92 : 0;
             int itemY = armorLayout == 0 ? 0 : i * 20;
             ItemStack stack = items[i];
+            // Show a representative diamond loadout in the editor when a slot is empty.
+            // These substitute items are preview-only and never affect gameplay.
+            if (preview && stack == null) stack = diamondPreviewItem(i);
             drawItem(mc, stack, itemX, itemY);
-            if (preview && stack == null) {
-                // Keep empty equipment slots visible in the editor even when item names are disabled.
-                Gui.drawRect(itemX, itemY, itemX + 16, itemY + 16, 0x553A414D);
-                Gui.drawRect(itemX, itemY, itemX + 16, itemY + 1, 0xAA7E8796);
-                Gui.drawRect(itemX, itemY + 15, itemX + 16, itemY + 16, 0xAA7E8796);
-                Gui.drawRect(itemX, itemY, itemX + 1, itemY + 16, 0xAA7E8796);
-                Gui.drawRect(itemX + 15, itemY, itemX + 16, itemY + 16, 0xAA7E8796);
-            }
             String label = stack == null ? (armorShowNames ? "Empty" : "") : ((armorShowNames ? stack.getDisplayName() : "") + (armorShowDurability ? " " + durability(stack) : "" )).trim();
             if (!label.isEmpty()) mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), itemX + 20, itemY + 5, armorColor);
         }
         GL11.glPopMatrix();
+    }
+
+    private static ItemStack diamondPreviewItem(int slot) {
+        switch (slot) {
+            case 0: return new ItemStack(Items.diamond_sword);
+            case 1: return new ItemStack(Items.diamond_helmet);
+            case 2: return new ItemStack(Items.diamond_chestplate);
+            case 3: return new ItemStack(Items.diamond_leggings);
+            case 4: return new ItemStack(Items.diamond_boots);
+            default: return null;
+        }
     }
 
     private static void drawItem(Minecraft mc, ItemStack stack, int x, int y) {
