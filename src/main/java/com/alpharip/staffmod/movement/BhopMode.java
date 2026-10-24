@@ -94,18 +94,15 @@ public class BhopMode {
 
         /*
          * =========================
-         * SHIFT UP ONLY
+         * SHIFT UP / JUMP BOOST ONLY
          * =========================
-         *
-         * SHIFT zonder W:
-         *
-         * Alleen omhoog.
-         *
-         * A/D worden hier bewust
-         * volledig genegeerd.
+         * Shift Up activates only when Shift is held without
+         * forward or strafe input. A/D alone must not trigger it.
+         * The vertical impulse continues naturally after Shift is released.
          */
         if (shift
-                && player.moveForward <= 0.0F) {
+                && player.moveForward == 0.0F
+                && player.moveStrafing == 0.0F) {
 
             if (player.onGround) {
 
@@ -142,43 +139,6 @@ public class BhopMode {
 
         /*
          * =========================
-         * W + SHIFT
-         * =========================
-         *
-         * Shift-BHOP.
-         */
-        if (shift) {
-
-            if (player.onGround) {
-
-                player.motionY =
-                        getShiftForwardJump();
-            }
-
-
-            /*
-             * Normale BHOP-snelheid x 1.25.
-             */
-            applySpeed(
-                    player,
-                    true
-            );
-
-
-            /*
-             * Extra Shift-forward boost.
-             */
-            applyForwardBoost(
-                    player,
-                    getShiftBoost()
-            );
-
-            return;
-        }
-
-
-        /*
-         * =========================
          * NORMAL BHOP
          * =========================
          */
@@ -190,10 +150,8 @@ public class BhopMode {
 
 
         /*
-         * Normale BHOP gebruikt alle
-         * 20 speed levels.
-         *
-         * A/D worden genegeerd.
+         * W activates BHOP. A/D may steer while W remains held,
+         * but A/D without W never activates BHOP.
          */
         applySpeed(
                 player,
@@ -275,43 +233,32 @@ public class BhopMode {
 
 
         /*
-         * Alleen de huidige
-         * kijkrichting gebruiken.
+         * Use W for activation, while allowing A/D to steer.
+         * Normalize diagonal input so it does not gain extra speed.
          */
-        float yaw =
-                player.rotationYaw;
+        float forward = player.moveForward;
+        float strafe = player.moveStrafing;
+        float yaw = player.rotationYaw;
 
+        if (forward < 0.0F) {
+            yaw += 180.0F;
+            forward = -forward;
+        }
+        float strafeFactor = 1.0F;
+        if (forward > 0.0F) {
+            strafeFactor = strafe > 0.0F ? -0.5F : (strafe < 0.0F ? 0.5F : 0.0F);
+            yaw += 90.0F * strafeFactor;
+            strafe = 0.0F;
+        }
+        if (strafe > 0.0F) strafe = 1.0F;
+        else if (strafe < 0.0F) strafe = -1.0F;
 
-        float yawRadians =
-                yaw * 0.017453292F;
+        float yawRadians = yaw * 0.017453292F;
+        double sin = MathHelper.sin(yawRadians);
+        double cos = MathHelper.cos(yawRadians);
 
-
-        double sin =
-                MathHelper.sin(
-                        yawRadians
-                );
-
-        double cos =
-                MathHelper.cos(
-                        yawRadians
-                );
-
-
-        /*
-         * =========================
-         * HORIZONTALE MOTION
-         * =========================
-         *
-         * Altijd recht vooruit in
-         * de richting van W.
-         *
-         * A/D hebben hier geen effect.
-         */
-        player.motionX =
-                -sin * speed;
-
-        player.motionZ =
-                cos * speed;
+        player.motionX = -sin * speed;
+        player.motionZ = cos * speed;
     }
 
 
@@ -319,11 +266,13 @@ public class BhopMode {
             EntityPlayer player,
             double boost) {
 
-        float yaw =
-                player.rotationYaw;
+        float yaw = player.rotationYaw;
+        float strafe = player.moveStrafing;
+        if (player.moveForward > 0.0F) {
+            yaw += strafe > 0.0F ? -45.0F : (strafe < 0.0F ? 45.0F : 0.0F);
+        }
 
-        float radians =
-                yaw * 0.017453292F;
+        float radians = yaw * 0.017453292F;
 
         double sin =
                 MathHelper.sin(
