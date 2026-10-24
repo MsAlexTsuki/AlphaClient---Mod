@@ -72,13 +72,13 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             return;
         }
 
-        // Use the same wide two-column workspace layout as Alpha Developer Studio.
-        panelWidth = Math.min(1120, Math.max(Math.min(420, width - 16), width - 36));
-        panelHeight = Math.min(650, Math.max(250, height - 16));
+        // Preserve the dashboard GUI dimensions from the original implementation.
+        panelWidth = Math.min(590, Math.max(360, width - 32));
+        panelHeight = Math.min(350, Math.max(250, height - 32));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
         int listX = panelLeft + 14;
-        int listWidth = Math.max(150, Math.min(225, panelWidth / 3));
+        int listWidth = Math.max(112, Math.min(132, panelWidth / 3));
         dividerX = listX + listWidth + 12;
         contentLeft = dividerX + 18;
         contentRight = panelLeft + panelWidth - 16;
