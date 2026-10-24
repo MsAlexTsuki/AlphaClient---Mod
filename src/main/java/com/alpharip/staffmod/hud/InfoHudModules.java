@@ -208,11 +208,11 @@ public final class InfoHudModules {
         load();
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null || mc.fontRendererObj == null || mc.gameSettings.showDebugInfo) return;
-        if (preview || armorEnabled()) renderArmor(mc);
+        if (preview || armorEnabled()) renderArmor(mc, preview);
         if (preview || potionEnabled()) renderPotions(mc, preview);
     }
 
-    private static void renderArmor(Minecraft mc) {
+    private static void renderArmor(Minecraft mc, boolean preview) {
         // Compact layout: held item first, then equipped armor from head to feet.
         ItemStack[] armor = mc.thePlayer.inventory.armorInventory;
         ItemStack[] items = new ItemStack[] {
@@ -227,8 +227,16 @@ public final class InfoHudModules {
             int itemY = armorLayout == 0 ? 0 : i * 20;
             ItemStack stack = items[i];
             drawItem(mc, stack, itemX, itemY);
+            if (preview && stack == null) {
+                // Keep empty equipment slots visible in the editor even when item names are disabled.
+                Gui.drawRect(itemX, itemY, itemX + 16, itemY + 16, 0x553A414D);
+                Gui.drawRect(itemX, itemY, itemX + 16, itemY + 1, 0xAA7E8796);
+                Gui.drawRect(itemX, itemY + 15, itemX + 16, itemY + 16, 0xAA7E8796);
+                Gui.drawRect(itemX, itemY, itemX + 1, itemY + 16, 0xAA7E8796);
+                Gui.drawRect(itemX + 15, itemY, itemX + 16, itemY + 16, 0xAA7E8796);
+            }
             String label = stack == null ? (armorShowNames ? "Empty" : "") : ((armorShowNames ? stack.getDisplayName() : "") + (armorShowDurability ? " " + durability(stack) : "" )).trim();
-            mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), itemX + 20, itemY + 5, armorColor);
+            if (!label.isEmpty()) mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), itemX + 20, itemY + 5, armorColor);
         }
         GL11.glPopMatrix();
     }
