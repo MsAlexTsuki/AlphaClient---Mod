@@ -249,6 +249,8 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/alphahelp open", "Open the scrollable command-list GUI");
             guideLine(sender, "/alphahelp help", "Show this AlphaHelp guide");
             guideLine(sender, "/alphaclient help", "Show the main AlphaClient command guide");
+            guideLine(sender, "/pothud help", "Show Potion HUD commands and settings");
+            guideLine(sender, "/playtime help", "Show Playtime Tracker commands and settings");
             guideLine(sender, "/staffmods help", "Show StaffMods folder commands");
             guideLine(sender, "/alphaperms help", "Show the Founder permission-manager guide");
         } else if ("alphaclient".equals(name) || "alphaclient:help".equals(name)) {
