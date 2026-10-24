@@ -46,10 +46,18 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
         }
         int y = panelTop + panelHeight - 32;
         buttonList.add(new AlphaButton(REFRESH, contentLeft, y - 29, 76, 20, "Refresh"));
-        if (!"audit".equals(type)) { buttonList.add(new AlphaButton(CREATE, contentLeft + 82, y - 29, 94, 20, "Create", true)); buttonList.add(new AlphaButton(SAVE, contentLeft + 180, y - 29, 76, 20, "Save edit")); buttonList.add(new AlphaButton(DELETE, contentLeft + 260, y - 29, 76, 20, "Delete")); }
+        if (!"audit".equals(type)) { buttonList.add(new AlphaButton(CREATE, contentLeft + 82, y - 29, 94, 20, "Create", true)); buttonList.add(new AlphaButton(SAVE, contentLeft + 180, y - 29, 76, 20, "Save edit")); if (canManageRecords()) buttonList.add(new AlphaButton(DELETE, contentLeft + 260, y - 29, 76, 20, "Delete")); }
         if (!"audit".equals(type)) buttonList.add(new AlphaButton(NEXT_STATUS, contentRight - 140, y - 29, 140, 20, "Next status"));
         buttonList.add(new AlphaButton(BACK, contentRight - 80, y, 80, 20, "Back"));
         refreshRecords();
+    }
+
+    private boolean canManageRecords() {
+        PermissionService.Rank rank = PermissionService.getEffectiveRank();
+        return rank == PermissionService.Rank.DEVELOPER
+                || rank == PermissionService.Rank.MANAGER
+                || rank == PermissionService.Rank.OWNER
+                || rank == PermissionService.Rank.FOUNDER;
     }
 
     private void refreshRecords() {
