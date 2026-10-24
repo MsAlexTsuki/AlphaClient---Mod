@@ -50,7 +50,12 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
         if (!"audit".equals(type)) buttonList.add(new AlphaButton(NEXT_STATUS, contentRight - 140, y - 29, 140, 20, "Next status"));
         buttonList.add(new AlphaButton(BACK, contentRight - 80, y, 80, 20, "Back"));
         refreshRecords();
-        if (SupabaseCommunityService.isSignedIn()) { try { SupabaseCommunityService.recordStaffModuleActivity("staff_operations", "module_opened", "open_" + type, title, null); } catch (Exception ignored) { } }
+        if (SupabaseCommunityService.isSignedIn()) { try { logActivity("module_opened", "open_" + type, title, null); } catch (Exception ignored) { } }
+    }
+
+    private void logActivity(String eventType, String actionKey, String target, JsonObject details) {
+        try { SupabaseCommunityService.recordStaffModuleActivity("staff_operations", eventType, actionKey, target, details); }
+        catch (Exception e) { System.err.println("[AlphaClient] Staff activity logging failed: " + safe(e.getMessage())); }
     }
 
     private boolean canManageRecords() {
@@ -85,13 +90,13 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
             if(nextTitle.isEmpty()) { status="Record title cannot be empty."; return; }
             JsonObject payload=selected.has("payload")&&selected.get("payload").isJsonObject()?selected.getAsJsonObject("payload"):new JsonObject();
             payload.addProperty("details",detailsField.getText().trim());
-            try { SupabaseCommunityService.updateStaffOperationsRecord(selectedId,nextTitle,selectedStatus,payload); SupabaseCommunityService.recordStaffModuleActivity("staff_operations", "action_performed", "record_updated", nextTitle, payload); refreshRecords(); status="Record updated."; }
+            try { SupabaseCommunityService.updateStaffOperationsRecord(selectedId,nextTitle,selectedStatus,payload); logActivity("action_performed", "record_updated", nextTitle, payload); refreshRecords(); status="Record updated."; }
             catch(Exception e) { status="Update denied or failed: "+safe(e.getMessage()); }
             return;
         }
         if(b.id==DELETE) {
             if(selectedId==null) { status="Select a record first."; return; }
-            try { SupabaseCommunityService.deleteStaffOperationsRecord(selectedId); SupabaseCommunityService.recordStaffModuleActivity("staff_operations", "action_performed", "record_deleted", selectedId, null); selectedId=null; refreshRecords(); status="Delete accepted by database."; }
+            try { SupabaseCommunityService.deleteStaffOperationsRecord(selectedId); logActivity("action_performed", "record_deleted", selectedId, null); selectedId=null; refreshRecords(); status="Delete accepted by database."; }
             catch(Exception e) { status="Delete denied or failed: "+safe(e.getMessage()); }
             return;
         }
@@ -103,7 +108,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
             payload.addProperty("created_by_label", SupabaseCommunityService.getSignedInAlphaName());
             try {
                 JsonObject created=SupabaseCommunityService.createStaffOperationsRecord(type,name,"open",payload);
-                selectedId=value(created,"id",null); selectedStatus=value(created,"status","open"); SupabaseCommunityService.recordStaffModuleActivity("staff_operations", "action_performed", "record_created", name, payload);
+                selectedId=value(created,"id",null); selectedStatus=value(created,"status","open"); logActivity("action_performed", "record_created", name, payload);
                 titleField.setText(""); detailsField.setText("");
                 refreshRecords(); status="Record created and shared with staff.";
             } catch(Exception e) { status="Create failed: "+safe(e.getMessage()); }
@@ -114,7 +119,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
             if(selected==null) { status="Select a record by clicking it first."; return; }
             selectedStatus=nextStatus(selectedStatus);
             JsonObject payload=selected.has("payload")&&selected.get("payload").isJsonObject()?selected.getAsJsonObject("payload"):new JsonObject();
-            try { SupabaseCommunityService.updateStaffOperationsRecord(selectedId,value(selected,"title","Untitled"),selectedStatus,payload); SupabaseCommunityService.recordStaffModuleActivity("staff_operations", "action_performed", "status_changed_to_" + selectedStatus, value(selected,"title","Untitled"), payload); refreshRecords(); status="Status changed to "+selectedStatus+"."; }
+            try { SupabaseCommunityService.updateStaffOperationsRecord(selectedId,value(selected,"title","Untitled"),selectedStatus,payload); logActivity("action_performed", "status_changed_to_" + selectedStatus, value(selected,"title","Untitled"), payload); refreshRecords(); status="Status changed to "+selectedStatus+"."; }
             catch(Exception e) { status="Status change denied or failed: "+safe(e.getMessage()); }
         }
     }
