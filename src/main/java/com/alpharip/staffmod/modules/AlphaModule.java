@@ -124,7 +124,7 @@ public final class AlphaModule {
     public boolean isUnlocked() {
         // These public HUD modules are not gated by the launcher's per-module permission catalog.
         // They must remain visible in General for every player.
-        if ("armor-hud-info".equals(id) || "potion-hud-info".equals(id)) {
+        if ("armor-hud-info".equals(id) || "potion-hud-info".equals(id) || "cps".equals(id)) {
             return true;
         }
 
