@@ -29,7 +29,8 @@ public final class InfoHudModules {
     public static final int MODE_BUFFS = 2;
     public static final int MODE_DEBUFFS = 3;
     private static final int DEFAULT_COLOR = 0xFFFFFFFF;
-    private static int armorX = 8, armorY = 80, armorColor = DEFAULT_COLOR, armorLayout;\n    private static boolean armorRainbow;
+    private static int armorX = 8, armorY = 80, armorColor = DEFAULT_COLOR, armorLayout;
+    private static boolean armorRainbow;
     private static int potionX = 8, potionY = 120, potionColor = DEFAULT_COLOR, potionMode = MODE_ICONS;
     private static boolean potionRainbow;
     private static boolean armorShowNames = true, armorShowDurability = true;
@@ -51,7 +52,8 @@ public final class InfoHudModules {
             }
             armorX = integer(p, "armorX", armorX);
             armorY = integer(p, "armorY", armorY);
-            armorColor = integer(p, "armorColor", armorColor);\n            armorRainbow = Boolean.parseBoolean(p.getProperty("armorRainbow", "false"));
+            armorColor = integer(p, "armorColor", armorColor);
+            armorRainbow = Boolean.parseBoolean(p.getProperty("armorRainbow", "false"));
             armorLayout = clamp(integer(p, "armorLayout", 0), 0, 1);
             armorShowNames = Boolean.parseBoolean(p.getProperty("armorShowNames", "true"));
             armorShowDurability = Boolean.parseBoolean(p.getProperty("armorShowDurability", "true"));
@@ -85,7 +87,8 @@ public final class InfoHudModules {
         Properties p = new Properties();
         p.setProperty("armorX", String.valueOf(armorX));
         p.setProperty("armorY", String.valueOf(armorY));
-        p.setProperty("armorColor", String.valueOf(armorColor));\n        p.setProperty("armorRainbow", String.valueOf(armorRainbow));
+        p.setProperty("armorColor", String.valueOf(armorColor));
+        p.setProperty("armorRainbow", String.valueOf(armorRainbow));
         p.setProperty("armorLayout", String.valueOf(armorLayout));
         p.setProperty("armorShowNames", String.valueOf(armorShowNames));
         p.setProperty("armorShowDurability", String.valueOf(armorShowDurability));
@@ -107,7 +110,8 @@ public final class InfoHudModules {
 
     public static int getArmorX() { load(); return armorX; }
     public static int getArmorY() { load(); return armorY; }
-    public static int getArmorColor() { load(); return armorRainbow ? rainbowColor() : armorColor; }\n    public static boolean isArmorRainbow() { load(); return armorRainbow; }
+    public static int getArmorColor() { load(); return armorRainbow ? rainbowColor() : armorColor; }
+    public static boolean isArmorRainbow() { load(); return armorRainbow; }
     public static int getArmorEditorWidth() { load(); return armorLayout == 0 ? 210 : 120; }
     public static int getArmorEditorHeight() { load(); return armorLayout == 0 ? 18 : 70; }
     public static int getArmorLayout() { load(); return armorLayout; }
@@ -117,7 +121,19 @@ public final class InfoHudModules {
     public static void toggleArmorShowDurability() { load(); armorShowDurability = !armorShowDurability; save(); }
     public static void setArmorPosition(int x, int y) { load(); armorX = Math.max(0, x); armorY = Math.max(0, y); save(); }
     public static void cycleArmorLayout() { load(); armorLayout = (armorLayout + 1) % 2; save(); }
-    public static void cycleArmorColor() {\n        load();\n        int[] colors = {0xFFFFFFFF, 0xFFB8BDC8, 0xFFFFD866, 0xFFFFAA00, 0xFFFF5555, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};\n        if (armorRainbow) { armorRainbow = false; armorColor = colors[0]; }\n        else {\n            int next = -1;\n            for (int i = 0; i < colors.length; i++) if (colors[i] == armorColor) { next = i + 1; break; }\n            if (next >= colors.length) armorRainbow = true;\n            else if (next >= 0) armorColor = colors[next];\n            else armorColor = colors[0];\n        }\n        save();\n    }
+    public static void cycleArmorColor() {
+        load();
+        int[] colors = {0xFFFFFFFF, 0xFFB8BDC8, 0xFFFFD866, 0xFFFFAA00, 0xFFFF5555, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};
+        if (armorRainbow) { armorRainbow = false; armorColor = colors[0]; }
+        else {
+            int next = -1;
+            for (int i = 0; i < colors.length; i++) if (colors[i] == armorColor) { next = i + 1; break; }
+            if (next >= colors.length) armorRainbow = true;
+            else if (next >= 0) armorColor = colors[next];
+            else armorColor = colors[0];
+        }
+        save();
+    }
     public static String getArmorLayoutName() { return getArmorLayout() == 0 ? "Horizontal" : "Vertical"; }
 
     public static int getPotionX() { load(); return potionX; }
