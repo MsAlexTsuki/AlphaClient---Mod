@@ -666,6 +666,15 @@ public final class SupabaseCommunityService {
         return requestArray("GET", "/rest/v1/staff_operations_records?select=id,record_type,title,status,payload,created_by,assigned_to,created_at,updated_at&order=updated_at.desc&limit=100", token);
     }
 
+    /** Reads centrally recorded AlphaClient and staff actions for the activity/audit viewer. */
+    public static synchronized JsonArray getStaffAuditLogs() throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalStateException("Sign in to your Alpha Account to load staff activity.");
+        }
+        return requestArray("GET", "/rest/v1/audit_logs?select=id,occurred_at,actor_id,actor_label,product,category,action,target_user_id,target_label,outcome,details&product=in.(client,system)&order=occurred_at.desc&limit=100", token);
+    }
+
     /** Creates a shared Staff Operations record. Audit records are server-generated and cannot be submitted here. */
     public static synchronized JsonObject createStaffOperationsRecord(String type, String title, String status, JsonObject payload) throws Exception {
         String token = accessToken;
