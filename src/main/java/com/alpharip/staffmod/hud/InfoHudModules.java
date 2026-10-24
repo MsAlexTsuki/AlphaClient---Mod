@@ -30,10 +30,14 @@ public final class InfoHudModules {
     public static final int MODE_BUFFS = 2;
     public static final int MODE_DEBUFFS = 3;
     private static final int DEFAULT_COLOR = 0xFFFFFFFF;
+    private static final String[] COLOR_NAMES = {"White", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Pink", "Rainbow"};
+    private static final int[] COLORS = {0xFFFFFFFF, 0xFFFF5555, 0xFFFFAA00, 0xFFFFFF55, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};
     private static int armorX = 8, armorY = 80, armorColor = DEFAULT_COLOR, armorLayout;
     private static boolean armorRainbow;
+    private static int armorColorIndex;
     private static int potionX = 8, potionY = 120, potionColor = DEFAULT_COLOR, potionMode = MODE_ICONS;
     private static boolean potionRainbow;
+    private static int potionColorIndex;
     private static boolean armorShowNames = true, armorShowDurability = true;
     private static boolean loaded;
     private static final Minecraft MC = Minecraft.getMinecraft();
@@ -55,6 +59,9 @@ public final class InfoHudModules {
             armorY = integer(p, "armorY", armorY);
             armorColor = integer(p, "armorColor", armorColor);
             armorRainbow = Boolean.parseBoolean(p.getProperty("armorRainbow", "false"));
+            armorColorIndex = clamp(integer(p, "armorColorIndex", colorIndex(armorColor, armorRainbow)), 0, COLOR_NAMES.length - 1);
+            armorRainbow = armorColorIndex == COLOR_NAMES.length - 1;
+            if (!armorRainbow) armorColor = COLORS[armorColorIndex];
             armorLayout = clamp(integer(p, "armorLayout", 0), 0, 1);
             armorShowNames = Boolean.parseBoolean(p.getProperty("armorShowNames", "true"));
             armorShowDurability = Boolean.parseBoolean(p.getProperty("armorShowDurability", "true"));
@@ -62,6 +69,9 @@ public final class InfoHudModules {
             potionY = integer(p, "potionY", potionY);
             potionColor = integer(p, "potionColor", potionColor);
             potionRainbow = Boolean.parseBoolean(p.getProperty("potionRainbow", "false"));
+            potionColorIndex = clamp(integer(p, "potionColorIndex", colorIndex(potionColor, potionRainbow)), 0, COLOR_NAMES.length - 1);
+            potionRainbow = potionColorIndex == COLOR_NAMES.length - 1;
+            if (!potionRainbow) potionColor = COLORS[potionColorIndex];
             potionMode = clamp(integer(p, "potionMode", MODE_ICONS), MODE_ICONS, MODE_DEBUFFS);
         } catch (Exception e) {
             System.err.println("[AlphaClient] Could not load Armor/Potion HUD settings: " + e.getMessage());
@@ -82,6 +92,11 @@ public final class InfoHudModules {
     }
 
     private static int clamp(int v, int min, int max) { return Math.max(min, Math.min(max, v)); }
+    private static int colorIndex(int color, boolean rainbow) {
+        if (rainbow) return COLOR_NAMES.length - 1;
+        for (int i = 0; i < COLORS.length; i++) if (COLORS[i] == color) return i;
+        return 0;
+    }
 
     private static void save() {
         load();
@@ -90,6 +105,7 @@ public final class InfoHudModules {
         p.setProperty("armorY", String.valueOf(armorY));
         p.setProperty("armorColor", String.valueOf(armorColor));
         p.setProperty("armorRainbow", String.valueOf(armorRainbow));
+        p.setProperty("armorColorIndex", String.valueOf(armorColorIndex));
         p.setProperty("armorLayout", String.valueOf(armorLayout));
         p.setProperty("armorShowNames", String.valueOf(armorShowNames));
         p.setProperty("armorShowDurability", String.valueOf(armorShowDurability));
@@ -97,6 +113,7 @@ public final class InfoHudModules {
         p.setProperty("potionY", String.valueOf(potionY));
         p.setProperty("potionColor", String.valueOf(potionColor));
         p.setProperty("potionRainbow", String.valueOf(potionRainbow));
+        p.setProperty("potionColorIndex", String.valueOf(potionColorIndex));
         p.setProperty("potionMode", String.valueOf(potionMode));
         FileOutputStream out = null;
         try {
@@ -111,8 +128,9 @@ public final class InfoHudModules {
 
     public static int getArmorX() { load(); return armorX; }
     public static int getArmorY() { load(); return armorY; }
-    public static int getArmorColor() { load(); return armorRainbow ? rainbowColor() : armorColor; }
+    public static int getArmorColor() { load(); return armorRainbow ? rainbowColor() : COLORS[armorColorIndex]; }
     public static boolean isArmorRainbow() { load(); return armorRainbow; }
+    public static String getArmorColorName() { load(); return COLOR_NAMES[armorColorIndex]; }
     public static int getArmorEditorWidth() { load(); return armorLayout == 0 ? 210 : 120; }
     public static int getArmorEditorHeight() { load(); return armorLayout == 0 ? 18 : 70; }
     public static int getArmorLayout() { load(); return armorLayout; }
@@ -124,23 +142,18 @@ public final class InfoHudModules {
     public static void cycleArmorLayout() { load(); armorLayout = (armorLayout + 1) % 2; save(); }
     public static void cycleArmorColor() {
         load();
-        int[] colors = {0xFFFFFFFF, 0xFFB8BDC8, 0xFFFFD866, 0xFFFFAA00, 0xFFFF5555, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};
-        if (armorRainbow) { armorRainbow = false; armorColor = colors[0]; }
-        else {
-            int next = -1;
-            for (int i = 0; i < colors.length; i++) if (colors[i] == armorColor) { next = i + 1; break; }
-            if (next >= colors.length) armorRainbow = true;
-            else if (next >= 0) armorColor = colors[next];
-            else armorColor = colors[0];
-        }
+        armorColorIndex = (armorColorIndex + 1) % COLOR_NAMES.length;
+        armorRainbow = armorColorIndex == COLOR_NAMES.length - 1;
+        if (!armorRainbow) armorColor = COLORS[armorColorIndex];
         save();
     }
     public static String getArmorLayoutName() { return getArmorLayout() == 0 ? "Horizontal" : "Vertical"; }
 
     public static int getPotionX() { load(); return potionX; }
     public static int getPotionY() { load(); return potionY; }
-    public static int getPotionColor() { load(); return potionRainbow ? rainbowColor() : potionColor; }
+    public static int getPotionColor() { load(); return potionRainbow ? rainbowColor() : COLORS[potionColorIndex]; }
     public static boolean isPotionRainbow() { load(); return potionRainbow; }
+    public static String getPotionColorName() { load(); return COLOR_NAMES[potionColorIndex]; }
     public static int getPotionEditorWidth() {
         load();
         if (potionMode == MODE_ICONS) return 18;
@@ -159,15 +172,9 @@ public final class InfoHudModules {
     public static void cyclePotionMode() { load(); potionMode = (potionMode + 1) % 4; save(); }
     public static void cyclePotionColor() {
         load();
-        int[] colors = {0xFFFFFFFF, 0xFFB8BDC8, 0xFFFFD866, 0xFFFFAA00, 0xFFFF5555, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};
-        if (potionRainbow) { potionRainbow = false; potionColor = colors[0]; }
-        else {
-            int next = -1;
-            for (int i = 0; i < colors.length; i++) if (colors[i] == potionColor) { next = i + 1; break; }
-            if (next >= colors.length) potionRainbow = true;
-            else if (next >= 0) potionColor = colors[next];
-            else potionColor = colors[0];
-        }
+        potionColorIndex = (potionColorIndex + 1) % COLOR_NAMES.length;
+        potionRainbow = potionColorIndex == COLOR_NAMES.length - 1;
+        if (!potionRainbow) potionColor = COLORS[potionColorIndex];
         save();
     }
     private static int rainbowColor() {
@@ -238,7 +245,7 @@ public final class InfoHudModules {
             if (preview && stack == null) stack = diamondPreviewItem(i);
             drawItem(mc, stack, itemX, itemY);
             String label = stack == null ? (armorShowNames ? "Empty" : "") : ((armorShowNames ? stack.getDisplayName() : "") + (armorShowDurability ? " " + durability(stack) : "" )).trim();
-            if (!label.isEmpty()) mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), itemX + 20, itemY + 5, armorColor);
+            if (!label.isEmpty()) mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), itemX + 20, itemY + 5, getArmorColor());
         }
         GL11.glPopMatrix();
     }
@@ -296,7 +303,7 @@ public final class InfoHudModules {
             String line = fit(mc, net.minecraft.util.StatCollector.translateToLocal(potion.getName()) + level + "  " + Potion.getDurationString(effect), 190);
             boolean alignLeft = potionX > new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth() / 2;
             int textX = alignLeft ? x - 2 - mc.fontRendererObj.getStringWidth(line) : x + 20;
-            mc.fontRendererObj.drawStringWithShadow(line, textX, y + 5, potionColor);
+            mc.fontRendererObj.drawStringWithShadow(line, textX, y + 5, getPotionColor());
             row++;
         }
     }
