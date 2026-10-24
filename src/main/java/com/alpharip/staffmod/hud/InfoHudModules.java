@@ -1,5 +1,6 @@
 package com.alpharip.staffmod.hud;
 
+import com.alpharip.staffmod.config.HudScaleConfig;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
