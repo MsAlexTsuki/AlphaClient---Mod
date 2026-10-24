@@ -269,7 +269,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
 
     private int visibleRows() {
-        return Math.max(1, (contentBottom - contentTop) / 56);
+        // Keep this in sync with the regular module tile layout in initGui().
+        // Each row is 54px tall with a 7px gap.
+        return Math.max(1, (contentBottom - contentTop) / 61);
     }
 
     private AlphaModule getSelectedModule() {
@@ -561,8 +563,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         int wheel = org.lwjgl.input.Mouse.getEventDWheel();
         super.handleMouseInput();
         if (wheel != 0) {
-            int mouseX = org.lwjgl.input.Mouse.getX() * width / mc.displayWidth;
-            int mouseY = height - org.lwjgl.input.Mouse.getY() * height / mc.displayHeight - 1;
+            int mouseX = org.lwjgl.input.Mouse.getEventX() * width / mc.displayWidth;
+            int mouseY = height - org.lwjgl.input.Mouse.getEventY() * height / mc.displayHeight - 1;
             if (mouseX >= panelLeft && mouseX <= panelLeft + sidebarWidth
                     && mouseY >= panelTop + 65 && mouseY <= panelTop + panelHeight - 40) {
                 int sidebarCount = 0;
