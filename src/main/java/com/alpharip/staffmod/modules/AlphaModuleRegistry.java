@@ -66,6 +66,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(fps);
 
+        AlphaModule ping = new AlphaModule(
+                "ping",
+                "Ping",
+                "Show your current server latency in milliseconds with configurable HUD appearance.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(ping);
+
         MODULES.add(new AlphaModule(
                 "armor-hud-info",
                 "Armor HUD",
