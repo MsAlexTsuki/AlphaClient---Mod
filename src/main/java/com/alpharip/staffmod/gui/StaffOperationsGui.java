@@ -122,9 +122,14 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         drawRect(panelLeft, panelTop + 1, panelLeft + 1, bottom - 1, 0x554B515D);
         drawRect(right - 1, panelTop + 1, right, bottom - 1, 0x554B515D);
 
-        drawString(fontRendererObj, "ALPHA CLIENT", panelLeft + 14, panelTop + 14, 0xFFF0F1F4);
-        drawString(fontRendererObj, "STAFF OPERATIONS", panelLeft + 14, panelTop + 34, ACCENT);
-        drawString(fontRendererObj, section.title, contentLeft, panelTop + 57, 0xFFB8BDC8);
+        // Match Alpha Developer Studio's hierarchy and restrained workspace styling,
+        // while retaining Staff Operations' existing panel dimensions and controls.
+        drawString(fontRendererObj, "ALPHA  /  STAFF OPERATIONS", panelLeft + 16, panelTop + 13, 0xFFF0F1F4);
+        drawString(fontRendererObj, "RESTRICTED STAFF WORKSPACE", panelLeft + 16, panelTop + 30, ACCENT);
+        drawString(fontRendererObj, section.title, panelLeft + 16, panelTop + 49, 0xFFB8BDC8);
+
+        int dividerY = panelTop + 66;
+        drawRect(panelLeft + 14, dividerY, right - 14, dividerY + 1, 0x554B515D);
 
         if (section == Section.DASHBOARD) {
             drawDashboardSummary();
@@ -132,8 +137,10 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
             drawSectionDetails();
         }
 
-        drawString(fontRendererObj, "RANK ACCESS: " + PermissionService.getEffectiveRank().name(),
-                panelLeft + 14, bottom - 22, 0xFFB8BDC8);
+        drawRect(panelLeft + 14, bottom - 36, right - 14, bottom - 35, 0x334B515D);
+        drawString(fontRendererObj, "STATUS  " + dataStatus, panelLeft + 14, bottom - 25, 0xFFB8BDC8);
+        drawString(fontRendererObj, "RANK  " + PermissionService.getEffectiveRank().name(),
+                panelLeft + 14, bottom - 12, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
