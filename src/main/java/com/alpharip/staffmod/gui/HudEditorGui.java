@@ -7,6 +7,7 @@ import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
+import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.hud.InfoHudModules;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
@@ -22,6 +23,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
     private final GuiScreen parent;
     private boolean dragging;
     private boolean fpsDragging;
+    private boolean pingDragging;
     private boolean cpsDragging;
     private boolean afkTimerDragging;
     private boolean sessionTimerDragging;
@@ -47,10 +49,16 @@ public final class HudEditorGui extends AlphaGuiScreen {
         return module != null && module.isEnabled() && module.isUnlocked();
     }
 
+    private static boolean isPingModuleEnabled() {
+        AlphaModule module = AlphaModuleRegistry.find("ping");
+        return module != null && module.isEnabled() && module.isUnlocked();
+    }
+
     @Override
     public void initGui() {
         BhopHud.loadHudPosition();
         FpsMod.loadHudPosition();
+        PingMod.load();
         CpsMod.load();
         InfoHudModules.load();
         buttonList.clear();
@@ -89,10 +97,29 @@ public final class HudEditorGui extends AlphaGuiScreen {
 
         if (isFpsModuleEnabled()) {
             String fps = "FPS " + net.minecraft.client.Minecraft.getDebugFPS();
-            int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
+            int pingX = PingMod.getHudX(), pingY = PingMod.getHudY();
+        int pingWidth = fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10;
+        if (isPingModuleEnabled() && mouseButton == 0 && mouseX >= pingX - 3 && mouseX <= pingX + pingWidth
+                && mouseY >= pingY - 3 && mouseY <= pingY + fontRendererObj.FONT_HEIGHT + 3) {
+            dragging = true;
+            dragX = mouseX - pingX;
+            dragY = mouseY - pingY;
+            pingDragging = true;
+            return;
+        }
+
+        int fx = FpsMod.getHudX(), fy = FpsMod.getHudY();
             int fw = fontRendererObj.getStringWidth(fps) + 10;
             if (FpsMod.isShowBackground()) drawRect(fx - 3, fy - 3, fx + fw, fy + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
             fontRendererObj.drawStringWithShadow(fps, fx, fy, FpsMod.getTextColor());
+        }
+
+        if (isPingModuleEnabled()) {
+            String ping = PingMod.getDisplayText();
+            int px = PingMod.getHudX(), py = PingMod.getHudY();
+            int pw = fontRendererObj.getStringWidth(ping) + 10;
+            if (PingMod.isShowBackground()) drawRect(px - 3, py - 3, px + pw, py + fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            fontRendererObj.drawStringWithShadow(ping, px, py, PingMod.getTextColor());
         }
 
         InfoHudModules.renderEditorPreviews();
@@ -215,6 +242,11 @@ public final class HudEditorGui extends AlphaGuiScreen {
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 FpsMod.setHudPosition(x, y);
+            } else if (pingDragging) {
+                int itemWidth = fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10;
+                x = Math.max(3, Math.min(width - itemWidth - 3, x));
+                y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
+                PingMod.setHudPosition(x, y);
             } else if (cpsDragging) {
                 int itemWidth = fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10;
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
@@ -258,6 +290,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
     protected void mouseReleased(int mouseX, int mouseY, int state) {
         dragging = false;
         fpsDragging = false;
+        pingDragging = false;
         cpsDragging = false;
         afkTimerDragging = false;
         sessionTimerDragging = false;
@@ -276,6 +309,7 @@ public final class HudEditorGui extends AlphaGuiScreen {
             HudPositionConfig.resetAll();
             BhopHud.loadHudPosition();
             FpsMod.setHudPosition(6, 6);
+            PingMod.setHudPosition(6, 22);
             CpsMod.setHudPosition(5, 28);
             AfkTimerHud.setHudPosition(6, 6);
             SessionTimerHud.setHudPosition(6, 22);
