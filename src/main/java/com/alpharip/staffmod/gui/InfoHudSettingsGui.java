@@ -39,7 +39,7 @@ public final class InfoHudSettingsGui extends AlphaGuiScreen {
         } else {
             buttonList.add(new AlphaButton(PRIMARY, width / 2 - 100, height / 2 - 8, 200, 20,
                     "MODE: " + InfoHudModules.getPotionModeName()));
-            buttonList.add(new AlphaButton(COLOR, width / 2 - 100, height / 2 + 18, 200, 20, "CYCLE HUD COLOR"));
+            buttonList.add(new AlphaButton(COLOR, width / 2 - 100, height / 2 + 18, 200, 20, "CYCLE TEXT COLOR"));
             buttonList.add(new AlphaButton(BACK, width / 2 - 60, height / 2 + 48, 120, 20, "BACK"));
         }
     }
@@ -71,7 +71,12 @@ public final class InfoHudSettingsGui extends AlphaGuiScreen {
         drawCenteredString(fontRendererObj, armor
                 ? "Held item + helmet, chestplate, leggings and boots"
                 : "Cycle through icons, all effects, buffs and debuffs", width / 2, height / 2 - 69, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Background: always OFF", width / 2, height / 2 + (armor ? 95 : 75), 0xFF9CE2AC);
+        if (armor) {
+            drawCenteredString(fontRendererObj, "Background: always OFF", width / 2, height / 2 + 95, 0xFF9CE2AC);
+        } else {
+            drawCenteredString(fontRendererObj, "Text color preview", width / 2, height / 2 + 74, 0xFFB8BDC8);
+            drawCenteredString(fontRendererObj, "Speed II  1:23", width / 2, height / 2 + 87, InfoHudModules.getPotionColor());
+        }
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
