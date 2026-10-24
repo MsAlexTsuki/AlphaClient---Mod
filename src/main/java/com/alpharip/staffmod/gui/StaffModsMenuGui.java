@@ -196,6 +196,18 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                     buttonList.add(new AlphaButton(MODULE_BASE + 100, x, y,
                             tileWidth, tileHeight, "UTILITIES"));
                 }
+
+                // Staff Operations uses the same AlphaButton styling as General.
+                // It is a separate hub so Bhop stays only in General.
+                int operationsIndex = visibleModules.size() + 1;
+                int operationsRow = operationsIndex / columns - scrollOffset;
+                if (operationsRow >= 0 && operationsRow < visibleRows
+                        && PermissionService.hasStaffModsAccess()) {
+                    int x = contentLeft + (operationsIndex % columns) * (tileWidth + gap);
+                    int y = contentTop + operationsRow * rowHeight;
+                    buttonList.add(new AlphaButton(MODULE_BASE + 101, x, y,
+                            tileWidth, tileHeight, "STAFF OPERATIONS", true));
+                }
             }
         }
 
@@ -563,6 +575,14 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         if (openFolderRank != null && button.id == MODULE_BASE + 100
                 && selectedRank == PermissionService.Rank.PUBLIC) {
             mc.displayGuiScreen(new UtilitiesGui(this));
+            return;
+        }
+
+        if (openFolderRank != null && button.id == MODULE_BASE + 101
+                && selectedRank == PermissionService.Rank.PUBLIC) {
+            if (PermissionService.hasStaffModsAccess()) {
+                mc.displayGuiScreen(new StaffOperationsGui(this));
+            }
             return;
         }
 
