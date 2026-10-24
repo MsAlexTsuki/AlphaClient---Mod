@@ -143,6 +143,13 @@ Deno.serve(async (req: Request) => {
         if (rankEntry) return { ...item, configured: true, allowed: rankEntry.enabled, source: "rank", rank_keys: rankEntry.rankKeys };
         return { ...item, configured: false, allowed: false, source: "default" };
       });
+      const { data: aliases, error: aliasError } = await admin.from("client_command_permission_aliases").select("alias_key, permission_key");
+      if (aliasError) throw new Error("Could not load renamed permission IDs.");
+      const canonical = new Map(permissions.map((item: Record<string, unknown>) => [item.permission_key as string, item]));
+      for (const alias of aliases ?? []) {
+        const item = canonical.get(alias.permission_key);
+        if (item) permissions.push({ ...item, permission_key: alias.alias_key });
+      }
       return json({ ok: true, username: profile.username, permissions });
     }
 
@@ -164,8 +171,13 @@ Deno.serve(async (req: Request) => {
       const oldKey = validPermissionId(body.permission), newKey = validPermissionId(body.new_permission);
       if (!permissionKeys.has(oldKey)) throw new Error("The original permission ID does not exist.");
       if (permissionKeys.has(newKey)) throw new Error("The new permission ID already exists.");
+      const { data: reserved, error: reservedError } = await admin.from("client_command_permission_aliases").select("alias_key").eq("alias_key", newKey).maybeSingle();
+      if (reservedError) throw new Error("Could not validate renamed permission ID.");
+      if (reserved) throw new Error("The new permission ID is already reserved as an alias.");
       const { error } = await admin.from("client_command_permission_catalog").update({ permission_key: newKey }).eq("permission_key", oldKey);
       if (error) throw new Error("Could not rename permission ID: " + error.message);
+      const { error: aliasError } = await admin.from("client_command_permission_aliases").upsert({ alias_key: oldKey, permission_key: newKey }, { onConflict: "alias_key" });
+      if (aliasError) throw new Error("ID renamed but runtime alias could not be saved: " + aliasError.message);
       await writeAudit(action, null, newKey, { old_permission_key: oldKey, new_permission_key: newKey });
       return json({ ok: true, action, old_permission: oldKey, permission: newKey });
     }
