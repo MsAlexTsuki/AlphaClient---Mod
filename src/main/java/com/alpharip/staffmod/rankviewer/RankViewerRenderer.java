@@ -7,6 +7,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -81,6 +83,7 @@ public final class RankViewerRenderer {
         int nameWidth = minecraft.fontRendererObj.getStringWidth(name);
         int badgeWidth = rank == null ? 0 : BADGE_SIZE + BADGE_GAP;
         int totalWidth = nameWidth + badgeWidth;
+        int nameColor = getRelationshipNameColor(minecraft, name, rank);
 
         // Capture the state that this renderer changes. World rendering and the vanilla HUD
         // share the OpenGL context, so forcing states to "enabled" can leak into later renders.
@@ -115,6 +118,18 @@ public final class RankViewerRenderer {
             GlStateManager.depthMask(false);
 
             int cursor = -totalWidth / 2;
+
+            // Barely visible glass panel fitted tightly around badge and name.
+            int left = cursor - 2;
+            int right = cursor + totalWidth + 2;
+            int top = -2;
+            int bottom = BADGE_SIZE + 3;
+            Gui.drawRect(left, top, right, bottom, 0x18000000);
+            Gui.drawRect(left, top, right, top + 1, 0x26000000);
+            Gui.drawRect(left, bottom - 1, right, bottom, 0x26000000);
+            Gui.drawRect(left, top, left + 1, bottom, 0x26000000);
+            Gui.drawRect(right - 1, top, right, bottom, 0x26000000);
+
             if (rank != null) {
                 GlStateManager.pushMatrix();
                 try {
@@ -131,7 +146,7 @@ public final class RankViewerRenderer {
             }
 
             // Keep the player's name; only the rank label/emblem text is replaced by the image.
-            minecraft.fontRendererObj.drawStringWithShadow(name, cursor, 1, 0xFFFFFFFF);
+            minecraft.fontRendererObj.drawStringWithShadow(name, cursor, 1, nameColor);
         } finally {
             GlStateManager.depthMask(depthMask);
             restoreCapability(GL11.GL_DEPTH_TEST, depthEnabled);
@@ -142,6 +157,53 @@ public final class RankViewerRenderer {
             GlStateManager.color(red, green, blue, alpha);
             GlStateManager.popMatrix();
         }
+    }
+
+
+    /**
+     * Uses server scoreboard colors when available. Vanilla scoreboard data
+     * cannot reliably distinguish faction allies from enemies unless the server
+     * exposes that relationship separately.
+     */
+    private int getRelationshipNameColor(Minecraft minecraft, String name, AlphaRank rank) {
+        if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null) {
+            return rank == null ? 0xFFFFFFFF : rank.color();
+        }
+
+        EntityPlayer target = null;
+        for (Object object : minecraft.theWorld.playerEntities) {
+            if (object instanceof EntityPlayer) {
+                EntityPlayer candidate = (EntityPlayer) object;
+                if (candidate.getName().equalsIgnoreCase(name)) {
+                    target = candidate;
+                    break;
+                }
+            }
+        }
+        if (target == null) return rank == null ? 0xFFFFFFFF : rank.color();
+
+        ScorePlayerTeam targetTeam = target.getTeam();
+        ScorePlayerTeam ownTeam = minecraft.thePlayer.getTeam();
+        if (target.getUniqueID().equals(minecraft.thePlayer.getUniqueID())) {
+            if (ownTeam != null && ownTeam.getChatFormat() != null
+                    && ownTeam.getChatFormat().getColor() != null) {
+                return 0xFF000000 | ownTeam.getChatFormat().getColor();
+            }
+            return rank == null ? 0xFFFFFFFF : rank.color();
+        }
+        if (targetTeam != null && ownTeam != null && targetTeam.isSameTeam(ownTeam)) {
+            EnumChatFormatting format = targetTeam.getChatFormat();
+            if (format != null && format.getColor() != null) {
+                return 0xFF000000 | format.getColor();
+            }
+        }
+        if (targetTeam != null) {
+            EnumChatFormatting format = targetTeam.getChatFormat();
+            if (format != null && format.getColor() != null) {
+                return 0xFF000000 | format.getColor();
+            }
+        }
+        return 0xFFFFFFFF;
     }
 
     private static void restoreCapability(int capability, boolean enabled) {
