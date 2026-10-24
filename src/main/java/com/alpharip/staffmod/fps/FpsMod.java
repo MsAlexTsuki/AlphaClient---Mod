@@ -2,6 +2,8 @@ package com.alpharip.staffmod.fps;
 
 import net.minecraft.client.Minecraft;
 import com.alpharip.staffmod.config.HudPositionConfig;
+import com.alpharip.staffmod.config.HudScaleConfig;
+import net.minecraft.client.renderer.GlStateManager;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -77,11 +79,16 @@ public final class FpsMod {
         String line = "FPS " + Minecraft.getDebugFPS();
         int x = hudX;
         int y = hudY;
+        float scale = HudScaleConfig.get("fps");
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, 0.0F);
+        GlStateManager.scale(scale, scale, 1.0F);
         int width = mc.fontRendererObj.getStringWidth(line) + 10;
         if (showBackground) {
-            net.minecraft.client.gui.Gui.drawRect(x - 3, y - 3, x + width, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-            net.minecraft.client.gui.Gui.drawRect(x - 3, y - 3, x + width, y - 2, 0xFFFFD866);
+            net.minecraft.client.gui.Gui.drawRect(-3, -3, width, mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            net.minecraft.client.gui.Gui.drawRect(-3, -3, width, -2, 0xFFFFD866);
         }
-        mc.fontRendererObj.drawStringWithShadow(line, x, y, getTextColor());
+        mc.fontRendererObj.drawStringWithShadow(line, 0, 0, getTextColor());
+        GlStateManager.popMatrix();
     }
 }
