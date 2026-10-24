@@ -157,10 +157,13 @@ public final class AutoGGMod {
     private static boolean isKillMessage(String message, String playerName) {
         String ownName = playerName == null ? "" : playerName.toLowerCase(Locale.ROOT);
         if (message.contains("you killed ") || message.contains("you have killed ")
-                || message.contains("you slew ")) {
+                || message.contains("you slew ") || message.contains("you have slain ")
+                || message.contains("you eliminated ") || message.contains("you defeated ")) {
             return true;
         }
         if (message.matches(".*\\bwas killed by (you|" + Pattern.quote(ownName) + ")\\b.*")
+                || message.matches(".*\\bwas slain by (you|" + Pattern.quote(ownName) + ")\\b.*")
+                || message.matches(".*\\bwas eliminated by (you|" + Pattern.quote(ownName) + ")\\b.*")
                 || message.matches(".*\\bkilled by (you|" + Pattern.quote(ownName) + ")\\b.*")) {
             return true;
         }
@@ -173,15 +176,22 @@ public final class AutoGGMod {
                 || message.contains("match over")
                 || message.contains("match ended")
                 || message.contains("match has ended")
+                || message.contains("match finished")
                 || message.contains("game ended")
                 || message.contains("game has ended")
+                || message.contains("game finished")
+                || message.contains("game has finished")
                 || message.contains("round over")
+                || message.contains("round ended")
                 || message.contains("round has ended")
+                || message.contains("duel ended")
+                || message.contains("duel finished")
                 || message.contains("you won")
                 || message.contains("you lost")
+                || message.contains("won the game")
                 || message.contains("you are the winner")
-                || message.contains("victory!")
-                || message.contains("defeat!")
+                || message.contains("victory")
+                || message.contains("defeat")
                 || message.contains("winner:");
     }
 }
