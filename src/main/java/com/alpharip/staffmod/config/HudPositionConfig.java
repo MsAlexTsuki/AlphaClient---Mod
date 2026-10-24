@@ -31,6 +31,10 @@ public class HudPositionConfig {
 
     private static final int DEFAULT_FPS_X = 6;
     private static final int DEFAULT_FPS_Y = 6;
+    private static final int DEFAULT_PING_X = 6;
+    private static final int DEFAULT_PING_Y = 22;
+    private static final int DEFAULT_PING_COLOR_INDEX = 0;
+    private static final boolean DEFAULT_PING_SHOW_BACKGROUND = true;
     private static final int DEFAULT_FPS_COLOR_INDEX = 0;
     private static final boolean DEFAULT_FPS_SHOW_BACKGROUND = true;
     private static final int DEFAULT_CPS_COLOR_INDEX = 0;
@@ -75,6 +79,10 @@ public class HudPositionConfig {
     private static int fpsY = DEFAULT_FPS_Y;
     private static int fpsColorIndex = DEFAULT_FPS_COLOR_INDEX;
     private static boolean fpsShowBackground = DEFAULT_FPS_SHOW_BACKGROUND;
+    private static int pingX = DEFAULT_PING_X;
+    private static int pingY = DEFAULT_PING_Y;
+    private static int pingColorIndex = DEFAULT_PING_COLOR_INDEX;
+    private static boolean pingShowBackground = DEFAULT_PING_SHOW_BACKGROUND;
     private static int cpsColorIndex = DEFAULT_CPS_COLOR_INDEX;
     private static int cpsDisplayMode = DEFAULT_CPS_DISPLAY_MODE;
     private static boolean cpsShowBackground = DEFAULT_CPS_SHOW_BACKGROUND;
@@ -258,6 +266,11 @@ public class HudPositionConfig {
             fpsColorIndex = getInt(properties, "fpsColorIndex", DEFAULT_FPS_COLOR_INDEX);
             if (fpsColorIndex < 0 || fpsColorIndex > 9) fpsColorIndex = DEFAULT_FPS_COLOR_INDEX;
             fpsShowBackground = Boolean.parseBoolean(properties.getProperty("fpsShowBackground", String.valueOf(DEFAULT_FPS_SHOW_BACKGROUND)));
+            pingX = getInt(properties, "pingX", DEFAULT_PING_X);
+            pingY = getInt(properties, "pingY", DEFAULT_PING_Y);
+            pingColorIndex = getInt(properties, "pingColorIndex", DEFAULT_PING_COLOR_INDEX);
+            if (pingColorIndex < 0 || pingColorIndex > 9) pingColorIndex = DEFAULT_PING_COLOR_INDEX;
+            pingShowBackground = Boolean.parseBoolean(properties.getProperty("pingShowBackground", String.valueOf(DEFAULT_PING_SHOW_BACKGROUND)));
 
         } catch (Exception e) {
 
@@ -366,6 +379,10 @@ public class HudPositionConfig {
         properties.setProperty("fpsY", String.valueOf(fpsY));
         properties.setProperty("fpsColorIndex", String.valueOf(fpsColorIndex));
         properties.setProperty("fpsShowBackground", String.valueOf(fpsShowBackground));
+        properties.setProperty("pingX", String.valueOf(pingX));
+        properties.setProperty("pingY", String.valueOf(pingY));
+        properties.setProperty("pingColorIndex", String.valueOf(pingColorIndex));
+        properties.setProperty("pingShowBackground", String.valueOf(pingShowBackground));
 
 
         FileOutputStream output =
@@ -707,6 +724,14 @@ public class HudPositionConfig {
 
     public static void setFpsShowBackground(boolean value) { load(); fpsShowBackground = value; save(); }
 
+    public static int getPingX() { load(); return pingX; }
+    public static int getPingY() { load(); return pingY; }
+    public static int getPingColorIndex() { load(); return pingColorIndex; }
+    public static boolean isPingShowBackground() { load(); return pingShowBackground; }
+    public static void setPingPosition(int x, int y) { load(); pingX = Math.max(0, x); pingY = Math.max(0, y); save(); }
+    public static void setPingColorIndex(int index) { load(); pingColorIndex = Math.max(0, Math.min(9, index)); save(); }
+    public static void setPingShowBackground(boolean value) { load(); pingShowBackground = value; save(); }
+
     public static int getFpsX() {
         load();
         return fpsX;
@@ -747,6 +772,10 @@ public class HudPositionConfig {
         resetValues();
         fpsX = DEFAULT_FPS_X;
         fpsY = DEFAULT_FPS_Y;
+        pingX = DEFAULT_PING_X;
+        pingY = DEFAULT_PING_Y;
+        pingColorIndex = DEFAULT_PING_COLOR_INDEX;
+        pingShowBackground = DEFAULT_PING_SHOW_BACKGROUND;
         save();
     }
 
@@ -782,6 +811,10 @@ public class HudPositionConfig {
         fpsX = DEFAULT_FPS_X;
         fpsY = DEFAULT_FPS_Y;
         fpsShowBackground = DEFAULT_FPS_SHOW_BACKGROUND;
+        pingX = DEFAULT_PING_X;
+        pingY = DEFAULT_PING_Y;
+        pingColorIndex = DEFAULT_PING_COLOR_INDEX;
+        pingShowBackground = DEFAULT_PING_SHOW_BACKGROUND;
         cpsColorIndex = DEFAULT_CPS_COLOR_INDEX;
         cpsDisplayMode = DEFAULT_CPS_DISPLAY_MODE;
         cpsShowBackground = DEFAULT_CPS_SHOW_BACKGROUND;
