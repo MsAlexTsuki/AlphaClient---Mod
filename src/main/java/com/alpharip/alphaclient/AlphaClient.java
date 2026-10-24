@@ -13,6 +13,7 @@ import com.alpharip.staffmod.hud.SessionTimerHud;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.hud.InfoHudModules;
 import com.alpharip.staffmod.fps.FpsMod;
+import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.pvp.LegacyPvpMod;
 import com.alpharip.staffmod.optimization.FpsOptimization;
@@ -80,6 +81,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
         MinecraftForge.EVENT_BUS.register(new RankViewerRenderer());
         MinecraftForge.EVENT_BUS.register(new FpsMod());
+        MinecraftForge.EVENT_BUS.register(new PingMod());
         MinecraftForge.EVENT_BUS.register(new CpsMod());
         MinecraftForge.EVENT_BUS.register(new InfoHudModules());
         MinecraftForge.EVENT_BUS.register(new LegacyPvpMod());
@@ -93,6 +95,7 @@ public final class AlphaClient {
         AlphaClientConfig.load();
         BhopHud.loadHudPosition();
         CpsMod.load();
+        PingMod.load();
 
         MinecraftForge.EVENT_BUS.register(new BhopHud());
         MinecraftForge.EVENT_BUS.register(new AfkTimerHud());
