@@ -29,6 +29,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private int contentLeft, contentTop, contentRight, contentBottom;
     private JsonArray records = new JsonArray();
     private JsonArray auditLogs = new JsonArray();
+    private JsonArray moduleActivity = new JsonArray();
     private String dataStatus = "Sign in to load shared staff data.";
     private long lastRefreshAt = 0L;
 
@@ -156,6 +157,22 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         drawString(fontRendererObj, "Shared records: " + records.size(), contentLeft, y + 34, 0xFFFFD866);
         drawString(fontRendererObj, dataStatus, contentLeft, y + 49, 0xFFB8BDC8);
         drawRecordCounts(contentLeft, y + 66);
+        int activityY = y + 92;
+        drawString(fontRendererObj, "Recent staff module activity", contentLeft, activityY, 0xFFE6E8ED);
+        int shown = 0;
+        for (int i = 0; i < moduleActivity.size() && shown < 5; i++) {
+            if (!moduleActivity.get(i).isJsonObject()) continue;
+            JsonObject event = moduleActivity.get(i).getAsJsonObject();
+            String actor = value(event, "actor_label", value(event, "actor_id", "Unknown staff"));
+            String module = value(event, "module_key", "module");
+            String action = value(event, "action_key", value(event, "event_type", "activity"));
+            String when = value(event, "occurred_at", "");
+            String line = actor + " / " + module + " / " + action + " / " + when;
+            if (line.length() > 88) line = line.substring(0, 85) + "...";
+            drawString(fontRendererObj, line, contentLeft, activityY + 14 + shown * 12, 0xFFB8BDC8);
+            shown++;
+        }
+        if (shown == 0) drawString(fontRendererObj, "No module activity has been recorded yet.", contentLeft, activityY + 14, 0xFFB8BDC8);
     }
 
     private void drawSectionDetails() {
@@ -183,6 +200,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         if (!SupabaseCommunityService.isSignedIn()) {
             records = new JsonArray();
             auditLogs = new JsonArray();
+            moduleActivity = new JsonArray();
             dataStatus = "Sign in to your Alpha Account to load live shared data.";
             return;
         }
@@ -190,6 +208,8 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             records = SupabaseCommunityService.getStaffOperationsRecords();
             try { auditLogs = SupabaseCommunityService.getStaffAuditLogs(); }
             catch (Exception auditException) { auditLogs = new JsonArray(); }
+            try { moduleActivity = SupabaseCommunityService.getStaffModuleActivity(); }
+            catch (Exception activityException) { moduleActivity = new JsonArray(); }
             dataStatus = "Synced with the shared Alpha staff database.";
             lastRefreshAt = System.currentTimeMillis();
         } catch (Exception exception) {
