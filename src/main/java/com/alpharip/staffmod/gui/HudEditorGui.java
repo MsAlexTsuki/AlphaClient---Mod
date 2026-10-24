@@ -228,7 +228,10 @@ public final class HudEditorGui extends AlphaGuiScreen {
                 y = Math.max(0, Math.min(Math.max(0, height - InfoHudModules.getArmorEditorHeight()), y));
                 InfoHudModules.setArmorPosition(x, y);
             } else if (potionDragging) {
-                x = Math.max(0, Math.min(Math.max(0, width - InfoHudModules.getPotionEditorWidth()), x));
+                // Keep the potion icon draggable all the way to the right edge.
+                // The effect text flips to the left of the icon on the right half.
+                int maxPotionX = x > width / 2 ? width - 18 : width - InfoHudModules.getPotionEditorWidth();
+                x = Math.max(0, Math.min(Math.max(0, maxPotionX), x));
                 y = Math.max(0, Math.min(Math.max(0, height - InfoHudModules.getPotionEditorHeight()), y));
                 InfoHudModules.setPotionPosition(x, y);
             } else if (playtimeTrackerDragging) {
