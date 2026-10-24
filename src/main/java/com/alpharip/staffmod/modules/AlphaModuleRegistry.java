@@ -27,7 +27,7 @@ public final class AlphaModuleRegistry {
         );
         quality.addFeature(new AlphaModuleFeature("alpha-module-manager", "Alpha Module Manager", "Central module management.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("playtime-tracker", "Playtime Tracker", "Track time spent playing.", PermissionService.Rank.PUBLIC, false));
-        quality.addFeature(new AlphaModuleFeature("auto-gg", "Auto GG", "Automatically send GG after a game.", PermissionService.Rank.PUBLIC, false));
+        quality.addFeature(new AlphaModuleFeature("auto-gg", "Auto GG", "Automatically send GG after a detected kill or match end.", PermissionService.Rank.PUBLIC, true));
         quality.addFeature(new AlphaModuleFeature("keybind-profiles", "Keybind Profiles", "Save and switch keybind sets.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("auto-respawn", "Auto Respawn", "Automatically respawn after death.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("core-experience", "AlphaClient Core Experience", "Shared quality-of-life foundation.", PermissionService.Rank.PUBLIC, false));
