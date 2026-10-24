@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -184,21 +185,25 @@ public final class RankViewerRenderer {
 
         Team targetTeam = target.getTeam();
         Team ownTeam = minecraft.thePlayer.getTeam();
+        ScorePlayerTeam targetScoreTeam = targetTeam instanceof ScorePlayerTeam
+                ? (ScorePlayerTeam) targetTeam : null;
+        ScorePlayerTeam ownScoreTeam = ownTeam instanceof ScorePlayerTeam
+                ? (ScorePlayerTeam) ownTeam : null;
         if (target.getUniqueID().equals(minecraft.thePlayer.getUniqueID())) {
-            if (ownTeam != null && ownTeam.getChatFormat() != null
-                    && ownTeam.getChatFormat().getColorIndex() >= 0) {
-                return 0xFF000000 | getFormattingColor(ownTeam.getChatFormat());
+            EnumChatFormatting format = ownScoreTeam == null ? null : ownScoreTeam.getChatFormat();
+            if (format != null && format.getColorIndex() >= 0) {
+                return 0xFF000000 | getFormattingColor(format);
             }
             return rank == null ? 0xFFFFFFFF : rank.color();
         }
         if (targetTeam != null && ownTeam != null && targetTeam.isSameTeam(ownTeam)) {
-            EnumChatFormatting format = targetTeam.getChatFormat();
+            EnumChatFormatting format = targetScoreTeam == null ? null : targetScoreTeam.getChatFormat();
             if (format != null && format.getColorIndex() >= 0) {
                 return 0xFF000000 | getFormattingColor(format);
             }
         }
-        if (targetTeam != null) {
-            EnumChatFormatting format = targetTeam.getChatFormat();
+        if (targetScoreTeam != null) {
+            EnumChatFormatting format = targetScoreTeam.getChatFormat();
             if (format != null && format.getColorIndex() >= 0) {
                 return 0xFF000000 | getFormattingColor(format);
             }
