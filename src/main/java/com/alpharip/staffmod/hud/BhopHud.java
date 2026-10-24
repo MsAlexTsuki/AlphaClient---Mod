@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.hud;
 
 import com.alpharip.staffmod.config.HudPositionConfig;
+import com.alpharip.staffmod.config.HudScaleConfig;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.profile.ProfileManager;
 import com.alpharip.staffmod.modules.AlphaModule;
@@ -374,7 +375,7 @@ public class BhopHud {
                 mc.fontRendererObj;
 
         float scale =
-                getVisualScale();
+                getVisualScale() * HudScaleConfig.get("bhop");
 
 
         String bhopName =
