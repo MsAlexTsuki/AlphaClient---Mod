@@ -6,9 +6,11 @@ import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.io.File;
@@ -27,7 +29,40 @@ public final class AutoReconnectMod {
     private static GuiScreen disconnectScreen;
     private static boolean attemptStarted;
 
+    private static final int MANUAL_RECONNECT_BUTTON_ID = 19841;
+
     public static boolean isEnabled() { return enabled; }
+
+    /** Adds a manual reconnect action to vanilla disconnect/error screens. */
+    @SubscribeEvent
+    public void onDisconnectScreenInit(GuiScreenEvent.InitGuiEvent.Post event) {
+        if (!(event.gui instanceof GuiDisconnected)) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || (mc.getCurrentServerData() == null && lastServer == null)) return;
+
+        int width = event.gui.width;
+        int y = event.gui.height / 2 + 35;
+        for (Object item : event.buttonList) {
+            if (item instanceof GuiButton && ((GuiButton) item).id == MANUAL_RECONNECT_BUTTON_ID) return;
+        }
+        event.buttonList.add(new GuiButton(MANUAL_RECONNECT_BUTTON_ID, width / 2 - 100, y, 200, 20, "Reconnect"));
+    }
+
+    /** Manual reconnect works independently of the Auto Reconnect toggle. */
+    @SubscribeEvent
+    public void onDisconnectScreenButton(GuiScreenEvent.ActionPerformedEvent.Pre event) {
+        if (!(event.gui instanceof GuiDisconnected) || event.button == null
+                || event.button.id != MANUAL_RECONNECT_BUTTON_ID) return;
+
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null) return;
+        ServerData target = lastServer != null ? lastServer : mc.getCurrentServerData();
+        if (target == null) return;
+
+        event.setCanceled(true);
+        resetPending();
+        mc.displayGuiScreen(new GuiConnecting(event.gui, mc, target));
+    }
 
     public static void setEnabled(boolean value) {
         enabled = value;
