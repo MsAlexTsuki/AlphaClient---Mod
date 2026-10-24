@@ -43,10 +43,10 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         int gap = 8;
         int tileWidth = (contentRight - contentLeft - gap) / 2;
         int tileHeight = 34;
-        buttonList.add(new AlphaButton(CASES, contentLeft, contentTop, tileWidth, tileHeight, "CASES"));
-        buttonList.add(new AlphaButton(SHIFTS, contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "SHIFTS"));
-        buttonList.add(new AlphaButton(PRESENCE, contentLeft, contentTop + tileHeight + gap, tileWidth, tileHeight, "PRESENCE"));
-        buttonList.add(new AlphaButton(AUDIT, contentLeft + tileWidth + gap, contentTop + tileHeight + gap, tileWidth, tileHeight, "AUDIT"));
+        buttonList.add(new AlphaButton(CASES, contentLeft, contentTop, tileWidth, tileHeight, "Cases"));
+        buttonList.add(new AlphaButton(SHIFTS, contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "Shifts"));
+        buttonList.add(new AlphaButton(PRESENCE, contentLeft, contentTop + tileHeight + gap, tileWidth, tileHeight, "Presence"));
+        buttonList.add(new AlphaButton(AUDIT, contentLeft + tileWidth + gap, contentTop + tileHeight + gap, tileWidth, tileHeight, "Activity and audit"));
         buttonList.add(new AlphaButton(DASHBOARD, contentLeft, panelTop + panelHeight - 63,
                 tileWidth, 22, "Open staff dashboard", true));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94,
@@ -65,13 +65,13 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         } else if (button.id == DASHBOARD) {
             mc.displayGuiScreen(new StaffDashboardGui(this));
         } else if (button.id == CASES) {
-            mc.displayGuiScreen(new StaffDashboardGui(this, "cases"));
+            mc.displayGuiScreen(new StaffOperationsModuleGui(this, "case"));
         } else if (button.id == SHIFTS) {
-            mc.displayGuiScreen(new StaffDashboardGui(this, "shifts"));
+            mc.displayGuiScreen(new StaffOperationsModuleGui(this, "shift"));
         } else if (button.id == PRESENCE) {
-            mc.displayGuiScreen(new StaffDashboardGui(this, "presence"));
+            mc.displayGuiScreen(new StaffOperationsModuleGui(this, "presence"));
         } else if (button.id == AUDIT) {
-            mc.displayGuiScreen(new StaffDashboardGui(this, "audit"));
+            mc.displayGuiScreen(new StaffOperationsModuleGui(this, "audit"));
         }
     }
 
@@ -86,14 +86,14 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         drawRect(right - 1, panelTop + 1, right, bottom - 1, 0x554B515D);
 
         // Follow Developer -> Alpha Developer Studio's restrained workspace hierarchy.
-        drawString(fontRendererObj, "ALPHA  /  STAFF OPERATIONS", panelLeft + 16, panelTop + 13, 0xFFF0F1F4);
-        drawString(fontRendererObj, "RESTRICTED STAFF WORKSPACE", panelLeft + 16, panelTop + 30, ACCENT);
-        drawString(fontRendererObj, "MODULE FOLDERS", panelLeft + 16, panelTop + 49, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Alpha  /  Staff operations", panelLeft + 16, panelTop + 13, 0xFFF0F1F4);
+        drawString(fontRendererObj, "Staff information and management", panelLeft + 16, panelTop + 30, ACCENT);
+        drawString(fontRendererObj, "Modules", panelLeft + 16, panelTop + 49, 0xFFB8BDC8);
         drawRect(panelLeft + 14, panelTop + 66, right - 14, panelTop + 67, 0x554B515D);
         drawString(fontRendererObj, "Open a staff module or launch the separate dashboard.", contentLeft,
                 panelTop + 71, 0xFFE6E8ED);
         drawRect(panelLeft + 14, bottom - 36, right - 14, bottom - 35, 0x334B515D);
-        drawString(fontRendererObj, "STAFF OPERATIONS  •  MODULE ACCESS", panelLeft + 14, bottom - 25, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Staff operations  •  Module access", panelLeft + 14, bottom - 25, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
