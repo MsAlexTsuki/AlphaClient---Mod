@@ -1,6 +1,8 @@
 package com.alpharip.staffmod.hud;
 
 import com.alpharip.staffmod.profile.ModuleProfileManager;
+import com.alpharip.staffmod.config.HudScaleConfig;
+import net.minecraft.client.renderer.GlStateManager;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -90,12 +92,17 @@ public final class PlaytimeTrackerHud {
     private static void renderHud(Minecraft mc, String text) {
         int x = getHudX();
         int y = getHudY();
+        float scale = HudScaleConfig.get(MODULE_ID);
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, 0.0F);
+        GlStateManager.scale(scale, scale, 1.0F);
         int textWidth = mc.fontRendererObj.getStringWidth(text) + 10;
         if (isShowBackground()) {
-            Gui.drawRect(x - 3, y - 3, x + textWidth, y + mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-            Gui.drawRect(x - 3, y - 3, x + textWidth, y - 2, 0xFFFFD866);
+            Gui.drawRect(-3, -3, textWidth, mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            Gui.drawRect(-3, -3, textWidth, -2, 0xFFFFD866);
         }
-        mc.fontRendererObj.drawStringWithShadow(text, x, y, getTextColor());
+        mc.fontRendererObj.drawStringWithShadow(text, 0, 0, getTextColor());
+        GlStateManager.popMatrix();
     }
 
     public static synchronized long getTotalPlaytimeMillis() {
