@@ -667,6 +667,30 @@ public final class SupabaseCommunityService {
     }
 
     /** Reads centrally recorded AlphaClient and staff actions for the activity/audit viewer. */
+    public static synchronized JsonArray getStaffModuleActivity() throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) throw new IllegalStateException("Sign in to your Alpha Account to load staff activity.");
+        return requestArray("GET", "/rest/v1/staff_module_activity?select=id,actor_id,actor_label,module_key,event_type,action_key,target_label,details,occurred_at&order=occurred_at.desc&limit=200", token);
+    }
+
+    public static synchronized void recordStaffModuleActivity(String moduleKey, String eventType, String actionKey, String targetLabel, JsonObject details) throws Exception {
+        String token = accessToken;
+        String userId = signedInUserId;
+        if (token == null || token.trim().isEmpty() || userId == null || userId.trim().isEmpty()) throw new IllegalStateException("Sign in to your Alpha Account to record staff activity.");
+        if (moduleKey == null || !moduleKey.matches("[a-zA-Z0-9_.-]{1,64}")) throw new IllegalArgumentException("Invalid module key.");
+        if (!("module_opened".equals(eventType) || "module_toggled".equals(eventType) || "action_performed".equals(eventType))) throw new IllegalArgumentException("Invalid activity event type.");
+        if (actionKey == null || actionKey.trim().isEmpty() || actionKey.length() > 100) throw new IllegalArgumentException("Invalid activity action.");
+        JsonObject body = new JsonObject();
+        body.addProperty("actor_id", userId);
+        body.addProperty("actor_label", signedInAlphaName == null ? "" : signedInAlphaName);
+        body.addProperty("module_key", moduleKey);
+        body.addProperty("event_type", eventType);
+        body.addProperty("action_key", actionKey);
+        body.addProperty("target_label", targetLabel == null ? "" : targetLabel.substring(0, Math.min(120, targetLabel.length())));
+        body.add("details", details == null ? new JsonObject() : details);
+        requestArray("POST", "/rest/v1/staff_module_activity?select=id", token, body.toString());
+    }
+
     public static synchronized JsonArray getStaffAuditLogs() throws Exception {
         String token = accessToken;
         if (token == null || token.trim().isEmpty()) {
