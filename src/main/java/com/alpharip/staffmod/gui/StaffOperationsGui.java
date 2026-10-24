@@ -113,6 +113,7 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        if (System.currentTimeMillis() - lastRefreshAt >= 10000L) refreshRecords(false);
         drawRect(0, 0, width, height, 0x30000000);
         int right = panelLeft + panelWidth;
         int bottom = panelTop + panelHeight;
