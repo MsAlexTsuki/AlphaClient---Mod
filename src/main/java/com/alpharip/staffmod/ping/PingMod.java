@@ -6,7 +6,6 @@ import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.network.NetworkPlayerInfo;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
