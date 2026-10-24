@@ -675,6 +675,36 @@ public final class SupabaseCommunityService {
         return requestArray("GET", "/rest/v1/audit_logs?select=id,occurred_at,actor_id,actor_label,product,category,action,target_user_id,target_label,outcome,details&product=in.(client,system)&order=occurred_at.desc&limit=100", token);
     }
 
+    /** Updates a shared staff record. Supabase RLS remains the authority for who may edit it. */
+    public static synchronized JsonObject updateStaffOperationsRecord(String id, String title, String status, JsonObject payload) throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) throw new IllegalStateException("Sign in to your Alpha Account to edit staff records.");
+        if (id == null || !id.matches("[0-9a-fA-F-]{36}")) throw new IllegalArgumentException("Invalid staff record ID.");
+        if (title == null || title.trim().isEmpty()) throw new IllegalArgumentException("Record title cannot be empty.");
+        if (status == null || !("open".equals(status) || "in_progress".equals(status) || "resolved".equals(status) || "closed".equals(status) || "active".equals(status) || "away".equals(status) || "busy".equals(status))) throw new IllegalArgumentException("Unsupported record status.");
+        JsonObject body = new JsonObject();
+        body.addProperty("title", title.trim());
+        body.addProperty("status", status);
+        body.add("payload", payload == null ? new JsonObject() : payload);
+        String path = "/rest/v1/staff_operations_records?id=eq." + java.net.URLEncoder.encode(id, "UTF-8")
+                + "&select=id,record_type,title,status,payload,created_by,assigned_to,created_at,updated_at";
+        JsonArray result = requestArray("PATCH", path, token, body.toString());
+        if (result.size() == 0 || !result.get(0).isJsonObject()) throw new IllegalStateException("Record was not updated. The database may deny this action through its access policies.");
+        return result.get(0).getAsJsonObject();
+    }
+
+    /** Deletes a shared staff record only when the database policy permits it. */
+    public static synchronized void deleteStaffOperationsRecord(String id) throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) throw new IllegalStateException("Sign in to your Alpha Account to delete staff records.");
+        if (id == null || !id.matches("[0-9a-fA-F-]{36}")) throw new IllegalArgumentException("Invalid staff record ID.");
+        String path = "/rest/v1/staff_operations_records?id=eq." + java.net.URLEncoder.encode(id, "UTF-8");
+        HttpURLConnection connection = open("DELETE", path, token);
+        readResponse(connection);
+        int code = connection.getResponseCode();
+        if (code < 200 || code >= 300) throw new IllegalStateException("Delete failed with HTTP " + code + ".");
+    }
+
     /** Creates a shared Staff Operations record. Audit records are server-generated and cannot be submitted here. */
     public static synchronized JsonObject createStaffOperationsRecord(String type, String title, String status, JsonObject payload) throws Exception {
         String token = accessToken;
