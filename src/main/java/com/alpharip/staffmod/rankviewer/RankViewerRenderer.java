@@ -7,7 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -182,19 +182,19 @@ public final class RankViewerRenderer {
         }
         if (target == null) return rank == null ? 0xFFFFFFFF : rank.color();
 
-        ScorePlayerTeam targetTeam = target.getTeam();
-        ScorePlayerTeam ownTeam = minecraft.thePlayer.getTeam();
+        Team targetTeam = target.getTeam();
+        Team ownTeam = minecraft.thePlayer.getTeam();
         if (target.getUniqueID().equals(minecraft.thePlayer.getUniqueID())) {
             if (ownTeam != null && ownTeam.getChatFormat() != null
-                    && ownTeam.getChatFormat().getColor() != null) {
-                return 0xFF000000 | ownTeam.getChatFormat().getColor();
+                    && ownTeam.getChatFormat().getColorIndex() >= 0) {
+                return 0xFF000000 | getFormattingColor(ownTeam.getChatFormat());
             }
             return rank == null ? 0xFFFFFFFF : rank.color();
         }
         if (targetTeam != null && ownTeam != null && targetTeam.isSameTeam(ownTeam)) {
             EnumChatFormatting format = targetTeam.getChatFormat();
-            if (format != null && format.getColor() != null) {
-                return 0xFF000000 | format.getColor();
+            if (format != null && format.getColorIndex() >= 0) {
+                return 0xFF000000 | getFormattingColor(format);
             }
         }
         if (targetTeam != null) {
@@ -204,6 +204,18 @@ public final class RankViewerRenderer {
             }
         }
         return 0xFFFFFFFF;
+    }
+
+    private static int getFormattingColor(EnumChatFormatting format) {
+        if (format == null || format.getColorIndex() < 0) return 0xFFFFFF;
+        int index = format.getColorIndex();
+        int[] colors = {
+                0x000000, 0x0000AA, 0x00AA00, 0x00AAAA,
+                0xAA0000, 0xAA00AA, 0xFFAA00, 0xAAAAAA,
+                0x555555, 0x5555FF, 0x55FF55, 0x55FFFF,
+                0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF
+        };
+        return index >= 0 && index < colors.length ? colors[index] : 0xFFFFFF;
     }
 
     private static void restoreCapability(int capability, boolean enabled) {
