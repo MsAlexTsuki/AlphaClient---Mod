@@ -27,6 +27,7 @@ import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.rankviewer.RankCache;
 import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 import com.alpharip.staffmod.quality.FullbrightMod;
+import com.alpharip.staffmod.quality.AutoGGMod;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -87,12 +88,14 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new LegacyPvpMod());
         MinecraftForge.EVENT_BUS.register(new WTapAssistance());
         MinecraftForge.EVENT_BUS.register(new FullbrightMod());
+        MinecraftForge.EVENT_BUS.register(new AutoGGMod());
         RankCache.INSTANCE.start();
         // Restore the Alpha Account session and keep rank/module permissions in sync.
         SupabaseCommunityService.start();
 
         // Load every implemented HUD's persisted position before registering its renderer.
         AlphaClientConfig.load();
+        AutoGGMod.loadSettings();
         BhopHud.loadHudPosition();
         CpsMod.load();
         PingMod.load();
@@ -138,7 +141,7 @@ public final class AlphaClient {
                 "hudeditor", "profiles", "profile", "alphaperms", "staffmods", "staffgeneral", "stafftmod", "staffmod",
                 "staffsrmod", "staffadmin", "staffsradmin", "staffmanagement",
                 "staffplatformadmin", "staffplatadmin", "staffmanager", "staffowner", "stafffounder",
-                "general", "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus"
+                "general", "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus", "autogg"
         };
         for (String command : commands) {
             ClientCommandHandler.instance.registerCommand(new AlphaClientCommand(command));
