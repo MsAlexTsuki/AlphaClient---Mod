@@ -72,6 +72,18 @@ public final class AlphaClientCommand extends CommandBase {
         }
 
         String permissionKey = commandPermissionForRoute(route, args);
+        if (("bhop".equals(route) || "alphaclient:bhop".equals(route)
+                || ("alphaclient".equals(route) && args != null && args.length > 0 && "bhop".equalsIgnoreCase(args[0])))
+                && !hasBhopAccess()) {
+            reply(sender, "Access denied: BHOP requires the correct staff rank and staff.bhop permission.");
+            return;
+        }
+        if (("wtap".equals(route) || "alphaclient:wtap".equals(route)
+                || ("alphaclient".equals(route) && args != null && args.length > 0 && "wtap".equalsIgnoreCase(args[0])))
+                && !hasWTapAccess()) {
+            reply(sender, "Access denied: W-Tap Assistance is Founder-only.");
+            return;
+        }
         if (permissionKey != null && Boolean.FALSE.equals(PermissionService.getCommandPermissionOverride(permissionKey))) {
             reply(sender, "Access denied: your Alpha Account does not have " + permissionKey + ".");
             return;
@@ -1383,8 +1395,14 @@ public final class AlphaClientCommand extends CommandBase {
                                                 net.minecraft.util.BlockPos pos) {
         List<String> options = new ArrayList<String>();
         if ("staffmods".equals(commandName) && args.length == 1) {
+            if (!PermissionService.hasStaffModsAccess()) return options;
             String[] folders = {"general","beta","tmod","mod","srmod","admin","sradmin","management","platformadmin","manager","owner","founder","donator","scout","rogue","elite","alpha","alphaplus"};
-            for (String folder : folders) options.add(folder);
+            for (String folder : folders) {
+                String key = staffFolderPermission(folder);
+                Boolean override = PermissionService.getCommandPermissionOverride(key);
+                if (Boolean.FALSE.equals(override)) continue;
+                if (isStaffFolderCompletionAllowed(folder)) options.add(folder);
+            }
         } else if ("profile".equals(commandName) && args.length == 1) {
             options.add("create");
             options.add("edit");
@@ -1402,24 +1420,60 @@ public final class AlphaClientCommand extends CommandBase {
         } else if ("alphaclient".equals(commandName)) {
             if (args.length == 1) {
                 String[] values = {"help","modules","settings","module","fps","cps","bhop","wtap","fullbright"};
-                for (String value : values) options.add(value);
+                for (String value : values) if (isCompletionAllowed(commandPermissionForRoute("alphaclient", new String[]{value}))) options.add(value);
             } else if (args.length == 2 && "module".equalsIgnoreCase(args[0])) {
                 for (AlphaModule module : AlphaModuleRegistry.getAll()) {
                     if ("staffmods".equals(module.getId()) || "quality".equals(module.getId())) continue;
-                    options.add(module.getId());
+                    if (isCompletionAllowed(moduleCommandPermission(module.getId()))) options.add(module.getId());
                 }
                 String[] extra = {"bhop","wtap","fullbright","playtime","sessiontimer","afktimer"};
-                for (String value : extra) options.add(value);
+                for (String value : extra) if (isCompletionAllowed(moduleCommandPermission(value))) options.add(value);
             } else if (args.length == 2 && "settings".equalsIgnoreCase(args[0])) {
                 String[] values = {"fps","cps","bhop","wtap","fullbright","playtime","sessiontimer","afktimer","nameviewer","legacypvp","quality"};
-                for (String value : values) options.add(value);
+                for (String value : values) if (isCompletionAllowed(moduleCommandPermission(value))) options.add(value);
             }
         } else if ("alphaclient:module".equals(commandName) && args.length == 2) {
             options.add("on"); options.add("off"); options.add("toggle");
         } else if ("alphaclient:settings".equals(commandName) && args.length == 1) {
             String[] values = {"fps","cps","bhop","wtap","fullbright","playtime","sessiontimer","afktimer","nameviewer","legacypvp","quality"};
-            for (String value : values) options.add(value);
+            for (String value : values) if (isCompletionAllowed(moduleCommandPermission(value))) options.add(value);
         }
         return options;
+    }
+
+    private boolean isCompletionAllowed(String permissionKey) {
+        if (permissionKey == null) return true;
+        if ("command.bhop".equals(permissionKey)) return hasBhopAccess();
+        if ("command.wtap".equals(permissionKey)) return hasWTapAccess();
+        Boolean override = PermissionService.getCommandPermissionOverride(permissionKey);
+        if (Boolean.FALSE.equals(override)) return false;
+        if (permissionKey.startsWith("staffmods.")) return PermissionService.hasStaffModsAccess();
+        return true;
+    }
+
+    private boolean isStaffFolderCompletionAllowed(String folder) {
+        if ("general".equals(folder)) return PermissionService.hasStaffModsAccess();
+        if ("beta".equals(folder) || "donator".equals(folder) || "scout".equals(folder)
+                || "rogue".equals(folder) || "elite".equals(folder) || "alpha".equals(folder)
+                || "alphaplus".equals(folder)) {
+            String key = staffFolderPermission(folder);
+            Boolean override = PermissionService.getCommandPermissionOverride(key);
+            if (override != null) return override.booleanValue();
+            AlphaModule.Category category = regularCategoryAlias(folder);
+            return category != null && PermissionService.hasAccess(category.getRequiredRank());
+        }
+        PermissionService.Rank rank = null;
+        if ("tmod".equals(folder)) rank = PermissionService.Rank.T_MOD;
+        else if ("mod".equals(folder)) rank = PermissionService.Rank.MOD;
+        else if ("srmod".equals(folder)) rank = PermissionService.Rank.SR_MOD;
+        else if ("admin".equals(folder)) rank = PermissionService.Rank.ADMIN;
+        else if ("sradmin".equals(folder)) rank = PermissionService.Rank.SR_ADMIN;
+        else if ("platformadmin".equals(folder)) rank = PermissionService.Rank.PLAT_ADMIN;
+        else if ("management".equals(folder) || "manager".equals(folder)) rank = PermissionService.Rank.MANAGER;
+        else if ("owner".equals(folder)) rank = PermissionService.Rank.OWNER;
+        else if ("founder".equals(folder)) rank = PermissionService.Rank.FOUNDER;
+        if (rank == null) return false;
+        Boolean override = PermissionService.getCommandPermissionOverride(staffFolderPermission(folder));
+        return override != null ? override.booleanValue() : PermissionService.hasAccess(rank);
     }
 }
