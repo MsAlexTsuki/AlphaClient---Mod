@@ -265,6 +265,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             if (query.isEmpty() || module.getName().toLowerCase(Locale.ROOT).contains(query)
                     || module.getDescription().toLowerCase(Locale.ROOT).contains(query)) result.add(module);
         }
+
+        // Quality is a dedicated folder opener and must remain the final module in General.
+        if (selectedCategory == AlphaModule.Category.PUBLIC) {
+            for (int i = result.size() - 1; i >= 0; i--) {
+                if ("quality".equals(result.get(i).getId())) {
+                    AlphaModule quality = result.remove(i);
+                    result.add(quality);
+                    break;
+                }
+            }
+        }
         return result;
     }
 
