@@ -109,7 +109,6 @@ public final class AlphaModule {
     private String getPermissionId() {
         // These stable IDs match the current AlphaLauncher permission catalog.
         if ("fps".equals(id)) return "public.performance_monitor";
-        if ("potion-hud-info".equals(id)) return "hud.potion";
         if ("cps".equals(id)) return "public.custom_hud";
         if ("staffmods".equals(id)) return "staff.bhop";
         return id;
@@ -123,8 +122,8 @@ public final class AlphaModule {
     }
 
     public boolean isUnlocked() {
-        // Armor HUD and CPS remain public. Potion HUD uses its explicit hud.potion grant.
-        if ("armor-hud-info".equals(id) || "cps".equals(id)) {
+        // Armor HUD, Potion HUD and CPS remain public.
+        if ("armor-hud-info".equals(id) || "potion-hud-info".equals(id) || "cps".equals(id)) {
             return true;
         }
 
