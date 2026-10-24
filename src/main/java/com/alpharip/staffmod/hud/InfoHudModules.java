@@ -30,7 +30,7 @@ public final class InfoHudModules {
     public static final int MODE_DEBUFFS = 3;
     private static final int DEFAULT_COLOR = 0xFFFFFFFF;
     private static int armorX = 8, armorY = 80, armorColor = DEFAULT_COLOR, armorLayout;
-    private static int potionX = 8, potionY = 120, potionColor = DEFAULT_COLOR, potionMode = MODE_ICONS;
+    private static int potionX = 8, potionY = 120, potionColor = DEFAULT_COLOR, potionMode = MODE_ICONS;\n    private static boolean potionRainbow;
     private static boolean armorShowNames = true, armorShowDurability = true;
     private static boolean loaded;
     private static final Minecraft MC = Minecraft.getMinecraft();
@@ -56,7 +56,7 @@ public final class InfoHudModules {
             armorShowDurability = Boolean.parseBoolean(p.getProperty("armorShowDurability", "true"));
             potionX = integer(p, "potionX", potionX);
             potionY = integer(p, "potionY", potionY);
-            potionColor = integer(p, "potionColor", potionColor);
+            potionColor = integer(p, "potionColor", potionColor);\n            potionRainbow = Boolean.parseBoolean(p.getProperty("potionRainbow", "false"));
             potionMode = clamp(integer(p, "potionMode", MODE_ICONS), MODE_ICONS, MODE_DEBUFFS);
         } catch (Exception e) {
             System.err.println("[AlphaClient] Could not load Armor/Potion HUD settings: " + e.getMessage());
@@ -89,7 +89,7 @@ public final class InfoHudModules {
         p.setProperty("armorShowDurability", String.valueOf(armorShowDurability));
         p.setProperty("potionX", String.valueOf(potionX));
         p.setProperty("potionY", String.valueOf(potionY));
-        p.setProperty("potionColor", String.valueOf(potionColor));
+        p.setProperty("potionColor", String.valueOf(potionColor));\n        p.setProperty("potionRainbow", String.valueOf(potionRainbow));
         p.setProperty("potionMode", String.valueOf(potionMode));
         FileOutputStream out = null;
         try {
@@ -119,7 +119,7 @@ public final class InfoHudModules {
 
     public static int getPotionX() { load(); return potionX; }
     public static int getPotionY() { load(); return potionY; }
-    public static int getPotionColor() { load(); return potionColor; }
+    public static int getPotionColor() { load(); return potionRainbow ? rainbowColor() : potionColor; }\n    public static boolean isPotionRainbow() { load(); return potionRainbow; }
     public static int getPotionEditorWidth() { load(); return potionMode == MODE_ICONS ? 18 : 210; }
     public static int getPotionEditorHeight() {
         load();
@@ -130,7 +130,7 @@ public final class InfoHudModules {
     public static int getPotionMode() { load(); return potionMode; }
     public static void setPotionPosition(int x, int y) { load(); potionX = Math.max(0, x); potionY = Math.max(0, y); save(); }
     public static void cyclePotionMode() { load(); potionMode = (potionMode + 1) % 4; save(); }
-    public static void cyclePotionColor() { load(); potionColor = nextPotionColor(potionColor); save(); }
+    public static void cyclePotionColor() {\n        load();\n        int[] colors = {0xFFFFFFFF, 0xFFB8BDC8, 0xFFFFD866, 0xFFFFAA00, 0xFFFF5555, 0xFF55FF55, 0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA};\n        if (potionRainbow) { potionRainbow = false; potionColor = colors[0]; }\n        else {\n            int next = -1;\n            for (int i = 0; i < colors.length; i++) if (colors[i] == potionColor) { next = i + 1; break; }\n            if (next >= colors.length) potionRainbow = true;\n            else if (next >= 0) potionColor = colors[next];\n            else potionColor = colors[0];\n        }\n        save();\n    }\n    private static int rainbowColor() {\n        float hue = (System.currentTimeMillis() % 6000L) / 6000.0F;\n        return 0xFF000000 | (java.awt.Color.HSBtoRGB(hue, 1.0F, 1.0F) & 0x00FFFFFF);\n    }
     public static String getPotionModeName() {
         switch (getPotionMode()) {
             case MODE_ALL: return "All effects";
