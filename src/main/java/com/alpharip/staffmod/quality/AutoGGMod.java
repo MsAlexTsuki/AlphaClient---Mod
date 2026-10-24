@@ -1,7 +1,5 @@
 package com.alpharip.staffmod.quality;
 
-import com.alpharip.staffmod.modules.AlphaModule;
-import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -28,20 +26,19 @@ public final class AutoGGMod {
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
 
     private static int delayTicks = DEFAULT_DELAY_TICKS;
+    private static boolean enabled;
     private int pendingTicks = -1;
     private int cooldownTicks;
     private boolean pending;
 
     public static boolean isEnabled() {
-        AlphaModule module = AlphaModuleRegistry.find("auto-gg");
-        return module != null && module.isImplemented() && module.isEnabled();
+        return enabled;
     }
 
-    public static void setEnabled(boolean enabled) {
-        AlphaModule module = AlphaModuleRegistry.find("auto-gg");
-        if (module != null && module.isImplemented()) {
-            module.setEnabled(enabled);
-        }
+    public static void setEnabled(boolean shouldEnable) {
+        if (enabled == shouldEnable) return;
+        enabled = shouldEnable;
+        saveSettings();
     }
 
     public static double getDelaySeconds() {
@@ -65,6 +62,10 @@ public final class AutoGGMod {
             reader = new FileReader(file);
             JsonElement root = new JsonParser().parse(reader);
             if (root != null && root.isJsonObject()) {
+                JsonElement enabledValue = root.getAsJsonObject().get("enabled");
+                if (enabledValue != null && enabledValue.isJsonPrimitive()) {
+                    enabled = enabledValue.getAsBoolean();
+                }
                 JsonElement delay = root.getAsJsonObject().get("delayTicks");
                 if (delay != null && delay.isJsonPrimitive()) {
                     delayTicks = Math.max(0, Math.min(MAX_DELAY_TICKS, delay.getAsInt()));
@@ -84,6 +85,7 @@ public final class AutoGGMod {
         File parent = file.getParentFile();
         if (parent != null && !parent.exists() && !parent.mkdirs()) return;
         JsonObject root = new JsonObject();
+        root.addProperty("enabled", enabled);
         root.addProperty("delayTicks", delayTicks);
         FileWriter writer = null;
         try {
