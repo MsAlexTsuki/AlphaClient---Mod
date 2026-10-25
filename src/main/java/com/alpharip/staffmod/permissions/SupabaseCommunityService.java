@@ -426,12 +426,13 @@ public final class SupabaseCommunityService {
     /** True only when the authenticated Alpha community profile has verified Founder status. */
     public static boolean isSignedInFounder() { return accessToken != null && signedInFounder; }
 
-    /** Staff Operations is restricted to authenticated Owner and Founder accounts. */
+    /** Staff Operations is available to authenticated Manager, Owner, and Founder accounts. */
     public static boolean hasStaffOperationsAccess() {
-        if (accessToken == null) return false;
-        if (signedInFounder) return true;
-        String rank = getSignedInRankLabel();
-        return rank != null && "Owner".equalsIgnoreCase(rank.trim());
+        if (accessToken == null || !PermissionService.isOnlineRankVerified()) return false;
+        java.util.Set<PermissionService.Rank> ranks = PermissionService.getVerifiedOnlineRanks();
+        return ranks != null && (ranks.contains(PermissionService.Rank.MANAGER)
+                || ranks.contains(PermissionService.Rank.OWNER)
+                || ranks.contains(PermissionService.Rank.FOUNDER));
     }
 
     public static String getSignedInEmail() { return signedInEmail; }
@@ -877,8 +878,10 @@ public final class SupabaseCommunityService {
 
     /** Client-side guard for the Owner/Founder-only /alphanote command. */
     public static boolean canUseAlphaNoteCommand() {
+        if (accessToken == null || !PermissionService.isOnlineRankVerified()) return false;
         java.util.Set<PermissionService.Rank> ranks = PermissionService.getVerifiedOnlineRanks();
-        return ranks != null && (ranks.contains(PermissionService.Rank.OWNER) || ranks.contains(PermissionService.Rank.FOUNDER));
+        return signedInFounder || (ranks != null
+                && (ranks.contains(PermissionService.Rank.OWNER) || ranks.contains(PermissionService.Rank.FOUNDER)));
     }
 
     /** Owner/Founder-only command data; Supabase RLS independently enforces visibility. */
