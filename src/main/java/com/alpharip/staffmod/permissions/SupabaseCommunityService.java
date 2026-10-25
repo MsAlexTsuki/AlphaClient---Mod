@@ -804,4 +804,87 @@ public final class SupabaseCommunityService {
         return result.get(0).getAsJsonObject();
     }
 
+
+    /** Upserts the current staff member's live presence through a server-side RPC. */
+    public static synchronized void sendStaffPresenceHeartbeat(boolean afk) throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty() || signedInUserId == null || signedInUserId.trim().isEmpty())
+            throw new IllegalStateException("Sign in to your Alpha Account to update staff presence.");
+        JsonObject body = new JsonObject();
+        body.addProperty("p_alpha_name", signedInAlphaName == null ? "" : signedInAlphaName);
+        body.addProperty("p_afk", afk);
+        HttpURLConnection connection = open("POST", "/rest/v1/rpc/staff_presence_heartbeat", token);
+        connection.setDoOutput(true);
+        connection.setRequestProperty("Content-Type", "application/json");
+        byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
+        connection.setRequestProperty("Content-Length", String.valueOf(bytes.length));
+        OutputStream output = connection.getOutputStream();
+        try { output.write(bytes); } finally { output.close(); }
+        readResponse(connection);
+    }
+
+    /** Marks the current account offline on a normal client disconnect/logout. */
+    public static synchronized void markStaffPresenceOffline() throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) return;
+        HttpURLConnection connection = open("POST", "/rest/v1/rpc/staff_presence_mark_offline", token);
+        connection.setDoOutput(true);
+        connection.setRequestProperty("Content-Type", "application/json");
+        byte[] bytes = "{}".getBytes(StandardCharsets.UTF_8);
+        connection.setRequestProperty("Content-Length", String.valueOf(bytes.length));
+        OutputStream output = connection.getOutputStream();
+        try { output.write(bytes); } finally { output.close(); }
+        readResponse(connection);
+    }
+
+    /** Reads shared live presence; Supabase RLS decides which staff can see it. */
+    public static synchronized JsonArray getStaffPresence() throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) throw new IllegalStateException("Sign in to view staff presence.");
+        return requestArray("GET", "/rest/v1/staff_presence?select=user_id,alpha_name,online,afk,last_seen_at,last_heartbeat_at,session_started_at,updated_at&order=online.desc,last_seen_at.desc&limit=100", token);
+    }
+
+    /** Reads private notes; RLS limits Managers to their own notes and Owner/Founder to all notes. */
+    public static synchronized JsonArray getPrivateStaffNotes(String subjectName) throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) throw new IllegalStateException("Sign in to view private staff notes.");
+        String path = "/rest/v1/staff_private_notes?select=id,subject_name,note,created_by,created_by_label,created_at,updated_at&order=created_at.desc&limit=100";
+        if (subjectName != null && !subjectName.trim().isEmpty()) {
+            if (!subjectName.trim().matches("[A-Za-z0-9_]{1,16}")) throw new IllegalArgumentException("Enter a valid player name.");
+            path += "&subject_name=ilike." + java.net.URLEncoder.encode(subjectName.trim(), "UTF-8");
+        }
+        return requestArray("GET", path, token);
+    }
+
+    /** Creates a private staff note. Supabase RLS is the final authorization check. */
+    public static synchronized JsonObject createPrivateStaffNote(String subjectName, String note) throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty() || signedInUserId == null || signedInUserId.trim().isEmpty())
+            throw new IllegalStateException("Sign in to add a private staff note.");
+        if (subjectName == null || !subjectName.trim().matches("[A-Za-z0-9_]{1,16}"))
+            throw new IllegalArgumentException("Enter a valid player name (1-16 letters, numbers or underscores).");
+        if (note == null || note.trim().isEmpty() || note.trim().length() > 2000)
+            throw new IllegalArgumentException("Note must contain 1-2000 characters.");
+        JsonObject body = new JsonObject();
+        body.addProperty("subject_name", subjectName.trim());
+        body.addProperty("note", note.trim());
+        body.addProperty("created_by", signedInUserId);
+        body.addProperty("created_by_label", signedInAlphaName == null ? "" : signedInAlphaName);
+        JsonArray result = requestArray("POST", "/rest/v1/staff_private_notes?select=id,subject_name,note,created_by,created_by_label,created_at,updated_at", token, body.toString());
+        if (result.size() == 0 || !result.get(0).isJsonObject()) throw new IllegalStateException("Supabase did not return the created private note.");
+        return result.get(0).getAsJsonObject();
+    }
+
+    /** Client-side guard for the Owner/Founder-only /alphanote command. */
+    public static boolean canUseAlphaNoteCommand() {
+        java.util.Set<PermissionService.Rank> ranks = PermissionService.getVerifiedOnlineRanks();
+        return ranks != null && (ranks.contains(PermissionService.Rank.OWNER) || ranks.contains(PermissionService.Rank.FOUNDER));
+    }
+
+    /** Owner/Founder-only command data; Supabase RLS independently enforces visibility. */
+    public static synchronized JsonArray getAllManagerPrivateNotesForOwnerCommand() throws Exception {
+        if (!canUseAlphaNoteCommand()) throw new SecurityException("The /alphanote command is restricted to Owner and Founder.");
+        return getPrivateStaffNotes(null);
+    }
+
 }
