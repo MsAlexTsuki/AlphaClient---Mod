@@ -260,6 +260,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         for (AlphaModule module : AlphaModuleRegistry.getForCategory(selectedCategory)) {
             // Bhop is exclusive to STAFFMODS -> GENERAL, never a rank-category module.
             if ("staffmods".equals(module.getId())) continue;
+            // Healthbar belongs in StaffMods -> General, not the public General module list.
+            if ("healthbar".equals(module.getId())) continue;
             // Do not render locked modules; visibility must match the effective permission result.
             if (!module.isUnlocked()) continue;
             if (query.isEmpty() || module.getName().toLowerCase(Locale.ROOT).contains(query)
