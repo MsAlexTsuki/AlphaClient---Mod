@@ -311,6 +311,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             commandResults.add("afk [note] | busy [note] | available [note]");
             commandResults.add("investigating <note> | activity [player]");
             commandResults.add("loginlog | notes <player>");
+            commandResults.add("addnote <player> <note>");
             commandStatus = "Status commands save shared Presence timeline records.";
         } else if ("cases".equals(command) || "shifts".equals(command) || "presence".equals(command)) {
             String type = "cases".equals(command) ? "case" : "shifts".equals(command) ? "shift" : "presence";
@@ -361,6 +362,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
                 }
             }
         } else if ("loginlog".equals(command)) {
+            refreshRecords(false);
             int shown = 0;
             for (int i = 0; i < moduleActivity.size() && shown < 2; i++) {
                 if (!moduleActivity.get(i).isJsonObject()) continue;
@@ -368,15 +370,48 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
                 String action = value(event, "action_key", "");
                 if (!"session_login".equals(action) && !"session_logout".equals(action)) continue;
                 String line = value(event, "actor_label", value(event, "actor_id", "Unknown staff"))
-                        + " / " + action + " / " + value(event, "occurred_at", "");
+                        + " / " + ("session_login".equals(action) ? "Login" : "Logout")
+                        + " / " + value(event, "occurred_at", "");
                 commandResults.add(line.length() > 78 ? line.substring(0, 75) + "..." : line);
                 shown++;
             }
             commandStatus = shown == 0
-                    ? "No login/logout events recorded yet; session tracking is not connected."
-                    : "Recorded login/logout events (not a live session list).";
+                    ? "No login/logout events found in the readable staff activity records."
+                    : "Latest recorded staff login/logout events.";
         } else if ("notes".equals(command)) {
-            commandStatus = parts.length < 2 ? "Usage: notes <player>" : "Notes lookup is not connected yet; no notes are fabricated.";
+            if (parts.length < 2 || parts[1].trim().isEmpty()) {
+                commandStatus = "Usage: notes <player>";
+            } else {
+                try {
+                    JsonArray notes = SupabaseCommunityService.getStaffPlayerNotes(parts[1].trim());
+                    int shown = 0;
+                    for (int i = 0; i < notes.size() && shown < 2; i++) {
+                        if (!notes.get(i).isJsonObject()) continue;
+                        JsonObject note = notes.get(i).getAsJsonObject();
+                        String line = value(note, "player_name", parts[1]) + " / "
+                                + value(note, "created_by_label", "Staff") + " / "
+                                + value(note, "note", "");
+                        commandResults.add(line.length() > 78 ? line.substring(0, 75) + "..." : line);
+                        shown++;
+                    }
+                    commandStatus = shown == 0 ? "No staff notes found for " + parts[1] + "." : "Found " + shown + " staff note(s).";
+                } catch (Exception e) {
+                    commandStatus = "Notes lookup failed: " + safeMessage(e.getMessage());
+                }
+            }
+        } else if ("addnote".equals(command)) {
+            if (parts.length < 3 || parts[1].trim().isEmpty() || parts[2].trim().isEmpty()) {
+                commandStatus = "Usage: addnote <player> <note>";
+            } else {
+                try {
+                    JsonObject created = SupabaseCommunityService.createStaffPlayerNote(parts[1].trim(), parts[2].trim());
+                    commandResults.add(value(created, "player_name", parts[1]) + " / " + value(created, "note", parts[2]));
+                    commandStatus = "Staff note saved to the shared database.";
+                    refreshRecords(false);
+                } catch (Exception e) {
+                    commandStatus = "Could not save staff note: " + safeMessage(e.getMessage());
+                }
+            }
         } else { commandStatus = "Unknown command: " + parts[0] + ". Enter help."; }
         if (commandField != null) commandField.setFocused(true);
     }
