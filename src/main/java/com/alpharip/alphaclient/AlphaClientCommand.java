@@ -1497,7 +1497,10 @@ public final class AlphaClientCommand extends CommandBase {
         if (rank == PermissionService.Rank.ALPHA_PLUS) {
             reply(sender, "/alphaplus opens Mods -> Alpha+.");
         }
-        reply(sender, "Available shortcuts: /fpshud /cpshud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality /hudeditor /profiles /profile <name|create|edit|delete>.");
+        reply(sender, "Available shortcuts: /fpshud /cpshud /pothud /playtime /sessiontimer /afktimer /fullbright /nameviewer /legacypvp /quality /autogg /autoreconnect /hudeditor /profiles /profile <name|create|edit|delete>.");
+        reply(sender, "Potion HUD: /pothud [help|settings|on|off|toggle].");
+        reply(sender, "Quality automation: /autogg [on|off|toggle], /autoreconnect [on|off|toggle].");
+        reply(sender, "Help GUI: /alphahelp open.");
         if (hasBhopAccess()) {
             reply(sender, "BHOP: /bhop [settings|on|off|toggle|speed|shiftup|name|color].");
         }
