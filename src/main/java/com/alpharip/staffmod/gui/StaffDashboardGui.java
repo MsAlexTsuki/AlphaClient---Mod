@@ -5,7 +5,11 @@ import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiTextField;
+import org.lwjgl.input.Keyboard;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Dedicated Staff Dashboard for shared staff records and module overviews;
@@ -19,6 +23,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private static final int PRESENCE = 13;
     private static final int AUDIT = 14;
     private static final int REFRESH = 15;
+    private static final int RUN_COMMAND = 16;
     private static final int ACCENT = 0xFFFFD866;
     private static final int NAV_BASE = 100;
     private int dividerX;
@@ -32,6 +37,9 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private JsonArray moduleActivity = new JsonArray();
     private String dataStatus = "Sign in to load shared staff data.";
     private long lastRefreshAt = 0L;
+    private GuiTextField commandField;
+    private final List<String> commandResults = new ArrayList<String>();
+    private String commandStatus = "Enter help to list dashboard commands.";
 
     private enum Section {
         DASHBOARD("Dashboard"),
@@ -86,6 +94,9 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         contentTop = panelTop + 72;
         contentBottom = panelTop + panelHeight - 76;
         refreshRecords(false);
+        commandField = new GuiTextField(30, fontRendererObj, contentLeft, panelTop + panelHeight - 83, Math.max(90, contentRight - contentLeft - 62), 20);
+        commandField.setMaxStringLength(180);
+        commandField.setCanLoseFocus(false);
 
         buttonList.add(new AlphaButton(NAV_BASE, listX, panelTop + 62, listWidth, 20, "Overview", section == Section.DASHBOARD));
         buttonList.add(new AlphaButton(NAV_BASE + 1, listX, panelTop + 85, listWidth, 20, "Cases", section == Section.CASES));
@@ -94,6 +105,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(NAV_BASE + 4, listX, panelTop + 154, listWidth, 20, "Activity and audit", section == Section.AUDIT));
         int actionWidth = Math.max(76, (contentRight - contentLeft - 8) / 2);
         buttonList.add(new AlphaButton(REFRESH, contentLeft, panelTop + panelHeight - 58, actionWidth, 20, "Refresh"));
+        buttonList.add(new AlphaButton(RUN_COMMAND, contentRight - 54, panelTop + panelHeight - 83, 54, 20, "Run"));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94, panelTop + panelHeight - 31, 80, 20, "Back"));
     }
 
@@ -108,6 +120,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             parent.returnToStaffMods();
             return;
         }
+        if (button.id == RUN_COMMAND) { runDashboardCommand(commandField == null ? "" : commandField.getText()); return; }
         if (button.id == NAV_BASE) section = Section.DASHBOARD;
         else if (button.id == NAV_BASE + 1) section = Section.CASES;
         else if (button.id == NAV_BASE + 2) section = Section.SHIFTS;
@@ -147,6 +160,10 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
 
         drawRect(panelLeft + 14, bottom - 36, right - 14, bottom - 35, 0x334B515D);
         drawString(fontRendererObj, "STATUS  " + dataStatus, panelLeft + 14, bottom - 25, 0xFF9CE2AC);
+        drawString(fontRendererObj, "Dashboard command", contentLeft, bottom - 100, 0xFFE6E8ED);
+        if (commandField != null) commandField.drawTextBox();
+        drawString(fontRendererObj, commandStatus, contentLeft, bottom - 61, 0xFFB8BDC8);
+        for (int i = 0; i < commandResults.size() && i < 4; i++) drawString(fontRendererObj, commandResults.get(i), contentLeft, bottom - 47 + i * 10, 0xFFE6E8ED);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
