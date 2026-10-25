@@ -75,7 +75,7 @@ public final class AlphaClientCommand extends CommandBase {
 
         if ("staffoperations".equals(route)) {
             if (!SupabaseCommunityService.hasStaffOperationsAccess()) {
-                reply(sender, "Access denied: /staffoperations is Owner/Founder-only.");
+                reply(sender, "Access denied: Staff Operations requires a verified Manager, Owner, or Founder Alpha Account.");
                 return;
             }
             if (args == null || args.length == 0 || (args.length == 1 && "open".equalsIgnoreCase(args[0]))) {
@@ -645,13 +645,12 @@ public final class AlphaClientCommand extends CommandBase {
     }
 
     private void handleAlphaNote(ICommandSender sender, String[] args) {
-        boolean staffOperationsAccess = SupabaseCommunityService.hasStaffOperationsAccess();
-        if (!PermissionService.hasCommandPermission("command.alphanote", staffOperationsAccess)) {
-            reply(sender, "Access denied: your Alpha Account does not have command.alphanote.");
+        if (!SupabaseCommunityService.canUseAlphaNoteCommand()) {
+            reply(sender, "Access denied: /alphanote is Owner/Founder-only.");
             return;
         }
-        if (!staffOperationsAccess) {
-            reply(sender, "Access denied: /alphanote is Owner/Founder-only.");
+        if (!PermissionService.hasCommandPermission("command.alphanote", true)) {
+            reply(sender, "Access denied: your Alpha Account does not have command.alphanote.");
             return;
         }
         if (args == null || args.length < 2) {
@@ -672,7 +671,7 @@ public final class AlphaClientCommand extends CommandBase {
         String minecraftName = mc != null && mc.getSession() != null ? mc.getSession().getUsername() : sender.getName();
         String alphaName = SupabaseCommunityService.getSignedInAlphaName();
         try {
-            JsonObject saved = SupabaseCommunityService.createStaffPlayerNote(playerName, note);
+            JsonObject saved = SupabaseCommunityService.createPrivateStaffNote(playerName, note);
             JsonObject details = new JsonObject();
             details.addProperty("event", "staff_note_created");
             details.addProperty("alpha_account", alphaName == null ? "" : alphaName);
