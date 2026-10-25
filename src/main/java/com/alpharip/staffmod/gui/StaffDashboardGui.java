@@ -401,11 +401,12 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         String[] parts = input.split("\\s+", 3);
         String command = parts[0].toLowerCase(java.util.Locale.ROOT);
         if (command.startsWith("./")) command = command.substring(2);
+        else if (command.startsWith("/")) command = command.substring(1);
         if ("help".equals(command)) {
             commandResults.add("help | cases | shifts | presence [player]");
             commandResults.add("afk [note] | busy [note] | available [note]");
-            commandResults.add("./suspect <player> | ./suspect check <player> | ./suspect list");
-            commandResults.add("investigating <note> | investigating delete | activity [player]");
+            commandResults.add("/suspect <player> | /suspect check <player> | /suspect list");
+            commandResults.add("/investigating <note> | /investigating delete | activity [player]");
             commandResults.add("loginlog | notes <player>");
             commandResults.add("addnote <player> <note>");
             commandStatus = "Status commands save shared Presence timeline records.";
