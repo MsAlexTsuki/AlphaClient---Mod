@@ -876,6 +876,23 @@ public final class SupabaseCommunityService {
         return result.get(0).getAsJsonObject();
     }
 
+    /** Updates a private note; database policy limits editing to its author. */
+    public static synchronized void updatePrivateStaffNote(String noteId,String note)throws Exception{
+        String token=accessToken;if(token==null||token.trim().isEmpty())throw new IllegalStateException("Sign in to edit a private staff note.");
+        if(noteId==null||!noteId.matches("[0-9a-fA-F-]{36}"))throw new IllegalArgumentException("Invalid note ID.");
+        if(note==null||note.trim().isEmpty()||note.trim().length()>2000)throw new IllegalArgumentException("Note must contain 1-2000 characters.");
+        JsonObject body=new JsonObject();body.addProperty("note",note.trim());body.addProperty("updated_at",java.time.Instant.now().toString());
+        JsonArray result=requestArray("PATCH","/rest/v1/staff_private_notes?id=eq."+noteId+"&select=id",token,body.toString());
+        if(result.size()==0)throw new SecurityException("Note was not updated; it may be hidden or you may not be its author.");
+    }
+    /** Database RLS enforces the author/rank deletion hierarchy. */
+    public static synchronized void deletePrivateStaffNote(String noteId)throws Exception{
+        String token=accessToken;if(token==null||token.trim().isEmpty())throw new IllegalStateException("Sign in to delete a private staff note.");
+        if(noteId==null||!noteId.matches("[0-9a-fA-F-]{36}"))throw new IllegalArgumentException("Invalid note ID.");
+        JsonArray result=requestArray("DELETE","/rest/v1/staff_private_notes?id=eq."+noteId+"&select=id",token);
+        if(result.size()==0)throw new SecurityException("Note was not deleted; author/rank rules denied this action or the note was not found.");
+    }
+
     /** Client-side guard for the Owner/Founder-only /alphanote command. */
     public static boolean canUseAlphaNoteCommand() {
         if (accessToken == null || !PermissionService.isOnlineRankVerified()) return false;
