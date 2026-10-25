@@ -889,8 +889,11 @@ public final class SupabaseCommunityService {
     public static synchronized void deletePrivateStaffNote(String noteId)throws Exception{
         String token=accessToken;if(token==null||token.trim().isEmpty())throw new IllegalStateException("Sign in to delete a private staff note.");
         if(noteId==null||!noteId.matches("[0-9a-fA-F-]{36}"))throw new IllegalArgumentException("Invalid note ID.");
-        JsonArray result=requestArray("DELETE","/rest/v1/staff_private_notes?id=eq."+noteId+"&select=id",token);
-        if(result.size()==0)throw new SecurityException("Note was not deleted; author/rank rules denied this action or the note was not found.");
+        HttpURLConnection connection=open("DELETE","/rest/v1/staff_private_notes?id=eq."+noteId+"&select=id",token);
+        connection.setRequestProperty("Prefer","return=representation");
+        String response=readResponse(connection);
+        JsonElement parsed=new JsonParser().parse(response);
+        if(!parsed.isJsonArray()||parsed.getAsJsonArray().size()==0)throw new SecurityException("Note was not deleted; author/rank rules denied this action or the note was not found.");
     }
 
     /** Client-side guard for the Owner/Founder-only /alphanote command. */
