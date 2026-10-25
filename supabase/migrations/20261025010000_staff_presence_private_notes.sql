@@ -4,14 +4,16 @@
 create or replace function public.staff_operations_is_manager_or_higher()
 returns boolean
 language sql stable security definer
-set search_path = public
-as $$
+set search_path = ''
+as $
   select exists (
     select 1 from public.profiles p
     where p.id = auth.uid()
       and (p.is_founder or p.rank_key in ('manager','owner','founder'))
   );
-$$;
+$;
+revoke all on function public.staff_operations_is_manager_or_higher() from public, anon;
+grant execute on function public.staff_operations_is_manager_or_higher() to authenticated;
 
 create or replace function public.staff_operations_is_owner_or_founder()
 returns boolean
@@ -23,7 +25,9 @@ as $$
     where p.id = auth.uid()
       and (p.is_founder or p.rank_key in ('owner','founder'))
   );
-$$;
+$;
+revoke all on function public.staff_operations_is_owner_or_founder() from public, anon;
+grant execute on function public.staff_operations_is_owner_or_founder() to authenticated;
 
 create table if not exists public.staff_presence (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -91,7 +95,7 @@ grant execute on function public.staff_presence_mark_offline() to authenticated;
 
 -- Heartbeat expiry ensures crashes and forced disconnects eventually appear offline.
 create or replace function public.staff_presence_expire_stale(p_timeout_seconds integer default 90)
-returns integer language plpgsql security definer set search_path = public as $$
+returns integer language plpgsql security definer set search_path = '' as $
 declare changed integer;
 begin
   update public.staff_presence set online = false, afk = false, updated_at = now()
@@ -149,3 +153,19 @@ create policy staff_private_notes_delete on public.staff_private_notes
 
 comment on table public.staff_presence is 'Live staff online/AFK status, updated by authenticated client heartbeats.';
 comment on table public.staff_private_notes is 'Private staff moderation notes: author-only, except Owner/Founder oversight.';
+
+
+-- Run stale-session cleanup every minute. pg_cron is available on Supabase,
+-- but is not enabled in every project by default.
+create extension if not exists pg_cron with schema pg_catalog;
+do $$
+begin
+  if not exists (select 1 from cron.job where jobname = 'staff-presence-expire-stale') then
+    perform cron.schedule(
+      'staff-presence-expire-stale',
+      '* * * * *',
+      $job$select public.staff_presence_expire_stale(90);$job$
+    );
+  end if;
+end;
+$$;
