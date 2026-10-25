@@ -14,7 +14,7 @@ import java.io.IOException;
 public final class AlphaClientHomeMenu extends HudEditorGui {
     private static final int MODS = 900;
     private static final ResourceLocation LOGO =
-            new ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
+            new ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
     private static final int ACCENT = 0xFFFFD866;
 
     private int modsX;
@@ -40,16 +40,16 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         // No opaque background: keep the live Minecraft world visible.
-        int logoWidth = Math.min(132, Math.max(80, width - 32));
-        int logoHeight = logoWidth * 448 / 512;
+        int logoWidth = Math.min(250, Math.max(120, width - 32));
+        int logoHeight = logoWidth;
         int logoX = (width - logoWidth) / 2;
         int logoY = Math.max(8, modsY - logoHeight - 28);
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(LOGO);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableBlend();
-        drawScaledCustomSizeModalRect(logoX, logoY, 0.0F, 0.0F, 512, 448,
-                logoWidth, logoHeight, 512.0F, 448.0F);
+        drawScaledCustomSizeModalRect(logoX, logoY, 0.0F, 0.0F, 1024, 1024,
+                logoWidth, logoHeight, 1024.0F, 1024.0F);
         GlStateManager.disableBlend();
         drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2,
                 logoY + logoHeight + 3, 0xFFF3F0E8);
