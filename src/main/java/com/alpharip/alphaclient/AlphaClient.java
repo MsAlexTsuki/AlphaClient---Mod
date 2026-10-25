@@ -141,7 +141,7 @@ public final class AlphaClient {
                 "alphaclient:sessiontimer", "alphaclient:afktimer",
                 "fpshud", "cpshud", "pothud", "playtime", "sessiontimer", "afktimer",
                 "bhop", "wtap", "fullbright", "nameviewer", "legacypvp", "quality",
-                "hudeditor", "profiles", "profile", "alphaperms", "staffmods", "staffgeneral", "stafftmod", "staffmod",
+                "hudeditor", "profiles", "profile", "alphaperms", "staffoperations", "alphanote", "staffmods", "staffgeneral", "stafftmod", "staffmod",
                 "staffsrmod", "staffadmin", "staffsradmin", "staffmanagement",
                 "staffplatformadmin", "staffplatadmin", "staffmanager", "staffowner", "stafffounder",
                 "general", "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus", "autogg", "autoreconnect"
