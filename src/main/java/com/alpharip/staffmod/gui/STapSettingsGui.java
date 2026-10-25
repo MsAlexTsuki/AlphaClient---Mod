@@ -13,10 +13,12 @@ public final class STapSettingsGui extends AlphaGuiScreen {
     private static final int ENABLED = 10;
     private static final int DELAY = 11;
     private static final int MODE = 12;
+    private static final int TRIGGER = 13;
     private static final int TARGET = 14;
     private static final int COOLDOWN = 15;
     private static final int REQUIRE_S = 16;
     private static final String[] MODES = {"LEGIT", "STANDARD", "AGGRESSIVE", "MANUAL"};
+    private static final String[] TRIGGERS = {"ON HIT", "ON ATTACK"};
     private static final String[] TARGETS = {"PLAYERS", "ALL LIVING ENTITIES"};
 
     private final GuiScreen parent;
@@ -38,9 +40,10 @@ public final class STapSettingsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(ENABLED, x, y, buttonWidth, 20, "ENABLED: " + onOff(STapAssistance.isEnabled())));
         buttonList.add(new AlphaButton(MODE, x, y + gap, buttonWidth, 20, "MODE: " + MODES[STapAssistance.getMode()]));
         buttonList.add(new AlphaButton(DELAY, x, y + gap * 2, buttonWidth, 20, "DELAY: " + STapAssistance.getDelay() + " TICKS"));
-        buttonList.add(new AlphaButton(TARGET, x, y + gap * 3, buttonWidth, 20, "TARGETS: " + TARGETS[STapAssistance.getTarget()]));
-        buttonList.add(new AlphaButton(COOLDOWN, x, y + gap * 4, buttonWidth, 20, "COOLDOWN: " + STapAssistance.getCooldown() + " TICKS"));
-        buttonList.add(new AlphaButton(REQUIRE_S, x, y + gap * 5, buttonWidth, 20, "REQUIRE S KEY: " + onOff(STapAssistance.isRequireS())));
+        buttonList.add(new AlphaButton(TRIGGER, x, y + gap * 3, buttonWidth, 20, "TRIGGER: " + TRIGGERS[STapAssistance.getTrigger()]));
+        buttonList.add(new AlphaButton(TARGET, x, y + gap * 4, buttonWidth, 20, "TARGETS: " + TARGETS[STapAssistance.getTarget()]));
+        buttonList.add(new AlphaButton(COOLDOWN, x, y + gap * 5, buttonWidth, 20, "COOLDOWN: " + STapAssistance.getCooldown() + " TICKS"));
+        buttonList.add(new AlphaButton(REQUIRE_S, x, y + gap * 6, buttonWidth, 20, "REQUIRE S KEY: " + onOff(STapAssistance.isRequireS())));
         buttonList.add(new AlphaButton(BACK, width / 2 - 55, height - 27, 110, 18, "BACK"));
     }
 
@@ -67,6 +70,7 @@ public final class STapSettingsGui extends AlphaGuiScreen {
                 break;
             case DELAY: STapAssistance.setDelay(STapAssistance.getDelay() >= 10 ? 0 : STapAssistance.getDelay() + 1); break;
             case MODE: STapAssistance.setMode((STapAssistance.getMode() + 1) % MODES.length); break;
+            case TRIGGER: STapAssistance.setTrigger((STapAssistance.getTrigger() + 1) % TRIGGERS.length); break;
             case TARGET: STapAssistance.setTarget((STapAssistance.getTarget() + 1) % TARGETS.length); break;
             case COOLDOWN: STapAssistance.setCooldown(STapAssistance.getCooldown() >= 20 ? 0 : STapAssistance.getCooldown() + 1); break;
             case REQUIRE_S: STapAssistance.setRequireS(!STapAssistance.isRequireS()); break;
