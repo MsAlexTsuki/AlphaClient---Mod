@@ -18,7 +18,7 @@ import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
 /** Drag-and-drop editor for AlphaClient HUD elements. */
-public final class HudEditorGui extends AlphaGuiScreen {
+public class HudEditorGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int RESET_ALL = 2;
     private static final int ACCENT = 0xFFFFD866;
