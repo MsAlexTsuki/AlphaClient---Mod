@@ -152,6 +152,14 @@ public final class SupabaseCommunityService {
         sessionStatus = "Signed in. Saving Alpha Account session...";
         persistRefreshToken();
         synchronizeVerifiedAccount();
+        try {
+            JsonObject event = new JsonObject();
+            event.addProperty("event", "login");
+            event.addProperty("details", "AlphaClient community session started");
+            recordStaffModuleActivity("staff_presence", "action_performed", "session_login", getSignedInAlphaName(), event);
+        } catch (Exception activityException) {
+            System.err.println("[AlphaClient] Login activity was not recorded: " + activityException.getMessage());
+        }
         sessionStatus = "Signed in as " + getSignedInAlphaName() + ".";
     }
 
@@ -303,6 +311,15 @@ public final class SupabaseCommunityService {
 
     public static synchronized void signOut() {
         String token = accessToken;
+        try {
+            JsonObject event = new JsonObject();
+            event.addProperty("event", "logout");
+            event.addProperty("details", "AlphaClient community session ended");
+            recordStaffModuleActivity("staff_presence", "action_performed", "session_logout",
+                    getSignedInAlphaName(), event);
+        } catch (Exception activityException) {
+            System.err.println("[AlphaClient] Logout activity was not recorded: " + activityException.getMessage());
+        }
         clearInMemorySession();
         sessionStatus = "Signed out. This Alpha Account session was removed from this installation.";
         deleteSavedSession();
