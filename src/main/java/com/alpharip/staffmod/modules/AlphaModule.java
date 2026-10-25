@@ -122,6 +122,11 @@ public final class AlphaModule {
     }
 
     public boolean isUnlocked() {
+        // Healthbar is listed in General but is available only to StaffMods users.
+        if ("healthbar".equals(id)) {
+            return PermissionService.hasStaffModsAccess();
+        }
+
         // Armor HUD, Potion HUD and CPS remain public.
         if ("armor-hud-info".equals(id) || "potion-hud-info".equals(id) || "cps".equals(id)) {
             return true;
