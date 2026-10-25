@@ -35,14 +35,14 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
     @Override public void initGui() {
         buttonList.clear();
         if (!PermissionService.hasStaffModsAccess()) { mc.displayGuiScreen(parent); return; }
-        panelWidth = Math.min(560, Math.max(340, width - 40));
-        panelHeight = Math.min(330, Math.max(250, height - 40));
+        panelWidth = Math.min(540, Math.max(340, width - 32));
+        panelHeight = Math.min(320, Math.max(250, height - 32));
         panelLeft = (width - panelWidth) / 2; panelTop = (height - panelHeight) / 2;
-        contentLeft = panelLeft + 16; contentRight = panelLeft + panelWidth - 16;
+        contentLeft = panelLeft + 12; contentRight = panelLeft + panelWidth - 12;
         if (!"audit".equals(type)) {
-            titleField = new GuiTextField(20, fontRendererObj, contentLeft, panelTop + 76, contentRight - contentLeft, 16);
+            titleField = new GuiTextField(20, fontRendererObj, contentLeft, panelTop + 69, contentRight - contentLeft, 15);
             titleField.setMaxStringLength(80);
-            detailsField = new GuiTextField(21, fontRendererObj, contentLeft, panelTop + 111, contentRight - contentLeft, 16);
+            detailsField = new GuiTextField(21, fontRendererObj, contentLeft, panelTop + 101, contentRight - contentLeft, 15);
             detailsField.setMaxStringLength(240);
         }
         int y = panelTop + panelHeight - 28;
@@ -135,7 +135,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
         super.mouseClicked(x,y,button);
         if(titleField!=null) titleField.mouseClicked(x,y,button);
         if(detailsField!=null) detailsField.mouseClicked(x,y,button);
-        int listTop=panelTop+151;
+        int listTop=panelTop+137;
         int row= (y-listTop)/15;
         if(y>=listTop && row>=0) {
             int index=0;
@@ -152,26 +152,25 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
         int right=panelLeft+panelWidth,bottom=panelTop+panelHeight;
         drawRect(panelLeft,panelTop,right,bottom,0xE00B0D12);
         drawRect(panelLeft,panelTop,right,panelTop+1,ACCENT);
-        drawRect(panelLeft+14,panelTop+58,right-14,panelTop+59,0x554B515D);
-        drawString(fontRendererObj,"Alpha / Staff operations",panelLeft+12,panelTop+10,0xFFF0F1F4);
-        drawString(fontRendererObj,"Shared staff information",panelLeft+12,panelTop+23,ACCENT);
-        drawString(fontRendererObj,title,panelLeft+12,panelTop+38,0xFFB8BDC8);
+        drawRect(panelLeft+12,panelTop+54,right-12,panelTop+55,0x554B515D);
+        drawString(fontRendererObj,"ALPHA  /  STAFF OPERATIONS",panelLeft+12,panelTop+10,0xFFF0F1F4);
+        drawString(fontRendererObj,title,panelLeft+12,panelTop+28,ACCENT);
         if(!"audit".equals(type)) {
-            drawString(fontRendererObj,"Title",contentLeft,panelTop+65,0xFFE6E8ED);
+            drawString(fontRendererObj,"Title",contentLeft,panelTop+57,0xFFE6E8ED);
             if(titleField!=null) titleField.drawTextBox();
-            drawString(fontRendererObj,"Details",contentLeft,panelTop+98,0xFFE6E8ED);
+            drawString(fontRendererObj,"Details",contentLeft,panelTop+88,0xFFE6E8ED);
             if(detailsField!=null) detailsField.drawTextBox();
         }
-        int y=panelTop+151;
-        drawString(fontRendererObj,"Shared records (click a row to select)",contentLeft,y-13,ACCENT);
+        int y=panelTop+137;
+        drawString(fontRendererObj,"RECORDS  ·  click a row to select",contentLeft,y-12,ACCENT);
         int shown=0;
         if ("audit".equals(type)) {
             for(int i=0;i<auditLogs.size() && shown<7;i++) {
                 if(!auditLogs.get(i).isJsonObject()) continue;
                 JsonObject event=auditLogs.get(i).getAsJsonObject();
                 String line=value(event,"occurred_at","")+"  "+value(event,"actor_label",value(event,"actor_id","Unknown staff"))+"  /  "+value(event,"category","client")+"  /  "+value(event,"action","event")+"  /  "+value(event,"outcome","unknown");
-                if(line.length()>100) line=line.substring(0,97)+"...";
-                drawString(fontRendererObj,line,contentLeft,y+shown*15,0xFFE6E8ED); shown++;
+                if(line.length()>78) line=line.substring(0,75)+"...";
+                drawString(fontRendererObj,line,contentLeft,y+shown*13,0xFFE6E8ED); shown++;
             }
             if(shown==0) drawString(fontRendererObj,"No audit events are available to this account.",contentLeft,y,0xFFB8BDC8);
         } else if ("presence".equals(type)) {
@@ -183,7 +182,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
                 boolean afk = p.has("afk") && !p.get("afk").isJsonNull() && p.get("afk").getAsBoolean();
                 String line = name + "  /  " + (online ? "ONLINE" : "OFFLINE") + (afk ? "  /  AFK" : "") + "  /  last seen " + value(p, "last_seen_at", "unknown");
                 if (line.length() > 96) line = line.substring(0, 93) + "...";
-                drawString(fontRendererObj, line, contentLeft, y + shown * 19, 0xFFE6E8ED);
+                drawString(fontRendererObj, line, contentLeft, y + shown * 15, 0xFFE6E8ED);
                 shown++;
             }
             if (shown == 0) drawString(fontRendererObj, "No presence data has been recorded yet.", contentLeft, y, 0xFFB8BDC8);
@@ -195,10 +194,10 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
             String author = value(recordPayload, "created_by_label", "");
             if (author.trim().isEmpty()) author = value(r, "created_by", "unknown");
             String line=value(r,"title","Untitled")+"  ["+value(r,"status","unknown")+"]  by "+author;
-            if(line.length()>92) line=line.substring(0,89)+"...";
-            drawString(fontRendererObj,(value(r,"id","").equals(selectedId)?"> ":"  ")+line,contentLeft,y+shown*19,0xFFE6E8ED);
+            if(line.length()>78) line=line.substring(0,75)+"...";
+            drawString(fontRendererObj,(value(r,"id","").equals(selectedId)?"> ":"  ")+line,contentLeft,y+shown*15,0xFFE6E8ED);
             String details=value(r.has("payload")&&r.get("payload").isJsonObject()?r.getAsJsonObject("payload"):null,"details","");
-            if(!details.isEmpty() && shown<2) drawString(fontRendererObj,details.length()>90?details.substring(0,87)+"...":details,contentLeft+10,y+shown*19+9,0xFF9299A6);
+            if(!details.isEmpty() && shown<2) drawString(fontRendererObj,details.length()>72?details.substring(0,69)+"...":details,contentLeft+10,y+shown*15+8,0xFF9299A6);
             shown++;
         }
         if(shown==0) drawString(fontRendererObj,"No "+type+" records have been created yet.",contentLeft,y,0xFFB8BDC8);
