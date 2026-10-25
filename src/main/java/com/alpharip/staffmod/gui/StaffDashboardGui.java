@@ -405,7 +405,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             commandResults.add("help | cases | shifts | presence [player]");
             commandResults.add("afk [note] | busy [note] | available [note]");
             commandResults.add("./suspect <player> | ./suspect check <player> | ./suspect list");
-            commandResults.add("investigating <note> | activity [player]");
+            commandResults.add("investigating <note> | investigating delete | activity [player]");
             commandResults.add("loginlog | notes <player>");
             commandResults.add("addnote <player> <note>");
             commandStatus = "Status commands save shared Presence timeline records.";
@@ -435,29 +435,53 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
                 shown++;
             }
             commandStatus = shown == 0 ? "No matching module activity found." : "Latest matching module activity";
-        } else if ("afk".equals(command) || "busy".equals(command) || "available".equals(command) || "investigating".equals(command)) {
-            String presenceStatus = "afk".equals(command) ? "away" : "busy".equals(command) ? "busy" : "available".equals(command) ? "active" : "in_progress";
-            String note = input.length() > parts[0].length() ? input.substring(parts[0].length()).trim() : "";
-            if ("investigating".equals(command) && note.isEmpty()) {
-                commandStatus = "Usage: investigating <note>";
+        } else if ("investigating".equals(command) && parts.length > 1 && "delete".equalsIgnoreCase(parts[1])) {
+            if (!SupabaseCommunityService.isSignedIn()) {
+                commandStatus = "Sign in to your Alpha Account to remove your test entry.";
             } else {
                 try {
-                    JsonObject payload = new JsonObject();
-                    payload.addProperty("details", note);
-                    payload.addProperty("presence_status", command);
-                    payload.addProperty("event", "status_changed");
-                    payload.addProperty("actor_label", SupabaseCommunityService.getSignedInAlphaName());
-                    SupabaseCommunityService.createStaffOperationsRecord("presence",
-                            SupabaseCommunityService.getSignedInAlphaName() + " - " + command,
-                            presenceStatus, payload);
-                    SupabaseCommunityService.recordStaffModuleActivity("staff_presence", "action_performed",
-                            "presence_status_" + command, SupabaseCommunityService.getSignedInAlphaName(), payload);
+                    String alphaName = SupabaseCommunityService.getSignedInAlphaName();
+                    JsonArray shared = SupabaseCommunityService.getStaffOperationsRecords();
+                    int removed = 0;
+                    for (int i = 0; i < shared.size(); i++) {
+                        if (!shared.get(i).isJsonObject()) continue;
+                        JsonObject row = shared.get(i).getAsJsonObject();
+                        if (!"presence".equals(value(row, "record_type", ""))) continue;
+                        JsonObject payload = row.has("payload") && row.get("payload").isJsonObject()
+                                ? row.getAsJsonObject("payload") : null;
+                        if (!"investigating".equalsIgnoreCase(value(payload, "presence_status", ""))) continue;
+                        if (!alphaName.equalsIgnoreCase(value(payload, "actor_label", ""))) continue;
+                        SupabaseCommunityService.deleteStaffOperationsRecord(value(row, "id", ""));
+                        removed++;
+                    }
                     refreshRecords(true);
-                    commandStatus = "Presence status saved to shared staff records.";
-                    commandResults.add(command + (note.isEmpty() ? "" : ": " + note));
+                    commandStatus = removed == 0
+                            ? "No legacy Investigating presence entry found for your Alpha account."
+                            : "Removed " + removed + " legacy Investigating presence entr" + (removed == 1 ? "y." : "ies.");
+                    commandResults.add(commandStatus);
                 } catch (Exception e) {
-                    commandStatus = "Could not save presence status: " + safeMessage(e.getMessage());
+                    commandStatus = "Could not remove legacy Investigating entry: " + safeMessage(e.getMessage());
                 }
+            }
+        } else if ("afk".equals(command) || "busy".equals(command) || "available".equals(command)) {
+            String presenceStatus = "afk".equals(command) ? "away" : "busy".equals(command) ? "busy" : "active";
+            String note = input.length() > parts[0].length() ? input.substring(parts[0].length()).trim() : "";
+            try {
+                JsonObject payload = new JsonObject();
+                payload.addProperty("details", note);
+                payload.addProperty("presence_status", command);
+                payload.addProperty("event", "status_changed");
+                payload.addProperty("actor_label", SupabaseCommunityService.getSignedInAlphaName());
+                SupabaseCommunityService.createStaffOperationsRecord("presence",
+                        SupabaseCommunityService.getSignedInAlphaName() + " - " + command,
+                        presenceStatus, payload);
+                SupabaseCommunityService.recordStaffModuleActivity("staff_presence", "action_performed",
+                        "presence_status_" + command, SupabaseCommunityService.getSignedInAlphaName(), payload);
+                refreshRecords(true);
+                commandStatus = "Presence status saved to shared staff records.";
+                commandResults.add(command + (note.isEmpty() ? "" : ": " + note));
+            } catch (Exception e) {
+                commandStatus = "Could not save presence status: " + safeMessage(e.getMessage());
             }
         } else if ("loginlog".equals(command)) {
             refreshRecords(false);
