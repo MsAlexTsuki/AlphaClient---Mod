@@ -29,7 +29,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
     public StaffOperationsModuleGui(net.minecraft.client.gui.GuiScreen parent, String type) {
         this.parent = parent;
         this.type = type;
-        this.title = "case".equals(type) ? "Cases" : "shift".equals(type) ? "Shifts" : "presence".equals(type) ? "Presence" : "Activity and audit";
+        this.title = "case".equals(type) ? "Cases" : "shift".equals(type) ? "Shifts" : "presence".equals(type) ? "Presence" : "suspect".equals(type) ? "Investigating" : "Activity and audit";
     }
 
     @Override public void initGui() {
