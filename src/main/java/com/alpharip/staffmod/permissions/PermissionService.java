@@ -114,6 +114,11 @@ public final class PermissionService {
         return verifiedOnlineRanks;
     }
 
+    /** True only after an authenticated community sync supplied the current rank set. */
+    public static boolean isOnlineRankVerified() {
+        return onlineRankVerified && !isOfflineTestSession();
+    }
+
     public static void clearVerifiedOnlineRank() {
         verifiedOnlineRanks = Collections.singleton(Rank.PUBLIC);
         onlineRankVerified = false;
