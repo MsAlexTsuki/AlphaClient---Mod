@@ -43,6 +43,15 @@ public final class AlphaHelpGui extends GuiScreen {
         addCommand("Edit profile", "/profile edit <old name> <new name>", "command.profiles.edit", true);
         addCommand("Delete profile", "/profile delete <name>", "command.profiles.delete", true);
         addCommand("HUD editor", "/hudeditor", "command.hudeditor", true);
+        addCommand("Potion HUD", "/pothud", "command.pothud", true);
+        addCommand("AutoGG", "/autogg", "command.autogg", true);
+        addCommand("Auto Reconnect", "/autoreconnect", "command.autoreconnect", true);
+        addCommand("Open help GUI", "/alphahelp open", "command.alphahelp.open", true);
+
+        if (com.alpharip.staffmod.permissions.SupabaseCommunityService.hasStaffOperationsAccess()) {
+            addCommand("Staff Operations", "/staffoperations", "Menu.StaffOperations", true);
+            addCommand("Create staff note", "/alphanote <player> <note>", "command.alphanote", true);
+        }
 
         addCommand("General menu", "/general", "menu.general", PermissionService.hasAccess(PermissionService.Rank.PUBLIC));
         addCommand("Beta menu", "/beta", "menu.beta", PermissionService.hasAccess(PermissionService.Rank.BETA));
