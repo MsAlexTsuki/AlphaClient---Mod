@@ -645,7 +645,12 @@ public final class AlphaClientCommand extends CommandBase {
     }
 
     private void handleAlphaNote(ICommandSender sender, String[] args) {
-        if (!SupabaseCommunityService.hasStaffOperationsAccess()) {
+        boolean staffOperationsAccess = SupabaseCommunityService.hasStaffOperationsAccess();
+        if (!PermissionService.hasCommandPermission("command.alphanote", staffOperationsAccess)) {
+            reply(sender, "Access denied: your Alpha Account does not have command.alphanote.");
+            return;
+        }
+        if (!staffOperationsAccess) {
             reply(sender, "Access denied: /alphanote is Owner/Founder-only.");
             return;
         }
