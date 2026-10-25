@@ -122,6 +122,44 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
+        // Combat feature groundwork: these stay marked Coming Soon until each
+        // module has its own implementation, settings, and in-game verification.
+        MODULES.add(new AlphaModule(
+                "aim-assist",
+                "Aim Assist",
+                "Planned: configurable, smoothed aim correction using the shared combat target selector.",
+                AlphaModule.Category.PUBLIC,
+                false,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "targeting",
+                "Targeting",
+                "Planned: choose and prioritize eligible targets using shared target-selection rules.",
+                AlphaModule.Category.PUBLIC,
+                false,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "attack-timing",
+                "Attack Timing",
+                "Planned: display attack-readiness timing based on Minecraft 1.8.9 combat behavior.",
+                AlphaModule.Category.PUBLIC,
+                false,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "hitbox",
+                "Hitbox",
+                "Planned: visualize existing entity bounding boxes without changing collision geometry.",
+                AlphaModule.Category.PUBLIC,
+                false,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule cps = new AlphaModule(
                 "cps",
                 "CPS",
