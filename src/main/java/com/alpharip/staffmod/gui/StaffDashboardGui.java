@@ -40,6 +40,8 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private long lastRefreshAt = 0L;
     private GuiTextField commandField;
     private final List<String> commandResults = new ArrayList<String>();
+    private final List<String> commandHistory = new ArrayList<String>();
+    private int commandHistoryIndex = 0;
     private String commandStatus = "Enter help to list dashboard commands.";
 
     private enum Section {
@@ -182,8 +184,9 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             drawString(fontRendererObj, "Alpha> " + line, contentLeft + 4, y, 0xFFE6E8ED);
             y += 11;
         }
-        drawString(fontRendererObj, "Alpha> " + commandStatus, contentLeft, bottom - 91, 0xFF9CE2AC);
+        drawString(fontRendererObj, commandStatus, contentLeft, bottom - 91, 0xFF9CE2AC);
         if (commandField != null) {
+            drawString(fontRendererObj, "COMMAND  (Enter to run, ↑/↓ history)", contentLeft, commandField.yPosition - 12, 0xFFB8BDC8);
             commandField.drawTextBox();
             drawString(fontRendererObj, "Alpha>", contentLeft, commandField.yPosition + 4, ACCENT);
         }
@@ -324,8 +327,11 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
 
     private void runDashboardCommand(String raw) {
         String input = raw == null ? "" : raw.trim();
-        commandResults.clear();
         if (input.isEmpty()) { commandStatus = "Enter a command. Use help for the list."; return; }
+        commandHistory.add(input);
+        commandHistoryIndex = commandHistory.size();
+        commandResults.add("> " + input);
+        if (commandResults.size() > 200) commandResults.remove(0);
         String[] parts = input.split("\\s+", 3);
         String command = parts[0].toLowerCase(java.util.Locale.ROOT);
         if ("help".equals(command)) {
@@ -435,7 +441,10 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
                 }
             }
         } else { commandStatus = "Unknown command: " + parts[0] + ". Enter help."; }
-        if (commandField != null) commandField.setFocused(true);
+        if (commandField != null) {
+            commandField.setText("");
+            commandField.setFocused(true);
+        }
     }
 
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
@@ -443,6 +452,20 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         if (section != Section.CMD) { super.keyTyped(typedChar, keyCode); return; }
         if (commandField != null && commandField.isFocused()) {
             if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) { runDashboardCommand(commandField.getText()); return; }
+            if (keyCode == Keyboard.KEY_UP) {
+                if (!commandHistory.isEmpty()) {
+                    commandHistoryIndex = Math.max(0, commandHistoryIndex - 1);
+                    commandField.setText(commandHistory.get(commandHistoryIndex));
+                }
+                return;
+            }
+            if (keyCode == Keyboard.KEY_DOWN) {
+                if (!commandHistory.isEmpty()) {
+                    commandHistoryIndex = Math.min(commandHistory.size(), commandHistoryIndex + 1);
+                    commandField.setText(commandHistoryIndex >= commandHistory.size() ? "" : commandHistory.get(commandHistoryIndex));
+                }
+                return;
+            }
             commandField.textboxKeyTyped(typedChar, keyCode);
             return;
         }
