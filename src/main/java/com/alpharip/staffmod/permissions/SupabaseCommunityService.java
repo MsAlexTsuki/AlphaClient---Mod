@@ -425,6 +425,15 @@ public final class SupabaseCommunityService {
 
     /** True only when the authenticated Alpha community profile has verified Founder status. */
     public static boolean isSignedInFounder() { return accessToken != null && signedInFounder; }
+
+    /** Staff Operations is restricted to authenticated Owner and Founder accounts. */
+    public static boolean hasStaffOperationsAccess() {
+        if (accessToken == null) return false;
+        if (signedInFounder) return true;
+        String rank = getSignedInRankLabel();
+        return rank != null && "Owner".equalsIgnoreCase(rank.trim());
+    }
+
     public static String getSignedInEmail() { return signedInEmail; }
     public static String getSignedInAlphaName() {
         String name = signedInAlphaName;
