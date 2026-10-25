@@ -20,6 +20,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
     private GuiTextField detailsField;
     private JsonArray records = new JsonArray();
     private JsonArray auditLogs = new JsonArray();
+    private JsonArray presenceRecords = new JsonArray();
     private String status = "Loading shared records...";
     private String selectedId = null;
     private String selectedStatus = "open";
@@ -70,6 +71,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
         if (!SupabaseCommunityService.isSignedIn()) { records = new JsonArray(); status = "Sign in to your Alpha Account to use shared staff records."; return; }
         try {
             if ("audit".equals(type)) { auditLogs = SupabaseCommunityService.getStaffAuditLogs(); records = new JsonArray(); status = "Loaded " + auditLogs.size() + " audit event(s)."; }
+            else if ("presence".equals(type)) { presenceRecords = SupabaseCommunityService.getStaffPresence(); records = new JsonArray(); status = "Live presence: " + presenceRecords.size() + " staff account(s)."; }
             else { records = SupabaseCommunityService.getStaffOperationsRecords(); status = "Synced. " + countType() + " " + type + " record(s)."; }
         } catch (Exception e) { status = "Could not load records: " + safe(e.getMessage()); }
     }
@@ -172,6 +174,19 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
                 drawString(fontRendererObj,line,contentLeft,y+shown*19,0xFFE6E8ED); shown++;
             }
             if(shown==0) drawString(fontRendererObj,"No audit events are available to this account.",contentLeft,y,0xFFB8BDC8);
+        } else if ("presence".equals(type)) {
+            for (int i=0; i<presenceRecords.size() && shown<7; i++) {
+                if (!presenceRecords.get(i).isJsonObject()) continue;
+                JsonObject p = presenceRecords.get(i).getAsJsonObject();
+                String name = value(p, "alpha_name", "Unknown staff");
+                boolean online = p.has("online") && !p.get("online").isJsonNull() && p.get("online").getAsBoolean();
+                boolean afk = p.has("afk") && !p.get("afk").isJsonNull() && p.get("afk").getAsBoolean();
+                String line = name + "  /  " + (online ? "ONLINE" : "OFFLINE") + (afk ? "  /  AFK" : "") + "  /  last seen " + value(p, "last_seen_at", "unknown");
+                if (line.length() > 96) line = line.substring(0, 93) + "...";
+                drawString(fontRendererObj, line, contentLeft, y + shown * 19, 0xFFE6E8ED);
+                shown++;
+            }
+            if (shown == 0) drawString(fontRendererObj, "No presence data has been recorded yet.", contentLeft, y, 0xFFB8BDC8);
         } else for(int i=0;i<records.size() && shown<5;i++) {
             if(!records.get(i).isJsonObject()) continue;
             JsonObject r=records.get(i).getAsJsonObject();
