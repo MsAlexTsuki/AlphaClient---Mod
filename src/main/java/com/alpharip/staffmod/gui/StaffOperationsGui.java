@@ -14,6 +14,7 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
     private static final int SHIFTS = 12;
     private static final int PRESENCE = 13;
     private static final int AUDIT = 14;
+    private static final int NOTES = 15;
     private static final int ACCENT = 0xFFFFD866;
 
     private final net.minecraft.client.gui.GuiScreen parent;
@@ -49,6 +50,8 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(AUDIT, contentLeft + tileWidth + gap, contentTop + tileHeight + gap, tileWidth, tileHeight, "Activity and audit"));
         buttonList.add(new AlphaButton(DASHBOARD, contentLeft, panelTop + panelHeight - 63,
                 tileWidth, 22, "Open staff dashboard", true));
+        buttonList.add(new AlphaButton(NOTES, contentLeft + tileWidth + gap, panelTop + panelHeight - 63,
+                tileWidth, 22, "Private staff notes"));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94,
                 panelTop + panelHeight - 31, 80, 20, "BACK"));
     }
@@ -72,6 +75,8 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
             mc.displayGuiScreen(new StaffOperationsModuleGui(this, "presence"));
         } else if (button.id == AUDIT) {
             mc.displayGuiScreen(new StaffOperationsModuleGui(this, "audit"));
+        } else if (button.id == NOTES) {
+            mc.displayGuiScreen(new PrivateStaffNotesGui(this));
         }
     }
 
