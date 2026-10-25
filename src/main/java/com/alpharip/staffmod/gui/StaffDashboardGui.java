@@ -47,7 +47,8 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         CASES("Cases"),
         SHIFTS("Shifts"),
         PRESENCE("Presence"),
-        AUDIT("Activity and audit");
+        AUDIT("Activity and audit"),
+        CMD("CMD Workspace");
 
         private final String title;
         Section(String title) { this.title = title; }
@@ -67,6 +68,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         else if ("shifts".equalsIgnoreCase(initialSection)) section = Section.SHIFTS;
         else if ("presence".equalsIgnoreCase(initialSection)) section = Section.PRESENCE;
         else if ("audit".equalsIgnoreCase(initialSection)) section = Section.AUDIT;
+        else if ("cmd".equalsIgnoreCase(initialSection)) section = Section.CMD;
         this.parent = new GuiScreenParent() {
             @Override public void returnToStaffMods() {
                 net.minecraft.client.Minecraft.getMinecraft().displayGuiScreen(parentScreen);
@@ -105,9 +107,10 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(NAV_BASE + 2, listX, panelTop + 108, listWidth, 20, "Shifts", section == Section.SHIFTS));
         buttonList.add(new AlphaButton(NAV_BASE + 3, listX, panelTop + 131, listWidth, 20, "Presence", section == Section.PRESENCE));
         buttonList.add(new AlphaButton(NAV_BASE + 4, listX, panelTop + 154, listWidth, 20, "Activity and audit", section == Section.AUDIT));
-        buttonList.add(new AlphaButton(CMD_WORKSPACE, panelLeft + panelWidth - 202, panelTop + 10, 102, 20, "CMD Workspace"));
+        buttonList.add(new AlphaButton(NAV_BASE + 5, listX, panelTop + 177, listWidth, 20, "CMD Workspace", section == Section.CMD));
         buttonList.add(new AlphaButton(REFRESH, panelLeft + panelWidth - 92, panelTop + 10, 78, 20, "Reload"));
         buttonList.add(new AlphaButton(RUN_COMMAND, contentRight - 54, panelTop + panelHeight - 83, 54, 20, "Run"));
+        buttonList.get(buttonList.size() - 1).enabled = section == Section.CMD;
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94, panelTop + panelHeight - 31, 80, 20, "Back"));
     }
 
@@ -123,15 +126,12 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             return;
         }
         if (button.id == RUN_COMMAND) { runDashboardCommand(commandField == null ? "" : commandField.getText()); return; }
-        if (button.id == CMD_WORKSPACE) {
-            net.minecraft.client.Minecraft.getMinecraft().displayGuiScreen(new CmdWorkspaceGui(this));
-            return;
-        }
         if (button.id == NAV_BASE) section = Section.DASHBOARD;
         else if (button.id == NAV_BASE + 1) section = Section.CASES;
         else if (button.id == NAV_BASE + 2) section = Section.SHIFTS;
         else if (button.id == NAV_BASE + 3) section = Section.PRESENCE;
         else if (button.id == NAV_BASE + 4) section = Section.AUDIT;
+        else if (button.id == NAV_BASE + 5) section = Section.CMD;
         else if (button.id == REFRESH) {
             refreshRecords(true);
         } else return;
@@ -158,19 +158,35 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         drawRect(dividerX, panelTop + 48, dividerX + 1, bottom - 80, 0x554B515D);
         drawString(fontRendererObj, section.title, contentLeft, panelTop + 49, ACCENT);
 
-        if (section == Section.DASHBOARD) {
-            drawDashboardSummary();
-        } else {
-            drawSectionDetails();
-        }
+        if (section == Section.DASHBOARD) drawDashboardSummary();
+        else if (section == Section.CMD) drawCommandWorkspace();
+        else drawSectionDetails();
 
         drawRect(panelLeft + 14, bottom - 36, right - 14, bottom - 35, 0x334B515D);
         drawString(fontRendererObj, "STATUS  " + dataStatus, panelLeft + 14, bottom - 25, 0xFF9CE2AC);
-        drawString(fontRendererObj, "Dashboard command", contentLeft, bottom - 100, 0xFFE6E8ED);
-        if (commandField != null) commandField.drawTextBox();
-        drawString(fontRendererObj, commandStatus, contentLeft, bottom - 61, 0xFFB8BDC8);
-        for (int i = 0; i < commandResults.size() && i < 2; i++) drawString(fontRendererObj, commandResults.get(i), contentLeft, bottom - 47 + i * 10, 0xFFE6E8ED);
         super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    private void drawCommandWorkspace() {
+        int bottom = panelTop + panelHeight;
+        drawString(fontRendererObj, "Command console", contentLeft, contentTop + 2, 0xFFE6E8ED);
+        drawString(fontRendererObj, "Run staff workspace commands without leaving this dashboard.", contentLeft, contentTop + 16, 0xFFB8BDC8);
+        int consoleTop = contentTop + 34;
+        int consoleBottom = bottom - 112;
+        drawRect(contentLeft - 4, consoleTop, contentRight, consoleBottom, 0xAA050609);
+        int maxLines = Math.max(1, (consoleBottom - consoleTop - 12) / 11);
+        int start = Math.max(0, commandResults.size() - maxLines);
+        int y = consoleTop + 8;
+        for (int i = start; i < commandResults.size(); i++) {
+            String line = commandResults.get(i);
+            int maxChars = Math.max(20, (contentRight - contentLeft - 10) / 6);
+            if (line.length() > maxChars) line = line.substring(0, maxChars - 3) + "...";
+            drawString(fontRendererObj, line, contentLeft + 4, y, 0xFFE6E8ED);
+            y += 11;
+        }
+        drawString(fontRendererObj, commandStatus, contentLeft, bottom - 99, 0xFF9CE2AC);
+        drawString(fontRendererObj, "Command", contentLeft, bottom - 86, 0xFFE6E8ED);
+        if (commandField != null) commandField.drawTextBox();
     }
 
     private void drawDashboardSummary() {
@@ -424,6 +440,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
 
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == Keyboard.KEY_ESCAPE) { parent.returnToStaffMods(); return; }
+        if (section != Section.CMD) { super.keyTyped(typedChar, keyCode); return; }
         if (commandField != null && commandField.isFocused()) {
             if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) { runDashboardCommand(commandField.getText()); return; }
             commandField.textboxKeyTyped(typedChar, keyCode);
@@ -438,7 +455,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             commandField.mouseClicked(mouseX, mouseY, mouseButton);
             boolean inside = mouseX >= commandField.xPosition && mouseX < commandField.xPosition + commandField.width
                     && mouseY >= commandField.yPosition && mouseY < commandField.yPosition + commandField.height;
-            commandField.setFocused(inside && mouseButton == 0);
+            commandField.setFocused(section == Section.CMD && inside && mouseButton == 0);
         }
     }
     private String value(JsonObject object, String key, String fallback) {
