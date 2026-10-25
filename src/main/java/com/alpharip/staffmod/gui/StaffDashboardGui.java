@@ -97,7 +97,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         contentTop = panelTop + 64;
         contentBottom = panelTop + panelHeight - 66;
         refreshRecords(false);
-        commandField = new GuiTextField(30, fontRendererObj, contentLeft, panelTop + panelHeight - 76, Math.max(90, contentRight - contentLeft - 54), 16);
+        commandField = new GuiTextField(30, fontRendererObj, contentLeft, panelTop + panelHeight - 76, Math.max(90, contentRight - contentLeft - 76), 16);
         commandField.setMaxStringLength(180);
         commandField.setCanLoseFocus(true);
         commandField.setFocused(false);
@@ -109,7 +109,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(NAV_BASE + 4, listX, panelTop + 138, listWidth, 18, "Activity and audit", section == Section.AUDIT));
         buttonList.add(new AlphaButton(NAV_BASE + 5, listX, panelTop + 159, listWidth, 18, "CMD Workspace", section == Section.CMD));
         buttonList.add(new AlphaButton(REFRESH, panelLeft + panelWidth - 80, panelTop + 8, 68, 18, "Reload"));
-        buttonList.add(new AlphaButton(RUN_COMMAND, contentRight - 48, panelTop + panelHeight - 76, 48, 16, "Run"));
+        buttonList.add(new AlphaButton(RUN_COMMAND, contentRight - 64, panelTop + panelHeight - 76, 60, 16, "Run"));
         buttonList.get(buttonList.size() - 1).enabled = section == Section.CMD;
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 82, panelTop + panelHeight - 27, 70, 18, "Back"));
     }
@@ -169,9 +169,8 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
 
     private void drawCommandWorkspace() {
         int bottom = panelTop + panelHeight;
-        drawString(fontRendererObj, "Command console", contentLeft, contentTop + 2, 0xFFE6E8ED);
-        drawString(fontRendererObj, "Run staff workspace commands without leaving this dashboard.", contentLeft, contentTop + 16, 0xFFB8BDC8);
-        int consoleTop = contentTop + 34;
+        drawString(fontRendererObj, "Alpha", contentLeft, contentTop + 2, ACCENT);
+        int consoleTop = contentTop + 22;
         int consoleBottom = bottom - 112;
         drawRect(contentLeft - 4, consoleTop, contentRight, consoleBottom, 0xAA050609);
         int maxLines = Math.max(1, (consoleBottom - consoleTop - 12) / 11);
@@ -181,12 +180,14 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             String line = commandResults.get(i);
             int maxChars = Math.max(20, (contentRight - contentLeft - 10) / 6);
             if (line.length() > maxChars) line = line.substring(0, maxChars - 3) + "...";
-            drawString(fontRendererObj, line, contentLeft + 4, y, 0xFFE6E8ED);
+            drawString(fontRendererObj, "Alpha> " + line, contentLeft + 4, y, 0xFFE6E8ED);
             y += 11;
         }
-        drawString(fontRendererObj, commandStatus, contentLeft, bottom - 99, 0xFF9CE2AC);
-        drawString(fontRendererObj, "Command", contentLeft, bottom - 86, 0xFFE6E8ED);
-        if (commandField != null) commandField.drawTextBox();
+        drawString(fontRendererObj, "Alpha> " + commandStatus, contentLeft, bottom - 99, 0xFF9CE2AC);
+        if (commandField != null) {
+            commandField.drawTextBox();
+            drawString(fontRendererObj, "Alpha>", contentLeft, commandField.yPosition + 4, ACCENT);
+        }
     }
 
     private void drawDashboardSummary() {
