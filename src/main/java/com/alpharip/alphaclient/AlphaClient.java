@@ -16,6 +16,8 @@ import com.alpharip.staffmod.hud.InfoHudModules;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.cps.CpsMod;
+import com.alpharip.staffmod.distance.DistanceTrackerMod;
+import com.alpharip.staffmod.healthbar.HealthbarMod;
 import com.alpharip.staffmod.pvp.LegacyPvpMod;
 import com.alpharip.staffmod.optimization.FpsOptimization;
 import com.alpharip.staffmod.modules.AlphaModule;
@@ -92,6 +94,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new FpsMod());
         MinecraftForge.EVENT_BUS.register(new PingMod());
         MinecraftForge.EVENT_BUS.register(new CpsMod());
+        MinecraftForge.EVENT_BUS.register(new DistanceTrackerMod());
+        MinecraftForge.EVENT_BUS.register(new HealthbarMod());
         MinecraftForge.EVENT_BUS.register(new InfoHudModules());
         MinecraftForge.EVENT_BUS.register(new LegacyPvpMod());
         MinecraftForge.EVENT_BUS.register(new WTapAssistance());
