@@ -123,7 +123,7 @@ public final class AlphaClient {
         syncBhopModuleState();
 
         openModMenuKey = new KeyBinding(
-                "AlphaClient: Open Module Menu",
+                "AlphaClient: Open Home Menu",
                 Keyboard.KEY_RCONTROL,
                 "AlphaClient"
         );
