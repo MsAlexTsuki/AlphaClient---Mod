@@ -300,6 +300,57 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         if (shown == 0) drawString(fontRendererObj, "No shared " + type + " records yet.", x, y, 0xFFB8BDC8);
     }
 
+    private void runDashboardCommand(String raw) {
+        String input = raw == null ? "" : raw.trim();
+        commandResults.clear();
+        if (input.isEmpty()) { commandStatus = "Enter a command. Use help for the list."; return; }
+        String[] parts = input.split("\\s+", 3);
+        String command = parts[0].toLowerCase(java.util.Locale.ROOT);
+        if ("help".equals(command)) {
+            commandResults.add("help | cases | shifts | presence | activity");
+            commandResults.add("notes <player> (notes storage not connected yet)");
+            commandStatus = "Available dashboard commands";
+        } else if ("cases".equals(command) || "shifts".equals(command) || "presence".equals(command)) {
+            String type = "cases".equals(command) ? "case" : "shifts".equals(command) ? "shift" : "presence";
+            int shown = 0;
+            for (int i = 0; i < records.size() && shown < 4; i++) {
+                if (!records.get(i).isJsonObject()) continue;
+                JsonObject row = records.get(i).getAsJsonObject();
+                if (!type.equals(value(row, "record_type", ""))) continue;
+                commandResults.add(value(row, "title", "(untitled)") + " [" + value(row, "status", "unknown") + "]");
+                shown++;
+            }
+            commandStatus = shown == 0 ? "No " + command + " records found." : "Showing " + shown + " " + command + " record(s).";
+        } else if ("activity".equals(command)) {
+            int shown = 0;
+            for (int i = 0; i < moduleActivity.size() && shown < 4; i++) {
+                if (!moduleActivity.get(i).isJsonObject()) continue;
+                JsonObject event = moduleActivity.get(i).getAsJsonObject();
+                String line = value(event, "actor_label", value(event, "actor_id", "Unknown staff")) + " / " + value(event, "module_key", "module") + " / " + value(event, "action_key", "activity");
+                commandResults.add(line.length() > 78 ? line.substring(0, 75) + "..." : line);
+                shown++;
+            }
+            commandStatus = shown == 0 ? "No module activity is recorded yet." : "Latest module activity";
+        } else if ("notes".equals(command)) {
+            commandStatus = parts.length < 2 ? "Usage: notes <player>" : "Notes lookup is not connected yet; no notes are fabricated."; 
+        } else { commandStatus = "Unknown command: " + parts[0] + ". Enter help."; }
+        if (commandField != null) commandField.setFocused(true);
+    }
+
+    @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (commandField != null && commandField.isFocused()) {
+            if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) { runDashboardCommand(commandField.getText()); return; }
+            if (keyCode == Keyboard.KEY_ESCAPE) { parent.returnToStaffMods(); return; }
+            commandField.textboxKeyTyped(typedChar, keyCode);
+            return;
+        }
+        super.keyTyped(typedChar, keyCode);
+    }
+
+    @Override protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+        if (commandField != null) commandField.mouseClicked(mouseX, mouseY, mouseButton);
+    }
     private String value(JsonObject object, String key, String fallback) {
         try {
             return object != null && object.has(key) && !object.get(key).isJsonNull()
