@@ -20,6 +20,7 @@ public final class STapAssistance {
     private static int delay = 2;
     private static int cooldown = 4;
     private static int mode;
+    private static int trigger;
     private static int target;
 
     private int pendingDelay = -1;
@@ -57,6 +58,11 @@ public final class STapAssistance {
     public static int getMode() { return mode; }
     public static void setMode(int value) {
         if (hasFounderAccess()) mode = Math.max(0, Math.min(3, value));
+    }
+
+    public static int getTrigger() { return trigger; }
+    public static void setTrigger(int value) {
+        if (hasFounderAccess()) trigger = Math.max(0, Math.min(1, value));
     }
 
     public static int getTarget() { return target; }
