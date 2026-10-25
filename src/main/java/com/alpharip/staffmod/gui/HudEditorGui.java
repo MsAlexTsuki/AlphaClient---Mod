@@ -75,15 +75,8 @@ public final class HudEditorGui extends AlphaGuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawRect(0, 0, width, height, 0x8806090F);
-        int panelWidth = Math.min(430, width - 32), panelHeight = 86;
-        int left = (width - panelWidth) / 2, top = 18;
-        drawRect(left, top, left + panelWidth, top + panelHeight, 0xE10D1017);
-        drawRect(left, top, left + panelWidth, top + 1, 0x554B515D);
-        drawString(fontRendererObj, "ALPHA", left + 16, top + 12, ACCENT);
-        drawString(fontRendererObj, "HUD EDITOR", left + 16, top + 27, 0xFFF1F3F7);
-        drawString(fontRendererObj, "Drag previews to move; drag the yellow corner to resize.", left + 16, top + 48, 0xFFB9C0CB);
-        drawString(fontRendererObj, "RESET ALL restores positions and sizes.", left + 16, top + 65, 0xFFB8BDC8);
+        // Minimal editor overlay: keep the game unobstructed and remove the large panel.
+        drawRect(0, 0, width, 1, 0x33FFD866);
 
         if (hasBhopAccess() && BhopHud.isEnabled()) {
             BhopHud.renderEditorPreview();
@@ -148,16 +141,17 @@ public final class HudEditorGui extends AlphaGuiScreen {
     }
 
     private void drawScaleHandle(int x, int y, int w, int h) {
-        int right = x + Math.max(12, w);
-        int bottom = y + Math.max(12, h);
-        drawRect(right - 7, bottom - 7, right + 1, bottom + 1, ACCENT);
-        drawRect(right - 5, bottom - 5, right - 3, bottom - 3, 0xFF242832);
+        int right = x + Math.max(2, w);
+        int bottom = y + Math.max(2, h);
+        // Tiny 2x2 corner marker, not the old oversized yellow square.
+        drawRect(right - 2, bottom - 2, right, bottom, ACCENT);
     }
 
     private boolean scaleHandleHit(int x, int y, int w, int h, int mx, int my) {
-        int right = x + Math.max(12, w);
-        int bottom = y + Math.max(12, h);
-        return mx >= right - 10 && mx <= right + 3 && my >= bottom - 10 && my <= bottom + 3;
+        int right = x + Math.max(2, w);
+        int bottom = y + Math.max(2, h);
+        // Slightly larger invisible hit target keeps the tiny marker usable.
+        return mx >= right - 5 && mx <= right + 2 && my >= bottom - 5 && my <= bottom + 2;
     }
 
     private void beginScale(String target, int mouseY) {
