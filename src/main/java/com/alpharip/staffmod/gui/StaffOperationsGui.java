@@ -15,6 +15,7 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
     private static final int PRESENCE = 13;
     private static final int AUDIT = 14;
     private static final int NOTES = 15;
+    private static final int INVESTIGATING = 16;
     private static final int ACCENT = 0xFFFFD866;
 
     private final net.minecraft.client.gui.GuiScreen parent;
@@ -47,6 +48,7 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(CASES, contentLeft, contentTop, tileWidth, tileHeight, "Cases"));
         buttonList.add(new AlphaButton(SHIFTS, contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "Shifts"));
         buttonList.add(new AlphaButton(PRESENCE, contentLeft, contentTop + tileHeight + 6, tileWidth, tileHeight, "Presence"));
+        buttonList.add(new AlphaButton(INVESTIGATING, contentLeft, contentTop + (tileHeight + 6) * 2, tileWidth, tileHeight, "Investigating"));
         buttonList.add(new AlphaButton(AUDIT, contentLeft + tileWidth + gap, contentTop + tileHeight + gap, tileWidth, tileHeight, "Activity and audit"));
         buttonList.add(new AlphaButton(DASHBOARD, contentLeft, panelTop + panelHeight - 54,
                 tileWidth, 20, "Open staff dashboard", true));
@@ -75,6 +77,8 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
             mc.displayGuiScreen(new StaffOperationsModuleGui(this, "presence"));
         } else if (button.id == AUDIT) {
             mc.displayGuiScreen(new StaffOperationsModuleGui(this, "audit"));
+        } else if (button.id == INVESTIGATING) {
+            mc.displayGuiScreen(new StaffOperationsModuleGui(this, "suspect"));
         } else if (button.id == NOTES) {
             mc.displayGuiScreen(new PrivateStaffNotesGui(this));
         }
