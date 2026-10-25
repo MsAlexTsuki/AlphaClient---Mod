@@ -378,10 +378,6 @@ public final class PermissionService {
         }
     }
 
-    public static boolean isOnlineRankVerified() {
-        return onlineRankVerified;
-    }
-
     public static String getStatusText() {
         if (isOfflineTestSession()) {
             return "FOUNDER OFFLINE TEST";
