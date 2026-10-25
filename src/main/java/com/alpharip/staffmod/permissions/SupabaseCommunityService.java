@@ -602,6 +602,9 @@ public final class SupabaseCommunityService {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setRequestProperty("Content-Length", String.valueOf(bytes.length));
+        if ("POST".equals(method) || "PATCH".equals(method)) {
+            connection.setRequestProperty("Prefer", "return=representation");
+        }
         OutputStream output = connection.getOutputStream();
         try { output.write(bytes); } finally { output.close(); }
         String response = readResponse(connection);
