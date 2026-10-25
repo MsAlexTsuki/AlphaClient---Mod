@@ -122,41 +122,41 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
-        // Combat feature groundwork: these stay marked Coming Soon until each
-        // module has its own implementation, settings, and in-game verification.
+        // Initial working foundations. These are deliberately simple first passes;
+        // tuneable settings and in-game validation can be added incrementally.
         MODULES.add(new AlphaModule(
                 "aim-assist",
                 "Aim Assist",
-                "Planned: configurable, smoothed aim correction using the shared combat target selector.",
+                "Gently corrects aim toward a nearby player already close to the crosshair.",
                 AlphaModule.Category.PUBLIC,
-                false,
+                true,
                 DEFAULT_MODULE_ENABLED
         ));
 
         MODULES.add(new AlphaModule(
                 "targeting",
                 "Targeting",
-                "Planned: choose and prioritize eligible targets using shared target-selection rules.",
+                "Selects the nearest eligible player to the crosshair and displays target name and distance.",
                 AlphaModule.Category.PUBLIC,
-                false,
+                true,
                 DEFAULT_MODULE_ENABLED
         ));
 
         MODULES.add(new AlphaModule(
                 "attack-timing",
                 "Attack Timing",
-                "Planned: display attack-readiness timing based on Minecraft 1.8.9 combat behavior.",
+                "Shows the local hand-swing state; Minecraft 1.8.9 has no later-version attack cooldown meter.",
                 AlphaModule.Category.PUBLIC,
-                false,
+                true,
                 DEFAULT_MODULE_ENABLED
         ));
 
         MODULES.add(new AlphaModule(
                 "hitbox",
                 "Hitbox",
-                "Planned: visualize existing entity bounding boxes without changing collision geometry.",
+                "Visualizes existing player bounding boxes without changing collision geometry.",
                 AlphaModule.Category.PUBLIC,
-                false,
+                true,
                 DEFAULT_MODULE_ENABLED
         ));
 
