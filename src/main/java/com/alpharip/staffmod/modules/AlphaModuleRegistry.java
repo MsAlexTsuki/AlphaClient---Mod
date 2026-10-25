@@ -104,6 +104,24 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(legacyPvp);
 
+        MODULES.add(new AlphaModule(
+                "distance-tracker",
+                "Distance Tracker",
+                "Show the distance when you hit another player and when another player hits you.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "healthbar",
+                "Healthbar",
+                "Briefly show a health bar above the player you are looking at.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule cps = new AlphaModule(
                 "cps",
                 "CPS",
