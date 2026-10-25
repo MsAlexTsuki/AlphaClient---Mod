@@ -192,12 +192,12 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private void drawDashboardSummary() {
         int y = contentTop + 4;
         drawString(fontRendererObj, "Team overview", contentLeft, y, 0xFFE6E8ED);
-        drawString(fontRendererObj, "Shared staff records and recorded activity", contentLeft, y + 14, 0xFFB8BDC8);
-        drawString(fontRendererObj, "Shared records: " + records.size(), contentLeft, y + 34, 0xFFFFD866);
-        drawString(fontRendererObj, dataStatus, contentLeft, y + 49, 0xFFB8BDC8);
-        drawRecordCounts(contentLeft, y + 66);
-        int activityY = y + 92;
-        drawString(fontRendererObj, "Recent staff module activity", contentLeft, activityY, 0xFFE6E8ED);
+        drawString(fontRendererObj, "Shared staff records and recent activity", contentLeft, y + 13, 0xFFB8BDC8);
+        drawString(fontRendererObj, "RECORDS  " + records.size(), contentLeft, y + 30, 0xFFFFD866);
+        drawString(fontRendererObj, dataStatus, contentLeft, y + 43, 0xFFB8BDC8);
+        drawRecordCounts(contentLeft, y + 58);
+        int activityY = y + 78;
+        drawString(fontRendererObj, "RECENT ACTIVITY", contentLeft, activityY, 0xFFE6E8ED);
         int shown = 0;
         for (int i = 0; i < moduleActivity.size() && shown < 5; i++) {
             if (!moduleActivity.get(i).isJsonObject()) continue;
@@ -208,7 +208,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             String when = value(event, "occurred_at", "");
             String line = actor + " / " + module + " / " + action + " / " + when;
             if (line.length() > 88) line = line.substring(0, 85) + "...";
-            drawString(fontRendererObj, line, contentLeft, activityY + 14 + shown * 12, 0xFFB8BDC8);
+            drawString(fontRendererObj, line, contentLeft, activityY + 13 + shown * 11, 0xFFB8BDC8);
             shown++;
         }
         if (shown == 0) drawString(fontRendererObj, "No module activity has been recorded yet.", contentLeft, activityY + 14, 0xFFB8BDC8);
@@ -217,7 +217,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private void drawSectionDetails() {
         int y = contentTop + 2;
         drawString(fontRendererObj, section.title + " OVERVIEW", contentLeft, y, 0xFFE6E8ED);
-        y += 20;
+        y += 16;
         if (section == Section.CASES) {
             drawString(fontRendererObj, "Board, calendar, search, filters, templates,", contentLeft, y, 0xFFB8BDC8);
             drawString(fontRendererObj, "comments, checklists and assignments.", contentLeft, y + 13, 0xFFB8BDC8);
@@ -230,9 +230,9 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         } else if (section == Section.AUDIT) {
             drawString(fontRendererObj, "Audit viewer, timeline, search, filters and export.", contentLeft, y, 0xFFB8BDC8);
         }
-        drawString(fontRendererObj, "SHARED RECORDS: " + countRecords(section), contentLeft, y + 42, 0xFFFFD866);
-        drawString(fontRendererObj, dataStatus, contentLeft, y + 57, 0xFFB8BDC8);
-        drawRecentRecords(contentLeft, y + 75, section);
+        drawString(fontRendererObj, "RECORDS  " + countRecords(section), contentLeft, y + 36, 0xFFFFD866);
+        drawString(fontRendererObj, dataStatus, contentLeft, y + 49, 0xFFB8BDC8);
+        drawRecentRecords(contentLeft, y + 64, section);
     }
 
     private void refreshRecords(boolean showStatus) {
@@ -274,10 +274,10 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     }
 
     private void drawRecordCounts(int x, int y) {
-        drawString(fontRendererObj, "Cases: " + countRecords(Section.CASES), x, y, 0xFFB8BDC8);
-        drawString(fontRendererObj, "Shifts: " + countRecords(Section.SHIFTS), x + 120, y, 0xFFB8BDC8);
-        drawString(fontRendererObj, "Presence: " + countRecords(Section.PRESENCE), x + 240, y, 0xFFB8BDC8);
-        drawString(fontRendererObj, "Audit: " + countRecords(Section.AUDIT), x + 360, y, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Cases " + countRecords(Section.CASES), x, y, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Shifts " + countRecords(Section.SHIFTS), x + 82, y, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Presence " + countRecords(Section.PRESENCE), x + 164, y, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Audit " + countRecords(Section.AUDIT), x + 258, y, 0xFFB8BDC8);
     }
 
     private void drawRecentRecords(int x, int y, Section target) {
@@ -292,12 +292,12 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
                 String outcome = value(event, "outcome", "success");
                 String when = value(event, "occurred_at", "");
                 String line = actor + "  /  " + category + "  /  " + action + "  /  " + outcome;
-                if (line.length() > 84) line = line.substring(0, 81) + "...";
-                drawString(fontRendererObj, line, x, y + shown * 13, 0xFFE6E8ED);
+                if (line.length() > 66) line = line.substring(0, 63) + "...";
+                drawString(fontRendererObj, line, x, y + shown * 16, 0xFFE6E8ED);
                 if (!when.isEmpty()) {
                     String time = when.replace('T', ' ');
                     if (time.length() > 19) time = time.substring(0, 19);
-                    drawString(fontRendererObj, time, x + 8, y + shown * 13 + 9, 0xFF9299A6);
+                    drawString(fontRendererObj, time, x + 8, y + shown * 16 + 9, 0xFF9299A6);
                 }
                 shown++;
             }
