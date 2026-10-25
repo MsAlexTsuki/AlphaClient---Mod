@@ -73,6 +73,27 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
 
+        if ("staffoperations".equals(route)) {
+            if (!SupabaseCommunityService.hasStaffOperationsAccess()) {
+                reply(sender, "Access denied: /staffoperations is Owner/Founder-only.");
+                return;
+            }
+            if (args == null || args.length == 0 || (args.length == 1 && "open".equalsIgnoreCase(args[0]))) {
+                Minecraft mc = Minecraft.getMinecraft();
+                if (mc == null) return;
+                AlphaClient.openGuiFromCommand(new com.alpharip.staffmod.gui.StaffOperationsGui(
+                        mc.currentScreen instanceof net.minecraft.client.gui.GuiChat ? null : mc.currentScreen));
+            } else {
+                reply(sender, "Usage: /staffoperations");
+            }
+            return;
+        }
+
+        if ("alphanote".equals(route)) {
+            handleAlphaNote(sender, args);
+            return;
+        }
+
         if ("alphaperms".equals(route)) {
             if (args != null && args.length > 0 && "help".equalsIgnoreCase(args[0])) {
                 showCommandGuide(sender, route);
@@ -621,6 +642,45 @@ public final class AlphaClientCommand extends CommandBase {
         if ("founder".equals(folder)) return "staffmods.founder";
         if ("developer".equals(folder)) return "staffmods.developer";
         return "staffmods.open";
+    }
+
+    private void handleAlphaNote(ICommandSender sender, String[] args) {
+        if (!SupabaseCommunityService.hasStaffOperationsAccess()) {
+            reply(sender, "Access denied: /alphanote is Owner/Founder-only.");
+            return;
+        }
+        if (args == null || args.length < 2) {
+            reply(sender, "Usage: /alphanote <MinecraftPlayerName> <note>");
+            return;
+        }
+        String playerName = args[0] == null ? "" : args[0].trim();
+        if (!playerName.matches("[A-Za-z0-9_]{1,16}")) {
+            reply(sender, "Invalid Minecraft player name.");
+            return;
+        }
+        String note = joinArgsRange(args, 1, args.length).trim();
+        if (note.isEmpty()) {
+            reply(sender, "Usage: /alphanote <MinecraftPlayerName> <note>");
+            return;
+        }
+        Minecraft mc = Minecraft.getMinecraft();
+        String minecraftName = mc != null && mc.getSession() != null ? mc.getSession().getUsername() : sender.getName();
+        String alphaName = SupabaseCommunityService.getSignedInAlphaName();
+        try {
+            JsonObject saved = SupabaseCommunityService.createStaffPlayerNote(playerName, note);
+            JsonObject details = new JsonObject();
+            details.addProperty("event", "staff_note_created");
+            details.addProperty("alpha_account", alphaName == null ? "" : alphaName);
+            details.addProperty("minecraft_account", minecraftName == null ? "" : minecraftName);
+            details.addProperty("player_name", playerName);
+            details.addProperty("note", note);
+            details.addProperty("note_id", saved.has("id") ? saved.get("id").getAsString() : "");
+            SupabaseCommunityService.recordStaffModuleActivity("staff_operations", "action_performed",
+                    "create_player_note", playerName, details);
+            reply(sender, "Staff note saved for " + playerName + ".");
+        } catch (Exception exception) {
+            reply(sender, "Could not save staff note: " + (exception.getMessage() == null ? "unknown error" : exception.getMessage()));
+        }
     }
 
     private void handleAlphaPerms(ICommandSender sender, String[] args) {
