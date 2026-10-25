@@ -35,17 +35,17 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
     @Override public void initGui() {
         buttonList.clear();
         if (!PermissionService.hasStaffModsAccess()) { mc.displayGuiScreen(parent); return; }
-        panelWidth = Math.min(650, Math.max(360, width - 28));
-        panelHeight = Math.min(390, Math.max(280, height - 24));
+        panelWidth = Math.min(560, Math.max(340, width - 40));
+        panelHeight = Math.min(330, Math.max(250, height - 40));
         panelLeft = (width - panelWidth) / 2; panelTop = (height - panelHeight) / 2;
         contentLeft = panelLeft + 16; contentRight = panelLeft + panelWidth - 16;
         if (!"audit".equals(type)) {
-            titleField = new GuiTextField(20, fontRendererObj, contentLeft, panelTop + 88, contentRight - contentLeft, 20);
+            titleField = new GuiTextField(20, fontRendererObj, contentLeft, panelTop + 76, contentRight - contentLeft, 16);
             titleField.setMaxStringLength(80);
-            detailsField = new GuiTextField(21, fontRendererObj, contentLeft, panelTop + 133, contentRight - contentLeft, 20);
+            detailsField = new GuiTextField(21, fontRendererObj, contentLeft, panelTop + 111, contentRight - contentLeft, 16);
             detailsField.setMaxStringLength(240);
         }
-        int y = panelTop + panelHeight - 32;
+        int y = panelTop + panelHeight - 28;
         buttonList.add(new AlphaButton(REFRESH, contentLeft, y - 29, 76, 20, "Refresh"));
         if (!"audit".equals(type)) { buttonList.add(new AlphaButton(CREATE, contentLeft + 82, y - 29, 94, 20, "Create", true)); buttonList.add(new AlphaButton(SAVE, contentLeft + 180, y - 29, 76, 20, "Save edit")); if (canManageRecords()) buttonList.add(new AlphaButton(DELETE, contentLeft + 260, y - 29, 76, 20, "Delete")); }
         if (!"audit".equals(type)) buttonList.add(new AlphaButton(NEXT_STATUS, contentRight - 140, y - 29, 140, 20, "Next status"));
@@ -135,8 +135,8 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
         super.mouseClicked(x,y,button);
         if(titleField!=null) titleField.mouseClicked(x,y,button);
         if(detailsField!=null) detailsField.mouseClicked(x,y,button);
-        int listTop=panelTop+178;
-        int row= (y-listTop)/19;
+        int listTop=panelTop+151;
+        int row= (y-listTop)/15;
         if(y>=listTop && row>=0) {
             int index=0;
             for(int i=0;i<records.size();i++) {
@@ -152,17 +152,17 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
         int right=panelLeft+panelWidth,bottom=panelTop+panelHeight;
         drawRect(panelLeft,panelTop,right,bottom,0xE00B0D12);
         drawRect(panelLeft,panelTop,right,panelTop+1,ACCENT);
-        drawRect(panelLeft+14,panelTop+66,right-14,panelTop+67,0x554B515D);
-        drawString(fontRendererObj,"Alpha  /  Staff operations",panelLeft+16,panelTop+13,0xFFF0F1F4);
-        drawString(fontRendererObj,"Shared staff information",panelLeft+16,panelTop+30,ACCENT);
-        drawString(fontRendererObj,title,panelLeft+16,panelTop+49,0xFFB8BDC8);
+        drawRect(panelLeft+14,panelTop+58,right-14,panelTop+59,0x554B515D);
+        drawString(fontRendererObj,"Alpha / Staff operations",panelLeft+12,panelTop+10,0xFFF0F1F4);
+        drawString(fontRendererObj,"Shared staff information",panelLeft+12,panelTop+23,ACCENT);
+        drawString(fontRendererObj,title,panelLeft+12,panelTop+38,0xFFB8BDC8);
         if(!"audit".equals(type)) {
-            drawString(fontRendererObj,"Record title",contentLeft,panelTop+75,0xFFE6E8ED);
+            drawString(fontRendererObj,"Title",contentLeft,panelTop+65,0xFFE6E8ED);
             if(titleField!=null) titleField.drawTextBox();
-            drawString(fontRendererObj,"Details / note",contentLeft,panelTop+119,0xFFE6E8ED);
+            drawString(fontRendererObj,"Details",contentLeft,panelTop+98,0xFFE6E8ED);
             if(detailsField!=null) detailsField.drawTextBox();
         }
-        int y=panelTop+178;
+        int y=panelTop+151;
         drawString(fontRendererObj,"Shared records (click a row to select)",contentLeft,y-13,ACCENT);
         int shown=0;
         if ("audit".equals(type)) {
@@ -171,7 +171,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
                 JsonObject event=auditLogs.get(i).getAsJsonObject();
                 String line=value(event,"occurred_at","")+"  "+value(event,"actor_label",value(event,"actor_id","Unknown staff"))+"  /  "+value(event,"category","client")+"  /  "+value(event,"action","event")+"  /  "+value(event,"outcome","unknown");
                 if(line.length()>100) line=line.substring(0,97)+"...";
-                drawString(fontRendererObj,line,contentLeft,y+shown*19,0xFFE6E8ED); shown++;
+                drawString(fontRendererObj,line,contentLeft,y+shown*15,0xFFE6E8ED); shown++;
             }
             if(shown==0) drawString(fontRendererObj,"No audit events are available to this account.",contentLeft,y,0xFFB8BDC8);
         } else if ("presence".equals(type)) {
