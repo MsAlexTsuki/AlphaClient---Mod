@@ -96,15 +96,15 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         refreshRecords(false);
         commandField = new GuiTextField(30, fontRendererObj, contentLeft, panelTop + panelHeight - 83, Math.max(90, contentRight - contentLeft - 62), 20);
         commandField.setMaxStringLength(180);
-        commandField.setCanLoseFocus(false);
+        commandField.setCanLoseFocus(true);
+        commandField.setFocused(false);
 
         buttonList.add(new AlphaButton(NAV_BASE, listX, panelTop + 62, listWidth, 20, "Overview", section == Section.DASHBOARD));
         buttonList.add(new AlphaButton(NAV_BASE + 1, listX, panelTop + 85, listWidth, 20, "Cases", section == Section.CASES));
         buttonList.add(new AlphaButton(NAV_BASE + 2, listX, panelTop + 108, listWidth, 20, "Shifts", section == Section.SHIFTS));
         buttonList.add(new AlphaButton(NAV_BASE + 3, listX, panelTop + 131, listWidth, 20, "Presence", section == Section.PRESENCE));
         buttonList.add(new AlphaButton(NAV_BASE + 4, listX, panelTop + 154, listWidth, 20, "Activity and audit", section == Section.AUDIT));
-        int actionWidth = Math.max(76, (contentRight - contentLeft - 8) / 2);
-        buttonList.add(new AlphaButton(REFRESH, contentLeft, panelTop + panelHeight - 58, actionWidth, 20, "Refresh"));
+        buttonList.add(new AlphaButton(REFRESH, panelLeft + panelWidth - 92, panelTop + 10, 78, 20, "Reload"));
         buttonList.add(new AlphaButton(RUN_COMMAND, contentRight - 54, panelTop + panelHeight - 83, 54, 20, "Run"));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94, panelTop + panelHeight - 31, 80, 20, "Back"));
     }
@@ -417,9 +417,9 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     }
 
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (keyCode == Keyboard.KEY_ESCAPE) { parent.returnToStaffMods(); return; }
         if (commandField != null && commandField.isFocused()) {
             if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) { runDashboardCommand(commandField.getText()); return; }
-            if (keyCode == Keyboard.KEY_ESCAPE) { parent.returnToStaffMods(); return; }
             commandField.textboxKeyTyped(typedChar, keyCode);
             return;
         }
@@ -428,7 +428,12 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
-        if (commandField != null) commandField.mouseClicked(mouseX, mouseY, mouseButton);
+        if (commandField != null) {
+            commandField.mouseClicked(mouseX, mouseY, mouseButton);
+            boolean inside = mouseX >= commandField.xPosition && mouseX < commandField.xPosition + commandField.width
+                    && mouseY >= commandField.yPosition && mouseY < commandField.yPosition + commandField.height;
+            commandField.setFocused(inside && mouseButton == 0);
+        }
     }
     private String value(JsonObject object, String key, String fallback) {
         try {
