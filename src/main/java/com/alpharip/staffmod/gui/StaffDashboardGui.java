@@ -362,13 +362,14 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             }
         } else if ("loginlog".equals(command)) {
             int shown = 0;
-            for (int i = 0; i < records.size() && shown < 2; i++) {
-                if (!records.get(i).isJsonObject()) continue;
-                JsonObject row = records.get(i).getAsJsonObject();
-                if (!"presence".equals(value(row, "record_type", ""))) continue;
-                JsonObject payload = row.has("payload") && row.get("payload").isJsonObject() ? row.getAsJsonObject("payload") : new JsonObject();
-                if (!"login".equals(value(payload, "event", "")) && !"logout".equals(value(payload, "event", ""))) continue;
-                commandResults.add(value(row, "title", "Session event") + " / " + value(row, "created_at", ""));
+            for (int i = 0; i < moduleActivity.size() && shown < 2; i++) {
+                if (!moduleActivity.get(i).isJsonObject()) continue;
+                JsonObject event = moduleActivity.get(i).getAsJsonObject();
+                String action = value(event, "action_key", "");
+                if (!"session_login".equals(action) && !"session_logout".equals(action)) continue;
+                String line = value(event, "actor_label", value(event, "actor_id", "Unknown staff"))
+                        + " / " + action + " / " + value(event, "occurred_at", "");
+                commandResults.add(line.length() > 78 ? line.substring(0, 75) + "..." : line);
                 shown++;
             }
             commandStatus = shown == 0
