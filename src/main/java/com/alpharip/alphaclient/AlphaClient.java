@@ -46,6 +46,8 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
 /** Central Forge entry point and lifecycle owner for AlphaClient. */
 @Mod(
@@ -66,6 +68,10 @@ public final class AlphaClient {
     private KeyBinding openModMenuKey;
     private KeyBinding toggleBhopKey;
     private int partnerAutoConnectTicks = -1;
+    private int presenceHeartbeatTicks = 0;
+    private long lastStaffInputAt = System.currentTimeMillis();
+    private double lastStaffX = Double.NaN, lastStaffY = Double.NaN, lastStaffZ = Double.NaN;
+    private float lastStaffYaw = Float.NaN, lastStaffPitch = Float.NaN;
     private boolean partnerAutoConnectConsumed;
     private boolean fpsOptimizationInitialized;
     private static volatile GuiScreen pendingCommandGui;
@@ -164,6 +170,9 @@ public final class AlphaClient {
             if (guiMinecraft != null) guiMinecraft.displayGuiScreen(requestedGui);
         }
 
+        // Staff Operations presence heartbeat and automatic AFK detection.
+        tickStaffPresence();
+
         // Keep the BHOP key visible in Minecraft Controls only while community-authenticated.
         syncBhopKeyBindingVisibility();
 
@@ -193,6 +202,52 @@ public final class AlphaClient {
         } else {
             partnerAutoConnectTicks = -1;
         }
+    }
+
+    private void tickStaffPresence() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null || !SupabaseCommunityService.isSignedIn()
+                || !PermissionService.hasStaffModsAccess()) {
+            presenceHeartbeatTicks = 0;
+            return;
+        }
+        if (minecraft.thePlayer != null) {
+            double x = minecraft.thePlayer.posX, y = minecraft.thePlayer.posY, z = minecraft.thePlayer.posZ;
+            float yaw = minecraft.thePlayer.rotationYaw, pitch = minecraft.thePlayer.rotationPitch;
+            if (Double.isNaN(lastStaffX) || x != lastStaffX || y != lastStaffY || z != lastStaffZ
+                    || yaw != lastStaffYaw || pitch != lastStaffPitch
+                    || Mouse.getDX() != 0 || Mouse.getDY() != 0
+                    || Keyboard.isKeyDown(Keyboard.KEY_W) || Keyboard.isKeyDown(Keyboard.KEY_A)
+                    || Keyboard.isKeyDown(Keyboard.KEY_S) || Keyboard.isKeyDown(Keyboard.KEY_D)
+                    || Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+                lastStaffInputAt = System.currentTimeMillis();
+            }
+            lastStaffX = x; lastStaffY = y; lastStaffZ = z; lastStaffYaw = yaw; lastStaffPitch = pitch;
+        }
+        if (++presenceHeartbeatTicks < 400) return;
+        presenceHeartbeatTicks = 0;
+        final boolean afk = System.currentTimeMillis() - lastStaffInputAt >= 300000L;
+        Thread thread = new Thread(new Runnable() {
+            @Override public void run() {
+                try { SupabaseCommunityService.sendStaffPresenceHeartbeat(afk); }
+                catch (Exception e) { System.err.println("[AlphaClient] Staff presence heartbeat failed: " + e.getMessage()); }
+            }
+        }, "AlphaClient-StaffPresence");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        if (!SupabaseCommunityService.isSignedIn()) return;
+        Thread thread = new Thread(new Runnable() {
+            @Override public void run() {
+                try { SupabaseCommunityService.markStaffPresenceOffline(); }
+                catch (Exception e) { System.err.println("[AlphaClient] Could not mark staff presence offline: " + e.getMessage()); }
+            }
+        }, "AlphaClient-StaffPresenceOffline");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     @SubscribeEvent
