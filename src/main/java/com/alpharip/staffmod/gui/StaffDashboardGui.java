@@ -163,7 +163,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         drawString(fontRendererObj, "Dashboard command", contentLeft, bottom - 100, 0xFFE6E8ED);
         if (commandField != null) commandField.drawTextBox();
         drawString(fontRendererObj, commandStatus, contentLeft, bottom - 61, 0xFFB8BDC8);
-        for (int i = 0; i < commandResults.size() && i < 4; i++) drawString(fontRendererObj, commandResults.get(i), contentLeft, bottom - 47 + i * 10, 0xFFE6E8ED);
+        for (int i = 0; i < commandResults.size() && i < 2; i++) drawString(fontRendererObj, commandResults.get(i), contentLeft, bottom - 47 + i * 10, 0xFFE6E8ED);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
@@ -307,7 +307,8 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         String[] parts = input.split("\\s+", 3);
         String command = parts[0].toLowerCase(java.util.Locale.ROOT);
         if ("help".equals(command)) {
-            commandResults.add("help | cases | shifts | presence | activity");
+            commandResults.add("help | cases | shifts | presence");
+            commandResults.add("activity [player] | notes <player>");
             commandResults.add("notes <player> (notes storage not connected yet)");
             commandStatus = "Available dashboard commands";
         } else if ("cases".equals(command) || "shifts".equals(command) || "presence".equals(command)) {
@@ -322,15 +323,18 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             }
             commandStatus = shown == 0 ? "No " + command + " records found." : "Showing " + shown + " " + command + " record(s).";
         } else if ("activity".equals(command)) {
+            String filter = parts.length > 1 ? parts[1].toLowerCase(java.util.Locale.ROOT) : "";
             int shown = 0;
-            for (int i = 0; i < moduleActivity.size() && shown < 4; i++) {
+            for (int i = 0; i < moduleActivity.size() && shown < 2; i++) {
                 if (!moduleActivity.get(i).isJsonObject()) continue;
                 JsonObject event = moduleActivity.get(i).getAsJsonObject();
-                String line = value(event, "actor_label", value(event, "actor_id", "Unknown staff")) + " / " + value(event, "module_key", "module") + " / " + value(event, "action_key", "activity");
+                String actor = value(event, "actor_label", value(event, "actor_id", "Unknown staff"));
+                if (!filter.isEmpty() && !actor.toLowerCase(java.util.Locale.ROOT).contains(filter)) continue;
+                String line = actor + " / " + value(event, "module_key", "module") + " / " + value(event, "action_key", "activity");
                 commandResults.add(line.length() > 78 ? line.substring(0, 75) + "..." : line);
                 shown++;
             }
-            commandStatus = shown == 0 ? "No module activity is recorded yet." : "Latest module activity";
+            commandStatus = shown == 0 ? "No matching module activity found." : "Latest matching module activity";
         } else if ("notes".equals(command)) {
             commandStatus = parts.length < 2 ? "Usage: notes <player>" : "Notes lookup is not connected yet; no notes are fabricated."; 
         } else { commandStatus = "Unknown command: " + parts[0] + ". Enter help."; }
