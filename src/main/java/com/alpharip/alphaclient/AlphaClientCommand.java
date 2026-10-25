@@ -645,46 +645,55 @@ public final class AlphaClientCommand extends CommandBase {
     }
 
     private void handleAlphaNote(ICommandSender sender, String[] args) {
-        if (!SupabaseCommunityService.canUseAlphaNoteCommand()) {
-            reply(sender, "Access denied: /alphanote is Owner/Founder-only.");
-            return;
-        }
-        if (!PermissionService.hasCommandPermission("command.alphanote", true)) {
-            reply(sender, "Access denied: your Alpha Account does not have command.alphanote.");
-            return;
-        }
-        if (args == null || args.length < 2) {
-            reply(sender, "Usage: /alphanote <MinecraftPlayerName> <note>");
-            return;
-        }
-        String playerName = args[0] == null ? "" : args[0].trim();
-        if (!playerName.matches("[A-Za-z0-9_]{1,16}")) {
-            reply(sender, "Invalid Minecraft player name.");
-            return;
-        }
-        String note = joinArgsRange(args, 1, args.length).trim();
-        if (note.isEmpty()) {
-            reply(sender, "Usage: /alphanote <MinecraftPlayerName> <note>");
-            return;
-        }
-        Minecraft mc = Minecraft.getMinecraft();
-        String minecraftName = mc != null && mc.getSession() != null ? mc.getSession().getUsername() : sender.getName();
-        String alphaName = SupabaseCommunityService.getSignedInAlphaName();
+        if (!SupabaseCommunityService.hasStaffOperationsAccess()) { reply(sender, "Access denied: verified Manager, Owner, or Founder Alpha Account required."); return; }
+        if (!PermissionService.hasCommandPermission("command.alphanote", true)) { reply(sender, "Access denied: your Alpha Account does not have command.alphanote."); return; }
+        if (args == null || args.length == 0) { reply(sender, "Usage: /alphanote <player> <note> | check <player|all> | edit <player> <number> <new note> | delete <player> <number>"); return; }
+        String action=args[0]==null?"":args[0].trim(), alphaName=SupabaseCommunityService.getSignedInAlphaName();
+        Minecraft mc=Minecraft.getMinecraft(); String minecraftName=mc!=null&&mc.getSession()!=null?mc.getSession().getUsername():sender.getName();
         try {
-            JsonObject saved = SupabaseCommunityService.createPrivateStaffNote(playerName, note);
-            JsonObject details = new JsonObject();
-            details.addProperty("event", "staff_note_created");
-            details.addProperty("alpha_account", alphaName == null ? "" : alphaName);
-            details.addProperty("minecraft_account", minecraftName == null ? "" : minecraftName);
-            details.addProperty("player_name", playerName);
-            details.addProperty("note", note);
-            details.addProperty("note_id", saved.has("id") ? saved.get("id").getAsString() : "");
-            SupabaseCommunityService.recordStaffModuleActivity("staff_operations", "action_performed",
-                    "create_player_note", playerName, details);
-            reply(sender, "Staff note saved for " + playerName + ".");
-        } catch (Exception exception) {
-            reply(sender, "Could not save staff note: " + (exception.getMessage() == null ? "unknown error" : exception.getMessage()));
-        }
+            if ("check".equalsIgnoreCase(action)) {
+                if(args.length!=2){reply(sender,"Usage: /alphanote check <MinecraftPlayerName|all>");return;}
+                String target=args[1].trim();boolean all="all".equalsIgnoreCase(target);
+                if(!all&&!target.matches("[A-Za-z0-9_]{1,16}")){reply(sender,"Invalid Minecraft player name.");return;}
+                com.google.gson.JsonArray result=SupabaseCommunityService.getPrivateStaffNotes(all?null:target);
+                reply(sender,"Private staff notes: "+result.size()+(all?" visible note(s).":" note(s) for "+target+"."));
+                int number=0;
+                for(int i=0;i<result.size();i++){if(!result.get(i).isJsonObject())continue;com.google.gson.JsonObject item=result.get(i).getAsJsonObject();number++;
+                    String subject=item.has("subject_name")?item.get("subject_name").getAsString():"Unknown";
+                    String author=item.has("created_by_label")?item.get("created_by_label").getAsString():"Staff";
+                    String note=item.has("note")?item.get("note").getAsString():"";String id=item.has("id")?item.get("id").getAsString():"";
+                    reply(sender,"#"+number+" "+subject+" | "+author+" | "+note+" [ID "+id+"]");
+                }
+                if(number==0)reply(sender,"No private staff notes found.");return;
+            }
+            if("delete".equalsIgnoreCase(action)||"edit".equalsIgnoreCase(action)){
+                boolean edit="edit".equalsIgnoreCase(action);
+                if(args.length<(edit?4:3)){reply(sender,edit?"Usage: /alphanote edit <MinecraftPlayerName> <number> <new note>":"Usage: /alphanote delete <MinecraftPlayerName> <number>");return;}
+                String player=args[1].trim();if(!player.matches("[A-Za-z0-9_]{1,16}")){reply(sender,"Invalid Minecraft player name.");return;}
+                int number;try{number=Integer.parseInt(args[2]);}catch(NumberFormatException e){reply(sender,"Note number must be a positive integer.");return;}
+                if(number<1){reply(sender,"Note number must be a positive integer.");return;}
+                String replacement=edit?joinArgsRange(args,3,args.length).trim():"";if(edit&&replacement.isEmpty()){reply(sender,"The new note cannot be empty.");return;}
+                com.google.gson.JsonArray playerNotes=SupabaseCommunityService.getPrivateStaffNotes(player);
+                if(number>playerNotes.size()||!playerNotes.get(number-1).isJsonObject()){reply(sender,"Note #"+number+" was not found for "+player+".");return;}
+                com.google.gson.JsonObject selected=playerNotes.get(number-1).getAsJsonObject();String id=selected.has("id")?selected.get("id").getAsString():"";
+                if(id.isEmpty()){reply(sender,"Selected note has no ID.");return;}
+                if(edit){SupabaseCommunityService.updatePrivateStaffNote(id,replacement);reply(sender,"Updated note #"+number+" for "+player+".");}
+                else{SupabaseCommunityService.deletePrivateStaffNote(id);reply(sender,"Deleted note #"+number+" for "+player+".");}
+                com.google.gson.JsonObject details=new com.google.gson.JsonObject();details.addProperty("event",edit?"staff_note_edited":"staff_note_deleted");
+                details.addProperty("alpha_account",alphaName==null?"":alphaName);details.addProperty("minecraft_account",minecraftName==null?"":minecraftName);
+                details.addProperty("player_name",player);details.addProperty("note_id",id);
+                SupabaseCommunityService.recordStaffModuleActivity("staff_operations","action_performed",edit?"edit_player_note":"delete_player_note",player,details);return;
+            }
+            if(args.length<2){reply(sender,"Usage: /alphanote <MinecraftPlayerName> <note>");return;}
+            String playerName=action;if(!playerName.matches("[A-Za-z0-9_]{1,16}")){reply(sender,"Invalid Minecraft player name.");return;}
+            String note=joinArgsRange(args,1,args.length).trim();if(note.isEmpty()){reply(sender,"Usage: /alphanote <MinecraftPlayerName> <note>");return;}
+            com.google.gson.JsonObject saved=SupabaseCommunityService.createPrivateStaffNote(playerName,note);
+            com.google.gson.JsonObject details=new com.google.gson.JsonObject();details.addProperty("event","staff_note_created");
+            details.addProperty("alpha_account",alphaName==null?"":alphaName);details.addProperty("minecraft_account",minecraftName==null?"":minecraftName);
+            details.addProperty("player_name",playerName);details.addProperty("note",note);details.addProperty("note_id",saved.has("id")?saved.get("id").getAsString():"");
+            SupabaseCommunityService.recordStaffModuleActivity("staff_operations","action_performed","create_player_note",playerName,details);
+            reply(sender,"Staff note saved for "+playerName+".");
+        }catch(Exception exception){reply(sender,"Private staff note action failed: "+(exception.getMessage()==null?"unknown error":exception.getMessage()));}
     }
 
     private void handleAlphaPerms(ICommandSender sender, String[] args) {
