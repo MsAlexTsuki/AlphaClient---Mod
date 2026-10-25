@@ -5,13 +5,13 @@ create or replace function public.staff_operations_is_manager_or_higher()
 returns boolean
 language sql stable security definer
 set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.profiles p
     where p.id = auth.uid()
       and (p.is_founder or p.rank_key in ('manager','owner','founder'))
   );
-$;
+$$;
 revoke all on function public.staff_operations_is_manager_or_higher() from public, anon;
 grant execute on function public.staff_operations_is_manager_or_higher() to authenticated;
 
@@ -19,13 +19,13 @@ create or replace function public.staff_operations_is_owner_or_founder()
 returns boolean
 language sql stable security definer
 set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.profiles p
     where p.id = auth.uid()
       and (p.is_founder or p.rank_key in ('owner','founder'))
   );
-$;
+$$;
 revoke all on function public.staff_operations_is_owner_or_founder() from public, anon;
 grant execute on function public.staff_operations_is_owner_or_founder() to authenticated;
 
@@ -95,7 +95,7 @@ grant execute on function public.staff_presence_mark_offline() to authenticated;
 
 -- Heartbeat expiry ensures crashes and forced disconnects eventually appear offline.
 create or replace function public.staff_presence_expire_stale(p_timeout_seconds integer default 90)
-returns integer language plpgsql security definer set search_path = '' as $
+returns integer language plpgsql security definer set search_path = '' as $$
 declare changed integer;
 begin
   update public.staff_presence set online = false, afk = false, updated_at = now()
