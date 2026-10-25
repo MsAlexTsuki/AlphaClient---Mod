@@ -20,7 +20,7 @@ public final class PrivateStaffNotesGui extends AlphaGuiScreen {
     public PrivateStaffNotesGui(net.minecraft.client.gui.GuiScreen parent){this.parent=parent;}
     @Override public void initGui(){
         buttonList.clear();if(!SupabaseCommunityService.hasStaffOperationsAccess()){mc.displayGuiScreen(parent);return;}
-        panelWidth=Math.min(690,Math.max(360,width-24));panelHeight=Math.min(430,Math.max(300,height-18));left=(width-panelWidth)/2;top=(height-panelHeight)/2;
+        panelWidth=Math.min(690,Math.max(360,width-24));panelHeight=Math.min(430,Math.max(300,height-32));left=(width-panelWidth)/2;top=(height-panelHeight)/2;
         playerField=new GuiTextField(20,fontRendererObj,left+16,top+72,panelWidth-32,20);playerField.setMaxStringLength(16);
         noteField=new GuiTextField(21,fontRendererObj,left+16,top+112,panelWidth-32,20);noteField.setMaxStringLength(2000);
         buttonList.add(new AlphaButton(REFRESH,left+16,top+panelHeight-31,68,20,"Refresh"));
