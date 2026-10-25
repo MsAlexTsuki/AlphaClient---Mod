@@ -50,7 +50,7 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(AUDIT, contentLeft + tileWidth + gap, contentTop + tileHeight + gap, tileWidth, tileHeight, "Activity and audit"));
         buttonList.add(new AlphaButton(DASHBOARD, contentLeft, panelTop + panelHeight - 54,
                 tileWidth, 20, "Open staff dashboard", true));
-        buttonList.add(new AlphaButton(NOTES, contentLeft + tileWidth + gap, panelTop + panelHeight - 63,
+        buttonList.add(new AlphaButton(NOTES, contentLeft + tileWidth + gap, panelTop + panelHeight - 54,
                 tileWidth, 20, "Private staff notes"));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94,
                 panelTop + panelHeight - 27, 72, 18, "BACK"));
