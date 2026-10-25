@@ -33,27 +33,27 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
             return;
         }
         // Keep the established Staff Operations dimensions unchanged.
-        panelWidth = Math.min(590, Math.max(360, width - 32));
-        panelHeight = Math.min(350, Math.max(250, height - 32));
+        panelWidth = Math.min(520, Math.max(340, width - 32));
+        panelHeight = Math.min(310, Math.max(245, height - 32));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
-        contentLeft = panelLeft + 16;
-        contentRight = panelLeft + panelWidth - 16;
-        contentTop = panelTop + 82;
+        contentLeft = panelLeft + 12;
+        contentRight = panelLeft + panelWidth - 12;
+        contentTop = panelTop + 65;
 
-        int gap = 8;
+        int gap = 6;
         int tileWidth = (contentRight - contentLeft - gap) / 2;
-        int tileHeight = 34;
+        int tileHeight = 30;
         buttonList.add(new AlphaButton(CASES, contentLeft, contentTop, tileWidth, tileHeight, "Cases"));
         buttonList.add(new AlphaButton(SHIFTS, contentLeft + tileWidth + gap, contentTop, tileWidth, tileHeight, "Shifts"));
-        buttonList.add(new AlphaButton(PRESENCE, contentLeft, contentTop + tileHeight + gap, tileWidth, tileHeight, "Presence"));
+        buttonList.add(new AlphaButton(PRESENCE, contentLeft, contentTop + tileHeight + 6, tileWidth, tileHeight, "Presence"));
         buttonList.add(new AlphaButton(AUDIT, contentLeft + tileWidth + gap, contentTop + tileHeight + gap, tileWidth, tileHeight, "Activity and audit"));
-        buttonList.add(new AlphaButton(DASHBOARD, contentLeft, panelTop + panelHeight - 63,
-                tileWidth, 22, "Open staff dashboard", true));
+        buttonList.add(new AlphaButton(DASHBOARD, contentLeft, panelTop + panelHeight - 54,
+                tileWidth, 20, "Open staff dashboard", true));
         buttonList.add(new AlphaButton(NOTES, contentLeft + tileWidth + gap, panelTop + panelHeight - 63,
-                tileWidth, 22, "Private staff notes"));
+                tileWidth, 20, "Private staff notes"));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94,
-                panelTop + panelHeight - 31, 80, 20, "BACK"));
+                panelTop + panelHeight - 27, 72, 18, "BACK"));
     }
 
     @Override
@@ -91,14 +91,12 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
         drawRect(right - 1, panelTop + 1, right, bottom - 1, 0x554B515D);
 
         // Follow Developer -> Alpha Developer Studio's restrained workspace hierarchy.
-        drawString(fontRendererObj, "Alpha  /  Staff operations", panelLeft + 16, panelTop + 13, 0xFFF0F1F4);
-        drawString(fontRendererObj, "Staff information and management", panelLeft + 16, panelTop + 30, ACCENT);
-        drawString(fontRendererObj, "Modules", panelLeft + 16, panelTop + 49, 0xFFB8BDC8);
-        drawRect(panelLeft + 14, panelTop + 66, right - 14, panelTop + 67, 0x554B515D);
-        drawString(fontRendererObj, "Open a staff module or launch the separate dashboard.", contentLeft,
-                panelTop + 71, 0xFFE6E8ED);
-        drawRect(panelLeft + 14, bottom - 36, right - 14, bottom - 35, 0x334B515D);
-        drawString(fontRendererObj, "Staff operations  •  Module access", panelLeft + 14, bottom - 25, 0xFFB8BDC8);
+        drawString(fontRendererObj, "ALPHA  /  STAFF OPERATIONS", panelLeft + 12, panelTop + 12, 0xFFF0F1F4);
+        drawString(fontRendererObj, "STAFF WORKSPACE  •  GENERAL", panelLeft + 12, panelTop + 29, ACCENT);
+        drawRect(panelLeft + 12, panelTop + 46, right - 12, panelTop + 47, 0x554B515D);
+        drawString(fontRendererObj, "MODULES", contentLeft, panelTop + 52, 0xFFB8BDC8);
+        drawRect(panelLeft + 12, bottom - 32, right - 12, bottom - 31, 0x334B515D);
+        drawString(fontRendererObj, "Staff operations  •  Module access", panelLeft + 12, bottom - 22, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
