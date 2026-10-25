@@ -152,6 +152,17 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         );
         MODULES.add(wTap);
+
+        // FOUNDER ONLY: S-Tap mirrors W-Tap Assistance, but uses the S/back key.
+        AlphaModule sTap = new AlphaModule(
+                "s-tap-assistance",
+                "S-Tap",
+                "Founder-only S-Tap assistance; briefly releases the S key after an attack.",
+                AlphaModule.Category.FOUNDER,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(sTap);
     }
 
     private AlphaModuleRegistry() {
