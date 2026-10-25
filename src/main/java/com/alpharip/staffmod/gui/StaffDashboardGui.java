@@ -85,33 +85,33 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         }
 
         // Preserve the dashboard GUI dimensions from the original implementation.
-        panelWidth = Math.min(590, Math.max(360, width - 32));
-        panelHeight = Math.min(350, Math.max(250, height - 32));
+        panelWidth = Math.min(520, Math.max(340, width - 40));
+        panelHeight = Math.min(320, Math.max(245, height - 40));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
-        int listX = panelLeft + 14;
-        int listWidth = Math.max(112, Math.min(132, panelWidth / 3));
-        dividerX = listX + listWidth + 12;
-        contentLeft = dividerX + 18;
-        contentRight = panelLeft + panelWidth - 16;
-        contentTop = panelTop + 72;
-        contentBottom = panelTop + panelHeight - 76;
+        int listX = panelLeft + 12;
+        int listWidth = Math.max(96, Math.min(112, panelWidth / 3));
+        dividerX = listX + listWidth + 9;
+        contentLeft = dividerX + 12;
+        contentRight = panelLeft + panelWidth - 12;
+        contentTop = panelTop + 64;
+        contentBottom = panelTop + panelHeight - 66;
         refreshRecords(false);
-        commandField = new GuiTextField(30, fontRendererObj, contentLeft, panelTop + panelHeight - 83, Math.max(90, contentRight - contentLeft - 62), 20);
+        commandField = new GuiTextField(30, fontRendererObj, contentLeft, panelTop + panelHeight - 76, Math.max(90, contentRight - contentLeft - 54), 16);
         commandField.setMaxStringLength(180);
         commandField.setCanLoseFocus(true);
         commandField.setFocused(false);
 
-        buttonList.add(new AlphaButton(NAV_BASE, listX, panelTop + 62, listWidth, 20, "Overview", section == Section.DASHBOARD));
-        buttonList.add(new AlphaButton(NAV_BASE + 1, listX, panelTop + 85, listWidth, 20, "Cases", section == Section.CASES));
-        buttonList.add(new AlphaButton(NAV_BASE + 2, listX, panelTop + 108, listWidth, 20, "Shifts", section == Section.SHIFTS));
-        buttonList.add(new AlphaButton(NAV_BASE + 3, listX, panelTop + 131, listWidth, 20, "Presence", section == Section.PRESENCE));
-        buttonList.add(new AlphaButton(NAV_BASE + 4, listX, panelTop + 154, listWidth, 20, "Activity and audit", section == Section.AUDIT));
-        buttonList.add(new AlphaButton(NAV_BASE + 5, listX, panelTop + 177, listWidth, 20, "CMD Workspace", section == Section.CMD));
-        buttonList.add(new AlphaButton(REFRESH, panelLeft + panelWidth - 92, panelTop + 10, 78, 20, "Reload"));
-        buttonList.add(new AlphaButton(RUN_COMMAND, contentRight - 54, panelTop + panelHeight - 83, 54, 20, "Run"));
+        buttonList.add(new AlphaButton(NAV_BASE, listX, panelTop + 54, listWidth, 18, "Overview", section == Section.DASHBOARD));
+        buttonList.add(new AlphaButton(NAV_BASE + 1, listX, panelTop + 75, listWidth, 18, "Cases", section == Section.CASES));
+        buttonList.add(new AlphaButton(NAV_BASE + 2, listX, panelTop + 96, listWidth, 18, "Shifts", section == Section.SHIFTS));
+        buttonList.add(new AlphaButton(NAV_BASE + 3, listX, panelTop + 117, listWidth, 18, "Presence", section == Section.PRESENCE));
+        buttonList.add(new AlphaButton(NAV_BASE + 4, listX, panelTop + 138, listWidth, 18, "Activity and audit", section == Section.AUDIT));
+        buttonList.add(new AlphaButton(NAV_BASE + 5, listX, panelTop + 159, listWidth, 18, "CMD Workspace", section == Section.CMD));
+        buttonList.add(new AlphaButton(REFRESH, panelLeft + panelWidth - 80, panelTop + 8, 68, 18, "Reload"));
+        buttonList.add(new AlphaButton(RUN_COMMAND, contentRight - 48, panelTop + panelHeight - 76, 48, 16, "Run"));
         buttonList.get(buttonList.size() - 1).enabled = section == Section.CMD;
-        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94, panelTop + panelHeight - 31, 80, 20, "Back"));
+        buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 82, panelTop + panelHeight - 27, 70, 18, "Back"));
     }
 
     @Override
