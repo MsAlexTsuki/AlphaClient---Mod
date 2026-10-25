@@ -35,6 +35,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
     @Override public void initGui() {
         buttonList.clear();
         if (!PermissionService.hasStaffModsAccess()) { mc.displayGuiScreen(parent); return; }
+        if ("suspect".equals(type) && !canReviewAllSuspects()) { mc.displayGuiScreen(parent); return; }
         panelWidth = Math.min(540, Math.max(340, width - 32));
         panelHeight = Math.min(320, Math.max(250, height - 32));
         panelLeft = (width - panelWidth) / 2; panelTop = (height - panelHeight) / 2;
@@ -48,7 +49,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
         int y = panelTop + panelHeight - 28;
         buttonList.add(new AlphaButton(REFRESH, contentLeft, y - 29, 76, 20, "Refresh"));
         if (!"audit".equals(type)) { buttonList.add(new AlphaButton(CREATE, contentLeft + 82, y - 29, 94, 20, "Create", true)); buttonList.add(new AlphaButton(SAVE, contentLeft + 180, y - 29, 76, 20, "Save edit")); if (canManageRecords()) buttonList.add(new AlphaButton(DELETE, contentLeft + 260, y - 29, 76, 20, "Delete")); }
-        if (!"audit".equals(type)) buttonList.add(new AlphaButton(NEXT_STATUS, contentRight - 140, y - 29, 140, 20, "Next status"));
+        if (!"audit".equals(type) && !"suspect".equals(type)) buttonList.add(new AlphaButton(NEXT_STATUS, contentRight - 140, y - 29, 140, 20, "Next status"));
         buttonList.add(new AlphaButton(BACK, contentRight - 80, y, 80, 20, "Back"));
         refreshRecords();
         if (SupabaseCommunityService.isSignedIn()) { try { logActivity("module_opened", "open_" + type, title, null); } catch (Exception ignored) { } }
@@ -57,6 +58,14 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
     private void logActivity(String eventType, String actionKey, String target, JsonObject details) {
         try { SupabaseCommunityService.recordStaffModuleActivity("staff_operations", eventType, actionKey, target, details); }
         catch (Exception e) { System.err.println("[AlphaClient] Staff activity logging failed: " + safe(e.getMessage())); }
+    }
+
+    private boolean canReviewAllSuspects() {
+        if (!PermissionService.isOnlineRankVerified()) return false;
+        java.util.Set<PermissionService.Rank> ranks = PermissionService.getVerifiedOnlineRanks();
+        return ranks != null && (ranks.contains(PermissionService.Rank.MANAGER)
+                || ranks.contains(PermissionService.Rank.OWNER)
+                || ranks.contains(PermissionService.Rank.FOUNDER));
     }
 
     private boolean canManageRecords() {
@@ -68,6 +77,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
     }
 
     private void refreshRecords() {
+        if ("suspect".equals(type) && !canReviewAllSuspects()) { records = new JsonArray(); status = "Investigating list is restricted to Manager, Owner and Founder."; return; }
         if (!SupabaseCommunityService.isSignedIn()) { records = new JsonArray(); status = "Sign in to your Alpha Account to use shared staff records."; return; }
         try {
             if ("audit".equals(type)) { auditLogs = SupabaseCommunityService.getStaffAuditLogs(); records = new JsonArray(); status = "Loaded " + auditLogs.size() + " audit event(s)."; }
@@ -83,6 +93,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
     @Override protected void actionPerformed(GuiButton b) throws IOException {
         if(b==null) return;
         if(!PermissionService.hasStaffModsAccess()) { mc.displayGuiScreen(parent); return; }
+        if ("suspect".equals(type) && !canReviewAllSuspects()) { mc.displayGuiScreen(parent); return; }
         if(b.id==BACK) { mc.displayGuiScreen(parent); return; }
         if(b.id==REFRESH) { refreshRecords(); return; }
         if(b.id==SAVE) {
@@ -194,6 +205,7 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
             String author = value(recordPayload, "created_by_label", "");
             if (author.trim().isEmpty()) author = value(r, "created_by", "unknown");
             String line=value(r,"title","Untitled")+"  ["+value(r,"status","unknown")+"]  by "+author;
+            if ("suspect".equals(type)) line = value(r, "title", "Unknown player") + "  [SUSPECT]  marked by " + author;
             if(line.length()>78) line=line.substring(0,75)+"...";
             drawString(fontRendererObj,(value(r,"id","").equals(selectedId)?"> ":"  ")+line,contentLeft,y+shown*15,0xFFE6E8ED);
             String details=value(r.has("payload")&&r.get("payload").isJsonObject()?r.getAsJsonObject("payload"):null,"details","");
