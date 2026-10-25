@@ -690,6 +690,32 @@ public final class SupabaseCommunityService {
         return requestArray("GET", "/rest/v1/staff_module_activity?select=id,actor_id,actor_label,module_key,event_type,action_key,target_label,details,occurred_at&order=occurred_at.desc&limit=200", token);
     }
 
+    /** Finds shared staff notes by Minecraft/player name (case-insensitive exact match). */
+    public static synchronized JsonArray getStaffPlayerNotes(String playerName) throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) throw new IllegalStateException("Sign in to your Alpha Account to search staff notes.");
+        if (playerName == null || !playerName.trim().matches("[A-Za-z0-9_]{1,16}")) throw new IllegalArgumentException("Enter a valid player name (1-16 letters, numbers or underscores).");
+        String encoded = java.net.URLEncoder.encode(playerName.trim(), "UTF-8");
+        return requestArray("GET", "/rest/v1/staff_player_notes?select=id,player_name,note,created_by,created_by_label,created_at&player_name=ilike." + encoded + "&order=created_at.desc&limit=20", token);
+    }
+
+    /** Adds a shared staff note. Database RLS verifies that the caller is staff. */
+    public static synchronized JsonObject createStaffPlayerNote(String playerName, String note) throws Exception {
+        String token = accessToken;
+        String userId = signedInUserId;
+        if (token == null || token.trim().isEmpty() || userId == null || userId.trim().isEmpty()) throw new IllegalStateException("Sign in to your Alpha Account to add staff notes.");
+        if (playerName == null || !playerName.trim().matches("[A-Za-z0-9_]{1,16}")) throw new IllegalArgumentException("Enter a valid player name (1-16 letters, numbers or underscores).");
+        if (note == null || note.trim().isEmpty() || note.trim().length() > 2000) throw new IllegalArgumentException("Note must contain 1-2000 characters.");
+        JsonObject body = new JsonObject();
+        body.addProperty("player_name", playerName.trim());
+        body.addProperty("note", note.trim());
+        body.addProperty("created_by", userId);
+        body.addProperty("created_by_label", signedInAlphaName == null ? "" : signedInAlphaName);
+        JsonArray result = requestArray("POST", "/rest/v1/staff_player_notes?select=id,player_name,note,created_by,created_by_label,created_at", token, body.toString());
+        if (result.size() == 0 || !result.get(0).isJsonObject()) throw new IllegalStateException("Supabase did not return the created staff note.");
+        return result.get(0).getAsJsonObject();
+    }
+
     public static synchronized void recordStaffModuleActivity(String moduleKey, String eventType, String actionKey, String targetLabel, JsonObject details) throws Exception {
         String token = accessToken;
         String userId = signedInUserId;
