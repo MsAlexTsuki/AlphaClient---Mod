@@ -4,6 +4,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
+import com.alpharip.staffmod.movement.STapAssistance;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
@@ -500,6 +501,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 if (button instanceof ModuleTileButton && ((ModuleTileButton) button).wasSwitchClicked()) {
                     if (clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         clickedModule.setEnabled(!clickedModule.isEnabled());
+                        if ("s-tap-assistance".equals(clickedModule.getId())) {
+                            STapAssistance.setEnabled(clickedModule.isEnabled());
+                        }
                     }
                 } else {
                     selectedModuleId = clickedModule.getId();
@@ -526,6 +530,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                         return;
                     }
                     if ("w-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new WTapSettingsGui(this)); return; }
+                    if ("s-tap-assistance".equals(clickedModule.getId())
+                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                        mc.displayGuiScreen(new STapSettingsGui(this));
+                        return;
+                    }
                     if ("legacy-pvp".equals(clickedModule.getId())
                             && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         mc.displayGuiScreen(new LegacyPvpSettingsGui(this));
