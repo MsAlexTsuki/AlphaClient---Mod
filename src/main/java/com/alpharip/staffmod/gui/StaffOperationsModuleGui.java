@@ -176,7 +176,10 @@ public final class StaffOperationsModuleGui extends AlphaGuiScreen {
             if(!records.get(i).isJsonObject()) continue;
             JsonObject r=records.get(i).getAsJsonObject();
             if(!type.equals(value(r,"record_type",""))) continue;
-            String line=value(r,"title","Untitled")+"  ["+value(r,"status","unknown")+"]  by "+value(r,"created_by","unknown");
+            JsonObject recordPayload = r.has("payload") && r.get("payload").isJsonObject() ? r.getAsJsonObject("payload") : null;
+            String author = value(recordPayload, "created_by_label", "");
+            if (author.trim().isEmpty()) author = value(r, "created_by", "unknown");
+            String line=value(r,"title","Untitled")+"  ["+value(r,"status","unknown")+"]  by "+author;
             if(line.length()>92) line=line.substring(0,89)+"...";
             drawString(fontRendererObj,(value(r,"id","").equals(selectedId)?"> ":"  ")+line,contentLeft,y+shown*19,0xFFE6E8ED);
             String details=value(r.has("payload")&&r.get("payload").isJsonObject()?r.getAsJsonObject("payload"):null,"details","");
