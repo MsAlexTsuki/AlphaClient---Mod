@@ -307,10 +307,11 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         String[] parts = input.split("\\s+", 3);
         String command = parts[0].toLowerCase(java.util.Locale.ROOT);
         if ("help".equals(command)) {
-            commandResults.add("help | cases | shifts | presence");
-            commandResults.add("activity [player] | notes <player>");
-            commandResults.add("notes <player> (notes storage not connected yet)");
-            commandStatus = "Available dashboard commands";
+            commandResults.add("help | cases | shifts | presence [player]");
+            commandResults.add("afk [note] | busy [note] | available [note]");
+            commandResults.add("investigating <note> | activity [player]");
+            commandResults.add("loginlog | notes <player>");
+            commandStatus = "Status commands save shared Presence timeline records.";
         } else if ("cases".equals(command) || "shifts".equals(command) || "presence".equals(command)) {
             String type = "cases".equals(command) ? "case" : "shifts".equals(command) ? "shift" : "presence";
             int shown = 0;
@@ -335,8 +336,46 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
                 shown++;
             }
             commandStatus = shown == 0 ? "No matching module activity found." : "Latest matching module activity";
+        } else if ("afk".equals(command) || "busy".equals(command) || "available".equals(command) || "investigating".equals(command)) {
+            String presenceStatus = "afk".equals(command) ? "away" : "busy".equals(command) ? "busy" : "available".equals(command) ? "active" : "in_progress";
+            String note = input.length() > parts[0].length() ? input.substring(parts[0].length()).trim() : "";
+            if ("investigating".equals(command) && note.isEmpty()) {
+                commandStatus = "Usage: investigating <note>";
+            } else {
+                try {
+                    JsonObject payload = new JsonObject();
+                    payload.addProperty("details", note);
+                    payload.addProperty("presence_status", command);
+                    payload.addProperty("event", "status_changed");
+                    payload.addProperty("actor_label", SupabaseCommunityService.getSignedInAlphaName());
+                    SupabaseCommunityService.createStaffOperationsRecord("presence",
+                            SupabaseCommunityService.getSignedInAlphaName() + " - " + command,
+                            presenceStatus, payload);
+                    SupabaseCommunityService.recordStaffModuleActivity("staff_presence", "action_performed",
+                            "presence_status_" + command, SupabaseCommunityService.getSignedInAlphaName(), payload);
+                    refreshRecords(true);
+                    commandStatus = "Presence status saved to shared staff records.";
+                    commandResults.add(command + (note.isEmpty() ? "" : ": " + note));
+                } catch (Exception e) {
+                    commandStatus = "Could not save presence status: " + safeMessage(e.getMessage());
+                }
+            }
+        } else if ("loginlog".equals(command)) {
+            int shown = 0;
+            for (int i = 0; i < records.size() && shown < 2; i++) {
+                if (!records.get(i).isJsonObject()) continue;
+                JsonObject row = records.get(i).getAsJsonObject();
+                if (!"presence".equals(value(row, "record_type", ""))) continue;
+                JsonObject payload = row.has("payload") && row.get("payload").isJsonObject() ? row.getAsJsonObject("payload") : new JsonObject();
+                if (!"login".equals(value(payload, "event", "")) && !"logout".equals(value(payload, "event", ""))) continue;
+                commandResults.add(value(row, "title", "Session event") + " / " + value(row, "created_at", ""));
+                shown++;
+            }
+            commandStatus = shown == 0
+                    ? "No login/logout events recorded yet; session tracking is not connected."
+                    : "Recorded login/logout events (not a live session list).";
         } else if ("notes".equals(command)) {
-            commandStatus = parts.length < 2 ? "Usage: notes <player>" : "Notes lookup is not connected yet; no notes are fabricated."; 
+            commandStatus = parts.length < 2 ? "Usage: notes <player>" : "Notes lookup is not connected yet; no notes are fabricated.";
         } else { commandStatus = "Unknown command: " + parts[0] + ". Enter help."; }
         if (commandField != null) commandField.setFocused(true);
     }
