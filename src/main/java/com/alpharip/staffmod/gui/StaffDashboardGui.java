@@ -24,6 +24,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
     private static final int AUDIT = 14;
     private static final int REFRESH = 15;
     private static final int RUN_COMMAND = 16;
+    private static final int CMD_WORKSPACE = 17;
     private static final int ACCENT = 0xFFFFD866;
     private static final int NAV_BASE = 100;
     private int dividerX;
@@ -104,6 +105,7 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(NAV_BASE + 2, listX, panelTop + 108, listWidth, 20, "Shifts", section == Section.SHIFTS));
         buttonList.add(new AlphaButton(NAV_BASE + 3, listX, panelTop + 131, listWidth, 20, "Presence", section == Section.PRESENCE));
         buttonList.add(new AlphaButton(NAV_BASE + 4, listX, panelTop + 154, listWidth, 20, "Activity and audit", section == Section.AUDIT));
+        buttonList.add(new AlphaButton(CMD_WORKSPACE, panelLeft + panelWidth - 202, panelTop + 10, 102, 20, "CMD Workspace"));
         buttonList.add(new AlphaButton(REFRESH, panelLeft + panelWidth - 92, panelTop + 10, 78, 20, "Reload"));
         buttonList.add(new AlphaButton(RUN_COMMAND, contentRight - 54, panelTop + panelHeight - 83, 54, 20, "Run"));
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94, panelTop + panelHeight - 31, 80, 20, "Back"));
@@ -121,6 +123,10 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
             return;
         }
         if (button.id == RUN_COMMAND) { runDashboardCommand(commandField == null ? "" : commandField.getText()); return; }
+        if (button.id == CMD_WORKSPACE) {
+            net.minecraft.client.Minecraft.getMinecraft().displayGuiScreen(new CmdWorkspaceGui(this));
+            return;
+        }
         if (button.id == NAV_BASE) section = Section.DASHBOARD;
         else if (button.id == NAV_BASE + 1) section = Section.CASES;
         else if (button.id == NAV_BASE + 2) section = Section.SHIFTS;
