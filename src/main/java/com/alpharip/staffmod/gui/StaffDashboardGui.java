@@ -325,6 +325,72 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         if (shown == 0) drawString(fontRendererObj, "No shared " + type + " records yet.", x, y, 0xFFB8BDC8);
     }
 
+    private void runSuspectCommand(String[] parts, String input) {
+        if (!SupabaseCommunityService.isSignedIn()) {
+            commandStatus = "Sign in to your Alpha Account to use shared Investigating data.";
+            return;
+        }
+        String sub = parts.length > 1 ? parts[1].trim() : "";
+        boolean check = "check".equalsIgnoreCase(sub);
+        boolean list = "list".equalsIgnoreCase(sub);
+        String player = check ? (parts.length > 2 ? parts[2].trim() : "")
+                : list ? "" : (parts.length > 1 ? input.substring(input.indexOf(parts[1])).trim() : "");
+        if (check && player.isEmpty()) { commandStatus = "Usage: ./suspect check <player>"; return; }
+        if (!check && !list && (player.isEmpty() || player.contains(" "))) {
+            commandStatus = "Usage: ./suspect <player> | ./suspect check <player> | ./suspect list";
+            return;
+        }
+        try {
+            JsonArray all = SupabaseCommunityService.getStaffOperationsRecords();
+            if (list && !canReviewAllSuspects()) {
+                commandStatus = "The suspect list is restricted to Manager, Owner and Founder.";
+                return;
+            }
+            int shown = 0;
+            for (int i = 0; i < all.size(); i++) {
+                if (!all.get(i).isJsonObject()) continue;
+                JsonObject row = all.get(i).getAsJsonObject();
+                if (!"suspect".equals(value(row, "record_type", ""))) continue;
+                String markedPlayer = value(row, "title", "");
+                if (check && !markedPlayer.equalsIgnoreCase(player)) continue;
+                if (!check && !list && !markedPlayer.equalsIgnoreCase(player)) continue;
+                if (list || check) {
+                    commandResults.add(markedPlayer + " [SUSPECT] / marked by "
+                            + value(row, "created_by_label", value(row, "created_by", "staff")));
+                    shown++;
+                } else {
+                    SupabaseCommunityService.deleteStaffOperationsRecord(value(row, "id", ""));
+                    commandStatus = "Removed suspect mark from " + player + ".";
+                    refreshRecords(false);
+                    return;
+                }
+            }
+            if (check) commandStatus = shown == 0 ? player + " is not marked as suspect." : player + " is marked as suspect.";
+            else if (list) commandStatus = "Showing " + shown + " suspect record(s).";
+            else {
+                JsonObject payload = new JsonObject();
+                payload.addProperty("player_name", player);
+                payload.addProperty("created_by_label", SupabaseCommunityService.getSignedInAlphaName());
+                payload.addProperty("details", "Marked for staff attention; not proof of cheating.");
+                SupabaseCommunityService.createStaffOperationsRecord("suspect", player, "open", payload);
+                SupabaseCommunityService.recordStaffModuleActivity("staff_operations", "suspect_marked", "suspect_added", player, payload);
+                commandResults.add(player + " added to Investigating.");
+                commandStatus = "Suspect mark saved to shared staff database.";
+                refreshRecords(false);
+            }
+        } catch (Exception e) {
+            commandStatus = "Investigating command failed: " + safeMessage(e.getMessage());
+        }
+    }
+
+    private boolean canReviewAllSuspects() {
+        if (!PermissionService.isOnlineRankVerified()) return false;
+        java.util.Set<PermissionService.Rank> ranks = PermissionService.getVerifiedOnlineRanks();
+        return ranks != null && (ranks.contains(PermissionService.Rank.MANAGER)
+                || ranks.contains(PermissionService.Rank.OWNER)
+                || ranks.contains(PermissionService.Rank.FOUNDER));
+    }
+
     private void runDashboardCommand(String raw) {
         String input = raw == null ? "" : raw.trim();
         if (input.isEmpty()) { commandStatus = "Enter a command. Use help for the list."; return; }
@@ -334,9 +400,11 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
         if (commandResults.size() > 200) commandResults.remove(0);
         String[] parts = input.split("\\s+", 3);
         String command = parts[0].toLowerCase(java.util.Locale.ROOT);
+        if (command.startsWith("./")) command = command.substring(2);
         if ("help".equals(command)) {
             commandResults.add("help | cases | shifts | presence [player]");
             commandResults.add("afk [note] | busy [note] | available [note]");
+            commandResults.add("./suspect <player> | ./suspect check <player> | ./suspect list");
             commandResults.add("investigating <note> | activity [player]");
             commandResults.add("loginlog | notes <player>");
             commandResults.add("addnote <player> <note>");
@@ -352,6 +420,8 @@ public final class StaffDashboardGui extends AlphaGuiScreen {
                 shown++;
             }
             commandStatus = shown == 0 ? "No " + command + " records found." : "Showing " + shown + " " + command + " record(s).";
+        } else if ("suspect".equals(command)) {
+            runSuspectCommand(parts, input);
         } else if ("activity".equals(command)) {
             String filter = parts.length > 1 ? parts[1].toLowerCase(java.util.Locale.ROOT) : "";
             int shown = 0;
