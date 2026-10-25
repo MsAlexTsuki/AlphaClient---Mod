@@ -368,9 +368,13 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         List<AlphaModule> modules = new ArrayList<AlphaModule>();
 
         if (selectedRank == PermissionService.Rank.PUBLIC) {
-            // Bhop is only exposed in General and only when its explicit permission allows it.
+            // Bhop is only exposed in StaffMods -> General and only with its explicit permission.
             AlphaModule bhop = AlphaModuleRegistry.find("staffmods");
             if (bhop != null && bhop.isUnlocked()) modules.add(bhop);
+
+            // Healthbar is also a StaffMods -> General module, gated by StaffMods access.
+            AlphaModule healthbar = AlphaModuleRegistry.find("healthbar");
+            if (healthbar != null && healthbar.isUnlocked()) modules.add(healthbar);
             return modules;
         }
 
@@ -603,6 +607,10 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
             if (!module.isUnlocked()) return;
             if ("staffmods".equals(module.getId())) {
                 mc.displayGuiScreen(new BhopSettingsGui(this));
+                return;
+            }
+            if ("healthbar".equals(module.getId())) {
+                mc.displayGuiScreen(new ModuleSettingsGui(this, module));
                 return;
             }
         }
