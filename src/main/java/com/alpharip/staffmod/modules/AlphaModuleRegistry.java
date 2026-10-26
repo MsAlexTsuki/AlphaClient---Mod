@@ -385,6 +385,17 @@ public final class AlphaModuleRegistry {
         MODULES.add(new AlphaModule("entity-count-hud", "Entity Count HUD", "Display nearby living entity count.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
         MODULES.add(new AlphaModule("durability-warning", "Durability Warning", "Warn when the held item is nearly broken.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
         MODULES.add(new AlphaModule("hunger-warning", "Hunger Warning", "Warn when the food bar is low.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("target-armor-hud", "Target Armor HUD", "Show armor pieces and durability for the entity under the crosshair.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("target-equipment-hud", "Target Equipment HUD", "Show the held item of the entity under the crosshair.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("arrow-tracker", "Arrow Tracker", "Count nearby arrows and show the nearest arrow distance.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("pearl-tracker", "Pearl Tracker", "Count nearby ender pearls and show the nearest pearl distance.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("projectile-warning", "Projectile Warning", "Warn when an arrow or ender pearl is close to the player.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("combat-timer", "Combat Timer", "Show time since the player last took damage.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("combo-counter", "Combo Counter", "Count observed hurt-state changes on the crosshair target.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("sprint-reset-indicator", "Sprint Reset Indicator", "Show sprint state and forward-key state.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("pearl-cooldown", "Pearl Cooldown", "Show an estimated cooldown after using an ender pearl.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("hit-indicator", "Hit Indicator", "Display a brief hit confirmation for the targeted entity.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
