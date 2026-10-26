@@ -1,60 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Queue Mood Check.
- * Purpose: Records an optional pre-queue mood check for personal statistics.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** Optional local mood journal; no queue blocking or external upload is performed. */
 public final class QueueMoodCheck {
-    public static final String NAME = "Queue Mood Check";
-    public static final String CATEGORY = "Practice";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Records an optional pre-queue mood check for personal statistics.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Queue Mood Check",CATEGORY="Practice",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class CheckIn {public final int mood;public final String note;public final long time;private CheckIn(int m,String n){mood=m;note=n;time=System.currentTimeMillis();}}
+ private final List<CheckIn> history=new ArrayList<CheckIn>();
+ public synchronized CheckIn record(int mood,String note){if(mood<1||mood>5)throw new IllegalArgumentException("mood must be 1..5");CheckIn c=new CheckIn(mood,note==null?"":note.trim());history.add(c);return c;}
+ public synchronized List<CheckIn> history(){return Collections.unmodifiableList(new ArrayList<CheckIn>(history));}
+ public synchronized double averageMood(){if(history.isEmpty())return 0;int s=0;for(CheckIn c:history)s+=c.mood;return (double)s/history.size();}
+ public synchronized void clear(){history.clear();}
 }
