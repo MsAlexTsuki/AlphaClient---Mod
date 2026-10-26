@@ -1,0 +1,9 @@
+package com.alpharip.staffmod.hud;
+import com.alpharip.staffmod.modules.AlphaModule;import com.alpharip.staffmod.modules.AlphaModuleRegistry;import net.minecraft.client.Minecraft;import net.minecraft.client.network.NetworkPlayerInfo;import net.minecraftforge.client.event.RenderGameOverlayEvent;import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;import net.minecraftforge.fml.common.gameevent.TickEvent;import java.util.ArrayDeque;import java.util.Deque;
+/** Displays a rolling text graph of player-list ping samples. */
+public final class StaffNetworkGraph{
+ private final Deque<Integer> samples=new ArrayDeque<Integer>();
+ private boolean enabled(){AlphaModule m=AlphaModuleRegistry.find("staff-network-graph");return m!=null&&m.isEnabled()&&m.isUnlocked();}
+ @SubscribeEvent public void onTick(TickEvent.ClientTickEvent e){if(e.phase!=TickEvent.Phase.END||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.thePlayer==null||mc.getNetHandler()==null)return;NetworkPlayerInfo i=mc.getNetHandler().getPlayerInfo(mc.thePlayer.getUniqueID());if(i==null)return;samples.addLast(i.getResponseTime());while(samples.size()>20)samples.removeFirst();}
+ @SubscribeEvent public void onOverlay(RenderGameOverlayEvent.Text e){if(e.type!=RenderGameOverlayEvent.ElementType.TEXT||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.thePlayer==null||mc.fontRendererObj==null||mc.gameSettings.showDebugInfo)return;StringBuilder g=new StringBuilder();int max=1;for(Integer v:samples)max=Math.max(max,v);for(Integer v:samples){int n=Math.max(1,Math.min(8,v*8/max));for(int j=0;j<n;j++)g.append('|');g.append(' ');}mc.fontRendererObj.drawStringWithShadow("Network ping history (20 samples)",6,6,0xFFFFFFFF);mc.fontRendererObj.drawStringWithShadow(g.toString(),6,18,0xFF55FF55);}
+}

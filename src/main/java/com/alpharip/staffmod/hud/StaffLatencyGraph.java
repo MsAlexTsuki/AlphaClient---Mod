@@ -1,0 +1,9 @@
+package com.alpharip.staffmod.hud;
+import com.alpharip.staffmod.modules.AlphaModule;import com.alpharip.staffmod.modules.AlphaModuleRegistry;import net.minecraft.client.Minecraft;import net.minecraft.client.network.NetworkPlayerInfo;import net.minecraftforge.client.event.RenderGameOverlayEvent;import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;import net.minecraftforge.fml.common.gameevent.TickEvent;import java.util.ArrayDeque;import java.util.Deque;
+/** Tracks rolling minimum, average and maximum player-list ping values. */
+public final class StaffLatencyGraph{
+ private final Deque<Integer> samples=new ArrayDeque<Integer>();
+ private boolean enabled(){AlphaModule m=AlphaModuleRegistry.find("staff-latency-graph");return m!=null&&m.isEnabled()&&m.isUnlocked();}
+ @SubscribeEvent public void onTick(TickEvent.ClientTickEvent e){if(e.phase!=TickEvent.Phase.END||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.thePlayer==null||mc.getNetHandler()==null)return;NetworkPlayerInfo i=mc.getNetHandler().getPlayerInfo(mc.thePlayer.getUniqueID());if(i==null)return;samples.addLast(i.getResponseTime());while(samples.size()>30)samples.removeFirst();}
+ @SubscribeEvent public void onOverlay(RenderGameOverlayEvent.Text e){if(e.type!=RenderGameOverlayEvent.ElementType.TEXT||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.thePlayer==null||mc.fontRendererObj==null||mc.gameSettings.showDebugInfo)return;if(samples.isEmpty()){mc.fontRendererObj.drawStringWithShadow("Latency Graph: waiting for ping samples",6,6,0xFFFFFFFF);return;}int min=Integer.MAX_VALUE,max=0,total=0;for(Integer v:samples){min=Math.min(min,v);max=Math.max(max,v);total+=v;}mc.fontRendererObj.drawStringWithShadow("Latency history ("+samples.size()+" samples)",6,6,0xFFFFFFFF);mc.fontRendererObj.drawStringWithShadow("Min "+min+" ms | Avg "+(total/samples.size())+" ms | Max "+max+" ms",6,18,0xFFFFFFFF);}
+}

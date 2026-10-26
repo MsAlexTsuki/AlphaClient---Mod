@@ -1,0 +1,9 @@
+package com.alpharip.staffmod.hud;
+import com.alpharip.staffmod.modules.AlphaModule;import com.alpharip.staffmod.modules.AlphaModuleRegistry;import net.minecraft.client.Minecraft;import net.minecraftforge.client.event.RenderGameOverlayEvent;import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;import net.minecraftforge.fml.common.gameevent.TickEvent;import java.util.ArrayDeque;import java.util.Deque;
+/** Tracks recent horizontal speed in blocks per second. */
+public final class StaffSpeedGraph{
+ private final Deque<Double> samples=new ArrayDeque<Double>();
+ private boolean enabled(){AlphaModule m=AlphaModuleRegistry.find("staff-speed-graph");return m!=null&&m.isEnabled()&&m.isUnlocked();}
+ @SubscribeEvent public void onTick(TickEvent.ClientTickEvent e){if(e.phase!=TickEvent.Phase.END||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.thePlayer==null)return;double x=mc.thePlayer.posX-mc.thePlayer.prevPosX,z=mc.thePlayer.posZ-mc.thePlayer.prevPosZ;samples.addLast(Math.sqrt(x*x+z*z)*20.0D);while(samples.size()>20)samples.removeFirst();}
+ @SubscribeEvent public void onOverlay(RenderGameOverlayEvent.Text e){if(e.type!=RenderGameOverlayEvent.ElementType.TEXT||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.thePlayer==null||mc.fontRendererObj==null||mc.gameSettings.showDebugInfo)return;StringBuilder g=new StringBuilder();double max=0.1D;for(Double v:samples)max=Math.max(max,v);for(Double v:samples){int n=Math.max(1,Math.min(8,(int)(v*8.0D/max)));for(int j=0;j<n;j++)g.append('|');g.append(' ');}mc.fontRendererObj.drawStringWithShadow("Horizontal speed history (blocks/second)",6,6,0xFFFFFFFF);mc.fontRendererObj.drawStringWithShadow(g.toString(),6,18,0xFFFFFFFF);}
+}

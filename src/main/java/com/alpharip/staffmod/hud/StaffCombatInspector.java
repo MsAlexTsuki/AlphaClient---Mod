@@ -1,0 +1,7 @@
+package com.alpharip.staffmod.hud;
+import com.alpharip.staffmod.modules.AlphaModule;import com.alpharip.staffmod.modules.AlphaModuleRegistry;import net.minecraft.client.Minecraft;import net.minecraft.entity.EntityLivingBase;import net.minecraft.util.MovingObjectPosition;import net.minecraftforge.client.event.RenderGameOverlayEvent;import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+/** Summarizes the combat state of the living entity under the crosshair. */
+public final class StaffCombatInspector{
+ private boolean enabled(){AlphaModule m=AlphaModuleRegistry.find("staff-combat-inspector");return m!=null&&m.isEnabled()&&m.isUnlocked();}
+ @SubscribeEvent public void onOverlay(RenderGameOverlayEvent.Text e){if(e.type!=RenderGameOverlayEvent.ElementType.TEXT||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.thePlayer==null||mc.theWorld==null||mc.fontRendererObj==null||mc.gameSettings.showDebugInfo||mc.objectMouseOver==null||mc.objectMouseOver.typeOfHit!=MovingObjectPosition.MovingObjectType.ENTITY||!(mc.objectMouseOver.entityHit instanceof EntityLivingBase))return;EntityLivingBase t=(EntityLivingBase)mc.objectMouseOver.entityHit;mc.fontRendererObj.drawStringWithShadow("Combat target: "+t.getName(),6,6,0xFFFFFFFF);mc.fontRendererObj.drawStringWithShadow(String.format("Health %.1f/%.1f | distance %.2f",t.getHealth(),t.getMaxHealth(),mc.thePlayer.getDistanceToEntity(t)),6,18,0xFFFFFFFF);mc.fontRendererObj.drawStringWithShadow("Hurt time: "+t.hurtTime+" | alive: "+t.isEntityAlive(),6,30,0xFFFFFFFF);}
+}

@@ -1,0 +1,9 @@
+package com.alpharip.staffmod.hud;
+import com.alpharip.staffmod.modules.AlphaModule;import com.alpharip.staffmod.modules.AlphaModuleRegistry;import net.minecraft.client.Minecraft;import net.minecraftforge.client.event.RenderGameOverlayEvent;import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;import net.minecraftforge.fml.common.gameevent.TickEvent;import java.util.ArrayDeque;import java.util.Deque;
+/** Tracks recent yaw and pitch changes per client tick. */
+public final class StaffRotationGraph{
+ private final Deque<Float> samples=new ArrayDeque<Float>();private float yaw,pitch;private boolean initialized;
+ private boolean enabled(){AlphaModule m=AlphaModuleRegistry.find("staff-rotation-graph");return m!=null&&m.isEnabled()&&m.isUnlocked();}
+ @SubscribeEvent public void onTick(TickEvent.ClientTickEvent e){if(e.phase!=TickEvent.Phase.END||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.thePlayer==null){initialized=false;return;}float y=mc.thePlayer.rotationYaw,p=mc.thePlayer.rotationPitch;if(initialized){float dy=Math.abs(y-yaw);while(dy>180.0F)dy=Math.abs(dy-360.0F);float dp=Math.abs(p-pitch);samples.addLast(dy+dp);while(samples.size()>20)samples.removeFirst();}yaw=y;pitch=p;initialized=true;}
+ @SubscribeEvent public void onOverlay(RenderGameOverlayEvent.Text e){if(e.type!=RenderGameOverlayEvent.ElementType.TEXT||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.thePlayer==null||mc.fontRendererObj==null||mc.gameSettings.showDebugInfo)return;StringBuilder g=new StringBuilder();float max=1.0F;for(Float v:samples)max=Math.max(max,v);for(Float v:samples){int n=Math.max(1,Math.min(8,(int)(v*8.0F/max)));for(int j=0;j<n;j++)g.append('|');g.append(' ');}mc.fontRendererObj.drawStringWithShadow("Rotation change history (degrees/tick)",6,6,0xFFFFFFFF);mc.fontRendererObj.drawStringWithShadow(g.toString(),6,18,0xFFFFFFFF);}
+}
