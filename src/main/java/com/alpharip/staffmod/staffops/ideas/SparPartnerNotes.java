@@ -1,60 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Spar Partner Notes.
- * Purpose: Stores personal notes keyed to spar-partner identifiers.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** Local note store keyed by spar-partner identifier. Persistence/UI integration remains separate. */
 public final class SparPartnerNotes {
-    public static final String NAME = "Spar Partner Notes";
-    public static final String CATEGORY = "Practice";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Stores personal notes keyed to spar-partner identifiers.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Spar Partner Notes",CATEGORY="Practice",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ private final Map<String,List<String>> notes=new LinkedHashMap<String,List<String>>();
+ public synchronized void add(String partner,String note){String p=text(partner),n=text(note);notes.computeIfAbsent(p,k->new ArrayList<String>()).add(n);}
+ public synchronized List<String> get(String partner){List<String> n=notes.get(text(partner));return Collections.unmodifiableList(n==null?new ArrayList<String>():new ArrayList<String>(n));}
+ public synchronized boolean remove(String partner,int index){List<String> n=notes.get(text(partner));if(n==null||index<0||index>=n.size())return false;n.remove(index);if(n.isEmpty())notes.remove(text(partner));return true;}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
