@@ -1,16 +1,13 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Raid Role Cards. Stores raid-role assignments as card data. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Stores raid role assignments for later card rendering by the staff/client UI. */
 public final class RaidRoleCards {
- public static final String NAME="Raid Role Cards", CATEGORY="HardcoreFactions", STATUS="NEW";
- public static final String PURPOSE="Stores raid-role assignments as card data.", REQUIRED_ACCESS="Everyone";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Raid Role Cards",CATEGORY="HardcoreFactions",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Role {public final String player,role,notes;private Role(String p,String r,String n){player=p;role=r;notes=n;}}
+ private final Map<String,Role> roles=new LinkedHashMap<String,Role>();
+ public synchronized void assign(String player,String role,String notes){String p=text(player);roles.put(p.toLowerCase(Locale.ROOT),new Role(p,text(role),notes==null?"":notes.trim()));}
+ public synchronized Role get(String player){return roles.get(text(player).toLowerCase(Locale.ROOT));}
+ public synchronized List<Role> snapshot(){return Collections.unmodifiableList(new ArrayList<Role>(roles.values()));}
+ public synchronized void clear(){roles.clear();}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
