@@ -1,60 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Kit Version Compare.
- * Purpose: Compares two saved kit configurations and reports their differences.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** Compares named saved kit snapshots. Inventory capture and storage are handled by integration code. */
 public final class KitVersionCompare {
-    public static final String NAME = "Kit Version Compare";
-    public static final String CATEGORY = "KitMap";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Compares two saved kit configurations and reports their differences.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Kit Version Compare",CATEGORY="KitMap",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Difference {public final String slot,left,right;private Difference(String s,String l,String r){slot=s;left=l;right=r;}}
+ private final Map<String,Map<String,String>> kits=new LinkedHashMap<String,Map<String,String>>();
+ public synchronized void save(String name,Map<String,String> slots){String n=text(name);if(slots==null)throw new IllegalArgumentException("slots required");kits.put(n,Collections.unmodifiableMap(new LinkedHashMap<String,String>(slots)));}
+ public synchronized List<Difference> compare(String leftName,String rightName){Map<String,String>a=kits.get(text(leftName)),b=kits.get(text(rightName));if(a==null||b==null)throw new IllegalArgumentException("Both kit versions must exist");Set<String> keys=new TreeSet<String>();keys.addAll(a.keySet());keys.addAll(b.keySet());List<Difference> out=new ArrayList<Difference>();for(String k:keys){String x=a.get(k),y=b.get(k);if(!Objects.equals(x,y))out.add(new Difference(k,x,y));}return Collections.unmodifiableList(out);}
+ public synchronized Set<String> names(){return Collections.unmodifiableSet(new LinkedHashSet<String>(kits.keySet()));}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("name must not be blank");return s.trim();}
 }
