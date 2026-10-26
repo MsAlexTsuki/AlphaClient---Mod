@@ -1,60 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Hit Selection Quiz.
- * Purpose: Stores hit-selection quiz prompts and answer choices for video-based practice.
- * Required access: Elite+.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** Quiz item model. Video playback, clip sourcing, and interactive UI are not wired here. */
 public final class HitSelectionQuiz {
-    public static final String NAME = "Hit Selection Quiz";
-    public static final String CATEGORY = "Practice";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Stores hit-selection quiz prompts and answer choices for video-based practice.";
-    public static final String REQUIRED_ACCESS = "Elite+";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Hit Selection Quiz",CATEGORY="Practice",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Question {public final String id,clipReference,prompt;public final long correctTimestampMs;public final long toleranceMs;private Question(String i,String c,String p,long t,long tol){id=i;clipReference=c;prompt=p;correctTimestampMs=t;toleranceMs=tol;}}
+ private final Map<String,Question> questions=new LinkedHashMap<String,Question>();
+ public synchronized void add(String id,String clip,String prompt,long correctMs,long toleranceMs){if(correctMs<0||toleranceMs<0)throw new IllegalArgumentException("timestamps must be non-negative");questions.put(text(id),new Question(text(id),text(clip),text(prompt),correctMs,toleranceMs));}
+ public synchronized boolean answer(String id,long selectedMs){Question q=questions.get(text(id));if(q==null)throw new IllegalArgumentException("Unknown question");return Math.abs(selectedMs-q.correctTimestampMs)<=q.toleranceMs;}
+ public synchronized List<Question> snapshot(){return Collections.unmodifiableList(new ArrayList<Question>(questions.values()));}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
