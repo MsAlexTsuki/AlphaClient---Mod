@@ -1,16 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.*;
-
-/** Staff Quiet Hours. Stores quiet-hour schedules and determines whether optional alerts should be muted. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+import java.time.*;
+/** Evaluates local quiet-hour windows; notification delivery/muting is integrated elsewhere. */
 public final class StaffQuietHours {
- public static final String NAME="Staff Quiet Hours", CATEGORY="StaffMods", STATUS="NEW";
- public static final String PURPOSE="Stores quiet-hour schedules and determines whether optional alerts should be muted.", REQUIRED_ACCESS="Staff";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Staff Quiet Hours",CATEGORY="StaffMods",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ private LocalTime start,end;private ZoneId zone=ZoneId.systemDefault();private boolean enabled;
+ public synchronized void configure(LocalTime start,LocalTime end,ZoneId zone){if(start==null||end==null)throw new IllegalArgumentException("times required");this.start=start;this.end=end;if(zone!=null)this.zone=zone;enabled=true;}
+ public synchronized void disable(){enabled=false;}public synchronized boolean isQuiet(Instant instant){if(!enabled)return false;LocalTime now=LocalTime.ofInstant(instant,zone);if(start.equals(end))return true;if(start.isBefore(end))return !now.isBefore(start)&&now.isBefore(end);return !now.isBefore(start)||now.isBefore(end);}
 }
