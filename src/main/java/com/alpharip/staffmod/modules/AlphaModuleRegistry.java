@@ -77,6 +77,33 @@ public final class AlphaModuleRegistry {
         MODULES.add(ping);
 
         MODULES.add(new AlphaModule(
+                "coordinates",
+                "Coordinates HUD",
+                "Show current block X, Y and Z coordinates in the General HUD.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "compass",
+                "Compass HUD",
+                "Show the player's cardinal direction and yaw in the General HUD.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "keystrokes",
+                "Keystrokes",
+                "Display live WASD and jump-key states in the General HUD.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
                 "armor-hud-info",
                 "Armor HUD",
                 "Show held-item and equipped-armor durability in a movable horizontal or vertical HUD.",
