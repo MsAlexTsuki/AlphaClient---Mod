@@ -1,60 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Safe Point Pointer.
- * Purpose: Points toward the player's chosen safe point after a fight.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+/** Stores a player-selected safe point and computes a navigation bearing. Does not render an in-game pointer yet. */
 public final class SafePointPointer {
-    public static final String NAME = "Safe Point Pointer";
-    public static final String CATEGORY = "KitMap";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Points toward the player's chosen safe point after a fight.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Safe Point Pointer", CATEGORY="KitMap", STATUS="NEW", REQUIRED_ACCESS="Unconfirmed";
+ public static final class Point {public final String world;public final int x,y,z;public Point(String world,int x,int y,int z){if(world==null||world.trim().isEmpty())throw new IllegalArgumentException("world is required");this.world=world;this.x=x;this.y=y;this.z=z;}}
+ private Point target;
+ public synchronized void setTarget(Point point){if(point==null)throw new IllegalArgumentException("point is required");target=point;}
+ public synchronized Point getTarget(){return target;} public synchronized void clear(){target=null;}
+ public synchronized double bearingDegrees(double playerX,double playerZ,String world){if(target==null)throw new IllegalStateException("No safe point selected");if(!target.world.equals(world))throw new IllegalArgumentException("Safe point belongs to another world");double angle=Math.toDegrees(Math.atan2(target.z-playerZ,target.x-playerX);return (angle+360.0)%360.0;}
+ public synchronized double distance(double playerX,double playerY,double playerZ,String world){if(target==null)throw new IllegalStateException("No safe point selected");if(!target.world.equals(world))throw new IllegalArgumentException("Safe point belongs to another world");double dx=target.x-playerX,dy=target.y-playerY,dz=target.z-playerZ;return Math.sqrt(dx*dx+dy*dy+dz*dz);}
 }
