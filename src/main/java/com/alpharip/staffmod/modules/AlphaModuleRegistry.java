@@ -337,6 +337,42 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
+        MODULES.add(new AlphaModule(
+                "biome-hud",
+                "Biome HUD",
+                "Show the biome at the player's current position.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "light-level-hud",
+                "Light Level HUD",
+                "Show the block light level at the player's position.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "world-time-hud",
+                "World Time HUD",
+                "Show the current Minecraft world time.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "fall-distance-hud",
+                "Fall Distance HUD",
+                "Show the player's current fall distance.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",

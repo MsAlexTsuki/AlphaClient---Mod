@@ -62,6 +62,10 @@ import com.alpharip.staffmod.hud.CrosshairCustomizerMod;
 import com.alpharip.staffmod.chat.ChatTimestampMod;
 import com.alpharip.staffmod.combat.KillCounterMod;
 import com.alpharip.staffmod.hud.AttackIndicatorMod;
+import com.alpharip.staffmod.hud.BiomeHud;
+import com.alpharip.staffmod.hud.LightLevelHud;
+import com.alpharip.staffmod.hud.WorldTimeHud;
+import com.alpharip.staffmod.hud.FallDistanceHud;
 import com.alpharip.staffmod.movement.AutoSprintMod;
 import com.alpharip.staffmod.inventory.AutoToolMod;
 
@@ -164,6 +168,10 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new ChatTimestampMod());
         MinecraftForge.EVENT_BUS.register(new KillCounterMod());
         MinecraftForge.EVENT_BUS.register(new AttackIndicatorMod());
+        MinecraftForge.EVENT_BUS.register(new BiomeHud());
+        MinecraftForge.EVENT_BUS.register(new LightLevelHud());
+        MinecraftForge.EVENT_BUS.register(new WorldTimeHud());
+        MinecraftForge.EVENT_BUS.register(new FallDistanceHud());
         MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         RankCache.INSTANCE.start();
