@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Storage Low Alert. Adds low-stock thresholds to storage tracking alongside Base Storage Ledger. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Configurable low-stock thresholds to complement Base Storage Ledger. Inventory/storage values must be supplied by that feature. */
 public final class StorageLowAlert {
- public static final String NAME="Storage Low Alert", CATEGORY="HardcoreFactions", STATUS="ENH";
- public static final String PURPOSE="Adds low-stock thresholds to storage tracking alongside Base Storage Ledger.", REQUIRED_ACCESS="Everyone";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Storage Low Alert",CATEGORY="HardcoreFactions",STATUS="ENH",REQUIRED_ACCESS="Unconfirmed";
+ private final Map<String,Integer> thresholds=new LinkedHashMap<String,Integer>(),stock=new LinkedHashMap<String,Integer>();
+ public synchronized void setThreshold(String item,int minimum){if(minimum<0)throw new IllegalArgumentException("minimum must be non-negative");thresholds.put(req(item),minimum);}
+ public synchronized void updateStock(String item,int count){if(count<0)throw new IllegalArgumentException("count must be non-negative");stock.put(req(item),count);}
+ public synchronized boolean isLow(String item){String k=req(item);return thresholds.containsKey(k)&&stock.containsKey(k)&&stock.get(k)<thresholds.get(k);}
+ public synchronized List<String> lowItems(){List<String> out=new ArrayList<String>();for(String item:thresholds.keySet())if(isLow(item))out.add(item);return Collections.unmodifiableList(out);}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("item required");return s.trim();}
 }
