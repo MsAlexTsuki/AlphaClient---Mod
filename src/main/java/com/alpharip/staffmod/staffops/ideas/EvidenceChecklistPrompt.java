@@ -1,16 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Evidence Checklist Prompt. Checks required evidence fields before a report is submitted. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Validates required evidence fields before a report is submitted. */
 public final class EvidenceChecklistPrompt {
- public static final String NAME="Evidence Checklist Prompt", CATEGORY="TrialModerator", STATUS="NEW";
- public static final String PURPOSE="Checks required evidence fields before a report is submitted.", REQUIRED_ACCESS="Trial Moderator";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Evidence Checklist Prompt",CATEGORY="TrialModerator",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ private final Set<String> required=new LinkedHashSet<String>(Arrays.asList("player","rule","timestamp","evidence"));
+ public synchronized void setRequired(Collection<String> fields){if(fields==null)throw new IllegalArgumentException("fields required");required.clear();for(String f:fields)required.add(req(f));}
+ public synchronized List<String> missing(Map<String,String> supplied){List<String> out=new ArrayList<String>();for(String k:required)if(supplied==null||supplied.get(k)==null||supplied.get(k).trim().isEmpty())out.add(k);return Collections.unmodifiableList(out);}
+ public synchronized boolean canSubmit(Map<String,String> supplied){return missing(supplied).isEmpty();}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("field required");return s.trim();}
 }
