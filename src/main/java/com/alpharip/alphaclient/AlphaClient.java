@@ -53,8 +53,6 @@ import com.alpharip.staffmod.hud.TargetDistanceHud;
 import com.alpharip.staffmod.hud.NearestEnemyHud;
 import com.alpharip.staffmod.hud.PotionHud;
 import com.alpharip.staffmod.hud.ArmorHud;
-import com.alpharip.staffmod.hud.CompassHudModule;
-import com.alpharip.staffmod.hud.CoordinatesHudModule;
 import com.alpharip.staffmod.quality.SessionTimerMod;
 import com.alpharip.staffmod.quality.PlaytimeTrackerMod;
 import com.alpharip.staffmod.hud.TargetHealthHud;
@@ -171,8 +169,6 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new NearestEnemyHud());
         MinecraftForge.EVENT_BUS.register(new PotionHud());
         MinecraftForge.EVENT_BUS.register(new ArmorHud());
-        MinecraftForge.EVENT_BUS.register(new CompassHudModule());
-        MinecraftForge.EVENT_BUS.register(new CoordinatesHudModule());
         MinecraftForge.EVENT_BUS.register(new SessionTimerMod());
         MinecraftForge.EVENT_BUS.register(new PlaytimeTrackerMod());
         MinecraftForge.EVENT_BUS.register(new TargetHealthHud());
