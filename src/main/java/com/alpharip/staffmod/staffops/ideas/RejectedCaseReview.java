@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Rejected Case Review. Collects rejected cases for structured review and evaluation. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Queue of rejected cases with a review outcome. */
 public final class RejectedCaseReview {
- public static final String NAME="Rejected Case Review", CATEGORY="SeniorStaff", STATUS="NEW";
- public static final String PURPOSE="Collects rejected cases for structured review and evaluation.", REQUIRED_ACCESS="Senior Staff";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Rejected Case Review",CATEGORY="SeniorStaff",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Case {public final String id,reason;private String reviewerNote="";private Case(String i,String r){id=i;reason=r;}public String getReviewerNote(){return reviewerNote;}}
+ private final Map<String,Case> cases=new LinkedHashMap<String,Case>();
+ public synchronized void add(String id,String reason){String i=req(id);cases.put(i,new Case(i,req(reason)));}
+ public synchronized void review(String id,String note){Case c=cases.get(req(id));if(c==null)throw new IllegalArgumentException("unknown case");c.reviewerNote=note==null?"":note.trim();}
+ public synchronized List<Case> snapshot(){return Collections.unmodifiableList(new ArrayList<Case>(cases.values()));}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
