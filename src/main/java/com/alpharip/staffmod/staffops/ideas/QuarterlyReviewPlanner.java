@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Quarterly Review Planner. Schedules quarterly staff reviews and tracks their completion. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Schedules staff reviews and tracks completion. */
 public final class QuarterlyReviewPlanner {
- public static final String NAME="Quarterly Review Planner", CATEGORY="Management", STATUS="NEW";
- public static final String PURPOSE="Schedules quarterly staff reviews and tracks their completion.", REQUIRED_ACCESS="Management";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Quarterly Review Planner",CATEGORY="Management",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Review {public final String id,staff;public final long scheduledAt;private boolean complete;private Review(String i,String s,long t){id=i;staff=s;scheduledAt=t;}public boolean isComplete(){return complete;}}
+ private final Map<String,Review> reviews=new LinkedHashMap<String,Review>();
+ public synchronized void schedule(String id,String staff,long time){if(time<0)throw new IllegalArgumentException("time must be non-negative");String i=req(id);reviews.put(i,new Review(i,req(staff),time));}
+ public synchronized void complete(String id,boolean complete){Review r=reviews.get(req(id));if(r==null)throw new IllegalArgumentException("unknown review");r.complete=complete;}
+ public synchronized List<Review> snapshot(){return Collections.unmodifiableList(new ArrayList<Review>(reviews.values()));}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
