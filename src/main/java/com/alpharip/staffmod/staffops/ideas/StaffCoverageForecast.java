@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Compares scheduled shifts with minimum staffing requirements for time windows.
@@ -89,12 +91,13 @@ public class StaffCoverageForecast {
             if (requirement == null) {
                 continue;
             }
-            int covered = 0;
+            Set<String> coveredStaff = new LinkedHashSet<String>();
             for (Shift shift : safeShifts) {
                 if (shift != null && shift.covers(requirement.getStart(), requirement.getEnd())) {
-                    covered++;
+                    coveredStaff.add(shift.getStaffId());
                 }
             }
+            int covered = coveredStaff.size();
             result.add(new Forecast(requirement, covered,
                     Math.max(0, requirement.getMinimumStaff() - covered)));
         }
