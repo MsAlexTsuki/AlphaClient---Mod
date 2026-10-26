@@ -1,60 +1,13 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Trade Price Notebook.
- * Purpose: Stores personal item prices as an enhancement companion to existing price-note features.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** Local personal price notes; persistence and GUI are integration work. */
 public final class TradePriceNotebook {
-    public static final String NAME = "Trade Price Notebook";
-    public static final String CATEGORY = "Economy";
-    public static final String STATUS = "ENH";
-    public static final String PURPOSE = "Stores personal item prices as an enhancement companion to existing price-note features.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Trade Price Notebook",CATEGORY="Economy",STATUS="ENH",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Price {public final String item,currency,note;public final double amount;public final long updatedAt;private Price(String i,double a,String c,String n){item=i;amount=a;currency=c;note=n;updatedAt=System.currentTimeMillis();}}
+ private final Map<String,Price> prices=new LinkedHashMap<String,Price>();
+ public synchronized void put(String item,double amount,String currency,String note){String k=text(item);if(amount<0||Double.isNaN(amount)||Double.isInfinite(amount))throw new IllegalArgumentException("invalid amount");String c=text(currency);prices.put(k.toLowerCase(Locale.ROOT),new Price(k,amount,c,note==null?"":note));}
+ public synchronized Price get(String item){return prices.get(text(item).toLowerCase(Locale.ROOT));}
+ public synchronized boolean remove(String item){return prices.remove(text(item).toLowerCase(Locale.ROOT))!=null;}
+ public synchronized List<Price> snapshot(){return Collections.unmodifiableList(new ArrayList<Price>(prices.values()));}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value must not be blank");return s.trim();}
 }
