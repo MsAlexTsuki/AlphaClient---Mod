@@ -1,60 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Practice Goal Tracker.
- * Purpose: Tracks weekly practice goals and progress toward each target.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** Tracks weekly goals by ISO week key supplied by the caller. */
 public final class PracticeGoalTracker {
-    public static final String NAME = "Practice Goal Tracker";
-    public static final String CATEGORY = "Practice";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Tracks weekly practice goals and progress toward each target.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Practice Goal Tracker",CATEGORY="Practice",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Goal {public final String id,title,weekKey;public final int target;private int progress;private Goal(String i,String t,String w,int n){id=i;title=t;weekKey=w;target=n;}public int getProgress(){return progress;}public int getRemaining(){return Math.max(0,target-progress);}public int getPercent(){return target==0?100:Math.min(100,progress*100/target;}}
+ private final Map<String,Goal> goals=new LinkedHashMap<String,Goal>();
+ public synchronized Goal add(String id,String title,String weekKey,int target){if(target<1)throw new IllegalArgumentException("target must be positive");Goal g=new Goal(text(id),text(title),text(weekKey),target);goals.put(g.id,g);return g;}
+ public synchronized Goal increment(String id,int amount){Goal g=goals.get(text(id));if(g==null)throw new IllegalArgumentException("Unknown goal");if(amount<0)throw new IllegalArgumentException("amount must be non-negative");g.progress=Math.min(g.target,g.progress+amount);return g;}
+ public synchronized List<Goal> snapshot(){return Collections.unmodifiableList(new ArrayList<Goal>(goals.values()));}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
