@@ -1,20 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
-import java.util.*;
-/**
- * Stores track/artist data for a now-playing badge.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
+/** Now-playing badge data; Spotify API/authentication and HUD rendering are not connected. */
 public class SpotifyNowPlayingBadge {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ private boolean enabled=true;private String track="",artist="",album="",url="";private long updatedAt;
+ public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}private static String clean(String s){return s==null?"":s.trim();}
+ public void setTrack(String t,String a,String al,String u,long time){track=clean(t);artist=clean(a);album=clean(al);url=clean(u);updatedAt=time;}
+ public String getTrack(){return track;}public String getArtist(){return artist;}public String getAlbum(){return album;}public String getExternalUrl(){return url;}public long getUpdatedAt(){return updatedAt;}
+ public String getDisplayText(){return track.isEmpty()?"":artist.isEmpty()?track:track+" — "+artist;}public void clear(){track=artist=album=url="";updatedAt=0;}
 }
