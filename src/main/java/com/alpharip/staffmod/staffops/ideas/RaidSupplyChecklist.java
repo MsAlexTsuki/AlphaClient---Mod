@@ -1,60 +1,13 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Raid Supply Checklist.
- * Purpose: Tracks raid supplies with checkable required-item entries.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** Checklist of raid supplies and required quantities. */
 public final class RaidSupplyChecklist {
-    public static final String NAME = "Raid Supply Checklist";
-    public static final String CATEGORY = "HardcoreFactions";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Tracks raid supplies with checkable required-item entries.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Raid Supply Checklist",CATEGORY="HardcoreFactions",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Supply {public final String item;public final int required;private int packed;private Supply(String i,int r){item=i;required=r;}public int getPacked(){return packed;}public boolean isReady(){return packed>=required;}}
+ private final Map<String,Supply> supplies=new LinkedHashMap<String,Supply>();
+ public synchronized void add(String item,int required){if(required<0)throw new IllegalArgumentException("required must be non-negative");supplies.put(text(item),new Supply(text(item),required));}
+ public synchronized void setPacked(String item,int packed){if(packed<0)throw new IllegalArgumentException("packed must be non-negative");Supply s=supplies.get(text(item));if(s==null)throw new IllegalArgumentException("Unknown supply");s.packed=packed;}
+ public synchronized boolean isReady(){for(Supply s:supplies.values())if(!s.isReady())return false;return true;}
+ public synchronized List<Supply> snapshot(){return Collections.unmodifiableList(new ArrayList<Supply>(supplies.values()));}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("item required");return s.trim();}
 }
