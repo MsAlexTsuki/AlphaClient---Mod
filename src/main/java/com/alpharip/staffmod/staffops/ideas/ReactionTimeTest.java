@@ -1,20 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/**
- * Runs timestamp-based reaction trials and averages.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
+/** Timestamp-based reaction trials; UI signal scheduling is separate. */
 public class ReactionTimeTest {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ private long signal=-1;private boolean falseStart;private final List<Long> results=new ArrayList<Long>();
+ public void startSignal(long nanos){if(nanos<0)throw new IllegalArgumentException();signal=nanos;falseStart=false;}
+ public long react(long nanos){if(signal<0)throw new IllegalStateException("No active signal");if(nanos<signal){falseStart=true;return -1;}long ms=(nanos-signal)/1000000L;results.add(ms);signal=-1;return ms;}
+ public void registerPrematureInput(){if(signal>=0)falseStart=true;}
+ public boolean hadFalseStart(){return falseStart;}public List<Long> getResults(){return Collections.unmodifiableList(new ArrayList<Long>(results));}
+ public double averageMillis(){if(results.isEmpty())return 0;long sum=0;for(Long x:results)sum+=x;return (double)sum/results.size();}
+ public void reset(){signal=-1;falseStart=false;results.clear();}
 }
