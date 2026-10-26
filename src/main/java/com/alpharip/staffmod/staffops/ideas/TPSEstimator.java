@@ -1,12 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/** Estimates TPS heuristically from response intervals. Actual Minecraft UI/event hooks and persistence are not connected. Compatible with Java 8. */
+/** Heuristic response-interval TPS estimate, not authoritative server TPS. */
 public class TPSEstimator {
- private boolean enabled=true;private final LinkedHashMap<String,String> entries=new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}
- public void put(String key,String value){entries.put(req(key),value==null?"":value);}
- public String get(String key){return entries.get(req(key));}public boolean remove(String key){return entries.remove(req(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String q){String s=req(q).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(s)||e.getValue().toLowerCase(Locale.ROOT).contains(s))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ private final Deque<Long> intervals=new ArrayDeque<Long>();private long last=-1;private int capacity=20;
+ public void recordResponse(long millis){if(millis<0)throw new IllegalArgumentException();if(last>=0&&millis>=last){intervals.addLast(Math.max(1,millis-last));while(intervals.size()>capacity)intervals.removeFirst();}last=millis;}
+ public double estimateTps(){if(intervals.isEmpty())return 20.0;long sum=0;for(Long x:intervals)sum+=x;return Math.min(20.0,1000.0/((double)sum/intervals.size()));}
+ public List<Long> getIntervals(){return Collections.unmodifiableList(new ArrayList<Long>(intervals));}public void reset(){intervals.clear();last=-1;}
 }
