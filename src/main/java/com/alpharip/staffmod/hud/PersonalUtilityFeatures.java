@@ -20,7 +20,7 @@ public final class PersonalUtilityFeatures {
     private static final Map<String,Long> seen=new LinkedHashMap<String,Long>();
     private static final Set<String> friends=new LinkedHashSet<String>(), present=new HashSet<String>(), dates=new TreeSet<String>();
     private static final List<Long> sessions=new ArrayList<Long>();
-    private static boolean loaded, alarmOn=true, breakOn=true;
+    private static boolean loaded, alarmOn=false, breakOn=true;
     private static int alarmH=0, alarmM=0;
     private static String bedtime="23:00", lastDate="", lastAlarm="", lastReminder="";
     private static long sessionStart, lastMove, pauseEnded, lastReminderAt;
@@ -37,7 +37,7 @@ public final class PersonalUtilityFeatures {
             if(o.has("dates"))for(JsonElement e:o.getAsJsonArray("dates"))dates.add(e.getAsString());
             if(o.has("sessions"))for(JsonElement e:o.getAsJsonArray("sessions"))sessions.add(e.getAsLong());
             if(o.has("alarmH"))alarmH=o.get("alarmH").getAsInt(); if(o.has("alarmM"))alarmM=o.get("alarmM").getAsInt();
-            if(o.has("alarmOn"))alarmOn=o.get("alarmOn").getAsBoolean(); if(o.has("breakOn"))breakOn=o.get("breakOn").getAsBoolean();
+            if(o.has("alarmOn"))alarmOn=o.get("alarmOn").getAsBoolean(); if(o.has("breakOn"))breakOn=o.get("breakOn").getAsBoolean();\n            if(o.has("walk"))walk=o.get("walk").getAsDouble(); if(o.has("swim"))swim=o.get("swim").getAsDouble(); if(o.has("fly"))fly=o.get("fly").getAsDouble();
             if(o.has("bedtime"))bedtime=o.get("bedtime").getAsString();
         }catch(Exception e){System.out.println("[AlphaClient] Personal utility load failed: "+e.getMessage());}
         finally{if(r!=null)try{r.close();}catch(Exception ignored){}}
@@ -48,7 +48,7 @@ public final class PersonalUtilityFeatures {
         for(Map.Entry<String,String>e:nicks.entrySet())a.addProperty(e.getKey(),e.getValue()); for(Map.Entry<String,String>e:notes.entrySet())b.addProperty(e.getKey(),e.getValue());
         for(Map.Entry<String,Long>e:seen.entrySet())s.addProperty(e.getKey(),e.getValue()); o.add("nicknames",a);o.add("notes",b);o.add("seen",s);
         JsonArray fa=new JsonArray(),da=new JsonArray(),sa=new JsonArray();for(String x:friends)fa.add(x);for(String x:dates)da.add(x);for(Long x:sessions)sa.add(x);
-        o.add("friends",fa);o.add("dates",da);o.add("sessions",sa);o.addProperty("alarmH",alarmH);o.addProperty("alarmM",alarmM);o.addProperty("alarmOn",alarmOn);o.addProperty("breakOn",breakOn);o.addProperty("bedtime",bedtime);
+        o.add("friends",fa);o.add("dates",da);o.add("sessions",sa);o.addProperty("alarmH",alarmH);o.addProperty("alarmM",alarmM);o.addProperty("alarmOn",alarmOn);o.addProperty("breakOn",breakOn);o.addProperty("bedtime",bedtime);o.addProperty("walk",walk);o.addProperty("swim",swim);o.addProperty("fly",fly);
         File f=file();if(f.getParentFile()!=null&&!f.getParentFile().exists())f.getParentFile().mkdirs();Writer w=null;
         try{w=new OutputStreamWriter(new FileOutputStream(f),"UTF-8");new GsonBuilder().setPrettyPrinting().create().toJson(o,w);}catch(Exception e){System.out.println("[AlphaClient] Personal utility save failed: "+e.getMessage());}finally{if(w!=null)try{w.close();}catch(Exception ignored){}}
     }
