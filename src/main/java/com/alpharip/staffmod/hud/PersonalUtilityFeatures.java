@@ -67,17 +67,17 @@ public final class PersonalUtilityFeatures {
         double x=m.thePlayer.posX,y=m.thePlayer.posY,z=m.thePlayer.posZ;
         if(!hasPos){px=x;py=y;pz=z;hasPos=true;}else{double dx=x-px,dy=y-py,dz=z-pz,d=Math.sqrt(dx*dx+dy*dy+dz*dz);
             if(d>0&&d<10){if(m.thePlayer.capabilities.isFlying)fly+=d;else if(m.thePlayer.isInWater())swim+=d;else if(m.thePlayer.onGround)walk+=Math.sqrt(dx*dx+dz*dz);}
-            if(d>0.02){if(lastMove>0&&t-lastMove>300000L)pauseEnded=t;lastMove=t;}px=x;py=y;pz=z;}
+            if(d>0.02){if(breakOn&&lastMove>0&&t-lastMove>300000L)pauseEnded=t;lastMove=t;}px=x;py=y;pz=z;}
         if(on("late-sleep-reminder")){int[] bt=time(bedtime);if(bt!=null){Calendar c=Calendar.getInstance();String d=now("yyyy-MM-dd");if((c.get(Calendar.HOUR_OF_DAY)>bt[0]||(c.get(Calendar.HOUR_OF_DAY)==bt[0]&&c.get(Calendar.MINUTE)>=bt[1]))&&(!d.equals(lastReminder)||t-lastReminderAt>3600000L)){lastReminder=d;lastReminderAt=t;tell("It is late ("+bedtime+"). Consider taking a break and getting some sleep.");}}}
         if(on("real-clock-alarm")&&alarmOn){Calendar c=Calendar.getInstance();String key=now("yyyy-MM-dd HH:mm");if(c.get(Calendar.HOUR_OF_DAY)==alarmH&&c.get(Calendar.MINUTE)==alarmM&&!key.equals(lastAlarm)){lastAlarm=key;tell("Alarm: "+String.format(Locale.ROOT,"%02d:%02d",alarmH,alarmM));m.thePlayer.playSound("random.orb",1F,1F);}}
-        Set<String> cur=new HashSet<String>();for(Object obj:m.theWorld.playerEntities)if(obj instanceof EntityPlayer&&obj!=m.thePlayer){EntityPlayer p=(EntityPlayer)obj;String k=p.getName().toLowerCase(Locale.ROOT);cur.add(k);seen.put(k,t);if(!present.contains(k)&&friends.contains(k)&&on("friend-join-leave"))tell("Friend joined: "+nicks.containsKey(k)?nicks.get(k):p.getName());}
+        Set<String> cur=new HashSet<String>();for(Object obj:m.theWorld.playerEntities)if(obj instanceof EntityPlayer&&obj!=m.thePlayer){EntityPlayer p=(EntityPlayer)obj;String k=p.getName().toLowerCase(Locale.ROOT);cur.add(k);seen.put(k,t);if(!present.contains(k)&&friends.contains(k)&&on("friend-join-leave"))tell("Friend joined: "+(nicks.containsKey(k)?nicks.get(k):p.getName()));}
         for(String k:present)if(!cur.contains(k)){seen.put(k,t);if(friends.contains(k)&&on("friend-join-leave"))tell("Friend left: "+(nicks.containsKey(k)?nicks.get(k):k));}
         if(!cur.equals(present))save();present.clear();present.addAll(cur);
     }
     private static void endSession(long t){if(sessionStart>0){long sec=(t-sessionStart)/1000;if(sec>=60&&on("session-average-comparison")){sessions.add(sec);while(sessions.size()>60)sessions.remove(0);save();}sessionStart=0;}}
     @SubscribeEvent public void render(RenderGameOverlayEvent.Text e){
         if(e.type!=RenderGameOverlayEvent.ElementType.TEXT)return;Minecraft m=Minecraft.getMinecraft();if(m==null||m.thePlayer==null||m.theWorld==null||m.fontRendererObj==null||m.gameSettings.hideGUI||m.gameSettings.showDebugInfo)return;load();int row=0;
-        if(on("break-since-last-pause"))draw(m,"Since last pause: "+(pauseEnded==0?"no pause recorded":duration((System.currentTimeMillis()-pauseEnded)/1000)),row++);
+        if(on("break-since-last-pause")&&breakOn)draw(m,"Since last pause: "+(pauseEnded==0?"no pause recorded":duration((System.currentTimeMillis()-pauseEnded)/1000)),row++);
         if(on("late-sleep-reminder"))draw(m,"Local time: "+now("HH:mm"),row++);
         if(on("real-clock-alarm"))draw(m,"Clock "+now("HH:mm:ss")+(alarmOn?" | Alarm "+String.format(Locale.ROOT,"%02d:%02d",alarmH,alarmM):""),row++);
         if(on("movement-distance-total"))draw(m,String.format(Locale.ROOT,"Distance W %.0fm S %.0fm F %.0fm",walk,swim,fly),row++);
