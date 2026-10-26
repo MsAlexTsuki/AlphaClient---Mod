@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Meeting Action Tracker. Tracks meeting action items, owners, due dates, and completion state. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Tracks meeting action items and completion. */
 public final class MeetingActionTracker {
- public static final String NAME="Meeting Action Tracker", CATEGORY="Management", STATUS="NEW";
- public static final String PURPOSE="Tracks meeting action items, owners, due dates, and completion state.", REQUIRED_ACCESS="Management";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Meeting Action Tracker",CATEGORY="Management",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Action {public final String id,meeting,description,owner;public final long dueAt;private boolean done;private Action(String i,String m,String d,String o,long due){id=i;meeting=m;description=d;owner=o;dueAt=due;}public boolean isDone(){return done;}}
+ private final Map<String,Action> actions=new LinkedHashMap<String,Action>();
+ public synchronized void add(String id,String meeting,String description,String owner,long dueAt){if(dueAt<0)throw new IllegalArgumentException("due date must be non-negative");String i=req(id);actions.put(i,new Action(i,req(meeting),req(description),req(owner),dueAt));}
+ public synchronized void setDone(String id,boolean done){Action a=actions.get(req(id));if(a==null)throw new IllegalArgumentException("unknown action");a.done=done;}
+ public synchronized List<Action> open(){List<Action> out=new ArrayList<Action>();for(Action a:actions.values())if(!a.done)out.add(a);return Collections.unmodifiableList(out);}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
