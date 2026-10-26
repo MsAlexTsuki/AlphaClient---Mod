@@ -43,6 +43,8 @@ import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
+import com.alpharip.staffmod.movement.AutoSprintMod;
+import com.alpharip.staffmod.inventory.AutoToolMod;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -124,6 +126,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new FullbrightMod());
         MinecraftForge.EVENT_BUS.register(new AutoGGMod());
         MinecraftForge.EVENT_BUS.register(new AutoReconnectMod());
+        MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
+        MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         RankCache.INSTANCE.start();
         // Restore the Alpha Account session and keep rank/module permissions in sync.
         SupabaseCommunityService.start();

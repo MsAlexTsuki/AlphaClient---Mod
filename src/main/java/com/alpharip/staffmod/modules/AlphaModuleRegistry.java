@@ -148,6 +148,24 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
+        MODULES.add(new AlphaModule(
+                "auto-sprint",
+                "Auto Sprint",
+                "Automatically sprint while moving forward when sprinting is safe.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "auto-tool",
+                "Auto Tool",
+                "Select the strongest hotbar tool when starting to mine a block and restore the previous slot on release.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
