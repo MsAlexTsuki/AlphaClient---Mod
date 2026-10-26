@@ -1,20 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/**
- * Stores strafe-training settings and samples.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
+/** Tracks strafe-efficiency samples; overlay/event wiring remains to be added. */
 public class StrafeTrainerOverlay {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ private boolean enabled=true;private final Deque<Double> samples=new ArrayDeque<Double>();private int capacity=120;
+ public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}public void setCapacity(int n){if(n<1||n>2000)throw new IllegalArgumentException("Capacity must be 1-2000");capacity=n;trim();}
+ public void recordStrafeEfficiency(double p){if(Double.isNaN(p)||Double.isInfinite(p))return;samples.addLast(Math.max(0,Math.min(100,p)));trim();}private void trim(){while(samples.size()>capacity)samples.removeFirst();}
+ public double getAverageEfficiency(){if(samples.isEmpty())return 0;double s=0;for(double d:samples)s+=d;return s/samples.size();}public List<Double> getSamples(){return Collections.unmodifiableList(new ArrayList<Double>(samples));}public void reset(){samples.clear();}
 }
