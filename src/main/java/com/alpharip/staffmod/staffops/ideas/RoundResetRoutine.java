@@ -1,60 +1,13 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Round Reset Routine.
- * Purpose: Provides a between-round checklist for food, potions, and positioning.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** Configurable between-round checklist with completion state. */
 public final class RoundResetRoutine {
-    public static final String NAME = "Round Reset Routine";
-    public static final String CATEGORY = "Practice";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Provides a between-round checklist for food, potions, and positioning.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Round Reset Routine",CATEGORY="Practice",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ private final Map<String,Boolean> items=new LinkedHashMap<String,Boolean>();
+ public RoundResetRoutine(){items.put("Food",false);items.put("Potions",false);items.put("Position",false);}
+ public synchronized void addItem(String item){items.put(text(item),false);}public synchronized void setDone(String item,boolean done){String k=text(item);if(!items.containsKey(k))throw new IllegalArgumentException("Unknown checklist item");items.put(k,done);}
+ public synchronized void reset(){for(String k:new ArrayList<String>(items.keySet()))items.put(k,false);}
+ public synchronized boolean isComplete(){return !items.isEmpty()&&!items.containsValue(Boolean.FALSE);}
+ public synchronized Map<String,Boolean> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Boolean>(items));}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("item required");return s.trim();}
 }
