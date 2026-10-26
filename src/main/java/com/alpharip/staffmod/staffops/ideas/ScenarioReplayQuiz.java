@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Scenario Replay Quiz. Stores anonymized scenario questions and answers for staff training. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Local training scenarios; all scenario text must be anonymized by the author before adding. */
 public final class ScenarioReplayQuiz {
- public static final String NAME="Scenario Replay Quiz", CATEGORY="TrialModerator", STATUS="NEW";
- public static final String PURPOSE="Stores anonymized scenario questions and answers for staff training.", REQUIRED_ACCESS="Trial Moderator";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Scenario Replay Quiz",CATEGORY="TrialModerator",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Scenario {public final String id,prompt;public final List<String> choices;public final int answer;private Scenario(String i,String p,List<String> c,int a){id=i;prompt=p;choices=Collections.unmodifiableList(new ArrayList<String>(c));answer=a;}}
+ private final Map<String,Scenario> scenarios=new LinkedHashMap<String,Scenario>();
+ public synchronized void add(String id,String prompt,List<String> choices,int answer){if(choices==null||choices.size()<2||answer<0||answer>=choices.size())throw new IllegalArgumentException("invalid choices or answer");scenarios.put(req(id),new Scenario(req(id),req(prompt),choices,answer));}
+ public synchronized boolean check(String id,int choice){Scenario s=scenarios.get(req(id));if(s==null)throw new IllegalArgumentException("unknown scenario");return s.answer==choice;}
+ public synchronized List<Scenario> snapshot(){return Collections.unmodifiableList(new ArrayList<Scenario>(scenarios.values()));}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
