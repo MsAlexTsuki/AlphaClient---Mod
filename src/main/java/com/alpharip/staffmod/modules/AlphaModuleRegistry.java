@@ -127,8 +127,8 @@ public final class AlphaModuleRegistry {
         MODULES.add(new AlphaModule(
                 "aim-assist",
                 "Aim Assist",
-                "Gently corrects aim toward a nearby player already close to the crosshair.",
-                AlphaModule.Category.PUBLIC,
+                "Founder-only aim correction for controlled testing.",
+                AlphaModule.Category.FOUNDER,
                 true,
                 DEFAULT_MODULE_ENABLED
         ));
