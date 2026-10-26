@@ -1,20 +1,16 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-/** Tracks safe-mode state and modules to skip. Category: Security. Foundation model only; no Minecraft/Forge integration. */
-public class SafeModeLaunch {
-    public static final String FEATURE_NAME = "SafeModeLaunch";
-    public static final String CATEGORY = "Security";
-    public static final String DESCRIPTION = "Tracks safe-mode state and modules to skip.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Describes a safe-mode launch plan. Actual module loading is owned by a future integration layer. */
+public final class SafeModeLaunch {
+    public static final String FEATURE_NAME="Safe Mode Launch", CATEGORY="Security", STATUS="NEW";
+    private boolean requested;
+    private final Set<String> excluded=new LinkedHashSet<String>();
+    public boolean isRequested(){return requested;}
+    public void setRequested(boolean value){requested=value;}
+    public void excludeModule(String id){if(id!=null&&!id.trim().isEmpty())excluded.add(id.trim());}
+    public void allowModule(String id){if(id!=null)excluded.remove(id.trim());}
+    public Set<String> getExcludedModules(){return Collections.unmodifiableSet(new LinkedHashSet<String>(excluded));}
+    public boolean shouldLoad(String id){return !requested||id==null||!excluded.contains(id.trim());}
 }

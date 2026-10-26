@@ -1,20 +1,14 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-/** Checks a settings map for missing or blank values. Category: Cross-Category. Foundation model only; no Minecraft/Forge integration. */
-public class ProfileHealthCheck {
-    public static final String FEATURE_NAME = "ProfileHealthCheck";
-    public static final String CATEGORY = "Cross-Category";
-    public static final String DESCRIPTION = "Checks a settings map for missing or blank values.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Checks caller-provided profile settings for absent keys and blank values. */
+public final class ProfileHealthCheck {
+    public static final String FEATURE_NAME="Profile Health Check", CATEGORY="Cross-Category", STATUS="NEW";
+    public List<String> inspect(Map<String,String> settings,Collection<String> requiredKeys){
+        Map<String,String> map=settings==null?Collections.<String,String>emptyMap():settings;
+        List<String> issues=new ArrayList<String>();
+        if(requiredKeys!=null)for(String key:requiredKeys)if(key!=null&&(!map.containsKey(key)||map.get(key)==null||map.get(key).trim().isEmpty()))issues.add(key);
+        Collections.sort(issues);return Collections.unmodifiableList(issues);
+    }
 }

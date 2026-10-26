@@ -1,20 +1,8 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/** Checks that a backup payload is present and can be read. Category: Security. Foundation model only; no Minecraft/Forge integration. */
-public class BackupRestoreTest {
-    public static final String FEATURE_NAME = "BackupRestoreTest";
-    public static final String CATEGORY = "Security";
-    public static final String DESCRIPTION = "Checks that a backup payload is present and can be read.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Performs basic payload checks only; it does not restore files or verify a real backup archive. */
+public final class BackupRestoreTest {
+    public static final String FEATURE_NAME="Backup Restore Test", CATEGORY="Security", STATUS="NEW";
+    public static final class Result {public final boolean passed;public final String message;private Result(boolean p,String m){passed=p;message=m;}}
+    public Result inspect(String payload){if(payload==null||payload.trim().isEmpty())return new Result(false,"Backup payload is empty.");return new Result(true,"Payload is present and readable as text.");}
 }

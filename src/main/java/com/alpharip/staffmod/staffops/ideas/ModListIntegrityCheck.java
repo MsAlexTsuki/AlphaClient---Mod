@@ -1,20 +1,20 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-/** Compares expected and actual mod identifiers. Category: Security. Foundation model only; no Minecraft/Forge integration. */
-public class ModListIntegrityCheck {
-    public static final String FEATURE_NAME = "ModListIntegrityCheck";
-    public static final String CATEGORY = "Security";
-    public static final String DESCRIPTION = "Compares expected and actual mod identifiers.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Compares mod identifiers supplied by a caller; it does not inspect Forge's runtime registry. */
+public final class ModListIntegrityCheck {
+    public static final String FEATURE_NAME="Mod List Integrity Check", CATEGORY="Security", STATUS="NEW";
+    public static final class Result {
+        public final Set<String> missing, unexpected;
+        private Result(Set<String> m,Set<String> u){missing=Collections.unmodifiableSet(m);unexpected=Collections.unmodifiableSet(u);}
+        public boolean isClean(){return missing.isEmpty()&&unexpected.isEmpty();}
+    }
+    public Result compare(Collection<String> expected, Collection<String> actual) {
+        Set<String> e=normalized(expected),a=normalized(actual);
+        Set<String> missing=new TreeSet<String>(e);missing.removeAll(a);
+        Set<String> unexpected=new TreeSet<String>(a);unexpected.removeAll(e);
+        return new Result(missing,unexpected);
+    }
+    private Set<String> normalized(Collection<String> values){Set<String>s=new TreeSet<String>();if(values!=null)for(String v:values)if(v!=null&&!v.trim().isEmpty())s.add(v.trim().toLowerCase(Locale.ROOT));return s;}
 }
