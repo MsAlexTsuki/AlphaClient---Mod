@@ -1,60 +1,13 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Bounty Board Parser.
- * Purpose: Parses configured bounty chat patterns into a local bounty list.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;import java.util.regex.*;
+/** Parses user-configured bounty chat formats into a local list; server-specific patterns must be configured. */
 public final class BountyBoardParser {
-    public static final String NAME = "Bounty Board Parser";
-    public static final String CATEGORY = "KitMap";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Parses configured bounty chat patterns into a local bounty list.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Bounty Board Parser",CATEGORY="KitMap",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Bounty {public final String player,amount,source;public final long detectedAt;private Bounty(String p,String a,String s){player=p;amount=a;source=s;detectedAt=System.currentTimeMillis();}}
+ private final List<Pattern> patterns=new ArrayList<Pattern>();private final Map<String,Bounty> bounties=new LinkedHashMap<String,Bounty>();
+ public synchronized void addPattern(String regex){patterns.add(Pattern.compile(regex,Pattern.CASE_INSENSITIVE));}
+ /** Patterns must expose player as group 1 and bounty amount as group 2. */
+ public synchronized Bounty parse(String chat){if(chat==null)return null;for(Pattern p:patterns){Matcher m=p.matcher(chat);if(m.find()&&m.groupCount()>=2){String player=m.group(1).trim(),amount=m.group(2).trim();if(player.isEmpty()||amount.isEmpty())continue;Bounty b=new Bounty(player,amount,chat);bounties.put(player.toLowerCase(Locale.ROOT),b);return b;}}return null;}
+ public synchronized List<Bounty> snapshot(){return Collections.unmodifiableList(new ArrayList<Bounty>(bounties.values()));}
+ public synchronized boolean remove(String player){return player!=null&&bounties.remove(player.toLowerCase(Locale.ROOT))!=null;}
 }
