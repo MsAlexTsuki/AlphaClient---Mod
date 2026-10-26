@@ -257,24 +257,6 @@ public final class AlphaModuleRegistry {
         ));
 
         MODULES.add(new AlphaModule(
-                "potion-hud",
-                "Potion HUD",
-                "Display active potion effects and their remaining duration.",
-                AlphaModule.Category.PUBLIC,
-                true,
-                DEFAULT_MODULE_ENABLED
-        ));
-
-        MODULES.add(new AlphaModule(
-                "armor-hud",
-                "Armor HUD",
-                "Display equipped armor pieces and remaining durability.",
-                AlphaModule.Category.PUBLIC,
-                true,
-                DEFAULT_MODULE_ENABLED
-        ));
-
-        MODULES.add(new AlphaModule(
                 "target-health-hud",
                 "Target Health HUD",
                 "Show health for the entity under the crosshair.",
