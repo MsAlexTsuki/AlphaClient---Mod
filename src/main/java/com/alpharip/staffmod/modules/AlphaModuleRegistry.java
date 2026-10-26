@@ -211,6 +211,33 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
+        MODULES.add(new AlphaModule(
+                "armor-durability-warning",
+                "Armor Durability Warning",
+                "Warn when equipped armor is close to breaking.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "target-distance-hud",
+                "Target Distance HUD",
+                "Show the distance to the entity currently targeted by the crosshair.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "nearest-enemy-hud",
+                "Nearest Enemy HUD",
+                "Show the nearest visible player within a short range.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",

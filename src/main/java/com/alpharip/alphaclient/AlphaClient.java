@@ -48,6 +48,9 @@ import com.alpharip.staffmod.combat.LowHealthWarningMod;
 import com.alpharip.staffmod.hud.PotionExpirationWarningMod;
 import com.alpharip.staffmod.hud.BlockCounterHud;
 import com.alpharip.staffmod.world.DeathWaypointMod;
+import com.alpharip.staffmod.hud.ArmorDurabilityWarningMod;
+import com.alpharip.staffmod.hud.TargetDistanceHud;
+import com.alpharip.staffmod.hud.NearestEnemyHud;
 import com.alpharip.staffmod.movement.AutoSprintMod;
 import com.alpharip.staffmod.inventory.AutoToolMod;
 
@@ -136,6 +139,9 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new PotionExpirationWarningMod());
         MinecraftForge.EVENT_BUS.register(new BlockCounterHud());
         MinecraftForge.EVENT_BUS.register(new DeathWaypointMod());
+        MinecraftForge.EVENT_BUS.register(new ArmorDurabilityWarningMod());
+        MinecraftForge.EVENT_BUS.register(new TargetDistanceHud());
+        MinecraftForge.EVENT_BUS.register(new NearestEnemyHud());
         MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         RankCache.INSTANCE.start();
