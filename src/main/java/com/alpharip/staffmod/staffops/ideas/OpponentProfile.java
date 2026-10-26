@@ -1,20 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/**
- * Tracks encounter notes by opponent name.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
+/** Stores prior encounters and notes by opponent. */
 public class OpponentProfile {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ public static final class Encounter {public final long timestamp;public final boolean won;public final String note;public Encounter(long t,boolean w,String n){if(t<0)throw new IllegalArgumentException();timestamp=t;won=w;note=n==null?"":n;}}
+ private final Map<String,List<Encounter>> data=new LinkedHashMap<String,List<Encounter>>();
+ public void add(String name,Encounter e){String k=key(name);if(e==null)throw new IllegalArgumentException("encounter");if(!data.containsKey(k))data.put(k,new ArrayList<Encounter>());data.get(k).add(e);}
+ public List<Encounter> get(String name){List<Encounter> v=data.get(key(name));return v==null?Collections.<Encounter>emptyList():Collections.unmodifiableList(new ArrayList<Encounter>(v));}
+ public int wins(String name){int n=0;for(Encounter e:get(name))if(e.won)n++;return n;}public int losses(String name){return get(name).size()-wins(name);}
+ private static String key(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("opponent");return s.trim().toLowerCase(Locale.ROOT);}
 }
