@@ -43,6 +43,11 @@ import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
+import com.alpharip.staffmod.quality.AutoRespawnMod;
+import com.alpharip.staffmod.combat.LowHealthWarningMod;
+import com.alpharip.staffmod.hud.PotionExpirationWarningMod;
+import com.alpharip.staffmod.hud.BlockCounterHud;
+import com.alpharip.staffmod.world.DeathWaypointMod;
 import com.alpharip.staffmod.movement.AutoSprintMod;
 import com.alpharip.staffmod.inventory.AutoToolMod;
 
@@ -126,6 +131,11 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new FullbrightMod());
         MinecraftForge.EVENT_BUS.register(new AutoGGMod());
         MinecraftForge.EVENT_BUS.register(new AutoReconnectMod());
+        MinecraftForge.EVENT_BUS.register(new AutoRespawnMod());
+        MinecraftForge.EVENT_BUS.register(new LowHealthWarningMod());
+        MinecraftForge.EVENT_BUS.register(new PotionExpirationWarningMod());
+        MinecraftForge.EVENT_BUS.register(new BlockCounterHud());
+        MinecraftForge.EVENT_BUS.register(new DeathWaypointMod());
         MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         RankCache.INSTANCE.start();

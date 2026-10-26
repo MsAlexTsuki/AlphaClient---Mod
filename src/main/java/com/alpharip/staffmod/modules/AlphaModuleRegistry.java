@@ -166,6 +166,51 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
+        MODULES.add(new AlphaModule(
+                "auto-respawn",
+                "Auto Respawn",
+                "Automatically respawn after death while enabled.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "low-health-warning",
+                "Low Health Warning",
+                "Display a compact warning when health drops below the configured first-pass threshold.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "potion-expiration-warning",
+                "Potion Expiration Warning",
+                "Show active potion effects that are close to expiring.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "block-counter",
+                "Block Counter",
+                "Count blocks in the inventory and display the total on the HUD.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "death-waypoint",
+                "Death Waypoint",
+                "Save and announce the location where the player died.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
