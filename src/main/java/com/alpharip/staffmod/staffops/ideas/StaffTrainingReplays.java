@@ -1,20 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-/** Stores scenario notes associated with staff training replays. Category: Cross-Category. Foundation model only; no Minecraft/Forge integration. */
-public class StaffTrainingReplays {
-    public static final String FEATURE_NAME = "StaffTrainingReplays";
-    public static final String CATEGORY = "Cross-Category";
-    public static final String DESCRIPTION = "Stores scenario notes associated with staff training replays.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Stores notes and learning points for named staff training scenarios. */
+public final class StaffTrainingReplays {
+ public static final String FEATURE_NAME="Staff Training Replays",CATEGORY="Cross-Category",STATUS="NEW";
+ public static final class ReplayNote {public final String scenario,notes;private ReplayNote(String s,String n){scenario=s;notes=n;}}
+ private final List<ReplayNote> notes=new ArrayList<ReplayNote>();
+ public void add(String scenario,String note){if(scenario==null||scenario.trim().isEmpty())throw new IllegalArgumentException("scenario required");notes.add(new ReplayNote(scenario.trim(),note==null?"":note.trim()));}
+ public List<ReplayNote> getNotes(){return Collections.unmodifiableList(new ArrayList<ReplayNote>(notes));}
 }

@@ -1,20 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-/** Stores a preview of perks associated with a rank. Category: Cross-Category. Foundation model only; no Minecraft/Forge integration. */
-public class RankPerkPreview {
-    public static final String FEATURE_NAME = "RankPerkPreview";
-    public static final String CATEGORY = "Cross-Category";
-    public static final String DESCRIPTION = "Stores a preview of perks associated with a rank.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Holds a read-only preview list of perks for a named rank; does not grant permissions. */
+public final class RankPerkPreview {
+ public static final String FEATURE_NAME="Rank Perk Preview",CATEGORY="Cross-Category",STATUS="NEW";
+ private String rank; private final List<String> perks=new ArrayList<String>();
+ public void setRank(String value){if(value==null||value.trim().isEmpty())throw new IllegalArgumentException("rank required");rank=value.trim();}
+ public String getRank(){return rank;} public void addPerk(String value){if(value!=null&&!value.trim().isEmpty())perks.add(value.trim());}
+ public List<String> getPerks(){return Collections.unmodifiableList(new ArrayList<String>(perks));}
 }

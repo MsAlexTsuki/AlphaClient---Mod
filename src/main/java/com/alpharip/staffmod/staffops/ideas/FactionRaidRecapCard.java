@@ -1,20 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/** Builds a concise faction raid recap from supplied event details. Category: Cross-Category. Foundation model only; no Minecraft/Forge integration. */
-public class FactionRaidRecapCard {
-    public static final String FEATURE_NAME = "FactionRaidRecapCard";
-    public static final String CATEGORY = "Cross-Category";
-    public static final String DESCRIPTION = "Builds a concise faction raid recap from supplied event details.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Builds a concise recap from supplied raid details; does not collect server events. */
+public final class FactionRaidRecapCard {
+ public static final String FEATURE_NAME="Faction Raid Recap Card",CATEGORY="Cross-Category",STATUS="NEW";
+ public String create(String faction,String outcome,int participants,String notes){
+  if(faction==null||faction.trim().isEmpty())throw new IllegalArgumentException("faction required");
+  if(participants<0)throw new IllegalArgumentException("participants cannot be negative");
+  return faction.trim()+" raid recap: "+clean(outcome,"Outcome not recorded")+". Participants: "+participants+". "+clean(notes,"");
+ }
+ private String clean(String s,String fallback){return s==null||s.trim().isEmpty()?fallback:s.trim();}
 }

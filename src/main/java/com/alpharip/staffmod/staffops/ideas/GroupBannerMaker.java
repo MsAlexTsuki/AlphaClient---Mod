@@ -1,20 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/** Stores a group banner title, subtitle, and theme. Category: Donator Alpha. Foundation model only; no Minecraft/Forge integration. */
-public class GroupBannerMaker {
-    public static final String FEATURE_NAME = "GroupBannerMaker";
-    public static final String CATEGORY = "Donator Alpha";
-    public static final String DESCRIPTION = "Stores a group banner title, subtitle, and theme.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Stores group banner text and a theme identifier for a future banner renderer. */
+public final class GroupBannerMaker {
+ public static final String FEATURE_NAME="Group Banner Maker",CATEGORY="Donator Alpha",STATUS="NEW";
+ private String title="",subtitle="",theme="default";
+ public void setTitle(String s){title=clean(s);} public void setSubtitle(String s){subtitle=clean(s);}
+ public void setTheme(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("theme required");theme=s.trim();}
+ public String getTitle(){return title;} public String getSubtitle(){return subtitle;} public String getTheme(){return theme;}
+ private String clean(String s){return s==null?"":s.trim();}
 }

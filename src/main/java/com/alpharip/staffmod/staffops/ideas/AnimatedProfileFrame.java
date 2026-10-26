@@ -1,20 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/** Stores an animated profile frame and speed setting. Category: Donator Alpha+. Foundation model only; no Minecraft/Forge integration. */
-public class AnimatedProfileFrame {
-    public static final String FEATURE_NAME = "AnimatedProfileFrame";
-    public static final String CATEGORY = "Donator Alpha+";
-    public static final String DESCRIPTION = "Stores an animated profile frame and speed setting.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Stores an animated profile frame selection and playback speed. */
+public final class AnimatedProfileFrame {
+ public static final String FEATURE_NAME="Animated Profile Frame",CATEGORY="Donator Alpha+",STATUS="NEW";
+ private String frame="none"; private float speed=1.0f;
+ public String getFrame(){return frame;} public void setFrame(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("frame required");frame=s.trim();}
+ public float getSpeed(){return speed;} public void setSpeed(float v){if(Float.isNaN(v)||v<0.25f||v>3f)throw new IllegalArgumentException("speed must be 0.25-3");speed=v;}
 }

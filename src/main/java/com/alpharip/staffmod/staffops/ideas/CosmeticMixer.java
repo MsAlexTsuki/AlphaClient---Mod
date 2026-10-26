@@ -1,20 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/** Stores two cosmetic effects and a blend amount. Category: Donator Alpha+. Foundation model only; no Minecraft/Forge integration. */
-public class CosmeticMixer {
-    public static final String FEATURE_NAME = "CosmeticMixer";
-    public static final String CATEGORY = "Donator Alpha+";
-    public static final String DESCRIPTION = "Stores two cosmetic effects and a blend amount.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Stores two cosmetic effect IDs and their blend percentage; no effects are rendered. */
+public final class CosmeticMixer {
+ public static final String FEATURE_NAME="Cosmetic Mixer",CATEGORY="Donator Alpha+",STATUS="NEW";
+ private String first,second; private int blendPercent=50;
+ public void setEffects(String a,String b){first=required(a);second=required(b);}
+ public String getFirst(){return first;} public String getSecond(){return second;}
+ public int getBlendPercent(){return blendPercent;} public void setBlendPercent(int v){if(v<0||v>100)throw new IllegalArgumentException("blend must be 0-100");blendPercent=v;}
+ private String required(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("effect required");return s.trim();}
 }

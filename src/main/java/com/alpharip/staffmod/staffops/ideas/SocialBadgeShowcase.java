@@ -1,20 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-/** Tracks which social badges are visible on a profile. Category: Donator Alpha. Foundation model only; no Minecraft/Forge integration. */
-public class SocialBadgeShowcase {
-    public static final String FEATURE_NAME = "SocialBadgeShowcase";
-    public static final String CATEGORY = "Donator Alpha";
-    public static final String DESCRIPTION = "Tracks which social badges are visible on a profile.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Tracks the ordered set of social badges chosen for display. */
+public final class SocialBadgeShowcase {
+ public static final String FEATURE_NAME="Social Badge Showcase",CATEGORY="Donator Alpha",STATUS="NEW";
+ private final LinkedHashSet<String> visible=new LinkedHashSet<String>();
+ public void show(String badge){visible.add(req(badge));} public void hide(String badge){if(badge!=null)visible.remove(badge.trim());}
+ public List<String> getVisible(){return Collections.unmodifiableList(new ArrayList<String>(visible));}
+ private String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("badge required");return s.trim();}
 }

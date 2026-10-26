@@ -1,20 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/** Stores a menu soundscape selection and volume. Category: Donator Alpha+. Foundation model only; no Minecraft/Forge integration. */
-public class CustomMenuSoundscape {
-    public static final String FEATURE_NAME = "CustomMenuSoundscape";
-    public static final String CATEGORY = "Donator Alpha+";
-    public static final String DESCRIPTION = "Stores a menu soundscape selection and volume.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Stores a soundscape preset and volume; audio playback is external. */
+public final class CustomMenuSoundscape {
+ public static final String FEATURE_NAME="Custom Menu Soundscape",CATEGORY="Donator Alpha+",STATUS="NEW";
+ private String preset="default"; private float volume=0.5f;
+ public String getPreset(){return preset;} public void setPreset(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("preset required");preset=s.trim();}
+ public float getVolume(){return volume;} public void setVolume(float v){if(Float.isNaN(v)||v<0||v>1)throw new IllegalArgumentException("volume must be 0-1");volume=v;}
 }

@@ -1,20 +1,14 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-/** Creates a practice drill outline from a kit and its items. Category: Cross-Category. Foundation model only; no Minecraft/Forge integration. */
-public class KitToDrillSync {
-    public static final String FEATURE_NAME = "KitToDrillSync";
-    public static final String CATEGORY = "Cross-Category";
-    public static final String DESCRIPTION = "Creates a practice drill outline from a kit and its items.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Turns supplied kit item names into a simple ordered practice drill outline. */
+public final class KitToDrillSync {
+ public static final String FEATURE_NAME="Kit-to-Drill Sync",CATEGORY="Cross-Category",STATUS="NEW";
+ public List<String> createDrill(String kitName,List<String> items){
+  if(kitName==null||kitName.trim().isEmpty())throw new IllegalArgumentException("kit name required");
+  List<String> steps=new ArrayList<String>();steps.add("Warm up with kit: "+kitName.trim());
+  if(items!=null)for(String item:items)if(item!=null&&!item.trim().isEmpty())steps.add("Practice using "+item.trim());
+  steps.add("Finish with a full kit simulation");return Collections.unmodifiableList(steps);
+ }
 }
