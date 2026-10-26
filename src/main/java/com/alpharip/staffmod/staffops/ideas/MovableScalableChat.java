@@ -1,12 +1,8 @@
 package com.alpharip.staffmod.staffops.ideas;
-import java.util.*;
-/** Stores chat position, size and scale. Actual Minecraft UI/event hooks and persistence are not connected. Compatible with Java 8. */
-public class MovableScalableChat {
- private boolean enabled=true;private final LinkedHashMap<String,String> entries=new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}
- public void put(String key,String value){entries.put(req(key),value==null?"":value);}
- public String get(String key){return entries.get(req(key));}public boolean remove(String key){return entries.remove(req(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String q){String s=req(q).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(s)||e.getValue().toLowerCase(Locale.ROOT).contains(s))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+/** Normalized chat widget position, size and scale preferences. */
+public class MovableScalableChat {private float x=.02f,y=.55f,width=.45f,height=.4f,scale=1f;
+ public void setPosition(float x,float y){this.x=clamp(x);this.y=clamp(y);}public void setSize(float w,float h){if(w<=0||h<=0)throw new IllegalArgumentException();width=clamp(w);height=clamp(h);}
+ public void setScale(float s){if(Float.isNaN(s)||s<.5f||s>2f)throw new IllegalArgumentException();scale=s;}
+ public float getX(){return x;}public float getY(){return y;}public float getWidth(){return width;}public float getHeight(){return height;}public float getScale(){return scale;}
+ private static float clamp(float v){if(Float.isNaN(v))throw new IllegalArgumentException();return Math.max(0,Math.min(1,v));}
 }
