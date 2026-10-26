@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Report Duplicate Finder. Finds reports that reference the same player or similar identifiers. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Finds likely duplicate reports using normalized player and summary keys. */
 public final class ReportDuplicateFinder {
- public static final String NAME="Report Duplicate Finder", CATEGORY="StaffMods", STATUS="NEW";
- public static final String PURPOSE="Finds reports that reference the same player or similar identifiers.", REQUIRED_ACCESS="Staff";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Report Duplicate Finder",CATEGORY="StaffMods",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Report {public final String id,player,summary;private Report(String i,String p,String s){id=i;player=p;summary=s;}}
+ private final Map<String,Report> reports=new LinkedHashMap<String,Report>();
+ public synchronized void add(String id,String player,String summary){String i=req(id);reports.put(i,new Report(i,req(player),req(summary)));}
+ public synchronized List<Report> findDuplicates(String player,String summary){String p=norm(player),s=norm(summary);List<Report> out=new ArrayList<Report>();for(Report r:reports.values())if(norm(r.player).equals(p)||norm(r.summary).equals(s))out.add(r);return Collections.unmodifiableList(out);}
+ private static String norm(String s){return req(s).toLowerCase(Locale.ROOT).replaceAll("\\s+"," ");}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
