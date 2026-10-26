@@ -1,39 +1,43 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
- * Foundation for SeniorShiftLeadAssignment.
+ * Assigns one senior staff lead to each shift.
  *
- * Stores lightweight workflow records only. UI, persistence, permission
- * enforcement, and live Minecraft integration are not connected.
+ * In-memory client-side model only; it does not verify rank or availability.
+ * TODO(Supabase): persist assignments and enforce senior-only write access.
  * Compatible with Java 8.
  */
 public class SeniorShiftLeadAssignment {
-    private boolean enabled = true;
-    private final List<String> records = new ArrayList<String>();
+    private final Map<String, String> leadsByShift = new LinkedHashMap<String, String>();
 
-    public boolean isEnabled() {
-        return enabled;
+    public void assignLead(String shiftId, String staffId) {
+        leadsByShift.put(requireText(shiftId, "shiftId"), requireText(staffId, "staffId"));
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public String getLead(String shiftId) {
+        return leadsByShift.get(requireText(shiftId, "shiftId"));
     }
 
-    public void addRecord(String record) {
-        if (record != null && !record.trim().isEmpty()) {
-            records.add(record);
+    public boolean hasLead(String shiftId) {
+        return leadsByShift.containsKey(requireText(shiftId, "shiftId"));
+    }
+
+    public void removeLead(String shiftId) {
+        leadsByShift.remove(requireText(shiftId, "shiftId"));
+    }
+
+    public Map<String, String> getAssignments() {
+        return Collections.unmodifiableMap(new LinkedHashMap<String, String>(leadsByShift));
+    }
+
+    private static String requireText(String value, String name) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(name + " must not be blank.");
         }
-    }
-
-    public List<String> getRecords() {
-        return Collections.unmodifiableList(new ArrayList<String>(records));
-    }
-
-    public void clearRecords() {
-        records.clear();
+        return value.trim();
     }
 }
