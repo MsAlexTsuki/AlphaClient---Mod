@@ -1,16 +1,8 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Template Variable Filler. Fills approved message-template variables such as player name. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Replaces explicitly supplied {variable} placeholders in staff templates. */
 public final class TemplateVariableFiller {
- public static final String NAME="Template Variable Filler", CATEGORY="StaffMods", STATUS="NEW";
- public static final String PURPOSE="Fills approved message-template variables such as player name.", REQUIRED_ACCESS="Staff";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Template Variable Filler",CATEGORY="StaffMods",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public String fill(String template,Map<String,String> values){if(template==null)throw new IllegalArgumentException("template required");if(values==null)throw new IllegalArgumentException("values required");String result=template;for(Map.Entry<String,String> e:values.entrySet()){String key=e.getKey();if(key==null||!key.matches("[A-Za-z][A-Za-z0-9_]*"))continue;result=result.replace("{"+key+"}",e.getValue()==null?"":e.getValue());}return result;}
+ public Set<String> unresolved(String template){Set<String> out=new LinkedHashSet<String>();if(template==null)return out;java.util.regex.Matcher m=java.util.regex.Pattern.compile("\\{([A-Za-z][A-Za-z0-9_]*)\\}").matcher(template);while(m.find())out.add(m.group(1));return Collections.unmodifiableSet(out);}
 }
