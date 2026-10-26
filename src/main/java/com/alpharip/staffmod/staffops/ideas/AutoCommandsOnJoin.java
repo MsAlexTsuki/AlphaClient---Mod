@@ -1,20 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/**
- * Stores server-specific, opt-in join commands.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
-public class AutoCommandsOnJoin {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+/** Server-specific opt-in command lists; caller must execute only after explicit user configuration. */
+public class AutoCommandsOnJoin {private final Map<String,List<String>> commands=new LinkedHashMap<String,List<String>>();private boolean enabled;
+ public void setEnabled(boolean v){enabled=v;}public boolean isEnabled(){return enabled;}
+ public void add(String server,String command){String s=req(server).toLowerCase(Locale.ROOT),c=req(command);if(!c.startsWith("/"))throw new IllegalArgumentException("Command must start with /");if(!commands.containsKey(s))commands.put(s,new ArrayList<String>());commands.get(s).add(c);}
+ public List<String> getCommands(String server){List<String> v=commands.get(req(server).toLowerCase(Locale.ROOT));return v==null?Collections.<String>emptyList():Collections.unmodifiableList(new ArrayList<String>(v));}
+ public void clear(String server){commands.remove(req(server).toLowerCase(Locale.ROOT));}private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException();return s.trim();}
 }
