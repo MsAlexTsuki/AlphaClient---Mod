@@ -197,6 +197,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new VelocityHud());
         MinecraftForge.EVENT_BUS.register(new HeldItemDurabilityHud());
         MinecraftForge.EVENT_BUS.register(new com.alpharip.staffmod.hud.CombatTrackingHudModules());
+        MinecraftForge.EVENT_BUS.register(new com.alpharip.staffmod.hud.UtilityTrackingHudModules());
         MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         RankCache.INSTANCE.start();

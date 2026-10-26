@@ -396,6 +396,17 @@ public final class AlphaModuleRegistry {
         MODULES.add(new AlphaModule("pearl-cooldown", "Pearl Cooldown", "Show an estimated cooldown after using an ender pearl.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
         MODULES.add(new AlphaModule("hit-indicator", "Hit Indicator", "Display a brief hit confirmation for the targeted entity.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
 
+        MODULES.add(new AlphaModule("movement-state-hud", "Movement State HUD", "Display current movement key and ground state.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("auto-walk-indicator", "Auto Walk Indicator", "Show whether forward movement is currently held.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("jump-reset-indicator", "Jump Reset Indicator", "Show jump key state and whether the player is grounded.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("fall-distance-warning", "Fall Distance Warning", "Warn when the player is falling from a potentially dangerous height.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("void-warning", "Void Warning", "Warn when the player is over a deep void without solid ground nearby.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("low-durability-armor", "Low Armor Durability Warning", "Warn when equipped armor is close to breaking.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("potion-effect-count", "Potion Effect Count", "Show the number of active potion effects.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("inventory-full-warning", "Inventory Full Warning", "Warn when the inventory has no empty slots.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("low-food-sprint-warning", "Low Food Sprint Warning", "Warn when food level is too low to sprint reliably.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("target-type-hud", "Target Type HUD", "Show the entity type and health of the current crosshair target.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
