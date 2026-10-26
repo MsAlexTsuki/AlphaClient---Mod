@@ -238,6 +238,60 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
+        MODULES.add(new AlphaModule(
+                "session-timer",
+                "Session Timer",
+                "Show the elapsed time since joining the current world or server.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "playtime-tracker",
+                "Playtime Tracker",
+                "Track elapsed play time for the current session.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "potion-hud",
+                "Potion HUD",
+                "Display active potion effects and their remaining duration.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "armor-hud",
+                "Armor HUD",
+                "Display equipped armor pieces and remaining durability.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "compass-hud",
+                "Compass HUD",
+                "Display the player's current horizontal facing direction.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "coordinates-hud",
+                "Coordinates HUD",
+                "Display the player's current world coordinates.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
