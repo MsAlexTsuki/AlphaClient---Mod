@@ -1,20 +1,7 @@
 package com.alpharip.staffmod.staffops.ideas;
-import java.util.*;
-/**
- * Models timed HUD hiding.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
+/** Timed HUD visibility state; call isHidden from the actual render/event loop. */
 public class TemporaryHudHideShortcut {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ private boolean enabled=true,hidden;private long hiddenUntil;public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;if(!v)hidden=false;}
+ public void hideFor(long now,long duration){if(!enabled)return;if(duration<=0)throw new IllegalArgumentException("Duration must be positive");hidden=true;hiddenUntil=now+duration;}
+ public boolean isHidden(long now){if(hidden&&now>=hiddenUntil)hidden=false;return enabled&&hidden;}public long getRemainingMillis(long now){return isHidden(now)?Math.max(0,hiddenUntil-now):0;}public void show(){hidden=false;}
 }
