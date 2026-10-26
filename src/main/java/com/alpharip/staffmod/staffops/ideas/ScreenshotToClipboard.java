@@ -1,12 +1,8 @@
 package com.alpharip.staffmod.staffops.ideas;
-import java.util.*;
-/** Stores screenshot clipboard options. Actual Minecraft UI/event hooks and persistence are not connected. Compatible with Java 8. */
+/** Clipboard transfer settings; actual OS clipboard integration is not connected. */
 public class ScreenshotToClipboard {
- private boolean enabled=true;private final LinkedHashMap<String,String> entries=new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}
- public void put(String key,String value){entries.put(req(key),value==null?"":value);}
- public String get(String key){return entries.get(req(key));}public boolean remove(String key){return entries.remove(req(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String q){String s=req(q).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(s)||e.getValue().toLowerCase(Locale.ROOT).contains(s))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ private boolean enabled=true,includeCursor;private String format="PNG";public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}
+ public boolean isIncludeCursor(){return includeCursor;}public void setIncludeCursor(boolean v){includeCursor=v;}public String getPreferredFormat(){return format;}
+ public void setPreferredFormat(String f){if(!"PNG".equalsIgnoreCase(f)&&!"JPEG".equalsIgnoreCase(f))throw new IllegalArgumentException("Format must be PNG or JPEG");format=f.toUpperCase(java.util.Locale.ROOT);}
+ public boolean canCopy(byte[] bytes){return enabled&&bytes!=null&&bytes.length>0;}
 }
