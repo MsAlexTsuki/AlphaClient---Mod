@@ -373,6 +373,8 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
+        MODULES.add(new AlphaModule("velocity-hud", "Velocity HUD", "Display horizontal and vertical movement velocity.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("durability-hud", "Held Item Durability", "Display remaining durability of the held item.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",

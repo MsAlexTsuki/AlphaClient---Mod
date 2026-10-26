@@ -66,6 +66,8 @@ import com.alpharip.staffmod.hud.BiomeHud;
 import com.alpharip.staffmod.hud.LightLevelHud;
 import com.alpharip.staffmod.hud.WorldTimeHud;
 import com.alpharip.staffmod.hud.FallDistanceHud;
+import com.alpharip.staffmod.hud.VelocityHud;
+import com.alpharip.staffmod.hud.HeldItemDurabilityHud;
 import com.alpharip.staffmod.movement.AutoSprintMod;
 import com.alpharip.staffmod.inventory.AutoToolMod;
 
@@ -172,6 +174,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new LightLevelHud());
         MinecraftForge.EVENT_BUS.register(new WorldTimeHud());
         MinecraftForge.EVENT_BUS.register(new FallDistanceHud());
+        MinecraftForge.EVENT_BUS.register(new VelocityHud());
+        MinecraftForge.EVENT_BUS.register(new HeldItemDurabilityHud());
         MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         RankCache.INSTANCE.start();
