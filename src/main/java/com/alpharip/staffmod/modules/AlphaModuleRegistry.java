@@ -375,6 +375,16 @@ public final class AlphaModuleRegistry {
 
         MODULES.add(new AlphaModule("velocity-hud", "Velocity HUD", "Display horizontal and vertical movement velocity.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
         MODULES.add(new AlphaModule("durability-hud", "Held Item Durability", "Display remaining durability of the held item.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("food-hud", "Food HUD", "Display current food level.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("health-hud", "Health HUD", "Display current and maximum health.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("experience-hud", "Experience HUD", "Display experience level and progress.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("air-hud", "Air HUD", "Display remaining air while underwater.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("speed-hud", "Speed HUD", "Display horizontal movement speed in blocks per second.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("dimension-hud", "Dimension HUD", "Display the current dimension identifier.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("day-counter", "Day Counter", "Display the current Minecraft world day.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("entity-count-hud", "Entity Count HUD", "Display nearby living entity count.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("durability-warning", "Durability Warning", "Warn when the held item is nearly broken.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("hunger-warning", "Hunger Warning", "Warn when the food bar is low.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
