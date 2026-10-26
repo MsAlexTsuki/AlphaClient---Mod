@@ -1,20 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/**
- * Maps radial sectors to emote identifiers.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
+/** Eight-sector emote wheel model; screen rendering and emote dispatch are not connected. */
 public class RadialEmoteMenu {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ private boolean enabled=true;private final String[] sectors=new String[8];public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}
+ public void setSector(int i,String e){check(i);sectors[i]=e==null||e.trim().isEmpty()?null:e.trim();}public String getSector(int i){check(i);return sectors[i];}
+ public String selectAngle(double degrees){int i=((int)Math.floor((((degrees%360)+360)%360+22.5)/45))%8;return sectors[i];}
+ public Map<Integer,String> snapshot(){Map<Integer,String> m=new LinkedHashMap<Integer,String>();for(int i=0;i<8;i++)if(sectors[i]!=null)m.put(i,sectors[i]);return Collections.unmodifiableMap(m);}private static void check(int i){if(i<0||i>=8)throw new IllegalArgumentException("Sector must be 0-7");}
 }
