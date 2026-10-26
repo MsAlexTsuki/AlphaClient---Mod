@@ -1,20 +1,8 @@
 package com.alpharip.staffmod.staffops.ideas;
-import java.util.*;
-/**
- * Validates enchantment-glint settings.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
+/** Enchantment-glint preferences; rendering hooks are not connected. */
 public class EnchantGlintCustomization {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ public enum Mode { DEFAULT, DISABLED, REDUCED, CUSTOM_COLOR }
+ private boolean enabled=true;private Mode mode=Mode.DEFAULT;private int rgb=0xAA55FF;private float intensity=1F;
+ public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}public Mode getMode(){return mode;}public void setMode(Mode m){if(m==null)throw new IllegalArgumentException("Mode required");mode=m;}
+ public int getRgb(){return rgb;}public void setRgb(int c){rgb=c&0xFFFFFF;}public float getIntensity(){return intensity;}public void setIntensity(float v){if(Float.isNaN(v)||Float.isInfinite(v))throw new IllegalArgumentException("Invalid intensity");intensity=Math.max(0,Math.min(1,v));}
 }
