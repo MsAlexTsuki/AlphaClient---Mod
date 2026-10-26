@@ -1,16 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Chat Evidence Snippet Cutter. Extracts a selected range of chat lines into a compact evidence snippet. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Selects a bounded range from captured chat lines. Chat capture is an external event hook. */
 public final class ChatEvidenceSnippetCutter {
- public static final String NAME="Chat Evidence Snippet Cutter", CATEGORY="StaffMods", STATUS="NEW";
- public static final String PURPOSE="Extracts a selected range of chat lines into a compact evidence snippet.", REQUIRED_ACCESS="Staff";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Chat Evidence Snippet Cutter",CATEGORY="StaffMods",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ private final List<String> lines=new ArrayList<String>();private final int maxLines;
+ public ChatEvidenceSnippetCutter(){this(500);}public ChatEvidenceSnippetCutter(int max){if(max<1)throw new IllegalArgumentException("max must be positive");maxLines=max;}
+ public synchronized void append(String line){if(line==null)return;lines.add(line);while(lines.size()>maxLines)lines.remove(0);}
+ public synchronized String cut(int startInclusive,int endExclusive){if(startInclusive<0||endExclusive>lines.size()||startInclusive>=endExclusive)throw new IndexOutOfBoundsException("Invalid snippet range");StringBuilder b=new StringBuilder();for(int i=startInclusive;i<endExclusive;i++){if(b.length()>0)b.append('\n');b.append(lines.get(i));}return b.toString();}
+ public synchronized List<String> snapshot(){return Collections.unmodifiableList(new ArrayList<String>(lines));}
 }
