@@ -1,20 +1,10 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/**
- * Tracks named event countdowns.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
-public class ChatEventTimers {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+/** Named event countdowns; chat parsing and HUD notifications are separate integrations. */
+public class ChatEventTimers {public static final class Timer {public final String name;public final long endAt;private Timer(String n,long e){name=n;endAt=e;}public long remaining(long now){return Math.max(0,endAt-now);}public boolean expired(long now){return now>=endAt;}}
+ private final Map<String,Timer> timers=new LinkedHashMap<String,Timer>();
+ public void set(String name,long now,long duration){if(now<0||duration<0)throw new IllegalArgumentException();String n=req(name);timers.put(n.toLowerCase(Locale.ROOT),new Timer(n,now+duration));}
+ public Timer get(String name){return timers.get(req(name).toLowerCase(Locale.ROOT));}
+ public List<Timer> active(long now){List<Timer> out=new ArrayList<Timer>();for(Timer t:timers.values())if(!t.expired(now))out.add(t);return Collections.unmodifiableList(out);}
+ public void remove(String name){timers.remove(req(name).toLowerCase(Locale.ROOT));}private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException();return s.trim();}
 }
