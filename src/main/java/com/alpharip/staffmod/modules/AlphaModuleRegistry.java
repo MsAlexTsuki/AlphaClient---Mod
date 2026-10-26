@@ -370,6 +370,96 @@ public final class AlphaModuleRegistry {
         MODULES.add(new AlphaModule("low-food-sprint-warning", "Low Food Sprint Warning", "Warn when food level is too low to sprint reliably.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
         MODULES.add(new AlphaModule("target-type-hud", "Target Type HUD", "Show the entity type and health of the current crosshair target.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
 
+        MODULES.add(new AlphaModule(
+                "staff-player-counter",
+                "Staff Player Counter",
+                "Count other players currently loaded in the world.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "staff-chunk-counter",
+                "Staff Chunk Counter",
+                "Show the current client's loaded chunk count.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "staff-weather-hud",
+                "Staff Weather HUD",
+                "Show current world weather conditions.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "player-direction-viewer",
+                "Player Direction Viewer",
+                "Show the facing direction of the player under the crosshair.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "player-velocity-viewer",
+                "Player Velocity Viewer",
+                "Show horizontal and vertical motion of the player under the crosshair.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "player-ping-viewer",
+                "Player Ping Viewer",
+                "Show the tab-list latency for the player under the crosshair.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "player-connection-viewer",
+                "Player Connection Viewer",
+                "Show whether the targeted player is present in the client tab list.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "player-join-tracker",
+                "Player Join Tracker",
+                "Show recent player joins observed in the current world.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "player-leave-tracker",
+                "Player Leave Tracker",
+                "Show recent player departures observed in the current world.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "player-reconnect-tracker",
+                "Player Reconnect Tracker",
+                "Show when a previously observed player returns after leaving.",
+                AlphaModule.Category.T_MOD,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
