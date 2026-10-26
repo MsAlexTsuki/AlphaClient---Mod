@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Faction Event Calendar. Tracks planned faction events with start times and notes. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Local faction event schedule. */
 public final class FactionEventCalendar {
- public static final String NAME="Faction Event Calendar", CATEGORY="HardcoreFactions", STATUS="NEW";
- public static final String PURPOSE="Tracks planned faction events with start times and notes.", REQUIRED_ACCESS="Everyone";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Faction Event Calendar",CATEGORY="HardcoreFactions",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Event {public final String id,title,notes;public final long startsAt;private Event(String i,String t,long s,String n){id=i;title=t;startsAt=s;notes=n;}}
+ private final Map<String,Event> events=new LinkedHashMap<String,Event>();
+ public synchronized void put(String id,String title,long startsAt,String notes){if(startsAt<0)throw new IllegalArgumentException("start time must be non-negative");String i=text(id);events.put(i,new Event(i,text(title),startsAt,notes==null?"":notes.trim()));}
+ public synchronized List<Event> upcoming(long now){List<Event> out=new ArrayList<Event>();for(Event e:events.values())if(e.startsAt>=now)out.add(e);Collections.sort(out,new Comparator<Event>(){public int compare(Event a,Event b){return Long.compare(a.startsAt,b.startsAt);}});return Collections.unmodifiableList(out);}
+ public synchronized boolean remove(String id){return events.remove(text(id))!=null;}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
