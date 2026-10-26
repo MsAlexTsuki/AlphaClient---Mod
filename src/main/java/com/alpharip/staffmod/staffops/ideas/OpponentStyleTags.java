@@ -1,60 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Opponent Style Tags.
- * Purpose: Stores fixed style tags such as rod-heavy alongside opponent history.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** User-managed style tags associated with an opponent key; integrates with Opponent History separately. */
 public final class OpponentStyleTags {
-    public static final String NAME = "Opponent Style Tags";
-    public static final String CATEGORY = "Practice";
-    public static final String STATUS = "ENH";
-    public static final String PURPOSE = "Stores fixed style tags such as rod-heavy alongside opponent history.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Opponent Style Tags",CATEGORY="Practice",STATUS="ENH",REQUIRED_ACCESS="Unconfirmed";
+ private final Map<String,Set<String>> tags=new LinkedHashMap<String,Set<String>>();
+ public synchronized void add(String opponent,String tag){String o=text(opponent),t=text(tag).toLowerCase(Locale.ROOT);tags.computeIfAbsent(o,k->new LinkedHashSet<String>()).add(t);}
+ public synchronized void remove(String opponent,String tag){Set<String>s=tags.get(text(opponent));if(s!=null){s.remove(text(tag).toLowerCase(Locale.ROOT));if(s.isEmpty())tags.remove(text(opponent));}}
+ public synchronized Set<String> get(String opponent){Set<String>s=tags.get(text(opponent));return Collections.unmodifiableSet(s==null?new LinkedHashSet<String>():new LinkedHashSet<String>(s));}
+ public synchronized Map<String,Set<String>> snapshot(){Map<String,Set<String>> out=new LinkedHashMap<String,Set<String>>();for(Map.Entry<String,Set<String>>e:tags.entrySet())out.put(e.getKey(),Collections.unmodifiableSet(new LinkedHashSet<String>(e.getValue())));return Collections.unmodifiableMap(out);}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
