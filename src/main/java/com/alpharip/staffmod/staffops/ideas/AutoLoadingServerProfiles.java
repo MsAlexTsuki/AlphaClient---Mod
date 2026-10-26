@@ -1,20 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/**
- * Resolves a server address to a saved profile.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
-public class AutoLoadingServerProfiles {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+/** Resolves exact or suffix server-address matches to profile names; profile application is separate. */
+public class AutoLoadingServerProfiles {private final Map<String,String> profiles=new LinkedHashMap<String,String>();
+ public void bind(String address,String profile){profiles.put(norm(address),req(profile));}
+ public String resolve(String address){String key=norm(address),best=null;int len=-1;for(Map.Entry<String,String> e:profiles.entrySet())if((key.equals(e.getKey())||key.endsWith("."+e.getKey()))&&e.getKey().length()>len){best=e.getValue();len=e.getKey().length();}return best;}
+ public void remove(String address){profiles.remove(norm(address));}public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(profiles));}
+ private static String norm(String s){return req(s).toLowerCase(Locale.ROOT).replaceAll("^https?://","").replaceAll("/+$","");}private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException();return s.trim();}
 }
