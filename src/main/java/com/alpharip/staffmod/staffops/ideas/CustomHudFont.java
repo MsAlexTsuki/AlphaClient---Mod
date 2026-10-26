@@ -1,20 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
-import java.util.*;
-/**
- * Stores HUD font resource and scale preferences.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
+/** HUD font preferences; resource loading and font renderer integration are not connected. */
 public class CustomHudFont {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ private boolean enabled=true;private String resource="minecraft:default";private float scale=1F;private boolean shadow=true;
+ public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}public String getResource(){return resource;}
+ public void setResource(String r){if(r==null||r.trim().isEmpty())throw new IllegalArgumentException("Font resource required");resource=r.trim();}
+ public float getScale(){return scale;}public void setScale(float s){if(Float.isNaN(s)||Float.isInfinite(s))throw new IllegalArgumentException("Invalid scale");scale=Math.max(.5F,Math.min(3F,s));}
+ public boolean hasShadow(){return shadow;}public void setShadow(boolean v){shadow=v;}
 }
