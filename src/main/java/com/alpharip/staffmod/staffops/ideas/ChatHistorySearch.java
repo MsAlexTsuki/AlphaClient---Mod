@@ -1,12 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/** Stores a bounded searchable chat transcript. Actual Minecraft UI/event hooks and persistence are not connected. Compatible with Java 8. */
+/** Bounded chat transcript and case-insensitive search; chat listener integration is separate. */
 public class ChatHistorySearch {
- private boolean enabled=true;private final LinkedHashMap<String,String> entries=new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}
- public void put(String key,String value){entries.put(req(key),value==null?"":value);}
- public String get(String key){return entries.get(req(key));}public boolean remove(String key){return entries.remove(req(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String q){String s=req(q).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(s)||e.getValue().toLowerCase(Locale.ROOT).contains(s))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+ private final Deque<String> lines=new ArrayDeque<String>();private int capacity=5000;
+ public void setCapacity(int n){if(n<1)throw new IllegalArgumentException();capacity=n;trim();}
+ public void add(String line){if(line!=null){lines.addLast(line);trim();}}
+ public List<String> search(String q){if(q==null||q.trim().isEmpty())return Collections.emptyList();String s=q.toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(String l:lines)if(l.toLowerCase(Locale.ROOT).contains(s))out.add(l);return Collections.unmodifiableList(out);}
+ public List<String> getAll(){return Collections.unmodifiableList(new ArrayList<String>(lines));}
+ private void trim(){while(lines.size()>capacity)lines.removeFirst();}
 }
