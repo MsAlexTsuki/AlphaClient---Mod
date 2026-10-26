@@ -1,12 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
-import java.util.*;
-/** Tracks work/break timer phases. Actual Minecraft UI/event hooks and persistence are not connected. Compatible with Java 8. */
-public class PomodoroTimer {
- private boolean enabled=true;private final LinkedHashMap<String,String> entries=new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}
- public void put(String key,String value){entries.put(req(key),value==null?"":value);}
- public String get(String key){return entries.get(req(key));}public boolean remove(String key){return entries.remove(req(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String q){String s=req(q).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(s)||e.getValue().toLowerCase(Locale.ROOT).contains(s))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+/** Monotonic-clock Pomodoro timer model; notifications and display need integration. */
+public class PomodoroTimer {public enum Phase{WORK,SHORT_BREAK,LONG_BREAK}
+ private Phase phase=Phase.WORK;private long duration=1500000L,start=-1;private int completed;
+ public void configure(Phase p,long millis){if(p==null||millis<1)throw new IllegalArgumentException();phase=p;duration=millis;start=-1;}
+ public void start(long now){if(now<0)throw new IllegalArgumentException();start=now;}
+ public long remaining(long now){return start<0?duration:Math.max(0,duration-(now-start));}
+ public boolean isFinished(long now){return start>=0&&remaining(now)==0;}
+ public Phase finish(long now){if(!isFinished(now))throw new IllegalStateException("Timer is not finished");if(phase==Phase.WORK)completed++;start=-1;return phase;}
+ public int getCompletedWorkSessions(){return completed;}public Phase getPhase(){return phase;}
 }
