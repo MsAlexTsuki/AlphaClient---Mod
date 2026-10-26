@@ -1,12 +1,8 @@
 package com.alpharip.staffmod.staffops.ideas;
 import java.util.*;
-/** Maps waypoint names to categories and RGB colors. Actual Minecraft UI/event hooks and persistence are not connected. Compatible with Java 8. */
-public class WaypointCategoriesColors {
- private boolean enabled=true;private final LinkedHashMap<String,String> entries=new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}
- public void put(String key,String value){entries.put(req(key),value==null?"":value);}
- public String get(String key){return entries.get(req(key));}public boolean remove(String key){return entries.remove(req(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String q){String s=req(q).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(s)||e.getValue().toLowerCase(Locale.ROOT).contains(s))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+/** Assigns categories and RGB colors to named waypoints. */
+public class WaypointCategoriesColors {private final Map<String,String> categories=new LinkedHashMap<String,String>();private final Map<String,Integer> colors=new LinkedHashMap<String,Integer>();
+ public void set(String waypoint,String category,int rgb){String id=req(waypoint);if(rgb<0||rgb>0xFFFFFF)throw new IllegalArgumentException("rgb");categories.put(id,req(category));colors.put(id,rgb);}
+ public String getCategory(String waypoint){return categories.get(req(waypoint));}public Integer getColor(String waypoint){return colors.get(req(waypoint));}
+ public Map<String,String> getCategories(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(categories));}private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException();return s.trim();}
 }
