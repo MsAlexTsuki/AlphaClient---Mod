@@ -1,28 +1,10 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/**
- * Stores subtle notification styling preferences.
- * Category: Donator Rogue
- * Foundation model only; this class is not wired into Minecraft or Forge.
- */
-public class SilentNotificationSkin {
-    public static final String FEATURE_NAME = "SilentNotificationSkin";
-    public static final String CATEGORY = "Donator Rogue";
-    public static final String DESCRIPTION = "Stores subtle notification styling preferences.";
-
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) {
-        if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim());
-    }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Configures subtle notification presentation without sending notifications. */
+public final class SilentNotificationSkin {
+ public static final String FEATURE_NAME="Silent Notification Skin",CATEGORY="Donator Rogue",STATUS="NEW";
+ private boolean soundEnabled=false; private long displayMillis=2500L; private float opacity=0.72f;
+ public boolean isSoundEnabled(){return soundEnabled;} public void setSoundEnabled(boolean v){soundEnabled=v;}
+ public long getDisplayMillis(){return displayMillis;} public void setDisplayMillis(long v){if(v<500||v>10000)throw new IllegalArgumentException("duration must be 500-10000 ms");displayMillis=v;}
+ public float getOpacity(){return opacity;} public void setOpacity(float v){if(Float.isNaN(v)||v<0.1f||v>1f)throw new IllegalArgumentException("opacity must be 0.1-1.0");opacity=v;}
 }

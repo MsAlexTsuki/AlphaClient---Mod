@@ -1,28 +1,9 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/**
- * Stores a dark visibility palette and brightness preference.
- * Category: Donator Rogue
- * Foundation model only; this class is not wired into Minecraft or Forge.
- */
-public class NightVisionPalette {
-    public static final String FEATURE_NAME = "NightVisionPalette";
-    public static final String CATEGORY = "Donator Rogue";
-    public static final String DESCRIPTION = "Stores a dark visibility palette and brightness preference.";
-
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) {
-        if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim());
-    }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Stores a dark palette and brightness preference; no framebuffer changes are performed. */
+public final class NightVisionPalette {
+ public static final String FEATURE_NAME="Night Vision Palette",CATEGORY="Donator Rogue",STATUS="NEW";
+ private String palette="midnight"; private float brightness=1.0f;
+ public String getPalette(){return palette;} public void setPalette(String p){if(p==null||p.trim().isEmpty())throw new IllegalArgumentException("palette required");palette=p.trim();}
+ public float getBrightness(){return brightness;} public void setBrightness(float b){if(Float.isNaN(b)||b<0.5f||b>2.0f)throw new IllegalArgumentException("brightness must be 0.5-2.0");brightness=b;}
 }

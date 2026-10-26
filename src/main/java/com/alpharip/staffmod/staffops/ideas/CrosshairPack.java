@@ -1,20 +1,13 @@
 package com.alpharip.staffmod.staffops.ideas;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-/** Stores selectable crosshair presets. Category: Donator Elite. Foundation model only; no Minecraft/Forge integration. */
-public class CrosshairPack {
-    public static final String FEATURE_NAME = "CrosshairPack";
-    public static final String CATEGORY = "Donator Elite";
-    public static final String DESCRIPTION = "Stores selectable crosshair presets.";
-    private boolean enabled = true;
-    private final List<String> entries = new ArrayList<String>();
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public void addEntry(String entry) { if (entry != null && !entry.trim().isEmpty()) entries.add(entry.trim()); }
-    public boolean removeEntry(String entry) { return entries.remove(entry); }
-    public List<String> getEntries() { return Collections.unmodifiableList(new ArrayList<String>(entries)); }
-    public void clearEntries() { entries.clear(); }
+/** Provides named crosshair preset definitions for a later renderer. */
+public final class CrosshairPack {
+ public static final String FEATURE_NAME="Crosshair Pack",CATEGORY="Donator Elite",STATUS="NEW";
+ private final Map<String,Integer> sizes=new LinkedHashMap<String,Integer>();
+ public CrosshairPack(){sizes.put("dot",2);sizes.put("classic",8);sizes.put("cross",10);}
+ public void putPreset(String name,int size){if(name==null||name.trim().isEmpty())throw new IllegalArgumentException("name required");if(size<1||size>32)throw new IllegalArgumentException("size must be 1-32");sizes.put(name.trim(),size);}
+ public Integer getSize(String name){return sizes.get(name);}
+ public Map<String,Integer> presets(){return Collections.unmodifiableMap(new LinkedHashMap<String,Integer>(sizes));}
 }
