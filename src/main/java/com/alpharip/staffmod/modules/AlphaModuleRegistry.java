@@ -586,6 +586,18 @@ public final class AlphaModuleRegistry {
         return result;
     }
 
+
+        MODULES.add(new AlphaModule("break-since-last-pause", "Time Since Last Break", "Track time since your last detected break.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("late-sleep-reminder", "Late-Time Sleep Reminder", "Remind you after your configured local bedtime.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("real-clock-alarm", "Real Clock & Alarm", "Show the real-world clock and an optional alarm.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("movement-distance-total", "Movement Distance", "Track total walking, swimming and flying distance.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("session-average-comparison", "Session vs Average", "Compare this session with your saved session average.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("annual-play-calendar", "Annual Play Calendar", "Record the calendar dates on which you played.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("player-nicknames", "Player Nicknames", "Save a local nickname for another player.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("player-notes", "Player Notes", "Save local notes about players and show them when targeted.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("player-last-seen", "Player Last Seen", "Keep a local last-seen log of observed players.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+        MODULES.add(new AlphaModule("friend-join-leave", "Friend Join/Leave Alerts", "Notify when a locally listed friend joins or leaves the same server.", AlphaModule.Category.PUBLIC, true, DEFAULT_MODULE_ENABLED));
+
     public static AlphaModule find(String id) {
         for (AlphaModule module : MODULES) {
             if (module.getId().equals(id)) {

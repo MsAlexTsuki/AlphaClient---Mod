@@ -75,6 +75,7 @@ import com.alpharip.staffmod.hud.FoodHUD;
 import com.alpharip.staffmod.hud.VelocityHud;
 import com.alpharip.staffmod.hud.HeldItemDurabilityHud;
 import com.alpharip.staffmod.hud.StaffUtilityTrackingModules;
+import com.alpharip.staffmod.hud.PersonalUtilityFeatures;
 import com.alpharip.staffmod.movement.AutoSprintMod;
 import com.alpharip.staffmod.inventory.AutoToolMod;
 
@@ -192,6 +193,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new com.alpharip.staffmod.hud.CombatTrackingHudModules());
         MinecraftForge.EVENT_BUS.register(new com.alpharip.staffmod.hud.UtilityTrackingHudModules());
         MinecraftForge.EVENT_BUS.register(new StaffUtilityTrackingModules());
+        MinecraftForge.EVENT_BUS.register(new PersonalUtilityFeatures());
         MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         RankCache.INSTANCE.start();
@@ -247,7 +249,7 @@ public final class AlphaClient {
                 "hudeditor", "profiles", "profile", "alphaperms", "staffoperations", "alphanote", "staffmods", "staffgeneral", "stafftmod", "staffmod",
                 "staffsrmod", "staffadmin", "staffsradmin", "staffmanagement",
                 "staffplatformadmin", "staffplatadmin", "staffmanager", "staffowner", "stafffounder",
-                "general", "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus", "autogg", "autoreconnect"
+                "personal", "general", "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus", "autogg", "autoreconnect"
         };
         for (String command : commands) {
             ClientCommandHandler.instance.registerCommand(new AlphaClientCommand(command));

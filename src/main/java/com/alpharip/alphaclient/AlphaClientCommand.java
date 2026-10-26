@@ -19,6 +19,7 @@ import com.alpharip.staffmod.gui.StaffModsMenuGui;
 import com.alpharip.staffmod.gui.WTapSettingsGui;
 import com.alpharip.staffmod.hud.AfkTimerHud;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
+import com.alpharip.staffmod.hud.PersonalUtilityFeatures;
 import com.alpharip.staffmod.hud.SessionTimerHud;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
@@ -63,6 +64,16 @@ public final class AlphaClientCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
+
+        if ("personal".equals(route)) {
+            PersonalUtilityFeatures.handleCommand(sender, args);
+            return;
+        }
+        if ("alphaclient".equals(route) && args != null && args.length > 0
+                && "personal".equalsIgnoreCase(args[0])) {
+            PersonalUtilityFeatures.handleCommand(sender, tail(args));
+            return;
+        }
 
         if ("autogg".equals(route)) {
             handleAutoGG(sender, args);
@@ -294,6 +305,7 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/alphaclient fps|cps|bhop|wtap", "Open the corresponding module command");
             guideLine(sender, "/alphaclient fullbright|legacypvp", "Open the corresponding feature command");
             guideLine(sender, "/alphaclient playtime|sessiontimer|afktimer", "Use the corresponding timer command");
+            guideLine(sender, "/alphaclient personal help", "Use personal timers, stats, player notes and friend alerts");
             guideLine(sender, "/alphahelp", "Show the rank-filtered command overview");
             guideLine(sender, "/profiles", "List saved profiles");
             guideLine(sender, "/profile <name|create|edit|delete>", "Switch or manage profiles");
@@ -1483,6 +1495,7 @@ public final class AlphaClientCommand extends CommandBase {
         reply(sender, "AlphaClient commands available to your current rank (" + rank.name() + "):");
         reply(sender, "/alphaclient help | modules | settings <module>");
         reply(sender, "/alphaclient module <module> <on|off|toggle>");
+        reply(sender, "/alphaclient personal help | nickname | note | friend | seen | clock | alarm | sleep | break | distance | calendar | sessions");
         reply(sender, "/general opens Mods -> General.");
         if (rank == PermissionService.Rank.BETA) {
             reply(sender, "/beta opens Mods -> Beta.");
