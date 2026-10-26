@@ -1,20 +1,7 @@
 package com.alpharip.staffmod.staffops.ideas;
-import java.util.*;
-/**
- * Stores and tests rectangular claim boundaries.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
-public class ClaimBoundaryOverlay {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+/** Claim rectangle geometry model; world rendering is not connected. */
+public class ClaimBoundaryOverlay {private int minX,minZ,maxX,maxZ;private boolean configured,enabled=true;
+ public void setBounds(int x1,int z1,int x2,int z2){minX=Math.min(x1,x2);maxX=Math.max(x1,x2);minZ=Math.min(z1,z2);maxZ=Math.max(z1,z2);configured=true;}
+ public boolean contains(int x,int z){return configured&&x>=minX&&x<=maxX&&z>=minZ&&z<=maxZ;}public boolean isConfigured(){return configured;}public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}
+ public int getMinX(){return minX;}public int getMaxX(){return maxX;}public int getMinZ(){return minZ;}public int getMaxZ(){return maxZ;}
 }
