@@ -1,20 +1,5 @@
 package com.alpharip.staffmod.staffops.ideas;
-import java.util.*;
-/**
- * Tracks a KOTH cooldown countdown.
- * Client-side model only: actual Minecraft UI/event hooks and persistence are not connected.
- * Add TODO(Supabase) integration only where shared cross-session data is required.
- * Compatible with Java 8.
- */
-public class KothCooldownHud {
- private boolean enabled = true;
- private final LinkedHashMap<String,String> entries = new LinkedHashMap<String,String>();
- public boolean isEnabled(){return enabled;}
- public void setEnabled(boolean value){enabled=value;}
- public void put(String key,String value){entries.put(require(key),value==null?"":value);}
- public String get(String key){return entries.get(require(key));}
- public boolean remove(String key){return entries.remove(require(key))!=null;}
- public Map<String,String> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,String>(entries));}
- public List<String> search(String query){String q=require(query).toLowerCase(Locale.ROOT);List<String> out=new ArrayList<String>();for(Map.Entry<String,String> e:entries.entrySet())if(e.getKey().toLowerCase(Locale.ROOT).contains(q)||e.getValue().toLowerCase(Locale.ROOT).contains(q))out.add(e.getKey());return Collections.unmodifiableList(out);}
- private static String require(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("Value must not be blank.");return s.trim();}
+/** KOTH cooldown state; chat parsing and HUD rendering are not wired. */
+public class KothCooldownHud {private long readyAt=-1;private boolean enabled=true;
+ public void setCooldown(long now,long duration){if(now<0||duration<0)throw new IllegalArgumentException();readyAt=now+duration;}public long remainingMillis(long now){return readyAt<0?0:Math.max(0,readyAt-now);}public boolean isReady(long now){return readyAt<0||now>=readyAt;}public boolean isEnabled(){return enabled;}public void setEnabled(boolean v){enabled=v;}public void clear(){readyAt=-1;}
 }
