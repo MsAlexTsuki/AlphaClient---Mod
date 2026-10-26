@@ -1,16 +1,11 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Stale Case Sweeper. Finds cases with no activity past a configurable age. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Identifies cases whose last activity is older than a caller-selected threshold. */
 public final class StaleCaseSweeper {
- public static final String NAME="Stale Case Sweeper", CATEGORY="SeniorStaff", STATUS="NEW";
- public static final String PURPOSE="Finds cases with no activity past a configurable age.", REQUIRED_ACCESS="Senior Staff";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Stale Case Sweeper",CATEGORY="SeniorStaff",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class CaseActivity {public final String id;public final long lastActivity;private CaseActivity(String i,long t){id=i;lastActivity=t;}}
+ private final Map<String,CaseActivity> cases=new LinkedHashMap<String,CaseActivity>();
+ public synchronized void update(String id,long lastActivity){if(lastActivity<0)throw new IllegalArgumentException("timestamp must be non-negative");String i=req(id);cases.put(i,new CaseActivity(i,lastActivity));}
+ public synchronized List<CaseActivity> stale(long now,long threshold){if(threshold<0||now<0)throw new IllegalArgumentException("invalid time");List<CaseActivity> out=new ArrayList<CaseActivity>();for(CaseActivity c:cases.values())if(now>=c.lastActivity&&now-c.lastActivity>=threshold)out.add(c);return Collections.unmodifiableList(out);}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("id required");return s.trim();}
 }
