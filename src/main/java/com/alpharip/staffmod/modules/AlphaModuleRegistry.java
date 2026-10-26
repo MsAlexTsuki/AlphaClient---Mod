@@ -137,7 +137,7 @@ public final class AlphaModuleRegistry {
                 "targeting",
                 "Targeting",
                 "Selects the nearest eligible player to the crosshair and displays target name and distance.",
-                AlphaModule.Category.PUBLIC,
+                AlphaModule.Category.FOUNDER,
                 true,
                 DEFAULT_MODULE_ENABLED
         ));
