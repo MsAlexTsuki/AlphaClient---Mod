@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Budget Request Tracker. Tracks resource requests, requested amounts, and review state. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Tracks resource requests and their review state. */
 public final class BudgetRequestTracker {
- public static final String NAME="Budget Request Tracker", CATEGORY="Management", STATUS="NEW";
- public static final String PURPOSE="Tracks resource requests, requested amounts, and review state.", REQUIRED_ACCESS="Management";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Budget Request Tracker",CATEGORY="Management",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Request {public final String id,requester,description,currency;public final double amount;private String status="PENDING";private Request(String i,String r,String d,double a,String c){id=i;requester=r;description=d;amount=a;currency=c;}public String getStatus(){return status;}}
+ private final Map<String,Request> requests=new LinkedHashMap<String,Request>();
+ public synchronized void add(String id,String requester,String description,double amount,String currency){if(amount<0||Double.isNaN(amount)||Double.isInfinite(amount))throw new IllegalArgumentException("invalid amount");String i=req(id);requests.put(i,new Request(i,req(requester),req(description),amount,req(currency)));}
+ public synchronized void review(String id,String status){Request r=requests.get(req(id));if(r==null)throw new IllegalArgumentException("unknown request");r.status=req(status).toUpperCase(Locale.ROOT);}
+ public synchronized List<Request> snapshot(){return Collections.unmodifiableList(new ArrayList<Request>(requests.values()));}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
