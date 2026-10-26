@@ -1,60 +1,14 @@
 package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Watchtower Shift Timer.
- * Purpose: Tracks guard shifts and exposes shift-change signal events.
- * Required access: Everyone.
- * Foundation only: Minecraft/Forge event, GUI, rendering, and external-service integration are separate work.
- */
+import java.util.*;
+/** Tracks a rotating watch schedule; signaling is returned as state for a UI/notification hook. */
 public final class WatchtowerShiftTimer {
-    public static final String NAME = "Watchtower Shift Timer";
-    public static final String CATEGORY = "HardcoreFactions";
-    public static final String STATUS = "NEW";
-    public static final String PURPOSE = "Tracks guard shifts and exposes shift-change signal events.";
-    public static final String REQUIRED_ACCESS = "Everyone";
-    public static final boolean REQUIRES_SUPABASE = false;
-    public static final boolean REQUIRES_SERVER_SUPPORT = false;
-
-    public static final class Entry {
-        private final String id;
-        private final Map<String, String> fields;
-        private final long createdAt;
-        private long updatedAt;
-        private Entry(String id, Map<String, String> fields) {
-            this.id = id;
-            this.fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(fields));
-            this.createdAt = System.currentTimeMillis();
-            this.updatedAt = this.createdAt;
-        }
-        public String getId() { return id; }
-        public Map<String, String> getFields() { return fields; }
-        public long getCreatedAt() { return createdAt; }
-        public long getUpdatedAt() { return updatedAt; }
-    }
-
-    private final Map<String, Entry> entries = new LinkedHashMap<String, Entry>();
-
-    public synchronized Entry put(String id, Map<String, String> fields) {
-        String key = requireText(id, "id");
-        if (fields == null) throw new IllegalArgumentException("fields must not be null.");
-        Entry entry = new Entry(key, fields);
-        entries.put(key, entry);
-        return entry;
-    }
-
-    public synchronized Entry get(String id) { return entries.get(requireText(id, "id")); }
-    public synchronized boolean remove(String id) { return entries.remove(requireText(id, "id")) != null; }
-    public synchronized List<Entry> snapshot() { return Collections.unmodifiableList(new ArrayList<Entry>(entries.values())); }
-    public synchronized int size() { return entries.size(); }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " must not be blank.");
-        return value.trim();
-    }
+ public static final String NAME="Watchtower Shift Timer",CATEGORY="HardcoreFactions",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ private final List<String> guards=new ArrayList<String>();private long shiftMillis;private long startedAt;private int current;
+ public synchronized void setShiftMillis(long ms){if(ms<1000)throw new IllegalArgumentException("shift must be at least one second");shiftMillis=ms;}
+ public synchronized void setGuards(List<String> names){if(names==null||names.isEmpty())throw new IllegalArgumentException("guards required");guards.clear();for(String n:names)guards.add(text(n));current=0;}
+ public synchronized void start(long now){if(guards.isEmpty()||shiftMillis<=0)throw new IllegalStateException("Configure guards and shift length first");startedAt=now;}
+ public synchronized boolean isShiftDue(long now){return startedAt>0&&shiftMillis>0&&now-startedAt>=shiftMillis;}
+ public synchronized String rotate(long now){if(!isShiftDue(now))return null;current=(current+1)%guards.size();startedAt=now;return guards.get(current);}
+ public synchronized String getCurrentGuard(){return guards.isEmpty()?null:guards.get(current);}
+ private static String text(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("guard required");return s.trim();}
 }
