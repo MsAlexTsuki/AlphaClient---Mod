@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Team Roster Overview. Maintains a team-oriented roster overview from locally supplied entries. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Team-oriented roster maintained from entries supplied by existing staff systems. */
 public final class TeamRosterOverview {
- public static final String NAME="Team Roster Overview", CATEGORY="Management", STATUS="NEW";
- public static final String PURPOSE="Maintains a team-oriented roster overview from locally supplied entries.", REQUIRED_ACCESS="Management";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Team Roster Overview",CATEGORY="Management",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ public static final class Member {public final String id,name,team,role;private Member(String i,String n,String t,String r){id=i;name=n;team=t;role=r;}}
+ private final Map<String,Member> members=new LinkedHashMap<String,Member>();
+ public synchronized void put(String id,String name,String team,String role){String i=req(id);members.put(i,new Member(i,req(name),req(team),req(role)));}
+ public synchronized List<Member> byTeam(String team){List<Member> out=new ArrayList<Member>();for(Member m:members.values())if(m.team.equalsIgnoreCase(req(team)))out.add(m);return Collections.unmodifiableList(out);}
+ public synchronized List<Member> snapshot(){return Collections.unmodifiableList(new ArrayList<Member>(members.values()));}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("value required");return s.trim();}
 }
