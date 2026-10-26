@@ -1,16 +1,12 @@
 package com.alpharip.staffmod.staffops.ideas;
-
 import java.util.*;
-
-/** Shift Start Checklist. Tracks checklist items at the start of a staff shift. Foundation only; Minecraft/Forge GUI and runtime integration remain separate. */
+/** Shift-start checklist state model. */
 public final class ShiftStartChecklist {
- public static final String NAME="Shift Start Checklist", CATEGORY="StaffMods", STATUS="NEW";
- public static final String PURPOSE="Tracks checklist items at the start of a staff shift.", REQUIRED_ACCESS="Staff";
- public static final boolean REQUIRES_SUPABASE=false, REQUIRES_SERVER_SUPPORT=false;
- private final Map<String,Map<String,String>> entries=new LinkedHashMap<String,Map<String,String>>();
- public synchronized void put(String id,Map<String,String> fields){String k=text(id,"id");if(fields==null)throw new IllegalArgumentException("fields must not be null");entries.put(k,Collections.unmodifiableMap(new LinkedHashMap<String,String>(fields)));}
- public synchronized Map<String,String> get(String id){return entries.get(text(id,"id"));}
- public synchronized boolean remove(String id){return entries.remove(text(id,"id"))!=null;}
- public synchronized Map<String,Map<String,String>> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Map<String,String>>(entries));}
- private static String text(String v,String n){if(v==null||v.trim().isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v.trim();}
+ public static final String NAME="Shift Start Checklist",CATEGORY="StaffMods",STATUS="NEW",REQUIRED_ACCESS="Unconfirmed";
+ private final Map<String,Boolean> items=new LinkedHashMap<String,Boolean>();
+ public synchronized void add(String item){items.put(req(item),false);}public synchronized void setDone(String item,boolean done){String k=req(item);if(!items.containsKey(k))throw new IllegalArgumentException("Unknown item");items.put(k,done);}
+ public synchronized void reset(){for(String k:new ArrayList<String>(items.keySet()))items.put(k,false);}
+ public synchronized boolean isComplete(){return !items.isEmpty()&&!items.containsValue(Boolean.FALSE);}
+ public synchronized Map<String,Boolean> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<String,Boolean>(items));}
+ private static String req(String s){if(s==null||s.trim().isEmpty())throw new IllegalArgumentException("item required");return s.trim();}
 }
