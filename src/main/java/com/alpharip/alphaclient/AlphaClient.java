@@ -57,6 +57,11 @@ import com.alpharip.staffmod.hud.CompassHudModule;
 import com.alpharip.staffmod.hud.CoordinatesHudModule;
 import com.alpharip.staffmod.quality.SessionTimerMod;
 import com.alpharip.staffmod.quality.PlaytimeTrackerMod;
+import com.alpharip.staffmod.hud.TargetHealthHud;
+import com.alpharip.staffmod.hud.CrosshairCustomizerMod;
+import com.alpharip.staffmod.chat.ChatTimestampMod;
+import com.alpharip.staffmod.combat.KillCounterMod;
+import com.alpharip.staffmod.hud.AttackIndicatorMod;
 import com.alpharip.staffmod.movement.AutoSprintMod;
 import com.alpharip.staffmod.inventory.AutoToolMod;
 
@@ -154,6 +159,11 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new CoordinatesHudModule());
         MinecraftForge.EVENT_BUS.register(new SessionTimerMod());
         MinecraftForge.EVENT_BUS.register(new PlaytimeTrackerMod());
+        MinecraftForge.EVENT_BUS.register(new TargetHealthHud());
+        MinecraftForge.EVENT_BUS.register(new CrosshairCustomizerMod());
+        MinecraftForge.EVENT_BUS.register(new ChatTimestampMod());
+        MinecraftForge.EVENT_BUS.register(new KillCounterMod());
+        MinecraftForge.EVENT_BUS.register(new AttackIndicatorMod());
         MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         RankCache.INSTANCE.start();

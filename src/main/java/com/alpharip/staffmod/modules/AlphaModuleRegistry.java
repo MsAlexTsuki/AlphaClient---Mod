@@ -292,6 +292,51 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
+        MODULES.add(new AlphaModule(
+                "target-health-hud",
+                "Target Health HUD",
+                "Show health for the entity under the crosshair.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "crosshair-customizer",
+                "Crosshair Customizer",
+                "Draw a simple configurable-style crosshair overlay.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "chat-timestamp",
+                "Chat Timestamp",
+                "Prefix incoming chat messages with the local time.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "kill-counter",
+                "Kill Counter",
+                "Count kills credited to the local player from client-visible death events.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "attack-indicator",
+                "Attack Indicator",
+                "Display the vanilla attack cooldown as a compact percentage.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         AlphaModule legacyPvp = new AlphaModule(
                 "legacy-pvp",
                 "Legacy PvP",
