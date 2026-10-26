@@ -104,6 +104,33 @@ public final class AlphaModuleRegistry {
         ));
 
         MODULES.add(new AlphaModule(
+                "item-hud",
+                "Item HUD",
+                "Show the held item's name and remaining durability in the General HUD.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "status-dashboard",
+                "Status Dashboard",
+                "Show a compact live FPS and current-server status line.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
+                "combat-warnings",
+                "Combat Warnings",
+                "Warn when health is low or the held item is nearly broken.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
+        MODULES.add(new AlphaModule(
                 "armor-hud-info",
                 "Armor HUD",
                 "Show held-item and equipped-armor durability in a movable horizontal or vertical HUD.",
