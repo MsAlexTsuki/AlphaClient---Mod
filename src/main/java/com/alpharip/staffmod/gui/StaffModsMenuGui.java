@@ -406,6 +406,14 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
 
             // W-Tap Assistance is a Founder-only tool and must never leak into
             // another rank folder, even when the current account is Founder.
+            if ("aim-assist".equals(module.getId())) {
+                if (selectedRank == PermissionService.Rank.FOUNDER
+                        && com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()
+                        && module.isImplemented() && module.isUnlocked()) {
+                    mc.displayGuiScreen(new AimAssistSettingsGui(this));
+                }
+                return;
+            }
             if ("w-tap-assistance".equals(module.getId())) {
                 if (selectedRank == PermissionService.Rank.FOUNDER
                         && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
