@@ -14,6 +14,7 @@ import java.util.List;
 public final class PixelGardenGUI extends GuiScreen {
     private static final int CROP_BASE = 10, BUY_BASE = 20, PLOT_BASE = 100, SELL_BASE = 200;
     private static final int AUTO = 300, GROWTH = 301, EXPAND = 302, BACK = 4;
+    private static final int SHOP = 400, INVENTORY = 401, SELL = 402, UPGRADES = 403;
     private static String loadedAccount;
     private static boolean loadInProgress;
     private final GuiScreen parent;
@@ -103,37 +104,20 @@ public final class PixelGardenGUI extends GuiScreen {
         return message == null || message.trim().isEmpty() ? "unknown error" : message;
     }
 
-    private int sidePanelWidth() { return Math.max(190, Math.min(280, (width - 470) / 2)); }
     private int gardenCell() {
-        int byHeight = (height - 250) / 3 - 8;
-        int byWidth = (width - sidePanelWidth() * 2 - 90) / 3 - 8;
-        return Math.max(58, Math.min(128, Math.min(byHeight, byWidth)));
+        int byHeight = (height - 205) / 3 - 8;
+        int byWidth = (width - 110) / 3 - 8;
+        return Math.max(54, Math.min(136, Math.min(byHeight, byWidth)));
     }
     private int gardenWidth() { return gardenCell() * 3 + 12; }
-    private int totalLayoutWidth() { return sidePanelWidth() * 2 + gardenWidth() + 40; }
-    private int layoutLeft() { return Math.max(8, (width - totalLayoutWidth()) / 2); }
-    private int leftPanelX() { return layoutLeft(); }
-    private int gardenLeft() { return leftPanelX() + sidePanelWidth() + 14; }
-    private int rightPanelX() { return gardenLeft() + gardenWidth() + 14; }
-    private int gardenTop() { return Math.max(145, (height - (gardenCell() * 3 + 12)) / 2 - 2); }
+    private int gardenLeft() { return (width - gardenWidth()) / 2; }
+    private int gardenTop() { return Math.max(120, (height - (gardenCell() * 3 + 72)) / 2); }
 
     @Override
     public void initGui() {
         buttonList.clear();
         game.processTime(System.currentTimeMillis());
         int cell = gardenCell(), gap = 4, gx = gardenLeft(), gy = gardenTop();
-        int leftX = leftPanelX(), rightX = rightPanelX();
-        int sideWidth = sidePanelWidth();
-        int cropY = 72;
-        for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
-            int rowY = cropY + crop.ordinal() * 43;
-            buttonList.add(new AlphaButton(CROP_BASE + crop.ordinal(), leftX + 5, rowY, sideWidth - 10, 19,
-                    (selectedCrop == crop ? "> " : "") + crop.displayName + "  Seeds: " + game.getSeeds(crop)));
-            buttonList.add(new AlphaButton(BUY_BASE + crop.ordinal(), leftX + 5, rowY + 20, sideWidth - 10, 18,
-                    "Buy seed  (" + crop.seedPrice + " coins)"));
-            buttonList.add(new AlphaButton(SELL_BASE + crop.ordinal(), leftX + 5, gy + cell * 3 + 24 + crop.ordinal() * 21,
-                    sideWidth - 10, 19, "Sell " + crop.displayName + " x" + game.getInventory(crop)));
-        }
         List<PixelGardenGame.Plot> plots = game.getPlots();
         for (int i = 0; i < plots.size(); i++) {
             int x = gx + (i % 3) * (cell + gap);
@@ -141,15 +125,15 @@ public final class PixelGardenGUI extends GuiScreen {
             buttonList.add(new AlphaButton(PLOT_BASE + i, x, y, cell, cell,
                     plotButtonLabel(plots.get(i), System.currentTimeMillis(), i)));
         }
-        int upgradeY = 75;
-        int upgradeWidth = sidePanelWidth() - 8;
-        buttonList.add(new AlphaButton(AUTO, rightX + 4, upgradeY + 20, upgradeWidth - 8, 22,
-                game.hasAutoHarvest() ? "Auto Harvest: ON" : "Auto Harvest (" + game.getUpgradeCost("auto_harvest") + ")"));
-        buttonList.add(new AlphaButton(GROWTH, rightX + 4, upgradeY + 83, upgradeWidth - 8, 22,
-                "Growth Boost L" + game.getGrowthLevels() + " (" + game.getUpgradeCost("growth_boost") + ")"));
-        buttonList.add(new AlphaButton(EXPAND, rightX + 4, upgradeY + 146, upgradeWidth - 8, 22,
-                "Expand Garden (" + game.getUpgradeCost("expansion") + ")"));
-        buttonList.add(new AlphaButton(BACK, width / 2 - 45, height - 25, 90, 20, "Back"));
+        int navY = height - 55;
+        int navWidth = Math.min(104, (width - 50) / 5);
+        int totalNav = navWidth * 5 + 8 * 4;
+        int navX = (width - totalNav) / 2;
+        buttonList.add(new AlphaButton(SHOP, navX, navY, navWidth, 22, "Shop"));
+        buttonList.add(new AlphaButton(INVENTORY, navX + navWidth + 8, navY, navWidth, 22, "Inventory"));
+        buttonList.add(new AlphaButton(SELL, navX + (navWidth + 8) * 2, navY, navWidth, 22, "Sell"));
+        buttonList.add(new AlphaButton(UPGRADES, navX + (navWidth + 8) * 3, navY, navWidth, 22, "Upgrades"));
+        buttonList.add(new AlphaButton(BACK, navX + (navWidth + 8) * 4, navY, navWidth, 22, "Back"));
     }
 
     private String plotButtonLabel(PixelGardenGame.Plot plot, long now, int index) {
@@ -170,6 +154,14 @@ public final class PixelGardenGUI extends GuiScreen {
         if (button.id == BACK) {
             saveCloudAsync();
             mc.displayGuiScreen(parent);
+            return;
+        }
+        if (button.id == SHOP || button.id == INVENTORY || button.id == SELL || button.id == UPGRADES) {
+            saveCloudAsync();
+            if (button.id == SHOP) mc.displayGuiScreen(new PixelGardenShopGUI(this));
+            else if (button.id == INVENTORY) mc.displayGuiScreen(new PixelGardenInventoryGUI(this));
+            else if (button.id == SELL) mc.displayGuiScreen(new PixelGardenSellGUI(this));
+            else mc.displayGuiScreen(new PixelGardenUpgradeGUI(this));
             return;
         }
         if (button.id >= CROP_BASE && button.id < CROP_BASE + 4) {
@@ -215,6 +207,24 @@ public final class PixelGardenGUI extends GuiScreen {
 
     private void pixel(int x, int y, int w, int h, int color) {
         drawRect(x, y, x + w, y + h, color);
+    }
+
+    private int inventoryTotal() {
+        int total = 0;
+        for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) total += game.getInventory(crop);
+        return total;
+    }
+
+    private void drawPixelGardenBorder(int x, int y, int w, int h) {
+        int tile = 6;
+        for (int px = x; px < x + w; px += tile) {
+            drawRect(px, y, Math.min(px + tile - 2, x + w), y + 3, 0xFF6AA84F);
+            drawRect(px, y + h - 3, Math.min(px + tile - 2, x + w), y + h, 0xFF4D823B);
+        }
+        for (int py = y; py < y + h; py += tile) {
+            drawRect(x, py, x + 3, Math.min(py + tile - 2, y + h), 0xFF4D823B);
+            drawRect(x + w - 3, py, x + w, Math.min(py + tile - 2, y + h), 0xFF6AA84F);
+        }
     }
 
     private void drawCropArt(PixelGardenGame.Crop crop, int x, int y, int size, long now,
@@ -266,16 +276,10 @@ public final class PixelGardenGUI extends GuiScreen {
 
         int gx = gardenLeft(), gy = gardenTop(), cell = gardenCell(), gap = 4;
         int gardenW = gardenWidth();
-        int sideW = sidePanelWidth();
-        int rightW = sidePanelWidth();
-        panel(leftPanelX(), 58, sideW, height - 92);
-        panel(gx - 8, gy - 30, gardenW + 16, cell * 3 + gap * 2 + 48);
-        panel(rightPanelX(), 58, rightW, height - 92);
-
-        drawString(fontRendererObj, "SEEDS & SHOP", leftPanelX() + 8, 65, 0xFFFFD45A);
-        drawString(fontRendererObj, "INVENTORY / SELL", leftPanelX() + 8, gy + cell * 3 + 5, 0xFFFFD45A);
-        drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 22, 0xFFFFD45A);
-        drawString(fontRendererObj, "UPGRADES", rightPanelX() + 8, 65, 0xFFFFD45A);
+        panel(gx - 22, gy - 36, gardenW + 44, cell * 3 + gap * 2 + 58);
+        drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 25, 0xFFFFD45A);
+        drawString(fontRendererObj, "Choose a plot to plant or harvest", gx + 2, gy - 13, 0xFFB7C4D5);
+        drawPixelGardenBorder(gx - 15, gy - 5, gardenW + 30, cell * 3 + gap * 2 + 20);
 
         List<PixelGardenGame.Plot> plots = game.getPlots();
         for (int i = 0; i < plots.size(); i++) {
@@ -287,9 +291,12 @@ public final class PixelGardenGUI extends GuiScreen {
                     ? 0xFF252A32 : 0xFF5A3823);
             drawRect(x, y, x + cell, y + cell, state == PixelGardenGame.PlotState.LOCKED
                     ? 0xFF30343A : 0xFF86552E);
-            for (int row = 0; row < 4; row++)
-                drawRect(x + 3, y + 5 + row * Math.max(5, cell / 5), x + cell - 3,
-                        y + 7 + row * Math.max(5, cell / 5), 0xFF704326);
+            for (int row = 0; row < 5; row++) {
+                int soilY = y + 5 + row * Math.max(4, cell / 6);
+                drawRect(x + 3, soilY, x + cell - 3, soilY + 2, 0xFF704326);
+                drawRect(x + 5, soilY + 2, x + cell - 5, soilY + 3, 0xFF9A6639);
+            }
+            drawRect(x + 4, y + 4, x + cell - 4, y + 6, 0xFFB47A45);
             if (state == PixelGardenGame.PlotState.LOCKED) {
                 drawCenteredString(fontRendererObj, "LOCKED", x + cell / 2, y + cell / 2 - 4, 0xFF8E949D);
             } else if (state == PixelGardenGame.PlotState.EMPTY) {
@@ -309,23 +316,8 @@ public final class PixelGardenGUI extends GuiScreen {
             }
         }
 
-        int invY = gy + cell * 3 + 27;
-        for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
-            drawString(fontRendererObj, crop.displayName + ": " + game.getInventory(crop),
-                    leftPanelX() + 8, invY + crop.ordinal() * 21, 0xFFE6E9EF);
-        }
-        int upY = 99;
-        String[] names = {"Auto Harvest", "Growth Boost", "Garden Expansion"};
-        String[] desc = {"Auto-collect ripe crops", "Faster new crop growth", "Unlock 3 more plots"};
-        int[] costs = {game.getUpgradeCost("auto_harvest"), game.getUpgradeCost("growth_boost"), game.getUpgradeCost("expansion")};
-        for (int i = 0; i < 3; i++) {
-            int y = upY + i * 63;
-            drawRect(rightPanelX() + 7, y, rightPanelX() + rightW - 7, y + 54, 0xFF151B25);
-            drawString(fontRendererObj, names[i], rightPanelX() + 13, y + 6, 0xFFF0F2F6);
-            drawString(fontRendererObj, desc[i], rightPanelX() + 13, y + 19, 0xFFADB8C8);
-            drawString(fontRendererObj, costs[i] < 0 ? "OWNED / MAX" : "Cost: " + costs[i],
-                    rightPanelX() + 13, y + 32, costs[i] < 0 ? 0xFF83D79A : 0xFFFFD45A);
-        }
+        drawCenteredString(fontRendererObj, "Seeds: " + selectedCrop.displayName + " x" + game.getSeeds(selectedCrop)
+                + "    Harvested inventory: " + inventoryTotal(), width / 2, height - 72, 0xFFE6E9EF);
         drawCenteredString(fontRendererObj, "Plant  >  Grow  >  Harvest  >  Sell  >  Upgrade",
                 width / 2, height - 31, 0xFFFFC83D);
         drawCenteredString(fontRendererObj, cloudStatus, width / 2, height - 18,
