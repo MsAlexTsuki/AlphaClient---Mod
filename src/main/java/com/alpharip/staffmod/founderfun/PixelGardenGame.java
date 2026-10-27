@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -202,8 +203,8 @@ public final class PixelGardenGame {
         JsonArray seedArray = new JsonArray();
         JsonArray inventoryArray = new JsonArray();
         for (Crop crop : Crop.values()) {
-            seedArray.add(seeds[crop.ordinal()]);
-            inventoryArray.add(inventory[crop.ordinal()]);
+            seedArray.add(new JsonPrimitive(seeds[crop.ordinal()]));
+            inventoryArray.add(new JsonPrimitive(inventory[crop.ordinal()]));
         }
         root.add("seeds", seedArray);
         root.add("inventory", inventoryArray);
