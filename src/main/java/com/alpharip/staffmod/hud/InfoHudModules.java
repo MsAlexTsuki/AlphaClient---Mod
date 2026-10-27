@@ -248,7 +248,12 @@ public final class InfoHudModules {
             if (preview && stack == null) stack = diamondPreviewItem(i);
             drawItem(mc, stack, itemX, itemY);
             String label = stack == null ? (armorShowNames ? "Empty" : "") : ((armorShowNames ? stack.getDisplayName() : "") + (armorShowDurability ? " " + durability(stack) : "" )).trim();
-            if (!label.isEmpty()) mc.fontRendererObj.drawStringWithShadow(fit(mc, label, 180), itemX + 20, itemY + 5, getArmorColor());
+            if (!label.isEmpty()) {
+                String fitted = fit(mc, label, 180);
+                boolean alignLeft = armorX > new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth() / 2;
+                int textX = alignLeft ? itemX - 2 - mc.fontRendererObj.getStringWidth(fitted) : itemX + 20;
+                mc.fontRendererObj.drawStringWithShadow(fitted, textX, itemY + 5, getArmorColor());
+            }
         }
         GL11.glPopMatrix();
     }
