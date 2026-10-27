@@ -266,7 +266,7 @@ public final class PixelGardenGame {
             if (plot.unlocked && cropValues != null && plantedAtValues != null
                     && i < cropValues.length && i < plantedAtValues.length
                     && cropValues[i] != null && plantedAtValues[i] > 0L) {
-                plot.plant(cropValues[i], plantedAtValues[i]);
+                plot.plant(cropValues[i], plantedAtValues[i], growthLevels);
             }
         }
         lastProcessedAt = savedAt > 0L ? savedAt : System.currentTimeMillis();
