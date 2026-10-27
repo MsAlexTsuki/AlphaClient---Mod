@@ -61,38 +61,52 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
         int leftCol = left + 12;
         int rightCol = leftCol + colWidth + gap;
         int y = top + 56;
+        boolean settingsEnabled = module.isConfiguredEnabled();
 
         buttonList.add(new AlphaButton(ENABLED, width / 2 - 100, y, 200, 20,
-                "AIMASSIST: " + (module.isConfiguredEnabled() ? "ON" : "OFF"),
-                module.isConfiguredEnabled()));
+                "AIMASSIST: " + (settingsEnabled ? "ON" : "OFF"),
+                settingsEnabled));
 
         int rowY = top + 100;
         addStepper(CORRECTION_DOWN, CORRECTION_UP, leftCol, rowY, colWidth,
-                "SPEED " + AimAssistSettings.getCorrectionSpeed() + "%");
+                "SPEED " + AimAssistSettings.getCorrectionSpeed() + "%", settingsEnabled);
         addStepper(DELAY_DOWN, DELAY_UP, leftCol, rowY + 34, colWidth,
-                "DELAY " + AimAssistSettings.getReactionDelayMs() + "ms");
+                "DELAY " + AimAssistSettings.getReactionDelayMs() + "ms", settingsEnabled);
         addStepper(ANGLE_DOWN, ANGLE_UP, leftCol, rowY + 68, colWidth,
-                "ANGLE " + AimAssistSettings.getMaximumAngleDegrees() + "deg");
+                "ANGLE " + AimAssistSettings.getMaximumAngleDegrees() + "deg", settingsEnabled);
 
         addStepper(HORIZONTAL_DOWN, HORIZONTAL_UP, rightCol, rowY, colWidth,
-                "HORIZONTAL " + AimAssistSettings.getHorizontalSpeed() + "/20");
+                "HORIZONTAL " + AimAssistSettings.getHorizontalSpeed() + "/20", settingsEnabled);
         addStepper(VERTICAL_DOWN, VERTICAL_UP, rightCol, rowY + 34, colWidth,
-                "VERTICAL " + AimAssistSettings.getVerticalSpeed() + "/20");
-        buttonList.add(new AlphaButton(AREA, rightCol, rowY + 68, colWidth, 20,
-                "AREA: " + AimAssistSettings.getTargetArea().getLabel()));
+                "VERTICAL " + AimAssistSettings.getVerticalSpeed() + "/20", settingsEnabled);
+        AlphaButton areaButton = new AlphaButton(AREA, rightCol, rowY + 68, colWidth, 20,
+                "AREA: " + AimAssistSettings.getTargetArea().getLabel(), settingsEnabled);
+        areaButton.enabled = settingsEnabled;
+        buttonList.add(areaButton);
 
-        buttonList.add(new AlphaButton(RESET, left + 12, top + panelHeight - 31, 100, 18, "RESET DEFAULTS"));
+        AlphaButton resetButton = new AlphaButton(RESET, left + 12, top + panelHeight - 31, 100, 18, "RESET DEFAULTS");
+        resetButton.enabled = settingsEnabled;
+        buttonList.add(resetButton);
         buttonList.add(new AlphaButton(BACK, left + panelWidth - 87, top + panelHeight - 31, 75, 18, "BACK"));
     }
 
-    private void addStepper(int downId, int upId, int x, int y, int colWidth, String label) {
+    private void addStepper(int downId, int upId, int x, int y, int colWidth, String label,
+                            boolean settingsEnabled) {
         int arrowWidth = 22;
         int valueWidth = colWidth - arrowWidth * 2 - 4;
-        buttonList.add(new AlphaButton(downId, x, y, arrowWidth, 20, "-"));
-        GuiButton value = new AlphaButton(1000 + downId, x + arrowWidth + 2, y, valueWidth, 20, label);
-        value.enabled = false;
-        buttonList.add(value);
-        buttonList.add(new AlphaButton(upId, x + arrowWidth + valueWidth + 4, y, arrowWidth, 20, "+"));
+
+        AlphaButton downButton = new AlphaButton(downId, x, y, arrowWidth, 20, "-");
+        downButton.enabled = settingsEnabled;
+        buttonList.add(downButton);
+
+        AlphaButton valueButton = new AlphaButton(1000 + downId, x + arrowWidth + 2, y, valueWidth, 20, label,
+                settingsEnabled);
+        valueButton.enabled = settingsEnabled;
+        buttonList.add(valueButton);
+
+        AlphaButton upButton = new AlphaButton(upId, x + arrowWidth + valueWidth + 4, y, arrowWidth, 20, "+");
+        upButton.enabled = settingsEnabled;
+        buttonList.add(upButton);
     }
 
     @Override
@@ -105,6 +119,11 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
         AlphaModule module = getAimAssistModule();
         if (module == null || !module.isImplemented() || !module.isUnlocked()) {
             mc.displayGuiScreen(parent);
+            return;
+        }
+
+        // All configuration controls, including reset and target-area selection, are locked while OFF.
+        if (!module.isConfiguredEnabled() && button.id != ENABLED && button.id != BACK) {
             return;
         }
 
