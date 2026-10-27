@@ -218,6 +218,7 @@ public final class PixelGardenGame {
                 ? root.getAsJsonArray("plots") : new JsonArray();
         Crop[] crops = new Crop[plots.size()];
         long[] planted = new long[plots.size()];
+        long[] durations = new long[plots.size()];
         int restoredUnlocked = 0;
         for (int i = 0; i < Math.min(savedPlots.size(), plots.size()); i++) {
             JsonElement element = savedPlots.get(i);
@@ -229,9 +230,10 @@ public final class PixelGardenGame {
                 catch (IllegalArgumentException ignored) { crops[i] = null; }
             }
             if (savedPlot.has("planted_at")) planted[i] = Math.max(0L, savedPlot.get("planted_at").getAsLong());
+            if (savedPlot.has("grow_duration")) durations[i] = Math.max(5L * 60L * 1000L, savedPlot.get("grow_duration").getAsLong());
         }
         restore(savedCoins, savedSeeds, savedInventory, savedAuto, savedGrowth,
-                Math.max(unlocked, restoredUnlocked), crops, planted, savedAt);
+                Math.max(unlocked, restoredUnlocked), crops, planted, durations, savedAt);
     }
 
     private static int[] readIntArray(JsonElement element, int length) {
@@ -249,7 +251,7 @@ public final class PixelGardenGame {
     /** Restore validated state from the account save service. */
     public synchronized void restore(int coinsValue, int[] seedValues, int[] inventoryValues,
             boolean autoHarvestValue, int growthLevelValue, int unlockedCount, Crop[] cropValues,
-            long[] plantedAtValues, long savedAt) {
+            long[] plantedAtValues, long[] growDurationValues, long savedAt) {
         coins = Math.max(0, coinsValue);
         for (Crop crop : Crop.values()) {
             int i = crop.ordinal();
@@ -267,6 +269,9 @@ public final class PixelGardenGame {
                     && i < cropValues.length && i < plantedAtValues.length
                     && cropValues[i] != null && plantedAtValues[i] > 0L) {
                 plot.plant(cropValues[i], plantedAtValues[i], growthLevels);
+                if (growDurationValues != null && i < growDurationValues.length && growDurationValues[i] > 0L) {
+                    plot.growDurationMillis = Math.max(5L * 60L * 1000L, growDurationValues[i]);
+                }
             }
         }
         lastProcessedAt = savedAt > 0L ? savedAt : System.currentTimeMillis();
