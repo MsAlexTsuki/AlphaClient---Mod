@@ -239,8 +239,9 @@ public final class InfoHudModules {
         GL11.glTranslatef(x, y, 0.0F);
         float armorScale = 0.65F * HudScaleConfig.get("armor");
         GL11.glScalef(armorScale, armorScale, 1.0F);
+        boolean alignLeft = armorX > new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth() / 2;
         for (int i = 0; i < items.length; i++) {
-            int itemX = armorLayout == 0 ? i * 92 : 0;
+            int itemX = armorLayout == 0 ? (alignLeft ? -i * 92 : i * 92) : 0;
             int itemY = armorLayout == 0 ? 0 : i * 20;
             ItemStack stack = items[i];
             // Show a representative diamond loadout in the editor when a slot is empty.
@@ -250,7 +251,6 @@ public final class InfoHudModules {
             String label = stack == null ? (armorShowNames ? "Empty" : "") : ((armorShowNames ? stack.getDisplayName() : "") + (armorShowDurability ? " " + durability(stack) : "" )).trim();
             if (!label.isEmpty()) {
                 String fitted = fit(mc, label, 180);
-                boolean alignLeft = armorX > new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth() / 2;
                 int textX = alignLeft ? itemX - 2 - mc.fontRendererObj.getStringWidth(fitted) : itemX + 20;
                 mc.fontRendererObj.drawStringWithShadow(fitted, textX, itemY + 5, getArmorColor());
             }
