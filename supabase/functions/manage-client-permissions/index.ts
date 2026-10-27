@@ -143,6 +143,26 @@ Deno.serve(async (req: Request) => {
         if (rankEntry) return { ...item, configured: true, allowed: rankEntry.enabled, source: "rank", rank_keys: rankEntry.rankKeys };
         return { ...item, configured: false, allowed: false, source: "default" };
       });
+      // A granted Pixel Garden root ID grants every canonical Pixel Garden child ID.
+      const pixelGardenRoot = permissions.find((item: { permission_key: string; allowed: boolean }) => item.permission_key === "pixelgarden");
+      if (pixelGardenRoot?.allowed === true) {
+        const pixelGardenChildren = [
+          "menu.pixelgarden",
+          "commands.pixelgarden",
+          "pixelgarden.shop",
+          "pixelgarden.upgrades",
+          "pixelgarden.settings",
+        ];
+        for (const childKey of pixelGardenChildren) {
+          const child = permissions.find((item: { permission_key: string }) => item.permission_key === childKey);
+          if (child) {
+            child.allowed = true;
+            child.configured = true;
+            child.source = pixelGardenRoot.source;
+          }
+        }
+      }
+
       const { data: aliases, error: aliasError } = await admin.from("client_command_permission_aliases").select("alias_key, permission_key");
       if (aliasError) throw new Error("Could not load renamed permission IDs.");
       const canonical = new Map(permissions.map((item: Record<string, unknown>) => [item.permission_key as string, item]));
