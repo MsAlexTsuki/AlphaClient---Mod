@@ -200,6 +200,15 @@ public final class PermissionService {
                 safe.put(entry.getKey(), entry.getValue());
             }
         }
+        // The Pixel Garden root permission grants every Pixel Garden sub-permission.
+        // Explicit child permissions remain supported for accounts without the root grant.
+        if (Boolean.TRUE.equals(safe.get("pixelgarden"))) {
+            safe.put("menu.pixelgarden", Boolean.TRUE);
+            safe.put("commands.pixelgarden", Boolean.TRUE);
+            safe.put("pixelgarden.shop", Boolean.TRUE);
+            safe.put("pixelgarden.upgrades", Boolean.TRUE);
+            safe.put("pixelgarden.settings", Boolean.TRUE);
+        }
         verifiedCommandPermissions = Collections.unmodifiableMap(safe);
         commandPermissionsVerified = true;
     }
