@@ -31,6 +31,7 @@ public final class WTapAssistance {
     private int wCooldownTicks;
     private int sCooldownTicks;
     private boolean activeUsesSTap;
+    private boolean activeWWasDown;
     private int activeMode;
     private int activeCooldown;
     private boolean activeRequireW;
@@ -134,6 +135,7 @@ public final class WTapAssistance {
         if (releaseTicks > 0 || pendingDelay >= 0) return;
 
         activeUsesSTap = useSTap;
+        activeWWasDown = Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode());
         activeMode = selectedMode;
         activeCooldown = selectedCooldown;
         activeRequireW = selectedRequireW;
@@ -229,7 +231,15 @@ public final class WTapAssistance {
                             Keyboard.isKeyDown(activeSKeyCode));
                     activeSKeyCode = -1;
                 }
-                restoreForwardKey(mc);
+                if (!activeSPhase && activeWWasDown
+                        && Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode())) {
+                    // Re-assert W after a W-Tap release so the player immediately
+                    // resumes forward movement instead of remaining stopped.
+                    KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
+                } else {
+                    restoreForwardKey(mc);
+                }
+                activeWWasDown = false;
             }
         }
     }
