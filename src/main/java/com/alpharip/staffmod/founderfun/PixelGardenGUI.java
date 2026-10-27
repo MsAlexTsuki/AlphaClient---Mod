@@ -141,7 +141,7 @@ public final class PixelGardenGUI extends GuiScreen {
         switch (plot.getState(now)) {
             case LOCKED: return "LOCKED";
             case EMPTY: return "+ Plant";
-            case GROWING: return plot.getCrop().displayName + " " + ((plot.getRemainingMillis(now) + 59999L) / 60000L) + "m";
+            case GROWING: return "";
             case READY: return "HARVEST!";
             default: return "Plot " + (index + 1);
         }
