@@ -1,3 +1,4 @@
+// --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.quality;
 
 import com.alpharip.staffmod.profile.ModuleProfileManager;
