@@ -291,11 +291,12 @@ public final class PixelGardenGUI extends GuiScreen {
         drawString(fontRendererObj, game.getUnlockedPlots() + " / " + PixelGardenGame.MAX_PLOTS + " plots",
                 width / 2 + 75, 15, 0xFFE3E7EE);
 
-        int gx = gardenLeft(), gy = gardenTop(), cell = gardenCell(), gap = 4;
+        int gx = gardenLeft(), gy = gardenTop(), cell = gardenCell(), tileHeight = gardenTileHeight(), gap = 4;
+        int visibleRows = visiblePlotRows();
         int gardenW = gardenWidth();
-        panel(gx - 22, gy - 36, gardenW + 44, cell * 3 + gap * 2 + 58);
-        drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 25, 0xFFFFD45A);
-        drawString(fontRendererObj, "Choose a plot to plant or harvest", gx + 2, gy - 13, 0xFFB7C4D5);
+        panel(gx - 12, gy - 30, gardenW + 24, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 48);
+        drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 22, 0xFFFFD45A);
+        drawString(fontRendererObj, "Choose a plot to plant or harvest", gx + 2, gy - 10, 0xFFB7C4D5);
         drawPixelGardenBorder(gx - 7, gy - 3, gardenW + 14, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 12);
 
         List<PixelGardenGame.Plot> plots = game.getPlots();
