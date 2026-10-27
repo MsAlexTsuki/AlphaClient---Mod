@@ -107,14 +107,14 @@ public final class PixelGardenGUI extends GuiScreen {
         return message == null || message.trim().isEmpty() ? "unknown error" : message;
     }
 
-    private static final int PLOT_COLUMNS = 3;
+    private static final int PLOT_COLUMNS = 6;
     private int gardenCell() {
-        return Math.max(100, Math.min(170, (width - 180) / PLOT_COLUMNS - 6));
+        return Math.max(42, Math.min(86, (width - 100) / PLOT_COLUMNS - 6));
     }
-    private int gardenTileHeight() { return 76; }
+    private int gardenTileHeight() { return 48; }
     private int visiblePlotRows() {
-        int available = height - gardenTop() - 205;
-        return Math.max(1, Math.min(3, available / (gardenTileHeight() + 8)));
+        int available = height - gardenTop() - 165;
+        return Math.max(1, Math.min(6, available / (gardenTileHeight() + 8)));
     }
     private int unlockedPlotCount(List<PixelGardenGame.Plot> plots) {
         int count = 0;
@@ -141,7 +141,7 @@ public final class PixelGardenGUI extends GuiScreen {
     }
     private int gardenWidth() { return gardenCell() * PLOT_COLUMNS + 20; }
     private int gardenLeft() { return (width - gardenWidth()) / 2; }
-    private int gardenTop() { return Math.max(150, (height - (gardenTileHeight() * 3 + 150)) / 2); }
+    private int gardenTop() { return Math.max(95, (height - (gardenTileHeight() * 5 + 120)) / 2); }
 
     @Override
     public void initGui() {
@@ -317,7 +317,7 @@ public final class PixelGardenGUI extends GuiScreen {
         drawString(fontRendererObj, game.getUnlockedPlots() + " / " + PixelGardenGame.MAX_PLOTS + " plots",
                 width / 2 + 75, 15, 0xFFE3E7EE);
 
-        int gx = gardenLeft(), gy = gardenTop(), cell = gardenCell(), tileHeight = gardenTileHeight(), gap = 8;
+        int gx = gardenLeft(), gy = gardenTop(), cell = gardenCell(), tileHeight = gardenTileHeight(), gap = 4;
         int visibleRows = visiblePlotRows();
         int gardenW = gardenWidth();
         panel(gx - 12, gy - 60, gardenW + 24, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 86);
@@ -342,10 +342,10 @@ public final class PixelGardenGUI extends GuiScreen {
             drawRect(x + 3, y + tileHeight - 8, x + cell - 3, y + tileHeight - 5, 0xFF704326);
             drawRect(x + 5, y + tileHeight - 5, x + cell - 5, y + tileHeight - 3, 0xFF9A6639);
             if (state == PixelGardenGame.PlotState.EMPTY) {
-                drawCropArt(selectedCrop, x, y, 48, now, state);
+                drawCropArt(selectedCrop, x, y, Math.min(cell, tileHeight), now, state);
                 drawCenteredString(fontRendererObj, "PLANT " + selectedCrop.displayName.toUpperCase(), x + cell / 2, y + tileHeight - 15, 0xFFF4E6C8);
             } else {
-                drawCropArt(plot.getCrop(), x, y, 48, now, state);
+                drawCropArt(plot.getCrop(), x, y, Math.min(cell, tileHeight), now, state);
                 if (state == PixelGardenGame.PlotState.READY) {
                     drawRect(x + 3, y + 3, x + cell - 3, y + 15, 0xDD172015);
                     drawCenteredString(fontRendererObj, "READY - CLICK TO HARVEST", x + cell / 2, y + 5, 0xFFFFE46B);
