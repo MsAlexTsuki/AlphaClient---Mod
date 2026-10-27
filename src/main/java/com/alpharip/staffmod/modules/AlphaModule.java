@@ -128,6 +128,11 @@ public final class AlphaModule {
             return true;
         }
 
+        // AimAssist requires the authenticated Founder session; offline test-mode rank fallback is insufficient.
+        if ("aim-assist".equals(id)) {
+            return SupabaseCommunityService.isSignedInFounder();
+        }
+
         // Founder-only modules remain exclusive and cannot be granted to other ranks.
         if (category == Category.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
