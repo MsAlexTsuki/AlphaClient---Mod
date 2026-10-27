@@ -28,6 +28,7 @@ public final class PixelGardenGUI extends GuiScreen {
     private PixelGardenGame.Crop selectedCrop = PixelGardenGame.Crop.WHEAT;
     private volatile String cloudStatus = "Cloud save: checking account...";
     private volatile boolean loadingCloud = false;
+    private volatile boolean cloudReady = false;
 
     public PixelGardenGUI(GuiScreen parent) {
         this.parent = parent;
@@ -36,12 +37,16 @@ public final class PixelGardenGUI extends GuiScreen {
 
     private void loadCloudSaveIfNeeded() {
         if (!SupabaseCommunityService.isSignedIn()) {
+            synchronized (PixelGardenGUI.class) { loadedAccount = null; }
+            game.resetToDefaults();
+            cloudReady = false;
             cloudStatus = "Cloud save unavailable: sign in to your Alpha Account.";
             return;
         }
         final String account = SupabaseCommunityService.getSignedInEmail();
         synchronized (PixelGardenGUI.class) {
             if (account != null && account.equals(loadedAccount)) {
+                cloudReady = true;
                 cloudStatus = "Cloud save: connected to " + account;
                 return;
             }
@@ -51,6 +56,8 @@ public final class PixelGardenGUI extends GuiScreen {
             }
             loadInProgress = true;
         }
+        game.resetToDefaults();
+        cloudReady = false;
         loadingCloud = true;
         cloudStatus = "Cloud save: loading account data...";
         Thread thread = new Thread(new Runnable() {
@@ -59,10 +66,12 @@ public final class PixelGardenGUI extends GuiScreen {
                     JsonObject saved = SupabaseCommunityService.loadPixelGardenSave();
                     if (saved != null) game.loadSaveData(saved);
                     synchronized (PixelGardenGUI.class) { loadedAccount = account; }
+                    cloudReady = true;
                     cloudStatus = saved == null
                             ? "Cloud save: new garden linked to " + account
                             : "Cloud save: synced with " + account;
                 } catch (Exception exception) {
+                    cloudReady = false;
                     cloudStatus = "Cloud save failed: " + safeMessage(exception);
                     System.err.println("[AlphaClient] Pixel Garden load failed: " + exception.getMessage());
                 } finally {
@@ -77,7 +86,7 @@ public final class PixelGardenGUI extends GuiScreen {
     }
 
     private void saveCloudAsync() {
-        if (!SupabaseCommunityService.isSignedIn() || loadingCloud) return;
+        if (!SupabaseCommunityService.isSignedIn() || loadingCloud || !cloudReady) return;
         final String account = SupabaseCommunityService.getSignedInEmail();
         final JsonObject snapshot = game.toSaveData();
         Thread thread = new Thread(new Runnable() {
