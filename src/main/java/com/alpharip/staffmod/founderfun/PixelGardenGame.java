@@ -13,7 +13,6 @@ import java.util.List;
  */
 public final class PixelGardenGame {
     public static final long GROW_TIME_MILLIS = 20L * 60L * 1000L;
-    public static final long MAX_OFFLINE_PROGRESS_MILLIS = 2L * 60L * 60L * 1000L;
     public static final int STARTING_COINS = 100;
     public static final int STARTING_PLOTS = 9;
     public static final int SEED_PRICE = 5;
@@ -122,19 +121,4 @@ public final class PixelGardenGame {
         return true;
     }
 
-    /**
-     * Applies at most the configured offline window to growing crops.
-     * The account-backed save/load layer will supply the persisted timestamp.
-     */
-    public synchronized void applyOfflineProgress(long lastSeenAt, long now) {
-        if (lastSeenAt <= 0L || now <= lastSeenAt) return;
-        long elapsed = Math.min(now - lastSeenAt, MAX_OFFLINE_PROGRESS_MILLIS);
-        long effectiveNow = lastSeenAt + elapsed;
-        for (Plot plot : plots) {
-            if (plot.unlocked && plot.plantedAt > 0L && plot.plantedAt < effectiveNow) {
-                // Keep planting timestamps unchanged; getState() naturally marks mature crops ready.
-                // Offline automation is intentionally not applied until its rules are finalized.
-            }
-        }
-    }
 }
