@@ -3,6 +3,7 @@ package com.alpharip.staffmod.config;
 
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.combat.AimAssistSettings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -33,7 +34,12 @@ public final class AlphaClientConfig {
             reader = new FileReader(file);
             JsonElement root = new JsonParser().parse(reader);
             if (root != null && root.isJsonObject()) {
-                JsonObject modules = root.getAsJsonObject().getAsJsonObject("modules");
+                JsonObject rootObject = root.getAsJsonObject();
+                JsonObject modules = rootObject.getAsJsonObject("modules");
+                JsonObject aimAssist = rootObject.getAsJsonObject("aimAssist");
+                if (aimAssist != null) {
+                    AimAssistSettings.loadFromJson(aimAssist);
+                }
                 if (modules != null) {
                     for (AlphaModule module : AlphaModuleRegistry.getAll()) {
                         JsonElement value = modules.get(module.getId());
@@ -74,6 +80,7 @@ public final class AlphaClientConfig {
             modules.addProperty(module.getId(), module.isConfiguredEnabled());
         }
         root.add("modules", modules);
+        root.add("aimAssist", AimAssistSettings.toJson());
         FileWriter writer = null;
         try {
             writer = new FileWriter(file);
