@@ -600,6 +600,14 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                 }
                 return;
             }
+            if ("s-tap-assistance".equals(module.getId())) {
+                if (selectedRank == PermissionService.Rank.FOUNDER
+                        && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                        && module.isImplemented() && module.isUnlocked()) {
+                    mc.displayGuiScreen(new STapSettingsGui(this));
+                }
+                return;
+            }
             if (!module.isUnlocked()) return;
             if ("staffmods".equals(module.getId())) {
                 mc.displayGuiScreen(new BhopSettingsGui(this));
