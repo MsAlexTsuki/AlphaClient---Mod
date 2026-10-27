@@ -1,3 +1,4 @@
+// --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.gui;
 
 public class StaffModeManager {
