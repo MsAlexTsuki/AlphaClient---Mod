@@ -134,6 +134,16 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         );
         MODULES.add(wTap);
+
+        AlphaModule sTap = new AlphaModule(
+                "s-tap-assistance",
+                "S-Tap Assistance",
+                "Randomizable W-key tap style; does not require the S key.",
+                AlphaModule.Category.FOUNDER,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(sTap);
     }
 
     private AlphaModuleRegistry() {

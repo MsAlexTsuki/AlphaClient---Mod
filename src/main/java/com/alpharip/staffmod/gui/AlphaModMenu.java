@@ -524,6 +524,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                         return;
                     }
                     if ("w-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new WTapSettingsGui(this)); return; }
+                    if ("s-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new STapSettingsGui(this)); return; }
                     if ("legacy-pvp".equals(clickedModule.getId())
                             && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         mc.displayGuiScreen(new LegacyPvpSettingsGui(this));

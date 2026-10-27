@@ -108,7 +108,8 @@ public final class WTapAssistance {
             KeyBinding.setKeyBindState(keyCode, physicalW);
         }
 
-        if (cooldownTicks > 0) cooldownTicks--;
+        if (wCooldownTicks > 0) wCooldownTicks--;
+        if (sCooldownTicks > 0) sCooldownTicks--;
         if (pendingDelay > 0) {
             pendingDelay--;
             return;
