@@ -1,6 +1,10 @@
 // --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.founderfun;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -169,6 +173,76 @@ public final class PixelGardenGame {
         lastProcessedAt = now;
     }
     public synchronized long getLastProcessedAt() { return lastProcessedAt; }
+    /** Creates a portable account-save payload; never includes auth/session secrets. */
+    public synchronized JsonObject toSaveData() {
+        JsonObject root = new JsonObject();
+        root.addProperty("version", 1);
+        root.addProperty("coins", coins);
+        root.addProperty("auto_harvest", autoHarvest);
+        root.addProperty("growth_levels", growthLevels);
+        root.addProperty("unlocked_plots", getUnlockedPlots());
+        root.addProperty("last_processed_at", lastProcessedAt);
+        JsonArray seedArray = new JsonArray();
+        JsonArray inventoryArray = new JsonArray();
+        for (Crop crop : Crop.values()) {
+            seedArray.add(seeds[crop.ordinal()]);
+            inventoryArray.add(inventory[crop.ordinal()]);
+        }
+        root.add("seeds", seedArray);
+        root.add("inventory", inventoryArray);
+        JsonArray plotArray = new JsonArray();
+        for (Plot plot : plots) {
+            JsonObject savedPlot = new JsonObject();
+            savedPlot.addProperty("unlocked", plot.unlocked);
+            if (plot.crop != null) savedPlot.addProperty("crop", plot.crop.name());
+            savedPlot.addProperty("planted_at", plot.plantedAt);
+            plotArray.add(savedPlot);
+        }
+        root.add("plots", plotArray);
+        return root;
+    }
+
+    /** Restores a save after validating every value and then applies capped offline progress. */
+    public synchronized void loadSaveData(JsonObject root) {
+        if (root == null) return;
+        int savedCoins = root.has("coins") ? root.get("coins").getAsInt() : STARTING_COINS;
+        int savedGrowth = root.has("growth_levels") ? root.get("growth_levels").getAsInt() : 0;
+        boolean savedAuto = root.has("auto_harvest") && root.get("auto_harvest").getAsBoolean();
+        int unlocked = root.has("unlocked_plots") ? root.get("unlocked_plots").getAsInt() : STARTING_PLOTS;
+        long savedAt = root.has("last_processed_at") ? root.get("last_processed_at").getAsLong() : System.currentTimeMillis();
+        int[] savedSeeds = readIntArray(root.get("seeds"), Crop.values().length);
+        int[] savedInventory = readIntArray(root.get("inventory"), Crop.values().length);
+        JsonArray savedPlots = root.has("plots") && root.get("plots").isJsonArray()
+                ? root.getAsJsonArray("plots") : new JsonArray();
+        Crop[] crops = new Crop[plots.size()];
+        long[] planted = new long[plots.size()];
+        int restoredUnlocked = 0;
+        for (int i = 0; i < Math.min(savedPlots.size(), plots.size()); i++) {
+            JsonElement element = savedPlots.get(i);
+            if (!element.isJsonObject()) continue;
+            JsonObject savedPlot = element.getAsJsonObject();
+            if (savedPlot.has("unlocked") && savedPlot.get("unlocked").getAsBoolean()) restoredUnlocked++;
+            if (savedPlot.has("crop")) {
+                try { crops[i] = Crop.valueOf(savedPlot.get("crop").getAsString()); }
+                catch (IllegalArgumentException ignored) { crops[i] = null; }
+            }
+            if (savedPlot.has("planted_at")) planted[i] = Math.max(0L, savedPlot.get("planted_at").getAsLong());
+        }
+        restore(savedCoins, savedSeeds, savedInventory, savedAuto, savedGrowth,
+                Math.max(unlocked, restoredUnlocked), crops, planted, savedAt);
+    }
+
+    private static int[] readIntArray(JsonElement element, int length) {
+        int[] result = new int[length];
+        if (element == null || !element.isJsonArray()) return result;
+        JsonArray array = element.getAsJsonArray();
+        for (int i = 0; i < Math.min(length, array.size()); i++) {
+            try { result[i] = Math.max(0, array.get(i).getAsInt()); }
+            catch (RuntimeException ignored) { result[i] = 0; }
+        }
+        return result;
+    }
+
 
     /** Restore validated state from the account save service. */
     public synchronized void restore(int coinsValue, int[] seedValues, int[] inventoryValues,
