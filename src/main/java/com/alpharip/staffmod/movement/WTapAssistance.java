@@ -9,9 +9,13 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
+import java.util.concurrent.ThreadLocalRandom;
 
-
-/** Client-side W-Tap helper. Settings are shared with the W-Tap GUI. */
+/**
+ * Shared W-key tap input handler. When both styles are enabled, each attack
+ * randomly selects either the W-Tap settings or the S-Tap settings.
+ * S-Tap also releases W; it never requires the physical S key.
+ */
 public final class WTapAssistance {
     private static boolean enabled;
     private static boolean requireW = true;
@@ -23,7 +27,12 @@ public final class WTapAssistance {
 
     private int pendingDelay = -1;
     private int releaseTicks;
-    private int cooldownTicks;
+    private int wCooldownTicks;
+    private int sCooldownTicks;
+    private boolean activeUsesSTap;
+    private int activeMode;
+    private int activeCooldown;
+    private boolean activeRequireW;
 
     public static boolean isEnabled() { return enabled; }
 
@@ -31,6 +40,18 @@ public final class WTapAssistance {
         return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
                 || PermissionService.hasModAccess("w-tap-assistance")
                 || PermissionService.hasCommandPermission("command.wtap", false);
+    }
+
+    private static boolean isWTapAvailable() {
+        return enabled && hasFounderAccess() && mode != 3;
+    }
+
+    private static boolean isSTapAvailable() {
+        return STapAssistance.isEnabled() && STapAssistance.getMode() != 3;
+    }
+
+    private boolean isSelectedStyleAvailable() {
+        return activeUsesSTap ? isSTapAvailable() : isWTapAvailable();
     }
 
     public static void setEnabled(boolean value) {
@@ -60,19 +81,39 @@ public final class WTapAssistance {
     public static void setTarget(int value) {
         if (hasFounderAccess()) target = Math.max(0, Math.min(1, value));
     }
+
     @SubscribeEvent
     public void onAttackEntity(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (!enabled || mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer
-                || mc.currentScreen != null) return;
-        if (!hasFounderAccess()) return;
+        if (mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer
+                || mc.currentScreen != null || mc.gameSettings == null) return;
+
+        // If one style is cooling down, the other available style can handle this attack.
+        boolean wAvailable = isWTapAvailable() && wCooldownTicks <= 0;
+        boolean sAvailable = isSTapAvailable() && sCooldownTicks <= 0;
+        if (!wAvailable && !sAvailable) return;
+
+        // Exactly one style is chosen for each attack. If only one is available, use it.
+        boolean useSTap = sAvailable && (!wAvailable || ThreadLocalRandom.current().nextBoolean());
         Entity victim = event.target;
         if (!(victim instanceof EntityLivingBase)) return;
-        if (target == 0 && !(victim instanceof EntityPlayer)) return;
 
-        if (mode == 3 || (requireW && !Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode()))) return;
-        if (cooldownTicks > 0 || releaseTicks > 0 || pendingDelay >= 0) return;
-        pendingDelay = delay;
+        int selectedTarget = useSTap ? STapAssistance.getTarget() : target;
+        boolean selectedRequireW = useSTap ? STapAssistance.isRequireW() : requireW;
+        int selectedMode = useSTap ? STapAssistance.getMode() : mode;
+        int selectedDelay = useSTap ? STapAssistance.getDelay() : delay;
+        int selectedCooldown = useSTap ? STapAssistance.getCooldown() : cooldown;
+
+        if (selectedTarget == 0 && !(victim instanceof EntityPlayer)) return;
+        if (selectedMode == 3 || (selectedRequireW
+                && !Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode()))) return;
+        if (releaseTicks > 0 || pendingDelay >= 0) return;
+
+        activeUsesSTap = useSTap;
+        activeMode = selectedMode;
+        activeCooldown = selectedCooldown;
+        activeRequireW = selectedRequireW;
+        pendingDelay = selectedDelay;
     }
 
     @SubscribeEvent
@@ -82,8 +123,11 @@ public final class WTapAssistance {
         if (mc == null || mc.thePlayer == null || mc.gameSettings == null) {
             pendingDelay = -1;
             releaseTicks = 0;
+            wCooldownTicks = 0;
+            sCooldownTicks = 0;
             return;
         }
+
         int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
         boolean physicalW = Keyboard.isKeyDown(keyCode);
 
@@ -94,42 +138,49 @@ public final class WTapAssistance {
             return;
         }
 
-        if (!enabled || !hasFounderAccess() || mode == 3) {
+        if (!isWTapAvailable() && !isSTapAvailable()) {
             restoreForwardKey(mc);
-            pendingDelay = -1;
-            releaseTicks = 0;
+            clearPendingTap();
             return;
         }
 
-        // Outside an active release, keep Minecraft's forward state synchronized with the real key.
-        // This restores movement on the next client tick even if the physical key never generated
-        // another key-down event after W-Tap temporarily released it.
+        if ((pendingDelay >= 0 || releaseTicks > 0) && !isSelectedStyleAvailable()) {
+            clearPendingTap();
+            restoreForwardKey(mc);
+            return;
+        }
+
         if (releaseTicks <= 0 && pendingDelay < 0) {
             KeyBinding.setKeyBindState(keyCode, physicalW);
         }
 
         if (wCooldownTicks > 0) wCooldownTicks--;
         if (sCooldownTicks > 0) sCooldownTicks--;
+
         if (pendingDelay > 0) {
             pendingDelay--;
             return;
         }
         if (pendingDelay == 0) {
             pendingDelay = -1;
-            if (!requireW || physicalW) {
+            if (!activeRequireW || physicalW) {
                 KeyBinding.setKeyBindState(keyCode, false);
-                releaseTicks = 1 + mode;
-                cooldownTicks = cooldown;
+                releaseTicks = 1 + activeMode;
+                if (activeUsesSTap) sCooldownTicks = activeCooldown;
+                else wCooldownTicks = activeCooldown;
             }
             return;
         }
         if (releaseTicks > 0) {
-            // Reassert the release for the whole tap; physical W key events must not cancel it early.
             KeyBinding.setKeyBindState(keyCode, false);
             releaseTicks--;
             if (releaseTicks == 0) restoreForwardKey(mc);
-            return;
         }
+    }
+
+    private void clearPendingTap() {
+        pendingDelay = -1;
+        releaseTicks = 0;
     }
 
     private static void restoreForwardKey(Minecraft mc) {
