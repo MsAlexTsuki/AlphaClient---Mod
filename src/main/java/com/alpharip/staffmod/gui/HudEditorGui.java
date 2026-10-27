@@ -222,7 +222,9 @@ public class HudEditorGui extends AlphaGuiScreen {
         }
 
         int ahx = InfoHudModules.getArmorX(), ahy = InfoHudModules.getArmorY();
-        if (mouseButton == 0 && mouseX >= ahx && mouseX <= ahx + InfoHudModules.getArmorEditorWidth()
+        int armorWidth = (int)(InfoHudModules.getArmorEditorWidth() * HudScaleConfig.get("armor"));
+        int armorLeft = ahx > width / 2 ? ahx - armorWidth : ahx;
+        if (mouseButton == 0 && mouseX >= armorLeft && mouseX <= armorLeft + armorWidth
                 && mouseY >= ahy && mouseY <= ahy + InfoHudModules.getArmorEditorHeight()) {
             dragging = true;
             selectedHud = "armor";
@@ -326,8 +328,13 @@ public class HudEditorGui extends AlphaGuiScreen {
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 SessionTimerHud.setHudPosition(x, y);
             } else if (armorDragging) {
-                x = Math.max(0, Math.min(Math.max(0, width - InfoHudModules.getArmorEditorWidth()), x));
+                int itemWidth = (int)(InfoHudModules.getArmorEditorWidth() * HudScaleConfig.get("armor"));
                 y = Math.max(0, Math.min(Math.max(0, height - InfoHudModules.getArmorEditorHeight()), y));
+                if (InfoHudModules.getArmorX() > width / 2) {
+                    x = Math.max(itemWidth, Math.min(width, x));
+                } else {
+                    x = Math.max(0, Math.min(Math.max(0, width - itemWidth), x));
+                }
                 InfoHudModules.setArmorPosition(x, y);
             } else if (potionDragging) {
                 // Keep the potion icon draggable all the way to the right edge.
