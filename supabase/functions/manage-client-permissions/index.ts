@@ -348,6 +348,24 @@ Deno.serve(async (req: Request) => {
         if (rankEntry) return { ...item, configured: true, allowed: rankEntry.enabled, source: "rank", rank_keys: rankEntry.ranks };
         return { ...item, configured: false, allowed: false, source: "default" };
       });
+      // Reflect inherited Pixel Garden child permissions in account-management results too.
+      const pixelGardenRoot = permissions.find((item: { permission_key: string; allowed: boolean }) => item.permission_key === "pixelgarden");
+      if (pixelGardenRoot?.allowed === true) {
+        for (const childKey of [
+          "menu.pixelgarden",
+          "commands.pixelgarden",
+          "pixelgarden.shop",
+          "pixelgarden.upgrades",
+          "pixelgarden.settings",
+        ]) {
+          const child = permissions.find((item: { permission_key: string }) => item.permission_key === childKey);
+          if (child) {
+            child.allowed = true;
+            child.configured = true;
+            child.source = pixelGardenRoot.source;
+          }
+        }
+      }
       return json({ ok: true, target: "account", username: target.username, permissions });
     }
 
