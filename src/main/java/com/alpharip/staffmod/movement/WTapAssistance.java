@@ -34,6 +34,13 @@ public final class WTapAssistance {
     private int activeCooldown;
     private boolean activeRequireW;
 
+    // Keep one style for the whole engagement instead of rerolling on every hit.
+    private Entity fightTarget;
+    private boolean fightStyleChosen;
+    private boolean fightUsesSTap;
+    private int ticksSinceFightAttack;
+    private static final int FIGHT_RESET_TICKS = 40;
+
     public static boolean isEnabled() { return enabled; }
 
     private static boolean hasFounderAccess() {
@@ -88,15 +95,27 @@ public final class WTapAssistance {
         if (mc == null || mc.thePlayer == null || event.entityPlayer != mc.thePlayer
                 || mc.currentScreen != null || mc.gameSettings == null) return;
 
-        // If one style is cooling down, the other available style can handle this attack.
+        Entity victim = event.target;
+        if (!(victim instanceof EntityLivingBase)) return;
+
+        // A new target or a long pause starts a new engagement. Randomize once per
+        // engagement so a fight uses S-Tap consistently, while the next fight can
+        // use the regular W-Tap style instead.
+        if (fightTarget != victim || !fightStyleChosen || ticksSinceFightAttack >= FIGHT_RESET_TICKS) {
+            fightTarget = victim;
+            fightUsesSTap = ThreadLocalRandom.current().nextBoolean();
+            fightStyleChosen = true;
+        }
+        ticksSinceFightAttack = 0;
+
         boolean wAvailable = isWTapAvailable() && wCooldownTicks <= 0;
         boolean sAvailable = isSTapAvailable() && sCooldownTicks <= 0;
         if (!wAvailable && !sAvailable) return;
 
-        // Exactly one style is chosen for each attack. If only one is available, use it.
-        boolean useSTap = sAvailable && (!wAvailable || ThreadLocalRandom.current().nextBoolean());
-        Entity victim = event.target;
-        if (!(victim instanceof EntityLivingBase)) return;
+        // Preserve the engagement's selected style when both are available.
+        // Fall back to the other style only if the selected one is unavailable.
+        boolean useSTap = fightUsesSTap ? sAvailable : !wAvailable && sAvailable;
+        if (!useSTap && !wAvailable) return;
 
         int selectedTarget = useSTap ? STapAssistance.getTarget() : target;
         boolean selectedRequireW = useSTap ? STapAssistance.isRequireW() : requireW;
@@ -125,8 +144,13 @@ public final class WTapAssistance {
             releaseTicks = 0;
             wCooldownTicks = 0;
             sCooldownTicks = 0;
+            fightTarget = null;
+            fightStyleChosen = false;
+            ticksSinceFightAttack = 0;
             return;
         }
+
+        if (ticksSinceFightAttack < FIGHT_RESET_TICKS) ticksSinceFightAttack++;
 
         int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
         boolean physicalW = Keyboard.isKeyDown(keyCode);
