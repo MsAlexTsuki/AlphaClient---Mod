@@ -336,11 +336,12 @@ public final class PixelGardenGUI extends GuiScreen {
             int y = gy + 8 + ((visibleIndex / PLOT_COLUMNS) - plotScrollRow) * (tileHeight + gap);
             PixelGardenGame.Plot plot = plots.get(i);
             PixelGardenGame.PlotState state = plot.getState(now);
-            drawRect(x - 2, y - 2, x + cell + 2, y + tileHeight + 2, 0xFF5A3823);
+            // Keep the plot surface bright; the old dark fill made every crop look dim.
+            drawRect(x - 2, y - 2, x + cell + 2, y + tileHeight + 2, 0xFF9A6639);
             drawRect(x, y, x + cell, y + tileHeight, state == PixelGardenGame.PlotState.EMPTY
-                    ? 0xFF86552E : 0xFF704326);
-            drawRect(x + 3, y + tileHeight - 8, x + cell - 3, y + tileHeight - 5, 0xFF704326);
-            drawRect(x + 5, y + tileHeight - 5, x + cell - 5, y + tileHeight - 3, 0xFF9A6639);
+                    ? 0xFFB9854B : 0xFF9B6B3B);
+            drawRect(x + 3, y + tileHeight - 8, x + cell - 3, y + tileHeight - 5, 0xFFB9854B);
+            drawRect(x + 5, y + tileHeight - 5, x + cell - 5, y + tileHeight - 3, 0xFFC9965B);
             if (state == PixelGardenGame.PlotState.EMPTY) {
                 drawCropArt(selectedCrop, x, y, Math.min(cell, tileHeight), now, state);
                 drawCenteredString(fontRendererObj, "PLANT " + selectedCrop.displayName.toUpperCase(), x + cell / 2, y + tileHeight - 15, 0xFFF4E6C8);
