@@ -42,20 +42,21 @@ public final class PixelGardenGame {
         private boolean unlocked;
         private Crop crop;
         private long plantedAt;
+        private long growDurationMillis = GROW_TIME_MILLIS;
         private Plot(boolean unlocked) { this.unlocked = unlocked; }
         public boolean isUnlocked() { return unlocked; }
         public Crop getCrop() { return crop; }
         public PlotState getState(long now) {
             if (!unlocked) return PlotState.LOCKED;
             if (crop == null || plantedAt <= 0L) return PlotState.EMPTY;
-            return now - plantedAt >= GROW_TIME_MILLIS ? PlotState.READY : PlotState.GROWING;
+            return now - plantedAt >= growDurationMillis ? PlotState.READY : PlotState.GROWING;
         }
         public long getRemainingMillis(long now) {
             return getState(now) == PlotState.GROWING
-                ? Math.max(0L, GROW_TIME_MILLIS - (now - plantedAt)) : 0L;
+                ? Math.max(0L, growDurationMillis - (now - plantedAt)) : 0L;
         }
-        private void plant(Crop crop, long now) { this.crop = crop; this.plantedAt = now; }
-        private void clear() { crop = null; plantedAt = 0L; }
+        private void plant(Crop crop, long now, int growthLevels) { this.crop = crop; this.plantedAt = now; this.growDurationMillis = Math.max(5L * 60L * 1000L, GROW_TIME_MILLIS * (100L - 15L * growthLevels) / 100L); }
+        private void clear() { crop = null; plantedAt = 0L; growDurationMillis = GROW_TIME_MILLIS; }
     }
 
     private final List<Plot> plots = new ArrayList<Plot>();
@@ -98,7 +99,7 @@ public final class PixelGardenGame {
         Plot plot = plots.get(plotIndex);
         if (plot.getState(now) != PlotState.EMPTY || seeds[crop.ordinal()] <= 0) return false;
         seeds[crop.ordinal()]--;
-        plot.plant(crop, now);
+        plot.plant(crop, now, growthLevels);
         return true;
     }
     public synchronized boolean harvest(int plotIndex, long now) {
@@ -196,6 +197,7 @@ public final class PixelGardenGame {
             savedPlot.addProperty("unlocked", plot.unlocked);
             if (plot.crop != null) savedPlot.addProperty("crop", plot.crop.name());
             savedPlot.addProperty("planted_at", plot.plantedAt);
+            savedPlot.addProperty("grow_duration", plot.growDurationMillis);
             plotArray.add(savedPlot);
         }
         root.add("plots", plotArray);
