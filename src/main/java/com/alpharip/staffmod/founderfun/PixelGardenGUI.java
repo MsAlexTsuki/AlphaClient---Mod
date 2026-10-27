@@ -62,13 +62,13 @@ public final class PixelGardenGUI extends GuiScreen {
                     cloudStatus = saved == null
                             ? "Cloud save: new garden linked to " + account
                             : "Cloud save: synced with " + account;
-                    if (saved == null) saveCloudAsync();
                 } catch (Exception exception) {
                     cloudStatus = "Cloud save failed: " + safeMessage(exception);
                     System.err.println("[AlphaClient] Pixel Garden load failed: " + exception.getMessage());
                 } finally {
                     loadingCloud = false;
                     synchronized (PixelGardenGUI.class) { loadInProgress = false; }
+                    if (cloudStatus.startsWith("Cloud save: new garden")) saveCloudAsync();
                 }
             }
         }, "AlphaClient-PixelGardenLoad");
