@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.modules;
 
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.config.AlphaClientConfig;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import java.util.ArrayList;
@@ -129,7 +130,8 @@ public final class AlphaModule {
 
         // Founder-only modules remain exclusive and cannot be granted to other ranks.
         if (category == Category.FOUNDER) {
-            return PermissionService.hasAccess(PermissionService.Rank.FOUNDER);
+            return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                    || SupabaseCommunityService.isSignedInFounder();
         }
 
         // Owner and Founder retain access to every non-Founder module.
