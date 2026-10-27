@@ -141,7 +141,7 @@ public final class PixelGardenGUI extends GuiScreen {
     }
     private int gardenWidth() { return gardenCell() * PLOT_COLUMNS + 20; }
     private int gardenLeft() { return (width - gardenWidth()) / 2; }
-    private int gardenTop() { return Math.max(95, (height - (gardenTileHeight() * 5 + 120)) / 2); }
+    private int gardenTop() { return Math.max(110, (height - (gardenTileHeight() * 5 + 120)) / 2 + 15); }
 
     @Override
     public void initGui() {
