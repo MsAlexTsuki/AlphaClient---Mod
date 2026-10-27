@@ -4,6 +4,7 @@ package com.alpharip.staffmod.founderfun;
 import com.alpharip.staffmod.gui.AlphaButton;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
 
@@ -103,23 +104,19 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         drawRect(x + w - 3, y, x + w, y + h, 0xFF714323);
     }
 
+    private static final ResourceLocation PIXEL_GARDEN_SHEET =
+            new ResourceLocation("alphastaffmod", "textures/gui/spritesheet.png");
+
+    private void drawSprite(int x, int y, int width, int height, int u, int v) {
+        mc.getTextureManager().bindTexture(PIXEL_GARDEN_SHEET);
+        net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        net.minecraft.client.renderer.GlStateManager.enableBlend();
+        drawScaledCustomSizeModalRect(x, y, u, v, 16, 16, width, height, 96, 64);
+        net.minecraft.client.renderer.GlStateManager.disableBlend();
+    }
+
     private void drawCropIcon(PixelGardenGame.Crop crop, int x, int y, int s) {
-        int soil = 0xFF86552E, green = 0xFF4A9B39;
-        drawRect(x, y + s - 5, x + s, y + s, soil);
-        if (crop == PixelGardenGame.Crop.WHEAT) {
-            for (int i = 0; i < 3; i++) {
-                int sx = x + 5 + i * 6;
-                drawRect(sx, y + 8, sx + 2, y + s - 5, green);
-                drawRect(sx - 2, y + 5 + (i % 2) * 3, sx + 4, y + 10 + (i % 2) * 3, 0xFFE8C64A);
-            }
-        } else {
-            drawRect(x + s / 2 - 7, y + 9, x + s / 2 + 7, y + 19, green);
-            drawRect(x + s / 2 - 3, y + 4, x + s / 2 + 3, y + 12, 0xFF75C84D);
-            int fruit = crop == PixelGardenGame.Crop.CARROT ? 0xFFFF8B26
-                    : crop == PixelGardenGame.Crop.POTATO ? 0xFFC9A05B : 0xFFE98222;
-            drawRect(x + s / 2 - 5, y + 16, x + s / 2 + 5, y + s - 7, fruit);
-            drawRect(x + s / 2 - 3, y + s - 10, x + s / 2 + 3, y + s - 7, fruit);
-        }
+        drawSprite(x, y, s, s, crop.ordinal() * 16, 0);
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
