@@ -414,6 +414,48 @@ public final class SupabaseCommunityService {
 
     public static boolean isSignedIn() { return accessToken != null; }
 
+    /** Loads the signed-in account's Pixel Garden save, or returns null when no save exists. */
+    public static synchronized JsonObject loadPixelGardenSave() throws Exception {
+        String token = accessToken;
+        String userId = signedInUserId;
+        if (token == null || userId == null) {
+            throw new IllegalStateException("Sign in to your Alpha Account to load Pixel Garden.");
+        }
+        String query = "/rest/v1/pixel_garden_saves?select=save_data,saved_at&user_id=eq."
+                + java.net.URLEncoder.encode(userId, "UTF-8") + "&limit=1";
+        JsonArray rows = requestArray("GET", query, token);
+        if (rows.size() == 0 || !rows.get(0).isJsonObject()) return null;
+        JsonObject row = rows.get(0).getAsJsonObject();
+        return row.has("save_data") && row.get("save_data").isJsonObject()
+                ? row.getAsJsonObject("save_data") : null;
+    }
+
+    /** Upserts only the currently authenticated account's Pixel Garden save under RLS. */
+    public static synchronized void savePixelGardenSave(JsonObject saveData) throws Exception {
+        String token = accessToken;
+        String userId = signedInUserId;
+        if (token == null || userId == null) {
+            throw new IllegalStateException("Sign in to your Alpha Account to save Pixel Garden.");
+        }
+        if (saveData == null || !saveData.isJsonObject()) {
+            throw new IllegalArgumentException("Pixel Garden save data must be a JSON object.");
+        }
+        JsonObject payload = new JsonObject();
+        payload.addProperty("user_id", userId);
+        payload.add("save_data", saveData);
+        payload.addProperty("saved_at", new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .format(new java.util.Date()));
+        HttpURLConnection connection = open("POST", "/rest/v1/pixel_garden_saves?on_conflict=user_id", token);
+        connection.setDoOutput(true);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("Prefer", "resolution=merge-duplicates,return=minimal");
+        byte[] bytes = payload.toString().getBytes(StandardCharsets.UTF_8);
+        connection.setRequestProperty("Content-Length", String.valueOf(bytes.length));
+        OutputStream output = connection.getOutputStream();
+        try { output.write(bytes); } finally { output.close(); }
+        readResponse(connection);
+    }
+
     /** Calls the server-side command permission API using the current authenticated Alpha Account session. */
     public static synchronized JsonObject manageCommandPermissions(JsonObject payload) throws Exception {
         String token = accessToken;
