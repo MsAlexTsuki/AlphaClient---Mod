@@ -16,7 +16,7 @@ public final class PixelGardenGame {
     public static final long MAX_OFFLINE_PROGRESS_MILLIS = 2L * 60L * 60L * 1000L;
     public static final int STARTING_COINS = 100;
     public static final int STARTING_PLOTS = 1;
-    public static final int MAX_PLOTS = 18;
+    public static final int MAX_PLOTS = 28;
     public static final int AUTO_HARVEST_COST = 250;
     public static final int GROWTH_BOOST_COST = 150;
     public static final int EXPANSION_COST = 50;
