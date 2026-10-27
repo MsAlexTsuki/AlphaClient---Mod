@@ -226,5 +226,10 @@ public final class PixelGardenGUI extends GuiScreen {
     }
 
     @Override
+    public void onGuiClosed() {
+        saveCloudAsync();
+    }
+
+    @Override
     public boolean doesGuiPauseGame() { return false; }
 }
