@@ -92,7 +92,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         List<AlphaModule.Category> sidebarCategories = new ArrayList<AlphaModule.Category>();
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
             // Staff rank folders belong exclusively inside StaffMods, not in the regular Mods sidebar.
-            if (isStaffRankCategory(category) || isDonatorRankCategory(category)) continue;
+            // Founder owns dedicated W-Tap/S-Tap modules in this menu; keep other staff folders inside StaffMods.
+            if ((isStaffRankCategory(category) && category != AlphaModule.Category.FOUNDER)
+                    || isDonatorRankCategory(category)) continue;
             boolean categoryAllowed = PermissionService.hasAccess(category.getRequiredRank());
             if (!categoryAllowed) {
                 for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
