@@ -124,6 +124,11 @@ public final class AlphaModule {
     }
 
     public boolean isUnlocked() {
+        // Pixel Garden is controlled by its authenticated command-permission bundle.
+        if ("pixelgarden".equals(id)) {
+            return PermissionService.hasCommandPermission("menu.pixelgarden", false);
+        }
+
         // Armor HUD, Potion HUD and CPS remain public.
         if ("armor-hud-info".equals(id) || "potion-hud-info".equals(id) || "cps".equals(id)) {
             return true;
