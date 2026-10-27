@@ -35,24 +35,35 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         buttonList.clear();
         int left = Math.max(18, width / 2 - 250);
         int panelWidth = Math.min(500, width - 36);
-        int top = 72;
+        int top = 88;
         if (page == Page.SHOP || page == Page.SELL || page == Page.INVENTORY) {
+            int gap = 8;
+            int cardWidth = (panelWidth - 28 - gap) / 2;
+            int cardHeight = 78;
             for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
-                int y = top + crop.ordinal() * 66;
+                int col = crop.ordinal() % 2;
+                int row = crop.ordinal() / 2;
+                int x = left + 10 + col * (cardWidth + gap);
+                int y = top + row * (cardHeight + gap);
                 String label;
-                if (page == Page.SHOP) label = "Buy " + crop.displayName + " seed (" + crop.seedPrice + ")";
-                else if (page == Page.SELL) label = "Sell all " + crop.displayName + " x" + game.getInventory(crop);
-                else label = crop.displayName + "  Seeds: " + game.getSeeds(crop) + "  Harvest: " + game.getInventory(crop);
-                buttonList.add(new AlphaButton(ACTION_BASE + crop.ordinal(), left + 12, y + 34, panelWidth - 24, 22, label));
+                if (page == Page.SHOP) label = "Buy seed (" + crop.seedPrice + ")";
+                else if (page == Page.SELL) label = "Sell all x" + game.getInventory(crop);
+                else label = "Seeds " + game.getSeeds(crop) + " / Harvest " + game.getInventory(crop);
+                buttonList.add(new AlphaButton(ACTION_BASE + crop.ordinal(), x + 8, y + cardHeight - 25, cardWidth - 16, 18, label));
             }
         } else {
-            String[] labels = {
-                game.hasAutoHarvest() ? "Auto Harvest - OWNED" : "Buy Auto Harvest (" + game.getUpgradeCost("auto_harvest") + " coins)",
-                "Growth Boost L" + game.getGrowthLevels() + " (" + game.getUpgradeCost("growth_boost") + " coins)",
-                "Expand Garden (" + game.getUpgradeCost("expansion") + " coins)"
-            };
-            for (int i = 0; i < labels.length; i++)
-                buttonList.add(new AlphaButton(ACTION_BASE + i, left + 12, top + i * 88 + 45, panelWidth - 24, 22, labels[i]));
+            int gap = 8;
+            int cardWidth = (panelWidth - 32 - gap * 2) / 3;
+            int cardHeight = 112;
+            for (int i = 0; i < 3; i++) {
+                int x = left + 10 + i * (cardWidth + gap);
+                int y = top + 12;
+                String label;
+                if (i == 0) label = game.hasAutoHarvest() ? "OWNED" : "Buy (" + game.getUpgradeCost("auto_harvest") + ")";
+                else if (i == 1) label = "Buy (" + game.getUpgradeCost("growth_boost") + ")";
+                else label = "Expand (" + game.getUpgradeCost("expansion") + ")";
+                buttonList.add(new AlphaButton(ACTION_BASE + i, x + 6, y + cardHeight - 25, cardWidth - 12, 18, label));
+            }
         }
         int navY = height - 35;
         int navW = Math.min(90, (width - 45) / 5);
@@ -130,55 +141,50 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         int left = Math.max(18, width / 2 - 250), panelWidth = Math.min(500, width - 36);
         int top = 60, panelHeight = height - 105;
         drawPanel(left, top, panelWidth, panelHeight);
-        drawString(fontRendererObj, title(), left + 18, top + 14, 0xFFFFD45A);
+        drawString(fontRendererObj, title(), left + 14, top + 12, 0xFFFFD45A);
         if (page == Page.SHOP || page == Page.SELL || page == Page.INVENTORY) {
+            int gap = 8, cardWidth = (panelWidth - 28 - gap) / 2, cardHeight = 78;
             for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
-                int y = 88 + crop.ordinal() * 66;
-                drawPanel(left + 10, y, panelWidth - 20, 58);
-                drawCropIcon(crop, left + 20, y + 7, 40);
-                drawString(fontRendererObj, crop.displayName, left + 70, y + 9, 0xFFF0F2F6);
+                int col = crop.ordinal() % 2, row = crop.ordinal() / 2;
+                int x = left + 10 + col * (cardWidth + gap);
+                int y = 88 + row * (cardHeight + gap);
+                drawPanel(x, y, cardWidth, cardHeight);
+                drawCropIcon(crop, x + 8, y + 7, 24);
+                drawString(fontRendererObj, crop.displayName, x + 38, y + 10, 0xFFF0F2F6);
                 if (page == Page.SHOP) {
-                    drawString(fontRendererObj, "Seeds owned: " + game.getSeeds(crop) + "   Price: " + crop.seedPrice + " coins",
-                            left + 70, y + 25, 0xFFB7C4D5);
+                    drawString(fontRendererObj, "Seeds: " + game.getSeeds(crop), x + 38, y + 25, 0xFFB7C4D5);
+                    drawString(fontRendererObj, "Price: " + crop.seedPrice, x + 38, y + 38, 0xFFFFD45A);
                 } else if (page == Page.SELL) {
-                    drawString(fontRendererObj, "In inventory: " + game.getInventory(crop) + "   Sell value: " + crop.sellPrice + " coins each",
-                            left + 70, y + 25, 0xFFB7C4D5);
+                    drawString(fontRendererObj, "Stock: " + game.getInventory(crop), x + 38, y + 25, 0xFFB7C4D5);
+                    drawString(fontRendererObj, "Each: " + crop.sellPrice, x + 38, y + 38, 0xFFFFD45A);
                 } else {
-                    drawString(fontRendererObj, "Seeds: " + game.getSeeds(crop) + "   Harvested: " + game.getInventory(crop),
-                            left + 70, y + 25, 0xFFB7C4D5);
+                    drawString(fontRendererObj, "Seeds: " + game.getSeeds(crop), x + 38, y + 25, 0xFFB7C4D5);
+                    drawString(fontRendererObj, "Harvest: " + game.getInventory(crop), x + 38, y + 38, 0xFFB7C4D5);
                 }
             }
         } else {
             String[] names = {"Auto Harvest", "Growth Boost", "Garden Expansion"};
-            String[] desc = {"Automatically collect ripe crops.", "Reduce growth time for newly planted crops.", "Unlock three additional garden plots."};
+            String[] desc = {"Auto-collect ripe crops", "Faster growth", "Three more plots"};
             int[] costs = {game.getUpgradeCost("auto_harvest"), game.getUpgradeCost("growth_boost"), game.getUpgradeCost("expansion")};
+            int gap = 8, cardWidth = (panelWidth - 32 - gap * 2) / 3, cardHeight = 112;
             for (int i = 0; i < 3; i++) {
-                int y = 91 + i * 88;
-                drawPanel(left + 12, y, panelWidth - 24, 76);
-                drawString(fontRendererObj, names[i], left + 24, y + 10, 0xFFF0F2F6);
-                drawString(fontRendererObj, desc[i], left + 24, y + 27, 0xFFB7C4D5);
-                drawString(fontRendererObj, costs[i] < 0 ? "OWNED / MAX" : "Cost: " + costs[i] + " coins",
-                        left + 24, y + 45, costs[i] < 0 ? 0xFF83D79A : 0xFFFFD45A);
-                drawUpgradeIcon(left + panelWidth - 75, y + 17, i);
+                int x = left + 10 + i * (cardWidth + gap), y = 100;
+                drawPanel(x, y, cardWidth, cardHeight);
+                drawString(fontRendererObj, names[i], x + 7, y + 9, 0xFFF0F2F6);
+                drawString(fontRendererObj, desc[i], x + 7, y + 27, 0xFFB7C4D5);
+                drawString(fontRendererObj, costs[i] < 0 ? "OWNED / MAX" : "Cost: " + costs[i], x + 7, y + 44,
+                        costs[i] < 0 ? 0xFF83D79A : 0xFFFFD45A);
+                drawUpgradeIcon(x + cardWidth - 42, y + 2, i);
             }
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     private void drawUpgradeIcon(int x, int y, int kind) {
-        drawRect(x, y + 12, x + 30, y + 42, 0xFF26313C);
-        if (kind == 0) {
-            drawRect(x + 9, y + 17, x + 21, y + 33, 0xFFD6DCE5);
-            drawRect(x + 12, y + 13, x + 18, y + 17, 0xFFFFC83D);
-            drawRect(x + 12, y + 33, x + 18, y + 37, 0xFF75C84D);
-        } else if (kind == 1) {
-            drawRect(x + 12, y + 19, x + 18, y + 38, 0xFF4A9B39);
-            drawRect(x + 4, y + 17, x + 14, y + 25, 0xFF75C84D);
-            drawRect(x + 17, y + 13, x + 27, y + 21, 0xFF8AE34D);
-        } else {
-            for (int i = 0; i < 2; i++) for (int j = 0; j < 2; j++)
-                drawRect(x + 5 + i * 10, y + 17 + j * 10, x + 14 + i * 10, y + 26 + j * 10, 0xFF55A9D6);
-        }
+        int u = kind == 0 ? 64 : kind == 1 ? 48 : 0;
+        int v = kind == 0 ? 16 : kind == 1 ? 48 : 48;
+        if (kind == 2) u = 16;
+        drawSprite(x, y, 24, 24, u, v);
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }
