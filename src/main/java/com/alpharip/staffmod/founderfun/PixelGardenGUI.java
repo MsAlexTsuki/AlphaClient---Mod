@@ -78,7 +78,7 @@ public final class PixelGardenGUI extends GuiScreen {
         thread.start();
     }
 
-    private void saveCloudAsync() {
+    void saveCloudAsync() {
         if (!SupabaseCommunityService.isSignedIn() || loadingCloud || !cloudReady) return;
         final String account = SupabaseCommunityService.getSignedInEmail();
         final JsonObject snapshot = game.toSaveData();
