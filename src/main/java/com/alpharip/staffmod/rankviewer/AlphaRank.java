@@ -1,3 +1,4 @@
+// --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.rankviewer;
 
 import net.minecraft.util.ResourceLocation;
