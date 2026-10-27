@@ -144,6 +144,16 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         );
         MODULES.add(sTap);
+
+        // AimAssist is visible and usable only for the authenticated Founder account.
+        MODULES.add(new AlphaModule(
+                "aim-assist",
+                "AimAssist",
+                "Smoothly correct aim only when a visible player is already close to the crosshair.",
+                AlphaModule.Category.FOUNDER,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
     }
 
     private AlphaModuleRegistry() {
