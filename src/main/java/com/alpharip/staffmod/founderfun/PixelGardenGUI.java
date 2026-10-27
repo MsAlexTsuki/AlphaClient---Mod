@@ -216,7 +216,7 @@ public final class PixelGardenGUI extends GuiScreen {
         drawRect(0, 0, width, height, 0xD90A0C11);
         drawRect(width / 2 - 150, 34, width / 2 + 150, 36, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "PIXEL GARDEN", width / 2, 43, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "Coins: " + game.getCoins() + "    Unlocked plots: "
+        drawCenteredString(fontRendererObj, "PixelGardenUpgradeCoins: " + game.getCoins() + "    Unlocked plots: "
                 + game.getUnlockedPlots() + "/" + PixelGardenGame.MAX_PLOTS, width / 2, 60, 0xFFF0F1F4);
         StringBuilder stock = new StringBuilder("Inventory: ");
         for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
