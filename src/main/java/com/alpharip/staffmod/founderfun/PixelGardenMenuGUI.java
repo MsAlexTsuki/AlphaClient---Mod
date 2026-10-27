@@ -164,9 +164,9 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             }
         } else {
             int unlockedPlots = game.getUnlockedPlots();
-            int extensionNumber = Math.max(1, (unlockedPlots - PixelGardenGame.STARTING_PLOTS) / 3 + 1);
+            int extensionNumber = Math.max(1, unlockedPlots - PixelGardenGame.STARTING_PLOTS + 1);
             String[] names = {"Auto Harvest", "Growth Boost", "Garden Extension " + extensionNumber};
-            String[] desc = {"Auto-collect ripe crops", "Faster growth", "Unlock the next 3 plots"};
+            String[] desc = {"Auto-collect ripe crops", "Faster growth", "Unlock the next plot"};
             int[] costs = {game.getUpgradeCost("auto_harvest"), game.getUpgradeCost("growth_boost"), game.getUpgradeCost("expansion")};
             int gap = 8, cardWidth = (panelWidth - 32 - gap * 2) / 3, cardHeight = 112;
             for (int i = 0; i < 3; i++) {
