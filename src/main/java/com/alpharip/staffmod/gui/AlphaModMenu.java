@@ -473,6 +473,15 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             boolean categoryAccess = PermissionService.hasAccess(category.getRequiredRank())
                     || (category == AlphaModule.Category.FOUNDER
                     && SupabaseCommunityService.isSignedInFounder());
+            // Match the sidebar visibility rule: an unlocked module grants access to its category.
+            if (!categoryAccess) {
+                for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
+                    if (!"staffmods".equals(module.getId()) && module.isUnlocked()) {
+                        categoryAccess = true;
+                        break;
+                    }
+                }
+            }
             if (categoryAccess) {
                 selectedCategory = category;
                 selectedModuleId = "";
