@@ -10,6 +10,7 @@ import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
 import java.util.List;
+import org.lwjgl.input.Mouse;
 
 /** Pixel-art farming screen with account-linked cloud saving. */
 public final class PixelGardenGUI extends GuiScreen {
@@ -24,6 +25,7 @@ public final class PixelGardenGUI extends GuiScreen {
     private volatile String cloudStatus = "Cloud save: checking account...";
     private volatile boolean loadingCloud, cloudReady;
     private long lastRefresh;
+    private int plotScrollRow;
 
     public PixelGardenGUI(GuiScreen parent) {
         this.parent = parent;
@@ -106,9 +108,22 @@ public final class PixelGardenGUI extends GuiScreen {
     }
 
     private int gardenCell() {
-        return Math.max(54, Math.min(86, (width - 100) / 6 - 6));
+        return Math.max(42, Math.min(86, (width - 100) / 6 - 6));
     }
     private int gardenTileHeight() { return 48; }
+    private int visiblePlotRows() {
+        int available = height - gardenTop() - 180;
+        return Math.max(1, Math.min(3, available / (gardenTileHeight() + 4)));
+    }
+    @Override public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int wheel = Mouse.getEventDWheel();
+        if (wheel != 0) {
+            int maxRows = Math.max(0, (game.getPlots().size() + 5) / 6 - visiblePlotRows());
+            plotScrollRow = Math.max(0, Math.min(maxRows, plotScrollRow + (wheel < 0 ? 1 : -1)));
+            initGui();
+        }
+    }
     private int gardenWidth() { return gardenCell() * 6 + 20; }
     private int gardenLeft() { return (width - gardenWidth()) / 2; }
     private int gardenTop() { return Math.max(105, (height - (gardenTileHeight() * 3 + 70)) / 2); }
@@ -119,9 +134,12 @@ public final class PixelGardenGUI extends GuiScreen {
         game.processTime(System.currentTimeMillis());
         int cell = gardenCell(), tileHeight = gardenTileHeight(), gap = 4, gx = gardenLeft(), gy = gardenTop();
         List<PixelGardenGame.Plot> plots = game.getPlots();
-        for (int i = 0; i < plots.size(); i++) {
+        int visibleRows = visiblePlotRows();
+        int firstPlot = plotScrollRow * 6;
+        int lastPlot = Math.min(plots.size(), firstPlot + visibleRows * 6);
+        for (int i = firstPlot; i < lastPlot; i++) {
             int x = gx + (i % 6) * (cell + gap);
-            int y = gy + (i / 6) * (tileHeight + gap);
+            int y = gy + ((i / 6) - plotScrollRow) * (tileHeight + gap);
             buttonList.add(new AlphaButton(PLOT_BASE + i, x, y, cell, tileHeight,
                     plotButtonLabel(plots.get(i), System.currentTimeMillis(), i)));
         }
@@ -278,12 +296,14 @@ public final class PixelGardenGUI extends GuiScreen {
         panel(gx - 22, gy - 36, gardenW + 44, cell * 3 + gap * 2 + 58);
         drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 25, 0xFFFFD45A);
         drawString(fontRendererObj, "Choose a plot to plant or harvest", gx + 2, gy - 13, 0xFFB7C4D5);
-        drawPixelGardenBorder(gx - 7, gy - 3, gardenW + 14, tileHeight * 3 + gap * 2 + 12);
+        drawPixelGardenBorder(gx - 7, gy - 3, gardenW + 14, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 12);
 
         List<PixelGardenGame.Plot> plots = game.getPlots();
-        for (int i = 0; i < plots.size(); i++) {
+        int firstPlot = plotScrollRow * 6;
+        int lastPlot = Math.min(plots.size(), firstPlot + visibleRows * 6);
+        for (int i = firstPlot; i < lastPlot; i++) {
             int x = gx + (i % 6) * (cell + gap);
-            int y = gy + (i / 6) * (tileHeight + gap);
+            int y = gy + ((i / 6) - plotScrollRow) * (tileHeight + gap);
             PixelGardenGame.Plot plot = plots.get(i);
             PixelGardenGame.PlotState state = plot.getState(now);
             drawRect(x - 2, y - 2, x + cell + 2, y + tileHeight + 2, state == PixelGardenGame.PlotState.LOCKED
@@ -311,6 +331,9 @@ public final class PixelGardenGUI extends GuiScreen {
             }
         }
 
+        if (plotScrollRow > 0) drawString(fontRendererObj, "Scroll up for earlier plots", gx, gy - 3, 0xFFB7C4D5);
+        if ((plots.size() + 5) / 6 > plotScrollRow + visibleRows)
+            drawString(fontRendererObj, "Scroll down for more plots", gx, gy + tileHeight * visibleRows + gap * visibleRows + 2, 0xFFB7C4D5);
         drawCenteredString(fontRendererObj, "Seeds: " + selectedCrop.displayName + " x" + game.getSeeds(selectedCrop)
                 + "    Harvested inventory: " + inventoryTotal(), width / 2, height - 72, 0xFFE6E9EF);
         drawCenteredString(fontRendererObj, "Plant  >  Grow  >  Harvest  >  Sell  >  Upgrade",
