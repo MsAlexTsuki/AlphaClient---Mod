@@ -6,6 +6,7 @@ import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.google.gson.JsonObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
 import java.util.List;
@@ -196,6 +197,17 @@ public final class PixelGardenGUI extends GuiScreen {
         drawRect(x, y, x + size, y + size, color);
     }
 
+    private static final ResourceLocation PIXEL_GARDEN_SHEET =
+            new ResourceLocation("alphastaffmod", "textures/gui/spritesheet.png");
+
+    private void drawSprite(int x, int y, int width, int height, int u, int v) {
+        mc.getTextureManager().bindTexture(PIXEL_GARDEN_SHEET);
+        net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        net.minecraft.client.renderer.GlStateManager.enableBlend();
+        drawScaledCustomSizeModalRect(x, y, u, v, 16, 16, width, height, 96, 64);
+        net.minecraft.client.renderer.GlStateManager.disableBlend();
+    }
+
     /** Tiny blocky sprout emblem drawn at integer pixel scale for the 1.8.9 GUI. */
     private void drawPixelSprout(int x, int y, int scale) {
         pixel(x + 4 * scale, y + 7 * scale, 2 * scale, 0xFF9A5B27);
@@ -229,32 +241,20 @@ public final class PixelGardenGUI extends GuiScreen {
 
     private void drawCropArt(PixelGardenGame.Crop crop, int x, int y, int size, long now,
                              PixelGardenGame.PlotState state) {
-        int p = Math.max(3, size / 12);
+        int spriteU = crop.ordinal() * 16;
+        int spriteV = 0;
+        int spriteSize = Math.max(16, size / 2);
         if (state == PixelGardenGame.PlotState.EMPTY) {
-            pixel(x + size / 2 - p, y + size / 2, p, 0xFF65B94B);
-            pixel(x + size / 2, y + size / 2 - p, p, 0xFF8BDD54);
+            drawSprite(x + (size - spriteSize) / 2, y + (size - spriteSize) / 2,
+                    spriteSize, spriteSize, 48, 16);
             return;
         }
-        if (crop == PixelGardenGame.Crop.WHEAT) {
-            for (int i = 0; i < 4; i++) {
-                int stemX = x + size / 2 - p * 3 + i * p * 2;
-                int stemH = state == PixelGardenGame.PlotState.READY ? size / 2 : Math.max(p, size / 5);
-                drawRect(stemX, y + size - p * 2 - stemH, stemX + p, y + size - p, 0xFF3D8C37);
-                if (state == PixelGardenGame.PlotState.READY) {
-                    pixel(stemX - p, y + size - p * 2 - stemH, p * 2, 0xFFE5C33B);
-                    pixel(stemX, y + size - p * 3 - stemH, p * 2, 0xFFFFE46B);
-                } else pixel(stemX, y + size - p * 2 - stemH, p, 0xFF75C84D);
-            }
+        drawSprite(x + (size - spriteSize) / 2, y + (size - spriteSize) / 2 - 4,
+                spriteSize, spriteSize, spriteU, spriteV);
+        if (state == PixelGardenGame.PlotState.READY) {
+            drawSprite(x + size - 22, y + 4, 18, 18, 32, 16);
         } else {
-            int leaf = crop == PixelGardenGame.Crop.PUMPKIN ? 0xFF4B9E35 : 0xFF3EAD46;
-            pixel(x + size / 2 - p * 2, y + size / 2, p * 2, leaf);
-            pixel(x + size / 2, y + size / 2 - p, p * 2, 0xFF79C84B);
-            pixel(x + size / 2 + p, y + size / 2, p * 2, leaf);
-            int fruit = crop == PixelGardenGame.Crop.CARROT ? 0xFFFF8B26
-                    : crop == PixelGardenGame.Crop.POTATO ? 0xFFC9A05B : 0xFFE98222;
-            pixel(x + size / 2 - p, y + size / 2 + p, p * 2, fruit);
-            pixel(x + size / 2, y + size / 2 + p * 2, p, fruit);
-            if (state == PixelGardenGame.PlotState.READY) pixel(x + size / 2, y + size / 2, p, 0xFFFFD45C);
+            drawSprite(x + size - 22, y + 4, 18, 18, 48, 16);
         }
     }
 
