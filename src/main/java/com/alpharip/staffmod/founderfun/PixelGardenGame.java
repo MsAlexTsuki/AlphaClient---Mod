@@ -72,6 +72,22 @@ public final class PixelGardenGame {
         for (int i = STARTING_PLOTS; i < MAX_PLOTS; i++) plots.add(new Plot(false));
         seeds[Crop.WHEAT.ordinal()] = 3;
     }
+    public synchronized void resetToDefaults() {
+        coins = STARTING_COINS;
+        autoHarvest = false;
+        growthLevels = 0;
+        lastProcessedAt = System.currentTimeMillis();
+        for (int i = 0; i < seeds.length; i++) {
+            seeds[i] = 0;
+            inventory[i] = 0;
+        }
+        seeds[Crop.WHEAT.ordinal()] = 3;
+        for (int i = 0; i < plots.size(); i++) {
+            Plot plot = plots.get(i);
+            plot.unlocked = i < STARTING_PLOTS;
+            plot.clear();
+        }
+    }
     public static PixelGardenGame getInstance() { return INSTANCE; }
     public synchronized int getCoins() { return coins; }
     public synchronized int getSeeds(Crop crop) { return seeds[crop.ordinal()]; }
