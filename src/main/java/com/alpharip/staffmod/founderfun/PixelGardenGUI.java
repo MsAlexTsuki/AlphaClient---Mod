@@ -113,7 +113,7 @@ public final class PixelGardenGUI extends GuiScreen {
     private int gardenTileHeight() { return 48; }
     private int visiblePlotRows() {
         int available = height - gardenTop() - 180;
-        return Math.max(1, Math.min(3, available / (gardenTileHeight() + 4)));
+        return Math.max(1, Math.min(2, available / (gardenTileHeight() + 4)));
     }
     @Override public void handleMouseInput() throws IOException {
         super.handleMouseInput();
