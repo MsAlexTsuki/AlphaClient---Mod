@@ -1,3 +1,4 @@
+// --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.gui;
 
 /** Session-only toggle for the restricted Developer Mode workspace. */
