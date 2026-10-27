@@ -12,9 +12,8 @@ import org.lwjgl.input.Keyboard;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Shared W-key tap input handler. When both styles are enabled, each attack
- * randomly selects either the W-Tap settings or the S-Tap settings.
- * S-Tap also releases W; it never requires the physical S key.
+ * Shared movement input handler for W-Tap and S-Tap. S-Tap briefly releases
+ * W and presses S on its own, then releases S and restores the physical W state.
  */
 public final class WTapAssistance {
     private static boolean enabled;
@@ -27,6 +26,8 @@ public final class WTapAssistance {
 
     private int pendingDelay = -1;
     private int releaseTicks;
+    private boolean activeSPhase;
+    private int activeSKeyCode = -1;
     private int wCooldownTicks;
     private int sCooldownTicks;
     private boolean activeUsesSTap;
@@ -156,9 +157,8 @@ public final class WTapAssistance {
         boolean physicalW = Keyboard.isKeyDown(keyCode);
 
         if (mc.currentScreen != null) {
-            pendingDelay = -1;
-            releaseTicks = 0;
-            KeyBinding.setKeyBindState(keyCode, false);
+            clearPendingTap();
+            restoreMovementKeys(mc);
             return;
         }
 
@@ -175,7 +175,7 @@ public final class WTapAssistance {
         }
 
         if (releaseTicks <= 0 && pendingDelay < 0) {
-            KeyBinding.setKeyBindState(keyCode, physicalW);
+            restoreMovementKeys(mc);
         }
 
         if (wCooldownTicks > 0) wCooldownTicks--;
@@ -188,23 +188,59 @@ public final class WTapAssistance {
         if (pendingDelay == 0) {
             pendingDelay = -1;
             if (!activeRequireW || physicalW) {
-                KeyBinding.setKeyBindState(keyCode, false);
                 releaseTicks = 1 + activeMode;
-                if (activeUsesSTap) sCooldownTicks = activeCooldown;
-                else wCooldownTicks = activeCooldown;
+                if (activeUsesSTap) {
+                    activeSPhase = true;
+                    activeSKeyCode = mc.gameSettings.keyBindBack.getKeyCode();
+                    // Never hold forward and back simultaneously: release W first,
+                    // then activate S for the short tap window.
+                    KeyBinding.setKeyBindState(keyCode, false);
+                    KeyBinding.setKeyBindState(activeSKeyCode, true);
+                    sCooldownTicks = activeCooldown;
+                } else {
+                    activeSPhase = false;
+                    KeyBinding.setKeyBindState(keyCode, false);
+                    wCooldownTicks = activeCooldown;
+                }
             }
             return;
         }
         if (releaseTicks > 0) {
-            KeyBinding.setKeyBindState(keyCode, false);
+            if (activeSPhase) {
+                KeyBinding.setKeyBindState(keyCode, false);
+                if (activeSKeyCode >= 0) KeyBinding.setKeyBindState(activeSKeyCode, true);
+            } else {
+                KeyBinding.setKeyBindState(keyCode, false);
+            }
             releaseTicks--;
-            if (releaseTicks == 0) restoreForwardKey(mc);
+            if (releaseTicks == 0) {
+                activeSPhase = false;
+                if (activeSKeyCode >= 0) {
+                    KeyBinding.setKeyBindState(activeSKeyCode,
+                            Keyboard.isKeyDown(activeSKeyCode));
+                    activeSKeyCode = -1;
+                }
+                restoreForwardKey(mc);
+            }
         }
     }
 
     private void clearPendingTap() {
         pendingDelay = -1;
         releaseTicks = 0;
+        activeSPhase = false;
+        if (activeSKeyCode >= 0) {
+            KeyBinding.setKeyBindState(activeSKeyCode, Keyboard.isKeyDown(activeSKeyCode));
+            activeSKeyCode = -1;
+        }
+    }
+
+    private static void restoreMovementKeys(Minecraft mc) {
+        if (mc == null || mc.gameSettings == null) return;
+        int forwardCode = mc.gameSettings.keyBindForward.getKeyCode();
+        int backCode = mc.gameSettings.keyBindBack.getKeyCode();
+        KeyBinding.setKeyBindState(forwardCode, Keyboard.isKeyDown(forwardCode));
+        KeyBinding.setKeyBindState(backCode, Keyboard.isKeyDown(backCode));
     }
 
     private static void restoreForwardKey(Minecraft mc) {
