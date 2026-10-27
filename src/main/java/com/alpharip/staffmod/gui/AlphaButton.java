@@ -7,14 +7,21 @@ import net.minecraft.client.gui.GuiButton;
 /** Shared AlphaClient button: restrained dark surface, clean border and Alpha Yellow focus. */
 public final class AlphaButton extends GuiButton {
     private final boolean primary;
+    private final boolean active;
 
     public AlphaButton(int id, int x, int y, int width, int height, String label) {
-        this(id, x, y, width, height, label, false);
+        this(id, x, y, width, height, label, false, false);
     }
 
     public AlphaButton(int id, int x, int y, int width, int height, String label, boolean primary) {
+        this(id, x, y, width, height, label, primary, false);
+    }
+
+    public AlphaButton(int id, int x, int y, int width, int height, String label,
+                       boolean primary, boolean active) {
         super(id, x, y, width, height, UiText.normalize(label));
         this.primary = primary;
+        this.active = active;
     }
 
     @Override
@@ -34,12 +41,13 @@ public final class AlphaButton extends GuiButton {
             foreground = 0xFFFFD866;
         } else {
             background = hovered ? 0xE02A2D35 : 0xC014161D;
-            foreground = hovered ? 0xFFFFD866 : 0xFFE6E8ED;
+            foreground = (active || hovered) ? 0xFFFFD866 : 0xFFE6E8ED;
         }
 
         drawRect(xPosition, yPosition, xPosition + width, yPosition + height, background);
-        int border = primary ? (hovered ? 0xFFFFF0BE : 0xFFFFD866)
-                : (hovered ? 0xFFFFD866 : 0x664B515D);
+        int border = active ? 0xFFFFD866
+                : (primary ? (hovered ? 0xFFFFF0BE : 0xFFFFD866)
+                : (hovered ? 0xFFFFD866 : 0x664B515D));
         drawRect(xPosition, yPosition, xPosition + width, yPosition + 1, border);
         drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height,
                 primary ? 0x66FFFFFF : 0xAA090A0E);
