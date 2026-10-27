@@ -133,7 +133,12 @@ public class HudEditorGui extends AlphaGuiScreen {
         if (hasBhopAccess() && BhopHud.isEnabled()) if ("bhop".equals(selectedHud)) drawScaleHandle(BhopHud.getHudX(), BhopHud.getHudY(), (int)(BhopHud.getHudWidth() * BhopHud.getVisualScale() * HudScaleConfig.get("bhop")), 20);
         if (AfkTimerHud.isEnabled()) if ("afkTimer".equals(selectedHud)) drawScaleHandle(AfkTimerHud.getHudX(), AfkTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("AFK 00:00") + 10) * HudScaleConfig.get("afkTimer")), fontRendererObj.FONT_HEIGHT + 6);
         if (SessionTimerHud.isEnabled()) if ("sessionTimer".equals(selectedHud)) drawScaleHandle(SessionTimerHud.getHudX(), SessionTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("SESSION 00:00:00") + 10) * HudScaleConfig.get("sessionTimer")), fontRendererObj.FONT_HEIGHT + 6);
-        if (PlaytimeTrackerHud.isEnabled()) if ("playtimeTracker".equals(selectedHud)) drawScaleHandle(PlaytimeTrackerHud.getHudX(), PlaytimeTrackerHud.getHudY(), (int)((fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10) * HudScaleConfig.get("playtimeTracker")), fontRendererObj.FONT_HEIGHT + 6);
+        if (PlaytimeTrackerHud.isEnabled() && "playtimeTracker".equals(selectedHud)) {
+            int playWidth = (int)(PlaytimeTrackerHud.getEditorWidth() * HudScaleConfig.get("playtimeTracker"));
+            int playX = PlaytimeTrackerHud.getHudX();
+            if (playX > width / 2) playX -= playWidth;
+            drawScaleHandle(playX, PlaytimeTrackerHud.getHudY(), playWidth, fontRendererObj.FONT_HEIGHT + 6);
+        }
         if (isFpsModuleEnabled()) if ("fps".equals(selectedHud)) drawScaleHandle(FpsMod.getHudX(), FpsMod.getHudY(), (int)((fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10) * HudScaleConfig.get("fps")), fontRendererObj.FONT_HEIGHT + 6);
         if (isPingModuleEnabled()) if ("ping".equals(selectedHud)) drawScaleHandle(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6);
         if (isCpsModuleEnabled()) if ("cps".equals(selectedHud)) drawScaleHandle(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6);
@@ -167,7 +172,11 @@ public class HudEditorGui extends AlphaGuiScreen {
             if (hasBhopAccess() && BhopHud.isEnabled() && scaleHandleHit(BhopHud.getHudX(), BhopHud.getHudY(), (int)(BhopHud.getHudWidth() * BhopHud.getVisualScale() * HudScaleConfig.get("bhop")), 20, mouseX, mouseY)) { selectedHud = "bhop"; beginScale("bhop", mouseY); return; }
             if (AfkTimerHud.isEnabled() && scaleHandleHit(AfkTimerHud.getHudX(), AfkTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("AFK 00:00") + 10) * HudScaleConfig.get("afkTimer")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "afkTimer"; beginScale("afkTimer", mouseY); return; }
             if (SessionTimerHud.isEnabled() && scaleHandleHit(SessionTimerHud.getHudX(), SessionTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("SESSION 00:00:00") + 10) * HudScaleConfig.get("sessionTimer")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "sessionTimer"; beginScale("sessionTimer", mouseY); return; }
-            if (PlaytimeTrackerHud.isEnabled() && scaleHandleHit(PlaytimeTrackerHud.getHudX(), PlaytimeTrackerHud.getHudY(), (int)((fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10) * HudScaleConfig.get("playtimeTracker")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "playtimeTracker"; beginScale("playtimeTracker", mouseY); return; }
+            if (PlaytimeTrackerHud.isEnabled() && scaleHandleHit(
+                    PlaytimeTrackerHud.getHudX() > width / 2 ? PlaytimeTrackerHud.getHudX() - (int)(PlaytimeTrackerHud.getEditorWidth() * HudScaleConfig.get("playtimeTracker")) : PlaytimeTrackerHud.getHudX(),
+                    PlaytimeTrackerHud.getHudY(),
+                    (int)(PlaytimeTrackerHud.getEditorWidth() * HudScaleConfig.get("playtimeTracker")),
+                    fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "playtimeTracker"; beginScale("playtimeTracker", mouseY); return; }
             if (isFpsModuleEnabled() && scaleHandleHit(FpsMod.getHudX(), FpsMod.getHudY(), (int)((fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10) * HudScaleConfig.get("fps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "fps"; beginScale("fps", mouseY); return; }
             if (isPingModuleEnabled() && scaleHandleHit(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "ping"; beginScale("ping", mouseY); return; }
             if (isCpsModuleEnabled() && scaleHandleHit(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "cps"; beginScale("cps", mouseY); return; }
@@ -328,9 +337,13 @@ public class HudEditorGui extends AlphaGuiScreen {
                 y = Math.max(0, Math.min(Math.max(0, height - InfoHudModules.getPotionEditorHeight()), y));
                 InfoHudModules.setPotionPosition(x, y);
             } else if (playtimeTrackerDragging) {
-                int itemWidth = fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10;
-                x = Math.max(3, Math.min(width - itemWidth - 3, x));
+                int itemWidth = (int)Math.ceil(PlaytimeTrackerHud.getEditorWidth() * HudScaleConfig.get("playtimeTracker"));
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
+                if (PlaytimeTrackerHud.getHudX() > width / 2) {
+                    x = Math.max(itemWidth + 3, Math.min(width - 3, x + itemWidth));
+                } else {
+                    x = Math.max(3, Math.min(width - itemWidth - 3, x));
+                }
                 PlaytimeTrackerHud.setHudPosition(x, y);
             } else {
                 float scale = BhopHud.getVisualScale();
