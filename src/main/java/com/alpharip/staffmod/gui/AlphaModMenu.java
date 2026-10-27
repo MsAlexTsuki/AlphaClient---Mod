@@ -6,6 +6,7 @@ import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
+import com.alpharip.staffmod.founderfun.PixelGardenGUI;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.permissions.PermissionService;
@@ -496,6 +497,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 if (!clickedModule.isUnlocked()) {
                     selectedModuleId = "";
                     initGui();
+                    return;
+                }
+                if ("pixelgarden".equals(clickedModule.getId())) {
+                    if (PermissionService.hasCommandPermission("menu.pixelgarden", false)) {
+                        mc.displayGuiScreen(new PixelGardenGUI(this));
+                    }
                     return;
                 }
                 if ("quality".equals(clickedModule.getId())) {
