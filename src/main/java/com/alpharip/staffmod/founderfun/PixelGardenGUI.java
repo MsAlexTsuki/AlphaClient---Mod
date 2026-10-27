@@ -123,9 +123,9 @@ public final class PixelGardenGUI extends GuiScreen {
                 width / 2, 79, 0xFFB8BDC8);
         drawCenteredString(fontRendererObj, "Plant an empty plot; click HARVEST when it is ready.",
                 width / 2, 94, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Growth time: 20 minutes", width / 2, 208, 0xFF9CE2AC);
+        drawCenteredString(fontRendererObj, "Growth time: 20 minutes", width / 2, 242, 0xFF9CE2AC);
         drawCenteredString(fontRendererObj, "Prototype: account-linked cloud saving is not connected yet.",
-                width / 2, 222, 0xFF8F96A3);
+                width / 2, 256, 0xFF8F96A3);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
