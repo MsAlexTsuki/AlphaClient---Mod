@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.movement;
 
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 
 /**
  * S-Tap configuration. S-Tap deliberately uses the W key; WTapAssistance owns
@@ -19,6 +20,7 @@ public final class STapAssistance {
 
     private static boolean hasFounderAccess() {
         return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
+                || SupabaseCommunityService.isSignedInFounder()
                 || PermissionService.hasModAccess("w-tap-assistance")
                 || PermissionService.hasCommandPermission("command.wtap", false);
     }
