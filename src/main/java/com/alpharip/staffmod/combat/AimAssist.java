@@ -106,18 +106,27 @@ public final class AimAssist {
 
     private TargetAim findClosestBodyAimPoint(EntityPlayer viewer, EntityPlayer target) {
         AxisAlignedBB box = target.getEntityBoundingBox();
-        double centerX = (box.minX + box.maxX) * 0.5D;
-        double centerZ = (box.minZ + box.maxZ) * 0.5D;
+        double bodyWidthX = box.maxX - box.minX;
+        double bodyWidthZ = box.maxZ - box.minZ;
         double bodyHeight = box.maxY - box.minY;
+        double[] horizontalSamples = {0.10D, 0.50D, 0.90D};
         TargetAim bestAim = null;
         float bestAngle = AimAssistSettings.getMaximumAngleDegrees();
 
-        for (double heightFraction : AimAssistSettings.getTargetArea().getHeightSamples()) {
-            double aimY = box.minY + bodyHeight * heightFraction;
-            float angle = getAimAngle(viewer, centerX, aimY, centerZ);
-            if (angle < bestAngle) {
-                bestAngle = angle;
-                bestAim = new TargetAim(target, centerX, aimY, centerZ, angle);
+        // Sample across the hitbox width/depth as well as the selected body heights.
+        // This makes the full model targetable instead of checking only a vertical center line.
+        for (double xFraction : horizontalSamples) {
+            for (double zFraction : horizontalSamples) {
+                double aimX = box.minX + bodyWidthX * xFraction;
+                double aimZ = box.minZ + bodyWidthZ * zFraction;
+                for (double heightFraction : AimAssistSettings.getTargetArea().getHeightSamples()) {
+                    double aimY = box.minY + bodyHeight * heightFraction;
+                    float angle = getAimAngle(viewer, aimX, aimY, aimZ);
+                    if (angle < bestAngle) {
+                        bestAngle = angle;
+                        bestAim = new TargetAim(target, aimX, aimY, aimZ, angle);
+                    }
+                }
             }
         }
         return bestAim;
