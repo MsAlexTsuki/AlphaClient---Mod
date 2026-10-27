@@ -97,12 +97,14 @@ public final class PlaytimeTrackerHud {
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, 0.0F);
         GlStateManager.scale(scale, scale, 1.0F);
-        int textWidth = mc.fontRendererObj.getStringWidth(text) + 10;
+        int textWidth = mc.fontRendererObj.getStringWidth(text);
+        boolean alignLeft = x > new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth() / 2;
+        int textX = alignLeft ? -textWidth : 0;
         if (isShowBackground()) {
-            Gui.drawRect(-3, -3, textWidth, mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
-            Gui.drawRect(-3, -3, textWidth, -2, 0xFFFFD866);
+            Gui.drawRect(textX - 3, -3, textX + textWidth + 3, mc.fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+            Gui.drawRect(textX - 3, -3, textX + textWidth + 3, -2, 0xFFFFD866);
         }
-        mc.fontRendererObj.drawStringWithShadow(text, 0, 0, getTextColor());
+        mc.fontRendererObj.drawStringWithShadow(text, textX, 0, getTextColor());
         GlStateManager.popMatrix();
     }
 
@@ -202,6 +204,13 @@ public final class PlaytimeTrackerHud {
     public static int getHudX() {
         JsonObject settings = getSettings();
         return settings.has("hudX") ? Math.max(0, settings.get("hudX").getAsInt()) : 6;
+    }
+
+    public static int getEditorWidth() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.fontRendererObj == null) return 160;
+        String text = getDisplayName() + ": " + formatDuration(getTotalPlaytimeSeconds(), getFormatMode());
+        return mc.fontRendererObj.getStringWidth(text) + 6;
     }
 
     public static int getHudY() {
