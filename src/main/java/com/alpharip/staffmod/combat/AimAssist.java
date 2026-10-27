@@ -1,3 +1,5 @@
+--- Made By MsAlexTsuki ---
+    
 package com.alpharip.staffmod.combat;
 
 import com.alpharip.staffmod.modules.AlphaModule;
