@@ -159,7 +159,8 @@ public final class PixelGardenGUI extends GuiScreen {
             int x = gx + (visibleIndex % PLOT_COLUMNS) * (cell + gap);
             int y = gy + 8 + ((visibleIndex / PLOT_COLUMNS) - plotScrollRow) * (tileHeight + gap);
             buttonList.add(new AlphaButton(PLOT_BASE + plotIndex, x, y, cell, tileHeight,
-                    plotButtonLabel(plots.get(plotIndex), System.currentTimeMillis(), plotIndex)));
+                    plotButtonLabel(plots.get(plotIndex), System.currentTimeMillis(), plotIndex),
+                    false, false, true));
         }
         int cropY = gy - 25;
         int cropGap = 6;
