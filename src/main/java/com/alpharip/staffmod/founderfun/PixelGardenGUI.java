@@ -29,6 +29,7 @@ public final class PixelGardenGUI extends GuiScreen {
     private volatile String cloudStatus = "Cloud save: checking account...";
     private volatile boolean loadingCloud = false;
     private volatile boolean cloudReady = false;
+    private long lastButtonRefresh = 0L;
 
     public PixelGardenGUI(GuiScreen parent) {
         this.parent = parent;
@@ -212,7 +213,12 @@ public final class PixelGardenGUI extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        game.processTime(System.currentTimeMillis());
+        long now = System.currentTimeMillis();
+        game.processTime(now);
+        if (now - lastButtonRefresh >= 1000L) {
+            lastButtonRefresh = now;
+            initGui();
+        }
         drawRect(0, 0, width, height, 0xD90A0C11);
         drawRect(width / 2 - 150, 34, width / 2 + 150, 36, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "PIXEL GARDEN", width / 2, 43, 0xFFFFD866);
