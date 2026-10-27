@@ -157,8 +157,11 @@ public final class WTapAssistance {
         boolean physicalW = Keyboard.isKeyDown(keyCode);
 
         if (mc.currentScreen != null) {
-            clearPendingTap();
-            restoreMovementKeys(mc);
+            // Do not mirror physical key state while a GUI/chat is open: typing
+            // the letter S must not activate the backward movement binding.
+            clearPendingTap(false);
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(), false);
             return;
         }
 
@@ -226,11 +229,16 @@ public final class WTapAssistance {
     }
 
     private void clearPendingTap() {
+        clearPendingTap(true);
+    }
+
+    private void clearPendingTap(boolean restorePhysicalState) {
         pendingDelay = -1;
         releaseTicks = 0;
         activeSPhase = false;
         if (activeSKeyCode >= 0) {
-            KeyBinding.setKeyBindState(activeSKeyCode, Keyboard.isKeyDown(activeSKeyCode));
+            KeyBinding.setKeyBindState(activeSKeyCode,
+                    restorePhysicalState && Keyboard.isKeyDown(activeSKeyCode));
             activeSKeyCode = -1;
         }
     }
