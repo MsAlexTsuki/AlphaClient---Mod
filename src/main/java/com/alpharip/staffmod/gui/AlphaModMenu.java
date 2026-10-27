@@ -468,7 +468,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (button.id >= CATEGORY_BASE
                 && button.id < CATEGORY_BASE + AlphaModule.Category.values().length) {
             AlphaModule.Category category = AlphaModule.Category.values()[button.id - CATEGORY_BASE];
-            if (PermissionService.hasAccess(category.getRequiredRank())) {
+            boolean categoryAccess = PermissionService.hasAccess(category.getRequiredRank())
+                    || (category == AlphaModule.Category.FOUNDER
+                    && SupabaseCommunityService.isSignedInFounder());
+            if (categoryAccess) {
                 selectedCategory = category;
                 selectedModuleId = "";
             }
