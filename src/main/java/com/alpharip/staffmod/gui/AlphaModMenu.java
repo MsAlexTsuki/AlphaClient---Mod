@@ -591,7 +591,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     && mouseY >= panelTop + 65 && mouseY <= panelTop + panelHeight - 40) {
                 int sidebarCount = 0;
                 for (AlphaModule.Category category : AlphaModule.Category.values()) {
-                    if (isStaffRankCategory(category) || isDonatorRankCategory(category)) continue;
+                    if ((isStaffRankCategory(category) && category != AlphaModule.Category.FOUNDER)
+                            || isDonatorRankCategory(category)) continue;
                     boolean allowed = PermissionService.hasAccess(category.getRequiredRank());
                     if (!allowed) {
                         for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
