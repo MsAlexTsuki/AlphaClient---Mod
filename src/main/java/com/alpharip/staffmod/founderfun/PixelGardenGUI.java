@@ -286,7 +286,7 @@ public final class PixelGardenGUI extends GuiScreen {
                              PixelGardenGame.PlotState state) {
         int spriteU = crop.ordinal() * 16;
         int spriteV = 0;
-        int spriteSize = Math.max(16, size / 2);
+        int spriteSize = Math.max(24, size);
         if (state == PixelGardenGame.PlotState.EMPTY) {
             drawSprite(x + (size - spriteSize) / 2, y + (size - spriteSize) / 2,
                     spriteSize, spriteSize, 48, 16);
