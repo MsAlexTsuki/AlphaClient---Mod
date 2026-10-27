@@ -122,6 +122,10 @@ public final class WTapAssistance {
         boolean selectedRequireW = useSTap ? STapAssistance.isRequireW() : requireW;
         int selectedMode = useSTap ? STapAssistance.getMode() : mode;
         int selectedDelay = useSTap ? STapAssistance.getDelay() : delay;
+        // S-Tap Standard must react on the hit rather than after a noticeable delay.
+        // Legit gets a small timing and duration increase; Aggressive stays unchanged.
+        if (useSTap && selectedMode == 0) selectedDelay = 0;
+        else if (useSTap && selectedMode == 1) selectedDelay = Math.min(selectedDelay, 1);
         int selectedCooldown = useSTap ? STapAssistance.getCooldown() : cooldown;
 
         if (selectedTarget == 0 && !(victim instanceof EntityPlayer)) return;
@@ -191,7 +195,9 @@ public final class WTapAssistance {
         if (pendingDelay == 0) {
             pendingDelay = -1;
             if (!activeRequireW || physicalW) {
-                releaseTicks = 1 + activeMode;
+                releaseTicks = activeUsesSTap
+                        ? (activeMode == 0 ? 2 : activeMode == 1 ? 3 : 1 + activeMode)
+                        : 1 + activeMode;
                 if (activeUsesSTap) {
                     activeSPhase = true;
                     activeSKeyCode = mc.gameSettings.keyBindBack.getKeyCode();
