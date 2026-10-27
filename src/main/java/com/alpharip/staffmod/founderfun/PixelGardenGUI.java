@@ -107,41 +107,67 @@ public final class PixelGardenGUI extends GuiScreen {
         return message == null || message.trim().isEmpty() ? "unknown error" : message;
     }
 
+    private static final int PLOT_COLUMNS = 3;
     private int gardenCell() {
-        return Math.max(42, Math.min(86, (width - 100) / 6 - 6));
+        return Math.max(100, Math.min(170, (width - 180) / PLOT_COLUMNS - 6));
     }
-    private int gardenTileHeight() { return 48; }
+    private int gardenTileHeight() { return 76; }
     private int visiblePlotRows() {
-        int available = height - gardenTop() - 180;
-        return Math.max(1, Math.min(2, available / (gardenTileHeight() + 4)));
+        int available = height - gardenTop() - 205;
+        return Math.max(1, Math.min(3, available / (gardenTileHeight() + 8)));
+    }
+    private int unlockedPlotCount(List<PixelGardenGame.Plot> plots) {
+        int count = 0;
+        for (PixelGardenGame.Plot plot : plots) if (plot.isUnlocked()) count++;
+        return count;
+    }
+    private int plotIndexAtVisiblePosition(List<PixelGardenGame.Plot> plots, int visibleIndex) {
+        int found = 0;
+        for (int i = 0; i < plots.size(); i++) {
+            if (!plots.get(i).isUnlocked()) continue;
+            if (found++ == visibleIndex) return i;
+        }
+        return -1;
     }
     @Override public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
         if (wheel != 0) {
-            int maxRows = Math.max(0, (game.getPlots().size() + 5) / 6 - visiblePlotRows());
+            List<PixelGardenGame.Plot> plots = game.getPlots();
+            int maxRows = Math.max(0, (unlockedPlotCount(plots) + PLOT_COLUMNS - 1) / PLOT_COLUMNS - visiblePlotRows());
             plotScrollRow = Math.max(0, Math.min(maxRows, plotScrollRow + (wheel < 0 ? 1 : -1)));
             initGui();
         }
     }
-    private int gardenWidth() { return gardenCell() * 6 + 20; }
+    private int gardenWidth() { return gardenCell() * PLOT_COLUMNS + 20; }
     private int gardenLeft() { return (width - gardenWidth()) / 2; }
-    private int gardenTop() { return Math.max(105, (height - (gardenTileHeight() * 3 + 70)) / 2); }
+    private int gardenTop() { return Math.max(150, (height - (gardenTileHeight() * 3 + 150)) / 2); }
 
     @Override
     public void initGui() {
         buttonList.clear();
         game.processTime(System.currentTimeMillis());
-        int cell = gardenCell(), tileHeight = gardenTileHeight(), gap = 4, gx = gardenLeft(), gy = gardenTop();
+        int cell = gardenCell(), tileHeight = gardenTileHeight(), gap = 8, gx = gardenLeft(), gy = gardenTop();
         List<PixelGardenGame.Plot> plots = game.getPlots();
         int visibleRows = visiblePlotRows();
-        int firstPlot = plotScrollRow * 6;
-        int lastPlot = Math.min(plots.size(), firstPlot + visibleRows * 6);
-        for (int i = firstPlot; i < lastPlot; i++) {
-            int x = gx + (i % 6) * (cell + gap);
-            int y = gy + ((i / 6) - plotScrollRow) * (tileHeight + gap);
-            buttonList.add(new AlphaButton(PLOT_BASE + i, x, y, cell, tileHeight,
-                    plotButtonLabel(plots.get(i), System.currentTimeMillis(), i)));
+        int unlockedCount = unlockedPlotCount(plots);
+        int firstPlot = plotScrollRow * PLOT_COLUMNS;
+        int lastPlot = Math.min(unlockedCount, firstPlot + visibleRows * PLOT_COLUMNS);
+        for (int visibleIndex = firstPlot; visibleIndex < lastPlot; visibleIndex++) {
+            int plotIndex = plotIndexAtVisiblePosition(plots, visibleIndex);
+            if (plotIndex < 0) continue;
+            int x = gx + (visibleIndex % PLOT_COLUMNS) * (cell + gap);
+            int y = gy + 8 + ((visibleIndex / PLOT_COLUMNS) - plotScrollRow) * (tileHeight + gap);
+            buttonList.add(new AlphaButton(PLOT_BASE + plotIndex, x, y, cell, tileHeight,
+                    plotButtonLabel(plots.get(plotIndex), System.currentTimeMillis(), plotIndex)));
+        }
+        int cropY = gy - 25;
+        int cropGap = 6;
+        int cropWidth = (gardenWidth() - 12 - cropGap * 3) / 4;
+        for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
+            int x = gx + crop.ordinal() * (cropWidth + cropGap);
+            String label = (selectedCrop == crop ? "> " : "") + crop.displayName + " (" + game.getSeeds(crop) + ")";
+            buttonList.add(new AlphaButton(CROP_BASE + crop.ordinal(), x, cropY, cropWidth, 20, label));
         }
         int navY = height - 55;
         int navWidth = Math.min(104, (width - 50) / 5);
@@ -291,38 +317,38 @@ public final class PixelGardenGUI extends GuiScreen {
         drawString(fontRendererObj, game.getUnlockedPlots() + " / " + PixelGardenGame.MAX_PLOTS + " plots",
                 width / 2 + 75, 15, 0xFFE3E7EE);
 
-        int gx = gardenLeft(), gy = gardenTop(), cell = gardenCell(), tileHeight = gardenTileHeight(), gap = 4;
+        int gx = gardenLeft(), gy = gardenTop(), cell = gardenCell(), tileHeight = gardenTileHeight(), gap = 8;
         int visibleRows = visiblePlotRows();
         int gardenW = gardenWidth();
-        panel(gx - 12, gy - 30, gardenW + 24, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 48);
-        drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 22, 0xFFFFD45A);
-        drawString(fontRendererObj, "Choose a plot to plant or harvest", gx + 2, gy - 10, 0xFFB7C4D5);
-        drawPixelGardenBorder(gx - 7, gy - 3, gardenW + 14, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 12);
+        panel(gx - 12, gy - 60, gardenW + 24, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 86);
+        drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 52, 0xFFFFD45A);
+        drawString(fontRendererObj, "Select a crop above, then click an unlocked plot", gx + 2, gy - 39, 0xFFB7C4D5);
+        drawPixelGardenBorder(gx - 7, gy + 4, gardenW + 14, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 12);
 
         List<PixelGardenGame.Plot> plots = game.getPlots();
-        int firstPlot = plotScrollRow * 6;
-        int lastPlot = Math.min(plots.size(), firstPlot + visibleRows * 6);
-        for (int i = firstPlot; i < lastPlot; i++) {
-            int x = gx + (i % 6) * (cell + gap);
-            int y = gy + ((i / 6) - plotScrollRow) * (tileHeight + gap);
+        int unlockedCount = unlockedPlotCount(plots);
+        int firstPlot = plotScrollRow * PLOT_COLUMNS;
+        int lastPlot = Math.min(unlockedCount, firstPlot + visibleRows * PLOT_COLUMNS);
+        for (int visibleIndex = firstPlot; visibleIndex < lastPlot; visibleIndex++) {
+            int i = plotIndexAtVisiblePosition(plots, visibleIndex);
+            if (i < 0) continue;
+            int x = gx + (visibleIndex % PLOT_COLUMNS) * (cell + gap);
+            int y = gy + 8 + ((visibleIndex / PLOT_COLUMNS) - plotScrollRow) * (tileHeight + gap);
             PixelGardenGame.Plot plot = plots.get(i);
             PixelGardenGame.PlotState state = plot.getState(now);
-            drawRect(x - 2, y - 2, x + cell + 2, y + tileHeight + 2, state == PixelGardenGame.PlotState.LOCKED
-                    ? 0xFF252A32 : 0xFF5A3823);
-            drawRect(x, y, x + cell, y + tileHeight, state == PixelGardenGame.PlotState.LOCKED
-                    ? 0xFF30343A : 0xFF86552E);
+            drawRect(x - 2, y - 2, x + cell + 2, y + tileHeight + 2, 0xFF5A3823);
+            drawRect(x, y, x + cell, y + tileHeight, state == PixelGardenGame.PlotState.EMPTY
+                    ? 0xFF86552E : 0xFF704326);
             drawRect(x + 3, y + tileHeight - 8, x + cell - 3, y + tileHeight - 5, 0xFF704326);
             drawRect(x + 5, y + tileHeight - 5, x + cell - 5, y + tileHeight - 3, 0xFF9A6639);
-            if (state == PixelGardenGame.PlotState.LOCKED) {
-                drawCenteredString(fontRendererObj, "LOCKED", x + cell / 2, y + tileHeight / 2 - 4, 0xFF8E949D);
-            } else if (state == PixelGardenGame.PlotState.EMPTY) {
-                drawCropArt(selectedCrop, x, y, Math.min(cell, tileHeight), now, state);
-                drawCenteredString(fontRendererObj, "+", x + cell - 8, y + tileHeight - 12, 0xFFD7C4A3);
+            if (state == PixelGardenGame.PlotState.EMPTY) {
+                drawCropArt(selectedCrop, x, y, 48, now, state);
+                drawCenteredString(fontRendererObj, "PLANT " + selectedCrop.displayName.toUpperCase(), x + cell / 2, y + tileHeight - 15, 0xFFF4E6C8);
             } else {
-                drawCropArt(plot.getCrop(), x, y, Math.min(cell, tileHeight), now, state);
+                drawCropArt(plot.getCrop(), x, y, 48, now, state);
                 if (state == PixelGardenGame.PlotState.READY) {
-                    drawRect(x + 3, y + 3, x + cell - 3, y + 14, 0xDD172015);
-                    drawCenteredString(fontRendererObj, "READY!", x + cell / 2, y + 5, 0xFFFFE46B);
+                    drawRect(x + 3, y + 3, x + cell - 3, y + 15, 0xDD172015);
+                    drawCenteredString(fontRendererObj, "READY - CLICK TO HARVEST", x + cell / 2, y + 5, 0xFFFFE46B);
                 } else {
                     long secs = plot.getRemainingMillis(now) / 1000L;
                     String timer = (secs / 60) + "m " + (secs % 60) + "s";
@@ -333,8 +359,8 @@ public final class PixelGardenGUI extends GuiScreen {
         }
 
         if (plotScrollRow > 0) drawString(fontRendererObj, "Scroll up for earlier plots", gx, gy - 3, 0xFFB7C4D5);
-        if ((plots.size() + 5) / 6 > plotScrollRow + visibleRows)
-            drawString(fontRendererObj, "Scroll down for more plots", gx, gy + tileHeight * visibleRows + gap * visibleRows + 2, 0xFFB7C4D5);
+        if ((unlockedCount + PLOT_COLUMNS - 1) / PLOT_COLUMNS > plotScrollRow + visibleRows)
+            drawString(fontRendererObj, "Scroll down for more plots", gx, gy + 8 + tileHeight * visibleRows + gap * visibleRows + 2, 0xFFB7C4D5);
         drawCenteredString(fontRendererObj, "Seeds: " + selectedCrop.displayName + " x" + game.getSeeds(selectedCrop)
                 + "    Harvested inventory: " + inventoryTotal(), width / 2, height - 72, 0xFFE6E9EF);
         drawCenteredString(fontRendererObj, "Plant  >  Grow  >  Harvest  >  Sell  >  Upgrade",
