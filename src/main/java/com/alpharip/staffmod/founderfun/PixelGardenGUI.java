@@ -103,12 +103,19 @@ public final class PixelGardenGUI extends GuiScreen {
         return message == null || message.trim().isEmpty() ? "unknown error" : message;
     }
 
-    private int gardenCell() { return Math.max(52, Math.min(86, (height - 230) / 6)); }
+    private int sidePanelWidth() { return Math.max(190, Math.min(280, (width - 470) / 2)); }
+    private int gardenCell() {
+        int byHeight = (height - 250) / 3 - 8;
+        int byWidth = (width - sidePanelWidth() * 2 - 90) / 3 - 8;
+        return Math.max(58, Math.min(128, Math.min(byHeight, byWidth)));
+    }
     private int gardenWidth() { return gardenCell() * 3 + 12; }
-    private int gardenLeft() { return (width - gardenWidth()) / 2; }
-    private int gardenTop() { return Math.max(112, (height - (gardenCell() * 3 + 12)) / 2 - 2); }
-    private int leftPanelX() { return Math.max(8, gardenLeft() - 172); }
-    private int rightPanelX() { return Math.min(width - 168, gardenLeft() + gardenWidth() + 12); }
+    private int totalLayoutWidth() { return sidePanelWidth() * 2 + gardenWidth() + 40; }
+    private int layoutLeft() { return Math.max(8, (width - totalLayoutWidth()) / 2); }
+    private int leftPanelX() { return layoutLeft(); }
+    private int gardenLeft() { return leftPanelX() + sidePanelWidth() + 14; }
+    private int rightPanelX() { return gardenLeft() + gardenWidth() + 14; }
+    private int gardenTop() { return Math.max(145, (height - (gardenCell() * 3 + 12)) / 2 - 2); }
 
     @Override
     public void initGui() {
@@ -116,7 +123,7 @@ public final class PixelGardenGUI extends GuiScreen {
         game.processTime(System.currentTimeMillis());
         int cell = gardenCell(), gap = 4, gx = gardenLeft(), gy = gardenTop();
         int leftX = leftPanelX(), rightX = rightPanelX();
-        int sideWidth = Math.max(142, Math.min(164, gx - leftX - 8));
+        int sideWidth = sidePanelWidth();
         int cropY = 72;
         for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
             int rowY = cropY + crop.ordinal() * 43;
@@ -135,7 +142,7 @@ public final class PixelGardenGUI extends GuiScreen {
                     plotButtonLabel(plots.get(i), System.currentTimeMillis(), i)));
         }
         int upgradeY = 75;
-        int upgradeWidth = Math.max(140, Math.min(164, width - rightX - 10));
+        int upgradeWidth = sidePanelWidth() - 8;
         buttonList.add(new AlphaButton(AUTO, rightX + 4, upgradeY + 20, upgradeWidth - 8, 22,
                 game.hasAutoHarvest() ? "Auto Harvest: ON" : "Auto Harvest (" + game.getUpgradeCost("auto_harvest") + ")"));
         buttonList.add(new AlphaButton(GROWTH, rightX + 4, upgradeY + 83, upgradeWidth - 8, 22,
@@ -197,6 +204,19 @@ public final class PixelGardenGUI extends GuiScreen {
         drawRect(x, y, x + size, y + size, color);
     }
 
+    /** Tiny blocky sprout emblem drawn at integer pixel scale for the 1.8.9 GUI. */
+    private void drawPixelSprout(int x, int y, int scale) {
+        pixel(x + 4 * scale, y + 7 * scale, 2 * scale, 0xFF9A5B27);
+        pixel(x + 5 * scale, y + 5 * scale, scale, 0xFF3C9C39);
+        pixel(x + 3 * scale, y + 2 * scale, 3 * scale, 2 * scale, 0xFF62C943);
+        pixel(x + 6 * scale, y, 3 * scale, 2 * scale, 0xFF8AE34D);
+        pixel(x + 5 * scale, y + 2 * scale, scale, 4 * scale, 0xFF3C9C39);
+    }
+
+    private void pixel(int x, int y, int w, int h, int color) {
+        drawRect(x, y, x + w, y + h, color);
+    }
+
     private void drawCropArt(PixelGardenGame.Crop crop, int x, int y, int size, long now,
                              PixelGardenGame.PlotState state) {
         int p = Math.max(3, size / 12);
@@ -236,16 +256,18 @@ public final class PixelGardenGUI extends GuiScreen {
         drawDefaultBackground();
         drawRect(0, 0, width, 48, 0xF00B1018);
         drawRect(0, 46, width, 49, 0xFFFFC83D);
-        drawString(fontRendererObj, "PIXEL", 18, 15, 0xFFF3F5F8);
-        drawString(fontRendererObj, "GARDEN", 58, 15, 0xFFFFC83D);
-        drawString(fontRendererObj, "Coins: " + game.getCoins(), width / 2 - 35, 15, 0xFFFFD45A);
+        drawPixelSprout(18, 10, 2);
+        drawString(fontRendererObj, "PIXEL", 43, 15, 0xFFF3F5F8);
+        drawString(fontRendererObj, "GARDEN", 83, 15, 0xFFFFC83D);
+        drawString(fontRendererObj, "Plant  •  Grow  •  Harvest  •  Sell", 150, 15, 0xFFB7C4D5);
+        drawString(fontRendererObj, "Coins: " + game.getCoins(), width / 2 - 45, 15, 0xFFFFD45A);
         drawString(fontRendererObj, game.getUnlockedPlots() + " / " + PixelGardenGame.MAX_PLOTS + " plots",
-                width / 2 + 55, 15, 0xFFE3E7EE);
+                width / 2 + 75, 15, 0xFFE3E7EE);
 
         int gx = gardenLeft(), gy = gardenTop(), cell = gardenCell(), gap = 4;
         int gardenW = gardenWidth();
-        int sideW = Math.max(142, Math.min(164, gx - leftPanelX() - 8));
-        int rightW = Math.max(140, Math.min(164, width - rightPanelX() - 8));
+        int sideW = sidePanelWidth();
+        int rightW = sidePanelWidth();
         panel(leftPanelX(), 58, sideW, height - 92);
         panel(gx - 8, gy - 30, gardenW + 16, cell * 3 + gap * 2 + 48);
         panel(rightPanelX(), 58, rightW, height - 92);
