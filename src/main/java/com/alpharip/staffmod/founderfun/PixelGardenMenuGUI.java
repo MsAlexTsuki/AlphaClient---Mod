@@ -65,8 +65,13 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
-        if (button.id == BACK) { mc.displayGuiScreen(parent); return; }
+        if (button.id == BACK) {
+            saveIfGardenParent();
+            mc.displayGuiScreen(parent);
+            return;
+        }
         if (button.id >= TAB_SHOP && button.id <= TAB_UPGRADES) {
+            saveIfGardenParent();
             if (button.id == TAB_SHOP) mc.displayGuiScreen(new PixelGardenShopGUI(parent));
             else if (button.id == TAB_INVENTORY) mc.displayGuiScreen(new PixelGardenInventoryGUI(parent));
             else if (button.id == TAB_SELL) mc.displayGuiScreen(new PixelGardenSellGUI(parent));
@@ -82,7 +87,12 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             else if (button.id == ACTION_BASE + 1) game.buyGrowthBoost();
             else if (button.id == ACTION_BASE + 2) game.expandGarden();
         }
+        saveIfGardenParent();
         initGui();
+    }
+
+    private void saveIfGardenParent() {
+        if (parent instanceof PixelGardenGUI) ((PixelGardenGUI) parent).saveCloudAsync();
     }
 
     private void drawPanel(int x, int y, int w, int h) {
