@@ -185,8 +185,9 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                 int row = (i - startIndex) / columns;
                 int x = contentLeft + column * (tileWidth + gap);
                 int y = contentTop + row * rowHeight;
+                AlphaModule module = visibleModules.get(i);
                 buttonList.add(new AlphaButton(MODULE_BASE + i, x, y,
-                        tileWidth, tileHeight, visibleModules.get(i).getName()));
+                        tileWidth, tileHeight, module.getName(), false, module.isEnabled()));
             }
             if (selectedRank == PermissionService.Rank.PUBLIC) {
                 int utilityIndex = visibleModules.size();
