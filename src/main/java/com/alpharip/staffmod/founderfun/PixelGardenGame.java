@@ -62,7 +62,7 @@ public final class PixelGardenGame {
     private final List<Plot> plots = new ArrayList<Plot>();
     private final int[] seeds = new int[Crop.values().length];
     private final int[] inventory = new int[Crop.values().length];
-    private int coins = STARTING_COINS;
+    private int pixelGardenUpgradeCoins = STARTING_COINS;
     private boolean autoHarvest;
     private int growthLevels;
     private long lastProcessedAt = System.currentTimeMillis();
@@ -73,7 +73,7 @@ public final class PixelGardenGame {
         seeds[Crop.WHEAT.ordinal()] = 3;
     }
     public synchronized void resetToDefaults() {
-        coins = STARTING_COINS;
+        pixelGardenUpgradeCoins = STARTING_COINS;
         autoHarvest = false;
         growthLevels = 0;
         lastProcessedAt = System.currentTimeMillis();
@@ -89,7 +89,7 @@ public final class PixelGardenGame {
         }
     }
     public static PixelGardenGame getInstance() { return INSTANCE; }
-    public synchronized int getCoins() { return coins; }
+    public synchronized int getCoins() { return pixelGardenUpgradeCoins; }
     public synchronized int getSeeds(Crop crop) { return seeds[crop.ordinal()]; }
     public synchronized int getInventory(Crop crop) { return inventory[crop.ordinal()]; }
     public synchronized boolean hasAutoHarvest() { return autoHarvest; }
@@ -105,8 +105,8 @@ public final class PixelGardenGame {
     public synchronized boolean buySeeds(Crop crop, int amount) {
         if (crop == null || amount <= 0) return false;
         long cost = (long) crop.seedPrice * amount;
-        if (cost > coins || cost > Integer.MAX_VALUE) return false;
-        coins -= (int) cost;
+        if (cost > pixelGardenUpgradeCoins || cost > Integer.MAX_VALUE) return false;
+        pixelGardenUpgradeCoins -= (int) cost;
         seeds[crop.ordinal()] += amount;
         return true;
     }
@@ -129,32 +129,32 @@ public final class PixelGardenGame {
     public synchronized boolean sell(Crop crop, int amount) {
         if (crop == null || amount <= 0 || amount > inventory[crop.ordinal()]) return false;
         long earned = (long) crop.sellPrice * amount;
-        if (earned > Integer.MAX_VALUE - coins) return false;
+        if (earned > Integer.MAX_VALUE - pixelGardenUpgradeCoins) return false;
         inventory[crop.ordinal()] -= amount;
-        coins += (int) earned;
+        pixelGardenUpgradeCoins += (int) earned;
         return true;
     }
     public synchronized boolean sellAll(Crop crop) {
         return crop != null && sell(crop, inventory[crop.ordinal()]);
     }
     public synchronized boolean buyAutoHarvest() {
-        if (autoHarvest || coins < AUTO_HARVEST_COST) return false;
-        coins -= AUTO_HARVEST_COST;
+        if (autoHarvest || pixelGardenUpgradeCoins < AUTO_HARVEST_COST) return false;
+        pixelGardenUpgradeCoins -= AUTO_HARVEST_COST;
         autoHarvest = true;
         return true;
     }
     public synchronized boolean buyGrowthBoost() {
         if (growthLevels >= 3) return false;
         int cost = GROWTH_BOOST_COST * (growthLevels + 1);
-        if (coins < cost) return false;
-        coins -= cost;
+        if (pixelGardenUpgradeCoins < cost) return false;
+        pixelGardenUpgradeCoins -= cost;
         growthLevels++;
         return true;
     }
     public synchronized boolean expandGarden() {
-        if (getUnlockedPlots() >= MAX_PLOTS || coins < EXPANSION_COST) return false;
+        if (getUnlockedPlots() >= MAX_PLOTS || pixelGardenUpgradeCoins < EXPANSION_COST) return false;
         int unlockCount = Math.min(3, MAX_PLOTS - getUnlockedPlots());
-        coins -= EXPANSION_COST;
+        pixelGardenUpgradeCoins -= EXPANSION_COST;
         int unlocked = 0;
         for (Plot plot : plots) {
             if (!plot.unlocked && unlocked < unlockCount) {
@@ -194,7 +194,7 @@ public final class PixelGardenGame {
     public synchronized JsonObject toSaveData() {
         JsonObject root = new JsonObject();
         root.addProperty("version", 1);
-        root.addProperty("coins", coins);
+        root.addProperty("pixelGardenUpgradeCoins", pixelGardenUpgradeCoins);
         root.addProperty("auto_harvest", autoHarvest);
         root.addProperty("growth_levels", growthLevels);
         root.addProperty("unlocked_plots", getUnlockedPlots());
@@ -223,7 +223,7 @@ public final class PixelGardenGame {
     /** Restores a save after validating every value and then applies capped offline progress. */
     public synchronized void loadSaveData(JsonObject root) {
         if (root == null) return;
-        int savedCoins = root.has("coins") ? root.get("coins").getAsInt() : STARTING_COINS;
+        int savedCoins = root.has("pixelGardenUpgradeCoins") ? root.get("pixelGardenUpgradeCoins").getAsInt() : STARTING_COINS;
         int savedGrowth = root.has("growth_levels") ? root.get("growth_levels").getAsInt() : 0;
         boolean savedAuto = root.has("auto_harvest") && root.get("auto_harvest").getAsBoolean();
         int unlocked = root.has("unlocked_plots") ? root.get("unlocked_plots").getAsInt() : STARTING_PLOTS;
@@ -268,7 +268,7 @@ public final class PixelGardenGame {
     public synchronized void restore(int coinsValue, int[] seedValues, int[] inventoryValues,
             boolean autoHarvestValue, int growthLevelValue, int unlockedCount, Crop[] cropValues,
             long[] plantedAtValues, long[] growDurationValues, long savedAt) {
-        coins = Math.max(0, coinsValue);
+        pixelGardenUpgradeCoins = Math.max(0, coinsValue);
         for (Crop crop : Crop.values()) {
             int i = crop.ordinal();
             seeds[i] = seedValues != null && i < seedValues.length ? Math.max(0, seedValues[i]) : 0;
