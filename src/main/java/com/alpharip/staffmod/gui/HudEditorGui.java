@@ -38,6 +38,7 @@ public class HudEditorGui extends AlphaGuiScreen {
     private String scaleTarget;
     private int scaleStartY;
     private float scaleStartValue;
+    private String selectedHud;
 
     public HudEditorGui(GuiScreen parent) { this.parent = parent; }
 
@@ -129,15 +130,15 @@ public class HudEditorGui extends AlphaGuiScreen {
             fontRendererObj.drawStringWithShadow(cps, 0, 0, CpsMod.getTextColor());
             GlStateManager.popMatrix();
         }
-        if (hasBhopAccess() && BhopHud.isEnabled()) drawScaleHandle(BhopHud.getHudX(), BhopHud.getHudY(), (int)(BhopHud.getHudWidth() * BhopHud.getVisualScale() * HudScaleConfig.get("bhop")), 20);
-        if (AfkTimerHud.isEnabled()) drawScaleHandle(AfkTimerHud.getHudX(), AfkTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("AFK 00:00") + 10) * HudScaleConfig.get("afkTimer")), fontRendererObj.FONT_HEIGHT + 6);
-        if (SessionTimerHud.isEnabled()) drawScaleHandle(SessionTimerHud.getHudX(), SessionTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("SESSION 00:00:00") + 10) * HudScaleConfig.get("sessionTimer")), fontRendererObj.FONT_HEIGHT + 6);
-        if (PlaytimeTrackerHud.isEnabled()) drawScaleHandle(PlaytimeTrackerHud.getHudX(), PlaytimeTrackerHud.getHudY(), (int)((fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10) * HudScaleConfig.get("playtimeTracker")), fontRendererObj.FONT_HEIGHT + 6);
-        if (isFpsModuleEnabled()) drawScaleHandle(FpsMod.getHudX(), FpsMod.getHudY(), (int)((fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10) * HudScaleConfig.get("fps")), fontRendererObj.FONT_HEIGHT + 6);
-        if (isPingModuleEnabled()) drawScaleHandle(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6);
-        if (isCpsModuleEnabled()) drawScaleHandle(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6);
-        drawScaleHandle(InfoHudModules.getArmorX(), InfoHudModules.getArmorY(), (int)(InfoHudModules.getArmorEditorWidth() * HudScaleConfig.get("armor")), (int)(InfoHudModules.getArmorEditorHeight() * HudScaleConfig.get("armor")));
-        drawScaleHandle(InfoHudModules.getPotionX(), InfoHudModules.getPotionY(), (int)(InfoHudModules.getPotionEditorWidth() * HudScaleConfig.get("potion")), (int)(InfoHudModules.getPotionEditorHeight() * HudScaleConfig.get("potion")));
+        if (hasBhopAccess() && BhopHud.isEnabled()) if ("bhop".equals(selectedHud)) drawScaleHandle(BhopHud.getHudX(), BhopHud.getHudY(), (int)(BhopHud.getHudWidth() * BhopHud.getVisualScale() * HudScaleConfig.get("bhop")), 20);
+        if (AfkTimerHud.isEnabled()) if ("afkTimer".equals(selectedHud)) drawScaleHandle(AfkTimerHud.getHudX(), AfkTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("AFK 00:00") + 10) * HudScaleConfig.get("afkTimer")), fontRendererObj.FONT_HEIGHT + 6);
+        if (SessionTimerHud.isEnabled()) if ("sessionTimer".equals(selectedHud)) drawScaleHandle(SessionTimerHud.getHudX(), SessionTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("SESSION 00:00:00") + 10) * HudScaleConfig.get("sessionTimer")), fontRendererObj.FONT_HEIGHT + 6);
+        if (PlaytimeTrackerHud.isEnabled()) if ("playtimeTracker".equals(selectedHud)) drawScaleHandle(PlaytimeTrackerHud.getHudX(), PlaytimeTrackerHud.getHudY(), (int)((fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10) * HudScaleConfig.get("playtimeTracker")), fontRendererObj.FONT_HEIGHT + 6);
+        if (isFpsModuleEnabled()) if ("fps".equals(selectedHud)) drawScaleHandle(FpsMod.getHudX(), FpsMod.getHudY(), (int)((fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10) * HudScaleConfig.get("fps")), fontRendererObj.FONT_HEIGHT + 6);
+        if (isPingModuleEnabled()) if ("ping".equals(selectedHud)) drawScaleHandle(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6);
+        if (isCpsModuleEnabled()) if ("cps".equals(selectedHud)) drawScaleHandle(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6);
+        if ("armor".equals(selectedHud)) drawScaleHandle(InfoHudModules.getArmorX(), InfoHudModules.getArmorY(), (int)(InfoHudModules.getArmorEditorWidth() * HudScaleConfig.get("armor")), (int)(InfoHudModules.getArmorEditorHeight() * HudScaleConfig.get("armor")));
+        if ("potion".equals(selectedHud)) drawScaleHandle(InfoHudModules.getPotionX(), InfoHudModules.getPotionY(), (int)(InfoHudModules.getPotionEditorWidth() * HudScaleConfig.get("potion")), (int)(InfoHudModules.getPotionEditorHeight() * HudScaleConfig.get("potion")));
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
@@ -161,16 +162,17 @@ public class HudEditorGui extends AlphaGuiScreen {
     }
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        if (mouseButton == 0) selectedHud = null;
         if (mouseButton == 0) {
-            if (hasBhopAccess() && BhopHud.isEnabled() && scaleHandleHit(BhopHud.getHudX(), BhopHud.getHudY(), (int)(BhopHud.getHudWidth() * BhopHud.getVisualScale() * HudScaleConfig.get("bhop")), 20, mouseX, mouseY)) { beginScale("bhop", mouseY); return; }
-            if (AfkTimerHud.isEnabled() && scaleHandleHit(AfkTimerHud.getHudX(), AfkTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("AFK 00:00") + 10) * HudScaleConfig.get("afkTimer")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("afkTimer", mouseY); return; }
-            if (SessionTimerHud.isEnabled() && scaleHandleHit(SessionTimerHud.getHudX(), SessionTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("SESSION 00:00:00") + 10) * HudScaleConfig.get("sessionTimer")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("sessionTimer", mouseY); return; }
-            if (PlaytimeTrackerHud.isEnabled() && scaleHandleHit(PlaytimeTrackerHud.getHudX(), PlaytimeTrackerHud.getHudY(), (int)((fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10) * HudScaleConfig.get("playtimeTracker")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("playtimeTracker", mouseY); return; }
-            if (isFpsModuleEnabled() && scaleHandleHit(FpsMod.getHudX(), FpsMod.getHudY(), (int)((fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10) * HudScaleConfig.get("fps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("fps", mouseY); return; }
-            if (isPingModuleEnabled() && scaleHandleHit(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("ping", mouseY); return; }
-            if (isCpsModuleEnabled() && scaleHandleHit(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("cps", mouseY); return; }
-            if (true && scaleHandleHit(InfoHudModules.getArmorX(), InfoHudModules.getArmorY(), (int)(InfoHudModules.getArmorEditorWidth() * HudScaleConfig.get("armor")), (int)(InfoHudModules.getArmorEditorHeight() * HudScaleConfig.get("armor")), mouseX, mouseY)) { beginScale("armor", mouseY); return; }
-            if (true && scaleHandleHit(InfoHudModules.getPotionX(), InfoHudModules.getPotionY(), (int)(InfoHudModules.getPotionEditorWidth() * HudScaleConfig.get("potion")), (int)(InfoHudModules.getPotionEditorHeight() * HudScaleConfig.get("potion")), mouseX, mouseY)) { beginScale("potion", mouseY); return; }
+            if (hasBhopAccess() && BhopHud.isEnabled() && scaleHandleHit(BhopHud.getHudX(), BhopHud.getHudY(), (int)(BhopHud.getHudWidth() * BhopHud.getVisualScale() * HudScaleConfig.get("bhop")), 20, mouseX, mouseY)) { selectedHud = "bhop"; beginScale("bhop", mouseY); return; }
+            if (AfkTimerHud.isEnabled() && scaleHandleHit(AfkTimerHud.getHudX(), AfkTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("AFK 00:00") + 10) * HudScaleConfig.get("afkTimer")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "afkTimer"; beginScale("afkTimer", mouseY); return; }
+            if (SessionTimerHud.isEnabled() && scaleHandleHit(SessionTimerHud.getHudX(), SessionTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("SESSION 00:00:00") + 10) * HudScaleConfig.get("sessionTimer")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "sessionTimer"; beginScale("sessionTimer", mouseY); return; }
+            if (PlaytimeTrackerHud.isEnabled() && scaleHandleHit(PlaytimeTrackerHud.getHudX(), PlaytimeTrackerHud.getHudY(), (int)((fontRendererObj.getStringWidth("PLAYTIME 1 Y and 2 Mo") + 10) * HudScaleConfig.get("playtimeTracker")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "playtimeTracker"; beginScale("playtimeTracker", mouseY); return; }
+            if (isFpsModuleEnabled() && scaleHandleHit(FpsMod.getHudX(), FpsMod.getHudY(), (int)((fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10) * HudScaleConfig.get("fps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "fps"; beginScale("fps", mouseY); return; }
+            if (isPingModuleEnabled() && scaleHandleHit(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "ping"; beginScale("ping", mouseY); return; }
+            if (isCpsModuleEnabled() && scaleHandleHit(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "cps"; beginScale("cps", mouseY); return; }
+            if (true && scaleHandleHit(InfoHudModules.getArmorX(), InfoHudModules.getArmorY(), (int)(InfoHudModules.getArmorEditorWidth() * HudScaleConfig.get("armor")), (int)(InfoHudModules.getArmorEditorHeight() * HudScaleConfig.get("armor")), mouseX, mouseY)) { selectedHud = "armor"; beginScale("armor", mouseY); return; }
+            if (true && scaleHandleHit(InfoHudModules.getPotionX(), InfoHudModules.getPotionY(), (int)(InfoHudModules.getPotionEditorWidth() * HudScaleConfig.get("potion")), (int)(InfoHudModules.getPotionEditorHeight() * HudScaleConfig.get("potion")), mouseX, mouseY)) { selectedHud = "potion"; beginScale("potion", mouseY); return; }
         }
         int ax = AfkTimerHud.getHudX(), ay = AfkTimerHud.getHudY();
         int aw = fontRendererObj.getStringWidth("AFK 00:00") + 10;
@@ -179,6 +181,7 @@ public class HudEditorGui extends AlphaGuiScreen {
             dragging = true;
             dragX = mouseX - ax;
             dragY = mouseY - ay;
+            selectedHud = "afkTimer";
             afkTimerDragging = true;
             return;
         }
@@ -191,6 +194,7 @@ public class HudEditorGui extends AlphaGuiScreen {
             dragging = true;
             dragX = mouseX - sx;
             dragY = mouseY - sy;
+            selectedHud = "sessionTimer";
             sessionTimerDragging = true;
             return;
         }
@@ -203,6 +207,7 @@ public class HudEditorGui extends AlphaGuiScreen {
             dragging = true;
             dragX = mouseX - px;
             dragY = mouseY - py;
+            selectedHud = "playtimeTracker";
             playtimeTrackerDragging = true;
             return;
         }
@@ -211,6 +216,7 @@ public class HudEditorGui extends AlphaGuiScreen {
         if (mouseButton == 0 && mouseX >= ahx && mouseX <= ahx + InfoHudModules.getArmorEditorWidth()
                 && mouseY >= ahy && mouseY <= ahy + InfoHudModules.getArmorEditorHeight()) {
             dragging = true;
+            selectedHud = "armor";
             armorDragging = true;
             dragX = mouseX - ahx;
             dragY = mouseY - ahy;
@@ -221,6 +227,7 @@ public class HudEditorGui extends AlphaGuiScreen {
         if (mouseButton == 0 && mouseX >= phx && mouseX <= phx + InfoHudModules.getPotionEditorWidth()
                 && mouseY >= phy && mouseY <= phy + InfoHudModules.getPotionEditorHeight()) {
             dragging = true;
+            selectedHud = "potion";
             potionDragging = true;
             dragX = mouseX - phx;
             dragY = mouseY - phy;
@@ -234,6 +241,7 @@ public class HudEditorGui extends AlphaGuiScreen {
             dragging = true;
             dragX = mouseX - cx;
             dragY = mouseY - cy;
+            selectedHud = "cps";
             cpsDragging = true;
             return;
         }
@@ -245,6 +253,7 @@ public class HudEditorGui extends AlphaGuiScreen {
             dragging = true;
             dragX = mouseX - pingX;
             dragY = mouseY - pingY;
+            selectedHud = "ping";
             pingDragging = true;
             return;
         }
@@ -256,12 +265,14 @@ public class HudEditorGui extends AlphaGuiScreen {
             dragging = true;
             dragX = mouseX - fx;
             dragY = mouseY - fy;
+            selectedHud = "fps";
             fpsDragging = true;
             return;
         }
 
         int x = BhopHud.getHudX(), y = BhopHud.getHudY(), w = Math.max(110, BhopHud.getHudWidth());
         if (hasBhopAccess() && mouseButton == 0 && mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + 28) {
+            selectedHud = "bhop";
             dragging = true;
             dragX = mouseX - x;
             dragY = mouseY - y;
