@@ -1,5 +1,4 @@
 // --- Made By MsAlexTsuki ---
-
 package com.alpharip.staffmod.combat;
 
 import com.alpharip.staffmod.modules.AlphaModule;
@@ -12,39 +11,56 @@ import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import java.util.UUID;
+
 /**
  * Founder-only smooth aim correction.
- *
- * This module only adjusts client-side view rotation for a visible player whose
- * full body is already close to the crosshair. It never attacks, changes
- * hitboxes, sends packets, or acquires targets outside the small angle gate.
+ * It only corrects toward a visible player already inside the configured angle gate.
  */
 public final class AimAssist {
     private static final double MAX_RANGE = 3.2D;
-    private static final float MAX_TARGET_ANGLE = 10.0F;
-    private static final float SMOOTHING = 0.10F;
     private static final float MAX_ROTATION_STEP = 1.5F;
-    private static final double[] BODY_HEIGHT_SAMPLES = {0.10D, 0.30D, 0.50D, 0.70D, 0.90D};
+    private UUID pendingTargetId;
+    private long pendingTargetSince;
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
 
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.thePlayer == null || mc.theWorld == null || mc.currentScreen != null) return;
+        if (mc == null || mc.thePlayer == null || mc.theWorld == null || mc.currentScreen != null) {
+            resetPendingTarget();
+            return;
+        }
 
-        // Do not rely on rank inheritance or offline-test rank fallbacks for this module.
-        if (!SupabaseCommunityService.isSignedInFounder()) return;
+        if (!SupabaseCommunityService.isSignedInFounder()) {
+            resetPendingTarget();
+            return;
+        }
 
         AlphaModule module = AlphaModuleRegistry.find("aim-assist");
-        if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()) return;
+        if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()) {
+            resetPendingTarget();
+            return;
+        }
 
         TargetAim targetAim = findCrosshairAdjacentTarget(mc);
-        if (targetAim == null) return;
+        if (targetAim == null) {
+            resetPendingTarget();
+            return;
+        }
 
-        double dx = targetAim.player.posX - mc.thePlayer.posX;
-        double dz = targetAim.player.posZ - mc.thePlayer.posZ;
-        double dy = targetAim.aimY - (mc.thePlayer.posY + mc.thePlayer.getEyeHeight());
+        long now = System.currentTimeMillis();
+        UUID targetId = targetAim.player.getUniqueID();
+        if (!targetId.equals(pendingTargetId)) {
+            pendingTargetId = targetId;
+            pendingTargetSince = now;
+        }
+        if (now - pendingTargetSince < AimAssistSettings.getReactionDelayMs()) return;
+
+        double dx = targetAim.x - mc.thePlayer.posX;
+        double dz = targetAim.z - mc.thePlayer.posZ;
+        double dy = targetAim.y - (mc.thePlayer.posY + mc.thePlayer.getEyeHeight());
         double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
 
         float targetYaw = (float) (Math.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
@@ -52,10 +68,14 @@ public final class AimAssist {
         float yawDelta = MathHelper.wrapAngleTo180_float(targetYaw - mc.thePlayer.rotationYaw);
         float pitchDelta = MathHelper.wrapAngleTo180_float(targetPitch - mc.thePlayer.rotationPitch);
 
-        mc.thePlayer.rotationYaw += clamp(yawDelta * SMOOTHING, -MAX_ROTATION_STEP, MAX_ROTATION_STEP);
+        float baseSpeed = AimAssistSettings.getCorrectionSpeed() / 100.0F;
+        float yawSpeed = baseSpeed * AimAssistSettings.getHorizontalSpeed() / 10.0F;
+        float pitchSpeed = baseSpeed * AimAssistSettings.getVerticalSpeed() / 10.0F;
+
+        mc.thePlayer.rotationYaw += clamp(yawDelta * yawSpeed, -MAX_ROTATION_STEP, MAX_ROTATION_STEP);
         mc.thePlayer.rotationPitch = MathHelper.clamp_float(
                 mc.thePlayer.rotationPitch
-                        + clamp(pitchDelta * SMOOTHING, -MAX_ROTATION_STEP, MAX_ROTATION_STEP),
+                        + clamp(pitchDelta * pitchSpeed, -MAX_ROTATION_STEP, MAX_ROTATION_STEP),
                 -90.0F,
                 90.0F
         );
@@ -63,11 +83,10 @@ public final class AimAssist {
 
     private TargetAim findCrosshairAdjacentTarget(Minecraft mc) {
         TargetAim bestTarget = null;
-        float bestAngle = MAX_TARGET_ANGLE;
+        float bestAngle = AimAssistSettings.getMaximumAngleDegrees();
 
         for (Object object : mc.theWorld.playerEntities) {
             if (!(object instanceof EntityPlayer)) continue;
-
             EntityPlayer candidate = (EntityPlayer) object;
             if (candidate == mc.thePlayer || candidate.isDead || !candidate.isEntityAlive()
                     || candidate.isInvisible()
@@ -82,32 +101,25 @@ public final class AimAssist {
                 bestTarget = candidateAim;
             }
         }
-
         return bestTarget;
     }
 
-    /**
-     * Tests points distributed from the lower body to the top of the player's
-     * bounding box, so aim correction can activate on the legs, torso, or head.
-     */
     private TargetAim findClosestBodyAimPoint(EntityPlayer viewer, EntityPlayer target) {
         AxisAlignedBB box = target.getEntityBoundingBox();
         double centerX = (box.minX + box.maxX) * 0.5D;
         double centerZ = (box.minZ + box.maxZ) * 0.5D;
         double bodyHeight = box.maxY - box.minY;
-
         TargetAim bestAim = null;
-        float bestAngle = MAX_TARGET_ANGLE;
+        float bestAngle = AimAssistSettings.getMaximumAngleDegrees();
 
-        for (double heightFraction : BODY_HEIGHT_SAMPLES) {
+        for (double heightFraction : AimAssistSettings.getTargetArea().getHeightSamples()) {
             double aimY = box.minY + bodyHeight * heightFraction;
             float angle = getAimAngle(viewer, centerX, aimY, centerZ);
             if (angle < bestAngle) {
                 bestAngle = angle;
-                bestAim = new TargetAim(target, aimY, angle);
+                bestAim = new TargetAim(target, centerX, aimY, centerZ, angle);
             }
         }
-
         return bestAim;
     }
 
@@ -116,12 +128,16 @@ public final class AimAssist {
         double dz = targetZ - viewer.posZ;
         double dy = targetY - (viewer.posY + viewer.getEyeHeight());
         double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
-
         float targetYaw = (float) (Math.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
         float targetPitch = (float) (-(Math.atan2(dy, horizontalDistance) * 180.0D / Math.PI));
         float yawDelta = MathHelper.wrapAngleTo180_float(targetYaw - viewer.rotationYaw);
         float pitchDelta = MathHelper.wrapAngleTo180_float(targetPitch - viewer.rotationPitch);
         return (float) Math.sqrt(yawDelta * yawDelta + pitchDelta * pitchDelta);
+    }
+
+    private void resetPendingTarget() {
+        pendingTargetId = null;
+        pendingTargetSince = 0L;
     }
 
     private static float clamp(float value, float min, float max) {
@@ -130,12 +146,14 @@ public final class AimAssist {
 
     private static final class TargetAim {
         private final EntityPlayer player;
-        private final double aimY;
+        private final double x, y, z;
         private final float angle;
 
-        private TargetAim(EntityPlayer player, double aimY, float angle) {
+        private TargetAim(EntityPlayer player, double x, double y, double z, float angle) {
             this.player = player;
-            this.aimY = aimY;
+            this.x = x;
+            this.y = y;
+            this.z = z;
             this.angle = angle;
         }
     }
