@@ -115,6 +115,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(cps);
 
+        // Pixel Garden is a Donator feature shown inside the Scout subfolder.
+        MODULES.add(new AlphaModule(
+                "pixelgarden",
+                "Pixel Garden",
+                "Grow plants, harvest crops, sell them, and expand your garden.",
+                AlphaModule.Category.SCOUT,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         // Bhop is registered for access checks/settings only. The StaffMods menu
         // explicitly exposes it in General and filters it from every rank folder.
         MODULES.add(new AlphaModule(
