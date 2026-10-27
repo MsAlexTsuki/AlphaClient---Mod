@@ -3,6 +3,9 @@ package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.movement.BhopMode;
+import com.alpharip.staffmod.movement.STapAssistance;
+import com.alpharip.staffmod.movement.WTapAssistance;
 import com.alpharip.staffmod.permissions.PermissionService;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -187,7 +190,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                 int y = contentTop + row * rowHeight;
                 AlphaModule module = visibleModules.get(i);
                 buttonList.add(new AlphaButton(MODULE_BASE + i, x, y,
-                        tileWidth, tileHeight, module.getName(), false, module.isEnabled()));
+                        tileWidth, tileHeight, module.getName(), false, isModuleActive(module)));
             }
             if (selectedRank == PermissionService.Rank.PUBLIC) {
                 int utilityIndex = visibleModules.size();
@@ -215,6 +218,21 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
 
         buttonList.add(new AlphaButton(BACK, panelLeft + panelWidth - 94,
                 panelTop + panelHeight - 31, 80, 20, "BACK"));
+    }
+
+    /** Uses each module's real runtime state for StaffMods active highlighting. */
+    private boolean isModuleActive(AlphaModule module) {
+        if (module == null) return false;
+        switch (module.getId()) {
+            case "staffmods":
+                return BhopMode.isEnabled();
+            case "w-tap-assistance":
+                return WTapAssistance.isEnabled();
+            case "s-tap-assistance":
+                return STapAssistance.isEnabled();
+            default:
+                return module.isEnabled();
+        }
     }
 
     private void addDonatorSubfolderButton(int index, PermissionService.Rank rank, String label,
