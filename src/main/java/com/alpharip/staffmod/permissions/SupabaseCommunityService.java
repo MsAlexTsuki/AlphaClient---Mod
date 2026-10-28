@@ -574,7 +574,7 @@ public final class SupabaseCommunityService {
     }
     public static synchronized JsonObject purchasePixelGardenUpgrade(String upgrade) throws Exception {
         if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
-        if (upgrade == null || !upgrade.matches("auto_harvest|growth_boost|more_coins|more_crops|expansion")) throw new IllegalArgumentException("Unknown Pixel Garden upgrade.");
+        if (upgrade == null || !upgrade.matches("auto_harvest|auto_plant|auto_sell|auto_quest|growth_boost|more_coins|more_crops|expansion")) throw new IllegalArgumentException("Unknown Pixel Garden upgrade.");
         JsonObject payload = new JsonObject(); payload.addProperty("p_upgrade", upgrade);
         return requestJson("POST", "/rest/v1/rpc/pixel_garden_purchase_upgrade", accessToken, payload.toString());
     }
