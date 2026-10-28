@@ -76,6 +76,7 @@ public final class PixelGardenHelpGUI extends GuiScreen {
             lines.add("/pixelgarden rewards remove <quest id> <type> <amount|all> - Remove some or all of a quest reward");
             lines.add("Reward types: coins, seeds_wheat/carrot/potato/pumpkin, crop_wheat/carrot/potato/pumpkin");
             lines.add("FOUNDER COMMANDS");
+            lines.add("/pixelgarden admin fullreset <Alpha account name> - Reset garden, inventory, upgrades, levels, quests, tutorial and Prestige");
             lines.add("/pixelgarden harvesttime <multiplier|finish|normal> - Speed up, finish, or restore normal crop timers");
             lines.add("/pixelgarden coinsgive <Alpha account> <amount> - Give regular coins");
             lines.add("/pixelgarden takecoins <Alpha account> <amount> - Remove regular coins");
