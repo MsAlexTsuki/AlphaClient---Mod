@@ -118,21 +118,24 @@ public final class PixelGardenProgressionData {
     public synchronized Map<Integer, Long> getLevelXpRequirements() {
         Map<Integer, Long> result = new LinkedHashMap<Integer, Long>();
         for (int i = 1; i <= Math.max(100, level); i++) if (!deletedLevels.contains(i)) result.put(i, getRequirementForLevel(i));
-        result.putAll(levelXpRequirements);
+        for (Map.Entry<Integer, Long> entry : levelXpRequirements.entrySet())
+            if (!deletedLevels.contains(entry.getKey())) result.put(entry.getKey(), entry.getValue());
         return Collections.unmodifiableMap(result);
     }
 
     public synchronized Map<Integer, String> getLevelRewards() {
         Map<Integer, String> result = new LinkedHashMap<Integer, String>();
         for (int i = 1; i <= Math.max(100, level); i++) if (!deletedLevels.contains(i)) result.put(i, levelRewards.containsKey(i) ? levelRewards.get(i) : "None configured");
-        result.putAll(levelRewards);
+        for (Map.Entry<Integer, String> entry : levelRewards.entrySet())
+            if (!deletedLevels.contains(entry.getKey())) result.put(entry.getKey(), entry.getValue());
         return Collections.unmodifiableMap(result);
     }
 
     public synchronized Map<Integer, String> getLevelDescriptions() {
         Map<Integer, String> result = new LinkedHashMap<Integer, String>();
         for (int i = 1; i <= Math.max(100, level); i++) if (!deletedLevels.contains(i)) result.put(i, levelDescriptions.containsKey(i) ? levelDescriptions.get(i) : "");
-        result.putAll(levelDescriptions);
+        for (Map.Entry<Integer, String> entry : levelDescriptions.entrySet())
+            if (!deletedLevels.contains(entry.getKey())) result.put(entry.getKey(), entry.getValue());
         return Collections.unmodifiableMap(result);
     }
 
