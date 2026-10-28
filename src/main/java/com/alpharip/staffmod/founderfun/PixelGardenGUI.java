@@ -391,9 +391,9 @@ public final class PixelGardenGUI extends GuiScreen {
         if (plotScrollRow > 0) drawString(fontRendererObj, "Scroll up for earlier plots", gx, gy - 3, 0xFFB7C4D5);
         if ((unlockedCount + PLOT_COLUMNS - 1) / PLOT_COLUMNS > plotScrollRow + visibleRows)
             drawString(fontRendererObj, "Scroll down for more plots", gx, gy + 8 + tileHeight * visibleRows + gap * visibleRows + 2, 0xFFB7C4D5);
-        drawCenteredString(fontRendererObj, currentQuestSummary(), width / 2, height - 88, 0xFFFFD66B);
+        drawCurrentQuestCard();
         drawCenteredString(fontRendererObj, "Seeds: " + selectedCrop.displayName + " x" + game.getSeeds(selectedCrop)
-                + "    Harvested inventory: " + inventoryTotal(), width / 2, height - 72, 0xFFE6E9EF);
+                + "    Harvested inventory: " + inventoryTotal(), width / 2, height - 58, 0xFFE6E9EF);
         drawCenteredString(fontRendererObj, "Plant  >  Grow  >  Harvest  >  Sell  >  Upgrade",
                 width / 2, height - 31, 0xFFFFC83D);
         drawCenteredString(fontRendererObj, cloudStatus, width / 2, height - 18,
@@ -402,10 +402,9 @@ public final class PixelGardenGUI extends GuiScreen {
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
-    private String currentQuestSummary() {
+    private void drawCurrentQuestCard() {
         PixelGardenProgressionData progression = game.getProgressionData();
         progression.ensureDefaultCatalog();
-
         PixelGardenProgressionData.QuestInstance chosen = null;
         for (PixelGardenProgressionData.QuestInstance instance : progression.getInstances()) {
             if (instance.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) {
@@ -413,24 +412,37 @@ public final class PixelGardenGUI extends GuiScreen {
                 break;
             }
         }
+        int cardWidth = Math.min(width - 32, 520);
+        int cardLeft = (width - cardWidth) / 2;
+        int cardTop = height - 132;
+        drawRect(cardLeft, cardTop, cardLeft + cardWidth, cardTop + 48, 0xF0E3D1A6);
+        drawRect(cardLeft, cardTop, cardLeft + cardWidth, cardTop + 2, 0xFFFFC83D);
+        drawRect(cardLeft, cardTop + 2, cardLeft + 3, cardTop + 48, 0xFF8E6539);
         if (chosen == null) {
-            for (PixelGardenProgressionData.QuestInstance instance : progression.getInstances()) {
-                if ("pg_fresh_start".equals(instance.definitionId)
-                        && instance.getStatus() == PixelGardenProgressionData.QuestStatus.AVAILABLE) {
-                    return "Tutorial quest: Fresh Start — open Quest Book to accept";
-                }
-            }
-            return "Current quest: open Quest Book";
+            drawString(fontRendererObj, "TUTORIAL QUEST", cardLeft + 10, cardTop + 6, 0xFF8A5A20);
+            drawString(fontRendererObj, "Open Quest Book to begin your first chapter.", cardLeft + 10, cardTop + 23, 0xFF493019);
+            return;
         }
-
         PixelGardenProgressionData.QuestDefinition definition = progression.getDefinition(chosen.definitionId);
-        if (definition == null || definition.objectives.isEmpty()) {
-            return "Current quest: " + (definition == null ? "Unknown quest" : definition.name);
+        if (definition == null) {
+            drawString(fontRendererObj, "TUTORIAL QUEST", cardLeft + 10, cardTop + 6, 0xFF8A5A20);
+            drawString(fontRendererObj, "Quest details are unavailable. Open the Quest Book.", cardLeft + 10, cardTop + 23, 0xFF493019);
+            return;
         }
-        PixelGardenProgressionData.Objective objective = definition.objectives.get(0);
-        int progress = chosen.getObjectiveProgress(objective.id);
-        return "Current quest: " + definition.name + " — " + objective.target + " "
-                + Math.min(progress, objective.requiredAmount) + "/" + objective.requiredAmount;
+        drawString(fontRendererObj, "QUEST  •  " + definition.name, cardLeft + 10, cardTop + 5, 0xFF8A5A20);
+        String npcText = definition.npc == null || definition.npc.trim().isEmpty()
+                ? "NPC: Not assigned" : "NPC: " + definition.npc;
+        drawString(fontRendererObj, fontRendererObj.trimStringToWidth(npcText, cardWidth - 20),
+                cardLeft + 10, cardTop + 17, 0xFF725532);
+        if (!definition.objectives.isEmpty()) {
+            PixelGardenProgressionData.Objective objective = definition.objectives.get(0);
+            String objectiveText = objective.type.replace('_', ' ') + ": " + objective.target + "  "
+                    + chosen.getObjectiveProgress(objective.id) + "/" + objective.requiredAmount;
+            drawString(fontRendererObj, fontRendererObj.trimStringToWidth(objectiveText, cardWidth - 20),
+                    cardLeft + 10, cardTop + 30, 0xFF493019);
+        }
+        drawString(fontRendererObj, "Open Quest Book for details and rewards",
+                cardLeft + 10, cardTop + 39, 0xFF8A5A20);
     }
 
     @Override public void onGuiClosed() { saveCloudAsync(); }
