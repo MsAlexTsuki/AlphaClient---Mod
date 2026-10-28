@@ -3,6 +3,7 @@ package com.alpharip.staffmod.founderfun;
 
 import com.alpharip.alphaclient.AlphaClient;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
+import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.Minecraft;
@@ -25,6 +26,7 @@ public final class PixelGardenCommand extends CommandBase {
 
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+        if (!PixelGardenModuleSettings.getInstance().isEnabled()) return java.util.Collections.emptyList();
         if (args == null || args.length == 0) return java.util.Collections.emptyList();
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, new String[] {
@@ -117,6 +119,10 @@ public final class PixelGardenCommand extends CommandBase {
     }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+        if (!PixelGardenModuleSettings.getInstance().isEnabled()) {
+            reply(sender, "Pixel Garden is disabled in AlphaClient Settings.");
+            return;
+        }
         if (!allowed(sender, "commands.pixelgarden")) return;
         String action = args == null || args.length == 0 ? "help" : args[0].toLowerCase(Locale.ROOT);
         PixelGardenGame game = PixelGardenGame.getInstance();
