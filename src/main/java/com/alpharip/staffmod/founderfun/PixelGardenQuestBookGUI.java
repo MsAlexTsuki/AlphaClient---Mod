@@ -387,7 +387,11 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
         drawRect(0, 0, width, 48, 0xF00B1018);
         drawRect(0, 46, width, 49, 0xFFFFC83D);
         drawCenteredString(fontRendererObj, "PIXEL GARDEN", width / 2, 8, 0xFFFFC83D);
-        drawCenteredString(fontRendererObj, "QUEST JOURNAL  •  RECORDS OF YOUR GARDEN", width / 2, 25, 0xFFE3E8F0);
+        drawCenteredString(fontRendererObj, "QUEST JOURNAL  •  RECORDS OF YOUR GARDEN", width / 2, 23, 0xFFE3E8F0);
+        String storylineLine = "CHAPTER " + progression.getStorylineChapter() + ": "
+                + progression.getStorylineChapterTitle() + "  |  " + progression.getTutorialObjectiveText();
+        storylineLine = fontRendererObj.trimStringToWidth(storylineLine, Math.max(100, width - 24));
+        drawCenteredString(fontRendererObj, storylineLine, width / 2, 36, 0xFFFFD77A);
 
         int left = listLeft();
         int top = bookTop();
