@@ -74,6 +74,7 @@ public final class PixelGardenGame {
     private int pixelGardenUpgradeCoins = STARTING_COINS;
     private boolean autoHarvest;
     private int growthLevels;
+    private int resetTokens;
     private long lastProcessedAt = System.currentTimeMillis();
 
     private PixelGardenGame() {
@@ -99,6 +100,7 @@ public final class PixelGardenGame {
     }
     public static PixelGardenGame getInstance() { return INSTANCE; }
     public synchronized int getCoins() { return pixelGardenUpgradeCoins; }
+    public synchronized int getResetTokens() { return resetTokens; }
     public synchronized int getSeeds(Crop crop) { return seeds[crop.ordinal()]; }
     public synchronized int getInventory(Crop crop) { return inventory[crop.ordinal()]; }
     public synchronized boolean hasAutoHarvest() { return autoHarvest; }
@@ -210,6 +212,7 @@ public final class PixelGardenGame {
         root.addProperty("pixelGardenUpgradeCoins", pixelGardenUpgradeCoins);
         root.addProperty("auto_harvest", autoHarvest);
         root.addProperty("growth_levels", growthLevels);
+        root.addProperty("reset_tokens", resetTokens);
         root.addProperty("unlocked_plots", getUnlockedPlots());
         root.addProperty("last_processed_at", lastProcessedAt);
         JsonArray seedArray = new JsonArray();
@@ -238,6 +241,7 @@ public final class PixelGardenGame {
         if (root == null) return;
         int savedCoins = root.has("pixelGardenUpgradeCoins") ? root.get("pixelGardenUpgradeCoins").getAsInt() : STARTING_COINS;
         int savedGrowth = root.has("growth_levels") ? root.get("growth_levels").getAsInt() : 0;
+        int savedResetTokens = root.has("reset_tokens") ? Math.max(0, root.get("reset_tokens").getAsInt()) : 0;
         boolean savedAuto = root.has("auto_harvest") && root.get("auto_harvest").getAsBoolean();
         int unlocked = root.has("unlocked_plots") ? root.get("unlocked_plots").getAsInt() : STARTING_PLOTS;
         long savedAt = root.has("last_processed_at") ? root.get("last_processed_at").getAsLong() : System.currentTimeMillis();
@@ -263,6 +267,7 @@ public final class PixelGardenGame {
         }
         restore(savedCoins, savedSeeds, savedInventory, savedAuto, savedGrowth,
                 Math.max(unlocked, restoredUnlocked), crops, planted, durations, savedAt);
+        resetTokens = savedResetTokens;
     }
 
     private static int[] readIntArray(JsonElement element, int length) {
