@@ -359,6 +359,17 @@ public final class PixelGardenProgressionData {
         return 0;
     }
 
+    /** Returns the canonical level/prestige window used by the quest eligibility check. */
+    public static String getTierRequirementText(String tier) {
+        String normalized = normalizeTier(tier);
+        int minLevel = tierMinLevel(normalized);
+        int maxLevel = tierMaxLevel(normalized);
+        if (minLevel == 1 && maxLevel == Integer.MAX_VALUE && normalized.isEmpty()) return "";
+        String levelText = maxLevel == Integer.MAX_VALUE ? ("Level " + minLevel + "+")
+                : ("Level " + minLevel + "-" + maxLevel);
+        return levelText + " | Prestige " + tierRequiredPrestige(normalized);
+    }
+
     public synchronized boolean acceptQuest(String instanceId, int playerLevel, int playerPrestige) {
         QuestInstance instance = instances.get(instanceId);
         if (instance == null || instance.status != QuestStatus.AVAILABLE
