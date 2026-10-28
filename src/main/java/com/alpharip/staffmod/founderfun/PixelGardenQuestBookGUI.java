@@ -177,7 +177,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             }
         } else if (selected != null && selectedDefinition != null
                 && selected.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED
-                && !selected.areRewardsClaimed() && !selectedDefinition.rewards.isEmpty()) {
+                && !selected.areRewardsClaimed()) {
             buttonList.add(new AlphaButton(CLAIM, actionX, actionY, actionWidth, 20, "Claim Rewards"));
         }
         buttonList.add(new AlphaButton(BACK, width / 2 - 62, height - 34, 124, 22, "Close Book"));
@@ -356,11 +356,11 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             PixelGardenProgressionData.QuestInstance selected = selectedQuest();
             PixelGardenProgressionData.QuestDefinition def = definition(selected);
             if (selected == null || def == null || selected.getStatus() != PixelGardenProgressionData.QuestStatus.COMPLETED
-                    || selected.areRewardsClaimed() || def.rewards.isEmpty()) {
+                    || selected.areRewardsClaimed()) {
                 actionMessage("No unclaimed rewards are available.");
                 return;
             }
-            if (!game.grantQuestRewards(def.rewards)) {
+            if (!def.rewards.isEmpty() && !game.grantQuestRewards(def.rewards)) {
                 actionMessage("Reward configuration is invalid or exceeds a supported limit.");
                 return;
             }
