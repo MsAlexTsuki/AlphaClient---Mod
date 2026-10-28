@@ -186,7 +186,7 @@ public final class PixelGardenGUI extends GuiScreen {
             case LOCKED: return "LOCKED";
             case EMPTY: return "+ Plant";
             case GROWING: return "";
-            case READY: return "HARVEST!";
+            case READY: return "";
             default: return "Plot " + (index + 1);
         }
     }
@@ -349,8 +349,14 @@ public final class PixelGardenGUI extends GuiScreen {
             } else {
                 drawCropArt(plot.getCrop(), x, y, Math.min(cell, tileHeight), now, state);
                 if (state == PixelGardenGame.PlotState.READY) {
-                    drawRect(x + 3, y + 3, x + cell - 3, y + 15, 0xDD172015);
-                    drawCenteredString(fontRendererObj, "READY - CLICK TO HARVEST", x + cell / 2, y + 5, 0xFFFFE46B);
+                    int labelTop = y + tileHeight - 13;
+                    drawRect(x + 3, labelTop, x + cell - 3, y + tileHeight - 3, 0xCC172015);
+                    net.minecraft.client.renderer.GlStateManager.pushMatrix();
+                    net.minecraft.client.renderer.GlStateManager.scale(0.70F, 0.70F, 1.0F);
+                    String readyLabel = "READY  •  CLICK TO HARVEST";
+                    drawCenteredString(fontRendererObj, readyLabel,
+                            Math.round((x + cell / 2) / 0.70F), Math.round((labelTop + 1) / 0.70F), 0xFFFFE46B);
+                    net.minecraft.client.renderer.GlStateManager.popMatrix();
                 } else {
                     long secs = plot.getRemainingMillis(now) / 1000L;
                     String timer = (secs / 60) + "m " + (secs % 60) + "s";
