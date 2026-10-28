@@ -19,11 +19,11 @@ public final class PixelGardenPrestigeUpgradesGUI extends GuiScreen {
 
     @Override public void initGui() {
         buttonList.clear(); int left=width/2-150;
-        buttonList.add(new GuiButton(1,left,height/2-5,300,20,"Prestige Yield — buy next level"));
-        buttonList.add(new GuiButton(2,left,height/2+20,300,20,"Prestige Bonus — buy next level"));
-        buttonList.add(new GuiButton(3,left,height/2+45,300,20,"Garden Coin Cache — buy next level"));
-        buttonList.add(new GuiButton(4,left,height/2+75,300,20,"Refresh"));
-        buttonList.add(new GuiButton(5,left,height/2+100,300,20,"Back"));
+        buttonList.add(new PrestigeButton(1,left,height/2+10,300,20,"Prestige Yield — buy next level"));
+        buttonList.add(new PrestigeButton(2,left,height/2+35,300,20,"Prestige Bonus — buy next level"));
+        buttonList.add(new PrestigeButton(3,left,height/2+60,300,20,"Garden Coin Cache — buy next level"));
+        buttonList.add(new PrestigeButton(4,left,height/2+90,300,20,"Refresh"));
+        buttonList.add(new PrestigeButton(5,left,height/2+115,300,20,"Back"));
         refreshState(); updateButtons();
     }
     private void refreshState(){try{state=SupabaseCommunityService.getPixelGardenPrestigeState();status="";}catch(Exception e){status="Could not load Prestige data: "+safeMessage(e);}}
@@ -41,10 +41,23 @@ public final class PixelGardenPrestigeUpgradesGUI extends GuiScreen {
         busy=true;updateButtons();try{SupabaseCommunityService.purchasePixelGardenPrestigeUpgrade(key);refreshState();status="Prestige upgrade purchased.";}catch(Exception e){status="Purchase failed: "+safeMessage(e);}finally{busy=false;updateButtons();}
     }
     @Override public void drawScreen(int mx,int my,float partial){
-        drawDefaultBackground();int x=width/2-180,y=height/2-105;drawRect(x,y,x+360,y+225,0xF0202020);drawRect(x,y,x+360,y+3,0xFFFFC83D);
+        drawDefaultBackground();int x=width/2-180,y=height/2-105;drawRect(x,y,x+360,y+240,0xF0202020);drawRect(x,y,x+360,y+3,0xFFFFC83D);
         drawCenteredString(fontRendererObj,"PIXEL GARDEN PRESTIGE",width/2,y+12,0xFFFFC83D);
         if(state!=null){drawString(fontRendererObj,"Prestige Coins: "+state.get("prestige_coins").getAsString(),x+12,y+32,0xFFFFD45A);drawString(fontRendererObj,"Multiplier: "+state.get("effective_multiplier").getAsString()+"x ("+state.get("multiplier_source").getAsString()+")",x+12,y+45,0xFFE3E7EE);drawString(fontRendererObj,"Next reward in: "+(state.get("seconds_to_reward").getAsInt()/60)+"m",x+12,y+58,0xFFB7C4D5);drawString(fontRendererObj,"Upgrade steps: "+num(state,"upgrade_steps")+"/18",x+12,y+71,0xFFB7C4D5);drawString(fontRendererObj,"Prestiges completed: "+num(state,"prestige_count"),x+12,y+84,0xFFB7C4D5);}
-        if(!status.isEmpty())drawCenteredString(fontRendererObj,status,width/2,y+204,0xFFFF7777);super.drawScreen(mx,my,partial);
+        if(!status.isEmpty())drawCenteredString(fontRendererObj,status,width/2,y+101,0xFFFF7777);super.drawScreen(mx,my,partial);
+    }
+
+    private final class PrestigeButton extends GuiButton {
+        PrestigeButton(int id,int x,int y,int width,int height,String label){super(id,x,y,width,height,label);}
+        @Override public void drawButton(net.minecraft.client.Minecraft minecraft,int mouseX,int mouseY){
+            if(!visible)return;
+            hovered=mouseX>=xPosition&&mouseY>=yPosition&&mouseX<xPosition+width&&mouseY<yPosition+height;
+            int fill=!enabled?0xFF292D33:hovered?0xFF39332A:0xFF171B22;
+            PixelGardenPrestigeUpgradesGUI.this.drawRect(xPosition,yPosition,xPosition+width,yPosition+height,fill);
+            PixelGardenPrestigeUpgradesGUI.this.drawRect(xPosition,yPosition,xPosition+width,yPosition+1,enabled?0xFFFFC83D:0xFF555555);
+            PixelGardenPrestigeUpgradesGUI.this.drawRect(xPosition,yPosition+height-1,xPosition+width,yPosition+height,0xFF714323);
+            PixelGardenPrestigeUpgradesGUI.this.drawCenteredString(fontRendererObj,displayString,xPosition+width/2,yPosition+(height-8)/2,enabled?0xFFF3F5F8:0xFF858B94);
+        }
     }
     private static int level(JsonObject o,String k){return Math.max(0,Math.min(5,num(o,k)));}
     private static int num(JsonObject o,String k){try{return o!=null&&o.has(k)?o.get(k).getAsInt():0;}catch(Exception ignored){return 0;}}
