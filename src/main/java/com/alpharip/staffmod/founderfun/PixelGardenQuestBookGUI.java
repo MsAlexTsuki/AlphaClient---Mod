@@ -32,6 +32,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private static final int AMOUNT_UP_100 = 28;
     private static final int CROP_PREV = 29;
     private static final int CROP_NEXT = 30;
+    private static final int ADD_CROPS = 31;
 
     private final GuiScreen parent;
     private final PixelGardenGame game = PixelGardenGame.getInstance();
@@ -42,6 +43,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private int scrollOffset;
     private int selectedDeliveryAmount = 1;
     private int selectedDeliveryCropIndex;
+    private boolean cropControlsExpanded;
     private String actionMessage = "";
 
     public PixelGardenQuestBookGUI(GuiScreen parent) {
@@ -127,20 +129,14 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             PixelGardenProgressionData.QuestInstance instance = quests.get(i);
             PixelGardenProgressionData.QuestDefinition def = definition(instance);
             if (def == null) continue;
-            int buttonId = QUEST_BASE + visibleInstanceIds.size();
             visibleInstanceIds.add(instance.instanceId);
-            String prefix = instance.instanceId.equals(selectedInstanceId) ? "> " : "";
-            String label = prefix + def.name;
-            if (label.length() > 23) label = label.substring(0, 20) + "...";
-            buttonList.add(new AlphaButton(buttonId, rowX, rowY + (i - scrollOffset) * rowHeight(),
-                    listWidth, 24, label, instance.instanceId.equals(selectedInstanceId)));
         }
 
         PixelGardenProgressionData.QuestInstance selected = selectedQuest();
         PixelGardenProgressionData.QuestDefinition selectedDefinition = definition(selected);
-        int actionY = height - 61;
         int actionX = left + bookWidth / 2 + 12;
         int actionWidth = Math.max(90, bookWidth / 2 - 26);
+        int actionY = top + bookHeight - 48;
         if (selected != null && selectedDefinition != null
                 && selected.getStatus() == PixelGardenProgressionData.QuestStatus.AVAILABLE) {
             buttonList.add(new AlphaButton(ACCEPT, actionX, actionY, actionWidth, 20, "Accept Quest"));
@@ -148,23 +144,31 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 && selected.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) {
             PixelGardenProgressionData.Objective delivery = firstDeliveryObjective(selectedDefinition);
             if (delivery != null && selected.getObjectiveProgress(delivery.id) < delivery.requiredAmount) {
-                if ("*".equals(delivery.target)) {
-                    PixelGardenGame.Crop[] crops = PixelGardenGame.Crop.values();
-                    PixelGardenGame.Crop selectedCrop = crops[Math.floorMod(selectedDeliveryCropIndex, crops.length)];
-                    PixelGardenGame.Crop nextCrop = crops[Math.floorMod(selectedDeliveryCropIndex + 1, crops.length)];
-                    buttonList.add(new AlphaButton(CROP_PREV, actionX + actionWidth / 2 - 92, actionY - 22, 88, 18,
-                            "< " + selectedCrop.displayName));
-                    buttonList.add(new AlphaButton(CROP_NEXT, actionX + actionWidth / 2 + 4, actionY - 22, 88, 18,
-                            nextCrop.displayName + " >"));
+                buttonList.add(new AlphaButton(ADD_CROPS, actionX, actionY - (cropControlsExpanded ? 22 : 0),
+                        actionWidth, 18, cropControlsExpanded ? "Hide Crop Submission" : "Add Crops"));
+                if (cropControlsExpanded) {
+                    int rowY = actionY;
+                    int unit = Math.max(22, (actionWidth - 82) / 6);
+                    int leftW = unit * 3;
+                    int rightW = unit * 3;
+                    int submitW = Math.max(52, actionWidth - leftW - rightW - 8);
+                    int submitX = actionX + leftW + 4;
+                    int rightX = submitX + submitW + 4;
+                    buttonList.add(new AlphaButton(AMOUNT_DOWN, actionX, rowY, unit, 18, "-1"));
+                    buttonList.add(new AlphaButton(AMOUNT_DOWN_10, actionX + unit, rowY, unit, 18, "-10"));
+                    buttonList.add(new AlphaButton(AMOUNT_DOWN_100, actionX + unit * 2, rowY, unit, 18, "-100"));
+                    buttonList.add(new AlphaButton(SUBMIT, submitX, rowY, submitW, 18, "Submit"));
+                    buttonList.add(new AlphaButton(AMOUNT_UP, rightX, rowY, unit, 18, "+1"));
+                    buttonList.add(new AlphaButton(AMOUNT_UP_10, rightX + unit, rowY, unit, 18, "+10"));
+                    buttonList.add(new AlphaButton(AMOUNT_UP_100, rightX + unit * 2, rowY, unit, 18, "+100"));
+                    if ("*".equals(delivery.target)) {
+                        PixelGardenGame.Crop[] crops = PixelGardenGame.Crop.values();
+                        PixelGardenGame.Crop crop = crops[Math.floorMod(selectedDeliveryCropIndex, crops.length)];
+                        buttonList.add(new AlphaButton(CROP_PREV, actionX, actionY - 20, 82, 16, "< " + crop.displayName));
+                        buttonList.add(new AlphaButton(CROP_NEXT, actionX + actionWidth - 82, actionY - 20, 82, 16,
+                                crops[Math.floorMod(selectedDeliveryCropIndex + 1, crops.length)].displayName + " >"));
+                    }
                 }
-                buttonList.add(new AlphaButton(AMOUNT_DOWN, actionX, actionY, 24, 20, "-1"));
-                buttonList.add(new AlphaButton(AMOUNT_DOWN_10, actionX + 25, actionY, 30, 20, "-10"));
-                buttonList.add(new AlphaButton(AMOUNT_DOWN_100, actionX + 56, actionY, 36, 20, "-100"));
-                buttonList.add(new AlphaButton(AMOUNT_UP, actionX + 93, actionY, 24, 20, "+1"));
-                buttonList.add(new AlphaButton(AMOUNT_UP_10, actionX + 118, actionY, 30, 20, "+10"));
-                buttonList.add(new AlphaButton(AMOUNT_UP_100, actionX + 149, actionY, 36, 20, "+100"));
-                buttonList.add(new AlphaButton(SUBMIT, actionX + 186, actionY,
-                        Math.max(50, actionWidth - 186), 20, "Submit"));
             }
         } else if (selected != null && selectedDefinition != null
                 && selected.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED
