@@ -91,6 +91,10 @@ public final class PixelGardenGame {
     private final int[] inventory = new int[Crop.values().length];
     private int pixelGardenUpgradeCoins = STARTING_COINS;
     private boolean autoHarvest;
+    private boolean autoPlant;
+    private boolean autoSell;
+    private boolean autoSellEnabled;
+    private boolean autoQuest;
     private int growthLevels;
     private int moreCoinsLevel;
     private int moreCropsLevel;
@@ -107,6 +111,10 @@ public final class PixelGardenGame {
     public synchronized void resetToDefaults() {
         pixelGardenUpgradeCoins = STARTING_COINS;
         autoHarvest = false;
+        autoPlant = false;
+        autoSell = false;
+        autoSellEnabled = false;
+        autoQuest = false;
         growthLevels = 0;
         moreCoinsLevel = 0;
         moreCropsLevel = 0;
@@ -131,6 +139,11 @@ public final class PixelGardenGame {
     public synchronized int getSeeds(Crop crop) { return seeds[crop.ordinal()]; }
     public synchronized int getInventory(Crop crop) { return inventory[crop.ordinal()]; }
     public synchronized boolean hasAutoHarvest() { return autoHarvest; }
+    public synchronized boolean hasAutoPlant() { return autoPlant; }
+    public synchronized boolean hasAutoSell() { return autoSell; }
+    public synchronized boolean isAutoSellEnabled() { return autoSell && autoSellEnabled; }
+    public synchronized boolean hasAutoQuest() { return autoQuest; }
+    public synchronized void toggleAutoSell() { if (autoSell) autoSellEnabled = !autoSellEnabled; }
     public synchronized int getGrowthLevels() { return growthLevels; }
     public synchronized int getMoreCoinsLevel() { return moreCoinsLevel; }
     public synchronized int getMoreCropsLevel() { return moreCropsLevel; }
@@ -331,6 +344,9 @@ public final class PixelGardenGame {
     }
     public synchronized int getUpgradeCost(String upgrade) {
         if ("auto_harvest".equals(upgrade)) return autoHarvest ? -1 : AUTO_HARVEST_COST;
+        if ("auto_plant".equals(upgrade)) return autoPlant ? -1 : 2000;
+        if ("auto_sell".equals(upgrade)) return autoSell ? -1 : 2000;
+        if ("auto_quest".equals(upgrade)) return autoQuest ? -1 : 1000;
         if ("growth_boost".equals(upgrade)) return growthLevels >= 3 ? -1 : GROWTH_BOOST_COST * (growthLevels + 1);
         if ("more_coins".equals(upgrade)) return moreCoinsLevel >= MORE_COINS_PRICES.length ? -1 : MORE_COINS_PRICES[moreCoinsLevel];
         if ("more_crops".equals(upgrade)) return moreCropsLevel >= MORE_CROPS_PRICES.length ? -1 : MORE_CROPS_PRICES[moreCropsLevel];
@@ -364,8 +380,69 @@ public final class PixelGardenGame {
                 }
             }
         }
+        if (autoQuest) processAutomaticQuestDeliveries();
+        if (autoSell && autoSellEnabled) {
+            for (Crop crop : Crop.values()) sellAll(crop);
+        }
+        if (autoPlant) {
+            for (int i = 0; i < plots.size(); i++) {
+                if (plots.get(i).getState(effectiveNow) != PlotState.EMPTY) continue;
+                for (Crop crop : Crop.values()) {
+                    if (seeds[crop.ordinal()] > 0 && plant(i, crop, effectiveNow)) break;
+                }
+            }
+        }
         lastProcessedAt = now;
     }
+    /** Automatically delivers matching harvested crops to active quests and claims completed rewards. */
+    private synchronized void processAutomaticQuestDeliveries() {
+        for (PixelGardenProgressionData.QuestInstance instance : progressionData.getInstances()) {
+            if (instance.getStatus() != PixelGardenProgressionData.QuestStatus.ACTIVE) continue;
+            PixelGardenProgressionData.QuestDefinition definition = progressionData.getDefinition(instance.definitionId);
+            if (definition == null) continue;
+            for (PixelGardenProgressionData.Objective objective : definition.objectives) {
+                if (!"DELIVER_CROP".equalsIgnoreCase(objective.type)) continue;
+                int remaining = objective.requiredAmount - instance.getObjectiveProgress(objective.id);
+                if (remaining <= 0) continue;
+                Crop target = null;
+                if (!"*".equals(objective.target)) {
+                    try { target = Crop.valueOf(objective.target.toUpperCase(java.util.Locale.ROOT)); }
+                    catch (IllegalArgumentException ignored) { continue; }
+                }
+                if (target != null) {
+                    int amount = Math.min(remaining, inventory[target.ordinal()]);
+                    if (amount > 0) {
+                        int previous = instance.getObjectiveProgress(objective.id);
+                        if (consumeHarvestedCrop(target, amount)
+                                && progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous + amount)) {
+                            if (previous + amount >= objective.requiredAmount) progressionData.completeQuest(instance.instanceId);
+                        }
+                    }
+                } else {
+                    for (Crop crop : Crop.values()) {
+                        int amount = Math.min(remaining, inventory[crop.ordinal()]);
+                        if (amount <= 0) continue;
+                        int previous = instance.getObjectiveProgress(objective.id);
+                        if (consumeHarvestedCrop(crop, amount)
+                                && progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous + amount)) {
+                            if (previous + amount >= objective.requiredAmount) progressionData.completeQuest(instance.instanceId);
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        for (PixelGardenProgressionData.QuestInstance instance : progressionData.getInstances()) {
+            if (instance.getStatus() != PixelGardenProgressionData.QuestStatus.COMPLETED || instance.areRewardsClaimed()) continue;
+            PixelGardenProgressionData.QuestDefinition definition = progressionData.getDefinition(instance.definitionId);
+            if (definition == null) continue;
+            if (definition.rewards.isEmpty() || grantQuestRewards(definition.rewards)) {
+                if (progressionData.markRewardsClaimed(instance.instanceId)) awardExperience(20L);
+            }
+        }
+    }
+
     public synchronized void awardExperience(long amount) {
         int gained = progressionData.addExperience(amount);
         if (gained > 0) {
@@ -396,6 +473,10 @@ public final class PixelGardenGame {
         root.addProperty("version", 2);
         root.addProperty("pixelGardenUpgradeCoins", pixelGardenUpgradeCoins);
         root.addProperty("auto_harvest", autoHarvest);
+        root.addProperty("auto_plant", autoPlant);
+        root.addProperty("auto_sell", autoSell);
+        root.addProperty("auto_sell_enabled", autoSellEnabled);
+        root.addProperty("auto_quest", autoQuest);
         root.addProperty("growth_levels", growthLevels);
         root.addProperty("more_coins_level", moreCoinsLevel);
         root.addProperty("more_crops_level", moreCropsLevel);
@@ -439,6 +520,10 @@ public final class PixelGardenGame {
         int savedResetTokens = root.has("reset_tokens") ? Math.max(0, root.get("reset_tokens").getAsInt()) : 0;
         int savedPurchasedSteps = root.has("purchased_upgrade_steps") ? Math.max(0, root.get("purchased_upgrade_steps").getAsInt()) : 0;
         boolean savedAuto = root.has("auto_harvest") && root.get("auto_harvest").getAsBoolean();
+        autoPlant = root.has("auto_plant") && root.get("auto_plant").getAsBoolean();
+        autoSell = root.has("auto_sell") && root.get("auto_sell").getAsBoolean();
+        autoSellEnabled = autoSell && root.has("auto_sell_enabled") && root.get("auto_sell_enabled").getAsBoolean();
+        autoQuest = root.has("auto_quest") && root.get("auto_quest").getAsBoolean();
         int unlocked = root.has("unlocked_plots") ? root.get("unlocked_plots").getAsInt() : STARTING_PLOTS;
         long savedAt = root.has("last_processed_at") ? root.get("last_processed_at").getAsLong() : System.currentTimeMillis();
         int[] savedSeeds = readIntArray(root.get("seeds"), Crop.values().length);
