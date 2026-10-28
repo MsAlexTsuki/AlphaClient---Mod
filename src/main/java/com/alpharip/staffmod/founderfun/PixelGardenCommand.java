@@ -30,7 +30,7 @@ public final class PixelGardenCommand extends CommandBase {
         if (args == null || args.length == 0) return java.util.Collections.emptyList();
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, new String[] {
-                    "admin", "addnpc", "buy", "coins", "coinsgive", "coinsreset", "completequest", "createquest", "createnpc",
+                    "admin", "add", "addnpc", "buy", "coins", "coinsgive", "coinsreset", "completequest", "createquest", "createnpc",
                     "crops", "editnpc", "give", "givequest", "guide", "harvest", "harvesttime", "help", "ids",
                     "idlist", "info", "inv", "inventory", "multiplier", "msg", "open", "plant", "playtime",
                     "prestige", "prestigecoingive", "prestigecointake", "prestigecoinreset", "prestigereset",
@@ -70,6 +70,18 @@ public final class PixelGardenCommand extends CommandBase {
                 && args.length == 4 && "admin".equalsIgnoreCase(args[1]))
             return getListOfStringsMatchingLastWord(args, sharedQuestIds());
 
+        if ("add".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"questid"});
+        if ("add".equals(root) && args.length == 3 && "questid".equalsIgnoreCase(args[1]))
+            return getListOfStringsMatchingLastWord(args, sharedQuestIds());
+        if ("add".equals(root) && args.length == 4 && "questid".equalsIgnoreCase(args[1]))
+            return getListOfStringsMatchingLastWord(args, new String[] {"harvest", "sell", "deliver", "plant", "inventory", "name", "difficulty", "level"});
+        if ("add".equals(root) && args.length == 5 && "questid".equalsIgnoreCase(args[1])) {
+            String sub = args[3].toLowerCase(Locale.ROOT);
+            if ("difficulty".equals(sub)) return getListOfStringsMatchingLastWord(args, new String[] {"Scout", "Rogue", "Elite", "Alpha"});
+            if ("harvest".equals(sub) || "sell".equals(sub) || "deliver".equals(sub) || "plant".equals(sub) || "inventory".equals(sub))
+                return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin", "seeds_wheat", "seeds_carrot", "seeds_potato", "seeds_pumpkin"});
+        }
         if ("msg".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"on", "off"});
         if ("resettoken".equals(root) && args.length == 2)
@@ -360,6 +372,74 @@ public final class PixelGardenCommand extends CommandBase {
             payload.addProperty("action", "npc_create");
             payload.addProperty("npc_id", args[2]);
             runQuestAdminRequest(sender, payload, "Created NPC ID " + args[2] + ".");
+        } else if ("add".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 4 || !"questid".equalsIgnoreCase(args[1])) {
+                reply(sender, "Usage: /pixelgarden add questid <quest id> <harvest|sell|deliver|plant|inventory|name|difficulty|level> <value> [amount]");
+                return;
+            }
+            String questId = args[2].toLowerCase(Locale.ROOT);
+            String kind = args[3].toLowerCase(Locale.ROOT);
+            com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+            payload.addProperty("quest_id", questId);
+            if ("name".equals(kind)) {
+                if (args.length < 5) { reply(sender, "Usage: /pixelgarden add questid <quest id> name <new name>"); return; }
+                String name = joinArgs(args, 4);
+                if (name.trim().isEmpty() || name.length() > 64) { reply(sender, "Quest name must be 1-64 characters."); return; }
+                payload.addProperty("action", "metadata_update");
+                payload.addProperty("field", "name");
+                payload.addProperty("value", name);
+                runQuestAdminRequest(sender, payload, "Updated quest name for " + questId + ".");
+            } else if ("difficulty".equals(kind)) {
+                if (args.length != 5) { reply(sender, "Usage: /pixelgarden add questid <quest id> difficulty <Scout|Rogue|Elite|Alpha>"); return; }
+                String difficulty = args[4].toLowerCase(Locale.ROOT);
+                if (!("scout".equals(difficulty) || "rogue".equals(difficulty) || "elite".equals(difficulty) || "alpha".equals(difficulty))) {
+                    reply(sender, "Difficulty must be Scout, Rogue, Elite or Alpha."); return;
+                }
+                payload.addProperty("action", "metadata_update");
+                payload.addProperty("field", "difficulty");
+                payload.addProperty("value", difficulty.substring(0, 1).toUpperCase(Locale.ROOT) + difficulty.substring(1));
+                runQuestAdminRequest(sender, payload, "Set " + questId + " difficulty to " + payload.get("value").getAsString() + ".");
+            } else if ("level".equals(kind)) {
+                if (args.length != 5) { reply(sender, "Usage: /pixelgarden add questid <quest id> level <required level>"); return; }
+                int level = number(args[4]);
+                if (level < 1 || level > 1000000) { reply(sender, "Required level must be between 1 and 1000000."); return; }
+                payload.addProperty("action", "metadata_update");
+                payload.addProperty("field", "required_level");
+                payload.addProperty("value", level);
+                runQuestAdminRequest(sender, payload, "Set " + questId + " required level to " + level + ".");
+            } else {
+                if (!("harvest".equals(kind) || "sell".equals(kind) || "deliver".equals(kind) || "plant".equals(kind) || "inventory".equals(kind))
+                        || args.length != 6) {
+                    reply(sender, "Usage: /pixelgarden add questid <quest id> <harvest|sell|deliver|plant|inventory> <item> <amount>");
+                    return;
+                }
+                String item = args[4].toLowerCase(Locale.ROOT);
+                int amount = number(args[5]);
+                boolean seed = item.startsWith("seeds_");
+                String crop = seed ? item.substring(6) : item;
+                if (!("wheat".equals(crop) || "carrot".equals(crop) || "potato".equals(crop) || "pumpkin".equals(crop))
+                        || amount < 1 || amount > 1000000) {
+                    reply(sender, "Use wheat, carrot, potato, pumpkin or their seeds_<crop> IDs, with an amount from 1 to 1000000.");
+                    return;
+                }
+                if (("harvest".equals(kind) || "sell".equals(kind)) && seed) {
+                    reply(sender, "Harvest and sell objectives currently require a harvested crop, not seeds."); return;
+                }
+                if ("plant".equals(kind) && !seed) {
+                    reply(sender, "Plant objectives require a seeds_<crop> item ID."); return;
+                }
+                String objectiveType = "harvest".equals(kind) ? "HARVEST_CROP"
+                        : "sell".equals(kind) ? "SELL_CROP"
+                        : "deliver".equals(kind) ? (seed ? "DELIVER_SEEDS" : "DELIVER_CROP")
+                        : "plant".equals(kind) ? "PLANT_CROP" : "INVENTORY_ITEM";
+                String target = "plant".equals(kind) ? crop : item;
+                payload.addProperty("action", "objective_add");
+                payload.addProperty("objective_type", objectiveType);
+                payload.addProperty("target", target);
+                payload.addProperty("amount", amount);
+                runQuestAdminRequest(sender, payload, "Added " + kind + " objective to " + questId + ".");
+            }
         } else if ("createquest".equals(action)) {
             if (!founderOnly(sender)) return;
             if (args.length < 8 || !"admin".equalsIgnoreCase(args[1])) {
