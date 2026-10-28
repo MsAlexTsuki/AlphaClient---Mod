@@ -508,7 +508,8 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             y += 9;
             drawWrapped(def.description, detailX + 8, y, detailW - 16, 0xFF5D4A31, 11);
             y += 22;
-            drawString(fontRendererObj, "NPC: " + (def.npc.isEmpty() ? "Not assigned" : def.npc),
+            drawString(fontRendererObj, "NPC: " + PixelGardenNPC.displayName(def.npc)
+                    + (def.npc.isEmpty() ? "" : "  [" + def.npc + "]"),
                     detailX + 8, y, 0xFF8A5A20);
             y += 26;
             drawString(fontRendererObj, "REQUIREMENTS", detailX + 8, y, 0xFF8A5A20);
