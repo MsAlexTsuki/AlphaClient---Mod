@@ -228,7 +228,7 @@ public final class PixelGardenGame {
         if (autoHarvest) {
             for (Plot plot : plots) {
                 if (plot.getState(effectiveNow) == PlotState.READY && plot.crop != null) {
-                    inventory[plot.crop.ordinal()]++;
+                    inventory[plot.crop.ordinal()] += getCropYield();
                     plot.clear();
                 }
             }
