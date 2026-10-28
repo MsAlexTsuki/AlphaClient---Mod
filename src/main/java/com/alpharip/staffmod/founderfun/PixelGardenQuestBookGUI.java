@@ -511,7 +511,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             } else {
                 int shown = 0;
                 for (PixelGardenProgressionData.Objective objective : def.objectives) {
-                    if (shown >= 4 || y > top + h - 68) break;
+                    if (shown >= 4 || y > top + h - 112) break;
                     int progress = selected.getObjectiveProgress(objective.id);
                     drawString(fontRendererObj, ("*".equals(objective.target) ? "Any crop" : objective.target) + "  " + progress + "/" + objective.requiredAmount,
                             detailX + 8, y, 0xFF493019);
@@ -524,7 +524,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                     shown++;
                 }
             }
-            int rewardY = top + h - 52;
+            int rewardY = top + h - 108;
             drawString(fontRendererObj, "REWARDS", detailX + 8, rewardY, 0xFF8A5A20);
             String rewardText = def.rewards.isEmpty() ? "Not configured"
                     : def.rewards.toString().replace("{", "").replace("}", "").replace("=", " x ");
@@ -537,10 +537,9 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                     catch (IllegalArgumentException ignored) { }
                     int remaining = delivery.requiredAmount - selected.getObjectiveProgress(delivery.id);
                     int inInventory = crop == null ? 0 : game.getInventory(crop);
-                    drawString(fontRendererObj, "Submit amount: " + selectedDeliveryAmount
-                            + "  |  Remaining: " + Math.max(0, remaining), detailX + 8, top + h - 39, 0xFF493019);
-                    drawString(fontRendererObj, "Harvested in inventory: " + inInventory,
-                            detailX + 8, top + h - 28, 0xFF493019);
+                    drawString(fontRendererObj, "Amount " + selectedDeliveryAmount
+                            + "  |  Remaining " + Math.max(0, remaining) + "  |  In inventory " + inInventory,
+                            detailX + 8, top + h - 82, 0xFF493019);
                 }
             }
             String rewardTextStatus = def.rewards.isEmpty() ? "Rewards not configured"
