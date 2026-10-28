@@ -253,7 +253,7 @@ public final class PixelGardenProgressionData {
     }
 
     /**
-     * Picks and assigns one eligible quest for an NPC. chancePercent is a relative
+     * Picks and assigns one eligible quest for an NPC. weight is a relative
      * weight among quests unlocked by the supplied level and prestige, not a fixed
      * probability against a 100-point roll. Repeated definitions are intentionally allowed.
      * Returns the new AVAILABLE instance ID, or null when the active-quest cap is reached
@@ -267,15 +267,15 @@ public final class PixelGardenProgressionData {
         List<QuestDefinition> candidates = new ArrayList<QuestDefinition>();
         long totalWeight = 0L;
         for (QuestDefinition definition : definitions.values()) {
-            if (!npcId.equals(definition.npc) || definition.chancePercent <= 0
+            if (!npcId.equals(definition.npc) || definition.weight <= 0
                     || !isDefinitionEligible(definition, playerLevel, playerPrestige)) continue;
             candidates.add(definition);
-            totalWeight += definition.chancePercent;
+            totalWeight += definition.weight;
         }
         if (candidates.isEmpty() || totalWeight <= 0L) return null;
         long roll = (long) Math.floor(chooser.nextDouble() * totalWeight);
         for (QuestDefinition candidate : candidates) {
-            roll -= candidate.chancePercent;
+            roll -= candidate.weight;
             if (roll < 0L) return assignQuest(candidate.id);
         }
         return assignQuest(candidates.get(candidates.size() - 1).id);
@@ -624,7 +624,7 @@ public final class PixelGardenProgressionData {
         public final int requiredLevel;
         public final int requiredPrestige;
         /** Relative selection weight (0 disables this quest in NPC random pools). */
-        public final int chancePercent;
+        public final int weight;
         public final String tier;
         public final List<Objective> objectives;
         public final Map<String, Integer> rewards;
@@ -640,7 +640,7 @@ public final class PixelGardenProgressionData {
         }
 
         public QuestDefinition(String id, String name, String description, String npc, int requiredLevel,
-                int requiredPrestige, int chancePercent, String tier, List<Objective> objectives,
+                int requiredPrestige, int weight, String tier, List<Objective> objectives,
                 Map<String, Integer> rewards) {
             this.id = clean(id);
             this.name = clean(name);
@@ -648,7 +648,7 @@ public final class PixelGardenProgressionData {
             this.npc = npc == null ? "" : npc.trim();
             this.requiredLevel = Math.max(1, requiredLevel);
             this.requiredPrestige = Math.max(0, requiredPrestige);
-            this.chancePercent = Math.max(0, Math.min(100, chancePercent));
+            this.weight = Math.max(0, Math.min(1000000, weight));
             this.tier = tier == null ? "" : tier;
             this.objectives = new ArrayList<Objective>();
             if (objectives != null) for (Objective objective : objectives) {
@@ -668,7 +668,7 @@ public final class PixelGardenProgressionData {
 
         private QuestDefinition copy() {
             return new QuestDefinition(id, name, description, npc, requiredLevel, requiredPrestige,
-                    chancePercent, tier, objectives, rewards);
+                    weight, tier, objectives, rewards);
         }
 
         public JsonObject toJson() {
@@ -679,7 +679,7 @@ public final class PixelGardenProgressionData {
             root.addProperty("npc", npc);
             root.addProperty("required_level", requiredLevel);
             root.addProperty("required_prestige", requiredPrestige);
-            root.addProperty("chance_percent", chancePercent);
+            root.addProperty("weight", weight);
             root.addProperty("tier", tier);
             JsonArray objectiveArray = new JsonArray();
             for (Objective objective : objectives) objectiveArray.add(objective.toJson());
@@ -711,7 +711,7 @@ public final class PixelGardenProgressionData {
             QuestDefinition definition = new QuestDefinition(stringValue(root, "id", ""),
                     stringValue(root, "name", ""), stringValue(root, "description", ""), stringValue(root, "npc", ""),
                     intValue(root, "required_level", 1), intValue(root, "required_prestige", 0),
-                    intValue(root, "chance_percent", 100), stringValue(root, "tier", ""), objectives, rewards);
+                    intValue(root, "weight", intValue(root, "chance_percent", 100)), stringValue(root, "tier", ""), objectives, rewards);
             return definition.isValid() ? definition : null;
         }
     }
