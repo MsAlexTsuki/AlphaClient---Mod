@@ -51,7 +51,54 @@ public final class PixelGardenProgressionData {
 
     public synchronized void setStorylineProgress(int chapter, int step) {
         storylineChapter = Math.max(1, chapter);
-        tutorialStep = Math.max(0, step);
+        tutorialStep = Math.max(0, Math.min(8, step));
+    }
+
+    /** Advances the action-based tutorial only when the expected successful game action occurs. */
+    public synchronized void recordTutorialAction(String actionType, String target) {
+        if (tutorialStep >= 8 || actionType == null) return;
+        String action = actionType.trim().toUpperCase(java.util.Locale.ROOT);
+        String item = target == null ? "" : target.trim().toLowerCase(java.util.Locale.ROOT);
+        boolean advance;
+        switch (tutorialStep) {
+            case 0: advance = "PLANT_CROP".equals(action); break;
+            case 1: advance = "HARVEST_CROP".equals(action); break;
+            case 2: advance = "SELL_CROP".equals(action); break;
+            case 3: advance = "BUY_SEEDS".equals(action); break;
+            case 4: advance = "EXPAND_GARDEN".equals(action); break;
+            case 5: advance = "BUY_UPGRADE".equals(action); break;
+            case 6: advance = "HARVEST_CROP".equals(action); break;
+            case 7: advance = "PLANT_CROP".equals(action) && !item.isEmpty() && !"wheat".equals(item); break;
+            default: advance = false;
+        }
+        if (!advance) return;
+        tutorialStep++;
+        storylineChapter = tutorialStep <= 2 ? 1 : tutorialStep <= 4 ? 2 : tutorialStep <= 7 ? 3 : 4;
+    }
+
+    public synchronized boolean isTutorialComplete() { return tutorialStep >= 8; }
+
+    public synchronized String getStorylineChapterTitle() {
+        switch (storylineChapter) {
+            case 1: return "A Fresh Start";
+            case 2: return "The First Coins";
+            case 3: return "Growing Bigger";
+            default: return "Your Own Garden";
+        }
+    }
+
+    public synchronized String getTutorialObjectiveText() {
+        switch (Math.max(0, Math.min(8, tutorialStep))) {
+            case 0: return "Plant your first crop";
+            case 1: return "Harvest your first crop";
+            case 2: return "Sell a harvested crop";
+            case 3: return "Buy seeds and reinvest";
+            case 4: return "Unlock another garden plot";
+            case 5: return "Purchase a garden upgrade";
+            case 6: return "Harvest another crop";
+            case 7: return "Plant a crop other than wheat";
+            default: return "Tutorial complete — explore main, side and daily quests";
+        }
     }
 
     public synchronized void setNextDailyResetAt(long timestamp) {
