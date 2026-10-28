@@ -32,7 +32,10 @@ public final class PixelGardenGame {
         WHEAT("Wheat", 5, 8, 10L * 60L * 1000L),
         POTATO("Potato", 8, 15, 20L * 60L * 1000L),
         CARROT("Carrot", 15, 20, 30L * 60L * 1000L),
-        PUMPKIN("Pumpkin", 20, 30, 40L * 60L * 1000L);
+        PUMPKIN("Pumpkin", 20, 30, 40L * 60L * 1000L),
+        MELON("Melon", 20, 30, 40L * 60L * 1000L),
+        CACTUS("Cactus", 30, 40, 60L * 60L * 1000L),
+        SUGARCANE("Sugarcane", 40, 60, 80L * 60L * 1000L);
 
         public final String displayName;
         public final int seedPrice;
@@ -500,6 +503,9 @@ public final class PixelGardenGame {
             case POTATO: return 3;
             case CARROT: return 4;
             case PUMPKIN: return 8;
+            case MELON: return 8;
+            case CACTUS: return 10;
+            case SUGARCANE: return 13;
             default: return 0;
         }
     }
