@@ -19,7 +19,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help|prestige [use]|prestigecoingive|prestigecointake|prestigecoinreset|prestigereset|admin fullreset|multiplier prestige|inventory|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help (opens GUI)|prestige [use]|prestigecoingive|prestigecointake|prestigecoinreset|prestigereset|admin fullreset|multiplier prestige|inventory|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
@@ -59,7 +59,8 @@ public final class PixelGardenCommand extends CommandBase {
             Minecraft mc = Minecraft.getMinecraft();
             open(new PixelGardenHelpGUI(mc == null ? null : mc.currentScreen));
         } else if ("help".equals(action) || "?".equals(action)) {
-            showCommandGuide(sender);
+            Minecraft mc = Minecraft.getMinecraft();
+            open(new PixelGardenHelpGUI(mc == null ? null : mc.currentScreen));
         } else if ("open".equals(action)) {
             open(new PixelGardenGUI(null));
         } else if ("inventory".equals(action)) {
@@ -196,47 +197,6 @@ public final class PixelGardenCommand extends CommandBase {
     }
 
 
-    private void showCommandGuide(ICommandSender sender) {
-        reply(sender, "§ePixel Garden Command Guide");
-        reply(sender, "/pixelgarden prestige §7- Open Prestige Coins upgrades after your first Prestige.");
-        reply(sender, "/pixelgarden prestige use §7- Prestige for 20,000 ordinary coins after 18 upgrade steps.");
-        if(SupabaseCommunityService.isSignedInFounder()){
-            reply(sender,"/pixelgarden prestigecoingive <Alpha name> <amount> §7- Give Prestige Coins.");
-            reply(sender,"/pixelgarden prestigecointake <Alpha name> <amount> §7- Take Prestige Coins.");
-            reply(sender,"/pixelgarden prestigecoinreset <Alpha name> §7- Reset only the Prestige Coins balance.");
-            reply(sender,"/pixelgarden prestigereset <Alpha name> §7- Reset all Prestige progress.");
-            reply(sender,"/pixelgarden admin fullreset <Alpha name> §7- Reset all Pixel Garden data.");
-            reply(sender,"/pixelgarden multiplier prestige add <Alpha name> <multiplier> §7- Set a personal multiplier up to 5.0x.");
-            reply(sender,"/pixelgarden multiplier prestige reset <Alpha name> §7- Restore the rank multiplier.");
-        }
-        reply(sender, "/pixelgarden open §7- Open Pixel Garden.");
-        reply(sender, "/pixelgarden inventory §7- Open the inventory screen.");
-        reply(sender, "/pixelgarden inv §7- Show crop and planting-seed counts in chat.");
-        reply(sender, "/pixelgarden plant <plot> <crop> §7- Plant a crop on an unlocked empty plot.");
-        reply(sender, "/pixelgarden upgrades §7- Open the upgrades GUI.");
-        reply(sender, "/pixelgarden upgrade <auto_harvest|growth_boost|expansion> §7- Buy an upgrade.");
-        reply(sender, "/pixelgarden playtime §7- Show your AlphaClient playtime.");
-        reply(sender, "/pixelgarden shop §7- Open the shop.");
-        reply(sender, "/pixelgarden buy <wheat|carrot|potato|pumpkin> [amount] §7- Buy seeds.");
-        reply(sender, "/pixelgarden sell <crop> [amount] §7- Sell harvested crops.");
-        reply(sender, "/pixelgarden sell all §7- Sell all harvested crops.");
-        reply(sender, "/pixelgarden harvest <plot number|all> §7- Harvest a ready plot or all ready plots.");
-        reply(sender, "/pixelgarden time §7- Show crop growth timers.");
-        reply(sender, "/pixelgarden crops §7- Show harvested crop counts.");
-        reply(sender, "/pixelgarden seeds §7- Show seed counts by crop.");
-        reply(sender, "/pixelgarden coins [Alpha account] §7- Show a coin balance.");
-        reply(sender, "/pixelgarden resettokens §7- Show your reset token count.");
-        reply(sender, "/pixelgarden resettoken use §7- Open the reset confirmation popup.");
-        if (SupabaseCommunityService.isSignedInFounder()) {
-            reply(sender, "/pixelgarden coinsgive <Alpha account> <amount> §7- Give coins (Founder only).");
-            reply(sender, "/pixelgarden takecoins <Alpha account> <amount> §7- Remove coins (Founder only).");
-            reply(sender, "/pixelgarden coinsreset <Alpha account> §7- Reset coins (Founder only).");
-            reply(sender, "/pixelgarden give resettoken <Alpha account> §7- Give a reset token (Founder only).");
-            reply(sender, "/pixelgarden resettoken admin <Alpha account> §7- Force a full reset (Founder only).");
-        }
-        reply(sender, "/pixelgarden guide §7- Open the scrollable AlphaClient Command Guide GUI.");
-        reply(sender, "/garden §7- Alias for /pixelgarden; use /garden open, /garden help, or /garden guide.");
-    }
 
 
     private static void showInventory(ICommandSender sender, PixelGardenGame game) {

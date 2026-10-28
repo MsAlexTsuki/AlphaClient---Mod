@@ -25,7 +25,7 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         List<String> lines = new ArrayList<String>();
         lines.add("BASICS");
         lines.add("/pixelgarden open - Open the garden");
-        lines.add("/pixelgarden help - Print this guide in chat");
+        lines.add("/pixelgarden help - Open this command guide GUI");
         lines.add("/pixelgarden guide - Open this scrollable guide");
         lines.add("/garden - Alias for /pixelgarden");
         lines.add("/pixelgarden inventory - Open inventory");
