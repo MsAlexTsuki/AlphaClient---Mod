@@ -289,7 +289,9 @@ public final class PixelGardenCommand extends CommandBase {
             PixelGardenGame.Crop crop = crop(args[1]);
             int amount = args.length > 2 ? number(args[2]) : 1;
             if (crop == null || amount < 1) { reply(sender, "Choose wheat, carrot, potato or pumpkin and a positive amount."); return; }
-            reply(sender, game.buySeeds(crop, amount) ? "Bought " + amount + " " + crop.displayName + " seed(s)." : "Purchase failed: insufficient coins or invalid amount.");
+            boolean bought = game.buySeeds(crop, amount);
+            if (bought) saveCloudAsync(game);
+            reply(sender, bought ? "Bought " + amount + " " + crop.displayName + " seed(s)." : "Purchase failed: insufficient coins or invalid amount.");
         } else if ("sell".equals(action)) {
             if (!allowed(sender, "pixelgarden.shop")) return;
             if (args.length < 2) { reply(sender, "Usage: /pixelgarden sell <crop|all> [amount]"); return; }
@@ -299,12 +301,15 @@ public final class PixelGardenCommand extends CommandBase {
                     int count = game.getInventory(crop);
                     if (count > 0 && game.sell(crop, count)) sold += count;
                 }
+                if (sold > 0) saveCloudAsync(game);
                 reply(sender, sold == 0 ? "You have no harvested crops to sell." : "Sold " + sold + " crop(s). Coins: " + game.getCoins() + ".");
             } else {
                 PixelGardenGame.Crop crop = crop(args[1]);
                 if (crop == null) { reply(sender, "Unknown crop. Choose wheat, carrot, potato or pumpkin."); return; }
                 int amount = args.length > 2 ? number(args[2]) : game.getInventory(crop);
-                reply(sender, amount > 0 && game.sell(crop, amount) ? "Sold " + amount + " " + crop.displayName + ". Coins: " + game.getCoins() + "." : "Nothing sold: check your harvested inventory and amount.");
+                boolean sold = amount > 0 && game.sell(crop, amount);
+                if (sold) saveCloudAsync(game);
+                reply(sender, sold ? "Sold " + amount + " " + crop.displayName + ". Coins: " + game.getCoins() + "." : "Nothing sold: check your harvested inventory and amount.");
             }
         } else if ("plant".equals(action)) {
             if (args.length < 3) { reply(sender, "Usage: /pixelgarden plant <plot> <wheat|carrot|potato|pumpkin>"); return; }
