@@ -5,12 +5,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
+import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import java.io.IOException;
 
 /** AlphaClient settings hub; Minecraft's native options remain available as a sub-screen. */
 public final class AlphaSettingsMenu extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int MINECRAFT_OPTIONS = 4;
+    private static final int PIXEL_GARDEN_TOGGLE = 5;
     private final GuiScreen parent;
 
     public AlphaSettingsMenu(GuiScreen parent) {
@@ -28,6 +30,8 @@ public final class AlphaSettingsMenu extends AlphaGuiScreen {
 
         buttonList.add(new AlphaButton(MINECRAFT_OPTIONS, left + 14, top + 58, buttonWidth, 24,
                 "MINECRAFT OPTIONS"));
+        buttonList.add(new AlphaButton(PIXEL_GARDEN_TOGGLE, left + 14, top + 90, buttonWidth, 24,
+                "PIXEL GARDEN: " + (PixelGardenModuleSettings.getInstance().isEnabled() ? "ON" : "OFF")));
         buttonList.add(new AlphaButton(BACK, 10, height - 25, 76, 18, "BACK"));
     }
 
@@ -46,6 +50,11 @@ public final class AlphaSettingsMenu extends AlphaGuiScreen {
         drawString(fontRendererObj, "Settings", left + 14, top + 24, 0xFFF4F5F8);
         drawString(fontRendererObj, "Game options and client preferences.",
                 left + 14, top + 37, 0xFF9298A5);
+        boolean pixelGardenEnabled = PixelGardenModuleSettings.getInstance().isEnabled();
+        drawString(fontRendererObj, "Pixel Garden: " + (pixelGardenEnabled ? "enabled" : "disabled"),
+                left + 14, top + 128, pixelGardenEnabled ? 0xFF79D879 : 0xFFFF7777);
+        drawString(fontRendererObj, "OFF blocks its commands, screens and background work.",
+                left + 14, top + 143, 0xFF9298A5);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
@@ -60,6 +69,11 @@ public final class AlphaSettingsMenu extends AlphaGuiScreen {
                 break;
             case MINECRAFT_OPTIONS:
                 minecraft.displayGuiScreen(new GuiOptions(this, minecraft.gameSettings));
+                break;
+            case PIXEL_GARDEN_TOGGLE:
+                PixelGardenModuleSettings settings = PixelGardenModuleSettings.getInstance();
+                settings.setEnabled(!settings.isEnabled());
+                initGui();
                 break;
             default:
                 break;
