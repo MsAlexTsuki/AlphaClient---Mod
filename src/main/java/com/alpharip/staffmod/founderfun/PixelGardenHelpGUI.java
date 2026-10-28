@@ -37,6 +37,7 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         lines.add("/pixelgarden Quest complete <number> - Complete an eligible quest and claim its rewards");
         lines.add("/pixelgarden Quest history - Show completed and abandoned quest history");
         lines.add("/pixelgarden Quest progress - Show progress for active quests");
+        lines.add("/pixelgarden idlist - Open the dedicated Quest ID List GUI with quest IDs, NPC IDs and rewards");
         lines.add("/pixelgarden ids - Open the scrollable quest ID and NPC reference registry");
         lines.add("/pixelgarden help - Open this command guide GUI");
         lines.add("/pixelgarden guide - Open this scrollable guide");
