@@ -149,20 +149,20 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 buttonList.add(new AlphaButton(ADD_CROPS, actionX, actionY - (cropControlsExpanded ? 22 : 0),
                         actionWidth, 18, cropControlsExpanded ? "Hide Crop Submission" : "Add Crops"));
                 if (cropControlsExpanded) {
-                    int rowY = actionY;
+                    int controlsY = actionY;
                     int unit = Math.max(22, (actionWidth - 82) / 6);
                     int leftW = unit * 3;
                     int rightW = unit * 3;
                     int submitW = Math.max(52, actionWidth - leftW - rightW - 8);
                     int submitX = actionX + leftW + 4;
                     int rightX = submitX + submitW + 4;
-                    buttonList.add(new AlphaButton(AMOUNT_DOWN, actionX, rowY, unit, 18, "-1"));
-                    buttonList.add(new AlphaButton(AMOUNT_DOWN_10, actionX + unit, rowY, unit, 18, "-10"));
-                    buttonList.add(new AlphaButton(AMOUNT_DOWN_100, actionX + unit * 2, rowY, unit, 18, "-100"));
-                    buttonList.add(new AlphaButton(SUBMIT, submitX, rowY, submitW, 18, "Submit"));
-                    buttonList.add(new AlphaButton(AMOUNT_UP, rightX, rowY, unit, 18, "+1"));
-                    buttonList.add(new AlphaButton(AMOUNT_UP_10, rightX + unit, rowY, unit, 18, "+10"));
-                    buttonList.add(new AlphaButton(AMOUNT_UP_100, rightX + unit * 2, rowY, unit, 18, "+100"));
+                    buttonList.add(new AlphaButton(AMOUNT_DOWN, actionX, controlsY, unit, 18, "-1"));
+                    buttonList.add(new AlphaButton(AMOUNT_DOWN_10, actionX + unit, controlsY, unit, 18, "-10"));
+                    buttonList.add(new AlphaButton(AMOUNT_DOWN_100, actionX + unit * 2, controlsY, unit, 18, "-100"));
+                    buttonList.add(new AlphaButton(SUBMIT, submitX, controlsY, submitW, 18, "Submit"));
+                    buttonList.add(new AlphaButton(AMOUNT_UP, rightX, controlsY, unit, 18, "+1"));
+                    buttonList.add(new AlphaButton(AMOUNT_UP_10, rightX + unit, controlsY, unit, 18, "+10"));
+                    buttonList.add(new AlphaButton(AMOUNT_UP_100, rightX + unit * 2, controlsY, unit, 18, "+100"));
                     if ("*".equals(delivery.target)) {
                         PixelGardenGame.Crop[] crops = PixelGardenGame.Crop.values();
                         PixelGardenGame.Crop crop = crops[Math.floorMod(selectedDeliveryCropIndex, crops.length)];
@@ -486,8 +486,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             drawCenteredString(fontRendererObj, actionMessage, width / 2, 51, 0xFF67451F);
         }
         Minecraft minecraft = Minecraft.getMinecraft();
-        net.minecraft.client.gui.ScaledResolution scaled = new net.minecraft.client.gui.ScaledResolution(
-                minecraft, minecraft.displayWidth, minecraft.displayHeight);
+        net.minecraft.client.gui.ScaledResolution scaled = new net.minecraft.client.gui.ScaledResolution(minecraft);
         int scale = scaled.getScaleFactor();
         int clipTop = top + 58;
         int clipBottom = top + h - 24;
