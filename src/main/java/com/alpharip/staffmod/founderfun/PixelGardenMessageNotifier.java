@@ -70,7 +70,14 @@ public final class PixelGardenMessageNotifier {
             save();
         }
 
-        checkReadyCrops(minecraft);
+        // Keep harvest reminders out of every Pixel Garden screen; send once the player leaves it.
+        if (!isPixelGardenGuiOpen(minecraft)) checkReadyCrops(minecraft);
+    }
+
+    private static boolean isPixelGardenGuiOpen(Minecraft minecraft) {
+        if (minecraft == null || minecraft.currentScreen == null) return false;
+        return minecraft.currentScreen.getClass().getName()
+                .startsWith("com.alpharip.staffmod.founderfun.PixelGarden");
     }
 
     private void checkReadyCrops(Minecraft minecraft) {
