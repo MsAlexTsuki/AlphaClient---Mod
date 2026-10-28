@@ -413,9 +413,12 @@ public final class PixelGardenGame {
                     int amount = Math.min(remaining, inventory[target.ordinal()]);
                     if (amount > 0) {
                         int previous = instance.getObjectiveProgress(objective.id);
-                        if (consumeHarvestedCrop(target, amount)
-                                && progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous + amount)) {
-                            if (previous + amount >= objective.requiredAmount) progressionData.completeQuest(instance.instanceId);
+                        if (progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous + amount)) {
+                            if (consumeHarvestedCrop(target, amount)) {
+                                if (previous + amount >= objective.requiredAmount) progressionData.completeQuest(instance.instanceId);
+                            } else {
+                                progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous);
+                            }
                         }
                     }
                 } else {
@@ -423,9 +426,12 @@ public final class PixelGardenGame {
                         int amount = Math.min(remaining, inventory[crop.ordinal()]);
                         if (amount <= 0) continue;
                         int previous = instance.getObjectiveProgress(objective.id);
-                        if (consumeHarvestedCrop(crop, amount)
-                                && progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous + amount)) {
-                            if (previous + amount >= objective.requiredAmount) progressionData.completeQuest(instance.instanceId);
+                        if (progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous + amount)) {
+                            if (consumeHarvestedCrop(crop, amount)) {
+                                if (previous + amount >= objective.requiredAmount) progressionData.completeQuest(instance.instanceId);
+                            } else {
+                                progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous);
+                            }
                         }
                         break;
                     }
