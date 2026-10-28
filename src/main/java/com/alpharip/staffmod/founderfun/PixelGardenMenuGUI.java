@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
+import org.lwjgl.input.Mouse;
 
 /** Shared pixel-art menu frame for Pixel Garden's dedicated shop and management screens. */
 abstract class PixelGardenMenuGUI extends GuiScreen {
@@ -18,6 +19,8 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
     protected final GuiScreen parent;
     protected final PixelGardenGame game = PixelGardenGame.getInstance();
     private final Page page;
+    private int cropScrollRow;
+    private static final int CROP_CARD_HEIGHT = 78, CROP_ROW_GAP = 8;
 
     PixelGardenMenuGUI(GuiScreen parent, Page page) {
         this.parent = parent;
@@ -33,6 +36,29 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         }
     }
 
+    private int cropRowCount() {
+        return (PixelGardenGame.Crop.values().length + 1) / 2;
+    }
+
+    private int visibleCropRows() {
+        int availableHeight = Math.max(CROP_CARD_HEIGHT, height - 88 - 58);
+        return Math.max(1, availableHeight / (CROP_CARD_HEIGHT + CROP_ROW_GAP));
+    }
+
+    private void clampCropScroll() {
+        cropScrollRow = Math.max(0, Math.min(cropRowCount() - visibleCropRows(), cropScrollRow));
+    }
+
+    @Override public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int wheel = Mouse.getEventDWheel();
+        if (wheel != 0 && (page == Page.SHOP || page == Page.SELL || page == Page.INVENTORY)) {
+            cropScrollRow += wheel < 0 ? 1 : -1;
+            clampCropScroll();
+            initGui();
+        }
+    }
+
     @Override public void initGui() {
         buttonList.clear();
         int left = Math.max(18, width / 2 - 250);
@@ -41,12 +67,16 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         if (page == Page.SHOP || page == Page.SELL || page == Page.INVENTORY) {
             int gap = 8;
             int cardWidth = (panelWidth - 28 - gap) / 2;
-            int cardHeight = 78;
+            int cardHeight = CROP_CARD_HEIGHT;
+            clampCropScroll();
+            int firstRow = cropScrollRow;
+            int lastRow = Math.min(cropRowCount(), firstRow + visibleCropRows());
             for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
                 int col = crop.ordinal() % 2;
                 int row = crop.ordinal() / 2;
+                if (row < firstRow || row >= lastRow) continue;
                 int x = left + 10 + col * (cardWidth + gap);
-                int y = top + row * (cardHeight + gap);
+                int y = top + (row - cropScrollRow) * (cardHeight + gap);
                 String label;
                 if (page == Page.SHOP) label = "Buy seed (" + crop.seedPrice + ")";
                 else if (page == Page.SELL) label = "Sell all x" + game.getInventory(crop);
@@ -190,11 +220,15 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         drawPanel(left, top, panelWidth, panelHeight);
         drawString(fontRendererObj, title(), left + 14, top + 12, 0xFFFFD45A);
         if (page == Page.SHOP || page == Page.SELL || page == Page.INVENTORY) {
-            int gap = 8, cardWidth = (panelWidth - 28 - gap) / 2, cardHeight = 78;
+            int gap = CROP_ROW_GAP, cardWidth = (panelWidth - 28 - gap) / 2, cardHeight = CROP_CARD_HEIGHT;
+            clampCropScroll();
+            int firstRow = cropScrollRow;
+            int lastRow = Math.min(cropRowCount(), firstRow + visibleCropRows());
             for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
                 int col = crop.ordinal() % 2, row = crop.ordinal() / 2;
+                if (row < firstRow || row >= lastRow) continue;
                 int x = left + 10 + col * (cardWidth + gap);
-                int y = 88 + row * (cardHeight + gap);
+                int y = 88 + (row - cropScrollRow) * (cardHeight + gap);
                 drawPanel(x, y, cardWidth, cardHeight);
                 drawCropIcon(crop, x + 8, y + 7, 24);
                 drawString(fontRendererObj, crop.displayName, x + 38, y + 10, 0xFFF0F2F6);
@@ -208,6 +242,12 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                     drawString(fontRendererObj, "Seeds: " + game.getSeeds(crop), x + 38, y + 25, 0xFFB7C4D5);
                     drawString(fontRendererObj, "Harvest: " + game.getInventory(crop), x + 38, y + 38, 0xFFB7C4D5);
                 }
+            }
+            int totalRows = cropRowCount();
+            if (totalRows > visibleCropRows()) {
+                String scrollLabel = (cropScrollRow > 0 ? "▲ " : "") + "Mouse wheel to scroll crops"
+                        + (cropScrollRow + visibleCropRows() < totalRows ? " ▼" : "");
+                drawCenteredString(fontRendererObj, scrollLabel, width / 2, height - 53, 0xFFB7C4D5);
             }
         } else {
             int extensionNumber = Math.max(1, game.getUnlockedPlots() - PixelGardenGame.STARTING_PLOTS + 1);
