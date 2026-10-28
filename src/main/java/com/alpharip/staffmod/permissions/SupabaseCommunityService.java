@@ -51,6 +51,7 @@ public final class SupabaseCommunityService {
     private static volatile boolean restoringSession;
     private static volatile String sessionStatus = "Alpha Account has not been signed in on this installation.";
     private static ScheduledExecutorService syncExecutor;
+    private static volatile boolean prestigeShutdownHookRegistered;
 
     private SupabaseCommunityService() {
     }
@@ -58,6 +59,15 @@ public final class SupabaseCommunityService {
     /** Starts restore and live rank/permission synchronization once per client process. */
     public static synchronized void start() {
         if (syncExecutor != null && !syncExecutor.isShutdown()) return;
+        if (!prestigeShutdownHookRegistered) {
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override public void run() {
+                    try { if (accessToken != null) pixelGardenPrestigeHeartbeat(); }
+                    catch (Exception exception) { System.err.println("[AlphaClient] Final Prestige heartbeat failed: " + exception.getMessage()); }
+                }
+            }, "AlphaClient-PrestigeShutdownHeartbeat"));
+            prestigeShutdownHookRegistered = true;
+        }
         syncExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
             @Override public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable, "AlphaClient-CommunitySync");
@@ -74,6 +84,7 @@ public final class SupabaseCommunityService {
                         sessionStatus = "Restoring saved Alpha Account session...";
                         refreshSessionToken();
                         synchronizeVerifiedAccount();
+                        pixelGardenPrestigeBeginSession();
                         sessionStatus = "Alpha Account session restored.";
                     } else {
                         sessionStatus = "No saved Alpha Account session. Sign in once to save this account.";
@@ -154,6 +165,7 @@ public final class SupabaseCommunityService {
         sessionStatus = "Signed in. Saving Alpha Account session...";
         persistRefreshToken();
         synchronizeVerifiedAccount();
+        pixelGardenPrestigeBeginSession();
         try {
             JsonObject event = new JsonObject();
             event.addProperty("event", "login");
@@ -536,6 +548,10 @@ public final class SupabaseCommunityService {
     public static synchronized JsonObject getPixelGardenPrestigeState() throws Exception {
         if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
         return requestJson("POST", "/rest/v1/rpc/pixel_garden_prestige_state", accessToken, "{}");
+    }
+    public static synchronized JsonObject pixelGardenPrestigeBeginSession() throws Exception {
+        if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
+        return requestJson("POST", "/rest/v1/rpc/pixel_garden_prestige_begin_session", accessToken, "{}");
     }
     public static synchronized JsonObject pixelGardenPrestigeHeartbeat() throws Exception {
         if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
