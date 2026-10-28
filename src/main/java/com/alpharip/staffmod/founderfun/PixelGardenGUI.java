@@ -184,11 +184,13 @@ public final class PixelGardenGUI extends GuiScreen {
                     false, false, true));
         }
         int cropY = gy - 25;
-        int cropGap = 6;
-        int cropWidth = (gardenWidth() - 12 - cropGap * 3) / 4;
+        int cropGap = 4;
+        int cropCount = PixelGardenGame.Crop.values().length;
+        int cropWidth = (gardenWidth() - 12 - cropGap * (cropCount - 1)) / cropCount;
         for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
             int x = gx + crop.ordinal() * (cropWidth + cropGap);
-            String label = (selectedCrop == crop ? "> " : "") + crop.displayName + " (" + game.getSeeds(crop) + ")";
+            String cropLabel = crop == PixelGardenGame.Crop.SUGARCANE ? "Sugar" : crop.displayName;
+            String label = (selectedCrop == crop ? "> " : "") + cropLabel;
             buttonList.add(new AlphaButton(CROP_BASE + crop.ordinal(), x, cropY, cropWidth, 20, label));
         }
         int navGap = 8;
@@ -259,12 +261,12 @@ public final class PixelGardenGUI extends GuiScreen {
             else mc.displayGuiScreen(new PixelGardenUpgradeGUI(this));
             return;
         }
-        if (button.id >= CROP_BASE && button.id < CROP_BASE + 4) {
+        if (button.id >= CROP_BASE && button.id < CROP_BASE + PixelGardenGame.Crop.values().length) {
             selectedCrop = PixelGardenGame.Crop.values()[button.id - CROP_BASE];
-        } else if (button.id >= BUY_BASE && button.id < BUY_BASE + 4) {
+        } else if (button.id >= BUY_BASE && button.id < BUY_BASE + PixelGardenGame.Crop.values().length) {
             selectedCrop = PixelGardenGame.Crop.values()[button.id - BUY_BASE];
             game.buySeeds(selectedCrop, 1);
-        } else if (button.id >= SELL_BASE && button.id < SELL_BASE + 4) {
+        } else if (button.id >= SELL_BASE && button.id < SELL_BASE + PixelGardenGame.Crop.values().length) {
             game.sellAll(PixelGardenGame.Crop.values()[button.id - SELL_BASE]);
         } else if (button.id == AUTO) game.buyAutoHarvest();
         else if (button.id == GROWTH) game.buyGrowthBoost();
@@ -335,22 +337,31 @@ public final class PixelGardenGUI extends GuiScreen {
 
     private void drawCropArt(PixelGardenGame.Crop crop, int x, int y, int size, long now,
                              PixelGardenGame.PlotState state) {
-        int spriteU = crop == PixelGardenGame.Crop.POTATO ? 32
-                : crop == PixelGardenGame.Crop.CARROT ? 16 : crop.ordinal() * 16;
-        int spriteV = 0;
         int spriteSize = Math.max(24, size);
         if (state == PixelGardenGame.PlotState.EMPTY) {
             drawSprite(x + (size - spriteSize) / 2, y + (size - spriteSize) / 2,
                     spriteSize, spriteSize, 48, 16);
             return;
         }
-        drawSprite(x + (size - spriteSize) / 2, y + (size - spriteSize) / 2 - 4,
-                spriteSize, spriteSize, spriteU, spriteV);
-        if (state == PixelGardenGame.PlotState.READY) {
-            drawSprite(x + size - 22, y + 4, 18, 18, 32, 16);
+        if (crop == PixelGardenGame.Crop.MELON || crop == PixelGardenGame.Crop.CACTUS
+                || crop == PixelGardenGame.Crop.SUGARCANE) {
+            ResourceLocation cropTexture = new ResourceLocation("alphastaffmod",
+                    "textures/gui/" + crop.name().toLowerCase(java.util.Locale.ROOT) + ".png");
+            mc.getTextureManager().bindTexture(cropTexture);
+            net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            net.minecraft.client.renderer.GlStateManager.enableBlend();
+            drawScaledCustomSizeModalRect(x + (size - spriteSize) / 2,
+                    y + (size - spriteSize) / 2 - 4, 0, 0, 16, 16,
+                    spriteSize, spriteSize, 16, 16);
+            net.minecraft.client.renderer.GlStateManager.disableBlend();
         } else {
-            drawSprite(x + size - 22, y + 4, 18, 18, 48, 16);
+            int spriteU = crop == PixelGardenGame.Crop.POTATO ? 32
+                    : crop == PixelGardenGame.Crop.CARROT ? 16 : crop.ordinal() * 16;
+            drawSprite(x + (size - spriteSize) / 2, y + (size - spriteSize) / 2 - 4,
+                    spriteSize, spriteSize, spriteU, 0);
         }
+        drawSprite(x + size - 22, y + 4, 18, 18,
+                state == PixelGardenGame.PlotState.READY ? 32 : 48, 16);
     }
 
     @Override
