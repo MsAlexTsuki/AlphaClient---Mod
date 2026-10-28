@@ -25,10 +25,10 @@ public final class PixelGardenGame {
 
     public enum PlotState { LOCKED, EMPTY, GROWING, READY }
     public enum Crop {
-        WHEAT("Wheat", 5, 10, 10L * 60L * 1000L),
-        POTATO("Potato", 10, 20, 20L * 60L * 1000L),
+        WHEAT("Wheat", 5, 8, 10L * 60L * 1000L),
+        POTATO("Potato", 10, 12, 20L * 60L * 1000L),
         CARROT("Carrot", 8, 16, 30L * 60L * 1000L),
-        PUMPKIN("Pumpkin", 20, 45, 40L * 60L * 1000L);
+        PUMPKIN("Pumpkin", 20, 30, 40L * 60L * 1000L);
 
         public final String displayName;
         public final int seedPrice;
