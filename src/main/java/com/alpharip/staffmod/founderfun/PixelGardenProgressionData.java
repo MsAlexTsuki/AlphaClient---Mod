@@ -364,7 +364,7 @@ public final class PixelGardenProgressionData {
         String normalized = normalizeTier(tier);
         int minLevel = tierMinLevel(normalized);
         int maxLevel = tierMaxLevel(normalized);
-        if (minLevel == 1 && maxLevel == Integer.MAX_VALUE && normalized.isEmpty()) return "";
+        if (minLevel == 1 && maxLevel == Integer.MAX_VALUE && tierRequiredPrestige(normalized) == 0) return "";
         String levelText = maxLevel == Integer.MAX_VALUE ? ("Level " + minLevel + "+")
                 : ("Level " + minLevel + "-" + maxLevel);
         return levelText + " | Prestige " + tierRequiredPrestige(normalized);
