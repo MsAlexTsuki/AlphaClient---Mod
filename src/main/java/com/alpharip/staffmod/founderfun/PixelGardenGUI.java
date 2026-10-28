@@ -202,6 +202,14 @@ public final class PixelGardenGUI extends GuiScreen {
                 (tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) - sideColumnHeight) / 2);
         int leftX = gx - 12 - navGap - navButtonWidth;
         int rightX = gx + gardenWidth() + 12 + navGap;
+        PixelGardenProgressionData progression = game.getProgressionData();
+        int levelCardY = Math.max(54, gy - 62);
+        panel(leftX, levelCardY, navButtonWidth, 48);
+        drawString(fontRendererObj, "LEVEL " + progression.getLevel(), leftX + 6, levelCardY + 6, 0xFFFFD45A);
+        long neededXp = progression.getXpRequiredForNextLevel();
+        long currentXp = progression.getExperience();
+        drawString(fontRendererObj, "XP " + currentXp + "/" + neededXp, leftX + 6, levelCardY + 19, 0xFFE3E7EE);
+        drawString(fontRendererObj, "Next: " + (progression.getLevel() + 1), leftX + 6, levelCardY + 32, 0xFFB7C4D5);
         for (int i = 0; i < sideIds.length; i++) {
             int column = i / 4;
             int row = i % 4;
