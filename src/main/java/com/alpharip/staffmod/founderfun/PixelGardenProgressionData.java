@@ -643,6 +643,9 @@ public final class PixelGardenProgressionData {
         experience = 0L;
         resetLevelTokens = 0;
         customLevelMessage = "";
+        levelXpRequirements.clear();
+        levelRewards.clear();
+        levelDescriptions.clear();
         storylineChapter = 1;
         tutorialStep = 0;
         nextDailyResetAt = 0L;
