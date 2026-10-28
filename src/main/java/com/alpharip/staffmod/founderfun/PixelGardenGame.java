@@ -97,6 +97,7 @@ public final class PixelGardenGame {
     private int resetTokens;
     private int purchasedUpgradeSteps;
     private long lastProcessedAt = System.currentTimeMillis();
+    private final PixelGardenProgressionData progressionData = new PixelGardenProgressionData();
 
     private PixelGardenGame() {
         for (int i = 0; i < STARTING_PLOTS; i++) plots.add(new Plot(true));
@@ -110,6 +111,7 @@ public final class PixelGardenGame {
         moreCoinsLevel = 0;
         moreCropsLevel = 0;
         purchasedUpgradeSteps = 0;
+        progressionData.reset();
         lastProcessedAt = System.currentTimeMillis();
         for (int i = 0; i < seeds.length; i++) {
             seeds[i] = 0;
@@ -123,6 +125,7 @@ public final class PixelGardenGame {
         }
     }
     public static PixelGardenGame getInstance() { return INSTANCE; }
+    public synchronized PixelGardenProgressionData getProgressionData() { return progressionData; }
     public synchronized int getCoins() { return pixelGardenUpgradeCoins; }
     public synchronized int getResetTokens() { return resetTokens; }
     public synchronized int getSeeds(Crop crop) { return seeds[crop.ordinal()]; }
@@ -293,7 +296,7 @@ public final class PixelGardenGame {
     /** Creates a portable account-save payload; never includes auth/session secrets. */
     public synchronized JsonObject toSaveData() {
         JsonObject root = new JsonObject();
-        root.addProperty("version", 1);
+        root.addProperty("version", 2);
         root.addProperty("pixelGardenUpgradeCoins", pixelGardenUpgradeCoins);
         root.addProperty("auto_harvest", autoHarvest);
         root.addProperty("growth_levels", growthLevels);
@@ -324,12 +327,14 @@ public final class PixelGardenGame {
             plotArray.add(savedPlot);
         }
         root.add("plots", plotArray);
+        root.add("progression", progressionData.toJson());
         return root;
     }
 
     /** Restores a save after validating every value and then applies capped offline progress. */
     public synchronized void loadSaveData(JsonObject root) {
         if (root == null) return;
+        progressionData.loadJson(root.get("progression"));
         int savedCoins = root.has("pixelGardenUpgradeCoins") ? root.get("pixelGardenUpgradeCoins").getAsInt() : STARTING_COINS;
         int savedGrowth = root.has("growth_levels") ? root.get("growth_levels").getAsInt() : 0;
         int savedMoreCoins = root.has("more_coins_level") ? Math.max(0, Math.min(MORE_COINS_PRICES.length, root.get("more_coins_level").getAsInt())) : 0;
