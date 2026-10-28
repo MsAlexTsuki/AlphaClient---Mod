@@ -126,7 +126,125 @@ public final class PixelGardenCommand extends CommandBase {
         if (!allowed(sender, "commands.pixelgarden")) return;
         String action = args == null || args.length == 0 ? "help" : args[0].toLowerCase(Locale.ROOT);
         PixelGardenGame game = PixelGardenGame.getInstance();
-        if ("msg".equals(action)) {
+        if ("level".equals(action)) {
+            if (args.length >= 2 && "list".equalsIgnoreCase(args[1])) {
+                Minecraft mc = Minecraft.getMinecraft();
+                open(new PixelGardenLevelListGUI(mc == null ? null : mc.currentScreen));
+            } else if (args.length >= 3 && "check".equalsIgnoreCase(args[1])) {
+                try {
+                    com.google.gson.JsonObject info = SupabaseCommunityService.managePixelGardenLevels("info", args[2], 0, 0L, null);
+                    reply(sender, info.get("alpha_name").getAsString() + "'s Pixel Garden level: " + info.get("level").getAsInt() + ".");
+                } catch (Exception exception) { reply(sender, "Could not read that account's level: " + safeMessage(exception)); }
+            } else {
+                reply(sender, "Your Pixel Garden level: " + game.getProgressionData().getLevel() + ".");
+            }
+        } else if ("xp".equals(action)) {
+            if (args.length >= 3 && "check".equalsIgnoreCase(args[1])) {
+                try {
+                    com.google.gson.JsonObject info = SupabaseCommunityService.managePixelGardenLevels("info", args[2], 0, 0L, null);
+                    reply(sender, info.get("alpha_name").getAsString() + " needs " + info.get("xp_remaining").getAsLong()
+                            + " more XP for level " + (info.get("level").getAsInt() + 1) + ".");
+                } catch (Exception exception) { reply(sender, "Could not read that account's XP: " + safeMessage(exception)); }
+            } else {
+                PixelGardenProgressionData data = game.getProgressionData();
+                reply(sender, "You need " + data.getXpRemainingForNextLevel() + " more XP for level " + (data.getLevel() + 1) + ".");
+            }
+        } else if ("resetleveltoken".equals(action)) {
+            if (args.length >= 2 && "use".equalsIgnoreCase(args[1])) {
+                try {
+                    com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenLevels("use_token", null, 0, 0L, null);
+                    game.getProgressionData().resetLevel();
+                    if (result.has("reset_level_tokens")) game.getProgressionData().setResetLevelTokens(result.get("reset_level_tokens").getAsInt());
+                    saveCloudAsync(game);
+                    reply(sender, "Your Pixel Garden level and XP have been reset to level 1 and 0 XP.");
+                } catch (Exception exception) { reply(sender, "Could not use a level reset token: " + safeMessage(exception)); }
+            } else {
+                try {
+                    com.google.gson.JsonObject info = SupabaseCommunityService.managePixelGardenLevels("info", null, 0, 0L, null);
+                    reply(sender, "You have " + info.get("reset_level_tokens").getAsInt() + " level reset token(s). Use /pixelgarden resetleveltoken use to reset your level.");
+                } catch (Exception exception) { reply(sender, "Could not read level reset tokens: " + safeMessage(exception)); }
+            }
+        } else if ("setlevel".equals(action) || "resetlevel".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if ("setlevel".equals(action) && args.length < 3) { reply(sender, "Usage: /pixelgarden setlevel <Alpha account name> <level>"); return; }
+            if ("resetlevel".equals(action) && args.length < 2) { reply(sender, "Usage: /pixelgarden resetlevel <Alpha account name>"); return; }
+            int targetLevel = "setlevel".equals(action) ? number(args[2]) : 1;
+            if ("setlevel".equals(action) && targetLevel < 1) { reply(sender, "Level must be a positive whole number."); return; }
+            try {
+                com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenLevels(action, args[1], targetLevel, 0L, null);
+                reply(sender, ("setlevel".equals(action) ? "Set " : "Reset ") + result.get("alpha_name").getAsString()
+                        + "'s Pixel Garden level" + ("setlevel".equals(action) ? " to " + targetLevel : " to level 1") + "; XP is 0.");
+            } catch (Exception exception) { reply(sender, "Could not update that account's level: " + safeMessage(exception)); }
+        } else if ("editlevel".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 4) { reply(sender, "Usage: /pixelgarden editlevel <rewards|xp|desc> <level> <value>"); return; }
+            String kind = args[1].toLowerCase(Locale.ROOT);
+            int targetLevel = number(args[2]);
+            if (targetLevel < 1) { reply(sender, "Level must be a positive whole number."); return; }
+            try {
+                String textValue = joinArgs(args, 3);
+                long xpValue = "xp".equals(kind) ? Long.parseLong(textValue) : 0L;
+                String rpcAction = "xp".equals(kind) ? "edit_xp" : "rewards".equals(kind) ? "edit_rewards" : "desc".equals(kind) ? "edit_desc" : "";
+                if (rpcAction.isEmpty()) { reply(sender, "Choose rewards, xp or desc."); return; }
+                if ("xp".equals(kind) && xpValue < 1L) { reply(sender, "XP must be a positive whole number."); return; }
+                SupabaseCommunityService.managePixelGardenLevels(rpcAction, null, targetLevel, xpValue, "xp".equals(kind) ? null : textValue);
+                if ("xp".equals(kind)) game.getProgressionData().setLevelXpRequirement(targetLevel, xpValue);
+                else if ("rewards".equals(kind)) game.getProgressionData().setLevelReward(targetLevel, textValue);
+                else game.getProgressionData().setLevelDescription(targetLevel, textValue);
+                saveCloudAsync(game);
+                reply(sender, "Updated level " + targetLevel + " " + kind + ".");
+            } catch (Exception exception) { reply(sender, "Could not edit level: " + safeMessage(exception)); }
+        } else if ("editlevelmsg".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 2) { reply(sender, "Usage: /pixelgarden editlevelmsg <message>"); return; }
+            String message = joinArgs(args, 1);
+            try {
+                SupabaseCommunityService.managePixelGardenLevels("edit_message", null, 0, 0L, message);
+                game.getProgressionData().setCustomLevelMessage(message);
+                saveCloudAsync(game);
+                reply(sender, "Updated the default Pixel Garden level-up message.");
+            } catch (Exception exception) { reply(sender, "Could not update the level-up message: " + safeMessage(exception)); }
+        } else if ("admin".equals(action) && args.length >= 3 && "level".equalsIgnoreCase(args[1])) {
+            if (!founderOnly(sender)) return;
+            String sub = args[2].toLowerCase(Locale.ROOT);
+            if ("create".equals(sub)) {
+                if (args.length < 6) { reply(sender, "Usage: /pixelgarden admin level create <new level> <rewards> <xp>"); return; }
+                int targetLevel = number(args[3]);
+                long xpValue; try { xpValue = Long.parseLong(args[args.length - 1]); } catch (RuntimeException ex) { xpValue = 0L; }
+                String reward = joinArgs(args, 4, args.length - 1);
+                if (targetLevel < 1 || xpValue < 1L || reward.isEmpty()) { reply(sender, "Provide a positive level, rewards and XP."); return; }
+                try {
+                    SupabaseCommunityService.managePixelGardenLevels("create_level", null, targetLevel, xpValue, reward);
+                    game.getProgressionData().createLevel(targetLevel, reward, xpValue);
+                    saveCloudAsync(game);
+                    reply(sender, "Created Pixel Garden level " + targetLevel + ".");
+                } catch (Exception exception) { reply(sender, "Could not create level: " + safeMessage(exception)); }
+            } else if ("delete".equals(sub)) {
+                if (args.length < 4) { reply(sender, "Usage: /pixelgarden admin level delete <level>"); return; }
+                int targetLevel = number(args[3]);
+                try {
+                    SupabaseCommunityService.managePixelGardenLevels("delete_level", null, targetLevel, 0L, null);
+                    game.getProgressionData().deleteLevel(targetLevel);
+                    saveCloudAsync(game);
+                    reply(sender, "Deleted Pixel Garden level " + targetLevel + ".");
+                } catch (Exception exception) { reply(sender, "Could not delete level: " + safeMessage(exception)); }
+            } else reply(sender, "Use /pixelgarden admin level create or delete.");
+        } else if ("resetleveltoken".equals(action) && args.length >= 3 && ("give".equalsIgnoreCase(args[1]) || "take".equalsIgnoreCase(args[1]))) {
+            if (!founderOnly(sender)) return;
+            int amount = args.length >= 4 ? number(args[3]) : 1;
+            if (amount < 1) { reply(sender, "Token amount must be positive."); return; }
+            try {
+                com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenLevels(
+                        "give".equalsIgnoreCase(args[1]) ? "give_token" : "take_token", args[2], amount, 0L, null);
+                reply(sender, ("give".equalsIgnoreCase(args[1]) ? "Gave " : "Took ") + amount + " level reset token(s) "
+                        + ("give".equalsIgnoreCase(args[1]) ? "to " : "from ") + result.get("alpha_name").getAsString() + ".");
+            } catch (Exception exception) { reply(sender, "Could not change level reset tokens: " + safeMessage(exception)); }
+        } else if ("edit".equals(action) && args.length >= 4 && "level".equalsIgnoreCase(args[1]) && "message".equalsIgnoreCase(args[2])) {
+            String message = joinArgs(args, 3);
+            game.getProgressionData().setCustomLevelMessage(message);
+            saveCloudAsync(game);
+            reply(sender, "Your local Pixel Garden level-up message was updated.");
+        } else if ("msg".equals(action)) {
             if (args.length < 2 || (!"on".equalsIgnoreCase(args[1]) && !"off".equalsIgnoreCase(args[1]))) {
                 reply(sender, "Usage: /" + commandName + " msg <on|off>");
                 return;
@@ -505,6 +623,13 @@ public final class PixelGardenCommand extends CommandBase {
 
 
 
+
+    private static String joinArgs(String[] args, int start) { return joinArgs(args, start, args.length); }
+    private static String joinArgs(String[] args, int start, int end) {
+        StringBuilder value = new StringBuilder();
+        for (int i = start; i < end; i++) { if (value.length() > 0) value.append(' '); value.append(args[i]); }
+        return value.toString();
+    }
 
     private void handleQuestCommand(ICommandSender sender, String[] args, PixelGardenGame game) {
         if (!SupabaseCommunityService.isSignedIn()) {
