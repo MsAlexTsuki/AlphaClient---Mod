@@ -48,13 +48,14 @@ public final class PixelGardenResetGUI extends GuiScreen {
         drawCenteredString(fontRendererObj, "Do you want to really reset", width / 2, top + 25, 0xFFFFFFFF);
         drawCenteredString(fontRendererObj, "your garden?", width / 2, top + 36, 0xFFFFFFFF);
         for (GuiButton button : buttonList) {
-            if (button.id == 20) button.enabled = selected >= 0 && !busy;
-            if (button.id == 20 && button.enabled) button.packedFGColour = 0xFF55DD55;
+            if (button.id == 20) {
+                button.enabled = selected >= 0 && !busy;
+                button.packedFGColour = 0xFF55DD55;
+            }
             if (button.id == 21) button.packedFGColour = 0xFFFF5555;
-            button.drawButton(mc, mouseX, mouseY);
         }
-        if (!status.isEmpty()) drawCenteredString(fontRendererObj, status, width / 2, top + 116, 0xFFFF7777);
         super.drawScreen(mouseX, mouseY, partialTicks);
+        if (!status.isEmpty()) drawCenteredString(fontRendererObj, status, width / 2, top + 116, 0xFFFF7777);
     }
 
     @Override protected void actionPerformed(GuiButton button) {
