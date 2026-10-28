@@ -98,10 +98,55 @@ Deno.serve(async (req: Request) => {
 
     const questId = cleanText(input.quest_id, 64).toLowerCase();
     if (!/^[a-z][a-z0-9_]{2,63}$/.test(questId)) return reply({ error: "Invalid quest ID." }, 400);
-    const { data: questRow, error: questError } = await admin.from("pixel_garden_quest_catalog")
+    let { data: questRow, error: questError } = await admin.from("pixel_garden_quest_catalog")
       .select("definition").eq("quest_id", questId).maybeSingle();
     if (questError) throw questError;
-    if (!questRow) return reply({ error: "Quest not found." }, 404);
+
+    // Starter quests are initially local defaults. Promote a known starter definition
+    // into the shared catalog when its rewards are edited, so the override syncs to all clients.
+    if (!questRow && (action === "reward_add" || action === "reward_remove")) {
+      const starterDefinitions: Record<string, Record<string, unknown>> = {
+        pg_fresh_start: {
+          id: "pg_fresh_start", name: "Fresh Start",
+          description: "Begin your garden journey by meeting Vincent and delivering your first wheat crop.",
+          npc: "pixelgarden.npc.tutorial", required_level: 1, required_prestige: 0, weight: 100, tier: "Beginner",
+          objectives: [{ id: "pg_fresh_start_objective", type: "DELIVER_CROP", target: "wheat", required_amount: 1 }],
+          rewards: {},
+        },
+        pg_first_coins: {
+          id: "pg_first_coins", name: "First Coins",
+          description: "Meet Jasmine and sell your first harvested wheat to learn how the garden economy works.",
+          npc: "pixelgarden.npc.jasmine", required_level: 1, required_prestige: 0, weight: 100, tier: "Beginner",
+          objectives: [{ id: "pg_first_coins_objective", type: "SELL_CROP", target: "wheat", required_amount: 1 }],
+          rewards: {},
+        },
+        pg_growing_bigger: {
+          id: "pg_growing_bigger", name: "Growing Bigger",
+          description: "Meet Hank, harvest wheat from your garden and build a steady routine.",
+          npc: "pixelgarden.npc.hank", required_level: 1, required_prestige: 0, weight: 100, tier: "Beginner",
+          objectives: [{ id: "pg_growing_bigger_objective", type: "HARVEST_CROP", target: "wheat", required_amount: 3 }],
+          rewards: {},
+        },
+        pg_your_own_garden: {
+          id: "pg_your_own_garden", name: "Your Own Garden",
+          description: "Meet Emily and plant and harvest a carrot crop as you expand your garden skills.",
+          npc: "pixelgarden.npc.emily", required_level: 1, required_prestige: 0, weight: 100, tier: "Beginner",
+          objectives: [{ id: "pg_your_own_garden_objective", type: "HARVEST_CROP", target: "carrot", required_amount: 1 }],
+          rewards: {},
+        },
+      };
+      const starterDefinition = starterDefinitions[questId];
+      if (starterDefinition) {
+        const { error: promoteError } = await admin.from("pixel_garden_quest_catalog")
+          .upsert({ quest_id: questId, definition: starterDefinition, created_by: userId }, { onConflict: "quest_id", ignoreDuplicates: true });
+        if (promoteError) throw promoteError;
+        const refreshed = await admin.from("pixel_garden_quest_catalog")
+          .select("definition").eq("quest_id", questId).maybeSingle();
+        if (refreshed.error) throw refreshed.error;
+        questRow = refreshed.data;
+      }
+    }
+    if (!questRow) return reply({ error: "Quest not found. Only shared quests and the four built-in starter quests can be edited." }, 404);
 
     if (action === "reward_add" || action === "reward_remove") {
       const rewardType = cleanText(input.reward_type, 32).toLowerCase();
