@@ -48,12 +48,14 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         lines.add("UPGRADES AND PRESTIGE");
         lines.add("/pixelgarden upgrades - Open the upgrades screen");
         lines.add("/pixelgarden upgrade <upgrade> - Purchase an upgrade");
+        lines.add("/pixelgarden upgrade prestige_yield|prestige_bonus|coin_cache - Buy exclusive Prestige upgrades");
         lines.add("/pixelgarden prestige - Open Prestige upgrades when unlocked");
         lines.add("/pixelgarden prestige use - Prestige for 20,000 coins after 18 upgrade steps");
         lines.add("/pixelgarden resettokens - Check your reset-token balance");
         lines.add("/pixelgarden resettoken use - Open reset confirmation");
         if (SupabaseCommunityService.isSignedInFounder()) {
             lines.add("FOUNDER COMMANDS");
+            lines.add("/pixelgarden harvesttime <multiplier|finish> - Speed up or finish growing crops for testing");
             lines.add("/pixelgarden coinsgive <Alpha account> <amount> - Give regular coins");
             lines.add("/pixelgarden takecoins <Alpha account> <amount> - Remove regular coins");
             lines.add("/pixelgarden coinsreset <Alpha account> - Reset regular coins");
