@@ -105,6 +105,14 @@ public final class PixelGardenCommand extends CommandBase {
                 ids.add(definition.id);
             return getListOfStringsMatchingLastWord(args, ids.toArray(new String[ids.size()]));
         }
+        if ("rewards".equals(root) && args.length == 4
+                && ("add".equalsIgnoreCase(args[1]) || "remove".equalsIgnoreCase(args[1]))) {
+            return getListOfStringsMatchingLastWord(args, new String[] {
+                    "coins",
+                    "crop_wheat", "crop_potato", "crop_carrot", "crop_pumpkin",
+                    "seeds_wheat", "seeds_potato", "seeds_carrot", "seeds_pumpkin"
+            });
+        }
         if (("givequest".equals(root) || "takequest".equals(root) || "completequest".equals(root))
                 && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"admin"});
