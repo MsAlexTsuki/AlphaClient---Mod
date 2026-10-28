@@ -645,7 +645,7 @@ public final class PixelGardenProgressionData {
                     chancePercent, tier, objectives, rewards);
         }
 
-        private JsonObject toJson() {
+        public JsonObject toJson() {
             JsonObject root = new JsonObject();
             root.addProperty("id", id);
             root.addProperty("name", name);
