@@ -76,6 +76,16 @@ public final class PixelGardenCommand extends CommandBase {
             return getListOfStringsMatchingLastWord(args, new String[] {"fullreset"});
         if ("resettoken".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"use", "admin"});
+        if ("resetleveltoken".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"use", "give", "take"});
+        if ("level".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"check", "list"});
+        if ("editlevel".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"rewards", "xp", "desc"});
+        if ("admin".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"fullreset", "level"});
+        if ("admin".equals(root) && args.length == 3 && "level".equalsIgnoreCase(args[1]))
+            return getListOfStringsMatchingLastWord(args, new String[] {"create", "delete"});
         if ("give".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"resettoken"});
         if ("harvesttime".equals(root) && args.length == 2)
