@@ -951,7 +951,15 @@ public final class PixelGardenCommand extends CommandBase {
     private void runQuestAdminRequest(ICommandSender sender, com.google.gson.JsonObject payload, String successMessage) {
         try {
             com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenQuests(payload);
-            reply(sender, result.has("error") ? result.get("error").getAsString() : successMessage);
+            if (result.has("error")) {
+                reply(sender, result.get("error").getAsString());
+                return;
+            }
+            try {
+                PixelGardenGame.getInstance().getProgressionData()
+                        .mergeSharedDefinitions(SupabaseCommunityService.getSharedPixelGardenQuests());
+            } catch (Exception ignored) { }
+            reply(sender, successMessage);
         } catch (Exception exception) {
             reply(sender, "Quest administration failed: " + safeMessage(exception));
         }
