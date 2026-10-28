@@ -241,6 +241,10 @@ public final class PixelGardenCommand extends CommandBase {
         try {
             com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGarden(action, target, amount);
             String name = result.has("target_alpha_name") ? result.get("target_alpha_name").getAsString() : target;
+            if (name.equalsIgnoreCase(SupabaseCommunityService.getSignedInAlphaName())) {
+                com.google.gson.JsonObject refreshed = SupabaseCommunityService.loadPixelGardenSave();
+                if (refreshed != null) PixelGardenGame.getInstance().loadSaveData(refreshed);
+            }
             if ("force_reset".equals(action)) reply(sender, "Force-reset the full Pixel Garden for " + name + ".");
             else if ("give_token".equals(action)) reply(sender, "Gave 1 reset token to " + name + ".");
             else if ("reset_coins".equals(action)) reply(sender, "Reset " + name + "'s Pixel Garden coins to 0.");
