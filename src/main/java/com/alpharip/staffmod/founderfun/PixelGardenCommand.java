@@ -73,7 +73,7 @@ public final class PixelGardenCommand extends CommandBase {
         if ("msg".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"on", "off"});
         if ("admin".equals(root) && args.length == 2)
-            return getListOfStringsMatchingLastWord(args, new String[] {"fullreset"});
+            return getListOfStringsMatchingLastWord(args, new String[] {"fullreset", "level"});
         if ("resettoken".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"use", "admin"});
         if ("resetleveltoken".equals(root) && args.length == 2)
