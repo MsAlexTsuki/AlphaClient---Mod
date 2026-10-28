@@ -108,8 +108,11 @@ public final class PixelGardenGUI extends GuiScreen {
     }
 
     private static final int PLOT_COLUMNS = 6;
+    private int sideButtonWidth() { return Math.min(112, Math.max(70, width / 9)); }
     private int gardenCell() {
-        return Math.max(42, Math.min(86, (width - 100) / PLOT_COLUMNS - 6));
+        int sideSpace = sideButtonWidth() + 16;
+        int availableGardenWidth = width - 2 * sideSpace - 48;
+        return Math.max(42, Math.min(86, (availableGardenWidth - 20) / PLOT_COLUMNS - 6));
     }
     private int gardenTileHeight() { return 48; }
     private int visiblePlotRows() {
@@ -171,16 +174,16 @@ public final class PixelGardenGUI extends GuiScreen {
             buttonList.add(new AlphaButton(CROP_BASE + crop.ordinal(), x, cropY, cropWidth, 20, label));
         }
         int navGap = 8;
-        int navButtonWidth = Math.min(112, Math.max(70, (width - 48 - navGap * 3) / 8));
+        int navButtonWidth = sideButtonWidth();
         int navButtonHeight = 22;
         int navRowGap = 6;
         String[] sideLabels = {"Shop", "Inventory", "Sell", "Upgrades", "Prestige", "Quest Book", "NPCs", "Help"};
         int[] sideIds = {SHOP, INVENTORY, SELL, UPGRADES, PRESTIGE, QUESTBOOK, NPCS, HELP};
-        int sideColumnHeight = sideLabels.length / 2 * navButtonHeight
-                + (sideLabels.length / 2 - 1) * navRowGap;
-        int sideStartY = (height - sideColumnHeight) / 2;
-        int leftX = 16;
-        int rightX = width - 16 - navButtonWidth;
+        int sideColumnHeight = 4 * navButtonHeight + 3 * navRowGap;
+        int sideStartY = gy + 8 + Math.max(0,
+                (tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) - sideColumnHeight) / 2);
+        int leftX = gx - 12 - navGap - navButtonWidth;
+        int rightX = gx + gardenWidth() + 12 + navGap;
         for (int i = 0; i < sideIds.length; i++) {
             int column = i / 4;
             int row = i % 4;
@@ -191,7 +194,7 @@ public final class PixelGardenGUI extends GuiScreen {
             buttonList.add(navButton);
         }
         int backWidth = Math.min(112, Math.max(70, width / 8));
-        buttonList.add(new AlphaButton(BACK, (width - backWidth) / 2, height - 34, backWidth, navButtonHeight, "Back"));
+        buttonList.add(new AlphaButton(BACK, (width - backWidth) / 2, height - 48, backWidth, navButtonHeight, "Back"));
     }
 
     private String plotButtonLabel(PixelGardenGame.Plot plot, long now, int index) {
@@ -408,10 +411,10 @@ public final class PixelGardenGUI extends GuiScreen {
         drawCenteredString(fontRendererObj, "Seeds: " + selectedCrop.displayName + " x" + game.getSeeds(selectedCrop)
                 + "    Harvested inventory: " + inventoryTotal(), width / 2, height - 58, 0xFFE6E9EF);
         drawCenteredString(fontRendererObj, "Plant  >  Grow  >  Harvest  >  Sell  >  Upgrade",
-                width / 2, height - 31, 0xFFFFC83D);
-        drawCenteredString(fontRendererObj, cloudStatus, width / 2, height - 18,
+                width / 2, 52, 0xFFFFC83D);
+        drawCenteredString(fontRendererObj, cloudStatus, width / 2, 64,
                 cloudStatus.startsWith("Cloud save failed") ? 0xFFFF7777 : 0xFF9DA8B8);
-        if (loadingCloud) drawCenteredString(fontRendererObj, "Loading account garden...", width / 2, height - 43, 0xFFFFD45A);
+        if (loadingCloud) drawCenteredString(fontRendererObj, "Loading account garden...", width / 2, 76, 0xFFFFD45A);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
