@@ -51,6 +51,9 @@ public final class PixelGardenGame {
         private Crop crop;
         private long plantedAt;
         private long growDurationMillis = GROW_TIME_MILLIS;
+        private long normalPlantedAt;
+        private long normalGrowDurationMillis;
+        private boolean harvestTimeOverridden;
         private Plot(boolean unlocked) { this.unlocked = unlocked; }
         public boolean isUnlocked() { return unlocked; }
         public Crop getCrop() { return crop; }
@@ -68,8 +71,19 @@ public final class PixelGardenGame {
             this.plantedAt = now;
             this.growDurationMillis = Math.max(5L * 60L * 1000L,
                     crop.growDurationMillis * (100L - 15L * growthLevels) / 100L);
+            clearHarvestTimeOverride();
         }
-        private void clear() { crop = null; plantedAt = 0L; growDurationMillis = GROW_TIME_MILLIS; }
+        private void clearHarvestTimeOverride() {
+            normalPlantedAt = 0L;
+            normalGrowDurationMillis = 0L;
+            harvestTimeOverridden = false;
+        }
+        private void clear() {
+            crop = null;
+            plantedAt = 0L;
+            growDurationMillis = GROW_TIME_MILLIS;
+            clearHarvestTimeOverride();
+        }
     }
 
     private final List<Plot> plots = new ArrayList<Plot>();
@@ -153,17 +167,36 @@ public final class PixelGardenGame {
         return true;
     }
 
-    /** Accelerates all currently growing crops for testing; a finish request makes them ready immediately. */
+    /** Accelerates growing crops while retaining their original timers for a later normal reset. */
     public synchronized int accelerateHarvestTimes(double multiplier, boolean finish, long now) {
         int changed = 0;
         for (Plot plot : plots) {
             if (plot.getState(now) != PlotState.GROWING) continue;
+            if (!plot.harvestTimeOverridden) {
+                plot.normalPlantedAt = plot.plantedAt;
+                plot.normalGrowDurationMillis = plot.growDurationMillis;
+                plot.harvestTimeOverridden = true;
+            }
             long remaining = plot.getRemainingMillis(now);
             long newRemaining = finish ? 0L : Math.max(1L, (long) Math.ceil(remaining / multiplier));
             plot.plantedAt = now - Math.max(0L, plot.growDurationMillis - newRemaining);
             changed++;
         }
         return changed;
+    }
+
+    /** Restores the saved pre-test timer for every crop whose harvest time was overridden. */
+    public synchronized int restoreNormalHarvestTimes(long now) {
+        int restored = 0;
+        for (Plot plot : plots) {
+            if (!plot.harvestTimeOverridden || plot.crop == null || plot.normalPlantedAt <= 0L
+                    || plot.normalGrowDurationMillis <= 0L) continue;
+            plot.plantedAt = plot.normalPlantedAt;
+            plot.growDurationMillis = plot.normalGrowDurationMillis;
+            plot.clearHarvestTimeOverride();
+            restored++;
+        }
+        return restored;
     }
     public synchronized boolean sell(Crop crop, int amount) {
         if (crop == null || amount <= 0 || amount > inventory[crop.ordinal()]) return false;
@@ -285,6 +318,9 @@ public final class PixelGardenGame {
             if (plot.crop != null) savedPlot.addProperty("crop", plot.crop.name());
             savedPlot.addProperty("planted_at", plot.plantedAt);
             savedPlot.addProperty("grow_duration", plot.growDurationMillis);
+            savedPlot.addProperty("normal_planted_at", plot.normalPlantedAt);
+            savedPlot.addProperty("normal_grow_duration", plot.normalGrowDurationMillis);
+            savedPlot.addProperty("harvest_time_overridden", plot.harvestTimeOverridden);
             plotArray.add(savedPlot);
         }
         root.add("plots", plotArray);
@@ -310,6 +346,9 @@ public final class PixelGardenGame {
         Crop[] crops = new Crop[plots.size()];
         long[] planted = new long[plots.size()];
         long[] durations = new long[plots.size()];
+        long[] normalPlanted = new long[plots.size()];
+        long[] normalDurations = new long[plots.size()];
+        boolean[] timerOverridden = new boolean[plots.size()];
         int restoredUnlocked = 0;
         for (int i = 0; i < Math.min(savedPlots.size(), plots.size()); i++) {
             JsonElement element = savedPlots.get(i);
@@ -322,11 +361,23 @@ public final class PixelGardenGame {
             }
             if (savedPlot.has("planted_at")) planted[i] = Math.max(0L, savedPlot.get("planted_at").getAsLong());
             if (savedPlot.has("grow_duration")) durations[i] = Math.max(5L * 60L * 1000L, savedPlot.get("grow_duration").getAsLong());
+            if (savedPlot.has("normal_planted_at")) normalPlanted[i] = Math.max(0L, savedPlot.get("normal_planted_at").getAsLong());
+            if (savedPlot.has("normal_grow_duration")) normalDurations[i] = Math.max(0L, savedPlot.get("normal_grow_duration").getAsLong());
+            timerOverridden[i] = savedPlot.has("harvest_time_overridden")
+                    && savedPlot.get("harvest_time_overridden").getAsBoolean();
         }
         moreCoinsLevel = savedMoreCoins;
         moreCropsLevel = savedMoreCrops;
         restore(savedCoins, savedSeeds, savedInventory, savedAuto, savedGrowth,
                 Math.max(unlocked, restoredUnlocked), crops, planted, durations, savedAt);
+        for (int i = 0; i < plots.size(); i++) {
+            Plot plot = plots.get(i);
+            if (timerOverridden[i] && plot.crop != null && normalPlanted[i] > 0L && normalDurations[i] > 0L) {
+                plot.normalPlantedAt = normalPlanted[i];
+                plot.normalGrowDurationMillis = normalDurations[i];
+                plot.harvestTimeOverridden = true;
+            }
+        }
         resetTokens = savedResetTokens;
         purchasedUpgradeSteps = savedPurchasedSteps;
     }
