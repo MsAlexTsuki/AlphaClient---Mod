@@ -79,16 +79,19 @@ begin
 
   if normalized_action = 'setlevel' then
     if p_level_value < 1 or p_level_value > 100000 then raise exception 'Level must be between 1 and 100000.'; end if;
+    if coalesce((progression -> 'deleted_levels' ->> p_level_value::text)::boolean, false) then raise exception 'That level has been deleted.'; end if;
     progression := jsonb_set(jsonb_set(progression, '{level}', to_jsonb(p_level_value), true), '{experience}', '0'::jsonb, true);
   elsif normalized_action = 'resetlevel' then
-    progression := jsonb_set(jsonb_set(progression, '{level}', '1'::jsonb, true), '{experience}', '0'::jsonb, true);
+    current_level := case when coalesce((progression -> 'deleted_levels' ->> '1')::boolean, false) then 2 else 1 end;
+    progression := jsonb_set(jsonb_set(progression, '{level}', to_jsonb(current_level), true), '{experience}', '0'::jsonb, true);
   elsif normalized_action = 'give_token' then
     progression := jsonb_set(progression, '{reset_level_tokens}', to_jsonb(tokens + greatest(1, p_level_value)), true);
   elsif normalized_action = 'take_token' then
     progression := jsonb_set(progression, '{reset_level_tokens}', to_jsonb(greatest(0, tokens - greatest(1, p_level_value))), true);
   elsif normalized_action = 'use_token' then
     if tokens < 1 then raise exception 'You do not have a level reset token.'; end if;
-    progression := jsonb_set(jsonb_set(progression, '{reset_level_tokens}', to_jsonb(tokens - 1), true), '{level}', '1'::jsonb, true);
+    current_level := case when coalesce((progression -> 'deleted_levels' ->> '1')::boolean, false) then 2 else 1 end;
+    progression := jsonb_set(jsonb_set(progression, '{reset_level_tokens}', to_jsonb(tokens - 1), true), '{level}', to_jsonb(current_level), true);
     progression := jsonb_set(progression, '{experience}', '0'::jsonb, true);
   elsif normalized_action = 'edit_xp' then
     if p_level_value < 1 or p_xp_value < 1 then raise exception 'Level and XP must be positive.'; end if;
@@ -109,13 +112,15 @@ begin
     if p_level_value < 1 or p_xp_value < 1 then raise exception 'Level and XP must be positive.'; end if;
     progression := jsonb_set(progression, array['level_xp_requirements', p_level_value::text], to_jsonb(p_xp_value), true);
     progression := jsonb_set(progression, array['level_rewards', p_level_value::text], to_jsonb(coalesce(p_text_value, '')), true);
-    update public.pixel_garden_saves s set save_data = jsonb_set(jsonb_set(s.save_data, '{progression,level_xp_requirements}', coalesce(s.save_data #> '{progression,level_xp_requirements}', '{}'::jsonb) || jsonb_build_object(p_level_value::text, p_xp_value), true), '{progression,level_rewards}', coalesce(s.save_data #> '{progression,level_rewards}', '{}'::jsonb) || jsonb_build_object(p_level_value::text, coalesce(p_text_value, '')), true), saved_at = clock_timestamp() where s.user_id <> target_id;
+    progression := jsonb_set(progression, '{deleted_levels}', coalesce(progression -> 'deleted_levels', '{}'::jsonb) - p_level_value::text, true);
+    update public.pixel_garden_saves s set save_data = jsonb_set(jsonb_set(jsonb_set(s.save_data, '{progression,level_xp_requirements}', coalesce(s.save_data #> '{progression,level_xp_requirements}', '{}'::jsonb) || jsonb_build_object(p_level_value::text, p_xp_value), true), '{progression,level_rewards}', coalesce(s.save_data #> '{progression,level_rewards}', '{}'::jsonb) || jsonb_build_object(p_level_value::text, coalesce(p_text_value, '')), true), '{progression,deleted_levels}', coalesce(s.save_data #> '{progression,deleted_levels}', '{}'::jsonb) - p_level_value::text, true), saved_at = clock_timestamp() where s.user_id <> target_id;
   elsif normalized_action = 'delete_level' then
-    if p_level_value < 1 or p_level_value = current_level then raise exception 'Cannot delete the current level.'; end if;
+    if p_level_value <= 1 or p_level_value = current_level then raise exception 'Cannot delete level 1 or the current level.'; end if;
     progression := jsonb_set(progression, '{level_xp_requirements}', coalesce(progression -> 'level_xp_requirements', '{}'::jsonb) - p_level_value::text, true);
     progression := jsonb_set(progression, '{level_rewards}', coalesce(progression -> 'level_rewards', '{}'::jsonb) - p_level_value::text, true);
     progression := jsonb_set(progression, '{level_descriptions}', coalesce(progression -> 'level_descriptions', '{}'::jsonb) - p_level_value::text, true);
-    update public.pixel_garden_saves s set save_data = jsonb_set(jsonb_set(jsonb_set(s.save_data, '{progression,level_xp_requirements}', coalesce(s.save_data #> '{progression,level_xp_requirements}', '{}'::jsonb) - p_level_value::text, true), '{progression,level_rewards}', coalesce(s.save_data #> '{progression,level_rewards}', '{}'::jsonb) - p_level_value::text, true), '{progression,level_descriptions}', coalesce(s.save_data #> '{progression,level_descriptions}', '{}'::jsonb) - p_level_value::text, true), saved_at = clock_timestamp() where s.user_id <> target_id;
+    progression := jsonb_set(progression, '{deleted_levels}', coalesce(progression -> 'deleted_levels', '{}'::jsonb) || jsonb_build_object(p_level_value::text, true), true);
+    update public.pixel_garden_saves s set save_data = jsonb_set(jsonb_set(jsonb_set(jsonb_set(s.save_data, '{progression,level_xp_requirements}', coalesce(s.save_data #> '{progression,level_xp_requirements}', '{}'::jsonb) - p_level_value::text, true), '{progression,level_rewards}', coalesce(s.save_data #> '{progression,level_rewards}', '{}'::jsonb) - p_level_value::text, true), '{progression,level_descriptions}', coalesce(s.save_data #> '{progression,level_descriptions}', '{}'::jsonb) - p_level_value::text, true), '{progression,deleted_levels}', coalesce(s.save_data #> '{progression,deleted_levels}', '{}'::jsonb) || jsonb_build_object(p_level_value::text, true), true), saved_at = clock_timestamp() where s.user_id <> target_id;
   elsif normalized_action = 'edit_message' then
     progression := jsonb_set(progression, '{default_level_message}', to_jsonb(left(coalesce(p_text_value, ''), 240)), true);
     update public.pixel_garden_saves s set save_data = jsonb_set(s.save_data, '{progression,default_level_message}', to_jsonb(left(coalesce(p_text_value, ''), 240)), true), saved_at = clock_timestamp() where s.user_id <> target_id;
