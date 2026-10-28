@@ -34,8 +34,8 @@ public final class PixelGardenCommand extends CommandBase {
                     "crops", "editnpc", "give", "givequest", "guide", "harvest", "harvesttime", "help", "ids",
                     "idlist", "info", "inv", "inventory", "multiplier", "msg", "open", "plant", "playtime",
                     "prestige", "prestigecoingive", "prestigecointake", "prestigecoinreset", "prestigereset",
-                    "quest", "quests", "removenpc", "resettoken", "resettokens", "rewards", "sell", "seeds", "shop",
-                    "takecoins", "takequest", "time", "upgrade", "upgrades"
+                    "quest", "quests", "removenpc", "resettoken", "resettokens", "resetleveltoken", "rewards", "sell", "seeds", "shop",
+                    "level", "setlevel", "resetlevel", "xp", "editlevel", "editlevelmsg", "takecoins", "takequest", "time", "upgrade", "upgrades"
             });
         }
         String root = args[0].toLowerCase(Locale.ROOT);
@@ -248,16 +248,6 @@ public final class PixelGardenCommand extends CommandBase {
                     reply(sender, "Deleted Pixel Garden level " + targetLevel + ".");
                 } catch (Exception exception) { reply(sender, "Could not delete level: " + safeMessage(exception)); }
             } else reply(sender, "Use /pixelgarden admin level create or delete.");
-        } else if ("resetleveltoken".equals(action) && args.length >= 3 && ("give".equalsIgnoreCase(args[1]) || "take".equalsIgnoreCase(args[1]))) {
-            if (!founderOnly(sender)) return;
-            int amount = args.length >= 4 ? number(args[3]) : 1;
-            if (amount < 1) { reply(sender, "Token amount must be positive."); return; }
-            try {
-                com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenLevels(
-                        "give".equalsIgnoreCase(args[1]) ? "give_token" : "take_token", args[2], amount, 0L, null);
-                reply(sender, ("give".equalsIgnoreCase(args[1]) ? "Gave " : "Took ") + amount + " level reset token(s) "
-                        + ("give".equalsIgnoreCase(args[1]) ? "to " : "from ") + result.get("alpha_name").getAsString() + ".");
-            } catch (Exception exception) { reply(sender, "Could not change level reset tokens: " + safeMessage(exception)); }
         } else if ("edit".equals(action) && args.length >= 4 && "level".equalsIgnoreCase(args[1]) && "message".equalsIgnoreCase(args[2])) {
             String message = joinArgs(args, 3);
             game.getProgressionData().setCustomLevelMessage(message);
