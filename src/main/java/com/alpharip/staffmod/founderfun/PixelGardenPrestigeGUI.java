@@ -17,12 +17,36 @@ public final class PixelGardenPrestigeGUI extends GuiScreen {
 
     public PixelGardenPrestigeGUI(GuiScreen parent) { this.parent = parent; }
 
+    private volatile String prestigeCoinsPreview = "Loading...";
+    private volatile boolean loadingPrestigePreview;
+
     @Override public void initGui() {
         buttonList.clear();
-        int left = width / 2 - 120, top = height / 2 - 48;
+        int left = width / 2 - 120, top = height / 2 - 88;
         buttonList.add(new ColorButton(1, left + 8, top + 68, 104, 20, "Yes", 0xFF238B45));
         buttonList.add(new ColorButton(2, left + 128, top + 68, 104, 20, "No", 0xFFB52E35));
         updateButtons();
+        loadPrestigeCoinsPreview();
+    }
+
+    private void loadPrestigeCoinsPreview() {
+        if (loadingPrestigePreview) return;
+        loadingPrestigePreview = true;
+        Thread thread = new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    com.google.gson.JsonObject state = SupabaseCommunityService.getPixelGardenPrestigeState();
+                    prestigeCoinsPreview = state != null && state.has("prestige_coins")
+                            ? state.get("prestige_coins").getAsString() : "0";
+                } catch (Exception exception) {
+                    prestigeCoinsPreview = "unavailable";
+                } finally {
+                    loadingPrestigePreview = false;
+                }
+            }
+        }, "AlphaClient-PixelGardenPrestigePreview");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void updateButtons() {
@@ -31,14 +55,20 @@ public final class PixelGardenPrestigeGUI extends GuiScreen {
 
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        int left = width / 2 - 120, top = height / 2 - 48;
-        drawRect(left, top, left + 240, top + 112, 0xF0202020);
+        int left = width / 2 - 120, top = height / 2 - 88;
+        drawRect(left, top, left + 240, top + 176, 0xF0202020);
         drawRect(left, top, left + 240, top + 2, 0xFFFFC83D);
+        drawRect(left, top + 175, left + 240, top + 176, 0xFF454B58);
+        drawRect(left, top, left + 1, top + 176, 0xFF454B58);
+        drawRect(left + 239, top, left + 240, top + 176, 0xFF454B58);
         drawCenteredString(fontRendererObj, "PRESTIGE", width / 2, top + 12, 0xFFFFC83D);
         drawCenteredString(fontRendererObj, "Spend 20,000 coins for a full reset?", width / 2, top + 31, 0xFFFFFFFF);
         drawCenteredString(fontRendererObj, "All garden progress will be reset immediately.", width / 2, top + 45, 0xFFB7C4D5);
         super.drawScreen(mouseX, mouseY, partialTicks);
-        if (!status.isEmpty()) drawCenteredString(fontRendererObj, status, width / 2, top + 92, 0xFFFF7777);
+        drawCenteredString(fontRendererObj, "You have earned: " + prestigeCoinsPreview + " Prestige Coins", width / 2, top + 98, 0xFFFFD45A);
+        drawCenteredString(fontRendererObj, "to claim these! Prestige resets your garden", width / 2, top + 110, 0xFFE3E7EE);
+        drawCenteredString(fontRendererObj, "except Prestige Upgrades and Prestige Coins.", width / 2, top + 122, 0xFFB7C4D5);
+        if (!status.isEmpty()) drawCenteredString(fontRendererObj, status, width / 2, top + 151, 0xFFFF7777);
     }
 
     @Override protected void actionPerformed(GuiButton button) {

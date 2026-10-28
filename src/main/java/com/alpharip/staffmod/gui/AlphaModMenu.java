@@ -290,6 +290,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
 
     private AlphaModule getSelectedModule() {
+        // Opening the Scout folder should show its module list, not preselect/open Pixel Garden.
+        if (selectedCategory == AlphaModule.Category.SCOUT
+                && (selectedModuleId == null || selectedModuleId.isEmpty())) return null;
         AlphaModule module = AlphaModuleRegistry.find(selectedModuleId);
         if ("staffmods".equals(selectedModuleId)
                 && (module == null || module.getCategory() != selectedCategory)) {
