@@ -349,18 +349,18 @@ public final class PixelGardenGUI extends GuiScreen {
             } else {
                 drawCropArt(plot.getCrop(), x, y, Math.min(cell, tileHeight), now, state);
                 if (state == PixelGardenGame.PlotState.READY) {
-                    int labelTop = y + tileHeight - 13;
-                    drawRect(x + 3, labelTop, x + cell - 3, y + tileHeight - 3, 0xCC172015);
-                    net.minecraft.client.renderer.GlStateManager.pushMatrix();
-                    net.minecraft.client.renderer.GlStateManager.scale(0.70F, 0.70F, 1.0F);
+                    int labelY = y + tileHeight - 11;
                     String readyLabel = "READY  •  CLICK TO HARVEST";
+                    float textScale = 0.55F;
+                    net.minecraft.client.renderer.GlStateManager.pushMatrix();
+                    net.minecraft.client.renderer.GlStateManager.scale(textScale, textScale, 1.0F);
                     drawCenteredString(fontRendererObj, readyLabel,
-                            Math.round((x + cell / 2) / 0.70F), Math.round((labelTop + 1) / 0.70F), 0xFFFFE46B);
+                            Math.round((x + cell / 2) / textScale),
+                            Math.round(labelY / textScale), 0xFFFFE46B);
                     net.minecraft.client.renderer.GlStateManager.popMatrix();
                 } else {
-                    long secs = plot.getRemainingMillis(now) / 1000L;
+                    long secs = (plot.getRemainingMillis(now) + 999L) / 1000L;
                     String timer = (secs / 60) + "m " + (secs % 60) + "s";
-                    drawRect(x + 3, y + tileHeight - 13, x + cell - 3, y + tileHeight - 3, 0xDD172015);
                     drawCenteredString(fontRendererObj, timer, x + cell / 2, y + tileHeight - 11, 0xFFF4F1E8);
                 }
             }
