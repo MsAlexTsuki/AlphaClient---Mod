@@ -31,7 +31,10 @@ public final class PixelGardenLevelListGUI extends GuiScreen {
         lines.add("PIXEL GARDEN LEVELS & REWARDS");
         lines.add("XP shown is the amount needed to advance from that level.");
         lines.add("");
-        for (int level = 1; level <= Math.max(100, data.getLevel()); level++) {
+        int maxLevel = Math.max(100, data.getLevel());
+        for (Integer configuredLevel : xp.keySet()) if (configuredLevel != null) maxLevel = Math.max(maxLevel, configuredLevel.intValue());
+        for (Integer configuredLevel : rewards.keySet()) if (configuredLevel != null) maxLevel = Math.max(maxLevel, configuredLevel.intValue());
+        for (int level = 1; level <= maxLevel; level++) {
             lines.add("LEVEL " + level + "  |  Next level: " + xp.get(level) + " XP");
             String desc = descriptions.get(level);
             if (desc != null && !desc.trim().isEmpty()) lines.add("  " + desc);
