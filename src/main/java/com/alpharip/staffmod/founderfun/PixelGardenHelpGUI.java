@@ -89,7 +89,7 @@ public final class PixelGardenHelpGUI extends GuiScreen {
             lines.add("/pixelgarden completequest admin <quest id> - Complete this quest on your Founder account when objectives are met");
             lines.add("/pixelgarden rewards add <quest id> <type> <amount> - Add to a quest reward");
             lines.add("/pixelgarden rewards remove <quest id> <type> <amount|all> - Remove some or all of a quest reward");
-            lines.add("Reward types: coins, seeds_wheat/carrot/potato/pumpkin, crop_wheat/carrot/potato/pumpkin");
+            lines.add("Reward types: coins, seeds_wheat/potato/carrot/pumpkin/melon/cactus/sugarcane/berries, crop_wheat/potato/carrot/pumpkin/melon/cactus/sugarcane/berries");
             lines.add("FOUNDER LEVEL COMMANDS");
             lines.add("/pixelgarden setlevel <Alpha account name> <level> - Set level and reset XP to 0");
             lines.add("/pixelgarden resetlevel <Alpha account name> - Reset level to 1 and XP to 0");
