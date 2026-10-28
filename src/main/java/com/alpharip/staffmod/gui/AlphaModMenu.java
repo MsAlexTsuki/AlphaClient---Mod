@@ -467,6 +467,13 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 initGui();
                 return;
             }
+            if (targetCategory == AlphaModule.Category.SCOUT) {
+                // Open Scout as a separate folder screen so selecting the Scout
+                // folder cannot carry the Donator screen's click handling forward
+                // into the Pixel Garden module tile.
+                mc.displayGuiScreen(new AlphaModMenu(this, targetCategory));
+                return;
+            }
             selectedCategory = targetCategory;
             selectedModuleId = "";
             initGui();
