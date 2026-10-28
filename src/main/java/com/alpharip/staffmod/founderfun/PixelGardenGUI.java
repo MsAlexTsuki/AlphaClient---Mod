@@ -213,7 +213,7 @@ public final class PixelGardenGUI extends GuiScreen {
         if (button.id == PRESTIGE) {
             if (game.getPurchasedUpgradeSteps() < 18) return;
             saveCloudAsync();
-            mc.displayGuiScreen(new PixelGardenPrestigeGUI(this));
+            mc.displayGuiScreen(new PixelGardenPrestigeUpgradesGUI(this));
             return;
         }
         if (button.id == SHOP || button.id == INVENTORY || button.id == SELL || button.id == UPGRADES) {
