@@ -90,14 +90,14 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             else mc.displayGuiScreen(new PixelGardenUpgradeGUI(parent));
             return;
         }
-        if (button.id >= ACTION_BASE && button.id < ACTION_BASE + 4) {
-            int index = button.id - ACTION_BASE;
-            if (page == Page.SHOP) game.buySeeds(PixelGardenGame.Crop.values()[index], 1);
-            else if (page == Page.SELL) game.sellAll(PixelGardenGame.Crop.values()[index]);
-        } else if (page == Page.UPGRADES) {
+        if (page == Page.UPGRADES && button.id >= ACTION_BASE && button.id < ACTION_BASE + 3) {
             if (button.id == ACTION_BASE) game.buyAutoHarvest();
             else if (button.id == ACTION_BASE + 1) game.buyGrowthBoost();
             else if (button.id == ACTION_BASE + 2) game.expandGarden();
+        } else if (button.id >= ACTION_BASE && button.id < ACTION_BASE + 4) {
+            int index = button.id - ACTION_BASE;
+            if (page == Page.SHOP) game.buySeeds(PixelGardenGame.Crop.values()[index], 1);
+            else if (page == Page.SELL) game.sellAll(PixelGardenGame.Crop.values()[index]);
         }
         saveIfGardenParent();
         initGui();
