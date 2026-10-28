@@ -151,6 +151,7 @@ public final class PixelGardenGame {
         if (cost > pixelGardenUpgradeCoins || cost > Integer.MAX_VALUE) return false;
         pixelGardenUpgradeCoins -= (int) cost;
         seeds[crop.ordinal()] += amount;
+        progressionData.recordActionProgress("BUY_SEEDS", crop.name().toLowerCase(java.util.Locale.ROOT), amount);
         return true;
     }
     public synchronized boolean plant(int plotIndex, Crop crop, long now) {
@@ -165,8 +166,12 @@ public final class PixelGardenGame {
         if (plotIndex < 0 || plotIndex >= plots.size()) return false;
         Plot plot = plots.get(plotIndex);
         if (plot.getState(now) != PlotState.READY || plot.crop == null) return false;
-        inventory[plot.crop.ordinal()] += getCropYield();
+        Crop harvestedCrop = plot.crop;
+        int harvestedAmount = getCropYield();
+        inventory[harvestedCrop.ordinal()] += harvestedAmount;
         plot.clear();
+        progressionData.recordActionProgress("HARVEST_CROP",
+                harvestedCrop.name().toLowerCase(java.util.Locale.ROOT), harvestedAmount);
         return true;
     }
 
@@ -207,8 +212,49 @@ public final class PixelGardenGame {
         if (earned > Integer.MAX_VALUE - pixelGardenUpgradeCoins) return false;
         inventory[crop.ordinal()] -= amount;
         pixelGardenUpgradeCoins += (int) earned;
+        progressionData.recordActionProgress("SELL_CROP", crop.name().toLowerCase(java.util.Locale.ROOT), amount);
         return true;
     }
+    /** Removes harvested crops for an explicit quest submission, never for merely owning them. */
+    public synchronized boolean consumeHarvestedCrop(Crop crop, int amount) {
+        if (crop == null || amount <= 0 || amount > inventory[crop.ordinal()]) return false;
+        inventory[crop.ordinal()] -= amount;
+        return true;
+    }
+
+    /** Grants supported quest rewards atomically after validating all reward keys and bounds. */
+    public synchronized boolean grantQuestRewards(java.util.Map<String, Integer> rewards) {
+        if (rewards == null || rewards.isEmpty()) return false;
+        long newCoins = pixelGardenUpgradeCoins;
+        int[] newSeeds = seeds.clone();
+        int[] newInventory = inventory.clone();
+        for (java.util.Map.Entry<String, Integer> entry : rewards.entrySet()) {
+            String key = entry.getKey() == null ? "" : entry.getKey().toLowerCase(java.util.Locale.ROOT);
+            Integer boxed = entry.getValue();
+            if (boxed == null || boxed.intValue() <= 0) return false;
+            int amount = boxed.intValue();
+            if ("coins".equals(key)) {
+                newCoins += amount;
+                if (newCoins > Integer.MAX_VALUE) return false;
+            } else if (key.startsWith("seeds_") || key.startsWith("crop_")) {
+                boolean seedReward = key.startsWith("seeds_");
+                String cropName = key.substring(seedReward ? 6 : 5);
+                Crop rewardCrop;
+                try { rewardCrop = Crop.valueOf(cropName.toUpperCase(java.util.Locale.ROOT)); }
+                catch (IllegalArgumentException exception) { return false; }
+                int[] target = seedReward ? newSeeds : newInventory;
+                if (amount > Integer.MAX_VALUE - target[rewardCrop.ordinal()]) return false;
+                target[rewardCrop.ordinal()] += amount;
+            } else {
+                return false;
+            }
+        }
+        pixelGardenUpgradeCoins = (int) newCoins;
+        System.arraycopy(newSeeds, 0, seeds, 0, seeds.length);
+        System.arraycopy(newInventory, 0, inventory, 0, inventory.length);
+        return true;
+    }
+
     public synchronized boolean sellAll(Crop crop) {
         return crop != null && sell(crop, inventory[crop.ordinal()]);
     }
