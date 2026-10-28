@@ -53,6 +53,9 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
         progression.ensureDefaultCatalog();
         try { progression.mergeSharedDefinitions(SupabaseCommunityService.getSharedPixelGardenQuests()); }
         catch (Exception exception) { System.err.println("[AlphaClient] Could not sync shared Pixel Garden quests: " + exception.getMessage()); }
+        int assigned = progression.assignAutomaticNpcQuests(
+                progression.getLevel(), playerPrestige(), new java.util.Random());
+        if (assigned > 0) saveProgressionAsync();
     }
 
     private List<PixelGardenProgressionData.QuestInstance> questsForView() {
