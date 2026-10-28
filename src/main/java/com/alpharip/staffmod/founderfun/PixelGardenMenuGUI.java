@@ -53,20 +53,21 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                 else label = "Seeds " + game.getSeeds(crop) + " / Harvest " + game.getInventory(crop);
                 buttonList.add(new AlphaButton(ACTION_BASE + crop.ordinal(), x + 8, y + cardHeight - 25, cardWidth - 16, 18, label));
             }
-        } else {
+                } else {
             int gap = 8;
             int cardWidth = (panelWidth - 32 - gap * 2) / 3;
             int cardHeight = 82;
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 9; i++) {
                 int x = left + 10 + (i % 3) * (cardWidth + gap);
                 int y = top + 10 + (i / 3) * (cardHeight + gap);
+                String key = upgradeKey(i);
                 String label;
-                if (i == 0) label = game.hasAutoHarvest() ? "OWNED" : "Buy (" + game.getUpgradeCost("auto_harvest") + ")";
-                else if (i == 1) label = game.getUpgradeCost("growth_boost") < 0 ? "MAX" : "Buy (" + game.getUpgradeCost("growth_boost") + ")";
-                else if (i == 2) label = game.getUpgradeCost("expansion") < 0 ? "MAX" : "Unlock (" + game.getUpgradeCost("expansion") + ")";
-                else if (i == 3) label = game.getUpgradeCost("more_coins") < 0 ? "MAX" : "Buy (" + game.getUpgradeCost("more_coins") + ")";
-                else if (i == 4) label = game.getUpgradeCost("more_crops") < 0 ? "MAX" : "Buy (" + game.getUpgradeCost("more_crops") + ")";
-                else label = "Prestige (20000)";
+                if ("auto_harvest".equals(key)) label = game.hasAutoHarvest() ? "OWNED" : "Buy (" + game.getUpgradeCost(key) + ")";
+                else if ("auto_plant".equals(key)) label = game.hasAutoPlant() ? "OWNED" : "Buy (" + game.getUpgradeCost(key) + ")";
+                else if ("auto_sell".equals(key)) label = game.hasAutoSell() ? (game.isAutoSellEnabled() ? "ON" : "OFF") : "Buy (" + game.getUpgradeCost(key) + ")";
+                else if ("auto_quest".equals(key)) label = game.hasAutoQuest() ? "OWNED" : "Buy (" + game.getUpgradeCost(key) + ")";
+                else if ("prestige".equals(key)) label = "Prestige (20000)";
+                else label = game.getUpgradeCost(key) < 0 ? "MAX" : ("expansion".equals(key) ? "Unlock (" : "Buy (") + game.getUpgradeCost(key) + ")";
                 buttonList.add(new AlphaButton(ACTION_BASE + i, x + 6, y + cardHeight - 23, cardWidth - 12, 18, label));
             }
         }
@@ -95,10 +96,16 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             else mc.displayGuiScreen(new PixelGardenUpgradeGUI(parent));
             return;
         }
-        if (page == Page.UPGRADES && button.id >= ACTION_BASE && button.id < ACTION_BASE + 6) {
+        if (page == Page.UPGRADES && button.id >= ACTION_BASE && button.id < ACTION_BASE + 9) {
             int upgrade = button.id - ACTION_BASE;
-            if (upgrade == 5) { mc.displayGuiScreen(new PixelGardenPrestigeGUI(this)); return; }
-            String key = upgrade == 0 ? "auto_harvest" : upgrade == 1 ? "growth_boost" : upgrade == 2 ? "expansion" : upgrade == 3 ? "more_coins" : "more_crops";
+            String key = upgradeKey(upgrade);
+            if ("prestige".equals(key)) { mc.displayGuiScreen(new PixelGardenPrestigeGUI(this)); return; }
+            if ("auto_sell".equals(key) && game.hasAutoSell()) {
+                game.toggleAutoSell();
+                saveIfGardenParent();
+                initGui();
+                return;
+            }
             try {
                 JsonObject result = SupabaseCommunityService.purchasePixelGardenUpgrade(key);
                 if (result.has("save_data") && result.get("save_data").isJsonObject()) game.loadSaveData(result.getAsJsonObject("save_data"));
@@ -113,6 +120,20 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         }
         saveIfGardenParent();
         initGui();
+    }
+
+    private String upgradeKey(int index) {
+        switch (index) {
+            case 0: return "expansion";
+            case 1: return "auto_harvest";
+            case 2: return "auto_plant";
+            case 3: return "auto_sell";
+            case 4: return "auto_quest";
+            case 5: return "growth_boost";
+            case 6: return "more_coins";
+            case 7: return "more_crops";
+            default: return "prestige";
+        }
     }
 
     private void saveIfGardenParent() {
@@ -178,20 +199,25 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             }
         } else {
             int extensionNumber = Math.max(1, game.getUnlockedPlots() - PixelGardenGame.STARTING_PLOTS + 1);
-            String[] names = {"Auto Harvest", "Growth Boost", "Garden Extension " + extensionNumber, "More Coins", "More Crops", "Prestige"};
-            String[] desc = {"Auto-collect ripe crops", "Faster growth", "Unlock the next plot",
+            String[] names = {"Garden Extension " + extensionNumber, "Auto Harvest", "Auto Plant", "Auto Sell", "Auto Quest", "Growth Boost", "More Coins", "More Crops", "Prestige"};
+            String[] desc = {"Unlock the next plot", "Auto-collect ripe crops", "Plant available seeds automatically",
+                    "Automatically sell harvested crops", "Deliver crops and claim quest rewards", "Faster growth",
                     "Sell multiplier: " + game.getCoinMultiplier() + "x", "Harvest yield: " + game.getCropYield() + "x", "Full reset for 20,000 coins"};
-            int[] costs = {game.getUpgradeCost("auto_harvest"), game.getUpgradeCost("growth_boost"), game.getUpgradeCost("expansion"),
+            int[] costs = {game.getUpgradeCost("expansion"), game.getUpgradeCost("auto_harvest"), game.getUpgradeCost("auto_plant"),
+                    game.getUpgradeCost("auto_sell"), game.getUpgradeCost("auto_quest"), game.getUpgradeCost("growth_boost"),
                     game.getUpgradeCost("more_coins"), game.getUpgradeCost("more_crops"), game.getUpgradeCost("prestige")};
             int gap = 8, cardWidth = (panelWidth - 32 - gap * 2) / 3, cardHeight = 82;
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 9; i++) {
                 int x = left + 10 + (i % 3) * (cardWidth + gap), y = 98 + (i / 3) * (cardHeight + gap);
                 drawPanel(x, y, cardWidth, cardHeight);
                 drawString(fontRendererObj, names[i], x + 7, y + 8, 0xFFF0F2F6);
                 drawString(fontRendererObj, desc[i], x + 7, y + 25, 0xFFB7C4D5);
-                drawString(fontRendererObj, costs[i] < 0 ? "OWNED / MAX" : "Cost: " + costs[i], x + 7, y + 42,
-                        costs[i] < 0 ? 0xFF83D79A : 0xFFFFD45A);
-                if (i < 3) drawUpgradeIcon(x + cardWidth - 30, y + 2, i);
+                String status = i == 3 && game.hasAutoSell()
+                        ? (game.isAutoSellEnabled() ? "Auto Sell: ON" : "Auto Sell: OFF")
+                        : costs[i] < 0 ? "OWNED / MAX" : "Cost: " + costs[i];
+                drawString(fontRendererObj, status, x + 7, y + 42,
+                        (costs[i] < 0 || (i == 3 && game.hasAutoSell())) ? 0xFF83D79A : 0xFFFFD45A);
+                if (i < 5) drawUpgradeIcon(x + cardWidth - 30, y + 2, i);
             }
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
