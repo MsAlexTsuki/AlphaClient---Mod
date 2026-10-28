@@ -373,7 +373,7 @@ public final class PixelGardenGame {
             if (mc != null && mc.thePlayer != null) {
                 String message = progressionData.getCustomLevelMessage();
                 if (message == null || message.trim().isEmpty()) message = "You have leveled up in Pixel Garden!";
-                mc.thePlayer.addChatMessage(new net.minecraft.util.ChatComponentText(message));
+                for (int i = 0; i < gained; i++) mc.thePlayer.addChatMessage(new net.minecraft.util.ChatComponentText(message));
             }
         }
     }
