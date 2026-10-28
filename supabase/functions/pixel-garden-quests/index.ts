@@ -56,7 +56,7 @@ Deno.serve(async (req: Request) => {
       .select("user_id").eq("user_id", userId).maybeSingle();
     if (founderError) throw new Error("Could not verify Founder authorization.");
     const isFounder = !!founderRecord;
-    const founderActions = new Set(["create", "give", "take", "complete", "reward_add", "reward_remove"]);
+    const founderActions = new Set(["create", "give", "take", "complete", "reward_add", "reward_remove", "objective_add", "metadata_update"]);
     if (founderActions.has(action) && !isFounder) {
       return reply({ error: "Access denied: this action is restricted to Founder." }, 403);
     }
@@ -104,7 +104,7 @@ Deno.serve(async (req: Request) => {
 
     // Starter quests are initially local defaults. Promote a known starter definition
     // into the shared catalog when its rewards are edited, so the override syncs to all clients.
-    if (!questRow && (action === "reward_add" || action === "reward_remove")) {
+    if (!questRow && ["reward_add", "reward_remove", "objective_add", "metadata_update"].includes(action)) {
       const starterDefinitions: Record<string, Record<string, unknown>> = {
         pg_fresh_start: {
           id: "pg_fresh_start", name: "Fresh Start",
@@ -147,6 +147,55 @@ Deno.serve(async (req: Request) => {
       }
     }
     if (!questRow) return reply({ error: "Quest not found. Only shared quests and the four built-in starter quests can be edited." }, 404);
+
+    if (action === "metadata_update") {
+      const field = cleanText(input.field, 32).toLowerCase();
+      const definition = structuredClone(questRow.definition) as Record<string, unknown>;
+      if (field === "name") {
+        const name = cleanText(input.value, 64);
+        if (!name) return reply({ error: "Quest name must be 1-64 characters." }, 400);
+        definition.name = name;
+      } else if (field === "difficulty") {
+        const difficulty = cleanText(input.value, 16).toLowerCase();
+        if (!["scout", "rogue", "elite", "alpha"].includes(difficulty)) return reply({ error: "Difficulty must be Scout, Rogue, Elite or Alpha." }, 400);
+        definition.difficulty = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+      } else if (field === "required_level") {
+        const level = Number(input.value);
+        if (!Number.isInteger(level) || level < 1 || level > 1000000) return reply({ error: "Required level must be between 1 and 1000000." }, 400);
+        definition.required_level = level;
+      } else {
+        return reply({ error: "Unsupported quest setting." }, 400);
+      }
+      const { error } = await admin.from("pixel_garden_quest_catalog")
+        .update({ definition, updated_at: new Date().toISOString() }).eq("quest_id", questId);
+      if (error) throw error;
+      return reply({ ok: true, definition });
+    }
+
+    if (action === "objective_add") {
+      const type = cleanText(input.objective_type, 32).toUpperCase();
+      const target = cleanText(input.target, 32).toLowerCase();
+      const amount = Number(input.amount);
+      if (!["HARVEST_CROP", "SELL_CROP", "DELIVER_CROP", "DELIVER_SEEDS", "PLANT_CROP", "INVENTORY_ITEM"].includes(type)) {
+        return reply({ error: "Unsupported objective type." }, 400);
+      }
+      if (!/^(wheat|carrot|potato|pumpkin|seeds_(wheat|carrot|potato|pumpkin))$/.test(target)) {
+        return reply({ error: "Unsupported crop or seed item." }, 400);
+      }
+      if (["HARVEST_CROP", "SELL_CROP", "PLANT_CROP"].includes(type) && target.startsWith("seeds_")) {
+        return reply({ error: "This objective type requires a crop target." }, 400);
+      }
+      if (!Number.isInteger(amount) || amount < 1 || amount > 1000000) return reply({ error: "Objective amount must be between 1 and 1000000." }, 400);
+      const definition = structuredClone(questRow.definition) as Record<string, unknown>;
+      const objectives = Array.isArray(definition.objectives) ? definition.objectives as Record<string, unknown>[] : [];
+      const objectiveId = questId + "_" + type.toLowerCase() + "_" + target + "_" + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+      objectives.push({ id: objectiveId, type, target, required_amount: amount });
+      definition.objectives = objectives;
+      const { error } = await admin.from("pixel_garden_quest_catalog")
+        .update({ definition, updated_at: new Date().toISOString() }).eq("quest_id", questId);
+      if (error) throw error;
+      return reply({ ok: true, definition, objective_id: objectiveId });
+    }
 
     if (action === "reward_add" || action === "reward_remove") {
       const rewardType = cleanText(input.reward_type, 32).toLowerCase();
