@@ -99,6 +99,7 @@ public final class SupabaseCommunityService {
                             refreshSessionToken();
                         }
                         synchronizeVerifiedAccount();
+                        pixelGardenPrestigeHeartbeat();
                     }
                 } catch (Exception exception) {
                     System.err.println("[AlphaClient] Community sync failed; will retry: "
@@ -532,6 +533,33 @@ public final class SupabaseCommunityService {
         return requestJson("POST", "/rest/v1/rpc/pixel_garden_prestige", accessToken, "{}");
     }
 
+    public static synchronized JsonObject getPixelGardenPrestigeState() throws Exception {
+        if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
+        return requestJson("POST", "/rest/v1/rpc/pixel_garden_prestige_state", accessToken, "{}");
+    }
+    public static synchronized JsonObject pixelGardenPrestigeHeartbeat() throws Exception {
+        if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
+        return requestJson("POST", "/rest/v1/rpc/pixel_garden_prestige_heartbeat", accessToken, "{}");
+    }
+    public static synchronized JsonObject purchasePixelGardenUpgrade(String upgrade) throws Exception {
+        if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
+        if (upgrade == null || !upgrade.matches("auto_harvest|growth_boost|more_coins|more_crops|expansion")) throw new IllegalArgumentException("Unknown Pixel Garden upgrade.");
+        JsonObject payload = new JsonObject(); payload.addProperty("p_upgrade", upgrade);
+        return requestJson("POST", "/rest/v1/rpc/pixel_garden_purchase_upgrade", accessToken, payload.toString());
+    }
+    public static synchronized JsonObject purchasePixelGardenPrestigeUpgrade(String upgrade) throws Exception {
+        if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
+        if (upgrade == null || !upgrade.matches("prestige_yield|prestige_bonus|coin_cache")) throw new IllegalArgumentException("Unknown Prestige upgrade.");
+        JsonObject payload = new JsonObject(); payload.addProperty("p_upgrade", upgrade);
+        return requestJson("POST", "/rest/v1/rpc/pixel_garden_buy_prestige_upgrade", accessToken, payload.toString());
+    }
+    public static synchronized JsonObject managePixelGardenPrestige(String action, String targetAlphaName, int amount, double multiplier) throws Exception {
+        if (!isSignedInFounder()) throw new SecurityException("Only Founder can manage Prestige data.");
+        if (targetAlphaName == null || !targetAlphaName.trim().matches("[A-Za-z0-9_]{1,16}")) throw new IllegalArgumentException("Enter a valid Alpha Account name (1-16 letters, numbers or underscores).");
+        JsonObject payload = new JsonObject(); payload.addProperty("p_action", action); payload.addProperty("p_target_alpha_name", targetAlphaName.trim()); payload.addProperty("p_amount", amount);
+        if ("set_multiplier".equals(action)) payload.addProperty("p_multiplier", multiplier); else payload.add("p_multiplier", com.google.gson.JsonNull.INSTANCE);
+        return requestJson("POST", "/rest/v1/rpc/founder_pixel_garden_prestige_manage", accessToken, payload.toString());
+    }
     /** True only when the authenticated Alpha community profile has verified Founder status. */
     public static boolean isSignedInFounder() { return accessToken != null && signedInFounder; }
 

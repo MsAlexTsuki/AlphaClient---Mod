@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.founderfun;
 
 import com.alpharip.staffmod.gui.AlphaButton;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
+import com.google.gson.JsonObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
@@ -95,14 +97,14 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         }
         if (page == Page.UPGRADES && button.id >= ACTION_BASE && button.id < ACTION_BASE + 6) {
             int upgrade = button.id - ACTION_BASE;
-            if (upgrade == 0) game.buyAutoHarvest();
-            else if (upgrade == 1) game.buyGrowthBoost();
-            else if (upgrade == 2) game.expandGarden();
-            else if (upgrade == 3) game.buyMoreCoins();
-            else if (upgrade == 4) game.buyMoreCrops();
-            else if (upgrade == 5) {
-                mc.displayGuiScreen(new PixelGardenPrestigeGUI(this));
-                return;
+            if (upgrade == 5) { mc.displayGuiScreen(new PixelGardenPrestigeGUI(this)); return; }
+            String key = upgrade == 0 ? "auto_harvest" : upgrade == 1 ? "growth_boost" : upgrade == 2 ? "expansion" : upgrade == 3 ? "more_coins" : "more_crops";
+            try {
+                JsonObject result = SupabaseCommunityService.purchasePixelGardenUpgrade(key);
+                if (result.has("save_data") && result.get("save_data").isJsonObject()) game.loadSaveData(result.getAsJsonObject("save_data"));
+            } catch (Exception exception) {
+                System.err.println("[AlphaClient] Pixel Garden upgrade purchase failed: " + exception.getMessage());
+                if (mc.thePlayer != null) mc.thePlayer.addChatMessage(new net.minecraft.util.ChatComponentText("§6[Pixel Garden] §cUpgrade purchase failed: " + (exception.getMessage() == null ? "unknown error" : exception.getMessage())));
             }
         } else if (button.id >= ACTION_BASE && button.id < ACTION_BASE + 4) {
             int index = button.id - ACTION_BASE;

@@ -9,6 +9,8 @@ import java.io.IOException;
 
 /** Yes/No confirmation for the immediate full Pixel Garden Prestige reset. */
 public final class PixelGardenPrestigeGUI extends GuiScreen {
+    public static final String MENU_ID = "menu.pixelgarden.prestige";
+    public static final String PIXEL_GARDEN_ID = "pixelgarden";
     private final GuiScreen parent;
     private String status = "";
     private boolean busy;

@@ -19,14 +19,43 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help|inventory|inv|plant|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help|prestige [use]|prestigecoingive|prestigecointake|prestigecoinreset|prestigereset|admin fullreset|multiplier prestige|inventory|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (!allowed(sender, "commands.pixelgarden")) return;
         String action = args == null || args.length == 0 ? "help" : args[0].toLowerCase(Locale.ROOT);
         PixelGardenGame game = PixelGardenGame.getInstance();
-        if ("help".equals(action) || "?".equals(action)) {
+        if ("prestige".equals(action)) {
+            if (!SupabaseCommunityService.isSignedIn()) { reply(sender, "Sign in to your Alpha Account before using Prestige."); return; }
+            try {
+                com.google.gson.JsonObject state=SupabaseCommunityService.getPixelGardenPrestigeState();
+                int count=state.has("prestige_count")?state.get("prestige_count").getAsInt():0;
+                int steps=state.has("upgrade_steps")?state.get("upgrade_steps").getAsInt():0;
+                if(args.length>=2&&"use".equalsIgnoreCase(args[1])){if(steps<18){reply(sender,"Buy 18 upgrade steps in the Upgrade tab before using Prestige ("+steps+"/18).");return;}open(new PixelGardenPrestigeGUI(null));}
+                else if(count<1)reply(sender,"Damn you haven't prestiged yet! You will soon!");
+                else if(steps<18)reply(sender,"Prestige upgrades require 18 purchased Upgrade-tab steps ("+steps+"/18).");
+                else open(new PixelGardenPrestigeUpgradesGUI(null));
+            }catch(Exception e){reply(sender,"Could not load Prestige data: "+safeMessage(e));}
+        } else if ("prestigecoingive".equals(action) || "prestigecointake".equals(action)) {
+            if(!founderOnly(sender))return;if(args.length<3){reply(sender,"Usage: /pixelgarden "+action+" <Alpha account name> <amount>");return;}
+            int amount=number(args[2]);if(amount<1){reply(sender,"Amount must be a positive whole number.");return;}
+            runPrestigeFounderAction(sender,"prestigecoingive".equals(action)?"give_prestige_coins":"take_prestige_coins",args[1],amount,0.0D);
+        } else if ("prestigecoinreset".equals(action) || "prestigereset".equals(action)) {
+            if(!founderOnly(sender))return;if(args.length<2){reply(sender,"Usage: /pixelgarden "+action+" <Alpha account name>");return;}
+            runPrestigeFounderAction(sender,"prestigecoinreset".equals(action)?"reset_prestige_coins":"reset_prestige",args[1],0,0.0D);
+        } else if ("admin".equals(action)) {
+            if(args.length<3||!"fullreset".equalsIgnoreCase(args[1])){reply(sender,"Usage: /pixelgarden admin fullreset <Alpha account name>");return;}
+            if(!founderOnly(sender))return;runPrestigeFounderAction(sender,"full_reset",args[2],0,0.0D);
+        } else if ("multiplier".equals(action)) {
+            if(!founderOnly(sender))return;
+            if(args.length>=5&&"prestige".equalsIgnoreCase(args[1])&&"add".equalsIgnoreCase(args[2])){
+                double multiplier;try{multiplier=Double.parseDouble(args[4]);}catch(RuntimeException e){reply(sender,"Usage: /pixelgarden multiplier prestige add <Alpha account name> <multiplier>");return;}
+                if(multiplier<=0.0D||multiplier>5.0D||Double.isNaN(multiplier)||Double.isInfinite(multiplier)){reply(sender,"Multiplier must be greater than 0 and at most 5.0x.");return;}
+                runPrestigeFounderAction(sender,"set_multiplier",args[3],0,multiplier);
+            }else if(args.length>=4&&"prestige".equalsIgnoreCase(args[1])&&"reset".equalsIgnoreCase(args[2]))runPrestigeFounderAction(sender,"reset_multiplier",args[3],0,0.0D);
+            else reply(sender,"Usage: /pixelgarden multiplier prestige add <Alpha account name> <multiplier> | /pixelgarden multiplier prestige reset <Alpha account name>");
+        } else if ("help".equals(action) || "?".equals(action)) {
             showCommandGuide(sender);
         } else if ("open".equals(action)) {
             open(new PixelGardenGUI(null));
@@ -91,16 +120,10 @@ public final class PixelGardenCommand extends CommandBase {
         } else if ("upgrade".equals(action)) {
             if (!allowed(sender, "pixelgarden.upgrades")) return;
             if (args.length < 2) { reply(sender, "Usage: /pixelgarden upgrade <auto_harvest|growth_boost|expansion>"); return; }
-            String upgrade = args[1].toLowerCase(Locale.ROOT).replace('-', '_');
-            boolean ok;
-            if ("auto".equals(upgrade) || "autoharvest".equals(upgrade) || "auto_harvest".equals(upgrade)) {
-                ok = game.buyAutoHarvest(); upgrade = "auto harvest";
-            } else if ("growth".equals(upgrade) || "growthboost".equals(upgrade) || "growth_boost".equals(upgrade)) {
-                ok = game.buyGrowthBoost(); upgrade = "growth boost";
-            } else if ("plot".equals(upgrade) || "expansion".equals(upgrade)) {
-                ok = game.expandGarden(); upgrade = "plot expansion";
-            } else { reply(sender, "Unknown upgrade. Choose auto_harvest, growth_boost or expansion."); return; }
-            reply(sender, ok ? "Purchased " + upgrade + ". Coins: " + game.getCoins() + "." : "Upgrade failed: already owned, max level reached, or insufficient coins.");
+            String upgrade=args[1].toLowerCase(Locale.ROOT).replace('-','_');
+            if("auto".equals(upgrade)||"autoharvest".equals(upgrade))upgrade="auto_harvest";else if("growth".equals(upgrade)||"growthboost".equals(upgrade))upgrade="growth_boost";else if("plot".equals(upgrade))upgrade="expansion";
+            if(!("auto_harvest".equals(upgrade)||"growth_boost".equals(upgrade)||"expansion".equals(upgrade)||"more_coins".equals(upgrade)||"more_crops".equals(upgrade))){reply(sender,"Unknown upgrade. Choose auto_harvest, growth_boost, expansion, more_coins or more_crops.");return;}
+            try{com.google.gson.JsonObject purchase=SupabaseCommunityService.purchasePixelGardenUpgrade(upgrade);if(purchase.has("save_data")&&purchase.get("save_data").isJsonObject())game.loadSaveData(purchase.getAsJsonObject("save_data"));reply(sender,"Purchased "+upgrade.replace('_',' ')+". Coins: "+game.getCoins()+". Upgrade steps: "+purchase.get("upgrade_steps").getAsInt()+"/18.");}catch(Exception e){reply(sender,"Upgrade purchase failed: "+safeMessage(e));}
         } else if ("buy".equals(action)) {
             if (!allowed(sender, "pixelgarden.shop")) return;
             if (args.length < 2) { reply(sender, "Usage: /pixelgarden buy <wheat|carrot|potato|pumpkin> [amount]"); return; }
@@ -172,6 +195,17 @@ public final class PixelGardenCommand extends CommandBase {
 
     private void showCommandGuide(ICommandSender sender) {
         reply(sender, "§ePixel Garden Command Guide");
+        reply(sender, "/pixelgarden prestige §7- Open Prestige Coins upgrades after your first Prestige.");
+        reply(sender, "/pixelgarden prestige use §7- Prestige for 20,000 ordinary coins after 18 upgrade steps.");
+        if(SupabaseCommunityService.isSignedInFounder()){
+            reply(sender,"/pixelgarden prestigecoingive <Alpha name> <amount> §7- Give Prestige Coins.");
+            reply(sender,"/pixelgarden prestigecointake <Alpha name> <amount> §7- Take Prestige Coins.");
+            reply(sender,"/pixelgarden prestigecoinreset <Alpha name> §7- Reset only the Prestige Coins balance.");
+            reply(sender,"/pixelgarden prestigereset <Alpha name> §7- Reset all Prestige progress.");
+            reply(sender,"/pixelgarden admin fullreset <Alpha name> §7- Reset all Pixel Garden data.");
+            reply(sender,"/pixelgarden multiplier prestige add <Alpha name> <multiplier> §7- Set a personal multiplier up to 5.0x.");
+            reply(sender,"/pixelgarden multiplier prestige reset <Alpha name> §7- Restore the rank multiplier.");
+        }
         reply(sender, "/pixelgarden open §7- Open Pixel Garden.");
         reply(sender, "/pixelgarden inventory §7- Open the inventory screen.");
         reply(sender, "/pixelgarden inv §7- Show crop and planting-seed counts in chat.");
@@ -254,6 +288,23 @@ public final class PixelGardenCommand extends CommandBase {
             else if ("take_coins".equals(action)) reply(sender, "Removed coins from " + name + ". New balance: " + result.get("coins").getAsInt() + ".");
             else if ("give_coins".equals(action)) reply(sender, "Gave " + amount + " coins to " + name + ". New balance: " + result.get("coins").getAsInt() + ".");
         } catch (Exception exception) { reply(sender, "Pixel Garden action failed: " + safeMessage(exception)); }
+    }
+
+    private void runPrestigeFounderAction(ICommandSender sender,String action,String target,int amount,double multiplier){
+        try{
+            com.google.gson.JsonObject r=SupabaseCommunityService.managePixelGardenPrestige(action,target,amount,multiplier);
+            String name=r.has("target_alpha_name")?r.get("target_alpha_name").getAsString():target;
+            String msg;
+            if("give_prestige_coins".equals(action))msg="Gave "+amount+" Prestige Coins to "+name+". New balance: "+r.get("prestige_coins").getAsString()+".";
+            else if("take_prestige_coins".equals(action))msg="Took "+amount+" Prestige Coins from "+name+". New balance: "+r.get("prestige_coins").getAsString()+".";
+            else if("reset_prestige_coins".equals(action))msg="Reset "+name+"'s Prestige Coins balance to 0.";
+            else if("reset_prestige".equals(action))msg="Reset all Prestige progress for "+name+".";
+            else if("full_reset".equals(action))msg="Fully reset Pixel Garden and Prestige data for "+name+".";
+            else if("set_multiplier".equals(action))msg="Set "+name+"'s personal Prestige multiplier to "+multiplier+"x.";
+            else msg="Reset "+name+"'s personal multiplier. Effective multiplier: "+r.get("effective_multiplier").getAsString()+"x.";
+            reply(sender,msg);
+            if(name.equalsIgnoreCase(SupabaseCommunityService.getSignedInAlphaName())){com.google.gson.JsonObject save=SupabaseCommunityService.loadPixelGardenSave();if(save!=null)PixelGardenGame.getInstance().loadSaveData(save);}
+        }catch(Exception e){reply(sender,"Prestige administration failed: "+safeMessage(e));}
     }
 
     private static String safeMessage(Exception exception) {
