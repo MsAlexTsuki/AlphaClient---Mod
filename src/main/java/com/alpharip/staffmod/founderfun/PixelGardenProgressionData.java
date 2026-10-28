@@ -29,6 +29,11 @@ public final class PixelGardenProgressionData {
 
     private int level = 1;
     private long experience;
+    private final Map<Integer, Long> levelXpRequirements = new LinkedHashMap<Integer, Long>();
+    private final Map<Integer, String> levelRewards = new LinkedHashMap<Integer, String>();
+    private final Map<Integer, String> levelDescriptions = new LinkedHashMap<Integer, String>();
+    private int resetLevelTokens;
+    private String customLevelMessage = "";
     private int storylineChapter = 1;
     private int tutorialStep;
     private long nextDailyResetAt;
@@ -44,10 +49,134 @@ public final class PixelGardenProgressionData {
     public synchronized int getTutorialStep() { return tutorialStep; }
     public synchronized long getNextDailyResetAt() { return nextDailyResetAt; }
 
-    /** Stores progression values without defining how XP is earned. */
+    /** Stores progression values while preserving the existing save model. */
     public synchronized void setProgression(int levelValue, long experienceValue) {
         level = Math.max(1, levelValue);
         experience = Math.max(0L, experienceValue);
+    }
+
+    public synchronized int addExperience(long amount) {
+        if (amount <= 0L) return 0;
+        experience = Math.min(Long.MAX_VALUE - amount, experience) + amount;
+        int levelsGained = 0;
+        while (experience >= getXpRequiredForNextLevel()) {
+            experience -= getXpRequiredForNextLevel();
+            level++;
+            levelsGained++;
+            if (levelsGained >= 1000) break;
+        }
+        return levelsGained;
+    }
+
+    public synchronized long getXpRequiredForNextLevel() {
+        Long configured = levelXpRequirements.get(level);
+        return configured == null ? defaultXpRequirement(level) : Math.max(1L, configured.longValue());
+    }
+
+    public synchronized long getXpRemainingForNextLevel() {
+        return Math.max(0L, getXpRequiredForNextLevel() - experience);
+    }
+
+    public synchronized void setLevel(int targetLevel) {
+        level = Math.max(1, targetLevel);
+        experience = 0L;
+    }
+
+    public synchronized void resetLevel() {
+        level = 1;
+        experience = 0L;
+    }
+
+    public synchronized int getResetLevelTokens() { return resetLevelTokens; }
+    public synchronized void setResetLevelTokens(int amount) { resetLevelTokens = Math.max(0, amount); }
+    public synchronized boolean consumeResetLevelToken() {
+        if (resetLevelTokens < 1) return false;
+        resetLevelTokens--;
+        resetLevel();
+        return true;
+    }
+
+    public synchronized String getCustomLevelMessage() { return customLevelMessage; }
+    public synchronized void setCustomLevelMessage(String message) {
+        customLevelMessage = message == null ? "" : message.trim();
+        if (customLevelMessage.length() > 240) customLevelMessage = customLevelMessage.substring(0, 240);
+    }
+
+    public synchronized Map<Integer, Long> getLevelXpRequirements() {
+        Map<Integer, Long> result = new LinkedHashMap<Integer, Long>();
+        for (int i = 1; i <= Math.max(100, level); i++) result.put(i, getRequirementForLevel(i));
+        result.putAll(levelXpRequirements);
+        return Collections.unmodifiableMap(result);
+    }
+
+    public synchronized Map<Integer, String> getLevelRewards() {
+        Map<Integer, String> result = new LinkedHashMap<Integer, String>();
+        for (int i = 1; i <= Math.max(100, level); i++) result.put(i, levelRewards.containsKey(i) ? levelRewards.get(i) : "None configured");
+        result.putAll(levelRewards);
+        return Collections.unmodifiableMap(result);
+    }
+
+    public synchronized Map<Integer, String> getLevelDescriptions() {
+        Map<Integer, String> result = new LinkedHashMap<Integer, String>();
+        for (int i = 1; i <= Math.max(100, level); i++) result.put(i, levelDescriptions.containsKey(i) ? levelDescriptions.get(i) : "");
+        result.putAll(levelDescriptions);
+        return Collections.unmodifiableMap(result);
+    }
+
+    public synchronized void setLevelXpRequirement(int targetLevel, long xp) {
+        if (targetLevel < 1 || xp < 1L) throw new IllegalArgumentException("Level and XP must be positive.");
+        levelXpRequirements.put(targetLevel, xp);
+    }
+
+    public synchronized void setLevelReward(int targetLevel, String reward) {
+        if (targetLevel < 1) throw new IllegalArgumentException("Level must be positive.");
+        levelRewards.put(targetLevel, reward == null ? "" : reward.trim());
+    }
+
+    public synchronized void setLevelDescription(int targetLevel, String description) {
+        if (targetLevel < 1) throw new IllegalArgumentException("Level must be positive.");
+        levelDescriptions.put(targetLevel, description == null ? "" : description.trim());
+    }
+
+    public synchronized boolean createLevel(int targetLevel, String reward, long xp) {
+        if (targetLevel < 1 || xp < 1L) return false;
+        setLevelXpRequirement(targetLevel, xp);
+        setLevelReward(targetLevel, reward);
+        if (!levelDescriptions.containsKey(targetLevel)) levelDescriptions.put(targetLevel, "");
+        return true;
+    }
+
+    public synchronized boolean deleteLevel(int targetLevel) {
+        if (targetLevel < 1 || targetLevel == level) return false;
+        levelXpRequirements.remove(targetLevel);
+        levelRewards.remove(targetLevel);
+        levelDescriptions.remove(targetLevel);
+        return true;
+    }
+
+    private long getRequirementForLevel(int targetLevel) {
+        Long configured = levelXpRequirements.get(targetLevel);
+        return configured == null ? defaultXpRequirement(targetLevel) : configured.longValue();
+    }
+
+    private static long defaultXpRequirement(int targetLevel) {
+        if (targetLevel <= 10) return targetLevel * 5L;
+        if (targetLevel <= 15) return 50L + (targetLevel - 10) * 10L;
+        if (targetLevel <= 20) return 100L + (targetLevel - 15) * 20L;
+        switch (targetLevel) {
+            case 21: return 230L; case 22: return 260L; case 23: return 280L;
+            case 24: return 290L; case 25: return 300L; case 26: return 320L;
+            case 27: return 340L; case 28: return 360L; case 29: return 380L;
+            case 30: return 400L;
+        }
+        if (targetLevel <= 39) return 500L + (targetLevel - 31) * 50L;
+        if (targetLevel == 40) return 1000L;
+        if (targetLevel == 41) return 1010L;
+        if (targetLevel == 42) return 1015L;
+        if (targetLevel == 43) return 1020L;
+        if (targetLevel == 44) return 1030L;
+        if (targetLevel >= 45) return 1040L + (targetLevel - 45) * 10L;
+        return 5L;
     }
 
     public synchronized void setStorylineProgress(int chapter, int step) {
@@ -525,6 +654,17 @@ public final class PixelGardenProgressionData {
         root.addProperty("version", SAVE_VERSION);
         root.addProperty("level", level);
         root.addProperty("experience", experience);
+        root.addProperty("reset_level_tokens", resetLevelTokens);
+        root.addProperty("custom_level_message", customLevelMessage);
+        JsonObject levelConfig = new JsonObject();
+        for (Map.Entry<Integer, Long> entry : levelXpRequirements.entrySet()) levelConfig.addProperty(String.valueOf(entry.getKey()), entry.getValue());
+        root.add("level_xp_requirements", levelConfig);
+        JsonObject levelRewardConfig = new JsonObject();
+        for (Map.Entry<Integer, String> entry : levelRewards.entrySet()) levelRewardConfig.addProperty(String.valueOf(entry.getKey()), entry.getValue());
+        root.add("level_rewards", levelRewardConfig);
+        JsonObject levelDescriptionConfig = new JsonObject();
+        for (Map.Entry<Integer, String> entry : levelDescriptions.entrySet()) levelDescriptionConfig.addProperty(String.valueOf(entry.getKey()), entry.getValue());
+        root.add("level_descriptions", levelDescriptionConfig);
         root.addProperty("storyline_chapter", storylineChapter);
         root.addProperty("tutorial_step", tutorialStep);
         root.addProperty("next_daily_reset_at", nextDailyResetAt);
@@ -557,6 +697,24 @@ public final class PixelGardenProgressionData {
         JsonObject root = element.getAsJsonObject();
         level = Math.max(1, intValue(root, "level", 1));
         experience = Math.max(0L, longValue(root, "experience", 0L));
+        resetLevelTokens = Math.max(0, intValue(root, "reset_level_tokens", 0));
+        customLevelMessage = root.has("custom_level_message") && root.get("custom_level_message").isJsonPrimitive()
+                ? root.get("custom_level_message").getAsString() : "";
+        levelXpRequirements.clear();
+        JsonObject levelConfig = objectValue(root, "level_xp_requirements");
+        for (Map.Entry<String, JsonElement> entry : levelConfig.entrySet()) {
+            try { int key = Integer.parseInt(entry.getKey()); long value = entry.getValue().getAsLong(); if (key > 0 && value > 0L) levelXpRequirements.put(key, value); } catch (RuntimeException ignored) { }
+        }
+        levelRewards.clear();
+        JsonObject rewardConfig = objectValue(root, "level_rewards");
+        for (Map.Entry<String, JsonElement> entry : rewardConfig.entrySet()) {
+            try { int key = Integer.parseInt(entry.getKey()); if (key > 0 && entry.getValue().isJsonPrimitive()) levelRewards.put(key, entry.getValue().getAsString()); } catch (RuntimeException ignored) { }
+        }
+        levelDescriptions.clear();
+        JsonObject descriptionConfig = objectValue(root, "level_descriptions");
+        for (Map.Entry<String, JsonElement> entry : descriptionConfig.entrySet()) {
+            try { int key = Integer.parseInt(entry.getKey()); if (key > 0 && entry.getValue().isJsonPrimitive()) levelDescriptions.put(key, entry.getValue().getAsString()); } catch (RuntimeException ignored) { }
+        }
         storylineChapter = Math.max(1, intValue(root, "storyline_chapter", 1));
         tutorialStep = Math.max(0, intValue(root, "tutorial_step", 0));
         nextDailyResetAt = Math.max(0L, longValue(root, "next_daily_reset_at", 0L));
@@ -923,6 +1081,11 @@ public final class PixelGardenProgressionData {
     }
 
     private static String clean(String value) { return value == null ? "" : value.trim(); }
+    private static JsonObject objectValue(JsonObject object, String key) {
+        return object != null && object.has(key) && object.get(key).isJsonObject()
+                ? object.getAsJsonObject(key) : new JsonObject();
+    }
+
     private static JsonArray arrayValue(JsonObject object, String key) {
         JsonElement value = object.get(key);
         return value != null && value.isJsonArray() ? value.getAsJsonArray() : new JsonArray();
