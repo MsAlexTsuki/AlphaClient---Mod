@@ -355,6 +355,7 @@ public final class PixelGardenCommand extends CommandBase {
         }
         String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "open";
         PixelGardenProgressionData data = game.getProgressionData();
+        data.ensureDefaultCatalog();
         try {
             data.mergeSharedDefinitions(SupabaseCommunityService.getSharedPixelGardenQuests());
         } catch (Exception exception) {
