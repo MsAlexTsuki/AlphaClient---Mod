@@ -13,10 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Quest Book presentation for Pixel Garden.
- *
- * This screen deliberately only displays the persisted quest state. Quest acceptance,
- * delivery transactions and reward granting are connected when those gameplay flows exist.
+ * Quest Book interface for Pixel Garden quest selection, crop delivery and rewards.
  */
 public final class PixelGardenQuestBookGUI extends GuiScreen {
     private static final int TAB_ACTIVE = 10;
@@ -29,6 +26,10 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private static final int CLAIM = 22;
     private static final int AMOUNT_DOWN = 23;
     private static final int AMOUNT_UP = 24;
+    private static final int AMOUNT_DOWN_10 = 25;
+    private static final int AMOUNT_DOWN_100 = 26;
+    private static final int AMOUNT_UP_10 = 27;
+    private static final int AMOUNT_UP_100 = 28;
 
     private final GuiScreen parent;
     private final PixelGardenGame game = PixelGardenGame.getInstance();
@@ -128,9 +129,14 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 && selected.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) {
             PixelGardenProgressionData.Objective delivery = firstDeliveryObjective(selectedDefinition);
             if (delivery != null && selected.getObjectiveProgress(delivery.id) < delivery.requiredAmount) {
-                buttonList.add(new AlphaButton(AMOUNT_DOWN, actionX, actionY, 24, 20, "-"));
-                buttonList.add(new AlphaButton(AMOUNT_UP, actionX + 28, actionY, 24, 20, "+"));
-                buttonList.add(new AlphaButton(SUBMIT, actionX + 56, actionY, Math.max(64, actionWidth - 56), 20, "Submit Crop"));
+                buttonList.add(new AlphaButton(AMOUNT_DOWN, actionX, actionY, 24, 20, "-1"));
+                buttonList.add(new AlphaButton(AMOUNT_DOWN_10, actionX + 25, actionY, 30, 20, "-10"));
+                buttonList.add(new AlphaButton(AMOUNT_DOWN_100, actionX + 56, actionY, 36, 20, "-100"));
+                buttonList.add(new AlphaButton(AMOUNT_UP, actionX + 93, actionY, 24, 20, "+1"));
+                buttonList.add(new AlphaButton(AMOUNT_UP_10, actionX + 118, actionY, 30, 20, "+10"));
+                buttonList.add(new AlphaButton(AMOUNT_UP_100, actionX + 149, actionY, 36, 20, "+100"));
+                buttonList.add(new AlphaButton(SUBMIT, actionX + 186, actionY,
+                        Math.max(50, actionWidth - 186), 20, "Submit"));
             }
         } else if (selected != null && selectedDefinition != null
                 && selected.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED
@@ -142,6 +148,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
 
     private PixelGardenProgressionData.Objective firstDeliveryObjective(
             PixelGardenProgressionData.QuestDefinition definition) {
+        if (definition == null) return null;
         for (PixelGardenProgressionData.Objective objective : definition.objectives) {
             if ("DELIVER_CROP".equalsIgnoreCase(objective.type)) return objective;
         }
@@ -210,14 +217,19 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                         ? "You can have at most 5 active quests."
                         : "Quest requirements are not met yet.");
             } else {
+                viewStatus = PixelGardenProgressionData.QuestStatus.ACTIVE;
                 saveProgressionAsync();
                 actionMessage("Quest accepted. Your progress is now being tracked.");
             }
             return;
         }
-        if (button.id == AMOUNT_DOWN || button.id == AMOUNT_UP) {
-            selectedDeliveryAmount = Math.max(1, Math.min(1000,
-                    selectedDeliveryAmount + (button.id == AMOUNT_UP ? 1 : -1)));
+        if (button.id == AMOUNT_DOWN || button.id == AMOUNT_UP
+                || button.id == AMOUNT_DOWN_10 || button.id == AMOUNT_DOWN_100
+                || button.id == AMOUNT_UP_10 || button.id == AMOUNT_UP_100) {
+            int delta = button.id == AMOUNT_UP ? 1 : button.id == AMOUNT_UP_10 ? 10
+                    : button.id == AMOUNT_UP_100 ? 100 : button.id == AMOUNT_DOWN ? -1
+                    : button.id == AMOUNT_DOWN_10 ? -10 : -100;
+            selectedDeliveryAmount = Math.max(1, Math.min(1000, selectedDeliveryAmount + delta));
             initGui();
             return;
         }
@@ -242,10 +254,10 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 actionMessage("Could not record submission. Please contact an administrator.");
                 return;
             }
-            progression.recordActionProgress("__NO_MATCH__", "__NO_MATCH__", 0);
-            // Complete the quest only after inventory has been consumed and progress saved.
+            // Complete the quest only after inventory has been consumed and progress recorded.
             if (selected.getObjectiveProgress(objective.id) + amount >= objective.requiredAmount) {
                 progression.completeQuest(selected.instanceId);
+                viewStatus = PixelGardenProgressionData.QuestStatus.COMPLETED;
             }
             saveProgressionAsync();
             actionMessage("Submitted " + amount + " " + crop.displayName + ".");
@@ -381,7 +393,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
         PixelGardenProgressionData.QuestInstance selected = selectedQuest();
         PixelGardenProgressionData.QuestDefinition def = definition(selected);
         if (!actionMessage.isEmpty()) {
-            drawCenteredString(fontRendererObj, actionMessage, width / 2, height - 49, 0xFF67451F);
+            drawCenteredString(fontRendererObj, actionMessage, width / 2, 51, 0xFF67451F);
         }
         if (selected == null || def == null || selected.getStatus() != viewStatus) {
             drawCenteredString(fontRendererObj, "Choose a quest", detailX + detailW / 2, listY + 35, 0xFF67451F);
