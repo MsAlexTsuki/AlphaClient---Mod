@@ -37,6 +37,15 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         lines.add("/pixelgarden Quest complete <number> - Complete an eligible quest and claim its rewards");
         lines.add("/pixelgarden Quest history - Show completed and abandoned quest history");
         lines.add("/pixelgarden Quest progress - Show progress for active quests");
+        lines.add("LEVELS AND XP");
+        lines.add("/pixelgarden level - Show your current level");
+        lines.add("/pixelgarden level check <Alpha account name> - Check an account's level");
+        lines.add("/pixelgarden xp - Show XP remaining for the next level");
+        lines.add("/pixelgarden xp check <Alpha account name> - Check another account's remaining XP");
+        lines.add("/pixelgarden level list - Open the level and reward GUI");
+        lines.add("/pixelgarden resetleveltoken - Check your level reset tokens");
+        lines.add("/pixelgarden resetleveltoken use - Spend a token to reset level and XP");
+        lines.add("/pixelgarden edit level message <message> - Set your personal level-up message");
         lines.add("/pixelgarden idlist - Open the dedicated Quest ID List GUI with quest IDs, NPC IDs and rewards");
         lines.add("/pixelgarden ids - Open the scrollable quest ID and NPC reference registry");
         lines.add("/pixelgarden help - Open this command guide GUI");
@@ -67,6 +76,7 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         lines.add("/pixelgarden prestige use - Prestige for 20,000 coins after 18 upgrade steps");
         lines.add("/pixelgarden resettokens - Check your reset-token balance");
         lines.add("/pixelgarden resettoken use - Open reset confirmation");
+        lines.add("/pixelgarden level list - View all levels and rewards");
         if (SupabaseCommunityService.isSignedInFounder()) {
             lines.add("FOUNDER QUEST COMMANDS");
             lines.add("/pixelgarden createquest admin <quest id> <description> <NPC> <amount> <reward type> - Create a shared crop-delivery quest");
@@ -80,6 +90,17 @@ public final class PixelGardenHelpGUI extends GuiScreen {
             lines.add("/pixelgarden rewards add <quest id> <type> <amount> - Add to a quest reward");
             lines.add("/pixelgarden rewards remove <quest id> <type> <amount|all> - Remove some or all of a quest reward");
             lines.add("Reward types: coins, seeds_wheat/carrot/potato/pumpkin, crop_wheat/carrot/potato/pumpkin");
+            lines.add("FOUNDER LEVEL COMMANDS");
+            lines.add("/pixelgarden setlevel <Alpha account name> <level> - Set level and reset XP to 0");
+            lines.add("/pixelgarden resetlevel <Alpha account name> - Reset level to 1 and XP to 0");
+            lines.add("/pixelgarden resetleveltoken give <Alpha account name> [amount] - Give level reset tokens");
+            lines.add("/pixelgarden resetleveltoken take <Alpha account name> [amount] - Take level reset tokens");
+            lines.add("/pixelgarden editlevel rewards <level> <rewards> - Edit level rewards");
+            lines.add("/pixelgarden editlevel xp <level> <xp> - Edit XP required for the next level");
+            lines.add("/pixelgarden editlevel desc <level> <desc> - Edit the level description");
+            lines.add("/pixelgarden editlevelmsg <message> - Change the default level-up message");
+            lines.add("/pixelgarden admin level create <level> <rewards> <xp> - Create a level");
+            lines.add("/pixelgarden admin level delete <level> - Delete a level");
             lines.add("FOUNDER COMMANDS");
             lines.add("/pixelgarden admin fullreset <Alpha account name> - Reset garden, inventory, upgrades, levels, quests, tutorial and Prestige");
             lines.add("/pixelgarden harvesttime <multiplier|finish|normal> - Speed up, finish, or restore normal crop timers");
