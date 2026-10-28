@@ -27,7 +27,6 @@ public final class PixelGardenMessageNotifier {
     private boolean firstJoinTipShown;
     private String lastDailyDate = "";
     private boolean[] notifiedReadyPlots = new boolean[PixelGardenGame.MAX_PLOTS];
-    private boolean wasInWorld;
 
     private PixelGardenMessageNotifier() {
         load();
@@ -50,8 +49,8 @@ public final class PixelGardenMessageNotifier {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null) {
-            wasInWorld = false;
+        if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null
+                || minecraft.getCurrentServerData() == null) {
             return;
         }
         if (!enabled) return;
@@ -71,7 +70,6 @@ public final class PixelGardenMessageNotifier {
         }
 
         checkReadyCrops(minecraft);
-        wasInWorld = true;
     }
 
     private void checkReadyCrops(Minecraft minecraft) {
@@ -82,18 +80,20 @@ public final class PixelGardenMessageNotifier {
             notifiedReadyPlots = resized;
         }
         boolean changed = false;
+        boolean anyNewReadyCrop = false;
         long now = System.currentTimeMillis();
         for (int i = 0; i < plots.size(); i++) {
             boolean ready = plots.get(i).getState(now) == PixelGardenGame.PlotState.READY;
             if (ready && !notifiedReadyPlots[i]) {
-                send(minecraft, READY_MESSAGE);
                 notifiedReadyPlots[i] = true;
+                anyNewReadyCrop = true;
                 changed = true;
             } else if (!ready && notifiedReadyPlots[i]) {
                 notifiedReadyPlots[i] = false;
                 changed = true;
             }
         }
+        if (anyNewReadyCrop) send(minecraft, READY_MESSAGE);
         if (changed) save();
     }
 
