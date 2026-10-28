@@ -125,6 +125,7 @@ public final class PixelGardenCommand extends CommandBase {
         }
         if (!allowed(sender, "commands.pixelgarden")) return;
         String action = args == null || args.length == 0 ? "help" : args[0].toLowerCase(Locale.ROOT);
+        if ("admin".equals(action) && args.length >= 3 && "level".equalsIgnoreCase(args[1])) action = "adminlevel";
         PixelGardenGame game = PixelGardenGame.getInstance();
         if ("level".equals(action)) {
             if (args.length >= 2 && "list".equalsIgnoreCase(args[1])) {
@@ -150,7 +151,17 @@ public final class PixelGardenCommand extends CommandBase {
                 reply(sender, "You need " + data.getXpRemainingForNextLevel() + " more XP for level " + (data.getLevel() + 1) + ".");
             }
         } else if ("resetleveltoken".equals(action)) {
-            if (args.length >= 2 && "use".equalsIgnoreCase(args[1])) {
+            if (args.length >= 3 && ("give".equalsIgnoreCase(args[1]) || "take".equalsIgnoreCase(args[1]))) {
+                if (!founderOnly(sender)) return;
+                int amount = args.length >= 4 ? number(args[3]) : 1;
+                if (amount < 1) { reply(sender, "Token amount must be positive."); return; }
+                try {
+                    com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenLevels(
+                            "give".equalsIgnoreCase(args[1]) ? "give_token" : "take_token", args[2], amount, 0L, null);
+                    reply(sender, ("give".equalsIgnoreCase(args[1]) ? "Gave " : "Took ") + amount + " level reset token(s) "
+                            + ("give".equalsIgnoreCase(args[1]) ? "to " : "from ") + result.get("alpha_name").getAsString() + ".");
+                } catch (Exception exception) { reply(sender, "Could not change level reset tokens: " + safeMessage(exception)); }
+            } else if (args.length >= 2 && "use".equalsIgnoreCase(args[1])) {
                 try {
                     com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenLevels("use_token", null, 0, 0L, null);
                     game.getProgressionData().resetLevel();
@@ -204,7 +215,7 @@ public final class PixelGardenCommand extends CommandBase {
                 saveCloudAsync(game);
                 reply(sender, "Updated the default Pixel Garden level-up message.");
             } catch (Exception exception) { reply(sender, "Could not update the level-up message: " + safeMessage(exception)); }
-        } else if ("admin".equals(action) && args.length >= 3 && "level".equalsIgnoreCase(args[1])) {
+        } else if ("adminlevel".equals(action)) {
             if (!founderOnly(sender)) return;
             String sub = args[2].toLowerCase(Locale.ROOT);
             if ("create".equals(sub)) {
