@@ -16,7 +16,7 @@ import org.lwjgl.input.Mouse;
 public final class PixelGardenGUI extends GuiScreen {
     private static final int CROP_BASE = 10, BUY_BASE = 20, PLOT_BASE = 100, SELL_BASE = 200;
     private static final int AUTO = 300, GROWTH = 301, EXPAND = 302, BACK = 4;
-    private static final int SHOP = 400, INVENTORY = 401, SELL = 402, UPGRADES = 403, PRESTIGE = 404, HELP = 405, QUESTBOOK = 406;
+    private static final int SHOP = 400, INVENTORY = 401, SELL = 402, UPGRADES = 403, PRESTIGE = 404, HELP = 405, QUESTBOOK = 406, NPCS = 407;
     private static String loadedAccount;
     private static boolean loadInProgress;
     private final GuiScreen parent;
@@ -171,8 +171,8 @@ public final class PixelGardenGUI extends GuiScreen {
             buttonList.add(new AlphaButton(CROP_BASE + crop.ordinal(), x, cropY, cropWidth, 20, label));
         }
         int navY = height - 55;
-        int navWidth = Math.min(90, (width - 60) / 8);
-        int totalNav = navWidth * 8 + 8 * 7;
+        int navWidth = Math.max(48, Math.min(90, (width - 124) / 9));
+        int totalNav = navWidth * 9 + 8 * 8;
         int navX = (width - totalNav) / 2;
         buttonList.add(new AlphaButton(SHOP, navX, navY, navWidth, 22, "Shop"));
         buttonList.add(new AlphaButton(INVENTORY, navX + (navWidth + 8), navY, navWidth, 22, "Inventory"));
@@ -182,8 +182,9 @@ public final class PixelGardenGUI extends GuiScreen {
         prestigeButton.enabled = game.getPurchasedUpgradeSteps() >= 18;
         buttonList.add(prestigeButton);
         buttonList.add(new AlphaButton(QUESTBOOK, navX + (navWidth + 8) * 5, navY, navWidth, 22, "Quest Book", true));
-        buttonList.add(new AlphaButton(HELP, navX + (navWidth + 8) * 6, navY, navWidth, 22, "Help"));
-        buttonList.add(new AlphaButton(BACK, navX + (navWidth + 8) * 7, navY, navWidth, 22, "Back"));
+        buttonList.add(new AlphaButton(NPCS, navX + (navWidth + 8) * 6, navY, navWidth, 22, "NPCs"));
+        buttonList.add(new AlphaButton(HELP, navX + (navWidth + 8) * 7, navY, navWidth, 22, "Help"));
+        buttonList.add(new AlphaButton(BACK, navX + (navWidth + 8) * 8, navY, navWidth, 22, "Back"));
     }
 
     private String plotButtonLabel(PixelGardenGame.Plot plot, long now, int index) {
@@ -214,6 +215,11 @@ public final class PixelGardenGUI extends GuiScreen {
         if (button.id == QUESTBOOK) {
             saveCloudAsync();
             mc.displayGuiScreen(new PixelGardenQuestBookGUI(this));
+            return;
+        }
+        if (button.id == NPCS) {
+            saveCloudAsync();
+            mc.displayGuiScreen(new PixelGardenNPCGUI(this));
             return;
         }
         if (button.id == PRESTIGE) {
