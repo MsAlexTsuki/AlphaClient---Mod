@@ -32,10 +32,21 @@ public final class PixelGardenIdsGUI extends GuiScreen {
         Set<String> npcs = new LinkedHashSet<String>();
         for (PixelGardenProgressionData.QuestDefinition definition : progression.getDefinitions()) {
             entries.add("QUEST ID  |  " + definition.id + "  —  " + definition.name);
+            entries.add("  NPC REF  |  " + (definition.npc == null || definition.npc.trim().isEmpty()
+                    ? "Not assigned" : definition.npc.trim()));
+            entries.add("  REWARDS  |  " + (definition.rewards == null || definition.rewards.isEmpty()
+                    ? "None configured" : definition.rewards.toString()));
             if (definition.npc != null && !definition.npc.trim().isEmpty()) {
                 npcs.add(definition.npc.trim());
             }
         }
+        entries.add("");
+        entries.add("FOUNDER COMMAND REFERENCE");
+        entries.add("/pixelgarden createquest admin <quest id> <description> <NPC ID> <amount> <reward type>");
+        entries.add("/pixelgarden rewards add <quest id> <type> <amount>");
+        entries.add("/pixelgarden rewards remove <quest id> <type> <amount|all>");
+        entries.add("Use the exact QUEST ID above in rewards commands.");
+        entries.add("Use a registered NPC ID below when creating a quest.");
         entries.add("");
         entries.add("REGISTERED NPC IDS");
         for (java.util.Map.Entry<String, String> npc : PixelGardenNPC.getAllNpcNames().entrySet()) {
@@ -81,7 +92,7 @@ public final class PixelGardenIdsGUI extends GuiScreen {
         drawRect(0, 0, width, 44, 0xF00B1018);
         drawRect(0, 42, width, 45, 0xFFFFC83D);
         drawCenteredString(fontRendererObj, "PIXEL GARDEN ID REGISTRY", width / 2, 8, 0xFFFFC83D);
-        drawCenteredString(fontRendererObj, "Quest IDs and NPC references from the current catalog", width / 2, 25, 0xFFE3E8F0);
+        drawCenteredString(fontRendererObj, "Quest IDs, assigned NPCs, configured rewards and command syntax", width / 2, 25, 0xFFE3E8F0);
         int visible = Math.max(1, (height - 100) / 14);
         int end = Math.min(entries.size(), scrollOffset + visible);
         int y = 56;
