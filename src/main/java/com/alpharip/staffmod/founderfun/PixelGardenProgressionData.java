@@ -190,11 +190,14 @@ public final class PixelGardenProgressionData {
         for (JsonElement item : sharedDefinitions) {
             QuestDefinition definition = QuestDefinition.fromJson(item);
             if (definition == null) continue;
-            if (definitions.containsKey(definition.id)) {
-                definitions.put(definition.id, definition.copy());
-            } else {
-                definitions.put(definition.id, definition.copy());
+            QuestDefinition existing = definitions.get(definition.id);
+            if (existing != null && (definition.npc == null || definition.npc.trim().isEmpty())
+                    && existing.npc != null && !existing.npc.trim().isEmpty()) {
+                definition = new QuestDefinition(definition.id, definition.name, definition.description,
+                        existing.npc, definition.requiredLevel, definition.requiredPrestige,
+                        definition.tier, definition.objectives, definition.rewards);
             }
+            definitions.put(definition.id, definition.copy());
             merged++;
         }
         return merged;
