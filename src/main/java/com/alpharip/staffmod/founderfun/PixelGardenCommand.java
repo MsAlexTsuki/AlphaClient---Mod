@@ -786,8 +786,9 @@ public final class PixelGardenCommand extends CommandBase {
                 return;
             }
             data.markRewardsClaimed(instance.instanceId);
+            game.awardExperience(20L);
             saveCloudAsync(game);
-            reply(sender, "Completed " + definition.name + " and claimed its rewards.");
+            reply(sender, "Completed " + definition.name + " and claimed its rewards (+20 XP).");
         } else if ("history".equals(sub)) {
             List<PixelGardenProgressionData.HistoryEntry> history = data.getHistory();
             if (history.isEmpty()) reply(sender, "Your quest history is empty.");
