@@ -425,6 +425,7 @@ public final class PixelGardenProgressionData {
         public final String id;
         public final String name;
         public final String description;
+        public final String npc;
         public final int requiredLevel;
         public final int requiredPrestige;
         public final String tier;
@@ -470,6 +471,7 @@ public final class PixelGardenProgressionData {
             root.addProperty("id", id);
             root.addProperty("name", name);
             root.addProperty("description", description);
+            root.addProperty("npc", npc);
             root.addProperty("required_level", requiredLevel);
             root.addProperty("required_prestige", requiredPrestige);
             root.addProperty("tier", tier);
@@ -501,7 +503,7 @@ public final class PixelGardenProgressionData {
                 }
             }
             QuestDefinition definition = new QuestDefinition(stringValue(root, "id", ""),
-                    stringValue(root, "name", ""), stringValue(root, "description", ""),
+                    stringValue(root, "name", ""), stringValue(root, "description", ""), stringValue(root, "npc", ""),
                     intValue(root, "required_level", 1), intValue(root, "required_prestige", 0),
                     stringValue(root, "tier", ""), objectives, rewards);
             return definition.isValid() ? definition : null;
