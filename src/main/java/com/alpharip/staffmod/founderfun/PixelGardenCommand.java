@@ -55,7 +55,7 @@ public final class PixelGardenCommand extends CommandBase {
             }
             if (args.length == 4 && "givequest".equalsIgnoreCase(args[1])) {
                 return getListOfStringsMatchingLastWord(args, new String[] {
-                        "carrot", "potato", "wheat", "beetroot", "pumpkin", "melon"
+                        "carrot", "potato", "wheat", "pumpkin", "melon", "cactus", "sugarcane", "beetroot"
                 });
             }
         }
@@ -143,7 +143,7 @@ public final class PixelGardenCommand extends CommandBase {
         if (("buy".equals(root) || "sell".equals(root) || "plant".equals(root) || "harvest".equals(root))
                 && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {
-                    "carrot", "potato", "wheat", "beetroot", "pumpkin", "melon"
+                    "carrot", "potato", "wheat", "pumpkin", "melon", "cactus", "sugarcane", "beetroot"
             });
         return java.util.Collections.emptyList();
     }
