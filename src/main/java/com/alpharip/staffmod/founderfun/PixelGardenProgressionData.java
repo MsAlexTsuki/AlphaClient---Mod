@@ -281,12 +281,32 @@ public final class PixelGardenProgressionData {
         }
 
         JsonArray instanceArray = arrayValue(root, "quest_instances");
+        int restoredActiveCount = 0;
         for (JsonElement item : instanceArray) {
             QuestInstance instance = QuestInstance.fromJson(item);
-            if (instance != null && definitions.containsKey(instance.definitionId)
-                    && !instances.containsKey(instance.instanceId)) {
-                instances.put(instance.instanceId, instance);
+            if (instance == null || !definitions.containsKey(instance.definitionId)
+                    || instances.containsKey(instance.instanceId)) continue;
+
+            QuestDefinition definition = definitions.get(instance.definitionId);
+            List<String> validObjectiveIds = new ArrayList<String>();
+            for (Objective objective : definition.objectives) {
+                validObjectiveIds.add(objective.id);
+                int progress = instance.getObjectiveProgress(objective.id);
+                instance.objectiveProgress.put(objective.id,
+                        Integer.valueOf(Math.max(0, Math.min(objective.requiredAmount, progress))));
             }
+            instance.objectiveProgress.keySet().retainAll(validObjectiveIds);
+
+            // Malformed or legacy saves must not restore more than five active quests.
+            if (instance.status == QuestStatus.ACTIVE) {
+                if (restoredActiveCount >= MAX_ACTIVE_QUESTS) {
+                    instance.status = QuestStatus.AVAILABLE;
+                    instance.acceptedAt = 0L;
+                } else {
+                    restoredActiveCount++;
+                }
+            }
+            instances.put(instance.instanceId, instance);
         }
 
         JsonArray goalArray = arrayValue(root, "goals");
