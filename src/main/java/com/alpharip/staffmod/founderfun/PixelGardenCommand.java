@@ -86,8 +86,8 @@ public final class PixelGardenCommand extends CommandBase {
             });
         if ("rewards".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"add", "remove"});
-        if ("createquest".equals(root) && args.length >= 5) {
-            int npcArgument = args.length - 3;
+        if ("createquest".equals(root) && args.length >= 6) {
+            int npcArgument = args.length - 4;
             if (npcArgument >= 4) return getListOfStringsMatchingLastWord(args,
                     PixelGardenNPC.getAllNpcNames().keySet().toArray(new String[PixelGardenNPC.getAllNpcNames().size()]));
         }
