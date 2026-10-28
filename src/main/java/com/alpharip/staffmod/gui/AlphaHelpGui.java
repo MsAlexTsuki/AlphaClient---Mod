@@ -48,6 +48,44 @@ public final class AlphaHelpGui extends GuiScreen {
         addCommand("AutoGG", "/autogg", "command.autogg", true);
         addCommand("Auto Reconnect", "/autoreconnect", "command.autoreconnect", true);
         addCommand("Open help GUI", "/alphahelp open", "command.alphahelp.open", true);
+        addCommand("Pixel Garden guide", "/pixelgarden help", "commands.pixelgarden", true);
+        addCommand("Open Pixel Garden", "/pixelgarden open", "commands.pixelgarden", true);
+        addCommand("Pixel Garden inventory", "/pixelgarden inventory", "commands.pixelgarden", true);
+        addCommand("Show crop and seed counts", "/pixelgarden inv", "commands.pixelgarden", true);
+        addCommand("Plant a crop", "/pixelgarden plant <plot> <crop>", "commands.pixelgarden", true);
+        addCommand("Open garden upgrades", "/pixelgarden upgrades", "pixelgarden.upgrades", true);
+        addCommand("Buy a garden upgrade", "/pixelgarden upgrade <upgrade>", "pixelgarden.upgrades", true);
+        addCommand("Open garden shop", "/pixelgarden shop", "pixelgarden.shop", true);
+        addCommand("Buy seeds", "/pixelgarden buy <crop> [amount]", "pixelgarden.shop", true);
+        addCommand("Sell harvested crops", "/pixelgarden sell <crop|all> [amount]", "commands.pixelgarden", true);
+        addCommand("Harvest crops", "/pixelgarden harvest <plot|all>", "commands.pixelgarden", true);
+        addCommand("Show crop timers", "/pixelgarden time", "commands.pixelgarden", true);
+        addCommand("Show harvested crops", "/pixelgarden crops", "commands.pixelgarden", true);
+        addCommand("Show seed counts", "/pixelgarden seeds", "commands.pixelgarden", true);
+        addCommand("Check garden coins", "/pixelgarden coins [Alpha account]", "commands.pixelgarden", true);
+        addCommand("Show reset tokens", "/pixelgarden resettokens", "commands.pixelgarden", true);
+        addCommand("Use a reset token", "/pixelgarden resettoken use", "commands.pixelgarden", true);
+        addCommand("Show Pixel Garden playtime", "/pixelgarden playtime", "commands.pixelgarden", true);
+        addCommand("Prestige Coins and upgrades", "/pixelgarden prestige", "commands.pixelgarden", true);
+        addCommand("Perform a Prestige", "/pixelgarden prestige use", "commands.pixelgarden", true);
+        addCommand("Pixel Garden alias", "/garden help", "commands.pixelgarden", true);
+
+
+
+        if (com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()) {
+            addCommand("Give Prestige Coins", "/pixelgarden prestigecoingive <Alpha name> <amount>", "commands.pixelgarden", true);
+            addCommand("Take Prestige Coins", "/pixelgarden prestigecointake <Alpha name> <amount>", "commands.pixelgarden", true);
+            addCommand("Reset Prestige Coins balance", "/pixelgarden prestigecoinreset <Alpha name>", "commands.pixelgarden", true);
+            addCommand("Reset Prestige progress", "/pixelgarden prestigereset <Alpha name>", "commands.pixelgarden", true);
+            addCommand("Full Pixel Garden reset", "/pixelgarden admin fullreset <Alpha name>", "commands.pixelgarden", true);
+            addCommand("Set Prestige multiplier", "/pixelgarden multiplier prestige add <Alpha name> <multiplier>", "commands.pixelgarden", true);
+            addCommand("Reset Prestige multiplier", "/pixelgarden multiplier prestige reset <Alpha name>", "commands.pixelgarden", true);
+            addCommand("Give garden coins", "/pixelgarden coinsgive <Alpha account> <amount>", "commands.pixelgarden", true);
+            addCommand("Take garden coins", "/pixelgarden takecoins <Alpha account> <amount>", "commands.pixelgarden", true);
+            addCommand("Reset garden coins", "/pixelgarden coinsreset <Alpha account>", "commands.pixelgarden", true);
+            addCommand("Give a reset token", "/pixelgarden give resettoken <Alpha account>", "commands.pixelgarden", true);
+            addCommand("Force-reset a garden", "/pixelgarden resettoken admin <Alpha account>", "commands.pixelgarden", true);
+        }
 
         if (com.alpharip.staffmod.permissions.SupabaseCommunityService.hasStaffOperationsAccess()) {
             addCommand("Staff Operations", "/staffoperations", "Menu.StaffOperations", true);

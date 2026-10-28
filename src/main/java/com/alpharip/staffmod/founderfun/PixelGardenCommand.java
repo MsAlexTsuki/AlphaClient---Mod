@@ -55,6 +55,9 @@ public final class PixelGardenCommand extends CommandBase {
                 runPrestigeFounderAction(sender,"set_multiplier",args[3],0,multiplier);
             }else if(args.length>=4&&"prestige".equalsIgnoreCase(args[1])&&"reset".equalsIgnoreCase(args[2]))runPrestigeFounderAction(sender,"reset_multiplier",args[3],0,0.0D);
             else reply(sender,"Usage: /pixelgarden multiplier prestige add <Alpha account name> <multiplier> | /pixelgarden multiplier prestige reset <Alpha account name>");
+        } else if ("guide".equals(action)) {
+            Minecraft mc = Minecraft.getMinecraft();
+            open(new com.alpharip.staffmod.gui.AlphaHelpGui(mc == null ? null : mc.currentScreen));
         } else if ("help".equals(action) || "?".equals(action)) {
             showCommandGuide(sender);
         } else if ("open".equals(action)) {
@@ -231,7 +234,8 @@ public final class PixelGardenCommand extends CommandBase {
             reply(sender, "/pixelgarden give resettoken <Alpha account> §7- Give a reset token (Founder only).");
             reply(sender, "/pixelgarden resettoken admin <Alpha account> §7- Force a full reset (Founder only).");
         }
-        reply(sender, "/garden §7- Alias for /pixelgarden; use /garden open or /garden help.");
+        reply(sender, "/pixelgarden guide §7- Open the scrollable AlphaClient Command Guide GUI.");
+        reply(sender, "/garden §7- Alias for /pixelgarden; use /garden open, /garden help, or /garden guide.");
     }
 
 
