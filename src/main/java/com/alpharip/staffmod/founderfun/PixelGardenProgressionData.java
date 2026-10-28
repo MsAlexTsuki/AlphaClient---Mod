@@ -111,25 +111,25 @@ public final class PixelGardenProgressionData {
      */
     public synchronized void ensureDefaultCatalog() {
         addStarterQuest("pg_fresh_start", "Fresh Start",
-                "Begin your garden journey by delivering your first wheat crop.",
-                "DELIVER_CROP", "wheat", 1);
+                "Begin your garden journey by meeting Vincent and delivering your first wheat crop.",
+                PixelGardenNPC.TUTORIAL, "DELIVER_CROP", "wheat", 1);
         addStarterQuest("pg_first_coins", "First Coins",
-                "Sell your first harvested wheat to learn how the garden economy works.",
-                "SELL_CROP", "wheat", 1);
+                "Meet Jasmine and sell your first harvested wheat to learn how the garden economy works.",
+                PixelGardenNPC.JASMINE, "SELL_CROP", "wheat", 1);
         addStarterQuest("pg_growing_bigger", "Growing Bigger",
-                "Harvest wheat from your garden and build a steady routine.",
-                "HARVEST_CROP", "wheat", 3);
+                "Meet Hank, harvest wheat from your garden and build a steady routine.",
+                PixelGardenNPC.HANK, "HARVEST_CROP", "wheat", 3);
         addStarterQuest("pg_your_own_garden", "Your Own Garden",
-                "Plant and harvest a carrot crop as you expand your garden skills.",
-                "HARVEST_CROP", "carrot", 1);
+                "Meet Emily and plant and harvest a carrot crop as you expand your garden skills.",
+                PixelGardenNPC.EMILY, "HARVEST_CROP", "carrot", 1);
     }
 
-    private void addStarterQuest(String id, String name, String description,
+    private void addStarterQuest(String id, String name, String description, String npc,
             String objectiveType, String target, int amount) {
         if (!definitions.containsKey(id)) {
             List<Objective> objectives = new ArrayList<Objective>();
             objectives.add(new Objective(id + "_objective", objectiveType, target, amount));
-            addDefinition(new QuestDefinition(id, name, description, 1, 0, "Beginner",
+            addDefinition(new QuestDefinition(id, name, description, npc, 1, 0, "Beginner",
                     objectives, Collections.<String, Integer>emptyMap()));
         }
         if (!hasInstanceForDefinition(id)) {
