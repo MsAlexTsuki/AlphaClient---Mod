@@ -151,7 +151,9 @@ public final class PixelGardenGame {
         if (cost > pixelGardenUpgradeCoins || cost > Integer.MAX_VALUE) return false;
         pixelGardenUpgradeCoins -= (int) cost;
         seeds[crop.ordinal()] += amount;
-        progressionData.recordActionProgress("BUY_SEEDS", crop.name().toLowerCase(java.util.Locale.ROOT), amount);
+        String cropId = crop.name().toLowerCase(java.util.Locale.ROOT);
+        progressionData.recordActionProgress("BUY_SEEDS", cropId, amount);
+        progressionData.recordTutorialAction("BUY_SEEDS", cropId);
         return true;
     }
     public synchronized boolean plant(int plotIndex, Crop crop, long now) {
@@ -160,8 +162,9 @@ public final class PixelGardenGame {
         if (plot.getState(now) != PlotState.EMPTY || seeds[crop.ordinal()] <= 0) return false;
         seeds[crop.ordinal()]--;
         plot.plant(crop, now, growthLevels);
-        progressionData.recordActionProgress("PLANT_CROP",
-                crop.name().toLowerCase(java.util.Locale.ROOT), 1);
+        String cropId = crop.name().toLowerCase(java.util.Locale.ROOT);
+        progressionData.recordActionProgress("PLANT_CROP", cropId, 1);
+        progressionData.recordTutorialAction("PLANT_CROP", cropId);
         return true;
     }
     public synchronized boolean harvest(int plotIndex, long now) {
@@ -172,8 +175,9 @@ public final class PixelGardenGame {
         int harvestedAmount = getCropYield();
         inventory[harvestedCrop.ordinal()] += harvestedAmount;
         plot.clear();
-        progressionData.recordActionProgress("HARVEST_CROP",
-                harvestedCrop.name().toLowerCase(java.util.Locale.ROOT), harvestedAmount);
+        String cropId = harvestedCrop.name().toLowerCase(java.util.Locale.ROOT);
+        progressionData.recordActionProgress("HARVEST_CROP", cropId, harvestedAmount);
+        progressionData.recordTutorialAction("HARVEST_CROP", cropId);
         return true;
     }
 
@@ -214,7 +218,9 @@ public final class PixelGardenGame {
         if (earned > Integer.MAX_VALUE - pixelGardenUpgradeCoins) return false;
         inventory[crop.ordinal()] -= amount;
         pixelGardenUpgradeCoins += (int) earned;
-        progressionData.recordActionProgress("SELL_CROP", crop.name().toLowerCase(java.util.Locale.ROOT), amount);
+        String cropId = crop.name().toLowerCase(java.util.Locale.ROOT);
+        progressionData.recordActionProgress("SELL_CROP", cropId, amount);
+        progressionData.recordTutorialAction("SELL_CROP", cropId);
         return true;
     }
     /** Removes harvested crops for an explicit quest submission, never for merely owning them. */
@@ -265,6 +271,8 @@ public final class PixelGardenGame {
         pixelGardenUpgradeCoins -= AUTO_HARVEST_COST;
         autoHarvest = true;
         purchasedUpgradeSteps++;
+        progressionData.recordActionProgress("BUY_UPGRADE", "auto_harvest", 1);
+        progressionData.recordTutorialAction("BUY_UPGRADE", "auto_harvest");
         return true;
     }
     public synchronized boolean buyGrowthBoost() {
@@ -274,6 +282,8 @@ public final class PixelGardenGame {
         pixelGardenUpgradeCoins -= cost;
         growthLevels++;
         purchasedUpgradeSteps++;
+        progressionData.recordActionProgress("BUY_UPGRADE", "growth_boost", 1);
+        progressionData.recordTutorialAction("BUY_UPGRADE", "growth_boost");
         return true;
     }
     public synchronized boolean buyMoreCoins() {
@@ -283,6 +293,8 @@ public final class PixelGardenGame {
         pixelGardenUpgradeCoins -= cost;
         moreCoinsLevel++;
         purchasedUpgradeSteps++;
+        progressionData.recordActionProgress("BUY_UPGRADE", "more_coins", 1);
+        progressionData.recordTutorialAction("BUY_UPGRADE", "more_coins");
         return true;
     }
     public synchronized boolean buyMoreCrops() {
@@ -292,6 +304,8 @@ public final class PixelGardenGame {
         pixelGardenUpgradeCoins -= cost;
         moreCropsLevel++;
         purchasedUpgradeSteps++;
+        progressionData.recordActionProgress("BUY_UPGRADE", "more_crops", 1);
+        progressionData.recordTutorialAction("BUY_UPGRADE", "more_crops");
         return true;
     }
     public synchronized boolean expandGarden() {
@@ -306,7 +320,11 @@ public final class PixelGardenGame {
                 unlocked++;
             }
         }
-        if (unlocked > 0) purchasedUpgradeSteps++;
+        if (unlocked > 0) {
+            purchasedUpgradeSteps++;
+            progressionData.recordActionProgress("EXPAND_GARDEN", "*", unlocked);
+            progressionData.recordTutorialAction("EXPAND_GARDEN", "*");
+        }
         return unlocked > 0;
     }
     public synchronized int getUpgradeCost(String upgrade) {
