@@ -30,6 +30,8 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private static final int AMOUNT_DOWN_100 = 26;
     private static final int AMOUNT_UP_10 = 27;
     private static final int AMOUNT_UP_100 = 28;
+    private static final int CROP_PREV = 29;
+    private static final int CROP_NEXT = 30;
 
     private final GuiScreen parent;
     private final PixelGardenGame game = PixelGardenGame.getInstance();
@@ -39,11 +41,14 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private String selectedInstanceId;
     private int scrollOffset;
     private int selectedDeliveryAmount = 1;
+    private int selectedDeliveryCropIndex;
     private String actionMessage = "";
 
     public PixelGardenQuestBookGUI(GuiScreen parent) {
         this.parent = parent;
         progression.ensureDefaultCatalog();
+        try { progression.mergeSharedDefinitions(SupabaseCommunityService.getSharedPixelGardenQuests()); }
+        catch (Exception exception) { System.err.println("[AlphaClient] Could not sync shared Pixel Garden quests: " + exception.getMessage()); }
     }
 
     private List<PixelGardenProgressionData.QuestInstance> questsForView() {
@@ -143,6 +148,15 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 && selected.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) {
             PixelGardenProgressionData.Objective delivery = firstDeliveryObjective(selectedDefinition);
             if (delivery != null && selected.getObjectiveProgress(delivery.id) < delivery.requiredAmount) {
+                if ("*".equals(delivery.target)) {
+                    PixelGardenGame.Crop[] crops = PixelGardenGame.Crop.values();
+                    PixelGardenGame.Crop selectedCrop = crops[Math.floorMod(selectedDeliveryCropIndex, crops.length)];
+                    PixelGardenGame.Crop nextCrop = crops[Math.floorMod(selectedDeliveryCropIndex + 1, crops.length)];
+                    buttonList.add(new AlphaButton(CROP_PREV, actionX + actionWidth / 2 - 92, actionY - 22, 88, 18,
+                            "< " + selectedCrop.displayName));
+                    buttonList.add(new AlphaButton(CROP_NEXT, actionX + actionWidth / 2 + 4, actionY - 22, 88, 18,
+                            nextCrop.displayName + " >"));
+                }
                 buttonList.add(new AlphaButton(AMOUNT_DOWN, actionX, actionY, 24, 20, "-1"));
                 buttonList.add(new AlphaButton(AMOUNT_DOWN_10, actionX + 25, actionY, 30, 20, "-10"));
                 buttonList.add(new AlphaButton(AMOUNT_DOWN_100, actionX + 56, actionY, 36, 20, "-100"));
@@ -223,6 +237,12 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
+        if (button.id == CROP_PREV || button.id == CROP_NEXT) {
+            int count = PixelGardenGame.Crop.values().length;
+            selectedDeliveryCropIndex = Math.floorMod(selectedDeliveryCropIndex + (button.id == CROP_NEXT ? 1 : -1), count);
+            initGui();
+            return;
+        }
         if (button.id == ACCEPT) {
             PixelGardenProgressionData.QuestInstance selected = selectedQuest();
             if (selected == null) { actionMessage("Select a quest first."); return; }
@@ -257,8 +277,13 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 return;
             }
             PixelGardenGame.Crop crop;
-            try { crop = PixelGardenGame.Crop.valueOf(objective.target.toUpperCase(java.util.Locale.ROOT)); }
-            catch (IllegalArgumentException exception) { actionMessage("This quest uses an unsupported crop."); return; }
+            if ("*".equals(objective.target)) {
+                PixelGardenGame.Crop[] crops = PixelGardenGame.Crop.values();
+                crop = crops[Math.floorMod(selectedDeliveryCropIndex, crops.length)];
+            } else {
+                try { crop = PixelGardenGame.Crop.valueOf(objective.target.toUpperCase(java.util.Locale.ROOT)); }
+                catch (IllegalArgumentException exception) { actionMessage("This quest uses an unsupported crop."); return; }
+            }
             int remaining = objective.requiredAmount - selected.getObjectiveProgress(objective.id);
             int amount = Math.min(selectedDeliveryAmount, Math.min(remaining, game.getInventory(crop)));
             if (amount < 1) { actionMessage("Not enough " + crop.displayName + " in your harvested inventory."); return; }
@@ -429,6 +454,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             drawRect(detailX + 8, y, detailX + detailW - 8, y + 1, 0xFFB49A6B);
             y += 9;
             drawWrapped(def.description, detailX + 8, y, detailW - 16, 0xFF5D4A31, 11);
+            if (!def.npc.isEmpty()) { y += 22; drawString(fontRendererObj, "NPC: " + def.npc, detailX + 8, y, 0xFF8A5A20); }
             y += 62;
             drawString(fontRendererObj, "REQUIREMENTS", detailX + 8, y, 0xFF8A5A20);
             y += 13;
@@ -444,7 +470,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 for (PixelGardenProgressionData.Objective objective : def.objectives) {
                     if (shown >= 4 || y > top + h - 68) break;
                     int progress = selected.getObjectiveProgress(objective.id);
-                    drawString(fontRendererObj, objective.target + "  " + progress + "/" + objective.requiredAmount,
+                    drawString(fontRendererObj, ("*".equals(objective.target) ? "Any crop" : objective.target) + "  " + progress + "/" + objective.requiredAmount,
                             detailX + 8, y, 0xFF493019);
                     int barW = Math.max(20, detailW - 20);
                     drawRect(detailX + 8, y + 10, detailX + 8 + barW, y + 14, 0xFFBCA77D);
