@@ -40,6 +40,11 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         lines.add("/pixelgarden seeds - Show planting-seed counts");
         lines.add("/pixelgarden coins [Alpha account] - Check a coin balance");
         lines.add("/pixelgarden playtime - Show your AlphaClient playtime");
+        lines.add("CHAT REMINDERS");
+        lines.add("/pixelgarden msg on - Enable Pixel Garden chat reminders");
+        lines.add("/pixelgarden msg off - Disable Pixel Garden chat reminders");
+        lines.add("/garden msg <on|off> - Toggle reminders using the short alias");
+        lines.add("Reminders include ready crops and one daily message at Netherlands midnight.");
         lines.add("UPGRADES AND PRESTIGE");
         lines.add("/pixelgarden upgrades - Open the upgrades screen");
         lines.add("/pixelgarden upgrade <upgrade> - Purchase an upgrade");
