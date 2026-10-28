@@ -161,7 +161,8 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
 
     private void drawCropIcon(PixelGardenGame.Crop crop, int x, int y, int s) {
         if (crop == PixelGardenGame.Crop.MELON || crop == PixelGardenGame.Crop.CACTUS
-                || crop == PixelGardenGame.Crop.SUGARCANE) {
+                || crop == PixelGardenGame.Crop.SUGARCANE
+                || crop == PixelGardenGame.Crop.BERRIES) {
             ResourceLocation cropTexture = new ResourceLocation("alphastaffmod",
                     "textures/gui/" + crop.name().toLowerCase(java.util.Locale.ROOT) + ".png");
             mc.getTextureManager().bindTexture(cropTexture);
