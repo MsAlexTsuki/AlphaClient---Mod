@@ -20,6 +20,8 @@ public final class PixelGardenQuestIdListGUI extends GuiScreen {
     private final PixelGardenProgressionData progression = PixelGardenGame.getInstance().getProgressionData();
     private final List<String> lines = new ArrayList<String>();
     private int scrollOffset;
+    private String copiedMessage = "";
+    private long copiedMessageUntil;
 
     public PixelGardenQuestIdListGUI(GuiScreen parent) {
         this.parent = parent;
@@ -89,6 +91,50 @@ public final class PixelGardenQuestIdListGUI extends GuiScreen {
     }
 
     @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+        if (mouseButton != 0) return;
+
+        int left = Math.max(18, width / 2 - 220);
+        int right = Math.min(width - 18, width / 2 + 220);
+        int top = 54;
+        int y = top + 9;
+        int end = Math.min(lines.size(), scrollOffset + visibleLineCount());
+        for (int i = scrollOffset; i < end; i++) {
+            String line = lines.get(i);
+            if (line.isEmpty()) {
+                y += 5;
+                continue;
+            }
+            if (mouseX >= left + 10 && mouseX <= right - 10 && mouseY >= y - 2 && mouseY < y + 10) {
+                String id = getCopyableId(line);
+                if (id != null && !id.isEmpty()) {
+                    setClipboardString(id);
+                    copiedMessage = "Copied: " + id;
+                    copiedMessageUntil = System.currentTimeMillis() + 1800L;
+                }
+                return;
+            }
+            y += 13;
+        }
+    }
+
+    private String getCopyableId(String line) {
+        if (line.startsWith("QUEST ID: ")) {
+            return line.substring("QUEST ID: ".length()).trim();
+        }
+        if (line.startsWith("NPC ID: ")) {
+            String id = line.substring("NPC ID: ".length()).trim();
+            return "Not assigned".equals(id) ? null : id;
+        }
+        int separator = line.lastIndexOf(" — ");
+        if (separator >= 0 && separator + 3 < line.length()) {
+            return line.substring(separator + 3).trim();
+        }
+        return null;
+    }
+
+    @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button != null && button.id == BACK && mc != null) {
             mc.displayGuiScreen(parent);
@@ -131,6 +177,9 @@ public final class PixelGardenQuestIdListGUI extends GuiScreen {
         if (lines.size() > visibleLineCount()) {
             drawCenteredString(fontRendererObj, "Scroll " + (scrollOffset + 1) + "-" + end + " / " + lines.size(),
                     width / 2, height - 44, 0xFF9DA8B8);
+        }
+        if (!copiedMessage.isEmpty() && System.currentTimeMillis() < copiedMessageUntil) {
+            drawCenteredString(fontRendererObj, copiedMessage, width / 2, height - 57, 0xFFFFC83D);
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
