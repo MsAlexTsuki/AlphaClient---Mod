@@ -16,7 +16,7 @@ import org.lwjgl.input.Mouse;
 public final class PixelGardenGUI extends GuiScreen {
     private static final int CROP_BASE = 10, BUY_BASE = 20, PLOT_BASE = 100, SELL_BASE = 200;
     private static final int AUTO = 300, GROWTH = 301, EXPAND = 302, BACK = 4;
-    private static final int SHOP = 400, INVENTORY = 401, SELL = 402, UPGRADES = 403, PRESTIGE = 404, HELP = 405, QUESTBOOK = 406, NPCS = 407;
+    private static final int SHOP = 400, INVENTORY = 401, SELL = 402, UPGRADES = 403, PRESTIGE = 404, HELP = 405, QUESTBOOK = 406;
     private static String loadedAccount;
     private static boolean loadInProgress;
     private final GuiScreen parent;
@@ -196,8 +196,8 @@ public final class PixelGardenGUI extends GuiScreen {
         int navButtonWidth = sideButtonWidth();
         int navButtonHeight = 22;
         int navRowGap = 6;
-        String[] sideLabels = {"Shop", "Inventory", "Sell", "Upgrades", "Prestige", "Quest Book", "NPCs", "Help"};
-        int[] sideIds = {SHOP, INVENTORY, SELL, UPGRADES, PRESTIGE, QUESTBOOK, NPCS, HELP};
+        String[] sideLabels = {"Shop", "Inventory", "Sell", "Upgrades", "Prestige", "Quest Book", "Help"};
+        int[] sideIds = {SHOP, INVENTORY, SELL, UPGRADES, PRESTIGE, QUESTBOOK, HELP};
         int sideColumnHeight = 4 * navButtonHeight + 3 * navRowGap;
         int sideStartY = gy + 8 + Math.max(0,
                 (tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) - sideColumnHeight) / 2);
@@ -244,11 +244,6 @@ public final class PixelGardenGUI extends GuiScreen {
         if (button.id == QUESTBOOK) {
             saveCloudAsync();
             mc.displayGuiScreen(new PixelGardenQuestBookGUI(this));
-            return;
-        }
-        if (button.id == NPCS) {
-            saveCloudAsync();
-            mc.displayGuiScreen(new PixelGardenNPCGUI(this));
             return;
         }
         if (button.id == PRESTIGE) {
