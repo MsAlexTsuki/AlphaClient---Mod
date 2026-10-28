@@ -415,9 +415,9 @@ public final class PixelGardenGUI extends GuiScreen {
         int cardWidth = Math.min(width - 32, 520);
         int cardLeft = (width - cardWidth) / 2;
         int cardTop = height - 132;
-        drawRect(cardLeft, cardTop, cardLeft + cardWidth, cardTop + 48, 0xF0E3D1A6);
+        drawRect(cardLeft, cardTop, cardLeft + cardWidth, cardTop + 58, 0xF0E3D1A6);
         drawRect(cardLeft, cardTop, cardLeft + cardWidth, cardTop + 2, 0xFFFFC83D);
-        drawRect(cardLeft, cardTop + 2, cardLeft + 3, cardTop + 48, 0xFF8E6539);
+        drawRect(cardLeft, cardTop + 2, cardLeft + 3, cardTop + 58, 0xFF8E6539);
         if (chosen == null) {
             drawString(fontRendererObj, "TUTORIAL QUEST", cardLeft + 10, cardTop + 6, 0xFF8A5A20);
             drawString(fontRendererObj, "Open Quest Book to begin your first chapter.", cardLeft + 10, cardTop + 23, 0xFF493019);
@@ -430,8 +430,7 @@ public final class PixelGardenGUI extends GuiScreen {
             return;
         }
         drawString(fontRendererObj, "QUEST  •  " + definition.name, cardLeft + 10, cardTop + 5, 0xFF8A5A20);
-        String npcText = definition.npc == null || definition.npc.trim().isEmpty()
-                ? "NPC: Not assigned" : "NPC: " + definition.npc;
+        String npcText = "NPC: " + PixelGardenNPC.displayName(definition.npc);
         drawString(fontRendererObj, fontRendererObj.trimStringToWidth(npcText, cardWidth - 20),
                 cardLeft + 10, cardTop + 17, 0xFF725532);
         if (!definition.objectives.isEmpty()) {
@@ -441,8 +440,15 @@ public final class PixelGardenGUI extends GuiScreen {
             drawString(fontRendererObj, fontRendererObj.trimStringToWidth(objectiveText, cardWidth - 20),
                     cardLeft + 10, cardTop + 30, 0xFF493019);
         }
-        drawString(fontRendererObj, "Open Quest Book for details and rewards",
-                cardLeft + 10, cardTop + 39, 0xFF8A5A20);
+        drawString(fontRendererObj, "Tutorial guide: Vincent", cardLeft + 10, cardTop + 39, 0xFF8A5A20);
+        if (!progression.isTutorialComplete()) {
+            drawString(fontRendererObj, "Next tutorial NPC: " + PixelGardenNPC.displayName(
+                    PixelGardenNPC.tutorialStepNpc(progression.getTutorialStep())),
+                    cardLeft + 10, cardTop + 49, 0xFF725532);
+        } else {
+            drawString(fontRendererObj, "Open Quest Book for details and rewards",
+                    cardLeft + 10, cardTop + 49, 0xFF8A5A20);
+        }
     }
 
     @Override public void onGuiClosed() { saveCloudAsync(); }
