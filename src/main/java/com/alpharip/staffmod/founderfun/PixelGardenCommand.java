@@ -19,7 +19,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|seeds|ids]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
@@ -63,6 +63,9 @@ public final class PixelGardenCommand extends CommandBase {
                 runPrestigeFounderAction(sender,"set_multiplier",args[3],0,multiplier);
             }else if(args.length>=4&&"prestige".equalsIgnoreCase(args[1])&&"reset".equalsIgnoreCase(args[2]))runPrestigeFounderAction(sender,"reset_multiplier",args[3],0,0.0D);
             else reply(sender,"Usage: /pixelgarden multiplier prestige add <Alpha account name> <multiplier> | /pixelgarden multiplier prestige reset <Alpha account name>");
+        } else if ("ids".equals(action) || "idlist".equals(action)) {
+            Minecraft mc = Minecraft.getMinecraft();
+            open(new PixelGardenIdsGUI(mc == null ? null : mc.currentScreen));
         } else if ("guide".equals(action)) {
             Minecraft mc = Minecraft.getMinecraft();
             open(new PixelGardenHelpGUI(mc == null ? null : mc.currentScreen));
