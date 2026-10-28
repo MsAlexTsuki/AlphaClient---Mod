@@ -223,12 +223,13 @@ public final class PixelGardenCommand extends CommandBase {
                 return;
             }
             String questId = args[2].toLowerCase(Locale.ROOT);
-            String npc = args[args.length - 3];
-            int amount = number(args[args.length - 2]);
-            String rewardType = args[args.length - 1].toLowerCase(Locale.ROOT);
-            String description = joinArgs(args, 3, args.length - 3);
-            if (amount < 1 || description.trim().isEmpty()) {
-                reply(sender, "Quest amount must be positive and description cannot be empty.");
+            String npc = args[args.length - 4];
+            int amount = number(args[args.length - 3]);
+            String rewardType = args[args.length - 2].toLowerCase(Locale.ROOT);
+            int weight = number(args[args.length - 1]);
+            String description = joinArgs(args, 3, args.length - 4);
+            if (amount < 1 || weight < 1 || weight > 1000000 || description.trim().isEmpty()) {
+                reply(sender, "Quest amount and weight must be positive whole numbers (weight max 1000000), and description cannot be empty.");
                 return;
             }
             com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
@@ -238,7 +239,8 @@ public final class PixelGardenCommand extends CommandBase {
             payload.addProperty("npc", npc);
             payload.addProperty("amount", amount);
             payload.addProperty("reward_type", rewardType);
-            runQuestAdminRequest(sender, payload, "Created shared quest " + questId + ".");
+            payload.addProperty("weight", weight);
+            runQuestAdminRequest(sender, payload, "Created shared quest " + questId + " (weight " + weight + ").");
         } else if ("givequest".equals(action) || "takequest".equals(action)) {
             if (!founderOnly(sender)) return;
             if (args.length < 4 || !"admin".equalsIgnoreCase(args[1])) {
