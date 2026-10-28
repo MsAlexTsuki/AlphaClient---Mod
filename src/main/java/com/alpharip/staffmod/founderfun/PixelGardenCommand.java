@@ -69,6 +69,8 @@ public final class PixelGardenCommand extends CommandBase {
         } else if ("help".equals(action) || "?".equals(action)) {
             Minecraft mc = Minecraft.getMinecraft();
             open(new PixelGardenHelpGUI(mc == null ? null : mc.currentScreen));
+        } else if ("questbook".equals(action) || "quests".equals(action)) {
+            open(new PixelGardenQuestBookGUI(Minecraft.getMinecraft() == null ? null : Minecraft.getMinecraft().currentScreen));
         } else if ("open".equals(action)) {
             open(new PixelGardenGUI(null));
         } else if ("inventory".equals(action)) {
