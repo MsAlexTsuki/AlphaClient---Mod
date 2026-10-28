@@ -363,7 +363,10 @@ public final class PixelGardenGame {
      * to inventory during that window; without it, crops simply remain ready.
      */
     public synchronized void processTime(long now) {
-        if (now <= lastProcessedAt) return;
+        if (now <= lastProcessedAt) {
+            refreshInventoryQuestProgress();
+            return;
+        }
         long elapsed = Math.min(now - lastProcessedAt, MAX_OFFLINE_PROGRESS_MILLIS);
         long effectiveNow = lastProcessedAt + elapsed;
         if (autoHarvest) {
@@ -393,17 +396,46 @@ public final class PixelGardenGame {
             }
         }
         lastProcessedAt = now;
+        refreshInventoryQuestProgress();
     }
-    /** Automatically delivers matching harvested crops to active quests and claims completed rewards. */
+
+    private void refreshInventoryQuestProgress() {
+        java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<String, Integer>();
+        for (Crop crop : Crop.values()) {
+            String id = crop.name().toLowerCase(java.util.Locale.ROOT);
+            counts.put(id, Integer.valueOf(inventory[crop.ordinal()]));
+            counts.put("seeds_" + id, Integer.valueOf(seeds[crop.ordinal()]));
+        }
+        progressionData.updateInventoryObjectives(counts);
+    }
+
+    /** Automatically delivers matching harvested crops or seeds to active quests and claims completed rewards. */
     private synchronized void processAutomaticQuestDeliveries() {
         for (PixelGardenProgressionData.QuestInstance instance : progressionData.getInstances()) {
             if (instance.getStatus() != PixelGardenProgressionData.QuestStatus.ACTIVE) continue;
             PixelGardenProgressionData.QuestDefinition definition = progressionData.getDefinition(instance.definitionId);
             if (definition == null) continue;
             for (PixelGardenProgressionData.Objective objective : definition.objectives) {
-                if (!"DELIVER_CROP".equalsIgnoreCase(objective.type)) continue;
+                boolean deliverSeeds = "DELIVER_SEEDS".equalsIgnoreCase(objective.type);
+                if (!deliverSeeds && !"DELIVER_CROP".equalsIgnoreCase(objective.type)) continue;
                 int remaining = objective.requiredAmount - instance.getObjectiveProgress(objective.id);
                 if (remaining <= 0) continue;
+                if (deliverSeeds) {
+                    String seedId = objective.target.toLowerCase(java.util.Locale.ROOT);
+                    if (!seedId.startsWith("seeds_")) continue;
+                    Crop seedCrop;
+                    try { seedCrop = Crop.valueOf(seedId.substring(6).toUpperCase(java.util.Locale.ROOT)); }
+                    catch (IllegalArgumentException ignored) { continue; }
+                    int amount = Math.min(remaining, seeds[seedCrop.ordinal()]);
+                    if (amount > 0) {
+                        int previous = instance.getObjectiveProgress(objective.id);
+                        if (progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous + amount)) {
+                            seeds[seedCrop.ordinal()] -= amount;
+                            if (previous + amount >= objective.requiredAmount) progressionData.completeQuest(instance.instanceId);
+                        }
+                    }
+                    continue;
+                }
                 Crop target = null;
                 if (!"*".equals(objective.target)) {
                     try { target = Crop.valueOf(objective.target.toUpperCase(java.util.Locale.ROOT)); }
