@@ -18,7 +18,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help|inventory|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help|inventory|inv|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
@@ -29,7 +29,7 @@ public final class PixelGardenCommand extends CommandBase {
             showCommandGuide(sender);
         } else if ("open".equals(action)) {
             open(new PixelGardenGUI(null));
-        } else if ("inventory".equals(action)) {
+        } else if ("inventory".equals(action) || "inv".equals(action)) {
             open(new PixelGardenInventoryGUI(null));
         } else if ("upgrades".equals(action)) {
             if (allowed(sender, "pixelgarden.upgrades")) open(new PixelGardenUpgradeGUI(null));
@@ -101,7 +101,7 @@ public final class PixelGardenCommand extends CommandBase {
         } else if ("seeds".equals(action)) {
             for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) reply(sender, crop.displayName + " seeds: " + game.getSeeds(crop) + ".");
         } else {
-            reply(sender, "Usage: /pixelgarden [open|inventory|upgrades|upgrade <upgrade>|playtime|shop|buy <crop> [amount]|sell <crop|all> [amount]|harvest <plot|all>|time|crops|seeds]");
+            reply(sender, "Usage: /pixelgarden [open|inventory|inv|upgrades|upgrade <upgrade>|playtime|shop|buy <crop> [amount]|sell <crop|all> [amount]|harvest <plot|all>|time|crops|seeds]");
         }
     }
 
@@ -110,6 +110,7 @@ public final class PixelGardenCommand extends CommandBase {
         reply(sender, "§ePixel Garden Command Guide");
         reply(sender, "/pixelgarden open §7- Open Pixel Garden.");
         reply(sender, "/pixelgarden inventory §7- Open your crop and seed inventory.");
+        reply(sender, "/pixelgarden inv §7- Shortcut for /pixelgarden inventory.");
         reply(sender, "/pixelgarden upgrades §7- Open the upgrades GUI.");
         reply(sender, "/pixelgarden upgrade <auto_harvest|growth_boost|expansion> §7- Buy an upgrade.");
         reply(sender, "/pixelgarden playtime §7- Show your AlphaClient playtime.");
