@@ -113,7 +113,7 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                 System.err.println("[AlphaClient] Pixel Garden upgrade purchase failed: " + exception.getMessage());
                 if (mc.thePlayer != null) mc.thePlayer.addChatMessage(new net.minecraft.util.ChatComponentText("§6[Pixel Garden] §cUpgrade purchase failed: " + (exception.getMessage() == null ? "unknown error" : exception.getMessage())));
             }
-        } else if (button.id >= ACTION_BASE && button.id < ACTION_BASE + 4) {
+        } else if (button.id >= ACTION_BASE && button.id < ACTION_BASE + PixelGardenGame.Crop.values().length) {
             int index = button.id - ACTION_BASE;
             if (page == Page.SHOP) game.buySeeds(PixelGardenGame.Crop.values()[index], 1);
             else if (page == Page.SELL) game.sellAll(PixelGardenGame.Crop.values()[index]);
@@ -160,6 +160,17 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
     }
 
     private void drawCropIcon(PixelGardenGame.Crop crop, int x, int y, int s) {
+        if (crop == PixelGardenGame.Crop.MELON || crop == PixelGardenGame.Crop.CACTUS
+                || crop == PixelGardenGame.Crop.SUGARCANE) {
+            ResourceLocation cropTexture = new ResourceLocation("alphastaffmod",
+                    "textures/gui/" + crop.name().toLowerCase(java.util.Locale.ROOT) + ".png");
+            mc.getTextureManager().bindTexture(cropTexture);
+            net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            net.minecraft.client.renderer.GlStateManager.enableBlend();
+            drawScaledCustomSizeModalRect(x, y, 0, 0, 16, 16, s, s, 16, 16);
+            net.minecraft.client.renderer.GlStateManager.disableBlend();
+            return;
+        }
         int spriteU = crop == PixelGardenGame.Crop.POTATO ? 32
                 : crop == PixelGardenGame.Crop.CARROT ? 16 : crop.ordinal() * 16;
         drawSprite(x, y, s, s, spriteU, 0);
