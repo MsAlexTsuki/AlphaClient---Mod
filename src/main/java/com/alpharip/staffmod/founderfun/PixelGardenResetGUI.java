@@ -6,6 +6,7 @@ import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.ChatComponentText;
 import java.io.IOException;
 
 /** Small confirmation popup for token-based Pixel Garden resets. */
@@ -74,6 +75,10 @@ public final class PixelGardenResetGUI extends GuiScreen {
                 com.google.gson.JsonObject save = SupabaseCommunityService.loadPixelGardenSave();
                 if (save != null) PixelGardenGame.getInstance().loadSaveData(save);
                 status = "";
+                if (mc.thePlayer != null) {
+                    mc.thePlayer.addChatMessage(new ChatComponentText(
+                            "§eYou have used 1 resettoken, goodluck on your journey back to the top"));
+                }
                 mc.displayGuiScreen(parent);
             } catch (Exception exception) {
                 busy = false;
