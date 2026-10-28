@@ -181,6 +181,11 @@ public final class PixelGardenCommand extends CommandBase {
             payload.addProperty("action", "addnpc".equals(action) ? "npc_add" : "npc_remove");
             payload.addProperty("npc_id", args[2]);
             payload.addProperty("quest_id", args[3]);
+            if ("addnpc".equals(action)) {
+                PixelGardenProgressionData.QuestDefinition localDefinition =
+                        game.getProgressionData().getDefinition(args[3]);
+                if (localDefinition != null) payload.add("definition", localDefinition.toJson());
+            }
             runQuestAdminRequest(sender, payload, "addnpc".equals(action)
                     ? "Assigned NPC " + args[2] + " to quest " + args[3] + "."
                     : "Removed NPC " + args[2] + " from quest " + args[3] + ".");
