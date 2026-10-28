@@ -185,6 +185,9 @@ Deno.serve(async (req: Request) => {
       if (["HARVEST_CROP", "SELL_CROP", "PLANT_CROP"].includes(type) && target.startsWith("seeds_")) {
         return reply({ error: "This objective type requires a crop target." }, 400);
       }
+      if (type === "DELIVER_SEEDS" && !target.startsWith("seeds_")) {
+        return reply({ error: "Seed delivery objectives require a seeds_<crop> target." }, 400);
+      }
       if (!Number.isInteger(amount) || amount < 1 || amount > 1000000) return reply({ error: "Objective amount must be between 1 and 1000000." }, 400);
       const definition = structuredClone(questRow.definition) as Record<string, unknown>;
       const objectives = Array.isArray(definition.objectives) ? definition.objectives as Record<string, unknown>[] : [];
