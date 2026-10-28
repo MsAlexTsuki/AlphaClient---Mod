@@ -58,9 +58,8 @@ public final class PixelGardenNPCGUI extends GuiScreen {
         } else {
             PixelGardenProgressionData.QuestInstance available = firstQuestForNpc(
                     selectedNpc, PixelGardenProgressionData.QuestStatus.AVAILABLE);
-            if (available != null) {
-                buttonList.add(new AlphaButton(ACTION, width / 2 - 150, actionY, 150, 22, "Accept Quest"));
-            }
+            buttonList.add(new AlphaButton(ACTION, width / 2 - 150, actionY, 150, 22,
+                    available == null ? "Talk" : "Accept Quest"));
         }
         buttonList.add(new AlphaButton(QUEST_BOOK, width / 2 + 6, actionY, 144, 22, "Open Quest Book"));
         buttonList.add(new AlphaButton(BACK, width / 2 - 62, height - 32, 124, 20, "Back"));
@@ -152,7 +151,16 @@ public final class PixelGardenNPCGUI extends GuiScreen {
             PixelGardenProgressionData.QuestInstance available = firstQuestForNpc(
                     selectedNpc, PixelGardenProgressionData.QuestStatus.AVAILABLE);
             if (available == null) {
-                message = PixelGardenNPC.displayName(selectedNpc) + ": I have no available quest for you right now.";
+                PixelGardenProgressionData.QuestInstance active = firstQuestForNpc(
+                        selectedNpc, PixelGardenProgressionData.QuestStatus.ACTIVE);
+                if (active != null) {
+                    PixelGardenProgressionData.QuestDefinition definition = progression.getDefinition(active.definitionId);
+                    message = PixelGardenNPC.displayName(selectedNpc) + ": "
+                            + (definition == null ? "Your quest is in progress. Check your Quest Book."
+                                    : "Your quest '" + definition.name + "' is in progress. Check your Quest Book.");
+                } else {
+                    message = PixelGardenNPC.displayName(selectedNpc) + ": I have no available quest for you right now.";
+                }
             } else {
                 boolean accepted = progression.acceptQuest(available.instanceId, progression.getLevel(), currentPrestige());
                 message = accepted ? PixelGardenNPC.displayName(selectedNpc) + ": Quest accepted."
