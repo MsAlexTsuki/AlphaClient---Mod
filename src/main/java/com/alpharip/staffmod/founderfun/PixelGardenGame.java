@@ -25,18 +25,20 @@ public final class PixelGardenGame {
 
     public enum PlotState { LOCKED, EMPTY, GROWING, READY }
     public enum Crop {
-        WHEAT("Wheat", 5, 10),
-        CARROT("Carrot", 8, 16),
-        POTATO("Potato", 10, 20),
-        PUMPKIN("Pumpkin", 20, 45);
+        WHEAT("Wheat", 5, 10, 10L * 60L * 1000L),
+        POTATO("Potato", 10, 20, 20L * 60L * 1000L),
+        CARROT("Carrot", 8, 16, 30L * 60L * 1000L),
+        PUMPKIN("Pumpkin", 20, 45, 40L * 60L * 1000L);
 
         public final String displayName;
         public final int seedPrice;
         public final int sellPrice;
-        Crop(String displayName, int seedPrice, int sellPrice) {
+        public final long growDurationMillis;
+        Crop(String displayName, int seedPrice, int sellPrice, long growDurationMillis) {
             this.displayName = displayName;
             this.seedPrice = seedPrice;
             this.sellPrice = sellPrice;
+            this.growDurationMillis = growDurationMillis;
         }
     }
 
@@ -57,7 +59,12 @@ public final class PixelGardenGame {
             return getState(now) == PlotState.GROWING
                 ? Math.max(0L, growDurationMillis - (now - plantedAt)) : 0L;
         }
-        private void plant(Crop crop, long now, int growthLevels) { this.crop = crop; this.plantedAt = now; this.growDurationMillis = Math.max(5L * 60L * 1000L, GROW_TIME_MILLIS * (100L - 15L * growthLevels) / 100L); }
+        private void plant(Crop crop, long now, int growthLevels) {
+            this.crop = crop;
+            this.plantedAt = now;
+            this.growDurationMillis = Math.max(5L * 60L * 1000L,
+                    crop.growDurationMillis * (100L - 15L * growthLevels) / 100L);
+        }
         private void clear() { crop = null; plantedAt = 0L; growDurationMillis = GROW_TIME_MILLIS; }
     }
 
