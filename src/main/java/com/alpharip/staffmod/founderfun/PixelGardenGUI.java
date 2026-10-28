@@ -202,14 +202,6 @@ public final class PixelGardenGUI extends GuiScreen {
                 (tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) - sideColumnHeight) / 2);
         int leftX = gx - 12 - navGap - navButtonWidth;
         int rightX = gx + gardenWidth() + 12 + navGap;
-        PixelGardenProgressionData progression = game.getProgressionData();
-        int levelCardY = Math.max(54, gy - 62);
-        panel(leftX, levelCardY, navButtonWidth, 48);
-        drawString(fontRendererObj, "LEVEL " + progression.getLevel(), leftX + 6, levelCardY + 6, 0xFFFFD45A);
-        long neededXp = progression.getXpRequiredForNextLevel();
-        long currentXp = progression.getExperience();
-        drawString(fontRendererObj, "XP " + currentXp + "/" + neededXp, leftX + 6, levelCardY + 19, 0xFFE3E7EE);
-        drawString(fontRendererObj, "Next: " + (progression.getLevel() + 1), leftX + 6, levelCardY + 32, 0xFFB7C4D5);
         for (int i = 0; i < sideIds.length; i++) {
             int column = i / 4;
             int row = i % 4;
@@ -380,6 +372,15 @@ public final class PixelGardenGUI extends GuiScreen {
         int gx = gardenLeft(), gy = gardenTop(), cell = gardenCell(), tileHeight = gardenTileHeight(), gap = 4;
         int visibleRows = visiblePlotRows();
         int gardenW = gardenWidth();
+        int navButtonWidth = sideButtonWidth();
+        int leftX = gx - 12 - 8 - navButtonWidth;
+        int levelCardY = Math.max(54, gy - 62);
+        PixelGardenProgressionData progression = game.getProgressionData();
+        panel(leftX, levelCardY, navButtonWidth, 48);
+        drawString(fontRendererObj, "LEVEL " + progression.getLevel(), leftX + 6, levelCardY + 6, 0xFFFFD45A);
+        drawString(fontRendererObj, "XP " + progression.getExperience() + "/" + progression.getXpRequiredForNextLevel(),
+                leftX + 6, levelCardY + 19, 0xFFE3E7EE);
+        drawString(fontRendererObj, "Next: " + (progression.getLevel() + 1), leftX + 6, levelCardY + 32, 0xFFB7C4D5);
         panel(gx - 12, gy - 60, gardenW + 24, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 86);
         drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 52, 0xFFFFD45A);
         drawString(fontRendererObj, "Select a crop above, then click an unlocked plot", gx + 2, gy - 39, 0xFFB7C4D5);
