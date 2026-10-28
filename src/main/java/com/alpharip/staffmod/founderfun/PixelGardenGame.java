@@ -17,8 +17,8 @@ public final class PixelGardenGame {
     public static final int STARTING_COINS = 100;
     public static final int STARTING_PLOTS = 1;
     public static final int MAX_PLOTS = 28;
-    public static final int AUTO_HARVEST_COST = 250;
-    public static final int GROWTH_BOOST_COST = 150;
+    public static final int AUTO_HARVEST_COST = 2000;
+    public static final int GROWTH_BOOST_COST = 1250;
     public static final int EXPANSION_COST = 50;
     public static final int[] EXPANSION_PRICES = {50, 100, 150, 250, 300, 400, 450, 500, 600, 700, 800, 900, 1000, 1150, 1300, 1500, 2000, 2500, 3000, 4000, 5000, 5500, 5600, 5700, 5800, 5900, 6000};
     private static final PixelGardenGame INSTANCE = new PixelGardenGame();
