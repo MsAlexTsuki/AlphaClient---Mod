@@ -11,6 +11,7 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.BlockPos;
 import java.util.List;
 import java.util.Locale;
 
@@ -21,6 +22,83 @@ public final class PixelGardenCommand extends CommandBase {
     @Override public String getCommandName() { return commandName; }
     @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|seeds|ids]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
+
+    @Override
+    public List<String> getTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+        if (args == null || args.length == 0) return java.util.Collections.emptyList();
+        if (args.length == 1) {
+            return getListOfStringsMatchingLastWord(args, new String[] {
+                    "admin", "buy", "coins", "coinsgive", "coinsreset", "completequest", "createquest",
+                    "crops", "give", "givequest", "growth", "guide", "harvest", "harvesttime", "help",
+                    "ids", "idlist", "info", "inv", "inventory", "multiplier", "msg", "open", "plant",
+                    "playtime", "prestige", "prestigecoingive", "prestigecointake", "prestigecoinreset",
+                    "prestigereset", "quest", "quests", "resettoken", "resettokens", "rewards", "sell",
+                    "seeds", "shop", "takecoins", "takequest", "time", "upgrade", "upgrades"
+            });
+        }
+        String root = args[0].toLowerCase(Locale.ROOT);
+        if ("quest".equals(root) || "quests".equals(root)) {
+            if (args.length == 2) return getListOfStringsMatchingLastWord(args, new String[] {
+                    "active", "open", "info", "list", "accept", "remove", "givequest", "complete",
+                    "history", "progress"
+            });
+            if (args.length == 3 && ("accept".equalsIgnoreCase(args[1]) || "info".equalsIgnoreCase(args[1])
+                    || "remove".equalsIgnoreCase(args[1]) || "complete".equalsIgnoreCase(args[1])
+                    || "givequest".equalsIgnoreCase(args[1]))) {
+                List<String> numbers = new java.util.ArrayList<String>();
+                PixelGardenGame game = PixelGardenGame.getInstance();
+                List<PixelGardenProgressionData.QuestInstance> instances = game.getProgressionData().getInstances();
+                for (int i = 1; i <= instances.size(); i++) numbers.add(String.valueOf(i));
+                return getListOfStringsMatchingLastWord(args, numbers.toArray(new String[numbers.size()]));
+            }
+            if (args.length == 4 && "givequest".equalsIgnoreCase(args[1])) {
+                return getListOfStringsMatchingLastWord(args, new String[] {
+                        "carrot", "potato", "wheat", "beetroot", "pumpkin", "melon"
+                });
+            }
+        }
+        if ("msg".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"on", "off"});
+        if ("admin".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"fullreset"});
+        if ("resettoken".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"use", "admin"});
+        if ("give".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"resettoken"});
+        if ("harvesttime".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"1", "2", "5", "10", "finish", "normal"});
+        if ("upgrade".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {
+                    "growth", "growthboost", "plot", "expansion", "auto_harvest", "growth_boost", "more_coins", "more_crops"
+            });
+        if ("rewards".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"add", "remove"});
+        if ("rewards".equals(root) && args.length == 3) {
+            List<String> ids = new java.util.ArrayList<String>();
+            for (PixelGardenProgressionData.QuestDefinition definition : PixelGardenGame.getInstance().getProgressionData().getDefinitions())
+                ids.add(definition.id);
+            return getListOfStringsMatchingLastWord(args, ids.toArray(new String[ids.size()]));
+        }
+        if (("givequest".equals(root) || "takequest".equals(root) || "completequest".equals(root))
+                && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"admin"});
+        if ("createquest".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"admin"});
+        if ("createquest".equals(root) && args.length == 3) return getListOfStringsMatchingLastWord(args,
+                new String[] {"pg_fresh_start", "pg_first_coins", "pg_growing_bigger", "pg_your_own_garden"});
+        if ("multiplier".equals(root) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"prestige"});
+        if ("multiplier".equals(root) && args.length == 3)
+            return getListOfStringsMatchingLastWord(args, new String[] {"add", "reset"});
+        if ("multiplier".equals(root) && args.length == 4) return getListOfStringsMatchingLastWord(args,
+                new String[] {SupabaseCommunityService.getSignedInAlphaName() == null ? "" : SupabaseCommunityService.getSignedInAlphaName()});
+        if (("buy".equals(root) || "sell".equals(root) || "plant".equals(root) || "harvest".equals(root))
+                && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {
+                    "carrot", "potato", "wheat", "beetroot", "pumpkin", "melon"
+            });
+        return java.util.Collections.emptyList();
+    }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (!allowed(sender, "commands.pixelgarden")) return;
