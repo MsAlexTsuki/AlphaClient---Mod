@@ -513,6 +513,21 @@ public final class SupabaseCommunityService {
         return requestJson("POST", "/rest/v1/rpc/founder_pixel_garden_manage", accessToken, payload.toString());
     }
 
+    /** Reads or manages saved Pixel Garden level data through a server-authorized RPC. */
+    public static synchronized JsonObject managePixelGardenLevels(String action, String targetAlphaName,
+            int levelValue, long xpValue, String textValue) throws Exception {
+        if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("p_action", action);
+        if (targetAlphaName == null || targetAlphaName.trim().isEmpty()) payload.add("p_target_alpha_name", com.google.gson.JsonNull.INSTANCE);
+        else payload.addProperty("p_target_alpha_name", targetAlphaName.trim());
+        payload.addProperty("p_level_value", levelValue);
+        payload.addProperty("p_xp_value", xpValue);
+        if (textValue == null) payload.add("p_text_value", com.google.gson.JsonNull.INSTANCE);
+        else payload.addProperty("p_text_value", textValue);
+        return requestJson("POST", "/rest/v1/rpc/pixel_garden_level_command", accessToken, payload.toString());
+    }
+
     /** Reads the current or named account's Pixel Garden coin balance. */
     public static synchronized JsonObject getPixelGardenCoins(String targetAlphaName) throws Exception {
         if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
