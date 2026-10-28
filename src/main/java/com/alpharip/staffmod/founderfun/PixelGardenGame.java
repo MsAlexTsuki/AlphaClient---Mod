@@ -152,6 +152,19 @@ public final class PixelGardenGame {
         plot.clear();
         return true;
     }
+
+    /** Accelerates all currently growing crops for testing; a finish request makes them ready immediately. */
+    public synchronized int accelerateHarvestTimes(double multiplier, boolean finish, long now) {
+        int changed = 0;
+        for (Plot plot : plots) {
+            if (plot.getState(now) != PlotState.GROWING) continue;
+            long remaining = plot.getRemainingMillis(now);
+            long newRemaining = finish ? 0L : Math.max(1L, (long) Math.ceil(remaining / multiplier));
+            plot.plantedAt = now - Math.max(0L, plot.growDurationMillis - newRemaining);
+            changed++;
+        }
+        return changed;
+    }
     public synchronized boolean sell(Crop crop, int amount) {
         if (crop == null || amount <= 0 || amount > inventory[crop.ordinal()]) return false;
         long earned = (long) Math.floor((double) crop.sellPrice * amount * getCoinMultiplier());
