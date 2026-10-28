@@ -19,7 +19,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish>|shop|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|seeds]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
@@ -180,10 +180,18 @@ public final class PixelGardenCommand extends CommandBase {
         } else if ("harvesttime".equals(action)) {
             if (!founderOnly(sender)) return;
             if (args.length < 2) {
-                reply(sender, "Usage: /pixelgarden harvesttime <speed multiplier|finish>");
+                reply(sender, "Usage: /pixelgarden harvesttime <speed multiplier|finish|normal>");
                 return;
             }
             long now = System.currentTimeMillis();
+            if ("normal".equalsIgnoreCase(args[1])) {
+                int restored = game.restoreNormalHarvestTimes(now);
+                if (restored > 0) saveCloudAsync(game);
+                reply(sender, restored == 0
+                        ? "No accelerated crop timers to restore."
+                        : "Restored normal harvest timing for " + restored + " crop(s).");
+                return;
+            }
             boolean finish = "finish".equalsIgnoreCase(args[1]);
             double multiplier = 1.0D;
             if (!finish) {
@@ -191,7 +199,7 @@ public final class PixelGardenCommand extends CommandBase {
                 if (raw.endsWith("x")) raw = raw.substring(0, raw.length() - 1);
                 try { multiplier = Double.parseDouble(raw); }
                 catch (NumberFormatException exception) {
-                    reply(sender, "Use a multiplier such as 2, 10, 100, or finish.");
+                    reply(sender, "Use a multiplier such as 2, 10, 100, finish, or normal.");
                     return;
                 }
                 if (Double.isNaN(multiplier) || Double.isInfinite(multiplier) || multiplier < 1.0D) {
