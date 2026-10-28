@@ -226,6 +226,13 @@ Deno.serve(async (req: Request) => {
       return reply({ ok: true, definition });
     }
 
+    // Only account-targeted assignment actions may validate target_alpha_name.
+    // Quest definition edits (objective_add, metadata_update, reward_add/remove) have
+    // already returned above and must never fall through into player-account handling.
+    if (!["give", "take", "complete"].includes(action)) {
+      return reply({ error: "Unknown quest action." }, 400);
+    }
+
     const targetName = cleanText(input.target_alpha_name, 16);
     if (!validAccountName(targetName)) return reply({ error: "Enter a valid Alpha Account name." }, 400);
     const { data: target, error: targetError } = await admin.from("profiles")
