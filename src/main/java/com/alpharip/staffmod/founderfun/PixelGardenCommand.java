@@ -146,7 +146,10 @@ public final class PixelGardenCommand extends CommandBase {
                 runPrestigeFounderAction(sender,"set_multiplier",args[3],0,multiplier);
             }else if(args.length>=4&&"prestige".equalsIgnoreCase(args[1])&&"reset".equalsIgnoreCase(args[2]))runPrestigeFounderAction(sender,"reset_multiplier",args[3],0,0.0D);
             else reply(sender,"Usage: /pixelgarden multiplier prestige add <Alpha account name> <multiplier> | /pixelgarden multiplier prestige reset <Alpha account name>");
-        } else if ("ids".equals(action) || "idlist".equals(action)) {
+        } else if ("idlist".equals(action)) {
+            Minecraft mc = Minecraft.getMinecraft();
+            open(new PixelGardenQuestIdListGUI(mc == null ? null : mc.currentScreen));
+        } else if ("ids".equals(action)) {
             Minecraft mc = Minecraft.getMinecraft();
             open(new PixelGardenIdsGUI(mc == null ? null : mc.currentScreen));
         } else if ("guide".equals(action)) {
