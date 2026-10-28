@@ -228,7 +228,7 @@ public final class PixelGardenCommand extends CommandBase {
             String message = joinArgs(args, 1);
             try {
                 SupabaseCommunityService.managePixelGardenLevels("edit_message", null, 0, 0L, message);
-                game.getProgressionData().setCustomLevelMessage(message);
+                game.getProgressionData().setDefaultLevelMessage(message);
                 saveCloudAsync(game);
                 reply(sender, "Updated the default Pixel Garden level-up message.");
             } catch (Exception exception) { reply(sender, "Could not update the level-up message: " + safeMessage(exception)); }
