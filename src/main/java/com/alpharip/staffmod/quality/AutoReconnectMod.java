@@ -42,10 +42,18 @@ public final class AutoReconnectMod {
         if (mc == null || (mc.getCurrentServerData() == null && lastServer == null)) return;
 
         int width = event.gui.width;
-        int y = event.gui.height / 2 + 35;
+        int backButtonY = -1;
         for (Object item : event.buttonList) {
-            if (item instanceof GuiButton && ((GuiButton) item).id == MANUAL_RECONNECT_BUTTON_ID) return;
+            if (!(item instanceof GuiButton)) continue;
+            GuiButton button = (GuiButton) item;
+            if (button.id == MANUAL_RECONNECT_BUTTON_ID) return;
+            if (button.id == 0) backButtonY = button.yPosition;
         }
+
+        // GuiDisconnected positions its vanilla button based on the wrapped error text.
+        // Anchor Reconnect to that button instead of a fixed screen coordinate.
+        int y = backButtonY >= 0 ? backButtonY - 24 : event.gui.height / 2 + 10;
+        y = Math.max(4, Math.min(y, event.gui.height - 44));
         event.buttonList.add(new GuiButton(MANUAL_RECONNECT_BUTTON_ID, width / 2 - 100, y, 200, 20, "Reconnect"));
     }
 
