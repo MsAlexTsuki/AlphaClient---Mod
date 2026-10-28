@@ -17,6 +17,13 @@ public final class PixelGardenPrestigeUpgradesGUI extends GuiScreen {
     private boolean busy;
     public PixelGardenPrestigeUpgradesGUI(GuiScreen parent) { this.parent = parent; }
 
+    /** Resolves this screen through the Pixel Garden menu identifiers used by the command route. */
+    public static GuiScreen forMenu(String menuId, String gardenId, GuiScreen parent) {
+        if (!MENU_ID.equals(menuId) || !PIXEL_GARDEN_ID.equals(gardenId))
+            throw new IllegalArgumentException("Unknown Pixel Garden menu identifier.");
+        return new PixelGardenPrestigeUpgradesGUI(parent);
+    }
+
     @Override public void initGui() {
         buttonList.clear(); int left=width/2-150;
         buttonList.add(new PrestigeButton(1,left,height/2+10,300,20,"Prestige Yield — buy next level"));

@@ -35,7 +35,7 @@ public final class PixelGardenCommand extends CommandBase {
                 if(args.length>=2&&"use".equalsIgnoreCase(args[1])){if(steps<18){reply(sender,"Buy 18 upgrade steps in the Upgrade tab before using Prestige ("+steps+"/18).");return;}open(new PixelGardenPrestigeGUI(null));}
                 else if(count<1)reply(sender,"Damn you haven't prestiged yet! You will soon!");
                 else if(steps<18)reply(sender,"Prestige upgrades require 18 purchased Upgrade-tab steps ("+steps+"/18).");
-                else open(new PixelGardenPrestigeUpgradesGUI(null));
+                else open(PixelGardenPrestigeUpgradesGUI.forMenu(PixelGardenPrestigeUpgradesGUI.MENU_ID, PixelGardenPrestigeUpgradesGUI.PIXEL_GARDEN_ID, null));
             }catch(Exception e){reply(sender,"Could not load Prestige data: "+safeMessage(e));}
         } else if ("prestigecoingive".equals(action) || "prestigecointake".equals(action)) {
             if(!founderOnly(sender))return;if(args.length<3){reply(sender,"Usage: /pixelgarden "+action+" <Alpha account name> <amount>");return;}
