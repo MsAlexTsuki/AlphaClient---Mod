@@ -285,7 +285,8 @@ public final class PixelGardenGUI extends GuiScreen {
 
     private void drawCropArt(PixelGardenGame.Crop crop, int x, int y, int size, long now,
                              PixelGardenGame.PlotState state) {
-        int spriteU = crop.ordinal() * 16;
+        int spriteU = crop == PixelGardenGame.Crop.POTATO ? 32
+                : crop == PixelGardenGame.Crop.CARROT ? 16 : crop.ordinal() * 16;
         int spriteV = 0;
         int spriteSize = Math.max(24, size);
         if (state == PixelGardenGame.PlotState.EMPTY) {
