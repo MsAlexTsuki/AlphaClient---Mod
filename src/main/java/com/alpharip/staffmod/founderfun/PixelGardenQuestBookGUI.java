@@ -486,7 +486,8 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             drawCenteredString(fontRendererObj, actionMessage, width / 2, 51, 0xFF67451F);
         }
         Minecraft minecraft = Minecraft.getMinecraft();
-        net.minecraft.client.gui.ScaledResolution scaled = new net.minecraft.client.gui.ScaledResolution(minecraft);
+        net.minecraft.client.gui.ScaledResolution scaled = new net.minecraft.client.gui.ScaledResolution(
+                minecraft, minecraft.displayWidth, minecraft.displayHeight);
         int scale = scaled.getScaleFactor();
         int clipTop = top + 58;
         int clipBottom = top + h - 24;
