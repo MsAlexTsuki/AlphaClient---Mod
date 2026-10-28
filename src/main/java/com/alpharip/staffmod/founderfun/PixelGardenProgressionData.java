@@ -106,6 +106,52 @@ public final class PixelGardenProgressionData {
         return Collections.unmodifiableList(result);
     }
 
+    /**
+     * Records progress after the caller has validated the underlying game action.
+     * Delivery callers must consume inventory successfully before recording progress.
+     */
+    public synchronized boolean setObjectiveProgress(String instanceId, String objectiveId, int amount) {
+        QuestInstance instance = instances.get(instanceId);
+        if (instance == null || instance.status != QuestStatus.ACTIVE) return false;
+        QuestDefinition definition = definitions.get(instance.definitionId);
+        if (definition == null) return false;
+        for (Objective objective : definition.objectives) {
+            if (objective.id.equals(objectiveId)) {
+                instance.objectiveProgress.put(objectiveId,
+                        Integer.valueOf(Math.max(0, Math.min(objective.requiredAmount, amount))));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Completes an active quest only after every configured objective is complete. */
+    public synchronized boolean completeQuest(String instanceId) {
+        QuestInstance instance = instances.get(instanceId);
+        if (instance == null || instance.status != QuestStatus.ACTIVE) return false;
+        QuestDefinition definition = definitions.get(instance.definitionId);
+        if (definition == null || definition.objectives.isEmpty()) return false;
+        for (Objective objective : definition.objectives) {
+            if (instance.getObjectiveProgress(objective.id) < objective.requiredAmount) return false;
+        }
+        instance.status = QuestStatus.COMPLETED;
+        instance.finishedAt = System.currentTimeMillis();
+        history.add(new HistoryEntry(instance.instanceId, instance.definitionId,
+                QuestStatus.COMPLETED, instance.finishedAt));
+        return true;
+    }
+
+    /**
+     * Marks rewards as claimed only after the reward transaction succeeds.
+     * Actual reward delivery and durable transaction guarantees are implemented separately.
+     */
+    public synchronized boolean markRewardsClaimed(String instanceId) {
+        QuestInstance instance = instances.get(instanceId);
+        if (instance == null || instance.status != QuestStatus.COMPLETED || instance.rewardsClaimed) return false;
+        instance.rewardsClaimed = true;
+        return true;
+    }
+
     public synchronized int getActiveQuestCount() {
         int count = 0;
         for (QuestInstance instance : instances.values()) {
