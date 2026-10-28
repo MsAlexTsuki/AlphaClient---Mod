@@ -165,6 +165,7 @@ public final class PixelGardenGame {
         String cropId = crop.name().toLowerCase(java.util.Locale.ROOT);
         progressionData.recordActionProgress("PLANT_CROP", cropId, 1);
         progressionData.recordTutorialAction("PLANT_CROP", cropId);
+        awardExperience(1L);
         return true;
     }
     public synchronized boolean harvest(int plotIndex, long now) {
@@ -178,6 +179,7 @@ public final class PixelGardenGame {
         String cropId = harvestedCrop.name().toLowerCase(java.util.Locale.ROOT);
         progressionData.recordActionProgress("HARVEST_CROP", cropId, harvestedAmount);
         progressionData.recordTutorialAction("HARVEST_CROP", cropId);
+        awardExperience((long) harvestedAmount * (1L + cropExperienceValue(harvestedCrop)));
         return true;
     }
 
@@ -351,13 +353,42 @@ public final class PixelGardenGame {
         if (autoHarvest) {
             for (Plot plot : plots) {
                 if (plot.getState(effectiveNow) == PlotState.READY && plot.crop != null) {
-                    inventory[plot.crop.ordinal()] += getCropYield();
+                    Crop harvestedCrop = plot.crop;
+                    int harvestedAmount = getCropYield();
+                    inventory[harvestedCrop.ordinal()] += harvestedAmount;
                     plot.clear();
+                    String cropId = harvestedCrop.name().toLowerCase(java.util.Locale.ROOT);
+                    progressionData.recordActionProgress("HARVEST_CROP", cropId, harvestedAmount);
+                    progressionData.recordTutorialAction("HARVEST_CROP", cropId);
+                    awardExperience((long) harvestedAmount * (1L + cropExperienceValue(harvestedCrop)));
                 }
             }
         }
         lastProcessedAt = now;
     }
+    public synchronized void awardExperience(long amount) {
+        int gained = progressionData.addExperience(amount);
+        if (gained > 0) {
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+            if (mc != null && mc.thePlayer != null) {
+                String message = progressionData.getCustomLevelMessage();
+                if (message == null || message.trim().isEmpty()) message = "You have leveled up in Pixel Garden!";
+                mc.thePlayer.addChatMessage(new net.minecraft.util.ChatComponentText(message));
+            }
+        }
+    }
+
+    private static int cropExperienceValue(Crop crop) {
+        if (crop == null) return 0;
+        switch (crop) {
+            case WHEAT: return 1;
+            case POTATO: return 3;
+            case CARROT: return 4;
+            case PUMPKIN: return 8;
+            default: return 0;
+        }
+    }
+
     public synchronized long getLastProcessedAt() { return lastProcessedAt; }
     /** Creates a portable account-save payload; never includes auth/session secrets. */
     public synchronized JsonObject toSaveData() {
