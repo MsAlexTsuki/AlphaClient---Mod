@@ -55,7 +55,7 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         lines.add("/pixelgarden resettoken use - Open reset confirmation");
         if (SupabaseCommunityService.isSignedInFounder()) {
             lines.add("FOUNDER COMMANDS");
-            lines.add("/pixelgarden harvesttime <multiplier|finish> - Speed up or finish growing crops for testing");
+            lines.add("/pixelgarden harvesttime <multiplier|finish|normal> - Speed up, finish, or restore normal crop timers");
             lines.add("/pixelgarden coinsgive <Alpha account> <amount> - Give regular coins");
             lines.add("/pixelgarden takecoins <Alpha account> <amount> - Remove regular coins");
             lines.add("/pixelgarden coinsreset <Alpha account> - Reset regular coins");
