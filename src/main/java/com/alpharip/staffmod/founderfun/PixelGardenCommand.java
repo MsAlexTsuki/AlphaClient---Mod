@@ -80,7 +80,7 @@ public final class PixelGardenCommand extends CommandBase {
             String sub = args[3].toLowerCase(Locale.ROOT);
             if ("difficulty".equals(sub)) return getListOfStringsMatchingLastWord(args, new String[] {"Scout", "Rogue", "Elite", "Alpha"});
             if ("harvest".equals(sub) || "sell".equals(sub))
-                return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin"});
+                return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin", "melon", "cactus", "sugarcane"});
             if ("deliver".equals(sub) || "plant".equals(sub) || "inventory".equals(sub))
                 return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin", "seeds_wheat", "seeds_carrot", "seeds_potato", "seeds_pumpkin"});
         }
@@ -123,8 +123,8 @@ public final class PixelGardenCommand extends CommandBase {
                 && ("add".equalsIgnoreCase(args[1]) || "remove".equalsIgnoreCase(args[1]))) {
             return getListOfStringsMatchingLastWord(args, new String[] {
                     "coins",
-                    "crop_wheat", "crop_potato", "crop_carrot", "crop_pumpkin",
-                    "seeds_wheat", "seeds_potato", "seeds_carrot", "seeds_pumpkin"
+                    "crop_wheat", "crop_potato", "crop_carrot", "crop_pumpkin", "crop_melon", "crop_cactus", "crop_sugarcane",
+                    "seeds_wheat", "seeds_potato", "seeds_carrot", "seeds_pumpkin", "seeds_melon", "seeds_cactus", "seeds_sugarcane"
             });
         }
         if (("givequest".equals(root) || "takequest".equals(root) || "completequest".equals(root))
@@ -420,9 +420,11 @@ public final class PixelGardenCommand extends CommandBase {
                 int amount = number(args[5]);
                 boolean seed = item.startsWith("seeds_");
                 String crop = seed ? item.substring(6) : item;
-                if (!("wheat".equals(crop) || "carrot".equals(crop) || "potato".equals(crop) || "pumpkin".equals(crop))
+                if (!("wheat".equals(crop) || "carrot".equals(crop) || "potato".equals(crop)
+                        || "pumpkin".equals(crop) || "melon".equals(crop)
+                        || "cactus".equals(crop) || "sugarcane".equals(crop))
                         || amount < 1 || amount > 1000000) {
-                    reply(sender, "Use wheat, carrot, potato, pumpkin or their seeds_<crop> IDs, with an amount from 1 to 1000000.");
+                    reply(sender, "Use wheat, carrot, potato, pumpkin, melon, cactus, sugarcane or their seeds_<crop> IDs, with an amount from 1 to 1000000.");
                     return;
                 }
                 if (("harvest".equals(kind) || "sell".equals(kind)) && seed) {
@@ -658,10 +660,10 @@ public final class PixelGardenCommand extends CommandBase {
                     : "Accelerated harvest timers for " + affected + " crop(s) by " + multiplier + "x.");
         } else if ("buy".equals(action)) {
             if (!allowed(sender, "pixelgarden.shop")) return;
-            if (args.length < 2) { reply(sender, "Usage: /pixelgarden buy <wheat|carrot|potato|pumpkin> [amount]"); return; }
+            if (args.length < 2) { reply(sender, "Usage: /pixelgarden buy <crop> [amount]"); return; }
             PixelGardenGame.Crop crop = crop(args[1]);
             int amount = args.length > 2 ? number(args[2]) : 1;
-            if (crop == null || amount < 1) { reply(sender, "Choose wheat, carrot, potato or pumpkin and a positive amount."); return; }
+            if (crop == null || amount < 1) { reply(sender, "Choose a supported crop and a positive amount."); return; }
             boolean bought = game.buySeeds(crop, amount);
             if (bought) saveCloudAsync(game);
             reply(sender, bought ? "Bought " + amount + " " + crop.displayName + " seed(s)." : "Purchase failed: insufficient coins or invalid amount.");
@@ -678,18 +680,18 @@ public final class PixelGardenCommand extends CommandBase {
                 reply(sender, sold == 0 ? "You have no harvested crops to sell." : "Sold " + sold + " crop(s). Coins: " + game.getCoins() + ".");
             } else {
                 PixelGardenGame.Crop crop = crop(args[1]);
-                if (crop == null) { reply(sender, "Unknown crop. Choose wheat, carrot, potato or pumpkin."); return; }
+                if (crop == null) { reply(sender, "Unknown crop. Choose wheat, carrot, potato, pumpkin, melon, cactus or sugarcane."); return; }
                 int amount = args.length > 2 ? number(args[2]) : game.getInventory(crop);
                 boolean sold = amount > 0 && game.sell(crop, amount);
                 if (sold) saveCloudAsync(game);
                 reply(sender, sold ? "Sold " + amount + " " + crop.displayName + ". Coins: " + game.getCoins() + "." : "Nothing sold: check your harvested inventory and amount.");
             }
         } else if ("plant".equals(action)) {
-            if (args.length < 3) { reply(sender, "Usage: /pixelgarden plant <plot> <wheat|carrot|potato|pumpkin>"); return; }
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden plant <plot> <crop>"); return; }
             int plotNumber = number(args[1]);
             PixelGardenGame.Crop crop = crop(args[2]);
             if (plotNumber < 1) { reply(sender, "Plot numbers start at 1."); return; }
-            if (crop == null) { reply(sender, "Choose wheat, carrot, potato or pumpkin."); return; }
+            if (crop == null) { reply(sender, "Choose a supported crop."); return; }
             boolean planted = game.plant(plotNumber - 1, crop, System.currentTimeMillis());
             if (planted) {
                 reply(sender, "Planted " + crop.displayName + " on plot " + plotNumber + ". Seeds left: " + game.getSeeds(crop) + ".");
