@@ -466,6 +466,28 @@ public final class SupabaseCommunityService {
         return requestJson("POST", "/functions/v1/manage-client-permissions", token, payload.toString());
     }
 
+    /** Founder-only Pixel Garden coin grant; database RPC independently verifies Founder status. */
+    public static synchronized JsonObject grantPixelGardenCoins(String targetAlphaName, int amount) throws Exception {
+        String token = accessToken;
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalStateException("Sign in to your Founder Alpha Account first.");
+        }
+        if (!isSignedInFounder()) {
+            throw new SecurityException("Only Founder can grant Pixel Garden coins.");
+        }
+        if (targetAlphaName == null || !targetAlphaName.trim().matches("[A-Za-z0-9_]{1,16}")) {
+            throw new IllegalArgumentException("Enter a valid Alpha Account name (1-16 letters, numbers or underscores).");
+        }
+        if (amount < 1 || amount > 1000000) {
+            throw new IllegalArgumentException("Amount must be between 1 and 1,000,000 coins.");
+        }
+        JsonObject payload = new JsonObject();
+        payload.addProperty("target_alpha_name", targetAlphaName.trim());
+        payload.addProperty("coin_amount", amount);
+        JsonObject result = requestJson("POST", "/rest/v1/rpc/founder_grant_pixel_garden_coins", token, payload.toString());
+        return result;
+    }
+
     /** True only when the authenticated Alpha community profile has verified Founder status. */
     public static boolean isSignedInFounder() { return accessToken != null && signedInFounder; }
 
