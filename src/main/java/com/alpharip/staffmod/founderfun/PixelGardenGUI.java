@@ -59,9 +59,27 @@ public final class PixelGardenGUI extends GuiScreen {
         cloudStatus = "Cloud save: loading account data...";
         Thread thread = new Thread(new Runnable() {
             @Override public void run() {
+                int automaticQuestsAssigned = 0;
                 try {
                     JsonObject saved = SupabaseCommunityService.loadPixelGardenSave();
                     if (saved != null) game.loadSaveData(saved);
+                    PixelGardenProgressionData progression = game.getProgressionData();
+                    progression.ensureDefaultCatalog();
+                    try {
+                        progression.mergeSharedDefinitions(SupabaseCommunityService.getSharedPixelGardenQuests());
+                    } catch (Exception exception) {
+                        System.err.println("[AlphaClient] Could not sync Pixel Garden quest catalog: " + exception.getMessage());
+                    }
+                    int prestige = 0;
+                    try {
+                        JsonObject prestigeState = SupabaseCommunityService.getPixelGardenPrestigeState();
+                        if (prestigeState != null && prestigeState.has("prestige_count"))
+                            prestige = Math.max(0, prestigeState.get("prestige_count").getAsInt());
+                    } catch (Exception exception) {
+                        System.err.println("[AlphaClient] Could not load Pixel Garden prestige for quest offers: " + exception.getMessage());
+                    }
+                    automaticQuestsAssigned = progression.assignAutomaticNpcQuests(
+                            progression.getLevel(), prestige, new java.util.Random());
                     synchronized (PixelGardenGUI.class) { loadedAccount = account; }
                     cloudReady = true;
                     cloudStatus = saved == null ? "Cloud save: new garden linked to " + account
@@ -73,7 +91,8 @@ public final class PixelGardenGUI extends GuiScreen {
                 } finally {
                     loadingCloud = false;
                     synchronized (PixelGardenGUI.class) { loadInProgress = false; }
-                    if (cloudStatus.startsWith("Cloud save: new garden")) saveCloudAsync();
+                    if (automaticQuestsAssigned > 0 || cloudStatus.startsWith("Cloud save: new garden"))
+                        saveCloudAsync();
                 }
             }
         }, "AlphaClient-PixelGardenLoad");
