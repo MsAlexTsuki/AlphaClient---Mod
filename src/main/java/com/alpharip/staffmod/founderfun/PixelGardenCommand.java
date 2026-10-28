@@ -38,6 +38,51 @@ public final class PixelGardenCommand extends CommandBase {
             if (allowed(sender, "pixelgarden.upgrades")) open(new PixelGardenUpgradeGUI(null));
         } else if ("shop".equals(action)) {
             if (allowed(sender, "pixelgarden.shop")) open(new PixelGardenShopGUI(null));
+        } else if ("resettokens".equals(action)) {
+            reply(sender, "You have " + game.getResetTokens() + " reset token(s). Use /pixelgarden resettoken use to reset your garden.");
+        } else if ("resettoken".equals(action)) {
+            if (args.length >= 2 && "use".equalsIgnoreCase(args[1])) {
+                if (!SupabaseCommunityService.isSignedIn()) { reply(sender, "Sign in to your Alpha Account before using a reset token."); return; }
+                if (game.getResetTokens() < 1) { reply(sender, "You do not have a reset token."); return; }
+                open(new PixelGardenResetGUI(null));
+            } else if (args.length >= 3 && "admin".equalsIgnoreCase(args[1])) {
+                if (!founderOnly(sender)) return;
+                runFounderAction(sender, "force_reset", args[2], 0);
+            } else if (args.length >= 4 && "give".equalsIgnoreCase(args[1]) && "resettoken".equalsIgnoreCase(args[2])) {
+                if (!founderOnly(sender)) return;
+                runFounderAction(sender, "give_token", args[3], 0);
+            } else {
+                reply(sender, "Usage: /pixelgarden resettokens | /pixelgarden resettoken use | /pixelgarden resettoken admin <Alpha account> | /pixelgarden give resettoken <Alpha account>");
+            }
+        } else if ("give".equals(action)) {
+            if (args.length >= 3 && "resettoken".equalsIgnoreCase(args[1])) {
+                if (!founderOnly(sender)) return;
+                runFounderAction(sender, "give_token", args[2], 0);
+            } else {
+                reply(sender, "Usage: /pixelgarden give resettoken <Alpha account>");
+            }
+        } else if ("coins".equals(action)) {
+            String target = args.length >= 2 ? args[1] : null;
+            try {
+                com.google.gson.JsonObject result = SupabaseCommunityService.getPixelGardenCoins(target);
+                reply(sender, result.get("alpha_name").getAsString() + " has " + result.get("coins").getAsInt() + " Pixel Garden coins.");
+            } catch (Exception exception) { reply(sender, "Could not read coins: " + safeMessage(exception)); }
+        } else if ("coinsgive".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden coinsgive <Alpha account> <amount>"); return; }
+            int amount = number(args[2]);
+            if (amount < 1) { reply(sender, "Amount must be a positive whole number."); return; }
+            runFounderAction(sender, "give_coins", args[1], amount);
+        } else if ("takecoins".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden takecoins <Alpha account> <amount>"); return; }
+            int amount = number(args[2]);
+            if (amount < 1) { reply(sender, "Amount must be a positive whole number."); return; }
+            runFounderAction(sender, "take_coins", args[1], amount);
+        } else if ("coinsreset".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 2) { reply(sender, "Usage: /pixelgarden coinsreset <Alpha account>"); return; }
+            runFounderAction(sender, "reset_coins", args[1], 0);
         } else if ("playtime".equals(action)) {
             reply(sender, "Your AlphaClient playtime: " + duration(PlaytimeTrackerHud.getTotalPlaytimeSeconds()) + ".");
         } else if ("upgrade".equals(action)) {
@@ -139,6 +184,16 @@ public final class PixelGardenCommand extends CommandBase {
         reply(sender, "/pixelgarden time §7- Show crop growth timers.");
         reply(sender, "/pixelgarden crops §7- Show harvested crop counts.");
         reply(sender, "/pixelgarden seeds §7- Show seed counts by crop.");
+        reply(sender, "/pixelgarden coins [Alpha account] §7- Show a coin balance.");
+        reply(sender, "/pixelgarden resettokens §7- Show your reset token count.");
+        reply(sender, "/pixelgarden resettoken use §7- Open the reset confirmation popup.");
+        if (SupabaseCommunityService.isSignedInFounder()) {
+            reply(sender, "/pixelgarden coinsgive <Alpha account> <amount> §7- Give coins (Founder only).");
+            reply(sender, "/pixelgarden takecoins <Alpha account> <amount> §7- Remove coins (Founder only).");
+            reply(sender, "/pixelgarden coinsreset <Alpha account> §7- Reset coins (Founder only).");
+            reply(sender, "/pixelgarden give resettoken <Alpha account> §7- Give a reset token (Founder only).");
+            reply(sender, "/pixelgarden resettoken admin <Alpha account> §7- Force a full reset (Founder only).");
+        }
         reply(sender, "/garden §7- Alias for /pixelgarden; use /garden open or /garden help.");
     }
 
@@ -174,6 +229,28 @@ public final class PixelGardenCommand extends CommandBase {
         }, "AlphaClient-PixelGardenCommandSave");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private boolean founderOnly(ICommandSender sender) {
+        if (SupabaseCommunityService.isSignedInFounder()) return true;
+        reply(sender, "Access denied: this command is restricted to Founder.");
+        return false;
+    }
+
+    private void runFounderAction(ICommandSender sender, String action, String target, int amount) {
+        try {
+            com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGarden(action, target, amount);
+            String name = result.has("target_alpha_name") ? result.get("target_alpha_name").getAsString() : target;
+            if ("force_reset".equals(action)) reply(sender, "Force-reset the full Pixel Garden for " + name + ".");
+            else if ("give_token".equals(action)) reply(sender, "Gave 1 reset token to " + name + ".");
+            else if ("reset_coins".equals(action)) reply(sender, "Reset " + name + "'s Pixel Garden coins to 0.");
+            else if ("take_coins".equals(action)) reply(sender, "Removed coins from " + name + ". New balance: " + result.get("coins").getAsInt() + ".");
+            else if ("give_coins".equals(action)) reply(sender, "Gave " + amount + " coins to " + name + ". New balance: " + result.get("coins").getAsInt() + ".");
+        } catch (Exception exception) { reply(sender, "Pixel Garden action failed: " + safeMessage(exception)); }
+    }
+
+    private static String safeMessage(Exception exception) {
+        return exception.getMessage() == null ? "unknown error" : exception.getMessage();
     }
 
     private boolean allowed(ICommandSender sender, String permission) {
