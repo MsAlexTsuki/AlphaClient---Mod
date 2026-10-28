@@ -164,8 +164,8 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                     if ("*".equals(delivery.target)) {
                         PixelGardenGame.Crop[] crops = PixelGardenGame.Crop.values();
                         PixelGardenGame.Crop crop = crops[Math.floorMod(selectedDeliveryCropIndex, crops.length)];
-                        buttonList.add(new AlphaButton(CROP_PREV, actionX, actionY - 20, 82, 16, "< " + crop.displayName));
-                        buttonList.add(new AlphaButton(CROP_NEXT, actionX + actionWidth - 82, actionY - 20, 82, 16,
+                        buttonList.add(new AlphaButton(CROP_PREV, actionX, actionY - 42, 82, 16, "< " + crop.displayName));
+                        buttonList.add(new AlphaButton(CROP_NEXT, actionX + actionWidth - 82, actionY - 42, 82, 16,
                                 crops[Math.floorMod(selectedDeliveryCropIndex + 1, crops.length)].displayName + " >"));
                     }
                 }
@@ -239,8 +239,36 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     }
 
     @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+        if (mouseButton != 0) return;
+        int left = listLeft();
+        int top = bookTop();
+        int listX = left + 12;
+        int listY = top + 65;
+        int listW = Math.max(130, bookWidth() / 2 - 22);
+        if (mouseX < listX || mouseX > listX + listW) return;
+        int row = (mouseY - listY) / rowHeight();
+        if (row < 0 || mouseY < listY) return;
+        int index = scrollOffset + row;
+        List<PixelGardenProgressionData.QuestInstance> quests = questsForView();
+        if (index < 0 || index >= quests.size() || row >= visibleRows()) return;
+        PixelGardenProgressionData.QuestInstance instance = quests.get(index);
+        if (instance != null) {
+            selectedInstanceId = instance.instanceId;
+            cropControlsExpanded = false;
+            initGui();
+        }
+    }
+
+    @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
+        if (button.id == ADD_CROPS) {
+            cropControlsExpanded = !cropControlsExpanded;
+            initGui();
+            return;
+        }
         if (button.id == CROP_PREV || button.id == CROP_NEXT) {
             int count = PixelGardenGame.Crop.values().length;
             selectedDeliveryCropIndex = Math.floorMod(selectedDeliveryCropIndex + (button.id == CROP_NEXT ? 1 : -1), count);
