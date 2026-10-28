@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -21,6 +22,8 @@ public final class PixelGardenIdsGUI extends GuiScreen {
     public PixelGardenIdsGUI(GuiScreen parent) {
         this.parent = parent;
         progression.ensureDefaultCatalog();
+        try { progression.mergeSharedDefinitions(SupabaseCommunityService.getSharedPixelGardenQuests()); }
+        catch (Exception exception) { System.err.println("[AlphaClient] Could not sync quest IDs: " + exception.getMessage()); }
         rebuildEntries();
     }
 
