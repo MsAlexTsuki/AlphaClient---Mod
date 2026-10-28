@@ -41,6 +41,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private final List<String> visibleInstanceIds = new ArrayList<String>();
     private String selectedInstanceId;
     private int scrollOffset;
+    private int detailScrollOffset;
     private int selectedDeliveryAmount = 1;
     private int selectedDeliveryCropIndex;
     private boolean cropControlsExpanded;
@@ -231,9 +232,15 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
         if (wheel != 0) {
-            List<PixelGardenProgressionData.QuestInstance> quests = questsForView();
-            int max = Math.max(0, quests.size() - visibleRows());
-            scrollOffset = Math.max(0, Math.min(max, scrollOffset + (wheel < 0 ? 1 : -1)));
+            int mouseX = Mouse.getX() * width / Math.max(1, Minecraft.getMinecraft().displayWidth);
+            int left = listLeft();
+            if (mouseX >= left + bookWidth() / 2) {
+                detailScrollOffset = Math.max(0, Math.min(10, detailScrollOffset + (wheel < 0 ? 1 : -1)));
+            } else {
+                List<PixelGardenProgressionData.QuestInstance> quests = questsForView();
+                int max = Math.max(0, quests.size() - visibleRows());
+                scrollOffset = Math.max(0, Math.min(max, scrollOffset + (wheel < 0 ? 1 : -1)));
+            }
             initGui();
         }
     }
@@ -484,14 +491,14 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             drawString(fontRendererObj, "GARDEN LEVEL  " + progression.getLevel(),
                     detailX + 8, top + h - 35, 0xFF67451F);
         } else {
-            int y = listY + 2;
+            int y = listY + 2 - detailScrollOffset * 12;
             drawWrapped(def.name, detailX + 8, y, detailW - 16, 0xFF493019, 12);
             y += 30;
             drawRect(detailX + 8, y, detailX + detailW - 8, y + 1, 0xFFB49A6B);
             y += 9;
             drawWrapped(def.description, detailX + 8, y, detailW - 16, 0xFF5D4A31, 11);
             if (!def.npc.isEmpty()) { y += 22; drawString(fontRendererObj, "NPC: " + def.npc, detailX + 8, y, 0xFF8A5A20); }
-            y += 62;
+            y += 26;
             drawString(fontRendererObj, "REQUIREMENTS", detailX + 8, y, 0xFF8A5A20);
             y += 13;
             drawString(fontRendererObj, "Level " + def.requiredLevel + "  |  Prestige " + def.requiredPrestige,
