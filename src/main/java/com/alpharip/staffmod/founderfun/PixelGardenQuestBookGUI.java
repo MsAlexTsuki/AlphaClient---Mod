@@ -248,16 +248,23 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             int remaining = objective.requiredAmount - selected.getObjectiveProgress(objective.id);
             int amount = Math.min(selectedDeliveryAmount, Math.min(remaining, game.getInventory(crop)));
             if (amount < 1) { actionMessage("Not enough " + crop.displayName + " in your harvested inventory."); return; }
-            if (!game.consumeHarvestedCrop(crop, amount)) { actionMessage("Inventory changed. Please try again."); return; }
-            if (!progression.setObjectiveProgress(selected.instanceId, objective.id,
-                    selected.getObjectiveProgress(objective.id) + amount)) {
-                actionMessage("Could not record submission. Please contact an administrator.");
+            int previousProgress = selected.getObjectiveProgress(objective.id);
+            if (!progression.setObjectiveProgress(selected.instanceId, objective.id, previousProgress + amount)) {
+                actionMessage("Could not record submission. Please try again.");
                 return;
             }
-            // Complete the quest only after inventory has been consumed and progress recorded.
-            if (selected.getObjectiveProgress(objective.id) + amount >= objective.requiredAmount) {
+            if (!game.consumeHarvestedCrop(crop, amount)) {
+                progression.setObjectiveProgress(selected.instanceId, objective.id, previousProgress);
+                actionMessage("Inventory changed. Please try again.");
+                return;
+            }
+            // Complete only after the inventory transaction and objective update both succeed.
+            if (previousProgress + amount >= objective.requiredAmount) {
                 progression.completeQuest(selected.instanceId);
-                viewStatus = PixelGardenProgressionData.QuestStatus.COMPLETED;
+                PixelGardenProgressionData.QuestInstance updated = progression.getInstance(selected.instanceId);
+                if (updated != null && updated.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED) {
+                    viewStatus = PixelGardenProgressionData.QuestStatus.COMPLETED;
+                }
             }
             saveProgressionAsync();
             actionMessage("Submitted " + amount + " " + crop.displayName + ".");
