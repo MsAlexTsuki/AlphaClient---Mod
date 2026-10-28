@@ -79,7 +79,9 @@ public final class PixelGardenCommand extends CommandBase {
         if ("add".equals(root) && args.length == 5 && "questid".equalsIgnoreCase(args[1])) {
             String sub = args[3].toLowerCase(Locale.ROOT);
             if ("difficulty".equals(sub)) return getListOfStringsMatchingLastWord(args, new String[] {"Scout", "Rogue", "Elite", "Alpha"});
-            if ("harvest".equals(sub) || "sell".equals(sub) || "deliver".equals(sub) || "plant".equals(sub) || "inventory".equals(sub))
+            if ("harvest".equals(sub) || "sell".equals(sub))
+                return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin"});
+            if ("deliver".equals(sub) || "plant".equals(sub) || "inventory".equals(sub))
                 return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin", "seeds_wheat", "seeds_carrot", "seeds_potato", "seeds_pumpkin"});
         }
         if ("msg".equals(root) && args.length == 2)
