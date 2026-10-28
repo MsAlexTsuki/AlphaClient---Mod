@@ -91,8 +91,7 @@ public final class PixelGardenGUI extends GuiScreen {
                 } finally {
                     loadingCloud = false;
                     synchronized (PixelGardenGUI.class) { loadInProgress = false; }
-                    if (automaticQuestsAssigned > 0 || cloudStatus.startsWith("Cloud save: new garden"))
-                        saveCloudAsync();
+                    if (cloudReady) saveCloudAsync();
                 }
             }
         }, "AlphaClient-PixelGardenLoad");
