@@ -39,12 +39,15 @@ public final class PixelGardenCommand extends CommandBase {
         } else if ("shop".equals(action)) {
             if (allowed(sender, "pixelgarden.shop")) open(new PixelGardenShopGUI(null));
         } else if ("resettokens".equals(action)) {
-            reply(sender, "You have " + game.getResetTokens() + " reset token(s). Use /pixelgarden resettoken use to reset your garden.");
+            try { reply(sender, "You have " + SupabaseCommunityService.getPixelGardenResetTokens() + " reset token(s). Use /pixelgarden resettoken use to reset your garden."); }
+            catch (Exception exception) { reply(sender, "Could not read reset tokens: " + safeMessage(exception)); }
         } else if ("resettoken".equals(action)) {
             if (args.length >= 2 && "use".equalsIgnoreCase(args[1])) {
                 if (!SupabaseCommunityService.isSignedIn()) { reply(sender, "Sign in to your Alpha Account before using a reset token."); return; }
-                if (game.getResetTokens() < 1) { reply(sender, "You do not have a reset token."); return; }
-                open(new PixelGardenResetGUI(null));
+                try {
+                    if (SupabaseCommunityService.getPixelGardenResetTokens() < 1) { reply(sender, "You do not have a reset token."); return; }
+                    open(new PixelGardenResetGUI(null));
+                } catch (Exception exception) { reply(sender, "Could not verify reset tokens: " + safeMessage(exception)); }
             } else if (args.length >= 3 && "admin".equalsIgnoreCase(args[1])) {
                 if (!founderOnly(sender)) return;
                 runFounderAction(sender, "force_reset", args[2], 0);
