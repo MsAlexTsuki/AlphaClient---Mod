@@ -33,8 +33,8 @@ begin
     target_id := actor_id;
     select p.username into target_name from public.profiles p where p.id = target_id;
   else
-    if not actor_founder then
-      raise exception 'Only Founder can access another account''s level data.' using errcode = '42501';
+    if not coalesce(actor_founder, false) and normalized_action not in ('info', 'check_level', 'check_xp') then
+      raise exception 'Only Founder can access another account''s level data for management.' using errcode = '42501';
     end if;
     if p_target_alpha_name !~ '^[A-Za-z0-9_]{1,16}$' then
       raise exception 'Enter a valid Alpha Account name.';
