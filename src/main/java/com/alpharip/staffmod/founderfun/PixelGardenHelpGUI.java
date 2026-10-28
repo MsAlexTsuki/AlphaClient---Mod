@@ -79,7 +79,7 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         lines.add("/pixelgarden level list - View all levels and rewards");
         if (SupabaseCommunityService.isSignedInFounder()) {
             lines.add("FOUNDER QUEST COMMANDS");
-            lines.add("/pixelgarden createquest admin <quest id> <description> <NPC> <amount> <reward type> - Create a shared crop-delivery quest");
+            lines.add("/pixelgarden createquest admin <quest id> <description> <NPC> <amount> <reward type> <weight> - Create a shared crop-delivery quest");
             lines.add("/pixelgarden addnpc admin <npc_id> <quest_id> - Assign an existing NPC to an existing quest");
             lines.add("/pixelgarden removenpc admin <npc_id> <quest_id> - Remove an NPC assignment from a quest");
             lines.add("/pixelgarden editnpc admin <npc_id> <new_npc_id> - Rename an NPC ID and update its quest assignments");
