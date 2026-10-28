@@ -29,11 +29,11 @@ public final class PixelGardenCommand extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, new String[] {
                     "admin", "buy", "coins", "coinsgive", "coinsreset", "completequest", "createquest",
-                    "crops", "give", "givequest", "growth", "guide", "harvest", "harvesttime", "help",
-                    "ids", "idlist", "info", "inv", "inventory", "multiplier", "msg", "open", "plant",
-                    "playtime", "prestige", "prestigecoingive", "prestigecointake", "prestigecoinreset",
-                    "prestigereset", "quest", "quests", "resettoken", "resettokens", "rewards", "sell",
-                    "seeds", "shop", "takecoins", "takequest", "time", "upgrade", "upgrades"
+                    "crops", "give", "givequest", "guide", "harvest", "harvesttime", "help", "ids",
+                    "idlist", "info", "inv", "inventory", "multiplier", "msg", "open", "plant", "playtime",
+                    "prestige", "prestigecoingive", "prestigecointake", "prestigecoinreset", "prestigereset",
+                    "quest", "quests", "resettoken", "resettokens", "rewards", "sell", "seeds", "shop",
+                    "takecoins", "takequest", "time", "upgrade", "upgrades"
             });
         }
         String root = args[0].toLowerCase(Locale.ROOT);
@@ -73,6 +73,11 @@ public final class PixelGardenCommand extends CommandBase {
             });
         if ("rewards".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"add", "remove"});
+        if ("createquest".equals(root) && args.length >= 5) {
+            int npcArgument = args.length - 3;
+            if (npcArgument >= 4) return getListOfStringsMatchingLastWord(args,
+                    PixelGardenNPC.getAllNpcNames().keySet().toArray(new String[PixelGardenNPC.getAllNpcNames().size()]));
+        }
         if ("rewards".equals(root) && args.length == 3) {
             List<String> ids = new java.util.ArrayList<String>();
             for (PixelGardenProgressionData.QuestDefinition definition : PixelGardenGame.getInstance().getProgressionData().getDefinitions())
