@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -251,6 +252,35 @@ public final class PixelGardenProgressionData {
         return instanceId;
     }
 
+    /**
+     * Picks and assigns one eligible quest for an NPC. chancePercent is a relative
+     * weight among quests unlocked by the supplied level and prestige, not a fixed
+     * probability against a 100-point roll. Repeated definitions are intentionally allowed.
+     * Returns the new AVAILABLE instance ID, or null when the active-quest cap is reached
+     * or the NPC has no eligible quest with a positive weight.
+     */
+    public synchronized String assignRandomQuestForNpc(String npcId, int playerLevel,
+            int playerPrestige, Random random) {
+        if (npcId == null || npcId.trim().isEmpty()
+                || getActiveQuestCount() >= MAX_ACTIVE_QUESTS) return null;
+        Random chooser = random == null ? new Random() : random;
+        List<QuestDefinition> candidates = new ArrayList<QuestDefinition>();
+        long totalWeight = 0L;
+        for (QuestDefinition definition : definitions.values()) {
+            if (!npcId.equals(definition.npc) || definition.chancePercent <= 0
+                    || !isDefinitionEligible(definition, playerLevel, playerPrestige)) continue;
+            candidates.add(definition);
+            totalWeight += definition.chancePercent;
+        }
+        if (candidates.isEmpty() || totalWeight <= 0L) return null;
+        long roll = (long) Math.floor(chooser.nextDouble() * totalWeight);
+        for (QuestDefinition candidate : candidates) {
+            roll -= candidate.chancePercent;
+            if (roll < 0L) return assignQuest(candidate.id);
+        }
+        return assignQuest(candidates.get(candidates.size() - 1).id);
+    }
+
     public synchronized QuestInstance getInstance(String instanceId) {
         QuestInstance value = instances.get(instanceId);
         return value == null ? null : value.copy();
@@ -335,9 +365,12 @@ public final class PixelGardenProgressionData {
         QuestInstance instance = instances.get(instanceId);
         if (instance == null) return false;
         QuestDefinition definition = definitions.get(instance.definitionId);
+        return definition != null && isDefinitionEligible(definition, playerLevel, playerPrestige);
+    }
+
+    private boolean isDefinitionEligible(QuestDefinition definition, int playerLevel, int playerPrestige) {
         if (definition == null || playerLevel < definition.requiredLevel
                 || playerPrestige < definition.requiredPrestige) return false;
-
         String tier = normalizeTier(definition.tier);
         int minLevel = tierMinLevel(tier);
         int maxLevel = tierMaxLevel(tier);
@@ -564,6 +597,8 @@ public final class PixelGardenProgressionData {
         public final String npc;
         public final int requiredLevel;
         public final int requiredPrestige;
+        /** Relative selection weight (0 disables this quest in NPC random pools). */
+        public final int chancePercent;
         public final String tier;
         public final List<Objective> objectives;
         public final Map<String, Integer> rewards;
@@ -575,12 +610,19 @@ public final class PixelGardenProgressionData {
 
         public QuestDefinition(String id, String name, String description, String npc, int requiredLevel,
                 int requiredPrestige, String tier, List<Objective> objectives, Map<String, Integer> rewards) {
+            this(id, name, description, npc, requiredLevel, requiredPrestige, 100, tier, objectives, rewards);
+        }
+
+        public QuestDefinition(String id, String name, String description, String npc, int requiredLevel,
+                int requiredPrestige, int chancePercent, String tier, List<Objective> objectives,
+                Map<String, Integer> rewards) {
             this.id = clean(id);
             this.name = clean(name);
             this.description = description == null ? "" : description;
             this.npc = npc == null ? "" : npc.trim();
             this.requiredLevel = Math.max(1, requiredLevel);
             this.requiredPrestige = Math.max(0, requiredPrestige);
+            this.chancePercent = Math.max(0, Math.min(100, chancePercent));
             this.tier = tier == null ? "" : tier;
             this.objectives = new ArrayList<Objective>();
             if (objectives != null) for (Objective objective : objectives) {
@@ -599,7 +641,8 @@ public final class PixelGardenProgressionData {
         }
 
         private QuestDefinition copy() {
-            return new QuestDefinition(id, name, description, npc, requiredLevel, requiredPrestige, tier, objectives, rewards);
+            return new QuestDefinition(id, name, description, npc, requiredLevel, requiredPrestige,
+                    chancePercent, tier, objectives, rewards);
         }
 
         private JsonObject toJson() {
@@ -610,6 +653,7 @@ public final class PixelGardenProgressionData {
             root.addProperty("npc", npc);
             root.addProperty("required_level", requiredLevel);
             root.addProperty("required_prestige", requiredPrestige);
+            root.addProperty("chance_percent", chancePercent);
             root.addProperty("tier", tier);
             JsonArray objectiveArray = new JsonArray();
             for (Objective objective : objectives) objectiveArray.add(objective.toJson());
@@ -641,7 +685,7 @@ public final class PixelGardenProgressionData {
             QuestDefinition definition = new QuestDefinition(stringValue(root, "id", ""),
                     stringValue(root, "name", ""), stringValue(root, "description", ""), stringValue(root, "npc", ""),
                     intValue(root, "required_level", 1), intValue(root, "required_prestige", 0),
-                    stringValue(root, "tier", ""), objectives, rewards);
+                    intValue(root, "chance_percent", 100), stringValue(root, "tier", ""), objectives, rewards);
             return definition.isValid() ? definition : null;
         }
     }
