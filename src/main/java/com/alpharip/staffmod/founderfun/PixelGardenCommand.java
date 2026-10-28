@@ -19,7 +19,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|shop|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish>|shop|buy|sell|harvest|time|crops|seeds]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
@@ -131,11 +131,79 @@ public final class PixelGardenCommand extends CommandBase {
             reply(sender, "Your AlphaClient playtime: " + duration(PlaytimeTrackerHud.getTotalPlaytimeSeconds()) + ".");
         } else if ("upgrade".equals(action)) {
             if (!allowed(sender, "pixelgarden.upgrades")) return;
-            if (args.length < 2) { reply(sender, "Usage: /pixelgarden upgrade <auto_harvest|growth_boost|expansion>"); return; }
-            String upgrade=args[1].toLowerCase(Locale.ROOT).replace('-','_');
-            if("auto".equals(upgrade)||"autoharvest".equals(upgrade))upgrade="auto_harvest";else if("growth".equals(upgrade)||"growthboost".equals(upgrade))upgrade="growth_boost";else if("plot".equals(upgrade))upgrade="expansion";
-            if(!("auto_harvest".equals(upgrade)||"growth_boost".equals(upgrade)||"expansion".equals(upgrade)||"more_coins".equals(upgrade)||"more_crops".equals(upgrade))){reply(sender,"Unknown upgrade. Choose auto_harvest, growth_boost, expansion, more_coins or more_crops.");return;}
-            try{com.google.gson.JsonObject purchase=SupabaseCommunityService.purchasePixelGardenUpgrade(upgrade);if(purchase.has("save_data")&&purchase.get("save_data").isJsonObject())game.loadSaveData(purchase.getAsJsonObject("save_data"));reply(sender,"Purchased "+upgrade.replace('_',' ')+". Coins: "+game.getCoins()+". Upgrade steps: "+purchase.get("upgrade_steps").getAsInt()+"/18.");}catch(Exception e){reply(sender,"Upgrade purchase failed: "+safeMessage(e));}
+            if (args.length < 2) {
+                reply(sender, "Usage: /pixelgarden upgrade <auto_harvest|growth_boost|expansion|more_coins|more_crops|prestige_yield|prestige_bonus|coin_cache>");
+                return;
+            }
+            String upgrade = args[1].toLowerCase(Locale.ROOT).replace('-', '_');
+            if ("auto".equals(upgrade) || "autoharvest".equals(upgrade)) upgrade = "auto_harvest";
+            else if ("growth".equals(upgrade) || "growthboost".equals(upgrade)) upgrade = "growth_boost";
+            else if ("plot".equals(upgrade)) upgrade = "expansion";
+
+            boolean prestigeUpgrade = "prestige_yield".equals(upgrade)
+                    || "prestige_bonus".equals(upgrade) || "coin_cache".equals(upgrade);
+            boolean regularUpgrade = "auto_harvest".equals(upgrade) || "growth_boost".equals(upgrade)
+                    || "expansion".equals(upgrade) || "more_coins".equals(upgrade) || "more_crops".equals(upgrade);
+            if (!regularUpgrade && !prestigeUpgrade) {
+                reply(sender, "Unknown upgrade. Choose auto_harvest, growth_boost, expansion, more_coins, more_crops, prestige_yield, prestige_bonus or coin_cache.");
+                return;
+            }
+            try {
+                if (prestigeUpgrade) {
+                    if (!SupabaseCommunityService.isSignedIn()) {
+                        reply(sender, "Sign in to your Alpha Account before buying Prestige upgrades.");
+                        return;
+                    }
+                    com.google.gson.JsonObject state = SupabaseCommunityService.getPixelGardenPrestigeState();
+                    int prestigeCount = state.has("prestige_count") ? state.get("prestige_count").getAsInt() : 0;
+                    int steps = state.has("upgrade_steps") ? state.get("upgrade_steps").getAsInt() : 0;
+                    if (prestigeCount < 1 || steps < 18) {
+                        reply(sender, "Prestige upgrades are exclusive to players who have prestiged and completed 18 upgrade steps.");
+                        return;
+                    }
+                    SupabaseCommunityService.purchasePixelGardenPrestigeUpgrade(upgrade);
+                    com.google.gson.JsonObject refreshed = SupabaseCommunityService.getPixelGardenPrestigeState();
+                    reply(sender, "Purchased Prestige upgrade " + upgrade.replace('_', ' ')
+                            + ". Prestige Coins: " + (refreshed.has("prestige_coins")
+                            ? refreshed.get("prestige_coins").getAsString() : "unavailable") + ".");
+                } else {
+                    com.google.gson.JsonObject purchase = SupabaseCommunityService.purchasePixelGardenUpgrade(upgrade);
+                    if (purchase.has("save_data") && purchase.get("save_data").isJsonObject()) {
+                        game.loadSaveData(purchase.getAsJsonObject("save_data"));
+                    }
+                    reply(sender, "Purchased " + upgrade.replace('_', ' ') + ". Coins: " + game.getCoins()
+                            + ". Upgrade steps: " + purchase.get("upgrade_steps").getAsInt() + "/18.");
+                }
+            } catch (Exception exception) {
+                reply(sender, "Upgrade purchase failed: " + safeMessage(exception));
+            }
+        } else if ("harvesttime".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 2) {
+                reply(sender, "Usage: /pixelgarden harvesttime <speed multiplier|finish>");
+                return;
+            }
+            long now = System.currentTimeMillis();
+            boolean finish = "finish".equalsIgnoreCase(args[1]);
+            double multiplier = 1.0D;
+            if (!finish) {
+                String raw = args[1].toLowerCase(Locale.ROOT);
+                if (raw.endsWith("x")) raw = raw.substring(0, raw.length() - 1);
+                try { multiplier = Double.parseDouble(raw); }
+                catch (NumberFormatException exception) {
+                    reply(sender, "Use a multiplier such as 2, 10, 100, or finish.");
+                    return;
+                }
+                if (Double.isNaN(multiplier) || Double.isInfinite(multiplier) || multiplier < 1.0D) {
+                    reply(sender, "The harvest speed multiplier must be a finite number of at least 1.");
+                    return;
+                }
+            }
+            int affected = game.accelerateHarvestTimes(multiplier, finish, now);
+            saveCloudAsync(game);
+            reply(sender, affected == 0 ? "No growing crops found."
+                    : finish ? "Made " + affected + " crop(s) ready to harvest."
+                    : "Accelerated harvest timers for " + affected + " crop(s) by " + multiplier + "x.");
         } else if ("buy".equals(action)) {
             if (!allowed(sender, "pixelgarden.shop")) return;
             if (args.length < 2) { reply(sender, "Usage: /pixelgarden buy <wheat|carrot|potato|pumpkin> [amount]"); return; }
@@ -200,7 +268,7 @@ public final class PixelGardenCommand extends CommandBase {
         } else if ("seeds".equals(action)) {
             for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) reply(sender, crop.displayName + " seeds: " + game.getSeeds(crop) + ".");
         } else {
-            reply(sender, "Usage: /pixelgarden [open|inventory|inv|upgrades|upgrade <upgrade>|playtime|shop|buy <crop> [amount]|sell <crop|all> [amount]|harvest <plot|all>|time|crops|seeds]");
+            reply(sender, "Usage: /pixelgarden [open|inventory|inv|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish>|playtime|shop|buy <crop> [amount]|sell <crop|all> [amount]|harvest <plot|all>|time|crops|seeds]");
         }
     }
 
