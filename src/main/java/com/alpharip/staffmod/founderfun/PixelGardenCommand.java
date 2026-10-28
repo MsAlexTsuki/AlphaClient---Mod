@@ -145,7 +145,12 @@ public final class PixelGardenCommand extends CommandBase {
                     reply(sender, info.get("alpha_name").getAsString() + "'s Pixel Garden level: " + info.get("level").getAsInt() + ".");
                 } catch (Exception exception) { reply(sender, "Could not read that account's level: " + safeMessage(exception)); }
             } else {
-                reply(sender, "Your Pixel Garden level: " + game.getProgressionData().getLevel() + ".");
+                try {
+                    com.google.gson.JsonObject info = SupabaseCommunityService.managePixelGardenLevels("info", null, 0, 0L, null);
+                    reply(sender, "Your Pixel Garden level: " + info.get("level").getAsInt() + ".");
+                } catch (Exception exception) {
+                    reply(sender, "Your Pixel Garden level: " + game.getProgressionData().getLevel() + ".");
+                }
             }
         } else if ("xp".equals(action)) {
             if (args.length >= 3 && "check".equalsIgnoreCase(args[1])) {
@@ -155,8 +160,13 @@ public final class PixelGardenCommand extends CommandBase {
                             + " more XP for level " + (info.get("level").getAsInt() + 1) + ".");
                 } catch (Exception exception) { reply(sender, "Could not read that account's XP: " + safeMessage(exception)); }
             } else {
-                PixelGardenProgressionData data = game.getProgressionData();
-                reply(sender, "You need " + data.getXpRemainingForNextLevel() + " more XP for level " + (data.getLevel() + 1) + ".");
+                try {
+                    com.google.gson.JsonObject info = SupabaseCommunityService.managePixelGardenLevels("info", null, 0, 0L, null);
+                    reply(sender, "You need " + info.get("xp_remaining").getAsLong() + " more XP for level " + (info.get("level").getAsInt() + 1) + ".");
+                } catch (Exception exception) {
+                    PixelGardenProgressionData data = game.getProgressionData();
+                    reply(sender, "You need " + data.getXpRemainingForNextLevel() + " more XP for level " + (data.getLevel() + 1) + ".");
+                }
             }
         } else if ("resetleveltoken".equals(action)) {
             if (args.length >= 3 && ("give".equalsIgnoreCase(args[1]) || "take".equalsIgnoreCase(args[1]))) {
@@ -174,7 +184,6 @@ public final class PixelGardenCommand extends CommandBase {
                     com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenLevels("use_token", null, 0, 0L, null);
                     game.getProgressionData().resetLevel();
                     if (result.has("reset_level_tokens")) game.getProgressionData().setResetLevelTokens(result.get("reset_level_tokens").getAsInt());
-                    saveCloudAsync(game);
                     reply(sender, "Your Pixel Garden level and XP have been reset to level 1 and 0 XP.");
                 } catch (Exception exception) { reply(sender, "Could not use a level reset token: " + safeMessage(exception)); }
             } else {
