@@ -585,6 +585,15 @@ public final class SupabaseCommunityService {
         return requestJson("POST", "/functions/v1/pixel-garden-quests", accessToken, payload.toString());
     }
 
+    /** Loads the shared NPC ID registry through the authenticated backend. */
+    public static synchronized JsonArray getSharedPixelGardenNPCs() throws Exception {
+        JsonObject payload = new JsonObject();
+        payload.addProperty("action", "npc_list");
+        JsonObject result = managePixelGardenQuests(payload);
+        JsonElement npcs = result.get("npcs");
+        return npcs != null && npcs.isJsonArray() ? npcs.getAsJsonArray() : new JsonArray();
+    }
+
     /** Loads the shared quest definitions through the authenticated backend. */
     public static synchronized JsonArray getSharedPixelGardenQuests() throws Exception {
         JsonObject payload = new JsonObject();
