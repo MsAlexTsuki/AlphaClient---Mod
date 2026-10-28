@@ -32,6 +32,7 @@ import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
+import com.alpharip.staffmod.founderfun.PixelGardenMessageNotifier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -85,6 +86,7 @@ public final class AlphaClient {
         System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
 
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(PixelGardenMessageNotifier.getInstance());
         DeveloperDiagnostics.initialize();
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
