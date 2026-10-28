@@ -4,6 +4,7 @@ package com.alpharip.staffmod.founderfun;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -257,7 +258,7 @@ public final class PixelGardenProgressionData {
         root.add("quest_history", historyArray);
 
         JsonArray rotationArray = new JsonArray();
-        for (String id : recentRotationIds) rotationArray.add(id);
+        for (String id : recentRotationIds) rotationArray.add(new JsonPrimitive(id));
         root.add("recent_rotation_ids", rotationArray);
         return root;
     }
