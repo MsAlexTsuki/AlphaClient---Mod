@@ -281,6 +281,32 @@ public final class PixelGardenProgressionData {
         return assignQuest(candidates.get(candidates.size() - 1).id);
     }
 
+    /** Returns true when an NPC already has an available or active quest assigned. */
+    public synchronized boolean hasUnfinishedQuestForNpc(String npcId) {
+        if (npcId == null || npcId.trim().isEmpty()) return false;
+        for (QuestInstance instance : instances.values()) {
+            if (instance.status != QuestStatus.AVAILABLE && instance.status != QuestStatus.ACTIVE) continue;
+            QuestDefinition definition = definitions.get(instance.definitionId);
+            if (definition != null && npcId.equals(definition.npc)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Automatically offers eligible quests from NPC quest pools without requiring
+     * the player to talk to an NPC. At most one unfinished offer is kept per NPC.
+     */
+    public synchronized int assignAutomaticNpcQuests(int playerLevel, int playerPrestige, Random random) {
+        Random chooser = random == null ? new Random() : random;
+        int assigned = 0;
+        for (String npcId : PixelGardenNPC.getQuestNpcIds()) {
+            if (getActiveQuestCount() >= MAX_ACTIVE_QUESTS) break;
+            if (hasUnfinishedQuestForNpc(npcId)) continue;
+            if (assignRandomQuestForNpc(npcId, playerLevel, playerPrestige, chooser) != null) assigned++;
+        }
+        return assigned;
+    }
+
     public synchronized QuestInstance getInstance(String instanceId) {
         QuestInstance value = instances.get(instanceId);
         return value == null ? null : value.copy();
