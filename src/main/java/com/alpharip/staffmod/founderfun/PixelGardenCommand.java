@@ -393,11 +393,20 @@ public final class PixelGardenCommand extends CommandBase {
             int index = args.length >= 3 ? number(args[2]) - 1 : firstAvailableQuest(instances);
             if (index < 0 || index >= instances.size()) { reply(sender, "No available quest found. Use /pixelgarden Quest list."); return; }
             PixelGardenProgressionData.QuestInstance instance = instances.get(index);
-            if (data.acceptQuest(instance.instanceId, data.getLevel(), 0)) {
+            final int playerPrestige;
+            try {
+                com.google.gson.JsonObject prestigeState = SupabaseCommunityService.getPixelGardenPrestigeState();
+                playerPrestige = prestigeState != null && prestigeState.has("prestige_count")
+                        ? Math.max(0, prestigeState.get("prestige_count").getAsInt()) : 0;
+            } catch (Exception exception) {
+                reply(sender, "Could not verify your Prestige level, so the quest was not accepted. " + safeMessage(exception));
+                return;
+            }
+            if (data.acceptQuest(instance.instanceId, data.getLevel(), playerPrestige)) {
                 saveCloudAsync(game);
                 reply(sender, "Accepted quest: " + questName(data, instance) + ".");
             } else {
-                reply(sender, "Could not accept that quest. It may not be available, may require a higher level/prestige, or you already have 5 active quests.");
+                reply(sender, "Could not accept that quest. Check its level/prestige requirements and make sure you have fewer than 5 active quests.");
             }
         } else if ("remove".equals(sub)) {
             if (args.length < 3) { reply(sender, "Usage: /pixelgarden Quest Remove <number>"); return; }
