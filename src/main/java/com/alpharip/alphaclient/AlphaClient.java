@@ -154,10 +154,14 @@ public final class AlphaClient {
                 "hudeditor", "profiles", "profile", "alphaperms", "staffoperations", "alphanote", "staffmods", "staffgeneral", "stafftmod", "staffmod",
                 "staffsrmod", "staffadmin", "staffsradmin", "staffmanagement",
                 "staffplatformadmin", "staffplatadmin", "staffmanager", "staffowner", "stafffounder",
-                "general", "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus", "autogg", "autoreconnect"
+                "general", "beta", "donator", "scout", "rogue", "elite", "alpha", "alphaplus", "autogg", "autoreconnect", "pixelgarden", "garden"
         };
         for (String command : commands) {
-            ClientCommandHandler.instance.registerCommand(new AlphaClientCommand(command));
+            if ("pixelgarden".equals(command) || "garden".equals(command)) {
+                ClientCommandHandler.instance.registerCommand(new com.alpharip.staffmod.founderfun.PixelGardenCommand(command));
+            } else {
+                ClientCommandHandler.instance.registerCommand(new AlphaClientCommand(command));
+            }
         }
     }
 
