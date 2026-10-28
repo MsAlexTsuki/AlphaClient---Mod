@@ -2,10 +2,11 @@
 package com.alpharip.staffmod.founderfun;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatComponentText;
-import net.minecraftforge.fml.common.event.SubscribeEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.io.File;
@@ -145,7 +146,7 @@ public final class PixelGardenMessageNotifier {
         root.addProperty("first_join_tip_shown", firstJoinTipShown);
         root.addProperty("last_daily_date", lastDailyDate);
         com.google.gson.JsonArray ready = new com.google.gson.JsonArray();
-        for (boolean value : notifiedReadyPlots) ready.add(value);
+        for (boolean value : notifiedReadyPlots) ready.add(new JsonPrimitive(value));
         root.add("notified_ready_plots", ready);
         FileWriter writer = null;
         try {
