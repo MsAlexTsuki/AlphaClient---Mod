@@ -641,6 +641,8 @@ public final class PixelGardenProgressionData {
     public synchronized void reset() {
         level = 1;
         experience = 0L;
+        resetLevelTokens = 0;
+        customLevelMessage = "";
         storylineChapter = 1;
         tutorialStep = 0;
         nextDailyResetAt = 0L;
@@ -694,6 +696,9 @@ public final class PixelGardenProgressionData {
     }
 
     public synchronized void loadJson(JsonElement element) {
+        levelXpRequirements.clear();
+        levelRewards.clear();
+        levelDescriptions.clear();
         reset();
         if (element == null || !element.isJsonObject()) return;
         JsonObject root = element.getAsJsonObject();
