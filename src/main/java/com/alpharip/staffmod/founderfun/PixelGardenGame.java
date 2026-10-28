@@ -35,7 +35,8 @@ public final class PixelGardenGame {
         PUMPKIN("Pumpkin", 20, 30, 40L * 60L * 1000L),
         MELON("Melon", 20, 30, 40L * 60L * 1000L),
         CACTUS("Cactus", 30, 40, 60L * 60L * 1000L),
-        SUGARCANE("Sugarcane", 40, 60, 80L * 60L * 1000L);
+        SUGARCANE("Sugarcane", 40, 60, 80L * 60L * 1000L),
+        BERRIES("Berries", 50, 70, 85L * 60L * 1000L);
 
         public final String displayName;
         public final int seedPrice;
@@ -506,6 +507,7 @@ public final class PixelGardenGame {
             case MELON: return 8;
             case CACTUS: return 10;
             case SUGARCANE: return 13;
+            case BERRIES: return 15;
             default: return 0;
         }
     }
