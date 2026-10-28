@@ -509,6 +509,12 @@ public final class SupabaseCommunityService {
         return requestJson("POST", "/rest/v1/rpc/pixel_garden_get_account_coins", accessToken, payload.toString());
     }
 
+    public static synchronized int getPixelGardenResetTokens() throws Exception {
+        if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
+        JsonObject result = requestJson("POST", "/rest/v1/rpc/pixel_garden_get_reset_tokens", accessToken, "{}");
+        return result.has("reset_tokens") ? result.get("reset_tokens").getAsInt() : 0;
+    }
+
     /** Consumes one reset token and applies the selected reset atomically on the server. */
     public static synchronized JsonObject resetPixelGarden(String resetType) throws Exception {
         if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
