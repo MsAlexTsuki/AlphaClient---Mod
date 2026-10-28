@@ -49,6 +49,7 @@ public final class PixelGardenMessageNotifier {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
+        if (!PixelGardenModuleSettings.getInstance().isEnabled()) return;
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null
                 || minecraft.getCurrentServerData() == null) {
