@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.Set;
+import java.util.LinkedHashSet;
 
 /**
  * Persistent foundation for Pixel Garden progression and quests.
@@ -32,6 +34,7 @@ public final class PixelGardenProgressionData {
     private final Map<Integer, Long> levelXpRequirements = new LinkedHashMap<Integer, Long>();
     private final Map<Integer, String> levelRewards = new LinkedHashMap<Integer, String>();
     private final Map<Integer, String> levelDescriptions = new LinkedHashMap<Integer, String>();
+    private final Set<Integer> deletedLevels = new LinkedHashSet<Integer>();
     private int resetLevelTokens;
     private String customLevelMessage = "";
     private String defaultLevelMessage = "";
@@ -63,6 +66,7 @@ public final class PixelGardenProgressionData {
         while (experience >= getXpRequiredForNextLevel()) {
             experience -= getXpRequiredForNextLevel();
             level++;
+            while (deletedLevels.contains(level)) level++;
             levelsGained++;
             if (levelsGained >= 1000) break;
         }
@@ -80,11 +84,13 @@ public final class PixelGardenProgressionData {
 
     public synchronized void setLevel(int targetLevel) {
         level = Math.max(1, targetLevel);
+        while (deletedLevels.contains(level)) level++;
         experience = 0L;
     }
 
     public synchronized void resetLevel() {
         level = 1;
+        while (deletedLevels.contains(level)) level++;
         experience = 0L;
     }
 
@@ -111,21 +117,21 @@ public final class PixelGardenProgressionData {
 
     public synchronized Map<Integer, Long> getLevelXpRequirements() {
         Map<Integer, Long> result = new LinkedHashMap<Integer, Long>();
-        for (int i = 1; i <= Math.max(100, level); i++) result.put(i, getRequirementForLevel(i));
+        for (int i = 1; i <= Math.max(100, level); i++) if (!deletedLevels.contains(i)) result.put(i, getRequirementForLevel(i));
         result.putAll(levelXpRequirements);
         return Collections.unmodifiableMap(result);
     }
 
     public synchronized Map<Integer, String> getLevelRewards() {
         Map<Integer, String> result = new LinkedHashMap<Integer, String>();
-        for (int i = 1; i <= Math.max(100, level); i++) result.put(i, levelRewards.containsKey(i) ? levelRewards.get(i) : "None configured");
+        for (int i = 1; i <= Math.max(100, level); i++) if (!deletedLevels.contains(i)) result.put(i, levelRewards.containsKey(i) ? levelRewards.get(i) : "None configured");
         result.putAll(levelRewards);
         return Collections.unmodifiableMap(result);
     }
 
     public synchronized Map<Integer, String> getLevelDescriptions() {
         Map<Integer, String> result = new LinkedHashMap<Integer, String>();
-        for (int i = 1; i <= Math.max(100, level); i++) result.put(i, levelDescriptions.containsKey(i) ? levelDescriptions.get(i) : "");
+        for (int i = 1; i <= Math.max(100, level); i++) if (!deletedLevels.contains(i)) result.put(i, levelDescriptions.containsKey(i) ? levelDescriptions.get(i) : "");
         result.putAll(levelDescriptions);
         return Collections.unmodifiableMap(result);
     }
@@ -147,6 +153,7 @@ public final class PixelGardenProgressionData {
 
     public synchronized boolean createLevel(int targetLevel, String reward, long xp) {
         if (targetLevel < 1 || xp < 1L) return false;
+        deletedLevels.remove(targetLevel);
         setLevelXpRequirement(targetLevel, xp);
         setLevelReward(targetLevel, reward);
         if (!levelDescriptions.containsKey(targetLevel)) levelDescriptions.put(targetLevel, "");
@@ -158,6 +165,7 @@ public final class PixelGardenProgressionData {
         levelXpRequirements.remove(targetLevel);
         levelRewards.remove(targetLevel);
         levelDescriptions.remove(targetLevel);
+        deletedLevels.add(targetLevel);
         return true;
     }
 
@@ -654,6 +662,7 @@ public final class PixelGardenProgressionData {
         levelXpRequirements.clear();
         levelRewards.clear();
         levelDescriptions.clear();
+        deletedLevels.clear();
         storylineChapter = 1;
         tutorialStep = 0;
         nextDailyResetAt = 0L;
@@ -681,6 +690,9 @@ public final class PixelGardenProgressionData {
         JsonObject levelDescriptionConfig = new JsonObject();
         for (Map.Entry<Integer, String> entry : levelDescriptions.entrySet()) levelDescriptionConfig.addProperty(String.valueOf(entry.getKey()), entry.getValue());
         root.add("level_descriptions", levelDescriptionConfig);
+        JsonObject deletedLevelConfig = new JsonObject();
+        for (Integer deletedLevel : deletedLevels) deletedLevelConfig.addProperty(String.valueOf(deletedLevel), true);
+        root.add("deleted_levels", deletedLevelConfig);
         root.addProperty("storyline_chapter", storylineChapter);
         root.addProperty("tutorial_step", tutorialStep);
         root.addProperty("next_daily_reset_at", nextDailyResetAt);
@@ -736,6 +748,12 @@ public final class PixelGardenProgressionData {
         for (Map.Entry<String, JsonElement> entry : descriptionConfig.entrySet()) {
             try { int key = Integer.parseInt(entry.getKey()); if (key > 0 && entry.getValue().isJsonPrimitive()) levelDescriptions.put(key, entry.getValue().getAsString()); } catch (RuntimeException ignored) { }
         }
+        deletedLevels.clear();
+        JsonObject deletedConfig = objectValue(root, "deleted_levels");
+        for (Map.Entry<String, JsonElement> entry : deletedConfig.entrySet()) {
+            try { int key = Integer.parseInt(entry.getKey()); if (key > 0 && entry.getValue().getAsBoolean()) deletedLevels.add(key); } catch (RuntimeException ignored) { }
+        }
+        while (deletedLevels.contains(level)) level++;
         storylineChapter = Math.max(1, intValue(root, "storyline_chapter", 1));
         tutorialStep = Math.max(0, intValue(root, "tutorial_step", 0));
         nextDailyResetAt = Math.max(0L, longValue(root, "next_daily_reset_at", 0L));
