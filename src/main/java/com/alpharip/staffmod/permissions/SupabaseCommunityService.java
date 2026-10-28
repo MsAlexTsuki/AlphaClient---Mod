@@ -576,6 +576,24 @@ public final class SupabaseCommunityService {
         if ("set_multiplier".equals(action)) payload.addProperty("p_multiplier", multiplier); else payload.add("p_multiplier", com.google.gson.JsonNull.INSTANCE);
         return requestJson("POST", "/rest/v1/rpc/founder_pixel_garden_prestige_manage", accessToken, payload.toString());
     }
+    /** Calls the authenticated Pixel Garden quest backend. The Edge Function enforces Founder rights server-side. */
+    public static synchronized JsonObject managePixelGardenQuests(JsonObject payload) throws Exception {
+        if (accessToken == null || accessToken.trim().isEmpty()) {
+            throw new IllegalStateException("Sign in to your Alpha Account first.");
+        }
+        if (payload == null) throw new IllegalArgumentException("Missing quest request.");
+        return requestJson("POST", "/functions/v1/pixel-garden-quests", accessToken, payload.toString());
+    }
+
+    /** Loads the shared quest definitions through the authenticated backend. */
+    public static synchronized JsonArray getSharedPixelGardenQuests() throws Exception {
+        JsonObject payload = new JsonObject();
+        payload.addProperty("action", "list");
+        JsonObject result = managePixelGardenQuests(payload);
+        JsonElement definitions = result.get("definitions");
+        return definitions != null && definitions.isJsonArray() ? definitions.getAsJsonArray() : new JsonArray();
+    }
+
     /** True only when the authenticated Alpha community profile has verified Founder status. */
     public static boolean isSignedInFounder() { return accessToken != null && signedInFounder; }
 
