@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -484,6 +485,14 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
         if (!actionMessage.isEmpty()) {
             drawCenteredString(fontRendererObj, actionMessage, width / 2, 51, 0xFF67451F);
         }
+        Minecraft minecraft = Minecraft.getMinecraft();
+        net.minecraft.client.gui.ScaledResolution scaled = new net.minecraft.client.gui.ScaledResolution(minecraft);
+        int scale = scaled.getScaleFactor();
+        int clipTop = top + 58;
+        int clipBottom = top + h - 24;
+        GL11.glEnable(GL11.GL_SCISSOR_TEST);
+        GL11.glScissor(detailX * scale, minecraft.displayHeight - clipBottom * scale,
+                detailW * scale, Math.max(1, (clipBottom - clipTop) * scale));
         if (selected == null || def == null || selected.getStatus() != viewStatus) {
             drawCenteredString(fontRendererObj, "Choose a quest", detailX + detailW / 2, listY + 35, 0xFF67451F);
             drawWrapped("Select an entry on the left to read its story, objectives and rewards.",
@@ -548,6 +557,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                     detailX + 8, top + h - 20, selected.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED
                             ? 0xFF4B6B34 : 0xFF8A5A20);
         }
+        GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
         if (quests.size() > visibleRows()) {
             drawCenteredString(fontRendererObj, "Scroll to browse  " + (scrollOffset + 1) + "-"
