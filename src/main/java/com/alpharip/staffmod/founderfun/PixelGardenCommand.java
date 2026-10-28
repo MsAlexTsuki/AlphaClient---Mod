@@ -869,15 +869,6 @@ public final class PixelGardenCommand extends CommandBase {
         }
     }
 
-    private static String joinArgs(String[] args, int start, int endExclusive) {
-        StringBuilder value = new StringBuilder();
-        for (int i = start; i < endExclusive; i++) {
-            if (value.length() > 0) value.append(' ');
-            value.append(args[i]);
-        }
-        return value.toString();
-    }
-
     private static void showInventory(ICommandSender sender, PixelGardenGame game) {
         reply(sender, "§ePixel Garden Inventory");
         reply(sender, "§6Planting seeds:");
