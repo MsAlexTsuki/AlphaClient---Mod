@@ -19,14 +19,22 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help (opens GUI)|prestige [use]|prestigecoingive|prestigecointake|prestigecoinreset|prestigereset|admin fullreset|multiplier prestige|inventory|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|shop|buy|sell|harvest|time|crops|seeds]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (!allowed(sender, "commands.pixelgarden")) return;
         String action = args == null || args.length == 0 ? "help" : args[0].toLowerCase(Locale.ROOT);
         PixelGardenGame game = PixelGardenGame.getInstance();
-        if ("prestige".equals(action)) {
+        if ("msg".equals(action)) {
+            if (args.length < 2 || (!"on".equalsIgnoreCase(args[1]) && !"off".equalsIgnoreCase(args[1]))) {
+                reply(sender, "Usage: /" + commandName + " msg <on|off>");
+                return;
+            }
+            boolean enabled = "on".equalsIgnoreCase(args[1]);
+            PixelGardenMessageNotifier.getInstance().setEnabled(enabled);
+            reply(sender, enabled ? "Pixel Garden chat reminders enabled." : "Pixel Garden chat reminders disabled.");
+        } else if ("prestige".equals(action)) {
             if (!SupabaseCommunityService.isSignedIn()) { reply(sender, "Sign in to your Alpha Account before using Prestige."); return; }
             try {
                 com.google.gson.JsonObject state=SupabaseCommunityService.getPixelGardenPrestigeState();
