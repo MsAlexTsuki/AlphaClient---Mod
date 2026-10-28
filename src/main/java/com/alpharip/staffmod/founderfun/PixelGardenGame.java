@@ -300,11 +300,11 @@ public final class PixelGardenGame {
             if (savedPlot.has("planted_at")) planted[i] = Math.max(0L, savedPlot.get("planted_at").getAsLong());
             if (savedPlot.has("grow_duration")) durations[i] = Math.max(5L * 60L * 1000L, savedPlot.get("grow_duration").getAsLong());
         }
+        moreCoinsLevel = savedMoreCoins;
+        moreCropsLevel = savedMoreCrops;
         restore(savedCoins, savedSeeds, savedInventory, savedAuto, savedGrowth,
                 Math.max(unlocked, restoredUnlocked), crops, planted, durations, savedAt);
         resetTokens = savedResetTokens;
-        moreCoinsLevel = savedMoreCoins;
-        moreCropsLevel = savedMoreCrops;
     }
 
     private static int[] readIntArray(JsonElement element, int length) {
