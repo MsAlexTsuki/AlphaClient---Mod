@@ -48,7 +48,8 @@ public final class AlphaHelpGui extends GuiScreen {
         addCommand("AutoGG", "/autogg", "command.autogg", true);
         addCommand("Auto Reconnect", "/autoreconnect", "command.autoreconnect", true);
         addCommand("Open help GUI", "/alphahelp open", "command.alphahelp.open", true);
-        addCommand("Pixel Garden guide", "/pixelgarden help", "commands.pixelgarden", true);
+        addCommand("Pixel Garden chat guide", "/pixelgarden help", "commands.pixelgarden", true);
+        addCommand("Open Command Guide GUI", "/pixelgarden guide", "commands.pixelgarden", true);
         addCommand("Open Pixel Garden", "/pixelgarden open", "commands.pixelgarden", true);
         addCommand("Pixel Garden inventory", "/pixelgarden inventory", "commands.pixelgarden", true);
         addCommand("Show crop and seed counts", "/pixelgarden inv", "commands.pixelgarden", true);
@@ -84,6 +85,7 @@ public final class AlphaHelpGui extends GuiScreen {
             addCommand("Take garden coins", "/pixelgarden takecoins <Alpha account> <amount>", "commands.pixelgarden", true);
             addCommand("Reset garden coins", "/pixelgarden coinsreset <Alpha account>", "commands.pixelgarden", true);
             addCommand("Give a reset token", "/pixelgarden give resettoken <Alpha account>", "commands.pixelgarden", true);
+            addCommand("Give a reset token (legacy route)", "/pixelgarden resettoken give <Alpha account>", "commands.pixelgarden", true);
             addCommand("Force-reset a garden", "/pixelgarden resettoken admin <Alpha account>", "commands.pixelgarden", true);
         }
 
