@@ -18,14 +18,16 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (!allowed(sender, "commands.pixelgarden")) return;
-        String action = args == null || args.length == 0 ? "open" : args[0].toLowerCase(Locale.ROOT);
+        String action = args == null || args.length == 0 ? "help" : args[0].toLowerCase(Locale.ROOT);
         PixelGardenGame game = PixelGardenGame.getInstance();
-        if ("open".equals(action)) {
+        if ("help".equals(action) || "?".equals(action)) {
+            showCommandGuide(sender);
+        } else if ("open".equals(action)) {
             open(new PixelGardenGUI(null));
         } else if ("upgrades".equals(action)) {
             if (allowed(sender, "pixelgarden.upgrades")) open(new PixelGardenUpgradeGUI(null));
@@ -99,6 +101,24 @@ public final class PixelGardenCommand extends CommandBase {
         } else {
             reply(sender, "Usage: /pixelgarden [upgrades|upgrade <upgrade>|playtime|shop|buy <crop> [amount]|sell <crop|all> [amount]|harvest <plot|all>|time|crops|seeds]");
         }
+    }
+
+
+    private void showCommandGuide(ICommandSender sender) {
+        reply(sender, "§ePixel Garden Command Guide");
+        reply(sender, "/pixelgarden open §7- Open Pixel Garden.");
+        reply(sender, "/pixelgarden upgrades §7- Open the upgrades GUI.");
+        reply(sender, "/pixelgarden upgrade <auto_harvest|growth_boost|expansion> §7- Buy an upgrade.");
+        reply(sender, "/pixelgarden playtime §7- Show your AlphaClient playtime.");
+        reply(sender, "/pixelgarden shop §7- Open the shop.");
+        reply(sender, "/pixelgarden buy <wheat|carrot|potato|pumpkin> [amount] §7- Buy seeds.");
+        reply(sender, "/pixelgarden sell <crop> [amount] §7- Sell harvested crops.");
+        reply(sender, "/pixelgarden sell all §7- Sell all harvested crops.");
+        reply(sender, "/pixelgarden harvest <plot number|all> §7- Harvest a ready plot or all ready plots.");
+        reply(sender, "/pixelgarden time §7- Show crop growth timers.");
+        reply(sender, "/pixelgarden crops §7- Show harvested crop counts.");
+        reply(sender, "/pixelgarden seeds §7- Show seed counts by crop.");
+        reply(sender, "/garden §7- Alias for /pixelgarden; use /garden open or /garden help.");
     }
 
     private boolean allowed(ICommandSender sender, String permission) {
