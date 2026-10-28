@@ -15,6 +15,10 @@ public final class FounderGivePixelGardenCoinsCommand extends CommandBase {
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+        if (!PixelGardenModuleSettings.getInstance().isEnabled()) {
+            reply(sender, "Pixel Garden is disabled in AlphaClient Settings.");
+            return;
+        }
         if (!SupabaseCommunityService.isSignedIn()) {
             reply(sender, "Sign in to your Founder Alpha Account first.");
             return;
