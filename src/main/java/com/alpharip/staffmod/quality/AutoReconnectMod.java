@@ -51,9 +51,9 @@ public final class AutoReconnectMod {
         }
 
         // GuiDisconnected positions its vanilla button based on the wrapped error text.
-        // Anchor Reconnect to that button instead of a fixed screen coordinate.
-        int y = backButtonY >= 0 ? backButtonY - 24 : event.gui.height / 2 + 10;
-        y = Math.max(4, Math.min(y, event.gui.height - 44));
+        // Place Reconnect directly below the vanilla Back to Server List button.
+        int y = backButtonY >= 0 ? backButtonY + 24 : event.gui.height / 2 + 58;
+        y = Math.max(4, Math.min(y, event.gui.height - 24));
         event.buttonList.add(new GuiButton(MANUAL_RECONNECT_BUTTON_ID, width / 2 - 100, y, 200, 20, "Reconnect"));
     }
 
