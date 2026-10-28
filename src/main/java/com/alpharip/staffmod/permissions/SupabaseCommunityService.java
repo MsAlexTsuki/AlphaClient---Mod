@@ -525,6 +525,13 @@ public final class SupabaseCommunityService {
         return requestJson("POST", "/rest/v1/rpc/pixel_garden_reset_self", accessToken, payload.toString());
     }
 
+    /** Purchases Prestige and atomically performs the full reset on the server. */
+    public static synchronized JsonObject prestigePixelGarden() throws Exception {
+        if (accessToken == null || accessToken.trim().isEmpty())
+            throw new IllegalStateException("Sign in to your Alpha Account first.");
+        return requestJson("POST", "/rest/v1/rpc/pixel_garden_prestige", accessToken, "{}");
+    }
+
     /** True only when the authenticated Alpha community profile has verified Founder status. */
     public static boolean isSignedInFounder() { return accessToken != null && signedInFounder; }
 
