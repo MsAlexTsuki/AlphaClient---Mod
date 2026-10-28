@@ -218,8 +218,8 @@ public final class PixelGardenCommand extends CommandBase {
             runQuestAdminRequest(sender, payload, "Created NPC ID " + args[2] + ".");
         } else if ("createquest".equals(action)) {
             if (!founderOnly(sender)) return;
-            if (args.length < 7 || !"admin".equalsIgnoreCase(args[1])) {
-                reply(sender, "Usage: /pixelgarden createquest admin <quest id> <description> <NPC> <amount> <reward type>");
+            if (args.length < 8 || !"admin".equalsIgnoreCase(args[1])) {
+                reply(sender, "Usage: /pixelgarden createquest admin <quest id> <description> <NPC> <amount> <reward type> <weight>");
                 return;
             }
             String questId = args[2].toLowerCase(Locale.ROOT);
