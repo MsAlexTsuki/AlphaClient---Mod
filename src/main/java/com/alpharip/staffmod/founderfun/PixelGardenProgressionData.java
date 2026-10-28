@@ -175,7 +175,9 @@ public final class PixelGardenProgressionData {
         if (targetLevel == 42) return 1015L;
         if (targetLevel == 43) return 1020L;
         if (targetLevel == 44) return 1030L;
-        if (targetLevel >= 45) return 1040L + (targetLevel - 45) * 10L;
+        if (targetLevel >= 45 && targetLevel <= 99) return 1040L + (targetLevel - 45) * 10L;
+        if (targetLevel == 100) return 1600L;
+        if (targetLevel > 100) return 1600L + (targetLevel - 100) * 10L;
         return 5L;
     }
 
