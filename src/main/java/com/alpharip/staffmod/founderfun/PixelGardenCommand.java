@@ -28,11 +28,11 @@ public final class PixelGardenCommand extends CommandBase {
         if (args == null || args.length == 0) return java.util.Collections.emptyList();
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, new String[] {
-                    "admin", "buy", "coins", "coinsgive", "coinsreset", "completequest", "createquest",
-                    "crops", "give", "givequest", "guide", "harvest", "harvesttime", "help", "ids",
+                    "admin", "addnpc", "buy", "coins", "coinsgive", "coinsreset", "completequest", "createquest", "createnpc",
+                    "crops", "editnpc", "give", "givequest", "guide", "harvest", "harvesttime", "help", "ids",
                     "idlist", "info", "inv", "inventory", "multiplier", "msg", "open", "plant", "playtime",
                     "prestige", "prestigecoingive", "prestigecointake", "prestigecoinreset", "prestigereset",
-                    "quest", "quests", "resettoken", "resettokens", "rewards", "sell", "seeds", "shop",
+                    "quest", "quests", "removenpc", "resettoken", "resettokens", "rewards", "sell", "seeds", "shop",
                     "takecoins", "takequest", "time", "upgrade", "upgrades"
             });
         }
@@ -57,6 +57,17 @@ public final class PixelGardenCommand extends CommandBase {
                 });
             }
         }
+
+        if (("addnpc".equals(root) || "removenpc".equals(root) || "editnpc".equals(root)
+                || "createnpc".equals(root)) && args.length == 2)
+            return getListOfStringsMatchingLastWord(args, new String[] {"admin"});
+        if (("addnpc".equals(root) || "removenpc".equals(root) || "editnpc".equals(root))
+                && args.length == 3 && "admin".equalsIgnoreCase(args[1]))
+            return getListOfStringsMatchingLastWord(args, sharedNpcIds());
+        if (("addnpc".equals(root) || "removenpc".equals(root))
+                && args.length == 4 && "admin".equalsIgnoreCase(args[1]))
+            return getListOfStringsMatchingLastWord(args, sharedQuestIds());
+
         if ("msg".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"on", "off"});
         if ("admin".equals(root) && args.length == 2)
@@ -160,6 +171,40 @@ public final class PixelGardenCommand extends CommandBase {
             open(new PixelGardenHelpGUI(mc == null ? null : mc.currentScreen));
         } else if ("quest".equals(action) || "quests".equals(action)) {
             handleQuestCommand(sender, args, game);
+        } else if ("addnpc".equals(action) || "removenpc".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 4 || !"admin".equalsIgnoreCase(args[1])) {
+                reply(sender, "Usage: /pixelgarden " + action + " admin <npc_id> <quest_id>");
+                return;
+            }
+            com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+            payload.addProperty("action", "addnpc".equals(action) ? "npc_add" : "npc_remove");
+            payload.addProperty("npc_id", args[2]);
+            payload.addProperty("quest_id", args[3]);
+            runQuestAdminRequest(sender, payload, "addnpc".equals(action)
+                    ? "Assigned NPC " + args[2] + " to quest " + args[3] + "."
+                    : "Removed NPC " + args[2] + " from quest " + args[3] + ".");
+        } else if ("editnpc".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 4 || !"admin".equalsIgnoreCase(args[1])) {
+                reply(sender, "Usage: /pixelgarden editnpc admin <npc_id> <new_npc_id>");
+                return;
+            }
+            com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+            payload.addProperty("action", "npc_rename");
+            payload.addProperty("npc_id", args[2]);
+            payload.addProperty("new_npc_id", args[3]);
+            runQuestAdminRequest(sender, payload, "Renamed NPC " + args[2] + " to " + args[3] + ".");
+        } else if ("createnpc".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 3 || !"admin".equalsIgnoreCase(args[1])) {
+                reply(sender, "Usage: /pixelgarden createnpc admin <new_npc_id>");
+                return;
+            }
+            com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+            payload.addProperty("action", "npc_create");
+            payload.addProperty("npc_id", args[2]);
+            runQuestAdminRequest(sender, payload, "Created NPC ID " + args[2] + ".");
         } else if ("createquest".equals(action)) {
             if (!founderOnly(sender)) return;
             if (args.length < 7 || !"admin".equalsIgnoreCase(args[1])) {
@@ -628,6 +673,34 @@ public final class PixelGardenCommand extends CommandBase {
     private static String questName(PixelGardenProgressionData data, PixelGardenProgressionData.QuestInstance instance) {
         PixelGardenProgressionData.QuestDefinition definition = data.getDefinition(instance.definitionId);
         return definition == null ? instance.definitionId : definition.name;
+    }
+
+    private static String[] sharedNpcIds() {
+        try {
+            com.google.gson.JsonArray values = SupabaseCommunityService.getSharedPixelGardenNPCs();
+            java.util.List<String> ids = new java.util.ArrayList<String>();
+            for (com.google.gson.JsonElement value : values) if (value != null && value.isJsonPrimitive()) ids.add(value.getAsString());
+            return ids.toArray(new String[ids.size()]);
+        } catch (Exception ignored) {
+            return PixelGardenNPC.getAllNpcNames().keySet().toArray(new String[PixelGardenNPC.getAllNpcNames().size()]);
+        }
+    }
+
+    private static String[] sharedQuestIds() {
+        try {
+            com.google.gson.JsonArray values = SupabaseCommunityService.getSharedPixelGardenQuests();
+            java.util.List<String> ids = new java.util.ArrayList<String>();
+            for (com.google.gson.JsonElement value : values) {
+                if (value != null && value.isJsonObject() && value.getAsJsonObject().has("id"))
+                    ids.add(value.getAsJsonObject().get("id").getAsString());
+            }
+            return ids.toArray(new String[ids.size()]);
+        } catch (Exception ignored) {
+            java.util.List<String> ids = new java.util.ArrayList<String>();
+            for (PixelGardenProgressionData.QuestDefinition definition : PixelGardenGame.getInstance().getProgressionData().getDefinitions())
+                ids.add(definition.id);
+            return ids.toArray(new String[ids.size()]);
+        }
     }
 
     private void runQuestAdminRequest(ICommandSender sender, com.google.gson.JsonObject payload, String successMessage) {
