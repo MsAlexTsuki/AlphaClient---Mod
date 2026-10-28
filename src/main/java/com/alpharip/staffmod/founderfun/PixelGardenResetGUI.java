@@ -3,6 +3,7 @@ package com.alpharip.staffmod.founderfun;
 
 import com.alpharip.alphaclient.AlphaClient;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
@@ -23,8 +24,8 @@ public final class PixelGardenResetGUI extends GuiScreen {
         buttonList.add(new GuiButton(10, left + 8, top + 47, 220, 20, "Full Reset"));
         buttonList.add(new GuiButton(11, left + 8, top + 70, 220, 20, "Progress Reset"));
         buttonList.add(new GuiButton(12, left + 8, top + 93, 220, 20, "Coins Reset"));
-        buttonList.add(new GuiButton(20, left + 8, top + 132, 106, 20, "Yes"));
-        buttonList.add(new GuiButton(21, left + 122, top + 132, 106, 20, "No"));
+        buttonList.add(new ColorButton(20, left + 8, top + 132, 106, 20, "Yes", 0xFF238B45));
+        buttonList.add(new ColorButton(21, left + 122, top + 132, 106, 20, "No", 0xFFB52E35));
         updateButtons();
     }
 
@@ -48,11 +49,7 @@ public final class PixelGardenResetGUI extends GuiScreen {
         drawCenteredString(fontRendererObj, "Do you want to really reset", width / 2, top + 25, 0xFFFFFFFF);
         drawCenteredString(fontRendererObj, "your garden?", width / 2, top + 36, 0xFFFFFFFF);
         for (GuiButton button : buttonList) {
-            if (button.id == 20) {
-                button.enabled = selected >= 0 && !busy;
-                button.packedFGColour = 0xFF55DD55;
-            }
-            if (button.id == 21) button.packedFGColour = 0xFFFF5555;
+            if (button.id == 20) button.enabled = selected >= 0 && !busy;
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
         if (!status.isEmpty()) drawCenteredString(fontRendererObj, status, width / 2, top + 116, 0xFFFF7777);
@@ -86,6 +83,20 @@ public final class PixelGardenResetGUI extends GuiScreen {
         }
     }
 
+    private final class ColorButton extends GuiButton {
+        private final int fill;
+        private ColorButton(int id, int x, int y, int width, int height, String label, int fill) {
+            super(id, x, y, width, height, label);
+            this.fill = fill;
+        }
+        @Override public void drawButton(Minecraft minecraft, int mouseX, int mouseY) {
+            if (!visible) return;
+            hovered = mouseX >= xPosition && mouseY >= yPosition && mouseX < xPosition + width && mouseY < yPosition + height;
+            int background = enabled ? fill : 0xFF555555;
+            PixelGardenResetGUI.this.drawRect(xPosition, yPosition, xPosition + width, yPosition + height, background);
+            PixelGardenResetGUI.this.drawCenteredString(fontRendererObj, displayString, xPosition + width / 2, yPosition + (height - 8) / 2, enabled ? 0xFFFFFFFF : 0xFFAAAAAA);
+        }
+    }
     @Override public void onGuiClosed() { super.onGuiClosed(); }
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) mc.displayGuiScreen(parent);
