@@ -132,7 +132,19 @@ public final class PixelGardenProgressionData {
             addDefinition(new QuestDefinition(id, name, description, 1, 0, "Beginner",
                     objectives, Collections.<String, Integer>emptyMap()));
         }
-        if (!hasInstanceForDefinition(id)) assignQuest(id);
+        if (!hasInstanceForDefinition(id)) {
+            String instanceId = assignQuest(id);
+            if ("pg_fresh_start".equals(id)) acceptQuest(instanceId, level, 0);
+        }
+        if ("pg_fresh_start".equals(id)) {
+            for (QuestInstance instance : instances.values()) {
+                if ("pg_fresh_start".equals(instance.definitionId)
+                        && instance.status == QuestStatus.AVAILABLE) {
+                    acceptQuest(instance.instanceId, level, 0);
+                    break;
+                }
+            }
+        }
     }
 
     private boolean hasInstanceForDefinition(String definitionId) {
@@ -279,7 +291,21 @@ public final class PixelGardenProgressionData {
         instance.finishedAt = System.currentTimeMillis();
         history.add(new HistoryEntry(instance.instanceId, instance.definitionId,
                 QuestStatus.COMPLETED, instance.finishedAt));
+        autoStartNextTutorialQuest(instance.definitionId);
         return true;
+    }
+
+    private void autoStartNextTutorialQuest(String completedDefinitionId) {
+        String nextId = "pg_fresh_start".equals(completedDefinitionId) ? "pg_first_coins"
+                : "pg_first_coins".equals(completedDefinitionId) ? "pg_growing_bigger"
+                : "pg_growing_bigger".equals(completedDefinitionId) ? "pg_your_own_garden" : null;
+        if (nextId == null || getActiveQuestCount() >= MAX_ACTIVE_QUESTS) return;
+        for (QuestInstance instance : instances.values()) {
+            if (nextId.equals(instance.definitionId) && instance.status == QuestStatus.AVAILABLE) {
+                acceptQuest(instance.instanceId, level, 0);
+                return;
+            }
+        }
     }
 
     /**
