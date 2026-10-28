@@ -66,8 +66,9 @@ public final class PixelGardenPrestigeGUI extends GuiScreen {
         drawCenteredString(fontRendererObj, "All garden progress will be reset immediately.", width / 2, top + 45, 0xFFB7C4D5);
         super.drawScreen(mouseX, mouseY, partialTicks);
         drawCenteredString(fontRendererObj, "You have earned: " + prestigeCoinsPreview + " Prestige Coins", width / 2, top + 98, 0xFFFFD45A);
-        drawCenteredString(fontRendererObj, "to claim these! Prestige resets your garden", width / 2, top + 110, 0xFFE3E7EE);
-        drawCenteredString(fontRendererObj, "except Prestige Upgrades and Prestige Coins.", width / 2, top + 122, 0xFFB7C4D5);
+        drawCenteredString(fontRendererObj, "These coins are kept after Prestige.", width / 2, top + 110, 0xFFE3E7EE);
+        drawCenteredString(fontRendererObj, "Everything in your garden resets except", width / 2, top + 122, 0xFFB7C4D5);
+        drawCenteredString(fontRendererObj, "Prestige Upgrades and Prestige Coins.", width / 2, top + 134, 0xFFB7C4D5);
         if (!status.isEmpty()) drawCenteredString(fontRendererObj, status, width / 2, top + 151, 0xFFFF7777);
     }
 
