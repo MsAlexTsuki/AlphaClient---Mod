@@ -26,6 +26,17 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         lines.add("BASICS");
         lines.add("/pixelgarden open - Open the garden");
         lines.add("/pixelgarden quests open - Open the Quest Book");
+        lines.add("PLAYER QUEST COMMANDS");
+        lines.add("/pixelgarden Quest open - Open the Quest Book (same as quests open)");
+        lines.add("/pixelgarden Quest active - List active quests");
+        lines.add("/pixelgarden Quest list - List assigned quests and their status");
+        lines.add("/pixelgarden Quest info <number> - Show quest objectives, progress and rewards");
+        lines.add("/pixelgarden Quest accept [number] - Accept the first available quest or a numbered quest");
+        lines.add("/pixelgarden Quest Remove <number> - Remove a quest after the delayed confirmation");
+        lines.add("/pixelgarden Quest givequest <number> <crop> <amount> - Deliver harvested crops to an active quest");
+        lines.add("/pixelgarden Quest complete <number> - Complete an eligible quest and claim its rewards");
+        lines.add("/pixelgarden Quest history - Show completed and abandoned quest history");
+        lines.add("/pixelgarden Quest progress - Show progress for active quests");
         lines.add("/pixelgarden help - Open this command guide GUI");
         lines.add("/pixelgarden guide - Open this scrollable guide");
         lines.add("/garden - Alias for /pixelgarden");
@@ -55,6 +66,14 @@ public final class PixelGardenHelpGUI extends GuiScreen {
         lines.add("/pixelgarden resettokens - Check your reset-token balance");
         lines.add("/pixelgarden resettoken use - Open reset confirmation");
         if (SupabaseCommunityService.isSignedInFounder()) {
+            lines.add("FOUNDER QUEST COMMANDS");
+            lines.add("/pixelgarden createquest admin <quest id> <description> <NPC> <amount> <reward type> - Create a shared crop-delivery quest");
+            lines.add("/pixelgarden Givequest admin <Alpha account name> <quest id> - Assign a quest to an account");
+            lines.add("/pixelgarden takequest admin <Alpha account name> <quest id> - Remove an available or active quest");
+            lines.add("/pixelgarden completequest admin <quest id> - Complete this quest on your Founder account when objectives are met");
+            lines.add("/pixelgarden rewards add <quest id> <type> <amount> - Add to a quest reward");
+            lines.add("/pixelgarden rewards remove <quest id> <type> <amount|all> - Remove some or all of a quest reward");
+            lines.add("Reward types: coins, seeds_wheat/carrot/potato/pumpkin, crop_wheat/carrot/potato/pumpkin");
             lines.add("FOUNDER COMMANDS");
             lines.add("/pixelgarden harvesttime <multiplier|finish|normal> - Speed up, finish, or restore normal crop timers");
             lines.add("/pixelgarden coinsgive <Alpha account> <amount> - Give regular coins");
