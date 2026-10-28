@@ -117,8 +117,8 @@ begin
     progression := jsonb_set(progression, '{level_descriptions}', coalesce(progression -> 'level_descriptions', '{}'::jsonb) - p_level_value::text, true);
     update public.pixel_garden_saves s set save_data = jsonb_set(jsonb_set(jsonb_set(s.save_data, '{progression,level_xp_requirements}', coalesce(s.save_data #> '{progression,level_xp_requirements}', '{}'::jsonb) - p_level_value::text, true), '{progression,level_rewards}', coalesce(s.save_data #> '{progression,level_rewards}', '{}'::jsonb) - p_level_value::text, true), '{progression,level_descriptions}', coalesce(s.save_data #> '{progression,level_descriptions}', '{}'::jsonb) - p_level_value::text, true), saved_at = clock_timestamp() where s.user_id <> target_id;
   elsif normalized_action = 'edit_message' then
-    progression := jsonb_set(progression, '{custom_level_message}', to_jsonb(left(coalesce(p_text_value, ''), 240)), true);
-    update public.pixel_garden_saves s set save_data = jsonb_set(s.save_data, '{progression,custom_level_message}', to_jsonb(left(coalesce(p_text_value, ''), 240)), true), saved_at = clock_timestamp() where s.user_id <> target_id;
+    progression := jsonb_set(progression, '{default_level_message}', to_jsonb(left(coalesce(p_text_value, ''), 240)), true);
+    update public.pixel_garden_saves s set save_data = jsonb_set(s.save_data, '{progression,default_level_message}', to_jsonb(left(coalesce(p_text_value, ''), 240)), true), saved_at = clock_timestamp() where s.user_id <> target_id;
   else
     raise exception 'Unknown Pixel Garden level action: %', normalized_action;
   end if;
