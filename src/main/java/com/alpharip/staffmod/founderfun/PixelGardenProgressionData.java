@@ -364,7 +364,7 @@ public final class PixelGardenProgressionData {
                     && existing.npc != null && !existing.npc.trim().isEmpty()) {
                 definition = new QuestDefinition(definition.id, definition.name, definition.description,
                         existing.npc, definition.requiredLevel, definition.requiredPrestige,
-                        definition.tier, definition.objectives, definition.rewards);
+                        definition.weight, definition.tier, definition.difficulty, definition.objectives, definition.rewards);
             }
             definitions.put(definition.id, definition.copy());
             merged++;
@@ -845,6 +845,7 @@ public final class PixelGardenProgressionData {
         /** Relative selection weight (0 disables this quest in NPC random pools). */
         public final int weight;
         public final String tier;
+        public final String difficulty;
         public final List<Objective> objectives;
         public final Map<String, Integer> rewards;
 
@@ -861,6 +862,12 @@ public final class PixelGardenProgressionData {
         public QuestDefinition(String id, String name, String description, String npc, int requiredLevel,
                 int requiredPrestige, int weight, String tier, List<Objective> objectives,
                 Map<String, Integer> rewards) {
+            this(id, name, description, npc, requiredLevel, requiredPrestige, weight, tier, "", objectives, rewards);
+        }
+
+        public QuestDefinition(String id, String name, String description, String npc, int requiredLevel,
+                int requiredPrestige, int weight, String tier, String difficulty, List<Objective> objectives,
+                Map<String, Integer> rewards) {
             this.id = clean(id);
             this.name = clean(name);
             this.description = description == null ? "" : description;
@@ -869,6 +876,7 @@ public final class PixelGardenProgressionData {
             this.requiredPrestige = Math.max(0, requiredPrestige);
             this.weight = Math.max(0, Math.min(1000000, weight));
             this.tier = tier == null ? "" : tier;
+            this.difficulty = difficulty == null ? "" : difficulty.trim();
             this.objectives = new ArrayList<Objective>();
             if (objectives != null) for (Objective objective : objectives) {
                 if (objective != null && objective.isValid()) this.objectives.add(objective.copy());
@@ -887,7 +895,7 @@ public final class PixelGardenProgressionData {
 
         private QuestDefinition copy() {
             return new QuestDefinition(id, name, description, npc, requiredLevel, requiredPrestige,
-                    weight, tier, objectives, rewards);
+                    weight, tier, difficulty, objectives, rewards);
         }
 
         public JsonObject toJson() {
@@ -900,6 +908,7 @@ public final class PixelGardenProgressionData {
             root.addProperty("required_prestige", requiredPrestige);
             root.addProperty("weight", weight);
             root.addProperty("tier", tier);
+            root.addProperty("difficulty", difficulty);
             JsonArray objectiveArray = new JsonArray();
             for (Objective objective : objectives) objectiveArray.add(objective.toJson());
             root.add("objectives", objectiveArray);
@@ -930,7 +939,8 @@ public final class PixelGardenProgressionData {
             QuestDefinition definition = new QuestDefinition(stringValue(root, "id", ""),
                     stringValue(root, "name", ""), stringValue(root, "description", ""), stringValue(root, "npc", ""),
                     intValue(root, "required_level", 1), intValue(root, "required_prestige", 0),
-                    intValue(root, "weight", intValue(root, "chance_percent", 100)), stringValue(root, "tier", ""), objectives, rewards);
+                    intValue(root, "weight", intValue(root, "chance_percent", 100)), stringValue(root, "tier", ""),
+                    stringValue(root, "difficulty", ""), objectives, rewards);
             return definition.isValid() ? definition : null;
         }
     }
