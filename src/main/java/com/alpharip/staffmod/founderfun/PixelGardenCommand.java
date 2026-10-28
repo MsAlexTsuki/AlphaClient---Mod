@@ -435,19 +435,23 @@ public final class PixelGardenCommand extends CommandBase {
             PixelGardenProgressionData.QuestDefinition definition = data.getDefinition(instance.definitionId);
             String objectiveId = null;
             int nextProgress = 0;
+            int deliveryAmount = amount;
             if (definition != null) for (PixelGardenProgressionData.Objective objective : definition.objectives) {
                 if ("DELIVER_CROP".equalsIgnoreCase(objective.type)
                         && ("*".equals(objective.target) || crop.name().equalsIgnoreCase(objective.target))) {
+                    int currentProgress = instance.getObjectiveProgress(objective.id);
+                    deliveryAmount = Math.min(amount, Math.max(0, objective.requiredAmount - currentProgress));
                     objectiveId = objective.id;
-                    nextProgress = instance.getObjectiveProgress(objective.id) + amount;
+                    nextProgress = currentProgress + deliveryAmount;
                     break;
                 }
             }
             if (objectiveId == null) { reply(sender, "That quest does not accept delivered crops."); return; }
-            if (game.getInventory(crop) < amount) { reply(sender, "You do not have " + amount + " harvested " + crop.displayName + "."); return; }
-            if (!game.consumeHarvestedCrop(crop, amount)) { reply(sender, "Could not consume the crop delivery."); return; }
+            if (deliveryAmount < 1) { reply(sender, "This quest's crop objective is already complete."); return; }
+            if (game.getInventory(crop) < deliveryAmount) { reply(sender, "You do not have " + deliveryAmount + " harvested " + crop.displayName + "."); return; }
+            if (!game.consumeHarvestedCrop(crop, deliveryAmount)) { reply(sender, "Could not consume the crop delivery."); return; }
             if (!data.setObjectiveProgress(instance.instanceId, objectiveId, nextProgress)) {
-                game.grantQuestRewards(java.util.Collections.singletonMap("crop_" + crop.name().toLowerCase(Locale.ROOT), amount));
+                game.grantQuestRewards(java.util.Collections.singletonMap("crop_" + crop.name().toLowerCase(Locale.ROOT), deliveryAmount));
                 reply(sender, "Could not update quest progress.");
                 return;
             }
@@ -457,7 +461,7 @@ public final class PixelGardenCommand extends CommandBase {
                 if (data.getInstance(instance.instanceId).getObjectiveProgress(objective.id) < objective.requiredAmount) complete = false;
             if (complete) data.completeQuest(instance.instanceId);
             saveCloudAsync(game);
-            reply(sender, "Delivered " + amount + " " + crop.displayName + " to " + refreshedDefinition.name + ".");
+            reply(sender, "Delivered " + deliveryAmount + " " + crop.displayName + " to " + refreshedDefinition.name + ".");
         } else if ("complete".equals(sub)) {
             if (args.length < 3) { reply(sender, "Usage: /pixelgarden Quest complete <quest number>"); return; }
             int index = number(args[2]) - 1;
