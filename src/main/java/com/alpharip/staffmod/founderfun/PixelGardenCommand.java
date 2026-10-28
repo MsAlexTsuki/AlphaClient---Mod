@@ -69,12 +69,71 @@ public final class PixelGardenCommand extends CommandBase {
         } else if ("help".equals(action) || "?".equals(action)) {
             Minecraft mc = Minecraft.getMinecraft();
             open(new PixelGardenHelpGUI(mc == null ? null : mc.currentScreen));
-        } else if ("quests".equals(action)) {
-            if (args.length >= 2 && "open".equalsIgnoreCase(args[1])) {
-                open(new PixelGardenQuestBookGUI(null));
-            } else {
-                reply(sender, "Usage: /" + commandName + " quests open");
+        } else if ("quest".equals(action) || "quests".equals(action)) {
+            handleQuestCommand(sender, args, game);
+        } else if ("createquest".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 7 || !"admin".equalsIgnoreCase(args[1])) {
+                reply(sender, "Usage: /pixelgarden createquest admin <quest id> <description> <NPC> <amount> <reward type>");
+                return;
             }
+            String questId = args[2].toLowerCase(Locale.ROOT);
+            String npc = args[args.length - 3];
+            int amount = number(args[args.length - 2]);
+            String rewardType = args[args.length - 1].toLowerCase(Locale.ROOT);
+            String description = joinArgs(args, 3, args.length - 3);
+            if (amount < 1 || description.trim().isEmpty()) {
+                reply(sender, "Quest amount must be positive and description cannot be empty.");
+                return;
+            }
+            com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+            payload.addProperty("action", "create");
+            payload.addProperty("quest_id", questId);
+            payload.addProperty("description", description);
+            payload.addProperty("npc", npc);
+            payload.addProperty("amount", amount);
+            payload.addProperty("reward_type", rewardType);
+            runQuestAdminRequest(sender, payload, "Created shared quest " + questId + ".");
+        } else if ("givequest".equals(action) || "takequest".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 4 || !"admin".equalsIgnoreCase(args[1])) {
+                reply(sender, "Usage: /pixelgarden " + action + " admin <Alpha account name> <quest id>");
+                return;
+            }
+            com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+            payload.addProperty("action", "givequest".equals(action) ? "give" : "take");
+            payload.addProperty("target_alpha_name", args[2]);
+            payload.addProperty("quest_id", args[3]);
+            runQuestAdminRequest(sender, payload, ("givequest".equals(action) ? "Assigned quest " : "Removed quest ") + args[3] + " for " + args[2] + ".");
+        } else if ("completequest".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 3 || !"admin".equalsIgnoreCase(args[1])) {
+                reply(sender, "Usage: /pixelgarden completequest admin <quest id>");
+                return;
+            }
+            com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+            payload.addProperty("action", "complete");
+            payload.addProperty("target_alpha_name", SupabaseCommunityService.getSignedInAlphaName());
+            payload.addProperty("quest_id", args[2]);
+            runQuestAdminRequest(sender, payload, "Completed quest " + args[2] + " on your Founder account.");
+        } else if ("rewards".equals(action)) {
+            if (!founderOnly(sender)) return;
+            if (args.length < 5 || (!"add".equalsIgnoreCase(args[1]) && !"remove".equalsIgnoreCase(args[1]))) {
+                reply(sender, "Usage: /pixelgarden rewards <add|remove> <quest id> <type> <amount|all>");
+                return;
+            }
+            boolean remove = "remove".equalsIgnoreCase(args[1]);
+            com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+            payload.addProperty("action", remove ? "reward_remove" : "reward_add");
+            payload.addProperty("quest_id", args[2]);
+            payload.addProperty("reward_type", args[3]);
+            if (remove && "all".equalsIgnoreCase(args[4])) payload.addProperty("all", true);
+            else {
+                int amount = number(args[4]);
+                if (amount < 1) { reply(sender, "Reward amount must be a positive whole number or 'all' when removing."); return; }
+                payload.addProperty("amount", amount);
+            }
+            runQuestAdminRequest(sender, payload, (remove ? "Updated rewards for " : "Added rewards to ") + args[2] + ".");
         } else if ("open".equals(action)) {
             open(new PixelGardenGUI(null));
         } else if ("inventory".equals(action)) {
@@ -288,6 +347,192 @@ public final class PixelGardenCommand extends CommandBase {
 
 
 
+
+    private void handleQuestCommand(ICommandSender sender, String[] args, PixelGardenGame game) {
+        if (!SupabaseCommunityService.isSignedIn()) {
+            reply(sender, "Sign in to your Alpha Account to use quests.");
+            return;
+        }
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "open";
+        PixelGardenProgressionData data = game.getProgressionData();
+        try {
+            data.mergeSharedDefinitions(SupabaseCommunityService.getSharedPixelGardenQuests());
+        } catch (Exception exception) {
+            reply(sender, "Could not sync shared quests: " + safeMessage(exception));
+            if (!"open".equals(sub)) return;
+        }
+        if ("open".equals(sub)) {
+            open(new PixelGardenQuestBookGUI(null));
+            return;
+        }
+        List<PixelGardenProgressionData.QuestInstance> instances = new java.util.ArrayList<PixelGardenProgressionData.QuestInstance>(data.getInstances());
+        if ("list".equals(sub) || "active".equals(sub)) {
+            int shown = 0;
+            for (int i = 0; i < instances.size(); i++) {
+                PixelGardenProgressionData.QuestInstance instance = instances.get(i);
+                if ("active".equals(sub) && instance.getStatus() != PixelGardenProgressionData.QuestStatus.ACTIVE) continue;
+                PixelGardenProgressionData.QuestDefinition definition = data.getDefinition(instance.definitionId);
+                if (definition == null) continue;
+                shown++;
+                reply(sender, "#" + (i + 1) + " " + definition.name + " [" + instance.getStatus().name() + "]");
+            }
+            if (shown == 0) reply(sender, "No " + ("active".equals(sub) ? "active " : "") + "quests found. Open /pixelgarden Quest open to view the Quest Book.");
+        } else if ("info".equals(sub)) {
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden Quest info <number>"); return; }
+            int index = number(args[2]) - 1;
+            if (index < 0 || index >= instances.size()) { reply(sender, "Quest number not found. Use /pixelgarden Quest list."); return; }
+            PixelGardenProgressionData.QuestInstance instance = instances.get(index);
+            PixelGardenProgressionData.QuestDefinition definition = data.getDefinition(instance.definitionId);
+            if (definition == null) { reply(sender, "Quest definition not found."); return; }
+            reply(sender, definition.name + " [" + instance.getStatus().name() + "]: " + definition.description);
+            if (!definition.npc.isEmpty()) reply(sender, "NPC: " + definition.npc);
+            for (PixelGardenProgressionData.Objective objective : definition.objectives)
+                reply(sender, objective.type + " " + objective.target + ": " + instance.getObjectiveProgress(objective.id) + "/" + objective.requiredAmount);
+            if (!definition.rewards.isEmpty()) reply(sender, "Rewards: " + definition.rewards.toString());
+        } else if ("accept".equals(sub)) {
+            int index = args.length >= 3 ? number(args[2]) - 1 : firstAvailableQuest(instances);
+            if (index < 0 || index >= instances.size()) { reply(sender, "No available quest found. Use /pixelgarden Quest list."); return; }
+            PixelGardenProgressionData.QuestInstance instance = instances.get(index);
+            if (data.acceptQuest(instance.instanceId, data.getLevel(), 0)) {
+                saveCloudAsync(game);
+                reply(sender, "Accepted quest: " + questName(data, instance) + ".");
+            } else {
+                reply(sender, "Could not accept that quest. It may not be available, may require a higher level/prestige, or you already have 5 active quests.");
+            }
+        } else if ("remove".equals(sub)) {
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden Quest Remove <number>"); return; }
+            final int index = number(args[2]) - 1;
+            if (index < 0 || index >= instances.size()) { reply(sender, "Quest number not found."); return; }
+            final PixelGardenProgressionData.QuestInstance target = instances.get(index);
+            if (target.getStatus() != PixelGardenProgressionData.QuestStatus.ACTIVE
+                    && target.getStatus() != PixelGardenProgressionData.QuestStatus.AVAILABLE) {
+                reply(sender, "Only available or active quests can be removed.");
+                return;
+            }
+            Minecraft mc = Minecraft.getMinecraft();
+            open(new PixelGardenQuestRemoveConfirmGUI(mc == null ? null : mc.currentScreen, new Runnable() {
+                @Override public void run() {
+                    if (data.removeQuest(target.instanceId)) {
+                        saveCloudAsync(game);
+                        reply(sender, "Quest removed. Its rewards will be lost.");
+                    } else reply(sender, "Quest could not be removed.");
+                }
+            }));
+        } else if ("givequest".equals(sub)) {
+            if (args.length < 5) { reply(sender, "Usage: /pixelgarden Quest givequest <quest number> <crop> <amount>"); return; }
+            int index = number(args[2]) - 1;
+            PixelGardenGame.Crop crop = crop(args[3]);
+            int amount = number(args[4]);
+            if (index < 0 || index >= instances.size() || crop == null || amount < 1) {
+                reply(sender, "Use a valid quest number, crop and positive amount.");
+                return;
+            }
+            PixelGardenProgressionData.QuestInstance instance = instances.get(index);
+            if (instance.getStatus() != PixelGardenProgressionData.QuestStatus.ACTIVE) {
+                reply(sender, "Accept this quest before delivering crops.");
+                return;
+            }
+            PixelGardenProgressionData.QuestDefinition definition = data.getDefinition(instance.definitionId);
+            String objectiveId = null;
+            int nextProgress = 0;
+            if (definition != null) for (PixelGardenProgressionData.Objective objective : definition.objectives) {
+                if ("DELIVER_CROP".equalsIgnoreCase(objective.type)
+                        && ("*".equals(objective.target) || crop.name().equalsIgnoreCase(objective.target))) {
+                    objectiveId = objective.id;
+                    nextProgress = instance.getObjectiveProgress(objective.id) + amount;
+                    break;
+                }
+            }
+            if (objectiveId == null) { reply(sender, "That quest does not accept delivered crops."); return; }
+            if (game.getInventory(crop) < amount) { reply(sender, "You do not have " + amount + " harvested " + crop.displayName + "."); return; }
+            if (!game.consumeHarvestedCrop(crop, amount)) { reply(sender, "Could not consume the crop delivery."); return; }
+            if (!data.setObjectiveProgress(instance.instanceId, objectiveId, nextProgress)) {
+                game.grantQuestRewards(java.util.Collections.singletonMap("crop_" + crop.name().toLowerCase(Locale.ROOT), amount));
+                reply(sender, "Could not update quest progress.");
+                return;
+            }
+            PixelGardenProgressionData.QuestDefinition refreshedDefinition = data.getDefinition(instance.definitionId);
+            boolean complete = true;
+            for (PixelGardenProgressionData.Objective objective : refreshedDefinition.objectives)
+                if (data.getInstance(instance.instanceId).getObjectiveProgress(objective.id) < objective.requiredAmount) complete = false;
+            if (complete) data.completeQuest(instance.instanceId);
+            saveCloudAsync(game);
+            reply(sender, "Delivered " + amount + " " + crop.displayName + " to " + refreshedDefinition.name + ".");
+        } else if ("complete".equals(sub)) {
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden Quest complete <quest number>"); return; }
+            int index = number(args[2]) - 1;
+            if (index < 0 || index >= instances.size()) { reply(sender, "Quest number not found."); return; }
+            PixelGardenProgressionData.QuestInstance instance = instances.get(index);
+            PixelGardenProgressionData.QuestDefinition definition = data.getDefinition(instance.definitionId);
+            if (definition == null) { reply(sender, "Quest definition not found."); return; }
+            if (instance.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) data.completeQuest(instance.instanceId);
+            PixelGardenProgressionData.QuestInstance current = data.getInstance(instance.instanceId);
+            if (current == null || current.getStatus() != PixelGardenProgressionData.QuestStatus.COMPLETED) {
+                reply(sender, "Quest objectives are not complete yet.");
+                return;
+            }
+            if (current.areRewardsClaimed()) { reply(sender, "Quest is already completed and its rewards were claimed."); return; }
+            if (!definition.rewards.isEmpty() && !game.grantQuestRewards(definition.rewards)) {
+                reply(sender, "Quest completed, but rewards could not be granted. They remain unclaimed.");
+                saveCloudAsync(game);
+                return;
+            }
+            data.markRewardsClaimed(instance.instanceId);
+            saveCloudAsync(game);
+            reply(sender, "Completed " + definition.name + " and claimed its rewards.");
+        } else if ("history".equals(sub)) {
+            List<PixelGardenProgressionData.HistoryEntry> history = data.getHistory();
+            if (history.isEmpty()) reply(sender, "Your quest history is empty.");
+            for (PixelGardenProgressionData.HistoryEntry entry : history) {
+                PixelGardenProgressionData.QuestDefinition definition = data.getDefinition(entry.definitionId);
+                reply(sender, (definition == null ? entry.definitionId : definition.name) + " — " + entry.outcome.name());
+            }
+        } else if ("progress".equals(sub)) {
+            int found = 0;
+            for (PixelGardenProgressionData.QuestInstance instance : instances) {
+                if (instance.getStatus() != PixelGardenProgressionData.QuestStatus.ACTIVE) continue;
+                PixelGardenProgressionData.QuestDefinition definition = data.getDefinition(instance.definitionId);
+                if (definition == null) continue;
+                for (PixelGardenProgressionData.Objective objective : definition.objectives) {
+                    reply(sender, definition.name + ": " + objective.type + " " + objective.target + " "
+                            + instance.getObjectiveProgress(objective.id) + "/" + objective.requiredAmount);
+                    found++;
+                }
+            }
+            if (found == 0) reply(sender, "You have no active quest progress.");
+        } else {
+            reply(sender, "Quest commands: open, active, list, info <number>, accept [number], Remove <number>, givequest <number> <crop> <amount>, complete <number>, history, progress.");
+        }
+    }
+
+    private static int firstAvailableQuest(List<PixelGardenProgressionData.QuestInstance> instances) {
+        for (int i = 0; i < instances.size(); i++)
+            if (instances.get(i).getStatus() == PixelGardenProgressionData.QuestStatus.AVAILABLE) return i;
+        return -1;
+    }
+
+    private static String questName(PixelGardenProgressionData data, PixelGardenProgressionData.QuestInstance instance) {
+        PixelGardenProgressionData.QuestDefinition definition = data.getDefinition(instance.definitionId);
+        return definition == null ? instance.definitionId : definition.name;
+    }
+
+    private void runQuestAdminRequest(ICommandSender sender, com.google.gson.JsonObject payload, String successMessage) {
+        try {
+            com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenQuests(payload);
+            reply(sender, result.has("error") ? result.get("error").getAsString() : successMessage);
+        } catch (Exception exception) {
+            reply(sender, "Quest administration failed: " + safeMessage(exception));
+        }
+    }
+
+    private static String joinArgs(String[] args, int start, int endExclusive) {
+        StringBuilder value = new StringBuilder();
+        for (int i = start; i < endExclusive; i++) {
+            if (value.length() > 0) value.append(' ');
+            value.append(args[i]);
+        }
+        return value.toString();
+    }
 
     private static void showInventory(ICommandSender sender, PixelGardenGame game) {
         reply(sender, "§ePixel Garden Inventory");
