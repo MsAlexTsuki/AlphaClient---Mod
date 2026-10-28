@@ -4,6 +4,7 @@ package com.alpharip.staffmod.founderfun;
 import com.alpharip.alphaclient.AlphaClient;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.command.CommandBase;
@@ -18,7 +19,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help|inventory|inv|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|help|inventory|inv|plant|upgrades|upgrade|playtime|shop|buy|sell|harvest|time|crops|seeds]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
@@ -29,8 +30,10 @@ public final class PixelGardenCommand extends CommandBase {
             showCommandGuide(sender);
         } else if ("open".equals(action)) {
             open(new PixelGardenGUI(null));
-        } else if ("inventory".equals(action) || "inv".equals(action)) {
+        } else if ("inventory".equals(action)) {
             open(new PixelGardenInventoryGUI(null));
+        } else if ("inv".equals(action)) {
+            showInventory(sender, game);
         } else if ("upgrades".equals(action)) {
             if (allowed(sender, "pixelgarden.upgrades")) open(new PixelGardenUpgradeGUI(null));
         } else if ("shop".equals(action)) {
@@ -73,6 +76,19 @@ public final class PixelGardenCommand extends CommandBase {
                 int amount = args.length > 2 ? number(args[2]) : game.getInventory(crop);
                 reply(sender, amount > 0 && game.sell(crop, amount) ? "Sold " + amount + " " + crop.displayName + ". Coins: " + game.getCoins() + "." : "Nothing sold: check your harvested inventory and amount.");
             }
+        } else if ("plant".equals(action)) {
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden plant <plot> <wheat|carrot|potato|pumpkin>"); return; }
+            int plotNumber = number(args[1]);
+            PixelGardenGame.Crop crop = crop(args[2]);
+            if (plotNumber < 1) { reply(sender, "Plot numbers start at 1."); return; }
+            if (crop == null) { reply(sender, "Choose wheat, carrot, potato or pumpkin."); return; }
+            boolean planted = game.plant(plotNumber - 1, crop, System.currentTimeMillis());
+            if (planted) {
+                reply(sender, "Planted " + crop.displayName + " on plot " + plotNumber + ". Seeds left: " + game.getSeeds(crop) + ".");
+                saveCloudAsync(game);
+            } else {
+                reply(sender, "Could not plant on plot " + plotNumber + ": it may be locked, occupied, invalid, or you may have no seeds.");
+            }
         } else if ("harvest".equals(action)) {
             if (args.length < 2) { reply(sender, "Usage: /pixelgarden harvest <plot number|all>"); return; }
             long now = System.currentTimeMillis();
@@ -109,8 +125,9 @@ public final class PixelGardenCommand extends CommandBase {
     private void showCommandGuide(ICommandSender sender) {
         reply(sender, "§ePixel Garden Command Guide");
         reply(sender, "/pixelgarden open §7- Open Pixel Garden.");
-        reply(sender, "/pixelgarden inventory §7- Open your crop and seed inventory.");
-        reply(sender, "/pixelgarden inv §7- Shortcut for /pixelgarden inventory.");
+        reply(sender, "/pixelgarden inventory §7- Open the inventory screen.");
+        reply(sender, "/pixelgarden inv §7- Show crop and planting-seed counts in chat.");
+        reply(sender, "/pixelgarden plant <plot> <crop> §7- Plant a crop on an unlocked empty plot.");
         reply(sender, "/pixelgarden upgrades §7- Open the upgrades GUI.");
         reply(sender, "/pixelgarden upgrade <auto_harvest|growth_boost|expansion> §7- Buy an upgrade.");
         reply(sender, "/pixelgarden playtime §7- Show your AlphaClient playtime.");
@@ -123,6 +140,40 @@ public final class PixelGardenCommand extends CommandBase {
         reply(sender, "/pixelgarden crops §7- Show harvested crop counts.");
         reply(sender, "/pixelgarden seeds §7- Show seed counts by crop.");
         reply(sender, "/garden §7- Alias for /pixelgarden; use /garden open or /garden help.");
+    }
+
+
+    private static void showInventory(ICommandSender sender, PixelGardenGame game) {
+        reply(sender, "§ePixel Garden Inventory");
+        reply(sender, "§6Planting seeds:");
+        for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
+            reply(sender, crop.displayName + " seeds: " + game.getSeeds(crop) + ".");
+        }
+        reply(sender, "§6Harvested crops:");
+        for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
+            reply(sender, crop.displayName + ": " + game.getInventory(crop) + ".");
+        }
+        reply(sender, "Use /pixelgarden plant <plot> <crop> to plant a seed.");
+    }
+
+    private static void saveCloudAsync(final PixelGardenGame game) {
+        if (!SupabaseCommunityService.isSignedIn()) return;
+        final String account = SupabaseCommunityService.getSignedInEmail();
+        final com.google.gson.JsonObject snapshot = game.toSaveData();
+        Thread thread = new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    if (SupabaseCommunityService.isSignedIn()
+                            && (account == null || account.equals(SupabaseCommunityService.getSignedInEmail()))) {
+                        SupabaseCommunityService.savePixelGardenSave(snapshot);
+                    }
+                } catch (Exception exception) {
+                    System.err.println("[AlphaClient] Pixel Garden command save failed: " + exception.getMessage());
+                }
+            }
+        }, "AlphaClient-PixelGardenCommandSave");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private boolean allowed(ICommandSender sender, String permission) {
