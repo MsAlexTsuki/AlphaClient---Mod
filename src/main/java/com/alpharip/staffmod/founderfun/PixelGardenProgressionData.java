@@ -306,8 +306,57 @@ public final class PixelGardenProgressionData {
         QuestInstance instance = instances.get(instanceId);
         if (instance == null) return false;
         QuestDefinition definition = definitions.get(instance.definitionId);
-        return definition != null && playerLevel >= definition.requiredLevel
-                && playerPrestige >= definition.requiredPrestige;
+        if (definition == null || playerLevel < definition.requiredLevel
+                || playerPrestige < definition.requiredPrestige) return false;
+
+        String tier = normalizeTier(definition.tier);
+        int minLevel = tierMinLevel(tier);
+        int maxLevel = tierMaxLevel(tier);
+        int tierPrestige = tierRequiredPrestige(tier);
+        return playerLevel >= minLevel && playerLevel <= maxLevel
+                && playerPrestige >= tierPrestige;
+    }
+
+    private static String normalizeTier(String tier) {
+        return tier == null ? "" : tier.trim().toLowerCase(java.util.Locale.ROOT)
+                .replace('_', ' ').replace('-', ' ').replaceAll("\\s+", " ");
+    }
+
+    private static int tierMinLevel(String tier) {
+        if ("beginner".equals(tier)) return 1;
+        if ("rookie".equals(tier)) return 11;
+        if ("scout".equals(tier)) return 21;
+        if ("rogue".equals(tier)) return 31;
+        if ("elite".equals(tier)) return 41;
+        if ("alpha".equals(tier)) return 51;
+        if ("senior".equals(tier)) return 61;
+        if ("senior advanced".equals(tier)) return 71;
+        if ("legendary".equals(tier)) return 81;
+        if ("end game".equals(tier)) return 91;
+        if ("endless".equals(tier)) return 101;
+        return 1;
+    }
+
+    private static int tierMaxLevel(String tier) {
+        if ("beginner".equals(tier)) return 10;
+        if ("rookie".equals(tier)) return 20;
+        if ("scout".equals(tier)) return 30;
+        if ("rogue".equals(tier)) return 40;
+        if ("elite".equals(tier)) return 50;
+        if ("alpha".equals(tier)) return 60;
+        if ("senior".equals(tier)) return 70;
+        if ("senior advanced".equals(tier)) return 80;
+        if ("legendary".equals(tier)) return 90;
+        if ("end game".equals(tier)) return 100;
+        return Integer.MAX_VALUE;
+    }
+
+    private static int tierRequiredPrestige(String tier) {
+        if ("rogue".equals(tier) || "elite".equals(tier)) return 1;
+        if ("alpha".equals(tier)) return 3;
+        if ("senior".equals(tier) || "senior advanced".equals(tier)
+                || "legendary".equals(tier) || "end game".equals(tier) || "endless".equals(tier)) return 8;
+        return 0;
     }
 
     public synchronized boolean acceptQuest(String instanceId, int playerLevel, int playerPrestige) {
