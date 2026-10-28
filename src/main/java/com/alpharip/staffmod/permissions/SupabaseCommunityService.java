@@ -488,6 +488,37 @@ public final class SupabaseCommunityService {
         return result;
     }
 
+    /** Calls the server-authorized Pixel Garden account management RPC. */
+    public static synchronized JsonObject managePixelGarden(String action, String targetAlphaName, int amount) throws Exception {
+        if (!isSignedInFounder()) throw new SecurityException("Only Founder can manage another account's Pixel Garden.");
+        if (targetAlphaName == null || !targetAlphaName.trim().matches("[A-Za-z0-9_]{3,20}"))
+            throw new IllegalArgumentException("Enter a valid Alpha Account name.");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("p_action", action);
+        payload.addProperty("p_target_alpha_name", targetAlphaName.trim());
+        payload.addProperty("p_amount", amount);
+        return requestJson("POST", "/rest/v1/rpc/founder_pixel_garden_manage", accessToken, payload.toString());
+    }
+
+    /** Reads the current or named account's Pixel Garden coin balance. */
+    public static synchronized JsonObject getPixelGardenCoins(String targetAlphaName) throws Exception {
+        if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
+        JsonObject payload = new JsonObject();
+        if (targetAlphaName != null && !targetAlphaName.trim().isEmpty()) payload.addProperty("p_alpha_name", targetAlphaName.trim());
+        else payload.add("p_alpha_name", com.google.gson.JsonNull.INSTANCE);
+        return requestJson("POST", "/rest/v1/rpc/pixel_garden_get_account_coins", accessToken, payload.toString());
+    }
+
+    /** Consumes one reset token and applies the selected reset atomically on the server. */
+    public static synchronized JsonObject resetPixelGarden(String resetType) throws Exception {
+        if (accessToken == null) throw new IllegalStateException("Sign in to your Alpha Account first.");
+        if (!("full".equals(resetType) || "progress".equals(resetType) || "coins".equals(resetType)))
+            throw new IllegalArgumentException("Invalid reset type.");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("p_reset_type", resetType);
+        return requestJson("POST", "/rest/v1/rpc/pixel_garden_reset_self", accessToken, payload.toString());
+    }
+
     /** True only when the authenticated Alpha community profile has verified Founder status. */
     public static boolean isSignedInFounder() { return accessToken != null && signedInFounder; }
 
