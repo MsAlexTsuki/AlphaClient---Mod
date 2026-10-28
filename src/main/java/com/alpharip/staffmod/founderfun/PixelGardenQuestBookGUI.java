@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.founderfun;
 
 import com.alpharip.staffmod.gui.AlphaButton;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -22,6 +24,11 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private static final int TAB_COMPLETED = 12;
     private static final int QUEST_BASE = 100;
     private static final int BACK = 4;
+    private static final int ACCEPT = 20;
+    private static final int SUBMIT = 21;
+    private static final int CLAIM = 22;
+    private static final int AMOUNT_DOWN = 23;
+    private static final int AMOUNT_UP = 24;
 
     private final GuiScreen parent;
     private final PixelGardenGame game = PixelGardenGame.getInstance();
@@ -30,9 +37,12 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private final List<String> visibleInstanceIds = new ArrayList<String>();
     private String selectedInstanceId;
     private int scrollOffset;
+    private int selectedDeliveryAmount = 1;
+    private String actionMessage = "";
 
     public PixelGardenQuestBookGUI(GuiScreen parent) {
         this.parent = parent;
+        progression.ensureDefaultCatalog();
     }
 
     private List<PixelGardenProgressionData.QuestInstance> questsForView() {
@@ -106,7 +116,67 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                     listWidth, 24, label, instance.instanceId.equals(selectedInstanceId)));
         }
 
+        PixelGardenProgressionData.QuestInstance selected = selectedQuest();
+        PixelGardenProgressionData.QuestDefinition selectedDefinition = definition(selected);
+        int actionY = height - 61;
+        int actionX = left + bookWidth / 2 + 12;
+        int actionWidth = Math.max(90, bookWidth / 2 - 26);
+        if (selected != null && selectedDefinition != null
+                && selected.getStatus() == PixelGardenProgressionData.QuestStatus.AVAILABLE) {
+            buttonList.add(new AlphaButton(ACCEPT, actionX, actionY, actionWidth, 20, "Accept Quest"));
+        } else if (selected != null && selectedDefinition != null
+                && selected.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) {
+            PixelGardenProgressionData.Objective delivery = firstDeliveryObjective(selectedDefinition);
+            if (delivery != null && selected.getObjectiveProgress(delivery.id) < delivery.requiredAmount) {
+                buttonList.add(new AlphaButton(AMOUNT_DOWN, actionX, actionY, 24, 20, "-"));
+                buttonList.add(new AlphaButton(AMOUNT_UP, actionX + 28, actionY, 24, 20, "+"));
+                buttonList.add(new AlphaButton(SUBMIT, actionX + 56, actionY, Math.max(64, actionWidth - 56), 20, "Submit Crop"));
+            }
+        } else if (selected != null && selectedDefinition != null
+                && selected.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED
+                && !selected.areRewardsClaimed() && !selectedDefinition.rewards.isEmpty()) {
+            buttonList.add(new AlphaButton(CLAIM, actionX, actionY, actionWidth, 20, "Claim Rewards"));
+        }
         buttonList.add(new AlphaButton(BACK, width / 2 - 62, height - 34, 124, 22, "Close Book"));
+    }
+
+    private PixelGardenProgressionData.Objective firstDeliveryObjective(
+            PixelGardenProgressionData.QuestDefinition definition) {
+        for (PixelGardenProgressionData.Objective objective : definition.objectives) {
+            if ("DELIVER_CROP".equalsIgnoreCase(objective.type)) return objective;
+        }
+        return null;
+    }
+
+    private int playerPrestige() {
+        if (!SupabaseCommunityService.isSignedIn()) return 0;
+        try {
+            com.google.gson.JsonObject state = SupabaseCommunityService.getPixelGardenPrestigeState();
+            return state.has("prestige_count") ? Math.max(0, state.get("prestige_count").getAsInt()) : 0;
+        } catch (Exception ignored) { return 0; }
+    }
+
+    private void saveProgressionAsync() {
+        if (!SupabaseCommunityService.isSignedIn()) return;
+        final com.google.gson.JsonObject snapshot = game.toSaveData();
+        Thread thread = new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    if (SupabaseCommunityService.isSignedIn()) {
+                        SupabaseCommunityService.savePixelGardenSave(snapshot);
+                    }
+                } catch (Exception exception) {
+                    System.err.println("[AlphaClient] Pixel Garden quest save failed: " + exception.getMessage());
+                }
+            }
+        }, "AlphaClient-PixelGardenQuestSave");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void actionMessage(String message) {
+        actionMessage = message == null ? "" : message;
+        initGui();
     }
 
     private int count(PixelGardenProgressionData.QuestStatus status) {
@@ -132,6 +202,75 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
+        if (button.id == ACCEPT) {
+            PixelGardenProgressionData.QuestInstance selected = selectedQuest();
+            if (selected == null) { actionMessage("Select a quest first."); return; }
+            if (!progression.acceptQuest(selected.instanceId, progression.getLevel(), playerPrestige())) {
+                actionMessage(progression.getActiveQuestCount() >= PixelGardenProgressionData.MAX_ACTIVE_QUESTS
+                        ? "You can have at most 5 active quests."
+                        : "Quest requirements are not met yet.");
+            } else {
+                saveProgressionAsync();
+                actionMessage("Quest accepted. Your progress is now being tracked.");
+            }
+            return;
+        }
+        if (button.id == AMOUNT_DOWN || button.id == AMOUNT_UP) {
+            selectedDeliveryAmount = Math.max(1, Math.min(1000,
+                    selectedDeliveryAmount + (button.id == AMOUNT_UP ? 1 : -1)));
+            initGui();
+            return;
+        }
+        if (button.id == SUBMIT) {
+            PixelGardenProgressionData.QuestInstance selected = selectedQuest();
+            PixelGardenProgressionData.QuestDefinition def = definition(selected);
+            PixelGardenProgressionData.Objective objective = firstDeliveryObjective(def);
+            if (selected == null || def == null || objective == null
+                    || selected.getStatus() != PixelGardenProgressionData.QuestStatus.ACTIVE) {
+                actionMessage("This quest has no active crop delivery.");
+                return;
+            }
+            PixelGardenGame.Crop crop;
+            try { crop = PixelGardenGame.Crop.valueOf(objective.target.toUpperCase(java.util.Locale.ROOT)); }
+            catch (IllegalArgumentException exception) { actionMessage("This quest uses an unsupported crop."); return; }
+            int remaining = objective.requiredAmount - selected.getObjectiveProgress(objective.id);
+            int amount = Math.min(selectedDeliveryAmount, Math.min(remaining, game.getInventory(crop)));
+            if (amount < 1) { actionMessage("Not enough " + crop.displayName + " in your harvested inventory."); return; }
+            if (!game.consumeHarvestedCrop(crop, amount)) { actionMessage("Inventory changed. Please try again."); return; }
+            if (!progression.setObjectiveProgress(selected.instanceId, objective.id,
+                    selected.getObjectiveProgress(objective.id) + amount)) {
+                actionMessage("Could not record submission. Please contact an administrator.");
+                return;
+            }
+            progression.recordActionProgress("__NO_MATCH__", "__NO_MATCH__", 0);
+            // Complete the quest only after inventory has been consumed and progress saved.
+            if (selected.getObjectiveProgress(objective.id) + amount >= objective.requiredAmount) {
+                progression.completeQuest(selected.instanceId);
+            }
+            saveProgressionAsync();
+            actionMessage("Submitted " + amount + " " + crop.displayName + ".");
+            return;
+        }
+        if (button.id == CLAIM) {
+            PixelGardenProgressionData.QuestInstance selected = selectedQuest();
+            PixelGardenProgressionData.QuestDefinition def = definition(selected);
+            if (selected == null || def == null || selected.getStatus() != PixelGardenProgressionData.QuestStatus.COMPLETED
+                    || selected.areRewardsClaimed() || def.rewards.isEmpty()) {
+                actionMessage("No unclaimed rewards are available.");
+                return;
+            }
+            if (!game.grantQuestRewards(def.rewards)) {
+                actionMessage("Reward configuration is invalid or exceeds a supported limit.");
+                return;
+            }
+            if (!progression.markRewardsClaimed(selected.instanceId)) {
+                actionMessage("Rewards were granted but could not be marked as claimed. Please report this.");
+                return;
+            }
+            saveProgressionAsync();
+            actionMessage("Quest rewards claimed.");
+            return;
+        }
         if (button.id == BACK) {
             if (mc != null) mc.displayGuiScreen(parent);
             return;
@@ -241,6 +380,9 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
 
         PixelGardenProgressionData.QuestInstance selected = selectedQuest();
         PixelGardenProgressionData.QuestDefinition def = definition(selected);
+        if (!actionMessage.isEmpty()) {
+            drawCenteredString(fontRendererObj, actionMessage, width / 2, height - 49, 0xFF67451F);
+        }
         if (selected == null || def == null || selected.getStatus() != viewStatus) {
             drawCenteredString(fontRendererObj, "Choose a quest", detailX + detailW / 2, listY + 35, 0xFF67451F);
             drawWrapped("Select an entry on the left to read its story, objectives and rewards.",
@@ -285,8 +427,24 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             String rewardText = def.rewards.isEmpty() ? "Not configured"
                     : def.rewards.toString().replace("{", "").replace("}", "").replace("=", " x ");
             drawWrapped(rewardText, detailX + 8, rewardY + 12, detailW - 16, 0xFF493019, 11);
-            drawString(fontRendererObj, statusLabel(selected.getStatus()), detailX + 8, top + h - 20,
-                    selected.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED
+            if (selected.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) {
+                PixelGardenProgressionData.Objective delivery = firstDeliveryObjective(def);
+                if (delivery != null) {
+                    PixelGardenGame.Crop crop = null;
+                    try { crop = PixelGardenGame.Crop.valueOf(delivery.target.toUpperCase(java.util.Locale.ROOT)); }
+                    catch (IllegalArgumentException ignored) { }
+                    int remaining = delivery.requiredAmount - selected.getObjectiveProgress(delivery.id);
+                    int inInventory = crop == null ? 0 : game.getInventory(crop);
+                    drawString(fontRendererObj, "Submit amount: " + selectedDeliveryAmount
+                            + "  |  Remaining: " + Math.max(0, remaining), detailX + 8, top + h - 39, 0xFF493019);
+                    drawString(fontRendererObj, "Harvested in inventory: " + inInventory,
+                            detailX + 8, top + h - 28, 0xFF493019);
+                }
+            }
+            String rewardTextStatus = def.rewards.isEmpty() ? "Rewards not configured"
+                    : (selected.areRewardsClaimed() ? "Rewards claimed" : "Rewards available on completion");
+            drawString(fontRendererObj, statusLabel(selected.getStatus()) + "  |  " + rewardTextStatus,
+                    detailX + 8, top + h - 20, selected.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED
                             ? 0xFF4B6B34 : 0xFF8A5A20);
         }
 
