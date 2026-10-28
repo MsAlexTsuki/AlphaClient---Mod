@@ -63,7 +63,9 @@ begin
       when current_level <= 39 then 500 + (current_level - 31) * 50
       when current_level = 40 then 1000 when current_level = 41 then 1010
       when current_level = 42 then 1015 when current_level = 43 then 1020
-      when current_level = 44 then 1030 when current_level >= 45 then 1040 + (current_level - 45) * 10
+      when current_level = 44 then 1030 when current_level = 100 then 1600
+      when current_level >= 101 then 1600 + (current_level - 100) * 10
+      when current_level >= 45 then 1040 + (current_level - 45) * 10
       else 5 end));
 
   if normalized_action in ('info', 'check_level', 'check_xp') then
