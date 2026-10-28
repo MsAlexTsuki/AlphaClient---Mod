@@ -124,6 +124,33 @@ public final class PixelGardenProgressionData {
         return true;
     }
 
+    /** Merges definitions from the shared catalog without assigning them to this player. */
+    public synchronized int mergeSharedDefinitions(JsonArray sharedDefinitions) {
+        if (sharedDefinitions == null) return 0;
+        int merged = 0;
+        for (JsonElement item : sharedDefinitions) {
+            QuestDefinition definition = QuestDefinition.fromJson(item);
+            if (definition == null) continue;
+            if (definitions.containsKey(definition.id)) {
+                definitions.put(definition.id, definition.copy());
+            } else {
+                definitions.put(definition.id, definition.copy());
+            }
+            merged++;
+        }
+        return merged;
+    }
+
+    /** Removes an available or active quest and records it in history. */
+    public synchronized boolean removeQuest(String instanceId) {
+        QuestInstance instance = instances.get(instanceId);
+        if (instance == null || (instance.status != QuestStatus.ACTIVE && instance.status != QuestStatus.AVAILABLE)) return false;
+        instance.status = QuestStatus.ABANDONED;
+        instance.finishedAt = System.currentTimeMillis();
+        history.add(new HistoryEntry(instance.instanceId, instance.definitionId, QuestStatus.ABANDONED, instance.finishedAt));
+        return true;
+    }
+
     public synchronized boolean addDefinition(QuestDefinition definition) {
         if (definition == null || !definition.isValid() || definitions.containsKey(definition.id)) return false;
         definitions.put(definition.id, definition.copy());
@@ -406,9 +433,15 @@ public final class PixelGardenProgressionData {
 
         public QuestDefinition(String id, String name, String description, int requiredLevel,
                 int requiredPrestige, String tier, List<Objective> objectives, Map<String, Integer> rewards) {
+            this(id, name, description, "", requiredLevel, requiredPrestige, tier, objectives, rewards);
+        }
+
+        public QuestDefinition(String id, String name, String description, String npc, int requiredLevel,
+                int requiredPrestige, String tier, List<Objective> objectives, Map<String, Integer> rewards) {
             this.id = clean(id);
             this.name = clean(name);
             this.description = description == null ? "" : description;
+            this.npc = npc == null ? "" : npc.trim();
             this.requiredLevel = Math.max(1, requiredLevel);
             this.requiredPrestige = Math.max(0, requiredPrestige);
             this.tier = tier == null ? "" : tier;
@@ -429,7 +462,7 @@ public final class PixelGardenProgressionData {
         }
 
         private QuestDefinition copy() {
-            return new QuestDefinition(id, name, description, requiredLevel, requiredPrestige, tier, objectives, rewards);
+            return new QuestDefinition(id, name, description, npc, requiredLevel, requiredPrestige, tier, objectives, rewards);
         }
 
         private JsonObject toJson() {
