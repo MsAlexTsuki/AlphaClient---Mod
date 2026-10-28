@@ -37,15 +37,20 @@ public final class PixelGardenIdsGUI extends GuiScreen {
             }
         }
         entries.add("");
-        entries.add("NPC REFERENCES");
+        entries.add("REGISTERED NPC IDS");
+        for (java.util.Map.Entry<String, String> npc : PixelGardenNPC.getAllNpcNames().entrySet()) {
+            entries.add("NPC  |  " + npc.getValue() + "  |  " + npc.getKey());
+            npcs.add(npc.getKey());
+        }
+        entries.add("");
+        entries.add("NPC REFERENCES USED BY QUESTS");
         if (npcs.isEmpty()) {
             entries.add("No NPC references are configured in the current quest catalog.");
         } else {
-            for (String npc : npcs) entries.add("NPC NAME  |  " + npc);
+            for (String npc : npcs) {
+                entries.add("NPC  |  " + PixelGardenNPC.displayName(npc) + "  |  " + npc);
+            }
         }
-        entries.add("");
-        entries.add("The current source does not define a separate NPC ID registry.");
-        entries.add("NPC references are stored as names on quest definitions.");
     }
 
     @Override
@@ -86,9 +91,10 @@ public final class PixelGardenIdsGUI extends GuiScreen {
                 y += 5;
                 continue;
             }
-            int color = entry.equals("NPC REFERENCES") ? 0xFFFFD45A
+            int color = (entry.equals("REGISTERED NPC IDS") || entry.equals("NPC REFERENCES USED BY QUESTS"))
+                    ? 0xFFFFD45A
                     : entry.startsWith("QUEST ID") ? 0xFFE7D5A6
-                    : entry.startsWith("NPC NAME") ? 0xFFB7C4D5 : 0xFF9CA7B7;
+                    : entry.startsWith("NPC  |") ? 0xFFB7C4D5 : 0xFF9CA7B7;
             drawString(fontRendererObj, fontRendererObj.trimStringToWidth(entry, width - 32), 16, y, color);
             y += 14;
         }
