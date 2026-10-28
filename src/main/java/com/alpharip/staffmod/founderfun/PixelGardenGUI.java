@@ -170,25 +170,28 @@ public final class PixelGardenGUI extends GuiScreen {
             String label = (selectedCrop == crop ? "> " : "") + crop.displayName + " (" + game.getSeeds(crop) + ")";
             buttonList.add(new AlphaButton(CROP_BASE + crop.ordinal(), x, cropY, cropWidth, 20, label));
         }
-        int navButtonWidth = Math.min(112, Math.max(70, (width - 48 - 3 * 8) / 4));
         int navGap = 8;
-        int navRowHeight = 22;
-        int navRows = 3;
-        int navY = height - 28 - navRows * navRowHeight - (navRows - 1) * 6;
-        String[] navLabels = {"Shop", "Inventory", "Sell", "Upgrades", "Prestige", "Quest Book", "NPCs", "Help", "Back"};
-        int[] navIds = {SHOP, INVENTORY, SELL, UPGRADES, PRESTIGE, QUESTBOOK, NPCS, HELP, BACK};
-        for (int i = 0; i < navIds.length; i++) {
-            int row = i / 4;
-            int col = i % 4;
-            int itemsInRow = Math.min(4, navIds.length - row * 4);
-            int rowWidth = itemsInRow * navButtonWidth + (itemsInRow - 1) * navGap;
-            int navX = (width - rowWidth) / 2;
-            int x = navX + col * (navButtonWidth + navGap);
-            int y = navY + row * (navRowHeight + 6);
-            AlphaButton navButton = new AlphaButton(navIds[i], x, y, navButtonWidth, navRowHeight, navLabels[i]);
-            if (navIds[i] == PRESTIGE) navButton.enabled = game.getPurchasedUpgradeSteps() >= 18;
+        int navButtonWidth = Math.min(112, Math.max(70, (width - 48 - navGap * 3) / 8));
+        int navButtonHeight = 22;
+        int navRowGap = 6;
+        String[] sideLabels = {"Shop", "Inventory", "Sell", "Upgrades", "Prestige", "Quest Book", "NPCs", "Help"};
+        int[] sideIds = {SHOP, INVENTORY, SELL, UPGRADES, PRESTIGE, QUESTBOOK, NPCS, HELP};
+        int sideColumnHeight = sideLabels.length / 2 * navButtonHeight
+                + (sideLabels.length / 2 - 1) * navRowGap;
+        int sideStartY = (height - sideColumnHeight) / 2;
+        int leftX = 16;
+        int rightX = width - 16 - navButtonWidth;
+        for (int i = 0; i < sideIds.length; i++) {
+            int column = i / 4;
+            int row = i % 4;
+            int x = column == 0 ? leftX : rightX;
+            int y = sideStartY + row * (navButtonHeight + navRowGap);
+            AlphaButton navButton = new AlphaButton(sideIds[i], x, y, navButtonWidth, navButtonHeight, sideLabels[i]);
+            if (sideIds[i] == PRESTIGE) navButton.enabled = game.getPurchasedUpgradeSteps() >= 18;
             buttonList.add(navButton);
         }
+        int backWidth = Math.min(112, Math.max(70, width / 8));
+        buttonList.add(new AlphaButton(BACK, (width - backWidth) / 2, height - 34, backWidth, navButtonHeight, "Back"));
     }
 
     private String plotButtonLabel(PixelGardenGame.Plot plot, long now, int index) {
