@@ -391,6 +391,7 @@ public final class PixelGardenGUI extends GuiScreen {
         if (plotScrollRow > 0) drawString(fontRendererObj, "Scroll up for earlier plots", gx, gy - 3, 0xFFB7C4D5);
         if ((unlockedCount + PLOT_COLUMNS - 1) / PLOT_COLUMNS > plotScrollRow + visibleRows)
             drawString(fontRendererObj, "Scroll down for more plots", gx, gy + 8 + tileHeight * visibleRows + gap * visibleRows + 2, 0xFFB7C4D5);
+        drawCenteredString(fontRendererObj, currentQuestSummary(), width / 2, height - 88, 0xFFFFD66B);
         drawCenteredString(fontRendererObj, "Seeds: " + selectedCrop.displayName + " x" + game.getSeeds(selectedCrop)
                 + "    Harvested inventory: " + inventoryTotal(), width / 2, height - 72, 0xFFE6E9EF);
         drawCenteredString(fontRendererObj, "Plant  >  Grow  >  Harvest  >  Sell  >  Upgrade",
@@ -399,6 +400,37 @@ public final class PixelGardenGUI extends GuiScreen {
                 cloudStatus.startsWith("Cloud save failed") ? 0xFFFF7777 : 0xFF9DA8B8);
         if (loadingCloud) drawCenteredString(fontRendererObj, "Loading account garden...", width / 2, height - 43, 0xFFFFD45A);
         super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    private String currentQuestSummary() {
+        PixelGardenProgressionData progression = game.getProgressionData();
+        progression.ensureDefaultCatalog();
+
+        PixelGardenProgressionData.QuestInstance chosen = null;
+        for (PixelGardenProgressionData.QuestInstance instance : progression.getInstances()) {
+            if (instance.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) {
+                chosen = instance;
+                break;
+            }
+        }
+        if (chosen == null) {
+            for (PixelGardenProgressionData.QuestInstance instance : progression.getInstances()) {
+                if ("pg_fresh_start".equals(instance.definitionId)
+                        && instance.getStatus() == PixelGardenProgressionData.QuestStatus.AVAILABLE) {
+                    return "Tutorial quest: Fresh Start — open Quest Book to accept";
+                }
+            }
+            return "Current quest: open Quest Book";
+        }
+
+        PixelGardenProgressionData.QuestDefinition definition = progression.getDefinition(chosen.definitionId);
+        if (definition == null || definition.objectives.isEmpty()) {
+            return "Current quest: " + (definition == null ? "Unknown quest" : definition.name);
+        }
+        PixelGardenProgressionData.Objective objective = definition.objectives.get(0);
+        int progress = chosen.getObjectiveProgress(objective.id);
+        return "Current quest: " + definition.name + " — " + objective.target + " "
+                + Math.min(progress, objective.requiredAmount) + "/" + objective.requiredAmount;
     }
 
     @Override public void onGuiClosed() { saveCloudAsync(); }
