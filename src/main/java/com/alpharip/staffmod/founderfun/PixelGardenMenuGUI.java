@@ -127,7 +127,9 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
     }
 
     private void drawCropIcon(PixelGardenGame.Crop crop, int x, int y, int s) {
-        drawSprite(x, y, s, s, crop.ordinal() * 16, 0);
+        int spriteU = crop == PixelGardenGame.Crop.POTATO ? 32
+                : crop == PixelGardenGame.Crop.CARROT ? 16 : crop.ordinal() * 16;
+        drawSprite(x, y, s, s, spriteU, 0);
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
