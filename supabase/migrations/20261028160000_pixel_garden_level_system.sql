@@ -71,7 +71,7 @@ begin
       'required_xp', required_xp, 'xp_remaining', greatest(0, required_xp - current_xp), 'reset_level_tokens', tokens);
   end if;
 
-  if normalized_action in ('setlevel', 'resetlevel', 'give_token', 'take_token') and not actor_founder then
+  if normalized_action in ('setlevel', 'resetlevel', 'give_token', 'take_token', 'edit_xp', 'edit_rewards', 'edit_desc', 'create_level', 'delete_level', 'edit_message') and not coalesce(actor_founder, false) then
     raise exception 'Only Founder can perform this level-management action.' using errcode = '42501';
   end if;
 
