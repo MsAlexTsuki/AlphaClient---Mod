@@ -55,7 +55,7 @@ public final class PixelGardenCommand extends CommandBase {
             }
             if (args.length == 4 && "givequest".equalsIgnoreCase(args[1])) {
                 return getListOfStringsMatchingLastWord(args, new String[] {
-                        "carrot", "potato", "wheat", "pumpkin", "melon", "cactus", "sugarcane", "beetroot"
+                        "carrot", "potato", "wheat", "pumpkin", "melon", "cactus", "sugarcane", "berries", "beetroot"
                 });
             }
         }
@@ -80,9 +80,9 @@ public final class PixelGardenCommand extends CommandBase {
             String sub = args[3].toLowerCase(Locale.ROOT);
             if ("difficulty".equals(sub)) return getListOfStringsMatchingLastWord(args, new String[] {"Scout", "Rogue", "Elite", "Alpha"});
             if ("harvest".equals(sub) || "sell".equals(sub))
-                return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin", "melon", "cactus", "sugarcane"});
+                return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin", "melon", "cactus", "sugarcane", "berries"});
             if ("deliver".equals(sub) || "plant".equals(sub) || "inventory".equals(sub))
-                return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin", "seeds_wheat", "seeds_carrot", "seeds_potato", "seeds_pumpkin"});
+                return getListOfStringsMatchingLastWord(args, new String[] {"wheat", "carrot", "potato", "pumpkin", "seeds_wheat", "seeds_carrot", "seeds_potato", "seeds_pumpkin", "seeds_melon", "seeds_cactus", "seeds_sugarcane", "seeds_berries"});
         }
         if ("msg".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"on", "off"});
@@ -123,8 +123,8 @@ public final class PixelGardenCommand extends CommandBase {
                 && ("add".equalsIgnoreCase(args[1]) || "remove".equalsIgnoreCase(args[1]))) {
             return getListOfStringsMatchingLastWord(args, new String[] {
                     "coins",
-                    "crop_wheat", "crop_potato", "crop_carrot", "crop_pumpkin", "crop_melon", "crop_cactus", "crop_sugarcane",
-                    "seeds_wheat", "seeds_potato", "seeds_carrot", "seeds_pumpkin", "seeds_melon", "seeds_cactus", "seeds_sugarcane"
+                    "crop_wheat", "crop_potato", "crop_carrot", "crop_pumpkin", "crop_melon", "crop_cactus", "crop_sugarcane", "crop_berries",
+                    "seeds_wheat", "seeds_potato", "seeds_carrot", "seeds_pumpkin", "seeds_melon", "seeds_cactus", "seeds_sugarcane", "seeds_berries"
             });
         }
         if (("givequest".equals(root) || "takequest".equals(root) || "completequest".equals(root))
@@ -143,7 +143,7 @@ public final class PixelGardenCommand extends CommandBase {
         if (("buy".equals(root) || "sell".equals(root) || "plant".equals(root) || "harvest".equals(root))
                 && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {
-                    "carrot", "potato", "wheat", "pumpkin", "melon", "cactus", "sugarcane", "beetroot"
+                    "carrot", "potato", "wheat", "pumpkin", "melon", "cactus", "sugarcane", "berries", "beetroot"
             });
         return java.util.Collections.emptyList();
     }
@@ -422,7 +422,7 @@ public final class PixelGardenCommand extends CommandBase {
                 String crop = seed ? item.substring(6) : item;
                 if (!("wheat".equals(crop) || "carrot".equals(crop) || "potato".equals(crop)
                         || "pumpkin".equals(crop) || "melon".equals(crop)
-                        || "cactus".equals(crop) || "sugarcane".equals(crop))
+                        || "cactus".equals(crop) || "sugarcane".equals(crop) || "berries".equals(crop))
                         || amount < 1 || amount > 1000000) {
                     reply(sender, "Use wheat, carrot, potato, pumpkin, melon, cactus, sugarcane or their seeds_<crop> IDs, with an amount from 1 to 1000000.");
                     return;
@@ -680,7 +680,7 @@ public final class PixelGardenCommand extends CommandBase {
                 reply(sender, sold == 0 ? "You have no harvested crops to sell." : "Sold " + sold + " crop(s). Coins: " + game.getCoins() + ".");
             } else {
                 PixelGardenGame.Crop crop = crop(args[1]);
-                if (crop == null) { reply(sender, "Unknown crop. Choose wheat, carrot, potato, pumpkin, melon, cactus or sugarcane."); return; }
+                if (crop == null) { reply(sender, "Unknown crop. Choose wheat, carrot, potato, pumpkin, melon, cactus, sugarcane or berries."); return; }
                 int amount = args.length > 2 ? number(args[2]) : game.getInventory(crop);
                 boolean sold = amount > 0 && game.sell(crop, amount);
                 if (sold) saveCloudAsync(game);
