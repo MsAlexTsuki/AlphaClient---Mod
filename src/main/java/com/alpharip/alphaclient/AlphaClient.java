@@ -33,6 +33,7 @@ import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.founderfun.PixelGardenMessageNotifier;
+import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -143,6 +144,11 @@ public final class AlphaClient {
         pendingCommandGui = screen;
     }
 
+    private static boolean isPixelGardenScreen(GuiScreen screen) {
+        return screen != null && screen.getClass().getName()
+                .startsWith("com.alpharip.staffmod.founderfun.PixelGarden");
+    }
+
     /** Registers the central command namespace and short aliases against shared handlers. */
     private void registerClientCommands() {
         String[] commands = {
@@ -175,11 +181,18 @@ public final class AlphaClient {
         if (event.phase != TickEvent.Phase.END) return;
 
         // Client commands run while GuiChat is closing; defer requested screens until the next tick.
+        Minecraft guiMinecraft = Minecraft.getMinecraft();
         GuiScreen requestedGui = pendingCommandGui;
         if (requestedGui != null) {
             pendingCommandGui = null;
-            Minecraft guiMinecraft = Minecraft.getMinecraft();
-            if (guiMinecraft != null) guiMinecraft.displayGuiScreen(requestedGui);
+            if (guiMinecraft != null && (PixelGardenModuleSettings.getInstance().isEnabled()
+                    || !isPixelGardenScreen(requestedGui))) {
+                guiMinecraft.displayGuiScreen(requestedGui);
+            }
+        }
+        if (guiMinecraft != null && !PixelGardenModuleSettings.getInstance().isEnabled()
+                && isPixelGardenScreen(guiMinecraft.currentScreen)) {
+            guiMinecraft.displayGuiScreen(null);
         }
 
         // Staff Operations presence heartbeat and automatic AFK detection.
