@@ -160,6 +160,8 @@ public final class PixelGardenGame {
         if (plot.getState(now) != PlotState.EMPTY || seeds[crop.ordinal()] <= 0) return false;
         seeds[crop.ordinal()]--;
         plot.plant(crop, now, growthLevels);
+        progressionData.recordActionProgress("PLANT_CROP",
+                crop.name().toLowerCase(java.util.Locale.ROOT), 1);
         return true;
     }
     public synchronized boolean harvest(int plotIndex, long now) {
