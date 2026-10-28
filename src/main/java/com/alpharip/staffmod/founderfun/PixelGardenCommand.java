@@ -57,7 +57,7 @@ public final class PixelGardenCommand extends CommandBase {
             else reply(sender,"Usage: /pixelgarden multiplier prestige add <Alpha account name> <multiplier> | /pixelgarden multiplier prestige reset <Alpha account name>");
         } else if ("guide".equals(action)) {
             Minecraft mc = Minecraft.getMinecraft();
-            open(new com.alpharip.staffmod.gui.AlphaHelpGui(mc == null ? null : mc.currentScreen));
+            open(new PixelGardenHelpGUI(mc == null ? null : mc.currentScreen));
         } else if ("help".equals(action) || "?".equals(action)) {
             showCommandGuide(sender);
         } else if ("open".equals(action)) {
