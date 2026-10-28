@@ -58,6 +58,72 @@ public final class PixelGardenProgressionData {
         nextDailyResetAt = Math.max(0L, timestamp);
     }
 
+    /**
+     * Adds the starter Pixel Garden quest catalog to this save without duplicating
+     * quest instances. Reward values intentionally remain configurable rather than guessed.
+     */
+    public synchronized void ensureDefaultCatalog() {
+        addStarterQuest("pg_fresh_start", "Fresh Start",
+                "Begin your garden journey by delivering your first wheat crop.",
+                "DELIVER_CROP", "wheat", 1);
+        addStarterQuest("pg_first_coins", "First Coins",
+                "Sell your first harvested wheat to learn how the garden economy works.",
+                "SELL_CROP", "wheat", 1);
+        addStarterQuest("pg_growing_bigger", "Growing Bigger",
+                "Harvest wheat from your garden and build a steady routine.",
+                "HARVEST_CROP", "wheat", 3);
+        addStarterQuest("pg_your_own_garden", "Your Own Garden",
+                "Plant and harvest a carrot crop as you expand your garden skills.",
+                "HARVEST_CROP", "carrot", 1);
+    }
+
+    private void addStarterQuest(String id, String name, String description,
+            String objectiveType, String target, int amount) {
+        if (!definitions.containsKey(id)) {
+            List<Objective> objectives = new ArrayList<Objective>();
+            objectives.add(new Objective(id + "_objective", objectiveType, target, amount));
+            addDefinition(new QuestDefinition(id, name, description, 1, 0, "Beginner",
+                    objectives, Collections.<String, Integer>emptyMap()));
+        }
+        if (!hasInstanceForDefinition(id)) assignQuest(id);
+    }
+
+    private boolean hasInstanceForDefinition(String definitionId) {
+        for (QuestInstance instance : instances.values()) {
+            if (definitionId.equals(instance.definitionId)) return true;
+        }
+        return false;
+    }
+
+    /** Progresses active action-based objectives after the game confirms an action succeeded. */
+    public synchronized void recordActionProgress(String objectiveType, String target, int amount) {
+        if (objectiveType == null || target == null || amount <= 0) return;
+        List<String> completedIds = new ArrayList<String>();
+        for (QuestInstance instance : instances.values()) {
+            if (instance.status != QuestStatus.ACTIVE) continue;
+            QuestDefinition definition = definitions.get(instance.definitionId);
+            if (definition == null) continue;
+            for (Objective objective : definition.objectives) {
+                if (objectiveType.equalsIgnoreCase(objective.type)
+                        && target.equalsIgnoreCase(objective.target)) {
+                    int current = instance.getObjectiveProgress(objective.id);
+                    instance.objectiveProgress.put(objective.id,
+                            Integer.valueOf(Math.min(objective.requiredAmount, current + amount)));
+                }
+            }
+            if (areObjectivesComplete(instance, definition)) completedIds.add(instance.instanceId);
+        }
+        for (String instanceId : completedIds) completeQuest(instanceId);
+    }
+
+    private boolean areObjectivesComplete(QuestInstance instance, QuestDefinition definition) {
+        if (definition.objectives.isEmpty()) return false;
+        for (Objective objective : definition.objectives) {
+            if (instance.getObjectiveProgress(objective.id) < objective.requiredAmount) return false;
+        }
+        return true;
+    }
+
     public synchronized boolean addDefinition(QuestDefinition definition) {
         if (definition == null || !definition.isValid() || definitions.containsKey(definition.id)) return false;
         definitions.put(definition.id, definition.copy());
