@@ -24,7 +24,7 @@ public final class PixelGardenCommand extends CommandBase {
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override
-    public List<String> getTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args == null || args.length == 0) return java.util.Collections.emptyList();
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, new String[] {
