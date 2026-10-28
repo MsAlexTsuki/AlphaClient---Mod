@@ -325,6 +325,25 @@ public final class PixelGardenProgressionData {
         for (String instanceId : completedIds) completeQuest(instanceId);
     }
 
+    /** Re-evaluates inventory targets against the current total item counts. */
+    public synchronized void updateInventoryObjectives(Map<String, Integer> itemCounts) {
+        if (itemCounts == null) return;
+        List<String> completedIds = new ArrayList<String>();
+        for (QuestInstance instance : instances.values()) {
+            if (instance.status != QuestStatus.ACTIVE) continue;
+            QuestDefinition definition = definitions.get(instance.definitionId);
+            if (definition == null) continue;
+            for (Objective objective : definition.objectives) {
+                if (!"INVENTORY_ITEM".equalsIgnoreCase(objective.type)) continue;
+                Integer count = itemCounts.get(objective.target.toLowerCase(java.util.Locale.ROOT));
+                int current = count == null ? 0 : Math.max(0, count.intValue());
+                instance.objectiveProgress.put(objective.id, Integer.valueOf(Math.min(objective.requiredAmount, current)));
+            }
+            if (areObjectivesComplete(instance, definition)) completedIds.add(instance.instanceId);
+        }
+        for (String instanceId : completedIds) completeQuest(instanceId);
+    }
+
     private boolean areObjectivesComplete(QuestInstance instance, QuestDefinition definition) {
         if (definition.objectives.isEmpty()) return false;
         for (Objective objective : definition.objectives) {
