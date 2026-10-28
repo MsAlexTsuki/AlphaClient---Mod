@@ -236,6 +236,12 @@ public final class PixelGardenCommand extends CommandBase {
                     if (purchase.has("save_data") && purchase.get("save_data").isJsonObject()) {
                         game.loadSaveData(purchase.getAsJsonObject("save_data"));
                     }
+                    if ("expansion".equals(upgrade)) {
+                        game.getProgressionData().recordTutorialAction("EXPAND_GARDEN", "*");
+                    } else {
+                        game.getProgressionData().recordTutorialAction("BUY_UPGRADE", upgrade);
+                    }
+                    saveCloudAsync(game);
                     reply(sender, "Purchased " + upgrade.replace('_', ' ') + ". Coins: " + game.getCoins()
                             + ". Upgrade steps: " + purchase.get("upgrade_steps").getAsInt() + "/18.");
                 }
