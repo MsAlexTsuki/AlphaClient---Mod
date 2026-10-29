@@ -75,7 +75,7 @@ public final class PixelGardenCommand extends CommandBase {
         if ("add".equals(root) && args.length == 3 && "questid".equalsIgnoreCase(args[1]))
             return getListOfStringsMatchingLastWord(args, sharedQuestIds());
         if ("add".equals(root) && args.length == 4 && "questid".equalsIgnoreCase(args[1]))
-            return getListOfStringsMatchingLastWord(args, new String[] {"harvest", "sell", "deliver", "plant", "inventory", "name", "difficulty", "level"});
+            return getListOfStringsMatchingLastWord(args, new String[] {"harvest", "sell", "deliver", "plant", "inventory", "name", "difficulty", "level", "prestige"});
         if ("add".equals(root) && args.length == 5 && "questid".equalsIgnoreCase(args[1])) {
             String sub = args[3].toLowerCase(Locale.ROOT);
             if ("difficulty".equals(sub)) return getListOfStringsMatchingLastWord(args, new String[] {"Scout", "Rogue", "Elite", "Alpha"});
@@ -403,13 +403,23 @@ public final class PixelGardenCommand extends CommandBase {
                 payload.addProperty("value", difficulty.substring(0, 1).toUpperCase(Locale.ROOT) + difficulty.substring(1));
                 runQuestAdminRequest(sender, payload, "Set " + questId + " difficulty to " + payload.get("value").getAsString() + ".");
             } else if ("level".equals(kind)) {
-                if (args.length != 5) { reply(sender, "Usage: /pixelgarden add questid <quest id> level <required level>"); return; }
+                if (args.length != 5) { reply(sender, "Usage: /garden add questid <quest id> level <required level>"); return; }
                 int level = number(args[4]);
                 if (level < 1 || level > 1000000 || !args[4].matches("[0-9]+")) { reply(sender, "Required level must be between 1 and 1000000."); return; }
                 payload.addProperty("action", "metadata_update");
                 payload.addProperty("field", "required_level");
                 payload.addProperty("value", level);
                 runQuestAdminRequest(sender, payload, "Set " + questId + " required level to " + level + ".");
+            } else if ("prestige".equals(kind)) {
+                if (args.length != 5) { reply(sender, "Usage: /garden add questid <quest id> prestige <prestige level>"); return; }
+                int prestige = number(args[4]);
+                if (!args[4].matches("[0-9]+") || prestige < 0 || prestige > 1000000) {
+                    reply(sender, "Required Prestige level must be between 0 and 1000000."); return;
+                }
+                payload.addProperty("action", "metadata_update");
+                payload.addProperty("field", "required_prestige");
+                payload.addProperty("value", prestige);
+                runQuestAdminRequest(sender, payload, "Set " + questId + " required Prestige level to " + prestige + ".");
             } else {
                 if (!("harvest".equals(kind) || "sell".equals(kind) || "deliver".equals(kind) || "plant".equals(kind) || "inventory".equals(kind))
                         || args.length != 6) {
