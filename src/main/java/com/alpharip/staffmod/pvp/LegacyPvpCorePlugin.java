@@ -14,7 +14,10 @@ import java.util.Map;
 public final class LegacyPvpCorePlugin implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
-        return new String[] { LegacyPvpTransformer.class.getName() };
+        return new String[] {
+                LegacyPvpTransformer.class.getName(),
+                com.alpharip.staffmod.gui.AlphaOptionsTransformer.class.getName()
+        };
     }
 
     @Override
