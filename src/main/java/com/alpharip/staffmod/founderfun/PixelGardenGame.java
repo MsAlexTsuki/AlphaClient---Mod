@@ -93,6 +93,7 @@ public final class PixelGardenGame {
     private final List<Plot> plots = new ArrayList<Plot>();
     private final int[] seeds = new int[Crop.values().length];
     private final int[] inventory = new int[Crop.values().length];
+    private final int[] totalHarvested = new int[Crop.values().length];
     private int pixelGardenUpgradeCoins = STARTING_COINS;
     private boolean autoHarvest;
     private boolean autoPlant;
@@ -128,6 +129,7 @@ public final class PixelGardenGame {
         for (int i = 0; i < seeds.length; i++) {
             seeds[i] = 0;
             inventory[i] = 0;
+            totalHarvested[i] = 0;
         }
         seeds[Crop.WHEAT.ordinal()] = 3;
         for (int i = 0; i < plots.size(); i++) {
@@ -142,6 +144,7 @@ public final class PixelGardenGame {
     public synchronized int getResetTokens() { return resetTokens; }
     public synchronized int getSeeds(Crop crop) { return seeds[crop.ordinal()]; }
     public synchronized int getInventory(Crop crop) { return inventory[crop.ordinal()]; }
+    public synchronized int getTotalHarvested(Crop crop) { return totalHarvested[crop.ordinal()]; }
     public synchronized boolean hasAutoHarvest() { return autoHarvest; }
     public synchronized boolean hasAutoPlant() { return autoPlant; }
     public synchronized boolean hasAutoSell() { return autoSell; }
@@ -192,6 +195,8 @@ public final class PixelGardenGame {
         Crop harvestedCrop = plot.crop;
         int harvestedAmount = getCropYield();
         inventory[harvestedCrop.ordinal()] += harvestedAmount;
+        totalHarvested[harvestedCrop.ordinal()] = (int) Math.min(Integer.MAX_VALUE,
+                (long) totalHarvested[harvestedCrop.ordinal()] + harvestedAmount);
         plot.clear();
         String cropId = harvestedCrop.name().toLowerCase(java.util.Locale.ROOT);
         progressionData.recordActionProgress("HARVEST_CROP", cropId, harvestedAmount);
@@ -379,6 +384,8 @@ public final class PixelGardenGame {
                     Crop harvestedCrop = plot.crop;
                     int harvestedAmount = getCropYield();
                     inventory[harvestedCrop.ordinal()] += harvestedAmount;
+                    totalHarvested[harvestedCrop.ordinal()] = (int) Math.min(Integer.MAX_VALUE,
+                            (long) totalHarvested[harvestedCrop.ordinal()] + harvestedAmount);
                     plot.clear();
                     String cropId = harvestedCrop.name().toLowerCase(java.util.Locale.ROOT);
                     progressionData.recordActionProgress("HARVEST_CROP", cropId, harvestedAmount);
@@ -532,12 +539,15 @@ public final class PixelGardenGame {
         root.addProperty("last_processed_at", lastProcessedAt);
         JsonArray seedArray = new JsonArray();
         JsonArray inventoryArray = new JsonArray();
+        JsonArray totalHarvestedArray = new JsonArray();
         for (Crop crop : Crop.values()) {
             seedArray.add(new JsonPrimitive(seeds[crop.ordinal()]));
             inventoryArray.add(new JsonPrimitive(inventory[crop.ordinal()]));
+            totalHarvestedArray.add(new JsonPrimitive(totalHarvested[crop.ordinal()]));
         }
         root.add("seeds", seedArray);
         root.add("inventory", inventoryArray);
+        root.add("total_harvested", totalHarvestedArray);
         JsonArray plotArray = new JsonArray();
         for (Plot plot : plots) {
             JsonObject savedPlot = new JsonObject();
@@ -574,6 +584,7 @@ public final class PixelGardenGame {
         long savedAt = root.has("last_processed_at") ? root.get("last_processed_at").getAsLong() : System.currentTimeMillis();
         int[] savedSeeds = readIntArray(root.get("seeds"), Crop.values().length);
         int[] savedInventory = readIntArray(root.get("inventory"), Crop.values().length);
+        int[] savedTotalHarvested = readIntArray(root.get("total_harvested"), Crop.values().length);
         JsonArray savedPlots = root.has("plots") && root.get("plots").isJsonArray()
                 ? root.getAsJsonArray("plots") : new JsonArray();
         Crop[] crops = new Crop[plots.size()];
@@ -611,6 +622,7 @@ public final class PixelGardenGame {
                 plot.harvestTimeOverridden = true;
             }
         }
+        System.arraycopy(savedTotalHarvested, 0, totalHarvested, 0, totalHarvested.length);
         resetTokens = savedResetTokens;
         purchasedUpgradeSteps = savedPurchasedSteps;
     }
