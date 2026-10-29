@@ -91,7 +91,16 @@ public final class AlphaHelpGui extends GuiScreen {
             addCommand("Force-reset a garden", "/pixelgarden resettoken admin <Alpha account>", "commands.pixelgarden", true);
         }
 
-        if (com.alpharip.staffmod.permissions.SupabaseCommunityService.hasStaffOperationsAccess()) {
+        if (com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()) {
+            addCommand("Easter Eggs administration", "/alphaclient easteregg help", "staffmods.founder", true);
+            addCommand("Enable an Easter Egg", "/alphaclient easteregg on <id>", "staffmods.founder", true);
+            addCommand("Disable an Easter Egg", "/alphaclient easteregg off <id>", "staffmods.founder", true);
+            addCommand("Activate an Easter Egg", "/alphaclient easteregg activate <id>", "staffmods.founder", true);
+            addCommand("List Easter Egg IDs", "/alphaclient easteregg idlist", "staffmods.founder", true);
+            addCommand("Edit Easter Egg text", "/alphaclient easteregg edit <id> <text>", "staffmods.founder", true);
+        }
+
+        if (com.alpharip.staffmod.permissions.SupabaseCommunityService.hasStaffOperationsAccess())
             addCommand("Staff Operations", "/staffoperations", "Menu.StaffOperations", true);
         }
         if (com.alpharip.staffmod.permissions.SupabaseCommunityService.canUseAlphaNoteCommand()) {

@@ -33,6 +33,8 @@ import com.alpharip.staffmod.pvp.LegacyPvpSettings;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
+import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
+import com.alpharip.staffmod.founderfun.eastereggs.EasterEggSettingsGui;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -64,6 +66,12 @@ public final class AlphaClientCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
+
+        if ("alphaclient".equals(route) && args != null && args.length > 0
+                && "easteregg".equalsIgnoreCase(args[0])) {
+            handleEasterEggCommand(sender, tail(args));
+            return;
+        }
 
         if ("autogg".equals(route)) {
             handleAutoGG(sender, args);
@@ -274,6 +282,66 @@ public final class AlphaClientCommand extends CommandBase {
      * Shared, consistently formatted in-chat command guides.
      * Any registered AlphaClient command can show its guide with the "help" argument.
      */
+
+    /** Founder-only control for the locally implemented Easter Eggs registry. */
+    private void handleEasterEggCommand(ICommandSender sender, String[] args) {
+        if (!SupabaseCommunityService.isSignedInFounder()) {
+            reply(sender, "FOUNDER-ONLY: sign in with the Founder Alpha Account to use Easter Egg commands.");
+            return;
+        }
+        if (args == null || args.length == 0 || "help".equalsIgnoreCase(args[0])) {
+            reply(sender, "Founder-only Easter Eggs commands:");
+            reply(sender, "/alphaclient easteregg on <id>");
+            reply(sender, "/alphaclient easteregg off <id>");
+            reply(sender, "/alphaclient easteregg activate <id>");
+            reply(sender, "/alphaclient easteregg activate <alpha account name> <id> (remote activation is not available in this client-only build)");
+            reply(sender, "/alphaclient easteregg idlist");
+            reply(sender, "/alphaclient easteregg edit <id> <death screen text>");
+            return;
+        }
+        String action = args[0].toLowerCase(Locale.ROOT);
+        if ("idlist".equals(action)) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc != null) AlphaClient.openGuiFromCommand(new EasterEggSettingsGui(mc.currentScreen));
+            reply(sender, "Opened the Easter Eggs ID list. IDs range from 1 to 25.");
+            return;
+        }
+        if (("on".equals(action) || "off".equals(action)) && args.length == 2) {
+            Integer id = parseInteger(args[1], 1, 25);
+            if (id == null || EasterEggManager.getEgg(id.intValue()) == null) {
+                reply(sender, "Unknown Easter Egg ID. Use /alphaclient easteregg idlist.");
+                return;
+            }
+            boolean enabled = "on".equals(action);
+            EasterEggManager.setMasterEnabled(id.intValue(), enabled);
+            reply(sender, "Easter Egg " + id + " globally " + (enabled ? "enabled" : "disabled") + ".");
+            return;
+        }
+        if ("activate".equals(action) && args.length == 2) {
+            Integer id = parseInteger(args[1], 1, 25);
+            if (id == null || !EasterEggManager.queueActivation(id.intValue())) {
+                reply(sender, "Unknown Easter Egg ID. Use /alphaclient easteregg idlist.");
+                return;
+            }
+            reply(sender, "Easter Egg " + id + " queued for your next death screen.");
+            return;
+        }
+        if ("activate".equals(action) && args.length >= 3) {
+            reply(sender, "Remote activation requires a server-side delivery path; it is not available in this client-only version.");
+            return;
+        }
+        if ("edit".equals(action) && args.length >= 3) {
+            Integer id = parseInteger(args[1], 1, 25);
+            if (id == null || !EasterEggManager.setText(id.intValue(), joinArgs(args, 2))) {
+                reply(sender, "Usage: /alphaclient easteregg edit <id> <death screen text>");
+                return;
+            }
+            reply(sender, "Updated the text for Easter Egg " + id + ".");
+            return;
+        }
+        reply(sender, "Usage: /alphaclient easteregg <on|off|activate|idlist|edit> ...");
+    }
+
     private void showCommandGuide(ICommandSender sender, String route) {
         String name = route == null ? "" : route.toLowerCase(Locale.ROOT);
         if ("alphahelp".equals(name)) {
@@ -299,6 +367,14 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/profiles", "List saved profiles");
             guideLine(sender, "/profile <name|create|edit|delete>", "Switch or manage profiles");
             guideLine(sender, "/hudeditor", "Open the HUD editor");
+            if (SupabaseCommunityService.isSignedInFounder()) {
+                guideHeader(sender, "FOUNDER-ONLY EASTER EGGS");
+                guideLine(sender, "/alphaclient easteregg on <id>", "Globally enable an Easter Egg");
+                guideLine(sender, "/alphaclient easteregg off <id>", "Globally disable an Easter Egg");
+                guideLine(sender, "/alphaclient easteregg activate <id>", "Queue an Easter Egg for your next death screen");
+                guideLine(sender, "/alphaclient easteregg idlist", "Open the Easter Eggs ID list");
+                guideLine(sender, "/alphaclient easteregg edit <id> <text>", "Edit an Easter Egg's death-screen text");
+            }
         } else if ("alphaclient:modules".equals(name)) {
             guideHeader(sender, "MODULE LIST");
             guideLine(sender, "/alphaclient:modules", "List registered modules and their current status");
@@ -1617,6 +1693,16 @@ public final class AlphaClientCommand extends CommandBase {
             if (args.length == 1) {
                 String[] values = {"help","modules","settings","module","fps","cps","bhop","wtap","fullbright"};
                 for (String value : values) if (isCompletionAllowed(commandPermissionForRoute("alphaclient", new String[]{value}))) options.add(value);
+                if (SupabaseCommunityService.isSignedInFounder()) options.add("easteregg");
+            } else if (args.length == 2 && "easteregg".equalsIgnoreCase(args[0])
+                    && SupabaseCommunityService.isSignedInFounder()) {
+                String[] values = {"on","off","activate","idlist","edit","help"};
+                for (String value : values) options.add(value);
+            } else if (args.length == 3 && "easteregg".equalsIgnoreCase(args[0])
+                    && SupabaseCommunityService.isSignedInFounder()
+                    && ("on".equalsIgnoreCase(args[1]) || "off".equalsIgnoreCase(args[1])
+                    || "edit".equalsIgnoreCase(args[1]) || "activate".equalsIgnoreCase(args[1]))) {
+                for (int id = 1; id <= 25; id++) options.add(String.valueOf(id));
             } else if (args.length == 2 && "module".equalsIgnoreCase(args[0])) {
                 for (AlphaModule module : AlphaModuleRegistry.getAll()) {
                     if ("staffmods".equals(module.getId()) || "quality".equals(module.getId())) continue;

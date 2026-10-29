@@ -34,6 +34,7 @@ import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.founderfun.PixelGardenMessageNotifier;
 import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
+import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -88,6 +89,7 @@ public final class AlphaClient {
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(PixelGardenMessageNotifier.getInstance());
+        EasterEggManager.initialize();
         DeveloperDiagnostics.initialize();
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
