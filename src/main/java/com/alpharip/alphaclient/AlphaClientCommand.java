@@ -284,7 +284,7 @@ public final class AlphaClientCommand extends CommandBase {
      * Any registered AlphaClient command can show its guide with the "help" argument.
      */
 
-    /** Founder-only control for the locally implemented Easter Eggs registry. */
+    /** Founder-only control for local and server-delivered Easter Egg activations. */
     private void handleEasterEggCommand(ICommandSender sender, String[] args) {
         if (!SupabaseCommunityService.isSignedInFounder()) {
             reply(sender, "FOUNDER-ONLY: sign in with the Founder Alpha Account to use Easter Egg commands.");
@@ -387,6 +387,7 @@ public final class AlphaClientCommand extends CommandBase {
                 guideLine(sender, "/alphaclient easteregg on <id>", "Globally enable an Easter Egg");
                 guideLine(sender, "/alphaclient easteregg off <id>", "Globally disable an Easter Egg");
                 guideLine(sender, "/alphaclient easteregg activate <id>", "Queue an Easter Egg for your next death screen");
+                guideLine(sender, "/alphaclient easteregg activate <alpha account name> <id>", "Queue an Easter Egg for another account's next death screen");
                 guideLine(sender, "/alphaclient easteregg idlist", "Open the Easter Eggs ID list");
                 guideLine(sender, "/alphaclient easteregg edit <id> <text>", "Edit an Easter Egg's death-screen text");
             }
