@@ -369,15 +369,19 @@ public final class PixelGardenGUI extends GuiScreen {
             return;
         }
 
-        // Growing plots show a small sprout. The harvested crop artwork appears only
-        // once the timer finishes, so the two growth stages are visually distinct.
+        // Growing plots use the dedicated sprout texture. Mature crop artwork is
+        // drawn only after the growth timer finishes.
         if (state == PixelGardenGame.PlotState.GROWING) {
-            int sproutScale = Math.max(2, Math.min(4, spriteSize / 12));
-            int sproutWidth = 9 * sproutScale;
-            int sproutHeight = 9 * sproutScale;
-            int sproutX = x + (size - sproutWidth) / 2;
-            int sproutY = y + (size - sproutHeight) / 2 - 2;
-            drawPixelSprout(sproutX, sproutY, sproutScale);
+            ResourceLocation sproutTexture = new ResourceLocation("alphastaffmod", "textures/gui/sprout.png");
+            int sproutSize = Math.min(24, Math.max(16, size / 2));
+            int sproutX = x + (size - sproutSize) / 2;
+            int sproutY = y + (size - sproutSize) / 2 - 2;
+            mc.getTextureManager().bindTexture(sproutTexture);
+            net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            net.minecraft.client.renderer.GlStateManager.enableBlend();
+            drawScaledCustomSizeModalRect(sproutX, sproutY, 0, 0, 16, 16,
+                    sproutSize, sproutSize, 16, 16);
+            net.minecraft.client.renderer.GlStateManager.disableBlend();
             return;
         }
 
