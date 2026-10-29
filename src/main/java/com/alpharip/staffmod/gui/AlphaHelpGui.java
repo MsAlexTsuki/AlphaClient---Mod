@@ -5,6 +5,7 @@ import com.alpharip.alphaclient.AlphaClient;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.AlphaCommandVisibility;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -144,7 +145,7 @@ public final class AlphaHelpGui extends GuiScreen {
     }
 
     private void addCommand(String title, String command, String key, boolean fallback) {
-        if (PermissionService.hasCommandPermission(key, fallback)) {
+        if (AlphaCommandVisibility.canShow(command) && PermissionService.hasCommandPermission(key, fallback)) {
             entries.add(new Entry(title, command));
         }
     }
