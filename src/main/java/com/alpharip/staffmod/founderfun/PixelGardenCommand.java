@@ -405,7 +405,7 @@ public final class PixelGardenCommand extends CommandBase {
             } else if ("level".equals(kind)) {
                 if (args.length != 5) { reply(sender, "Usage: /pixelgarden add questid <quest id> level <required level>"); return; }
                 int level = number(args[4]);
-                if (level < 1 || level > 1000000) { reply(sender, "Required level must be between 1 and 1000000."); return; }
+                if (level < 1 || level > 1000000 || !args[4].matches("[0-9]+")) { reply(sender, "Required level must be between 1 and 1000000."); return; }
                 payload.addProperty("action", "metadata_update");
                 payload.addProperty("field", "required_level");
                 payload.addProperty("value", level);
