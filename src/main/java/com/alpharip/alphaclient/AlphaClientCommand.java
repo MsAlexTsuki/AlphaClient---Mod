@@ -34,6 +34,7 @@ import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
+import com.alpharip.staffmod.founderfun.eastereggs.EasterEggIdListGui;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggSettingsGui;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -302,7 +303,7 @@ public final class AlphaClientCommand extends CommandBase {
         String action = args[0].toLowerCase(Locale.ROOT);
         if ("idlist".equals(action)) {
             Minecraft mc = Minecraft.getMinecraft();
-            if (mc != null) AlphaClient.openGuiFromCommand(new EasterEggSettingsGui(mc.currentScreen));
+            if (mc != null) AlphaClient.openGuiFromCommand(new EasterEggIdListGui(mc.currentScreen));
             reply(sender, "Opened the Easter Eggs ID list. IDs range from 1 to 25.");
             return;
         }
