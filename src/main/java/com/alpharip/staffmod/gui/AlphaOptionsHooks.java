@@ -31,6 +31,7 @@ public final class AlphaOptionsHooks {
             }
 
             int targetRow = -1;
+            int skinRow = Integer.MAX_VALUE;
             for (GuiButton button : buttons) {
                 String label = button.displayString == null
                         ? "" : button.displayString.toLowerCase(Locale.ROOT);
@@ -39,26 +40,32 @@ public final class AlphaOptionsHooks {
                         || label.contains("gezichtsveld")) {
                     targetRow = Math.max(targetRow, button.yPosition);
                 }
+                if (label.contains("skin customization") || label.contains("skin customisation")
+                        || label.contains("super secret")) {
+                    skinRow = Math.min(skinRow, button.yPosition);
+                }
             }
 
-            // Vanilla 1.8.9 places the FOV/Difficulty controls in the upper half.
-            // If the labels are localized, use the known row rather than the old
-            // Resource Packs/Snooper row near the bottom of the options screen.
+            // Put Alpha Settings immediately after the FOV/Difficulty row.
+            // Do not shift every vanilla option: doing so moves Resource Packs/Snooper
+            // into the Done button's row and creates a large gap in the standard layout.
             if (targetRow < 0) targetRow = screen.height / 6 + 36;
             int y = targetRow + ROW_SPACING;
             int x = screen.width / 2 - 100;
 
-            // Make room for a dedicated full-width row without overlapping Resource Packs,
-            // Snooper Settings, or other vanilla controls below FOV/Difficulty.
-            for (GuiButton button : buttons) {
-                if (button.id != 200 && button.yPosition >= y) {
-                    button.yPosition += ROW_SPACING;
+            // If mod-added skin/secret buttons occupy the intended row, move only those
+            // controls down one row. All unrelated vanilla controls retain their positions.
+            if (skinRow <= y) {
+                for (GuiButton button : buttons) {
+                    String label = button.displayString == null
+                            ? "" : button.displayString.toLowerCase(Locale.ROOT);
+                    if (label.contains("skin customization") || label.contains("skin customisation")
+                            || label.contains("super secret")) {
+                        button.yPosition += ROW_SPACING;
+                    }
                 }
             }
 
-            if (y + BUTTON_HEIGHT > screen.height - 30) {
-                y = Math.max(targetRow + ROW_SPACING, screen.height - BUTTON_HEIGHT - 30);
-            }
             buttons.add(new GuiButton(ALPHA_SETTINGS_BUTTON_ID, x, y, 200, BUTTON_HEIGHT, "Alpha Settings"));
         } catch (Exception error) {
             System.err.println("[AlphaClient] Could not add Alpha Settings to Minecraft options: " + error.getMessage());
