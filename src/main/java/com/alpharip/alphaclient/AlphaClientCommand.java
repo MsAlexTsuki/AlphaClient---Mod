@@ -295,7 +295,7 @@ public final class AlphaClientCommand extends CommandBase {
             reply(sender, "/alphaclient easteregg on <id>");
             reply(sender, "/alphaclient easteregg off <id>");
             reply(sender, "/alphaclient easteregg activate <id>");
-            reply(sender, "/alphaclient easteregg activate <alpha account name> <id> (remote activation is not available in this client-only build)");
+            reply(sender, "/alphaclient easteregg activate <alpha account name> <id>");
             reply(sender, "/alphaclient easteregg idlist");
             reply(sender, "/alphaclient easteregg edit <id> <death screen text>");
             return;
@@ -327,8 +327,22 @@ public final class AlphaClientCommand extends CommandBase {
             reply(sender, "Easter Egg " + id + " queued for your next death screen.");
             return;
         }
-        if ("activate".equals(action) && args.length >= 3) {
-            reply(sender, "Remote activation requires a server-side delivery path; it is not available in this client-only version.");
+        if ("activate".equals(action) && args.length == 3) {
+            Integer id = parseInteger(args[2], 1, 25);
+            if (id == null || EasterEggManager.getEgg(id.intValue()) == null) {
+                reply(sender, "Unknown Easter Egg ID. Use /alphaclient easteregg idlist.");
+                return;
+            }
+            try {
+                JsonObject result = SupabaseCommunityService.activateEasterEggForUser(args[1], id.intValue());
+                String target = result.has("target_username") && !result.get("target_username").isJsonNull()
+                        ? result.get("target_username").getAsString() : args[1];
+                reply(sender, "Easter Egg " + id + " queued for " + target + "'s next death screen.");
+            } catch (Exception error) {
+                String message = error.getMessage();
+                reply(sender, "Could not queue remote Easter Egg: "
+                        + (message == null || message.trim().isEmpty() ? "server request failed." : message));
+            }
             return;
         }
         if ("edit".equals(action) && args.length >= 3) {
