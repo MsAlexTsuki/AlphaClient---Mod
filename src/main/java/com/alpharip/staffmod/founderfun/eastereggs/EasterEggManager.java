@@ -34,6 +34,7 @@ public final class EasterEggManager {
     private static int activeEggId = -1;
     private static boolean closeButtonIsZero;
     private static int queuedActivation = -1;
+    private static String queuedRemoteActivationId;
     private static boolean deathRollConsumed;
     private static int lastDeathEggId = -1;
     private static boolean specialButtonAssignmentMade;
@@ -100,8 +101,25 @@ public final class EasterEggManager {
     }
     public static synchronized boolean queueActivation(int id) {
         ensureLoaded();
-        if (getEgg(id) == null) return false;
+        if (getEgg(id) == null || queuedRemoteActivationId != null) return false;
         queuedActivation = id; return true;
+    }
+
+    /** Stores a server-delivered activation until the next death screen. */
+    public static synchronized boolean queueRemoteActivation(String activationId, int id) {
+        ensureLoaded();
+        if (activationId == null || activationId.trim().isEmpty() || getEgg(id) == null) return false;
+        if (queuedRemoteActivationId != null && !queuedRemoteActivationId.equals(activationId)) return false;
+        queuedRemoteActivationId = activationId;
+        if (queuedActivation <= 0) queuedActivation = id;
+        return queuedActivation == id;
+    }
+
+    /** Clears the pending remote marker only after the server confirms acknowledgement. */
+    public static synchronized void clearRemoteActivation(String activationId) {
+        if (activationId != null && activationId.equals(queuedRemoteActivationId)) {
+            queuedRemoteActivationId = null;
+        }
     }
 
     @SubscribeEvent
@@ -124,6 +142,7 @@ public final class EasterEggManager {
         lastDeathScreen = screen;
         activeEggId = -1;
         int selected = -1;
+        String remoteActivationToAcknowledge = null;
         synchronized (EasterEggManager.class) {
             ensureLoaded();
             if (deathRollConsumed) {
@@ -133,6 +152,7 @@ public final class EasterEggManager {
                 if (queuedActivation > 0) {
                     selected = queuedActivation;
                     queuedActivation = -1;
+                    if (queuedRemoteActivationId != null) remoteActivationToAcknowledge = queuedRemoteActivationId;
                 } else if (globallyEnabled && RANDOM.nextInt(CHANCE_DENOMINATOR) == 0) {
                     List<Integer> eligible = new ArrayList<Integer>();
                     for (int id = 1; id <= 25; id++) {
@@ -143,7 +163,24 @@ public final class EasterEggManager {
                 lastDeathEggId = selected;
             }
         }
-        if (selected > 0) applyToDeathScreen(mc, screen, selected);
+        if (selected > 0) {
+            applyToDeathScreen(mc, screen, selected);
+            if (remoteActivationToAcknowledge != null) {
+                final String activationId = remoteActivationToAcknowledge;
+                Thread acknowledge = new Thread(new Runnable() {
+                    @Override public void run() {
+                        try {
+                            com.alpharip.staffmod.permissions.SupabaseCommunityService
+                                    .acknowledgeEasterEggActivation(activationId);
+                        } catch (Exception error) {
+                            System.err.println("[AlphaClient] Could not acknowledge remote Easter Egg activation: " + error.getMessage());
+                        }
+                    }
+                }, "AlphaClient-EasterEggAck");
+                acknowledge.setDaemon(true);
+                acknowledge.start();
+            }
+        }
     }
 
     private void applyToDeathScreen(Minecraft mc, GuiScreen screen, int id) {
