@@ -392,6 +392,9 @@ public final class PixelGardenGUI extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        for (GuiButton button : buttonList) {
+            if (button.id == PRESTIGE) button.enabled = prestigeAccessChecked && prestigeAccessAllowed;
+        }
         long now = System.currentTimeMillis();
         game.processTime(now);
         if (now - lastRefresh >= 1000L) { lastRefresh = now; initGui(); }
