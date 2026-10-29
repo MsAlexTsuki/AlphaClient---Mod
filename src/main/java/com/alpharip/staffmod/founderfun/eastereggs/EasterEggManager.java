@@ -35,6 +35,7 @@ public final class EasterEggManager {
     private static boolean closeButtonIsZero;
     private static int queuedActivation = -1;
     private static String queuedRemoteActivationId;
+    private static boolean remoteActivationInFlight;
     private static boolean deathRollConsumed;
     private static int lastDeathEggId = -1;
     private static boolean specialButtonAssignmentMade;
@@ -109,16 +110,30 @@ public final class EasterEggManager {
     public static synchronized boolean queueRemoteActivation(String activationId, int id) {
         ensureLoaded();
         if (activationId == null || activationId.trim().isEmpty() || getEgg(id) == null) return false;
-        if (queuedRemoteActivationId != null && !queuedRemoteActivationId.equals(activationId)) return false;
+        if (queuedRemoteActivationId != null) {
+            if (!queuedRemoteActivationId.equals(activationId)) return false;
+            if (remoteActivationInFlight) return true;
+            if (queuedActivation <= 0) queuedActivation = id;
+            return queuedActivation == id;
+        }
+        if (queuedActivation > 0) return false;
         queuedRemoteActivationId = activationId;
-        if (queuedActivation <= 0) queuedActivation = id;
-        return queuedActivation == id;
+        queuedActivation = id;
+        return true;
     }
 
     /** Clears the pending remote marker only after the server confirms acknowledgement. */
     public static synchronized void clearRemoteActivation(String activationId) {
         if (activationId != null && activationId.equals(queuedRemoteActivationId)) {
             queuedRemoteActivationId = null;
+            remoteActivationInFlight = false;
+        }
+    }
+
+    /** Allows a pending server activation to be retried when acknowledgement fails. */
+    public static synchronized void markRemoteActivationAckFailed(String activationId) {
+        if (activationId != null && activationId.equals(queuedRemoteActivationId)) {
+            remoteActivationInFlight = false;
         }
     }
 
@@ -152,7 +167,10 @@ public final class EasterEggManager {
                 if (queuedActivation > 0) {
                     selected = queuedActivation;
                     queuedActivation = -1;
-                    if (queuedRemoteActivationId != null) remoteActivationToAcknowledge = queuedRemoteActivationId;
+                    if (queuedRemoteActivationId != null) {
+                        remoteActivationToAcknowledge = queuedRemoteActivationId;
+                        remoteActivationInFlight = true;
+                    }
                 } else if (globallyEnabled && RANDOM.nextInt(CHANCE_DENOMINATOR) == 0) {
                     List<Integer> eligible = new ArrayList<Integer>();
                     for (int id = 1; id <= 25; id++) {
@@ -173,6 +191,7 @@ public final class EasterEggManager {
                             com.alpharip.staffmod.permissions.SupabaseCommunityService
                                     .acknowledgeEasterEggActivation(activationId);
                         } catch (Exception error) {
+                            EasterEggManager.markRemoteActivationAckFailed(activationId);
                             System.err.println("[AlphaClient] Could not acknowledge remote Easter Egg activation: " + error.getMessage());
                         }
                     }
