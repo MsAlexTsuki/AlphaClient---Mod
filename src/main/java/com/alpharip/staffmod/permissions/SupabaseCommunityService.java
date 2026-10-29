@@ -85,6 +85,7 @@ public final class SupabaseCommunityService {
                         refreshSessionToken();
                         synchronizeVerifiedAccount();
                         pixelGardenPrestigeBeginSession();
+                        pollRemoteEasterEggActivation();
                         sessionStatus = "Alpha Account session restored.";
                     } else {
                         sessionStatus = "No saved Alpha Account session. Sign in once to save this account.";
@@ -111,6 +112,7 @@ public final class SupabaseCommunityService {
                         }
                         synchronizeVerifiedAccount();
                         pixelGardenPrestigeHeartbeat();
+                        pollRemoteEasterEggActivation();
                     }
                 } catch (Exception exception) {
                     System.err.println("[AlphaClient] Community sync failed; will retry: "
@@ -426,6 +428,51 @@ public final class SupabaseCommunityService {
     }
 
     public static boolean isSignedIn() { return accessToken != null; }
+
+    /** Queues an Easter Egg for another Alpha Account; the server independently verifies Founder access. */
+    public static synchronized JsonObject activateEasterEggForUser(String username, int eggId) throws Exception {
+        if (!isSignedInFounder()) throw new SecurityException("Only the authenticated Founder can activate an Easter Egg for another account.");
+        if (username == null || !username.trim().matches("(?i)[a-z0-9_]{3,20}")) {
+            throw new IllegalArgumentException("Provide a valid Alpha account username.");
+        }
+        if (eggId < 1 || eggId > 25) throw new IllegalArgumentException("Easter Egg ID must be between 1 and 25.");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("action", "enqueue");
+        payload.addProperty("username", username.trim().toLowerCase(java.util.Locale.ROOT));
+        payload.addProperty("egg_id", eggId);
+        return requestJson("POST", "/functions/v1/easter-egg-activation", accessToken, payload.toString());
+    }
+
+    /** Polls the authenticated account's own activation queue. */
+    private static synchronized void pollRemoteEasterEggActivation() throws Exception {
+        if (accessToken == null) return;
+        JsonObject payload = new JsonObject();
+        payload.addProperty("action", "poll");
+        JsonObject result = requestJson("POST", "/functions/v1/easter-egg-activation", accessToken, payload.toString());
+        JsonElement activationElement = result.get("activation");
+        if (result.has("ok") && result.get("ok").getAsBoolean()
+                && activationElement != null && activationElement.isJsonObject()) {
+            JsonObject activation = activationElement.getAsJsonObject();
+            String activationId = getString(activation, "id");
+            int eggId = (int) getLong(activation, "egg_id", 0L);
+            if (activationId != null && eggId >= 1 && eggId <= 25) {
+                com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager
+                        .queueRemoteActivation(activationId, eggId);
+            }
+        }
+    }
+
+    /** Acknowledges an activation only after its death-screen Easter Egg was shown. */
+    public static synchronized void acknowledgeEasterEggActivation(String activationId) throws Exception {
+        if (accessToken == null) return;
+        JsonObject payload = new JsonObject();
+        payload.addProperty("action", "ack");
+        payload.addProperty("activation_id", activationId);
+        JsonObject result = requestJson("POST", "/functions/v1/easter-egg-activation", accessToken, payload.toString());
+        if (result.has("ok") && result.get("ok").getAsBoolean()) {
+            com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager.clearRemoteActivation(activationId);
+        }
+    }
 
     /** Loads the signed-in account's Pixel Garden save, or returns null when no save exists. */
     public static synchronized JsonObject loadPixelGardenSave() throws Exception {
