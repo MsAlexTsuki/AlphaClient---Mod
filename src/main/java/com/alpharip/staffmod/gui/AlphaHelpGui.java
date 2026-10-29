@@ -74,7 +74,8 @@ public final class AlphaHelpGui extends GuiScreen {
 
 
 
-        if (com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()) {
+        if (com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()
+                || PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)) {
             addCommand("Give Prestige Coins", "/pixelgarden prestigecoingive <Alpha name> <amount>", "commands.pixelgarden", true);
             addCommand("Take Prestige Coins", "/pixelgarden prestigecointake <Alpha name> <amount>", "commands.pixelgarden", true);
             addCommand("Reset Prestige Coins balance", "/pixelgarden prestigecoinreset <Alpha name>", "commands.pixelgarden", true);
