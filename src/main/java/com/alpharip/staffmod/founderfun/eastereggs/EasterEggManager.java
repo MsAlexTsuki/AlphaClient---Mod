@@ -34,6 +34,9 @@ public final class EasterEggManager {
     private static int activeEggId = -1;
     private static boolean closeButtonIsZero;
     private static int queuedActivation = -1;
+    private static boolean deathRollConsumed;
+    private static int lastDeathEggId = -1;
+    private static boolean specialButtonAssignmentMade;
 
     static {
         add(1, "Please uninstall your game, its a skill issue! But don't worry you are bad at every game!");
@@ -105,7 +108,13 @@ public final class EasterEggManager {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || !(mc.currentScreen instanceof GuiGameOver)) {
+        if (mc == null) return;
+        if (mc.thePlayer != null && mc.thePlayer.getHealth() > 0.0F) {
+            deathRollConsumed = false;
+            lastDeathEggId = -1;
+            specialButtonAssignmentMade = false;
+        }
+        if (!(mc.currentScreen instanceof GuiGameOver)) {
             lastDeathScreen = null;
             activeEggId = -1;
             return;
@@ -117,15 +126,21 @@ public final class EasterEggManager {
         int selected = -1;
         synchronized (EasterEggManager.class) {
             ensureLoaded();
-            if (queuedActivation > 0) {
-                selected = queuedActivation;
-                queuedActivation = -1;
-            } else if (globallyEnabled && RANDOM.nextInt(CHANCE_DENOMINATOR) == 0) {
-                List<Integer> eligible = new ArrayList<Integer>();
-                for (int id = 1; id <= 25; id++) {
-                    if (MASTER_ENABLED[id] && USER_ENABLED[id]) eligible.add(Integer.valueOf(id));
+            if (deathRollConsumed) {
+                selected = lastDeathEggId;
+            } else {
+                deathRollConsumed = true;
+                if (queuedActivation > 0) {
+                    selected = queuedActivation;
+                    queuedActivation = -1;
+                } else if (globallyEnabled && RANDOM.nextInt(CHANCE_DENOMINATOR) == 0) {
+                    List<Integer> eligible = new ArrayList<Integer>();
+                    for (int id = 1; id <= 25; id++) {
+                        if (MASTER_ENABLED[id] && USER_ENABLED[id]) eligible.add(Integer.valueOf(id));
+                    }
+                    if (!eligible.isEmpty()) selected = eligible.get(RANDOM.nextInt(eligible.size())).intValue();
                 }
-                if (!eligible.isEmpty()) selected = eligible.get(RANDOM.nextInt(eligible.size())).intValue();
+                lastDeathEggId = selected;
             }
         }
         if (selected > 0) applyToDeathScreen(mc, screen, selected);
@@ -136,7 +151,10 @@ public final class EasterEggManager {
         if (text == null) return;
         activeEggId = id;
         if (id == 21 && screen.buttonList != null) {
-            closeButtonIsZero = RANDOM.nextBoolean();
+            if (!specialButtonAssignmentMade) {
+                closeButtonIsZero = RANDOM.nextBoolean();
+                specialButtonAssignmentMade = true;
+            }
             for (GuiButton button : screen.buttonList) {
                 if (button.id == 0 || button.id == 1) button.displayString = "YES";
             }
