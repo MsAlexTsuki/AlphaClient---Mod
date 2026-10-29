@@ -3,16 +3,15 @@ package com.alpharip.staffmod.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
 import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
+
 import java.io.IOException;
 
-/** AlphaClient settings hub; Minecraft's native options remain available as a sub-screen. */
-public final class AlphaSettingsMenu extends AlphaGuiScreen {
-    private static final int BACK = 1;
-    private static final int MINECRAFT_OPTIONS = 4;
-    private static final int PIXEL_GARDEN_TOGGLE = 5;
+/** AlphaClient settings screen using Minecraft 1.8.9's native screen and button style. */
+public final class AlphaSettingsMenu extends GuiScreen {
+    private static final int PIXEL_GARDEN_TOGGLE = 1;
+    private static final int DONE = 200;
     private final GuiScreen parent;
 
     public AlphaSettingsMenu(GuiScreen parent) {
@@ -23,61 +22,34 @@ public final class AlphaSettingsMenu extends AlphaGuiScreen {
     public void initGui() {
         buttonList.clear();
         int center = width / 2;
-        int panelWidth = Math.min(360, width - 24);
-        int left = center - panelWidth / 2;
-        int top = 74;
-        int buttonWidth = panelWidth - 28;
+        int firstRow = height / 6 + 24;
 
-        buttonList.add(new AlphaButton(MINECRAFT_OPTIONS, left + 14, top + 58, buttonWidth, 24,
-                "MINECRAFT OPTIONS"));
-        buttonList.add(new AlphaButton(PIXEL_GARDEN_TOGGLE, left + 14, top + 90, buttonWidth, 24,
-                "PIXEL GARDEN: " + (PixelGardenModuleSettings.getInstance().isEnabled() ? "ON" : "OFF")));
-        buttonList.add(new AlphaButton(BACK, 10, height - 25, 76, 18, "BACK"));
+        buttonList.add(new GuiButton(PIXEL_GARDEN_TOGGLE, center - 100, firstRow, 200, 20,
+                getPixelGardenLabel()));
+        buttonList.add(new GuiButton(DONE, center - 100, firstRow + 28, 200, 20, "Done"));
     }
 
-    @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawGradientRect(0, 0, width, height, 0xFF181B22, 0xFF090A0E);
-        int panelWidth = Math.min(360, width - 24);
-        int left = width / 2 - panelWidth / 2;
-        int right = left + panelWidth;
-        int top = 20;
-        drawRect(left, top, right, Math.min(height - 34, top + 252), 0xFF14171D);
-        drawRect(left, top, right, top + 1, 0xFF343944);
-        drawRect(left, top, left + 1, Math.min(height - 34, top + 252), 0x554B515D);
-
-        drawString(fontRendererObj, "ALPHA CLIENT", left + 14, top + 10, 0xFFFFD866);
-        drawString(fontRendererObj, "Settings", left + 14, top + 24, 0xFFF4F5F8);
-        drawString(fontRendererObj, "Game options and client preferences.",
-                left + 14, top + 37, 0xFF9298A5);
-        boolean pixelGardenEnabled = PixelGardenModuleSettings.getInstance().isEnabled();
-        drawString(fontRendererObj, "Pixel Garden: " + (pixelGardenEnabled ? "enabled" : "disabled"),
-                left + 14, top + 128, pixelGardenEnabled ? 0xFF79D879 : 0xFFFF7777);
-        drawString(fontRendererObj, "OFF blocks its commands, screens and background work.",
-                left + 14, top + 143, 0xFF9298A5);
-
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    private static String getPixelGardenLabel() {
+        return "Pixel Garden: " + (PixelGardenModuleSettings.getInstance().isEnabled() ? "ON" : "OFF");
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if (button == null) return;
-        Minecraft minecraft = Minecraft.getMinecraft();
-        switch (button.id) {
-            case BACK:
-                minecraft.displayGuiScreen(parent);
-                break;
-            case MINECRAFT_OPTIONS:
-                minecraft.displayGuiScreen(new GuiOptions(this, minecraft.gameSettings));
-                break;
-            case PIXEL_GARDEN_TOGGLE:
-                PixelGardenModuleSettings settings = PixelGardenModuleSettings.getInstance();
-                settings.setEnabled(!settings.isEnabled());
-                initGui();
-                break;
-            default:
-                break;
+        if (button == null || !button.enabled) return;
+        if (button.id == PIXEL_GARDEN_TOGGLE) {
+            PixelGardenModuleSettings settings = PixelGardenModuleSettings.getInstance();
+            settings.setEnabled(!settings.isEnabled());
+            button.displayString = getPixelGardenLabel();
+        } else if (button.id == DONE) {
+            Minecraft.getMinecraft().displayGuiScreen(parent);
         }
+    }
+
+    @Override
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawDefaultBackground();
+        drawCenteredString(fontRendererObj, "Alpha Settings", width / 2, 15, 0xFFFFFF);
+        super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     @Override
