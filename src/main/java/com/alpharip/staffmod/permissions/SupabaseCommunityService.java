@@ -456,8 +456,14 @@ public final class SupabaseCommunityService {
             String activationId = getString(activation, "id");
             int eggId = (int) getLong(activation, "egg_id", 0L);
             if (activationId != null && eggId >= 1 && eggId <= 25) {
-                com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager
-                        .queueRemoteActivation(activationId, eggId);
+                if (com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager
+                        .wasRemoteActivationDisplayed(activationId)) {
+                    // Retry acknowledgement without replaying an Easter Egg already shown.
+                    acknowledgeEasterEggActivation(activationId);
+                } else {
+                    com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager
+                            .queueRemoteActivation(activationId, eggId);
+                }
             }
         }
     }
@@ -471,6 +477,9 @@ public final class SupabaseCommunityService {
         JsonObject result = requestJson("POST", "/functions/v1/easter-egg-activation", accessToken, payload.toString());
         if (result.has("ok") && result.get("ok").getAsBoolean()) {
             com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager.clearRemoteActivation(activationId);
+        } else {
+            com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager.markRemoteActivationAckFailed(activationId);
+            throw new IllegalStateException("The server did not confirm the Easter Egg activation acknowledgement.");
         }
     }
 
