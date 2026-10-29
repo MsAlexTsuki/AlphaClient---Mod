@@ -57,9 +57,6 @@ public final class LegacyPvpTransformer implements IClassTransformer {
         if (MINECRAFT.equals(transformedName)) {
             return transformMinecraft(basicClass);
         }
-        if ("net.minecraft.client.gui.GuiOptions".equals(transformedName)) {
-            return transformGuiOptions(basicClass);
-        }
         if (!ITEM_RENDERER.equals(transformedName)) {
             return basicClass;
         }
@@ -323,70 +320,6 @@ public final class LegacyPvpTransformer implements IClassTransformer {
             return writer.toByteArray();
         } catch (Throwable error) {
             System.err.println("[AlphaClient] Legacy PvP blockhit transformer failed; vanilla rendering was left unchanged.");
-            error.printStackTrace();
-            return basicClass;
-        }
-    }
-
-    /**
-     * Adds Alpha Settings to the vanilla options screen without replacing its native controls.
-     * The action hook is gated to the dedicated button id and leaves all other actions untouched.
-     */
-    private byte[] transformGuiOptions(byte[] basicClass) {
-        try {
-            ClassNode classNode = new ClassNode();
-            new ClassReader(basicClass).accept(classNode, 0);
-            boolean initHooked = false;
-            boolean actionHooked = false;
-
-            for (MethodNode method : classNode.methods) {
-                if (("initGui".equals(method.name) || "func_73866_w_".equals(method.name)
-                        || "a".equals(method.name)) && "()V".equals(method.desc)) {
-                    AbstractInsnNode last = method.instructions.getLast();
-                    while (last != null && last.getOpcode() < 0) last = last.getPrevious();
-                    if (last != null && last.getOpcode() == Opcodes.RETURN) {
-                        org.objectweb.asm.tree.InsnList hook = new org.objectweb.asm.tree.InsnList();
-                        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
-                                "com/alpharip/staffmod/gui/AlphaOptionsHooks",
-                                "addAlphaSettingsButton", "(Ljava/lang/Object;)V", false));
-                        method.instructions.insertBefore(last, hook);
-                        initHooked = true;
-                        break;
-                    }
-                }
-            }
-
-            for (MethodNode method : classNode.methods) {
-                boolean actionName = "actionPerformed".equals(method.name)
-                        || "func_146284_a".equals(method.name) || "a".equals(method.name);
-                if (!actionName || !method.desc.startsWith("(L") || !method.desc.endsWith(")V")) continue;
-                org.objectweb.asm.tree.InsnList hook = new org.objectweb.asm.tree.InsnList();
-                org.objectweb.asm.tree.LabelNode continueVanilla = new org.objectweb.asm.tree.LabelNode();
-                hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
-                hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
-                        "com/alpharip/staffmod/gui/AlphaOptionsHooks",
-                        "handleAlphaSettingsButton", "(Ljava/lang/Object;Ljava/lang/Object;)Z", false));
-                hook.add(new org.objectweb.asm.tree.JumpInsnNode(Opcodes.IFEQ, continueVanilla));
-                hook.add(new org.objectweb.asm.tree.InsnNode(Opcodes.RETURN));
-                hook.add(continueVanilla);
-                method.instructions.insert(hook);
-                actionHooked = true;
-                break;
-            }
-
-            if (!initHooked || !actionHooked) {
-                System.err.println("[AlphaClient] Alpha Settings options hook could not find all GuiOptions methods; vanilla options remain available.");
-                return basicClass;
-            }
-
-            ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-            classNode.accept(writer);
-            System.out.println("[AlphaClient] Installed Alpha Settings button in Minecraft options.");
-            return writer.toByteArray();
-        } catch (Throwable error) {
-            System.err.println("[AlphaClient] Alpha Settings options transformer failed; vanilla options remain unchanged.");
             error.printStackTrace();
             return basicClass;
         }
