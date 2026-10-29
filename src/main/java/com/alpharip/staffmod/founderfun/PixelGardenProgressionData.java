@@ -272,6 +272,66 @@ public final class PixelGardenProgressionData {
         addStarterQuest("pg_your_own_garden", "Your Own Garden",
                 "Meet Emily and plant and harvest a carrot crop as you expand your garden skills.",
                 PixelGardenNPC.EMILY, "HARVEST_CROP", "carrot", 1);
+        addLevelQuestCatalog();
+    }
+
+    /**
+     * Provides a local fallback for two quests at every level from 1 through 100.
+     * Shared Supabase definitions replace these fallback definitions when available.
+     */
+    private void addLevelQuestCatalog() {
+        final String[] npcIds = {
+            PixelGardenNPC.JASMINE, PixelGardenNPC.HANK, PixelGardenNPC.EMILY, PixelGardenNPC.SEM,
+            PixelGardenNPC.CARSON, PixelGardenNPC.JIMMY, PixelGardenNPC.MACK, PixelGardenNPC.LIZ
+        };
+        final String[] npcNames = {"Jasmine", "Hank", "Emily", "Sem", "Carson", "Jimmy", "Mack", "Liz"};
+        final String[] crops = {"wheat", "carrot", "potato", "pumpkin"};
+        final String[] objectiveTypes = {"HARVEST_CROP", "SELL_CROP", "DELIVER_CROP", "PLANT_CROP"};
+        final String[][] questNames = {
+            {"Harvest Run", "Fieldwork", "Fresh Yield", "Crop Collection", "Harvest Challenge"},
+            {"Market Run", "Trading Day", "Crop Sale", "Market Challenge", "Profit Run"},
+            {"Supply Order", "Bulk Delivery", "Farm Contract", "Delivery Route", "Stock Request"},
+            {"New Fields", "Planting Plan", "Garden Expansion", "Seedbed Challenge", "Field Preparation"}
+        };
+        for (int targetLevel = 1; targetLevel <= 100; targetLevel++) {
+            String tier;
+            int prestige;
+            if (targetLevel <= 10) { tier = "Beginner"; prestige = 0; }
+            else if (targetLevel <= 20) { tier = "Rookie"; prestige = 0; }
+            else if (targetLevel <= 30) { tier = "Scout"; prestige = 0; }
+            else if (targetLevel <= 40) { tier = "Rogue"; prestige = 1; }
+            else if (targetLevel <= 50) { tier = "Elite"; prestige = 1; }
+            else if (targetLevel <= 60) { tier = "Alpha"; prestige = 3; }
+            else if (targetLevel <= 70) { tier = "Senior"; prestige = 3; }
+            else if (targetLevel <= 80) { tier = "Senior Advanced"; prestige = 8; }
+            else if (targetLevel <= 90) { tier = "Legendary"; prestige = 8; }
+            else { tier = "End Game"; prestige = 8; }
+
+            for (int slot = 0; slot < 2; slot++) {
+                int npcIndex = ((targetLevel - 1) * 2 + slot) % npcIds.length;
+                String crop = crops[(targetLevel + slot * 2 - 1) % crops.length];
+                int typeIndex = (targetLevel + slot - 1) % objectiveTypes.length;
+                String objectiveType = objectiveTypes[typeIndex];
+                int amount = targetLevel + (slot + 1) * 2;
+                String suffix = slot == 0 ? "a" : "b";
+                String id = "pg_level_" + String.format(java.util.Locale.ROOT, "%03d", targetLevel) + "_" + suffix;
+                String name = npcNames[npcIndex] + "'s " + questNames[typeIndex][(targetLevel + slot) % 5];
+                String description;
+                if ("HARVEST_CROP".equals(objectiveType)) description = "Harvest " + amount + " " + crop + " from your garden.";
+                else if ("SELL_CROP".equals(objectiveType)) description = "Sell " + amount + " " + crop + " through the garden market.";
+                else if ("DELIVER_CROP".equals(objectiveType)) description = "Deliver " + amount + " " + crop + " to complete the supply order.";
+                else description = "Plant " + amount + " " + crop + " in your garden.";
+
+                if (!definitions.containsKey(id)) {
+                    List<Objective> objectives = new ArrayList<Objective>();
+                    objectives.add(new Objective(id + "_objective", objectiveType, crop, amount));
+                    Map<String, Integer> rewards = new LinkedHashMap<String, Integer>();
+                    rewards.put("coins", Integer.valueOf(25 + targetLevel * 20 + slot * 10));
+                    addDefinition(new QuestDefinition(id, name, description, npcIds[npcIndex],
+                            targetLevel, prestige, 100, tier, objectives, rewards));
+                }
+            }
+        }
     }
 
     private void addStarterQuest(String id, String name, String description, String npc,
