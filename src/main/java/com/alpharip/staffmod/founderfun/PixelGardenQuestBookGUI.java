@@ -368,9 +368,10 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 actionMessage("Rewards were granted but could not be marked as claimed. Please report this.");
                 return;
             }
-            game.awardExperience(20L);
+            long questXp = game.getQuestExperience(def.id);
+            game.awardExperience(questXp);
             saveProgressionAsync();
-            actionMessage("Quest rewards claimed (+20 XP).");
+            actionMessage("Quest rewards claimed (+" + questXp + " XP).");
             return;
         }
         if (button.id == BACK) {
