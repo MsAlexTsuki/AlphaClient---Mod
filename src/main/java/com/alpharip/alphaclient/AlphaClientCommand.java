@@ -321,7 +321,7 @@ public final class AlphaClientCommand extends CommandBase {
         if ("activate".equals(action) && args.length == 2) {
             Integer id = parseInteger(args[1], 1, 25);
             if (id == null || !EasterEggManager.queueActivation(id.intValue())) {
-                reply(sender, "Unknown Easter Egg ID. Use /alphaclient easteregg idlist.");
+                reply(sender, "Unknown Easter Egg ID, or another activation is already pending. Use /alphaclient easteregg idlist.");
                 return;
             }
             reply(sender, "Easter Egg " + id + " queued for your next death screen.");
