@@ -185,13 +185,15 @@ public final class AlphaClient {
         GuiScreen requestedGui = pendingCommandGui;
         if (requestedGui != null) {
             pendingCommandGui = null;
-            if (guiMinecraft != null && (PixelGardenModuleSettings.getInstance().isEnabled()
-                    || !isPixelGardenScreen(requestedGui))) {
+            boolean pixelGardenAllowed = PermissionService.hasPixelGardenRankAccess();
+            if (guiMinecraft != null && (!isPixelGardenScreen(requestedGui)
+                    || (pixelGardenAllowed && PixelGardenModuleSettings.getInstance().isEnabled()))) {
                 guiMinecraft.displayGuiScreen(requestedGui);
             }
         }
-        if (guiMinecraft != null && !PixelGardenModuleSettings.getInstance().isEnabled()
-                && isPixelGardenScreen(guiMinecraft.currentScreen)) {
+        if (guiMinecraft != null && isPixelGardenScreen(guiMinecraft.currentScreen)
+                && (!PermissionService.hasPixelGardenRankAccess()
+                    || !PixelGardenModuleSettings.getInstance().isEnabled())) {
             guiMinecraft.displayGuiScreen(null);
         }
 
