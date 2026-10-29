@@ -73,7 +73,10 @@ public final class PixelGardenResetGUI extends GuiScreen {
             try {
                 SupabaseCommunityService.resetPixelGarden(type);
                 com.google.gson.JsonObject save = SupabaseCommunityService.loadPixelGardenSave();
-                if (save != null) PixelGardenGame.getInstance().loadSaveData(save);
+                PixelGardenGame game = PixelGardenGame.getInstance();
+                if (save != null) game.loadSaveData(save);
+                game.resetTotalHarvested();
+                SupabaseCommunityService.savePixelGardenSave(game.toSaveData());
                 status = "";
                 if (mc.thePlayer != null) {
                     mc.thePlayer.addChatMessage(new ChatComponentText(
