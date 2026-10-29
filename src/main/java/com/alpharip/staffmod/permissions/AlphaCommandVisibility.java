@@ -54,6 +54,12 @@ public final class AlphaCommandVisibility {
         boolean member = MEMBER.contains(root);
         if (member) return true;
 
+        if ("pixelgarden".equals(root) || "garden".equals(root)) {
+            if (!PermissionService.hasAccess(PermissionService.Rank.SCOUT)) return false;
+            String first = args.isEmpty() ? "" : args.split("\\s+", 2)[0];
+            return !isFounderOnlyGardenRoute(first);
+        }
+
         if (isStaff(rank)) {
             if (STAFF_COMMANDS.contains(root)) {
                 if ("stafffounder".equals(root) || "wtap".equals(root)) return false;
@@ -72,15 +78,13 @@ public final class AlphaCommandVisibility {
                 if ("alphaperms".equals(root)) return atLeast(rank, PermissionService.Rank.FOUNDER);
                 return true;
             }
-            if (DONATOR_MENU.contains(root)) return true;
-            // Staff ranks inherit the explicitly specified donor tiers up through Alpha+.
+            if ("scout".equals(root) || "donator".equals(root)) return true;
+            if ("rogue".equals(root)) return atLeast(rank, PermissionService.Rank.MOD);
+            if ("elite".equals(root)) return atLeast(rank, PermissionService.Rank.SR_MOD);
+            if ("alpha".equals(root)) return atLeast(rank, PermissionService.Rank.SR_MOD);
+            if ("alphaplus".equals(root)) return atLeast(rank, PermissionService.Rank.ADMIN);
+            // Beta is intentionally not assigned a visibility tier yet.
             return false;
-        }
-
-        if ("pixelgarden".equals(root) || "garden".equals(root)) {
-            if (!PermissionService.hasAccess(PermissionService.Rank.SCOUT)) return false;
-            String first = args.isEmpty() ? "" : args.split("\\s+", 2)[0];
-            return !isFounderOnlyGardenRoute(first);
         }
         if ("scout".equals(root) || "donator".equals(root)) {
             return PermissionService.hasAccess(PermissionService.Rank.SCOUT);
