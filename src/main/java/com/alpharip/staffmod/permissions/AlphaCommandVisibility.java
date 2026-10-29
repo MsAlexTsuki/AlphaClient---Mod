@@ -49,7 +49,8 @@ public final class AlphaCommandVisibility {
 
         if (founder || developer) return true;
         if (owner) return !"wtap".equals(root) && !"stafffounder".equals(root)
-                && !"alphaclient:wtap".equals(root);
+                && !"staffowner".equals(root) && !"alphaclient:wtap".equals(root)
+                && !"alphaclient:stafffounder".equals(root);
 
         boolean member = MEMBER.contains(root);
         if (member) return true;
@@ -62,7 +63,7 @@ public final class AlphaCommandVisibility {
 
         if (isStaff(rank)) {
             if (STAFF_COMMANDS.contains(root)) {
-                if ("stafffounder".equals(root) || "wtap".equals(root)) return false;
+                if ("stafffounder".equals(root) || "staffowner".equals(root) || "wtap".equals(root)) return false;
                 if ("staffgeneral".equals(root) || "bhop".equals(root)
                         || "stafftmod".equals(root) || "staffmods".equals(root)) {
                     return true;
