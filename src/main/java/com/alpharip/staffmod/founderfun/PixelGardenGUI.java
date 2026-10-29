@@ -24,12 +24,37 @@ public final class PixelGardenGUI extends GuiScreen {
     private PixelGardenGame.Crop selectedCrop = PixelGardenGame.Crop.WHEAT;
     private volatile String cloudStatus = "Cloud save: checking account...";
     private volatile boolean loadingCloud, cloudReady;
+    private volatile boolean prestigeAccessChecked, prestigeAccessAllowed;
     private long lastRefresh;
     private int plotScrollRow;
 
     public PixelGardenGUI(GuiScreen parent) {
         this.parent = parent;
         loadCloudSaveIfNeeded();
+        loadPrestigeAccess();
+    }
+
+    /** Uses server-owned Prestige progress instead of the local upgrade counter to unlock the Garden button. */
+    private void loadPrestigeAccess() {
+        Thread thread = new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    JsonObject state = SupabaseCommunityService.getPixelGardenPrestigeState();
+                    int prestigeCount = state != null && state.has("prestige_count")
+                            ? Math.max(0, state.get("prestige_count").getAsInt()) : 0;
+                    int upgradeSteps = state != null && state.has("upgrade_steps")
+                            ? Math.max(0, state.get("upgrade_steps").getAsInt()) : 0;
+                    prestigeAccessAllowed = prestigeCount > 0 && upgradeSteps >= 18;
+                } catch (Exception exception) {
+                    prestigeAccessAllowed = false;
+                    System.err.println("[AlphaClient] Could not verify Pixel Garden Prestige access: " + exception.getMessage());
+                } finally {
+                    prestigeAccessChecked = true;
+                }
+            }
+        }, "AlphaClient-PixelGardenPrestigeAccess");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void loadCloudSaveIfNeeded() {
@@ -210,7 +235,7 @@ public final class PixelGardenGUI extends GuiScreen {
             int x = column == 0 ? leftX : rightX;
             int y = sideStartY + row * (navButtonHeight + navRowGap);
             AlphaButton navButton = new AlphaButton(sideIds[i], x, y, navButtonWidth, navButtonHeight, sideLabels[i]);
-            if (sideIds[i] == PRESTIGE) navButton.enabled = game.getPurchasedUpgradeSteps() >= 18;
+            if (sideIds[i] == PRESTIGE) navButton.enabled = prestigeAccessChecked && prestigeAccessAllowed;
             buttonList.add(navButton);
         }
         int backWidth = Math.min(112, Math.max(70, width / 8));
