@@ -163,6 +163,10 @@ Deno.serve(async (req: Request) => {
         const level = Number(input.value);
         if (!Number.isInteger(level) || level < 1 || level > 1000000) return reply({ error: "Required level must be between 1 and 1000000." }, 400);
         definition.required_level = level;
+      } else if (field === "required_prestige") {
+        const prestige = Number(input.value);
+        if (!Number.isInteger(prestige) || prestige < 0 || prestige > 1000000) return reply({ error: "Required Prestige level must be between 0 and 1000000." }, 400);
+        definition.required_prestige = prestige;
       } else {
         return reply({ error: "Unsupported quest setting." }, 400);
       }
