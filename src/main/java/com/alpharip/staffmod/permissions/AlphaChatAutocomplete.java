@@ -24,7 +24,13 @@ public final class AlphaChatAutocomplete {
                     "staffmanagement", "staffmanager", "staffoperations", "alphanote",
                     "staffowner", "stafffounder", "alphaperms", "wtap", "scout", "donator",
                     "rogue", "elite", "alpha", "alphaplus", "beta", "pixelgarden", "garden",
-                    "pgivecoins"
+                    "pgivecoins", "alphaclient:bhop", "alphaclient:staffgeneral",
+                    "alphaclient:stafftmod", "alphaclient:staffmods", "alphaclient:staffmod",
+                    "alphaclient:staffsrmod", "alphaclient:staffadmin", "alphaclient:staffsradmin",
+                    "alphaclient:staffplatformadmin", "alphaclient:staffplatadmin",
+                    "alphaclient:staffmanagement", "alphaclient:staffmanager",
+                    "alphaclient:staffoperations", "alphaclient:alphanote", "alphaclient:staffowner",
+                    "alphaclient:stafffounder", "alphaclient:alphaperms", "alphaclient:wtap"
             )));
 
     private AlphaChatAutocomplete() { }
@@ -34,8 +40,10 @@ public final class AlphaChatAutocomplete {
         List<String> visible = new ArrayList<String>(suggestions.length);
         for (String suggestion : suggestions) {
             if (suggestion == null || suggestion.trim().isEmpty()) continue;
-            String value = suggestion.trim().toLowerCase(Locale.ROOT);
-            String candidate = value.startsWith("/") ? value.substring(1) : value;
+
+            // Forge 1.8.9 decorates local suggestions with formatting codes, e.g. §7/staffadmin§r.
+            String candidate = stripFormatting(suggestion).trim().toLowerCase(Locale.ROOT);
+            if (candidate.startsWith("/")) candidate = candidate.substring(1);
             String root = candidate.split("\\s+", 2)[0];
 
             // Unknown commands are normal Minecraft/server commands: preserve them.
@@ -45,5 +53,18 @@ public final class AlphaChatAutocomplete {
             }
         }
         return visible.toArray(new String[visible.size()]);
+    }
+
+    private static String stripFormatting(String value) {
+        StringBuilder result = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '\u00a7' && i + 1 < value.length()) {
+                i++;
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
     }
 }
