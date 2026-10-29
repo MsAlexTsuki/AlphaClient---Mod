@@ -358,6 +358,16 @@ public final class PermissionService {
         }
     }
 
+    /** Pixel Garden is available only to authenticated accounts at Scout rank or higher. */
+    public static boolean hasPixelGardenRankAccess() {
+        if (isOfflineTestSession()) return true;
+        if (!onlineRankVerified || verifiedOnlineRanks.isEmpty()) return false;
+        for (Rank rank : verifiedOnlineRanks) {
+            if (rank != null && rankPriority(rank) >= rankPriority(Rank.SCOUT)) return true;
+        }
+        return false;
+    }
+
     /** Canonical Alpha Community ordering: higher value means higher displayed rank. */
     private static int rankPriority(Rank rank) {
         switch (rank) {
