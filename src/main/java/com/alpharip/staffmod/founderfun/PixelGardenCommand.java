@@ -21,7 +21,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|seeds|ids]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|harvested|seeds|ids]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override
@@ -31,7 +31,7 @@ public final class PixelGardenCommand extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, new String[] {
                     "admin", "add", "addnpc", "buy", "coins", "coinsgive", "coinsreset", "completequest", "createquest", "createnpc",
-                    "crops", "editnpc", "give", "givequest", "guide", "harvest", "harvesttime", "help", "ids",
+                    "crops", "editnpc", "give", "harvested",  "givequest", "guide", "harvest", "harvesttime", "help", "ids",
                     "idlist", "info", "inv", "inventory", "multiplier", "msg", "open", "plant", "playtime",
                     "prestige", "prestigecoingive", "prestigecointake", "prestigecoinreset", "prestigereset",
                     "quest", "quests", "removenpc", "resettoken", "resettokens", "resetleveltoken", "rewards", "sell", "seeds", "shop",
@@ -723,11 +723,13 @@ public final class PixelGardenCommand extends CommandBase {
             }
             if (found == 0) reply(sender, "No crops are growing or ready.");
         } else if ("crops".equals(action)) {
-            for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) reply(sender, crop.displayName + ": " + game.getInventory(crop) + " harvested.");
+            for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) reply(sender, crop.displayName + " in inventory: " + game.getInventory(crop) + ".");
+        } else if ("harvested".equals(action)) {
+            for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) reply(sender, crop.displayName + " harvested since last reset: " + game.getTotalHarvested(crop) + ".");
         } else if ("seeds".equals(action)) {
             for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) reply(sender, crop.displayName + " seeds: " + game.getSeeds(crop) + ".");
         } else {
-            reply(sender, "Usage: /pixelgarden [open|inventory|inv|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish>|playtime|shop|buy <crop> [amount]|sell <crop|all> [amount]|harvest <plot|all>|time|crops|seeds]");
+            reply(sender, "Usage: /pixelgarden [open|inventory|inv|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish>|playtime|shop|buy <crop> [amount]|sell <crop|all> [amount]|harvest <plot|all>|time|crops|harvested|seeds]");
         }
     }
 
