@@ -368,6 +368,19 @@ public final class PixelGardenGUI extends GuiScreen {
                     spriteSize, spriteSize, 48, 16);
             return;
         }
+
+        // Growing plots show a small sprout. The harvested crop artwork appears only
+        // once the timer finishes, so the two growth stages are visually distinct.
+        if (state == PixelGardenGame.PlotState.GROWING) {
+            int sproutScale = Math.max(2, Math.min(4, spriteSize / 12));
+            int sproutWidth = 9 * sproutScale;
+            int sproutHeight = 9 * sproutScale;
+            int sproutX = x + (size - sproutWidth) / 2;
+            int sproutY = y + (size - sproutHeight) / 2 - 2;
+            drawPixelSprout(sproutX, sproutY, sproutScale);
+            return;
+        }
+
         if (crop == PixelGardenGame.Crop.MELON || crop == PixelGardenGame.Crop.CACTUS
                 || crop == PixelGardenGame.Crop.SUGARCANE
                 || crop == PixelGardenGame.Crop.BERRIES) {
@@ -386,8 +399,7 @@ public final class PixelGardenGUI extends GuiScreen {
             drawSprite(x + (size - spriteSize) / 2, y + (size - spriteSize) / 2 - 4,
                     spriteSize, spriteSize, spriteU, 0);
         }
-        drawSprite(x + size - 22, y + 4, 18, 18,
-                state == PixelGardenGame.PlotState.READY ? 32 : 48, 16);
+        drawSprite(x + size - 22, y + 4, 18, 18, 32, 16);
     }
 
     @Override
