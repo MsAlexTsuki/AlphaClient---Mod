@@ -35,37 +35,38 @@ public final class EasterEggManager {
     private static boolean closeButtonIsZero;
     private static int queuedActivation = -1;
     private static String queuedRemoteActivationId;
+    private static String lastDisplayedRemoteActivationId;
     private static boolean remoteActivationInFlight;
     private static boolean deathRollConsumed;
     private static int lastDeathEggId = -1;
     private static boolean specialButtonAssignmentMade;
 
     static {
-        add(1, "Please uninstall your game, its a skill issue! But don't worry you are bad at every game!");
+        add(1, "Please uninstall your game, it's a skill issue! But don't worry you are bad at every game!");
         add(2, "Your mom told you to stop! Now you died, go cry a river");
         add(3, "AlphaClient does not agree with your skills");
-        add(4, "Alphaclient is not the problem, its you! Ofcourse! Its always you and you know it!");
+        add(4, "AlphaClient is not the problem, it's you! Of course! It's always you and you know it!");
         add(5, "Great, another death. Congratulations!");
-        add(6, "Is it your birthday? Oh its not? Too bad you dead mothafacka!");
+        add(6, "Is it your birthday? Oh, it's not? Too bad you dead mothafacka!");
         add(7, "Go kiss your mom, she missed you");
         add(8, "Crazy, another day, another death in a game");
         add(9, "Just too bad you died today");
-        add(10, "Need some help with minecraft? Do you know how to play?");
+        add(10, "Need some help with Minecraft? Do you know how to play?");
         add(11, "Crazy that you cannot aim at a person");
-        add(12, "Its MY MOUSE!");
-        add(13, "POT ME, NOOOOO YOU DIDNT POT MEEEE");
+        add(12, "It's MY MOUSE!");
+        add(13, "POT ME, NOOOOO YOU DIDN'T POT MEEEE");
         add(14, "CRAZY THAT I DROPPED");
-        add(15, "Nahhh you cant do that shii");
+        add(15, "Nahhh you can't do that shii");
         add(16, "you died? Not my fault");
         add(17, "Help a hand at your local community");
         add(18, "Do not pray for skills, you just died because of skill issue");
         add(19, "Turn left to go right, YEET");
         add(20, "yee");
-        add(21, "Too bad this isnt hardcore, you can respawn.... but which one is it?");
-        add(22, "Hey vsauce, Micheal here. And your home security is great! or is it?");
+        add(21, "Too bad this isn't hardcore, you can respawn... but which one is it?");
+        add(22, "Hey Vsauce, Michael here. And your home security is great! Or is it?");
         add(23, "MsAlexTsuki agrees with this death");
         add(24, "AlphaClient and MsAlexTsuki just agreed that you should die, so you did");
-        add(25, "Feed your pets. You mightve forgotten them");
+        add(25, "Feed your pets. You might've forgotten them");
         for (int id = 1; id <= 25; id++) MASTER_ENABLED[id] = true;
     }
 
@@ -110,6 +111,7 @@ public final class EasterEggManager {
     public static synchronized boolean queueRemoteActivation(String activationId, int id) {
         ensureLoaded();
         if (activationId == null || activationId.trim().isEmpty() || getEgg(id) == null) return false;
+        if (activationId.equals(lastDisplayedRemoteActivationId)) return false;
         if (queuedRemoteActivationId != null) {
             if (!queuedRemoteActivationId.equals(activationId)) return false;
             if (remoteActivationInFlight) return true;
@@ -120,6 +122,11 @@ public final class EasterEggManager {
         queuedRemoteActivationId = activationId;
         queuedActivation = id;
         return true;
+    }
+
+    /** Returns whether an activation has already been displayed, to avoid replay after an acknowledgement failure. */
+    public static synchronized boolean wasRemoteActivationDisplayed(String activationId) {
+        return activationId != null && activationId.equals(lastDisplayedRemoteActivationId);
     }
 
     /** Clears the pending remote marker only after the server confirms acknowledgement. */
@@ -165,8 +172,11 @@ public final class EasterEggManager {
             } else {
                 deathRollConsumed = true;
                 if (queuedActivation > 0) {
-                    selected = queuedActivation;
+                    int queuedId = queuedActivation;
                     queuedActivation = -1;
+                    if (globallyEnabled && MASTER_ENABLED[queuedId] && USER_ENABLED[queuedId]) {
+                        selected = queuedId;
+                    }
                     if (queuedRemoteActivationId != null) {
                         remoteActivationToAcknowledge = queuedRemoteActivationId;
                         remoteActivationInFlight = true;
@@ -184,6 +194,12 @@ public final class EasterEggManager {
         if (selected > 0) {
             applyToDeathScreen(mc, screen, selected);
             if (remoteActivationToAcknowledge != null) {
+                synchronized (EasterEggManager.class) {
+                    lastDisplayedRemoteActivationId = remoteActivationToAcknowledge;
+                }
+            }
+        }
+        if (remoteActivationToAcknowledge != null) {
                 final String activationId = remoteActivationToAcknowledge;
                 Thread acknowledge = new Thread(new Runnable() {
                     @Override public void run() {
