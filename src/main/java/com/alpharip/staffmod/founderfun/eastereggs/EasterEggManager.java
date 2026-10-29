@@ -3,9 +3,9 @@ package com.alpharip.staffmod.founderfun.eastereggs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -15,7 +15,6 @@ import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -136,18 +135,34 @@ public final class EasterEggManager {
         String text = getText(id);
         if (text == null) return;
         activeEggId = id;
-        try {
-            Field field = findField(screen.getClass(), "causeOfDeath", "field_146442_a");
-            field.setAccessible(true);
-            field.set(screen, new ChatComponentText(text));
-        } catch (Exception error) {
-            System.err.println("[AlphaClient] Could not replace the death reason for Easter Egg " + id + ".");
-        }
         if (id == 21 && screen.buttonList != null) {
             closeButtonIsZero = RANDOM.nextBoolean();
             for (GuiButton button : screen.buttonList) {
                 if (button.id == 0 || button.id == 1) button.displayString = "YES";
             }
+        }
+    }
+
+    @SubscribeEvent
+    public void onDeathScreenDraw(GuiScreenEvent.DrawScreenEvent.Post event) {
+        if (activeEggId <= 0 || !(event.gui instanceof GuiGameOver)) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.fontRendererObj == null) return;
+        String text = getText(activeEggId);
+        if (text == null) return;
+        int centerX = event.gui.width / 2;
+        int top = event.gui.height / 4 - 42;
+        int maxWidth = Math.max(120, event.gui.width - 24);
+        List<String> lines = mc.fontRendererObj.listFormattedStringToWidth(text, maxWidth);
+        int lineHeight = mc.fontRendererObj.FONT_HEIGHT;
+        int widest = 0;
+        for (String line : lines) widest = Math.max(widest, mc.fontRendererObj.getStringWidth(line));
+        Gui.drawRect(centerX - widest / 2 - 8, top - 2, centerX + widest / 2 + 8,
+                top + lines.size() * lineHeight + 2, 0xAA000000);
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            mc.fontRendererObj.drawString(line, centerX - mc.fontRendererObj.getStringWidth(line) / 2,
+                    top + i * lineHeight, 0xFFFFFFFF);
         }
     }
 
@@ -166,17 +181,6 @@ public final class EasterEggManager {
         }
     }
 
-    private static Field findField(Class<?> type, String... names) throws NoSuchFieldException {
-        Class<?> current = type;
-        while (current != null) {
-            for (String name : names) {
-                try { return current.getDeclaredField(name); }
-                catch (NoSuchFieldException ignored) { }
-            }
-            current = current.getSuperclass();
-        }
-        throw new NoSuchFieldException("Death-screen field not found");
-    }
     private static boolean valid(int id) { return id >= 1 && id <= 25; }
     private static synchronized void ensureLoaded() { if (!loaded) load(); }
     private static synchronized File getFile() {
@@ -239,7 +243,7 @@ public final class EasterEggManager {
     public static final class Egg {
         private final int id;
         private final String defaultText;
-        private Egg(int id, String text) { id = id; this.id = id; this.defaultText = text; }
+        private Egg(int id, String text) { this.id = id; this.defaultText = text; }
         public int getId() { return id; }
         public String getDefaultText() { return defaultText; }
         public String getText() { return EasterEggManager.getText(id); }
