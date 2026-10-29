@@ -149,6 +149,10 @@ public final class PixelGardenCommand extends CommandBase {
     }
 
     @Override public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+        if (!PermissionService.hasPixelGardenRankAccess()) {
+            reply(sender, "Access denied: Pixel Garden requires Scout rank or higher.");
+            return;
+        }
         if (!PixelGardenModuleSettings.getInstance().isEnabled()) {
             reply(sender, "Pixel Garden is disabled in AlphaClient Settings.");
             return;
