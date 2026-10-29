@@ -8,11 +8,13 @@ import net.minecraft.client.gui.GuiScreen;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Locale;
 
 /** Adds the native-style Alpha Settings entry to Minecraft's standard options screen. */
 public final class AlphaOptionsHooks {
     private static final int ALPHA_SETTINGS_BUTTON_ID = 1989;
-    private static final String OPTIONS_CLASS = "net.minecraft.client.gui.GuiOptions";
+    private static final int BUTTON_HEIGHT = 20;
+    private static final int ROW_SPACING = 24;
 
     private AlphaOptionsHooks() { }
 
@@ -28,25 +30,36 @@ public final class AlphaOptionsHooks {
                 if (button.id == ALPHA_SETTINGS_BUTTON_ID) return;
             }
 
-            int targetBottom = screen.height / 6 + 126;
+            int targetRow = -1;
             for (GuiButton button : buttons) {
-                String label = button.displayString == null ? "" : button.displayString.toLowerCase();
+                String label = button.displayString == null
+                        ? "" : button.displayString.toLowerCase(Locale.ROOT);
                 if (label.contains("fov") || label.contains("field of view")
-                        || label.contains("difficulty") || label.contains("moeilijkheid")) {
-                    targetBottom = Math.max(targetBottom, button.yPosition + button.height);
+                        || label.contains("difficulty") || label.contains("moeilijkheid")
+                        || label.contains("gezichtsveld")) {
+                    targetRow = Math.max(targetRow, button.yPosition);
                 }
             }
 
+            // Vanilla 1.8.9 places the FOV/Difficulty controls in the upper half.
+            // If the labels are localized, use the known row rather than the old
+            // Resource Packs/Snooper row near the bottom of the options screen.
+            if (targetRow < 0) targetRow = screen.height / 6 + 36;
+            int y = targetRow + ROW_SPACING;
             int x = screen.width / 2 - 100;
-            int y = targetBottom + 3;
-            int doneY = screen.height / 6 + 168;
+
+            // Make room for a dedicated full-width row without overlapping Resource Packs,
+            // Snooper Settings, or other vanilla controls below FOV/Difficulty.
             for (GuiButton button : buttons) {
-                if (button.id == 200 && y + 20 > button.yPosition) {
-                    button.yPosition = Math.min(screen.height - 25, y + 24);
+                if (button.id != 200 && button.yPosition >= y) {
+                    button.yPosition += ROW_SPACING;
                 }
             }
-            if (y + 20 > screen.height - 24) y = screen.height - 46;
-            buttons.add(new GuiButton(ALPHA_SETTINGS_BUTTON_ID, x, y, 200, 20, "Alpha Settings"));
+
+            if (y + BUTTON_HEIGHT > screen.height - 30) {
+                y = Math.max(targetRow + ROW_SPACING, screen.height - BUTTON_HEIGHT - 30);
+            }
+            buttons.add(new GuiButton(ALPHA_SETTINGS_BUTTON_ID, x, y, 200, BUTTON_HEIGHT, "Alpha Settings"));
         } catch (Exception error) {
             System.err.println("[AlphaClient] Could not add Alpha Settings to Minecraft options: " + error.getMessage());
         }
