@@ -13,7 +13,13 @@ public final class AlphaChatAutocomplete {
         for (String suggestion : suggestions) {
             if (suggestion == null) continue;
             String value = suggestion.trim();
-            if (!value.startsWith("/") || AlphaCommandVisibility.canShow(value)) {
+            if (value.isEmpty()) continue;
+
+            // GuiChat/Forge may provide either "/command" or "command".
+            // Filtering only slash-prefixed entries allowed bare command names
+            // to bypass the rank visibility rules entirely.
+            String commandCandidate = value.startsWith("/") ? value : "/" + value;
+            if (AlphaCommandVisibility.canShow(commandCandidate)) {
                 visible.add(suggestion);
             }
         }
