@@ -145,6 +145,7 @@ public final class PixelGardenGame {
     public synchronized int getSeeds(Crop crop) { return seeds[crop.ordinal()]; }
     public synchronized int getInventory(Crop crop) { return inventory[crop.ordinal()]; }
     public synchronized int getTotalHarvested(Crop crop) { return totalHarvested[crop.ordinal()]; }
+    public synchronized void resetTotalHarvested() { java.util.Arrays.fill(totalHarvested, 0); }
     public synchronized boolean hasAutoHarvest() { return autoHarvest; }
     public synchronized boolean hasAutoPlant() { return autoPlant; }
     public synchronized boolean hasAutoSell() { return autoSell; }
