@@ -182,6 +182,13 @@ public final class AlphaClient {
 
         // Client commands run while GuiChat is closing; defer requested screens until the next tick.
         Minecraft guiMinecraft = Minecraft.getMinecraft();
+        // Persistently turn Pixel Garden off when a verified community account no longer meets Scout rank.
+        // Wait for rank verification so a temporary startup/authentication gap does not erase the saved toggle.
+        if (PermissionService.isOnlineRankVerified()
+                && !PermissionService.hasPixelGardenRankAccess()
+                && PixelGardenModuleSettings.getInstance().isEnabled()) {
+            PixelGardenModuleSettings.getInstance().setEnabled(false);
+        }
         GuiScreen requestedGui = pendingCommandGui;
         if (requestedGui != null) {
             pendingCommandGui = null;
