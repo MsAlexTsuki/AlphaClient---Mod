@@ -24,8 +24,10 @@ public final class AlphaSettingsMenu extends GuiScreen {
         int center = width / 2;
         int firstRow = height / 6 + 24;
 
-        buttonList.add(new GuiButton(PIXEL_GARDEN_TOGGLE, center - 100, firstRow, 200, 20,
-                getPixelGardenLabel()));
+        if (com.alpharip.staffmod.permissions.PermissionService.hasPixelGardenRankAccess()) {
+            buttonList.add(new GuiButton(PIXEL_GARDEN_TOGGLE, center - 100, firstRow, 200, 20,
+                    getPixelGardenLabel()));
+        }
         buttonList.add(new GuiButton(DONE, center - 100, firstRow + 28, 200, 20, "Done"));
     }
 
@@ -37,6 +39,10 @@ public final class AlphaSettingsMenu extends GuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null || !button.enabled) return;
         if (button.id == PIXEL_GARDEN_TOGGLE) {
+            if (!com.alpharip.staffmod.permissions.PermissionService.hasPixelGardenRankAccess()) {
+                initGui();
+                return;
+            }
             PixelGardenModuleSettings settings = PixelGardenModuleSettings.getInstance();
             settings.setEnabled(!settings.isEnabled());
             button.displayString = getPixelGardenLabel();
