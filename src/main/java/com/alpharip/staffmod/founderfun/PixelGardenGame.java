@@ -488,9 +488,20 @@ public final class PixelGardenGame {
             PixelGardenProgressionData.QuestDefinition definition = progressionData.getDefinition(instance.definitionId);
             if (definition == null) continue;
             if (definition.rewards.isEmpty() || grantQuestRewards(definition.rewards)) {
-                if (progressionData.markRewardsClaimed(instance.instanceId)) awardExperience(20L);
+                if (progressionData.markRewardsClaimed(instance.instanceId)) awardExperience(getQuestExperience(definition.id));
             }
         }
+    }
+
+    /** Returns the XP reward for a quest, with reduced XP for the four tutorial quests. */
+    public long getQuestExperience(String questId) {
+        if ("pg_fresh_start".equals(questId)
+                || "pg_first_coins".equals(questId)
+                || "pg_growing_bigger".equals(questId)
+                || "pg_your_own_garden".equals(questId)) {
+            return 5L;
+        }
+        return 10L;
     }
 
     public synchronized void awardExperience(long amount) {
