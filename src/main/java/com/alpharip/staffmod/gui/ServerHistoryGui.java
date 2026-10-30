@@ -36,7 +36,7 @@ public final class ServerHistoryGui extends AlphaGuiScreen {
         panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
         panelBottom = Math.min(height - 12, panelTop + 300);
 
-        int rowHeight = 43;
+        int rowHeight = 46;
         int rowTop = panelTop + 66;
         int joinX = panelRight - 82;
         int joinWidth = 70;
@@ -78,8 +78,8 @@ public final class ServerHistoryGui extends AlphaGuiScreen {
                 width / 2, panelTop + 32, 0xFFFFD866);
 
         drawServerRow(panelTop + 66, "Hypixel", "mc.hypixel.net", "Today · 20:42");
-        drawServerRow(panelTop + 115, "Minemen Club", "na.minemen.club", "Yesterday · 18:15");
-        drawServerRow(panelTop + 164, "Practice Server", "play.example.net", "26 October · 16:30");
+        drawServerRow(panelTop + 116, "Minemen Club", "na.minemen.club", "Yesterday · 18:15");
+        drawServerRow(panelTop + 166, "Practice Server", "play.example.net", "26 October · 16:30");
 
         drawString(fontRendererObj, "3 / 20 SERVERS SAVED",
                 panelLeft + 12, panelBottom - 48, 0xFFB8BDC8);
@@ -90,13 +90,14 @@ public final class ServerHistoryGui extends AlphaGuiScreen {
     private void drawServerRow(int y, String name, String address, String lastVisited) {
         int rowLeft = panelLeft + 12;
         int rowRight = panelRight - 12;
-        int rowBottom = y + 43;
+        int rowBottom = y + 46;
 
         drawRect(rowLeft, y, rowRight, rowBottom, 0x9914171E);
         drawRect(rowLeft, y, rowRight, y + 1, 0x554B515D);
-        drawString(fontRendererObj, name, rowLeft + 10, y + 7, 0xFFF3F4F6);
-        drawString(fontRendererObj, address, rowLeft + 10, y + 21, 0xFFB8BDC8);
-        drawString(fontRendererObj, lastVisited, rowRight - 104, y + 7, 0xFF8E95A3);
+        drawString(fontRendererObj, name, rowLeft + 10, y + 5, 0xFFF3F4F6);
+        drawString(fontRendererObj, "Last visited", rowLeft + 10, y + 18, 0xFFFFD866);
+        drawString(fontRendererObj, address, rowLeft + 10, y + 31, 0xFFB8BDC8);
+        drawString(fontRendererObj, lastVisited, rowLeft + 142, y + 31, 0xFF8E95A3);
     }
 
     @Override
