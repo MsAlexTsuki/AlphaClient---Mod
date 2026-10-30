@@ -17,8 +17,7 @@ public final class LegacyPvpCorePlugin implements IFMLLoadingPlugin {
         return new String[] {
                 LegacyPvpTransformer.class.getName(),
                 com.alpharip.staffmod.gui.AlphaOptionsTransformer.class.getName(),
-                com.alpharip.staffmod.gui.AlphaChatAutocompleteTransformer.class.getName(),
-                com.alpharip.staffmod.misc.CloudHeightTransformer.class.getName()
+                com.alpharip.staffmod.gui.AlphaChatAutocompleteTransformer.class.getName()
         };
     }
 
