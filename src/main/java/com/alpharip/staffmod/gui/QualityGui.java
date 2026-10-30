@@ -33,7 +33,7 @@ public final class QualityGui extends AlphaGuiScreen {
             "Fullbright", "Alpha Module Manager", "Mod Profiles", "Auto GG", "Keybind Profiles",
             "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Session Timer", "Playtime Tracker",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
-            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Easter Eggs"
+            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Deathscreens"
     };
 
     private final GuiScreen parent;
@@ -83,7 +83,7 @@ public final class QualityGui extends AlphaGuiScreen {
                 buttonList.add(new AlphaButton(FULLBRIGHT, x, y, tileWidth, tileHeight,
                         "Fullbright: " + (FullbrightMod.isEnabled() ? "ON" : "OFF"), true));
             } else if (i == 18) {
-                buttonList.add(new AlphaButton(EASTER_EGGS, x, y, tileWidth, tileHeight, "Easter Eggs", true));
+                buttonList.add(new AlphaButton(EASTER_EGGS, x, y, tileWidth, tileHeight, "Deathscreens", true));
             } else if (i == AFK_TIMER_INDEX) {
                 buttonList.add(new AlphaButton(AFK_TIMER, x, y, tileWidth, tileHeight, "AFK Timer", true));
             } else if (i == SESSION_TIMER_INDEX) {

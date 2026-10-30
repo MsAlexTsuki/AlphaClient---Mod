@@ -3,7 +3,6 @@ package com.alpharip.staffmod.founderfun.eastereggs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -29,7 +28,7 @@ public final class EasterEggManager {
     private static final boolean[] USER_ENABLED = new boolean[26];
     private static final boolean[] MASTER_ENABLED = new boolean[26];
     private static final String[] CUSTOM_TEXT = new String[26];
-    private static boolean globallyEnabled;
+    private static boolean globallyEnabled = true;
     private static boolean loaded;
     private static GuiScreen lastDeathScreen;
     private static int activeEggId = -1;
@@ -68,7 +67,7 @@ public final class EasterEggManager {
         add(23, "MsAlexTsuki agrees with this death");
         add(24, "AlphaClient and MsAlexTsuki just agreed that you should die, so you did");
         add(25, "Feed your pets. You might've forgotten them");
-        for (int id = 1; id <= 25; id++) MASTER_ENABLED[id] = true;
+        for (int id = 1; id <= 25; id++) { USER_ENABLED[id] = true; MASTER_ENABLED[id] = true; }
     }
 
     private EasterEggManager() { }
@@ -244,17 +243,15 @@ public final class EasterEggManager {
         String text = getText(activeEggId);
         if (text == null) return;
         int centerX = event.gui.width / 2;
-        int top = event.gui.height / 4 - 42;
+        int top = event.gui.height / 4 + 17;
         int maxWidth = Math.max(120, event.gui.width - 24);
         List<String> lines = mc.fontRendererObj.listFormattedStringToWidth(text, maxWidth);
         int lineHeight = mc.fontRendererObj.FONT_HEIGHT;
         int widest = 0;
         for (String line : lines) widest = Math.max(widest, mc.fontRendererObj.getStringWidth(line));
-        Gui.drawRect(centerX - widest / 2 - 8, top - 2, centerX + widest / 2 + 8,
-                top + lines.size() * lineHeight + 2, 0xAA000000);
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
-            mc.fontRendererObj.drawString(line, centerX - mc.fontRendererObj.getStringWidth(line) / 2,
+            mc.fontRendererObj.drawStringWithShadow(line, centerX - mc.fontRendererObj.getStringWidth(line) / 2,
                     top + i * lineHeight, 0xFFFFFFFF);
         }
     }

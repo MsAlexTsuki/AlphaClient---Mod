@@ -6,7 +6,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
-import com.alpharip.staffmod.founderfun.eastereggs.EasterEggSettingsGui;
 
 import java.io.IOException;
 
@@ -14,7 +13,6 @@ import java.io.IOException;
 public final class AlphaSettingsMenu extends GuiScreen {
     private static final int PIXEL_GARDEN_TOGGLE = 1;
     private static final int EASTER_EGGS_TOGGLE = 2;
-    private static final int EASTER_EGGS_SETTINGS = 3;
     private static final int DONE = 200;
     private final GuiScreen parent;
 
@@ -36,9 +34,7 @@ public final class AlphaSettingsMenu extends GuiScreen {
         }
         buttonList.add(new GuiButton(EASTER_EGGS_TOGGLE, center - 100, row, 200, 20,
                 "Easter Eggs: " + (EasterEggManager.isGloballyEnabled() ? "ON" : "OFF")));
-        buttonList.add(new GuiButton(EASTER_EGGS_SETTINGS, center - 100, row + 26, 200, 20,
-                "Easter Eggs Settings"));
-        buttonList.add(new GuiButton(DONE, center - 100, row + 54, 200, 20, "Done"));
+        buttonList.add(new GuiButton(DONE, center - 100, row + 26, 200, 20, "Done"));
     }
 
     private static String getPixelGardenLabel() {
@@ -59,8 +55,6 @@ public final class AlphaSettingsMenu extends GuiScreen {
         } else if (button.id == EASTER_EGGS_TOGGLE) {
             EasterEggManager.setGloballyEnabled(!EasterEggManager.isGloballyEnabled());
             button.displayString = "Easter Eggs: " + (EasterEggManager.isGloballyEnabled() ? "ON" : "OFF");
-        } else if (button.id == EASTER_EGGS_SETTINGS) {
-            Minecraft.getMinecraft().displayGuiScreen(new EasterEggSettingsGui(this));
         } else if (button.id == DONE) {
             Minecraft.getMinecraft().displayGuiScreen(parent);
         }
