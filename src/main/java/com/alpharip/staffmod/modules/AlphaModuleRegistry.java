@@ -47,6 +47,17 @@ public final class AlphaModuleRegistry {
         quality.addFeature(new AlphaModuleFeature("mod-toggle-menu", "Mod Toggle Menu", "Quickly enable or disable modules.", PermissionService.Rank.PUBLIC, false));
         MODULES.add(quality);
 
+        // Misc is a dedicated public folder beside Quality in Mods -> General.
+        AlphaModule misc = new AlphaModule(
+                "misc",
+                "Misc",
+                "Miscellaneous client features.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(misc);
+
         AlphaModule nameViewer = new AlphaModule(
                 "name-viewer",
                 "Name Viewer",
