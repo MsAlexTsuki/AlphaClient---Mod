@@ -36,6 +36,7 @@ public final class FightHistoryManager {
     private final Map<UUID, FightEntry> activeFights = new HashMap<UUID, FightEntry>();
     private final List<FightEntry> history = new ArrayList<FightEntry>();
     private long lastPresenceSaveAt;
+    private static boolean enabled = true;
 
     private FightHistoryManager() { }
 
@@ -47,6 +48,27 @@ public final class FightHistoryManager {
         INSTANCE.load();
     }
 
+    public static synchronized boolean isEnabled() {
+        return enabled;
+    }
+
+    public static synchronized void setEnabled(boolean value) {
+        enabled = value;
+        if (!value) {
+            INSTANCE.pendingHits.clear();
+            for (FightEntry entry : INSTANCE.activeFights.values()) entry.active = false;
+            INSTANCE.activeFights.clear();
+        }
+        INSTANCE.save();
+    }
+
+    public static synchronized void clearHistory() {
+        INSTANCE.history.clear();
+        INSTANCE.pendingHits.clear();
+        INSTANCE.activeFights.clear();
+        INSTANCE.save();
+    }
+
     public static synchronized List<FightEntry> getEntries() {
         List<FightEntry> entries = new ArrayList<FightEntry>(INSTANCE.history);
         Collections.sort(entries, (a, b) -> Long.compare(b.lastDamageAt, a.lastDamageAt));
@@ -55,7 +77,7 @@ public final class FightHistoryManager {
 
     @SubscribeEvent
     public void onAttackEntity(AttackEntityEvent event) {
-        if (event == null || event.isCanceled() || !(event.target instanceof EntityPlayer)) return;
+        if (!isEnabled() || event == null || event.isCanceled() || !(event.target instanceof EntityPlayer)) return;
         EntityPlayer attacker = event.entityPlayer;
         EntityPlayer target = (EntityPlayer) event.target;
         Minecraft mc = Minecraft.getMinecraft();
@@ -80,6 +102,11 @@ public final class FightHistoryManager {
                 activeFights.clear();
                 save();
             }
+            return;
+        }
+
+        if (!isEnabled()) {
+            pendingHits.clear();
             return;
         }
 
@@ -227,6 +254,7 @@ public final class FightHistoryManager {
         }
 
         JsonObject root = new JsonObject();
+        root.addProperty("enabled", enabled);
         JsonArray entries = new JsonArray();
         for (FightEntry entry : history) {
             JsonObject object = new JsonObject();
