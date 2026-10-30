@@ -86,11 +86,11 @@ public final class EasterEggManager {
         return null;
     }
     public static synchronized boolean isGloballyEnabled() { ensureLoaded(); return globallyEnabled; }
-    public static synchronized void setGloballyEnabled(boolean value) { ensureLoaded(); globallyEnabled = value; save(); }
+    public static synchronized void setGloballyEnabled(boolean value) { ensureLoaded(); globallyEnabled = value; }
     public static synchronized boolean isUserEnabled(int id) { ensureLoaded(); return valid(id) && USER_ENABLED[id]; }
     public static synchronized void setUserEnabled(int id, boolean value) { ensureLoaded(); if (valid(id)) { USER_ENABLED[id] = value; save(); } }
     public static synchronized boolean isMasterEnabled(int id) { ensureLoaded(); return valid(id) && MASTER_ENABLED[id]; }
-    public static synchronized void setMasterEnabled(int id, boolean value) { ensureLoaded(); if (valid(id)) { MASTER_ENABLED[id] = value; save(); } }
+    public static synchronized void setMasterEnabled(int id, boolean value) { ensureLoaded(); if (valid(id)) MASTER_ENABLED[id] = value; }\n    public static synchronized void applyGlobalSettings(boolean globalEnabled, JsonObject masterSettings) {\n        ensureLoaded();\n        globallyEnabled = globalEnabled;\n        if (masterSettings == null) return;\n        for (int id = 1; id <= 25; id++) {\n            String key = String.valueOf(id);\n            if (masterSettings.has(key) && masterSettings.get(key).isJsonPrimitive()\n                    && masterSettings.get(key).getAsJsonPrimitive().isBoolean()) {\n                MASTER_ENABLED[id] = masterSettings.get(key).getAsBoolean();\n            }\n        }\n    }
     public static synchronized String getText(int id) {
         ensureLoaded();
         Egg egg = getEgg(id);
@@ -319,7 +319,7 @@ public final class EasterEggManager {
             master.addProperty(key, MASTER_ENABLED[id]);
             if (CUSTOM_TEXT[id] != null) custom.addProperty(key, CUSTOM_TEXT[id]);
         }
-        root.add("userEnabled", user); root.add("masterEnabled", master); root.add("customText", custom);
+        root.add("userEnabled", user); root.add("customText", custom);
         FileWriter writer = null;
         try {
             writer = new FileWriter(file); writer.write(root.toString()); writer.flush();
