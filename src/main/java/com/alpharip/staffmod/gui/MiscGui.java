@@ -10,15 +10,12 @@ import java.io.IOException;
 /** Browser for AlphaClient miscellaneous mods. */
 public final class MiscGui extends AlphaGuiScreen {
     private static final int BACK = 1;
-    private static final String[] FEATURES = {"Cloud Height"};
+    private static final int CLOUD_HEIGHT = 2;
 
     private final GuiScreen parent;
-    private int visibleRows;
     private int panelLeft, panelRight, panelTop, panelBottom;
 
-    public MiscGui(GuiScreen parent) {
-        this.parent = parent;
-    }
+    public MiscGui(GuiScreen parent) { this.parent = parent; }
 
     @Override
     public void initGui() {
@@ -32,27 +29,17 @@ public final class MiscGui extends AlphaGuiScreen {
         int columns = 3;
         int tileWidth = (panelRight - panelLeft - 24 - gap * (columns - 1)) / columns;
         int tileHeight = 36;
-        int rowHeight = tileHeight + gap;
-        visibleRows = Math.max(1, (panelBottom - panelTop - 100) / rowHeight);
-
+        int x = panelLeft + 12;
+        int y = panelTop + 68;
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
-
-        int endIndex = Math.min(FEATURES.length, visibleRows * columns);
-        for (int i = 0; i < endIndex; i++) {
-            int x = panelLeft + 12 + (i % columns) * (tileWidth + gap);
-            int y = panelTop + 68 + (i / columns) * rowHeight;
-            AlphaButton planned = new AlphaButton(1000 + i, x, y, tileWidth, tileHeight,
-                    FEATURES[i] + "  -  PLANNED");
-            planned.enabled = false;
-            buttonList.add(planned);
-        }
+        buttonList.add(new AlphaButton(CLOUD_HEIGHT, x, y, tileWidth, tileHeight, "Cloud Height", true));
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if (button != null && button.id == BACK) {
-            mc.displayGuiScreen(parent);
-        }
+        if (button == null) return;
+        if (button.id == BACK) mc.displayGuiScreen(parent);
+        else if (button.id == CLOUD_HEIGHT) mc.displayGuiScreen(new CloudHeightGui(this));
     }
 
     @Override
@@ -69,14 +56,8 @@ public final class MiscGui extends AlphaGuiScreen {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        // Keep the same mouse-wheel interaction as QualityGui for future entries.
-        if (Mouse.getEventDWheel() != 0) {
-            initGui();
-        }
+        if (Mouse.getEventDWheel() != 0) initGui();
     }
 
-    @Override
-    public boolean doesGuiPauseGame() {
-        return false;
-    }
+    @Override public boolean doesGuiPauseGame() { return false; }
 }
