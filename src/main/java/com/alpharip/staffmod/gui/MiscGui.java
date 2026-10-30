@@ -3,14 +3,17 @@ package com.alpharip.staffmod.gui;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 
-/** Empty folder screen reserved for future AlphaClient Misc modules. */
+/** Browser for AlphaClient miscellaneous mods. */
 public final class MiscGui extends AlphaGuiScreen {
     private static final int BACK = 1;
+    private static final String[] FEATURES = {"Cloud Height"};
 
     private final GuiScreen parent;
+    private int visibleRows;
     private int panelLeft, panelRight, panelTop, panelBottom;
 
     public MiscGui(GuiScreen parent) {
@@ -25,7 +28,24 @@ public final class MiscGui extends AlphaGuiScreen {
         panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
         panelBottom = Math.min(height - 12, panelTop + 300);
 
+        int gap = 8;
+        int columns = 3;
+        int tileWidth = (panelRight - panelLeft - 24 - gap * (columns - 1)) / columns;
+        int tileHeight = 36;
+        int rowHeight = tileHeight + gap;
+        visibleRows = Math.max(1, (panelBottom - panelTop - 100) / rowHeight);
+
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+
+        int endIndex = Math.min(FEATURES.length, visibleRows * columns);
+        for (int i = 0; i < endIndex; i++) {
+            int x = panelLeft + 12 + (i % columns) * (tileWidth + gap);
+            int y = panelTop + 68 + (i / columns) * rowHeight;
+            AlphaButton planned = new AlphaButton(1000 + i, x, y, tileWidth, tileHeight,
+                    FEATURES[i] + "  -  PLANNED");
+            planned.enabled = false;
+            buttonList.add(planned);
+        }
     }
 
     @Override
@@ -42,9 +62,17 @@ public final class MiscGui extends AlphaGuiScreen {
         drawRect(panelLeft, panelTop, panelRight, panelTop + 2, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "MISC", width / 2, panelTop + 13, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "MISCELLANEOUS MODS", width / 2, panelTop + 30, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "No mods have been added here yet.",
-                width / 2, panelTop + 92, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Mods and roadmap ideas", panelLeft + 12, panelTop + 49, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        // Keep the same mouse-wheel interaction as QualityGui for future entries.
+        if (Mouse.getEventDWheel() != 0) {
+            initGui();
+        }
     }
 
     @Override
