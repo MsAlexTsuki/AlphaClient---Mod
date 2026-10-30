@@ -28,7 +28,7 @@ public final class EasterEggManager {
     private static final boolean[] USER_ENABLED = new boolean[26];
     private static final boolean[] MASTER_ENABLED = new boolean[26];
     private static final String[] CUSTOM_TEXT = new String[26];
-    private static boolean globallyEnabled = true;
+    private static boolean globallyEnabled = false;
     private static boolean loaded;
     private static GuiScreen lastDeathScreen;
     private static int activeEggId = -1;
@@ -67,7 +67,7 @@ public final class EasterEggManager {
         add(23, "MsAlexTsuki agrees with this death");
         add(24, "AlphaClient and MsAlexTsuki just agreed that you should die, so you did");
         add(25, "Feed your pets. You might've forgotten them");
-        for (int id = 1; id <= 25; id++) { USER_ENABLED[id] = true; MASTER_ENABLED[id] = true; }
+        for (int id = 1; id <= 25; id++) { USER_ENABLED[id] = true; }
     }
 
     private EasterEggManager() { }
