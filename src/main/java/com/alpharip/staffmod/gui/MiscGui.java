@@ -10,6 +10,7 @@ import java.io.IOException;
 /** Browser for AlphaClient miscellaneous mods. */
 public final class MiscGui extends AlphaGuiScreen {
     private static final int BACK = 1;
+    private static final int SERVER_HISTORY = 2;
 
     private final GuiScreen parent;
     private int panelLeft, panelRight, panelTop, panelBottom;
@@ -24,12 +25,19 @@ public final class MiscGui extends AlphaGuiScreen {
         panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
         panelBottom = Math.min(height - 12, panelTop + 300);
 
+        buttonList.add(new AlphaButton(SERVER_HISTORY, panelLeft + 12, panelTop + 68,
+                panelRight - panelLeft - 24, 34, "SERVER HISTORY", true));
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if (button != null && button.id == BACK) mc.displayGuiScreen(parent);
+        if (button == null) return;
+        if (button.id == BACK) {
+            mc.displayGuiScreen(parent);
+        } else if (button.id == SERVER_HISTORY) {
+            mc.displayGuiScreen(new ServerHistoryGui(this));
+        }
     }
 
     @Override
