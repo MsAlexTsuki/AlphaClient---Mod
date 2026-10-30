@@ -55,7 +55,9 @@ public final class FightHistoryManager {
         if (event == null || event.isCanceled() || !(event.target instanceof EntityPlayer)) return;
         EntityPlayer attacker = event.entityPlayer;
         EntityPlayer target = (EntityPlayer) event.target;
-        if (attacker == null || target == attacker || attacker.getUniqueID().equals(target.getUniqueID())) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || attacker == null || attacker != mc.thePlayer || target == attacker
+                || target.worldObj != mc.theWorld || attacker.getUniqueID().equals(target.getUniqueID())) return;
 
         // The attack attempt alone is not recorded. Wait for the target's hurt
         // animation to change, which is sent after the server accepts damage.
