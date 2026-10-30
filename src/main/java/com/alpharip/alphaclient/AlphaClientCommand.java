@@ -1716,7 +1716,8 @@ public final class AlphaClientCommand extends CommandBase {
                 String[] values = {"on","off","activate","idlist","edit","help"};
                 for (String value : values) options.add(value);
             } else if (args.length == 2 && ("on".equalsIgnoreCase(args[0])
-                    || "off".equalsIgnoreCase(args[0]) || "edit".equalsIgnoreCase(args[0]))) {
+                    || "off".equalsIgnoreCase(args[0]) || "edit".equalsIgnoreCase(args[0])
+                    || "activate".equalsIgnoreCase(args[0]))) {
                 for (int id = 1; id <= 25; id++) options.add(String.valueOf(id));
             } else if (args.length == 3 && "activate".equalsIgnoreCase(args[0])) {
                 for (int id = 1; id <= 25; id++) options.add(String.valueOf(id));
