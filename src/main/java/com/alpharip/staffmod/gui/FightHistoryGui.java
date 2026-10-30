@@ -14,6 +14,7 @@ import java.util.Locale;
 /** Displays the player's locally saved, per-opponent fight history. */
 public final class FightHistoryGui extends AlphaGuiScreen {
     private static final int BACK = 1;
+    private static final int SETTINGS = 2;
     private final GuiScreen parent;
     private int panelLeft, panelRight, panelTop, panelBottom;
     private int visibleRows;
@@ -38,6 +39,8 @@ public final class FightHistoryGui extends AlphaGuiScreen {
         visibleRows = Math.min(5, entries.size());
         visibleEntries = entries.subList(0, visibleRows);
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 80, 20, "BACK"));
+        buttonList.add(new AlphaButton(SETTINGS, panelRight - 92, panelBottom - 29,
+                80, 20, "SETTINGS"));
     }
 
     @Override
@@ -86,7 +89,12 @@ public final class FightHistoryGui extends AlphaGuiScreen {
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if (button != null && button.id == BACK) mc.displayGuiScreen(parent);
+        if (button == null) return;
+        if (button.id == BACK) {
+            mc.displayGuiScreen(parent);
+        } else if (button.id == SETTINGS) {
+            mc.displayGuiScreen(new FightHistorySettingsGui(this));
+        }
     }
 
     @Override
