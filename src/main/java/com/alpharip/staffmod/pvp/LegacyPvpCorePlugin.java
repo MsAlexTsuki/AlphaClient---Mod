@@ -6,7 +6,7 @@ import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import java.util.Map;
 
 /**
- * Loads the narrowly scoped ItemRenderer transformer used by Legacy PvP.
+ * Loads the narrowly scoped renderer transformers used by AlphaClient.
  */
 @IFMLLoadingPlugin.Name("AlphaClientLegacyPvp")
 @IFMLLoadingPlugin.MCVersion("1.8.9")
@@ -17,27 +17,13 @@ public final class LegacyPvpCorePlugin implements IFMLLoadingPlugin {
         return new String[] {
                 LegacyPvpTransformer.class.getName(),
                 com.alpharip.staffmod.gui.AlphaOptionsTransformer.class.getName(),
-                com.alpharip.staffmod.gui.AlphaChatAutocompleteTransformer.class.getName()
+                com.alpharip.staffmod.gui.AlphaChatAutocompleteTransformer.class.getName(),
+                com.alpharip.staffmod.misc.CloudHeightTransformer.class.getName()
         };
     }
 
-    @Override
-    public String getModContainerClass() {
-        return null;
-    }
-
-    @Override
-    public String getSetupClass() {
-        return null;
-    }
-
-    @Override
-    public void injectData(Map<String, Object> data) {
-        // No launch-time data is required.
-    }
-
-    @Override
-    public String getAccessTransformerClass() {
-        return null;
-    }
+    @Override public String getModContainerClass() { return null; }
+    @Override public String getSetupClass() { return null; }
+    @Override public void injectData(Map<String, Object> data) { }
+    @Override public String getAccessTransformerClass() { return null; }
 }
