@@ -92,12 +92,13 @@ public final class AlphaHelpGui extends GuiScreen {
         }
 
         if (com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()) {
-            addCommand("Easter Eggs administration", "/alphaclient easteregg help", "staffmods.founder", true);
-            addCommand("Enable an Easter Egg", "/alphaclient easteregg on <id>", "staffmods.founder", true);
-            addCommand("Disable an Easter Egg", "/alphaclient easteregg off <id>", "staffmods.founder", true);
-            addCommand("Activate an Easter Egg", "/alphaclient easteregg activate <id>", "staffmods.founder", true);
-            addCommand("List Easter Egg IDs", "/alphaclient easteregg idlist", "staffmods.founder", true);
-            addCommand("Edit Easter Egg text", "/alphaclient easteregg edit <id> <text>", "staffmods.founder", true);
+            addCommand("Easter Eggs administration", "/alphaclient:easteregg", "staffmods.founder", true);
+            addCommand("Enable an Easter Egg", "/easteregg on <id>", "staffmods.founder", true);
+            addCommand("Disable an Easter Egg", "/easteregg off <id>", "staffmods.founder", true);
+            addCommand("Activate an Easter Egg", "/easteregg activate <id>", "staffmods.founder", true);
+            addCommand("Activate an Easter Egg for another account", "/easteregg activate <alpha account name> <id>", "staffmods.founder", true);
+            addCommand("List Easter Egg IDs", "/easteregg idlist", "staffmods.founder", true);
+            addCommand("Edit Easter Egg text", "/easteregg edit <id> <death screen text>", "staffmods.founder", true);
         }
 
         if (com.alpharip.staffmod.permissions.SupabaseCommunityService.hasStaffOperationsAccess())
