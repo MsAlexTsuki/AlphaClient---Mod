@@ -68,6 +68,11 @@ public final class AlphaClientCommand extends CommandBase {
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
 
+        if ("easteregg".equals(route) || "alphaclient:easteregg".equals(route)) {
+            handleEasterEggCommand(sender, args);
+            return;
+        }
+        // Keep the previous nested route working for compatibility.
         if ("alphaclient".equals(route) && args != null && args.length > 0
                 && "easteregg".equalsIgnoreCase(args[0])) {
             handleEasterEggCommand(sender, tail(args));
@@ -292,7 +297,7 @@ public final class AlphaClientCommand extends CommandBase {
         }
         if (args == null || args.length == 0 || "help".equalsIgnoreCase(args[0])) {
             reply(sender, "Founder-only Easter Eggs commands:");
-            reply(sender, "/alphaclient easteregg on <id>");
+            reply(sender, "/easteregg on <id>");
             reply(sender, "/alphaclient easteregg off <id>");
             reply(sender, "/alphaclient easteregg activate <id>");
             reply(sender, "/alphaclient easteregg activate <alpha account name> <id>");
@@ -1705,11 +1710,21 @@ public final class AlphaClientCommand extends CommandBase {
                     options.add(profile.getProfileName());
                 }
             }
+        } else if ("easteregg".equals(commandName) || "alphaclient:easteregg".equals(commandName)) {
+            if (!SupabaseCommunityService.isSignedInFounder()) return options;
+            if (args.length == 1) {
+                String[] values = {"on","off","activate","idlist","edit","help"};
+                for (String value : values) options.add(value);
+            } else if (args.length == 2 && ("on".equalsIgnoreCase(args[0])
+                    || "off".equalsIgnoreCase(args[0]) || "edit".equalsIgnoreCase(args[0]))) {
+                for (int id = 1; id <= 25; id++) options.add(String.valueOf(id));
+            } else if (args.length == 3 && "activate".equalsIgnoreCase(args[0])) {
+                for (int id = 1; id <= 25; id++) options.add(String.valueOf(id));
+            }
         } else if ("alphaclient".equals(commandName)) {
             if (args.length == 1) {
                 String[] values = {"help","modules","settings","module","fps","cps","bhop","wtap","fullbright"};
                 for (String value : values) if (isCompletionAllowed(commandPermissionForRoute("alphaclient", new String[]{value}))) options.add(value);
-                if (SupabaseCommunityService.isSignedInFounder()) options.add("easteregg");
             } else if (args.length == 2 && "easteregg".equalsIgnoreCase(args[0])
                     && SupabaseCommunityService.isSignedInFounder()) {
                 String[] values = {"on","off","activate","idlist","edit","help"};
@@ -1717,7 +1732,7 @@ public final class AlphaClientCommand extends CommandBase {
             } else if (args.length == 3 && "easteregg".equalsIgnoreCase(args[0])
                     && SupabaseCommunityService.isSignedInFounder()
                     && ("on".equalsIgnoreCase(args[1]) || "off".equalsIgnoreCase(args[1])
-                    || "edit".equalsIgnoreCase(args[1]))) {
+                    || "edit".equalsIgnoreCase(args[1]) || "activate".equalsIgnoreCase(args[1]))) {
                 for (int id = 1; id <= 25; id++) options.add(String.valueOf(id));
             } else if (args.length == 4 && "easteregg".equalsIgnoreCase(args[0])
                     && "activate".equalsIgnoreCase(args[1])
