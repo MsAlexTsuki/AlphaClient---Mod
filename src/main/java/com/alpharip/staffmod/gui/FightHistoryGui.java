@@ -57,7 +57,7 @@ public final class FightHistoryGui extends AlphaGuiScreen {
 
         List<FightHistoryManager.FightEntry> entries = FightHistoryManager.getEntries();
         int listTop = panelTop + 58;
-        int rowHeight = 42;
+        int rowHeight = 36;
         if (entries.isEmpty()) {
             drawCenteredString(fontRendererObj, "No fights recorded yet",
                     width / 2, listTop + 38, 0xFFB8BDC8);
