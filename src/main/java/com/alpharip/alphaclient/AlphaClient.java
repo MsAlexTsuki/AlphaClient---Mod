@@ -155,7 +155,7 @@ public final class AlphaClient {
     private void registerClientCommands() {
         String[] commands = {
                 "alphaclient", "alphahelp", "alphaclient:help", "alphaclient:modules",
-                "alphaclient:settings", "alphaclient:module", "alphaclient:fps",
+                "alphaclient:settings", "alphaclient:module", "alphaclient:easteregg", "easteregg", "alphaclient:fps",
                 "alphaclient:cps", "alphaclient:bhop", "alphaclient:wtap",
                 "alphaclient:fullbright", "alphaclient:legacypvp", "alphaclient:playtime",
                 "alphaclient:sessiontimer", "alphaclient:afktimer",
