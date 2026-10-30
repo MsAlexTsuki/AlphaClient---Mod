@@ -32,6 +32,7 @@ import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
+import com.alpharip.staffmod.serverhistory.ServerHistoryManager;
 import com.alpharip.staffmod.founderfun.PixelGardenMessageNotifier;
 import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
@@ -106,6 +107,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new FullbrightMod());
         MinecraftForge.EVENT_BUS.register(new AutoGGMod());
         MinecraftForge.EVENT_BUS.register(new AutoReconnectMod());
+        ServerHistoryManager.loadSettings();
+        MinecraftForge.EVENT_BUS.register(ServerHistoryManager.getInstance());
         RankCache.INSTANCE.start();
         SupabaseCommunityService.start();
 
