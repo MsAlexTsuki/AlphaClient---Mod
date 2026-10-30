@@ -98,6 +98,8 @@ public final class ServerHistoryGui extends AlphaGuiScreen {
                 drawString(fontRendererObj, entry.getAddress(), rowLeft + 84, y + 19, 0xFFB8BDC8);
                 drawString(fontRendererObj, formatLastVisited(entry.getLastVisited()),
                         rowLeft + 10, y + 30, 0xFF8E95A3);
+                drawString(fontRendererObj, "JOIN COUNT: " + entry.getJoinCount(),
+                        panelRight - 205, y + 30, 0xFFFFD866);
             }
         }
 
