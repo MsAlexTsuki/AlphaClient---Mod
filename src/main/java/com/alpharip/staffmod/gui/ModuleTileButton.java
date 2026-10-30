@@ -27,7 +27,8 @@ public final class ModuleTileButton extends GuiButton {
         hovered = mouseX >= xPosition && mouseY >= yPosition
                 && mouseX < xPosition + width && mouseY < yPosition + height;
 
-        boolean folder = "quality".equals(module.getId()) || "pixelgarden".equals(module.getId());
+        boolean folder = "misc".equals(module.getId())
+                || "quality".equals(module.getId()) || "pixelgarden".equals(module.getId());
         boolean available = module.isImplemented() && module.isUnlocked() && !folder;
         boolean on = available && module.isEnabled();
         int bg = hovered ? 0xF0272B34 : 0xE0181B22;
@@ -74,7 +75,8 @@ public final class ModuleTileButton extends GuiButton {
     public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
         boolean pressed = super.mousePressed(mc, mouseX, mouseY);
         switchClicked = false;
-        if (pressed && !"quality".equals(module.getId()) && !"pixelgarden".equals(module.getId())) {
+        if (pressed && !"misc".equals(module.getId())
+                && !"quality".equals(module.getId()) && !"pixelgarden".equals(module.getId())) {
             int sx = xPosition + width - SWITCH_WIDTH - 7;
             int sy = yPosition + 6;
             switchClicked = mouseX >= sx && mouseX < sx + SWITCH_WIDTH
@@ -89,6 +91,7 @@ public final class ModuleTileButton extends GuiButton {
         if (id.contains("key")) return "⌨";
         if (id.contains("direction")) return "✥";
         if (id.contains("name-viewer")) return "N";
+        if ("misc".equals(id)) return "M";
         if ("quality".equals(id)) return "✦";
         if ("staffmods".equals(id)) return "⚒";
         return "◆";
