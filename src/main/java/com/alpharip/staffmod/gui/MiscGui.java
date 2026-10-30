@@ -10,7 +10,6 @@ import java.io.IOException;
 /** Browser for AlphaClient miscellaneous mods. */
 public final class MiscGui extends AlphaGuiScreen {
     private static final int BACK = 1;
-    private static final int CLOUD_HEIGHT = 2;
 
     private final GuiScreen parent;
     private int panelLeft, panelRight, panelTop, panelBottom;
@@ -25,21 +24,12 @@ public final class MiscGui extends AlphaGuiScreen {
         panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
         panelBottom = Math.min(height - 12, panelTop + 300);
 
-        int gap = 8;
-        int columns = 3;
-        int tileWidth = (panelRight - panelLeft - 24 - gap * (columns - 1)) / columns;
-        int tileHeight = 36;
-        int x = panelLeft + 12;
-        int y = panelTop + 68;
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
-        buttonList.add(new AlphaButton(CLOUD_HEIGHT, x, y, tileWidth, tileHeight, "Cloud Height", true));
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if (button == null) return;
-        if (button.id == BACK) mc.displayGuiScreen(parent);
-        else if (button.id == CLOUD_HEIGHT) mc.displayGuiScreen(new CloudHeightGui(this));
+        if (button != null && button.id == BACK) mc.displayGuiScreen(parent);
     }
 
     @Override
