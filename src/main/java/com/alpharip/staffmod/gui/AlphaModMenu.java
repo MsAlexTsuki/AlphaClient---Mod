@@ -270,7 +270,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     || module.getDescription().toLowerCase(Locale.ROOT).contains(query)) result.add(module);
         }
 
-        // Keep the dedicated folders together at the end of General, in a fixed order.
+        // Keep Misc directly above Quality at the end of General; Quality is always last.
         if (selectedCategory == AlphaModule.Category.PUBLIC) {
             AlphaModule quality = null;
             AlphaModule misc = null;
@@ -282,8 +282,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     misc = result.remove(i);
                 }
             }
-            if (quality != null) result.add(quality);
             if (misc != null) result.add(misc);
+            if (quality != null) result.add(quality);
         }
         return result;
     }
