@@ -83,6 +83,14 @@ public final class AimAssistSettings {
         save();
     }
 
+    public static synchronized void setTargetArea(TargetArea area) {
+        if (area == null) return;
+        if (targetArea != area) {
+            targetArea = area;
+            save();
+        }
+    }
+
     public static synchronized void reset() {
         correctionSpeed = DEFAULT_CORRECTION_SPEED;
         reactionDelayMs = DEFAULT_REACTION_DELAY_MS;
