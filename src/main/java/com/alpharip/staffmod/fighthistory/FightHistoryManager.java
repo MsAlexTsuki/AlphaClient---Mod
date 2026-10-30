@@ -35,6 +35,7 @@ public final class FightHistoryManager {
     private final Map<UUID, PendingHit> pendingHits = new HashMap<UUID, PendingHit>();
     private final Map<UUID, FightEntry> activeFights = new HashMap<UUID, FightEntry>();
     private final List<FightEntry> history = new ArrayList<FightEntry>();
+    private long lastPresenceSaveAt;
 
     private FightHistoryManager() { }
 
@@ -47,7 +48,9 @@ public final class FightHistoryManager {
     }
 
     public static synchronized List<FightEntry> getEntries() {
-        return Collections.unmodifiableList(new ArrayList<FightEntry>(INSTANCE.history));
+        List<FightEntry> entries = new ArrayList<FightEntry>(INSTANCE.history);
+        Collections.sort(entries, (a, b) -> Long.compare(b.lastSeenAt, a.lastSeenAt));
+        return Collections.unmodifiableList(entries);
     }
 
     @SubscribeEvent
@@ -81,6 +84,22 @@ public final class FightHistoryManager {
         }
 
         long now = System.currentTimeMillis();
+        boolean presenceChanged = false;
+        for (Object playerObject : mc.theWorld.playerEntities) {
+            EntityPlayer seenPlayer = (EntityPlayer) playerObject;
+            if (seenPlayer == mc.thePlayer) continue;
+            FightEntry knownEntry = findHistoryEntry(seenPlayer.getUniqueID());
+            if (knownEntry != null && now - knownEntry.lastSeenAt >= 1000L) {
+                knownEntry.lastSeenAt = now;
+                knownEntry.playerName = seenPlayer.getName();
+                presenceChanged = true;
+            }
+        }
+        if (presenceChanged && now - lastPresenceSaveAt >= 10000L) {
+            save();
+            lastPresenceSaveAt = now;
+        }
+
         Iterator<Map.Entry<UUID, PendingHit>> pendingIterator = pendingHits.entrySet().iterator();
         while (pendingIterator.hasNext()) {
             Map.Entry<UUID, PendingHit> item = pendingIterator.next();
@@ -117,19 +136,30 @@ public final class FightHistoryManager {
     private void recordConfirmedHit(EntityPlayer target, long now) {
         UUID playerId = target.getUniqueID();
         FightEntry entry = activeFights.get(playerId);
-        if (entry == null || now - entry.lastDamageAt >= FIGHT_TIMEOUT_MS) {
-            if (entry != null) entry.active = false;
-            entry = new FightEntry(playerId.toString(), target.getName(), now, now, 1, true);
+        if (entry == null) {
+            entry = findHistoryEntry(playerId);
+            if (entry == null) {
+                entry = new FightEntry(playerId.toString(), target.getName(), now, now, now, 1, true);
+                history.add(entry);
+            } else {
+                entry.fightCount++;
+                entry.active = true;
+                entry.playerName = target.getName();
+            }
             activeFights.put(playerId, entry);
-        } else {
-            entry.playerName = target.getName();
-            entry.lastDamageAt = now;
-            entry.hitCount++;
         }
-
-        history.remove(entry);
-        history.add(0, entry);
+        entry.lastDamageAt = now;
+        entry.lastSeenAt = now;
+        entry.playerName = target.getName();
         save();
+    }
+
+    private FightEntry findHistoryEntry(UUID playerId) {
+        String id = playerId.toString();
+        for (FightEntry entry : history) {
+            if (entry.playerId.equals(id)) return entry;
+        }
+        return null;
     }
 
     private synchronized void load() {
@@ -159,11 +189,25 @@ public final class FightHistoryManager {
                 String playerName = readString(object, "playerName");
                 long startedAt = readLong(object, "startedAt");
                 long lastDamageAt = readLong(object, "lastDamageAt");
-                int hitCount = (int) readLong(object, "hitCount");
+                int storedFightCount = (int) readLong(object, "fightCount");
+                long lastSeenAt = readLong(object, "lastSeenAt");
                 if (playerId.isEmpty() || playerName.isEmpty() || startedAt <= 0L || lastDamageAt <= 0L) continue;
-                // Active encounters are closed when the client restarts.
-                history.add(new FightEntry(playerId, playerName, startedAt, lastDamageAt,
-                        Math.max(1, hitCount), false));
+                UUID parsedPlayerId;
+                try { parsedPlayerId = UUID.fromString(playerId); }
+                catch (IllegalArgumentException ignored) { continue; }
+                FightEntry existing = findHistoryEntry(parsedPlayerId);
+                if (existing == null) {
+                    // Older entries represent individual encounters; hit totals are not fights.
+                    int fightCount = storedFightCount > 0 ? storedFightCount : 1;
+                    history.add(new FightEntry(playerId, playerName, startedAt, lastDamageAt,
+                            lastSeenAt > 0L ? lastSeenAt : lastDamageAt, fightCount, false));
+                } else {
+                    existing.fightCount += storedFightCount > 0 ? storedFightCount : 1;
+                    existing.startedAt = Math.min(existing.startedAt, startedAt);
+                    if (lastSeenAt > existing.lastSeenAt) existing.lastSeenAt = lastSeenAt;
+                    if (lastDamageAt > existing.lastDamageAt) existing.lastDamageAt = lastDamageAt;
+                    existing.playerName = playerName;
+                }
             }
         } catch (Exception e) {
             System.out.println("[AlphaClient] Could not load Fight History: " + e.getMessage());
@@ -190,7 +234,8 @@ public final class FightHistoryManager {
             object.addProperty("playerName", entry.playerName);
             object.addProperty("startedAt", entry.startedAt);
             object.addProperty("lastDamageAt", entry.lastDamageAt);
-            object.addProperty("hitCount", entry.hitCount);
+            object.addProperty("lastSeenAt", entry.lastSeenAt);
+            object.addProperty("fightCount", entry.fightCount);
             entries.add(object);
         }
         root.add("fights", entries);
@@ -229,25 +274,27 @@ public final class FightHistoryManager {
     public static final class FightEntry {
         private final String playerId;
         private String playerName;
-        private final long startedAt;
+        private long startedAt;
         private long lastDamageAt;
-        private int hitCount;
+        private long lastSeenAt;
+        private int fightCount;
         private boolean active;
 
         private FightEntry(String playerId, String playerName, long startedAt,
-                           long lastDamageAt, int hitCount, boolean active) {
+                           long lastDamageAt, long lastSeenAt, int fightCount, boolean active) {
             this.playerId = playerId;
             this.playerName = playerName;
             this.startedAt = startedAt;
             this.lastDamageAt = lastDamageAt;
-            this.hitCount = hitCount;
+            this.lastSeenAt = lastSeenAt;
+            this.fightCount = fightCount;
             this.active = active;
         }
 
         public String getPlayerName() { return playerName; }
         public long getStartedAt() { return startedAt; }
-        public long getLastDamageAt() { return lastDamageAt; }
-        public int getHitCount() { return hitCount; }
+        public long getLastSeenAt() { return lastSeenAt; }
+        public int getFightCount() { return fightCount; }
         public boolean isActive() { return active; }
     }
 
