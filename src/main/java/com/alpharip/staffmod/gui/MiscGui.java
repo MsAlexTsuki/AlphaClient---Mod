@@ -11,6 +11,7 @@ import java.io.IOException;
 public final class MiscGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int SERVER_HISTORY = 2;
+    private static final int FIGHT_HISTORY = 3;
 
     private final GuiScreen parent;
     private int panelLeft, panelRight, panelTop, panelBottom;
@@ -27,6 +28,8 @@ public final class MiscGui extends AlphaGuiScreen {
 
         buttonList.add(new AlphaButton(SERVER_HISTORY, panelLeft + 12, panelTop + 68,
                 panelRight - panelLeft - 24, 34, "SERVER HISTORY", true));
+        buttonList.add(new AlphaButton(FIGHT_HISTORY, panelLeft + 12, panelTop + 108,
+                panelRight - panelLeft - 24, 34, "FIGHT HISTORY", true));
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
     }
 
@@ -37,6 +40,8 @@ public final class MiscGui extends AlphaGuiScreen {
             mc.displayGuiScreen(parent);
         } else if (button.id == SERVER_HISTORY) {
             mc.displayGuiScreen(new ServerHistoryGui(this));
+        } else if (button.id == FIGHT_HISTORY) {
+            mc.displayGuiScreen(new FightHistoryGui(this));
         }
     }
 
