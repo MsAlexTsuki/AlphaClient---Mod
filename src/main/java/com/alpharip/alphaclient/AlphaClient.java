@@ -35,6 +35,7 @@ import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.founderfun.PixelGardenMessageNotifier;
 import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
+import com.alpharip.staffmod.misc.CloudHeightSettings;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -107,11 +108,10 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new AutoGGMod());
         MinecraftForge.EVENT_BUS.register(new AutoReconnectMod());
         RankCache.INSTANCE.start();
-        // Restore the Alpha Account session and keep rank/module permissions in sync.
         SupabaseCommunityService.start();
 
-        // Load every implemented HUD's persisted position before registering its renderer.
         AlphaClientConfig.load();
+        CloudHeightSettings.load();
         AutoGGMod.loadSettings();
         AutoReconnectMod.loadSettings();
         BhopHud.loadHudPosition();
@@ -125,33 +125,22 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new PlaytimeTrackerHud());
 
         bhopMode = new BhopMode();
-        // Restore per-profile module toggles after the registry and BHOP mode exist.
         ModuleProfileManager.load();
         ModuleProfileManager.applySelectedModuleStates();
         syncBhopModuleState();
 
-        openModMenuKey = new KeyBinding(
-                "AlphaClient: Open Home Menu",
-                Keyboard.KEY_RCONTROL,
-                "AlphaClient"
-        );
+        openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu", Keyboard.KEY_RCONTROL, "AlphaClient");
         ClientRegistry.registerKeyBinding(openModMenuKey);
         syncBhopKeyBindingVisibility();
-
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
     }
 
-    /** Opens a command-requested GUI after Minecraft has finished closing the chat screen. */
-    public static void openGuiFromCommand(GuiScreen screen) {
-        pendingCommandGui = screen;
-    }
+    public static void openGuiFromCommand(GuiScreen screen) { pendingCommandGui = screen; }
 
     private static boolean isPixelGardenScreen(GuiScreen screen) {
-        return screen != null && screen.getClass().getName()
-                .startsWith("com.alpharip.staffmod.founderfun.PixelGarden");
+        return screen != null && screen.getClass().getName().startsWith("com.alpharip.staffmod.founderfun.PixelGarden");
     }
 
-    /** Registers the central command namespace and short aliases against shared handlers. */
     private void registerClientCommands() {
         String[] commands = {
                 "alphaclient", "alphahelp", "alphaclient:help", "alphaclient:modules",
@@ -177,17 +166,12 @@ public final class AlphaClient {
         }
     }
 
-    /** Connects to the partner server only after the AlphaClient main menu has loaded. */
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
-
-        // Client commands run while GuiChat is closing; defer requested screens until the next tick.
+        CloudHeightSettings.apply();
         Minecraft guiMinecraft = Minecraft.getMinecraft();
-        // Persistently turn Pixel Garden off when a verified community account no longer meets Scout rank.
-        // Wait for rank verification so a temporary startup/authentication gap does not erase the saved toggle.
-        if (PermissionService.isOnlineRankVerified()
-                && !PermissionService.hasPixelGardenRankAccess()
+        if (PermissionService.isOnlineRankVerified() && !PermissionService.hasPixelGardenRankAccess()
                 && PixelGardenModuleSettings.getInstance().isEnabled()) {
             PixelGardenModuleSettings.getInstance().setEnabled(false);
         }
@@ -201,30 +185,17 @@ public final class AlphaClient {
             }
         }
         if (guiMinecraft != null && isPixelGardenScreen(guiMinecraft.currentScreen)
-                && (!PermissionService.hasPixelGardenRankAccess()
-                    || !PixelGardenModuleSettings.getInstance().isEnabled())) {
+                && (!PermissionService.hasPixelGardenRankAccess() || !PixelGardenModuleSettings.getInstance().isEnabled())) {
             guiMinecraft.displayGuiScreen(null);
         }
-
-        // Staff Operations presence heartbeat and automatic AFK detection.
         tickStaffPresence();
-
-        // Keep the BHOP key visible in Minecraft Controls only while community-authenticated.
         syncBhopKeyBindingVisibility();
-
-        // Apply FPS defaults once when Minecraft's settings are ready, independent of HUD toggles.
-        if (!fpsOptimizationInitialized) {
-            fpsOptimizationInitialized = FpsOptimization.applyOnce();
-        }
-
+        if (!fpsOptimizationInitialized) fpsOptimizationInitialized = FpsOptimization.applyOnce();
         if (partnerAutoConnectConsumed) return;
         String partnerServer = System.getProperty("alphaclient.partnerServer");
         if (partnerServer == null || partnerServer.trim().isEmpty()) return;
-
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null) return;
-
-        // Wait for the actual menu screen to remain active for one second before connecting.
         if (minecraft.currentScreen instanceof AlphaMainMenu || minecraft.currentScreen instanceof GuiMainMenu) {
             if (partnerAutoConnectTicks < 0) partnerAutoConnectTicks = 0;
             partnerAutoConnectTicks++;
@@ -235,15 +206,12 @@ public final class AlphaClient {
                 minecraft.displayGuiScreen(new GuiConnecting(parent, minecraft, serverData));
                 System.out.println("[AlphaClient] Connecting to partner server " + partnerServer.trim());
             }
-        } else {
-            partnerAutoConnectTicks = -1;
-        }
+        } else partnerAutoConnectTicks = -1;
     }
 
     private void tickStaffPresence() {
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || !SupabaseCommunityService.isSignedIn()
-                || !PermissionService.hasStaffModsAccess()) {
+        if (minecraft == null || !SupabaseCommunityService.isSignedIn() || !PermissionService.hasStaffModsAccess()) {
             presenceHeartbeatTicks = 0;
             return;
         }
@@ -251,13 +219,10 @@ public final class AlphaClient {
             double x = minecraft.thePlayer.posX, y = minecraft.thePlayer.posY, z = minecraft.thePlayer.posZ;
             float yaw = minecraft.thePlayer.rotationYaw, pitch = minecraft.thePlayer.rotationPitch;
             if (Double.isNaN(lastStaffX) || x != lastStaffX || y != lastStaffY || z != lastStaffZ
-                    || yaw != lastStaffYaw || pitch != lastStaffPitch
-                    || Mouse.getDX() != 0 || Mouse.getDY() != 0
+                    || yaw != lastStaffYaw || pitch != lastStaffPitch || Mouse.getDX() != 0 || Mouse.getDY() != 0
                     || Keyboard.isKeyDown(Keyboard.KEY_W) || Keyboard.isKeyDown(Keyboard.KEY_A)
                     || Keyboard.isKeyDown(Keyboard.KEY_S) || Keyboard.isKeyDown(Keyboard.KEY_D)
-                    || Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
-                lastStaffInputAt = System.currentTimeMillis();
-            }
+                    || Keyboard.isKeyDown(Keyboard.KEY_SPACE)) lastStaffInputAt = System.currentTimeMillis();
             lastStaffX = x; lastStaffY = y; lastStaffZ = z; lastStaffYaw = yaw; lastStaffPitch = pitch;
         }
         if (++presenceHeartbeatTicks < 400) return;
@@ -290,17 +255,12 @@ public final class AlphaClient {
     public void onKeyInput(InputEvent.KeyInputEvent event) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null) return;
-
         if (openModMenuKey != null && openModMenuKey.isPressed()) {
-            if (minecraft.currentScreen == null) {
-                minecraft.displayGuiScreen(new AlphaClientHomeMenu());
-            }
+            if (minecraft.currentScreen == null) minecraft.displayGuiScreen(new AlphaClientHomeMenu());
             return;
         }
-
         if (toggleBhopKey != null && toggleBhopKey.isPressed()) {
-            if (!SupabaseCommunityService.isSignedIn()
-                    || !PermissionService.hasAccess(PermissionService.Rank.T_MOD)) return;
+            if (!SupabaseCommunityService.isSignedIn() || !PermissionService.hasAccess(PermissionService.Rank.T_MOD)) return;
             AlphaModule staffmods = AlphaModuleRegistry.find("staffmods");
             if (staffmods == null || !staffmods.isImplemented() || !PermissionService.hasModAccess("staff.bhop")) {
                 System.out.println("[AlphaClient] BHOP requires Staff access or Founder offline test mode.");
@@ -311,60 +271,32 @@ public final class AlphaClient {
         }
     }
 
-    /**
-     * Shows the BHOP key in Minecraft Controls only for authenticated staff accounts.
-     * Keep the registered KeyBinding instance so it can be hidden and restored without
-     * accessing Minecraft's private keybind registry.
-     */
     private void syncBhopKeyBindingVisibility() {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.gameSettings == null) return;
-
         boolean shouldBeVisible = SupabaseCommunityService.isSignedIn()
                 && PermissionService.hasAccess(PermissionService.Rank.T_MOD);
-
         if (shouldBeVisible && toggleBhopKey == null) {
-            toggleBhopKey = new KeyBinding(
-                    "AlphaClient: Toggle BHOP",
-                    Keyboard.KEY_B,
-                    "AlphaClient"
-            );
+            toggleBhopKey = new KeyBinding("AlphaClient: Toggle BHOP", Keyboard.KEY_B, "AlphaClient");
             ClientRegistry.registerKeyBinding(toggleBhopKey);
         }
-
         if (toggleBhopKey == null) return;
-
         KeyBinding[] bindings = minecraft.gameSettings.keyBindings;
-        boolean isRegisteredInControls = false;
-        for (KeyBinding binding : bindings) {
-            if (binding == toggleBhopKey) {
-                isRegisteredInControls = true;
-                break;
-            }
-        }
-
-        if (shouldBeVisible && !isRegisteredInControls) {
+        boolean registered = false;
+        for (KeyBinding binding : bindings) if (binding == toggleBhopKey) { registered = true; break; }
+        if (shouldBeVisible && !registered) {
             KeyBinding[] expanded = new KeyBinding[bindings.length + 1];
             System.arraycopy(bindings, 0, expanded, 0, bindings.length);
             expanded[bindings.length] = toggleBhopKey;
             minecraft.gameSettings.keyBindings = expanded;
-        } else if (!shouldBeVisible && isRegisteredInControls) {
+        } else if (!shouldBeVisible && registered) {
             KeyBinding[] filtered = new KeyBinding[bindings.length - 1];
             int index = 0;
-            for (KeyBinding binding : bindings) {
-                if (binding != toggleBhopKey) {
-                    filtered[index++] = binding;
-                }
-            }
+            for (KeyBinding binding : bindings) if (binding != toggleBhopKey) filtered[index++] = binding;
             minecraft.gameSettings.keyBindings = filtered;
         }
     }
 
-    /**
-     * Kept for compatibility with profile screens. Do not overwrite the saved BHOP
-     * preference based on a module-registry entry: BHOP has its own profile state.
-     * BhopMode checks the latest server permission on every client tick.
-     */
     public static void syncBhopModuleState() {
         // Intentionally preserve BhopMode's configured state.
     }
