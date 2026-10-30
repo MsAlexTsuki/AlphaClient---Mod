@@ -32,8 +32,10 @@ public final class AlphaSettingsMenu extends GuiScreen {
                     getPixelGardenLabel()));
             row += 26;
         }
-        buttonList.add(new GuiButton(EASTER_EGGS_TOGGLE, center - 100, row, 200, 20,
-                "Easter Eggs: " + (EasterEggManager.isGloballyEnabled() ? "ON" : "OFF")));
+        GuiButton easterEggToggle = new GuiButton(EASTER_EGGS_TOGGLE, center - 100, row, 200, 20,
+                "Easter Eggs: " + (EasterEggManager.isGloballyEnabled() ? "ON" : "OFF"));
+        easterEggToggle.enabled = com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder();
+        buttonList.add(easterEggToggle);
         buttonList.add(new GuiButton(DONE, center - 100, row + 26, 200, 20, "Done"));
     }
 
@@ -53,8 +55,16 @@ public final class AlphaSettingsMenu extends GuiScreen {
             settings.setEnabled(!settings.isEnabled());
             button.displayString = getPixelGardenLabel();
         } else if (button.id == EASTER_EGGS_TOGGLE) {
-            EasterEggManager.setGloballyEnabled(!EasterEggManager.isGloballyEnabled());
-            button.displayString = "Easter Eggs: " + (EasterEggManager.isGloballyEnabled() ? "ON" : "OFF");
+            try {
+                com.alpharip.staffmod.permissions.SupabaseCommunityService
+                        .setGlobalEasterEggEnabled(!EasterEggManager.isGloballyEnabled());
+                button.displayString = "Easter Eggs: " + (EasterEggManager.isGloballyEnabled() ? "ON" : "OFF");
+            } catch (Exception error) {
+                String message = error.getMessage();
+                Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(
+                        new net.minecraft.util.ChatComponentText("Could not update global Easter Egg settings: "
+                                + (message == null ? "server request failed." : message)));
+            }
         } else if (button.id == DONE) {
             Minecraft.getMinecraft().displayGuiScreen(parent);
         }
