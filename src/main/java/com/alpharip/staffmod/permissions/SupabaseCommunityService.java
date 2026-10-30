@@ -80,6 +80,11 @@ public final class SupabaseCommunityService {
                 restoringSession = true;
                 try {
                     loadSavedRefreshToken();
+                    try {
+                        synchronizeGlobalEasterEggSettings();
+                    } catch (Exception settingsError) {
+                        System.err.println("[AlphaClient] Global Easter Egg settings could not be loaded: " + settingsError.getMessage());
+                    }
                     if (refreshToken != null) {
                         sessionStatus = "Restoring saved Alpha Account session...";
                         refreshSessionToken();
@@ -103,7 +108,14 @@ public final class SupabaseCommunityService {
         });
         syncExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override public void run() {
-                if (refreshToken == null) return;
+                if (refreshToken == null) {
+                    try {
+                        synchronizeGlobalEasterEggSettings();
+                    } catch (Exception settingsError) {
+                        System.err.println("[AlphaClient] Global Easter Egg settings sync failed; will retry: " + settingsError.getMessage());
+                    }
+                    return;
+                }
                 try {
                     synchronized (SupabaseCommunityService.class) {
                         if (accessToken == null || accessTokenExpiresAt <=
@@ -111,6 +123,7 @@ public final class SupabaseCommunityService {
                             refreshSessionToken();
                         }
                         synchronizeVerifiedAccount();
+                        synchronizeGlobalEasterEggSettings();
                         pixelGardenPrestigeHeartbeat();
                         pollRemoteEasterEggActivation();
                     }
