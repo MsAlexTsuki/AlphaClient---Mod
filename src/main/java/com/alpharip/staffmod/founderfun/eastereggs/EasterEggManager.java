@@ -90,7 +90,7 @@ public final class EasterEggManager {
     public static synchronized boolean isUserEnabled(int id) { ensureLoaded(); return valid(id) && USER_ENABLED[id]; }
     public static synchronized void setUserEnabled(int id, boolean value) { ensureLoaded(); if (valid(id)) { USER_ENABLED[id] = value; save(); } }
     public static synchronized boolean isMasterEnabled(int id) { ensureLoaded(); return valid(id) && MASTER_ENABLED[id]; }
-    public static synchronized void setMasterEnabled(int id, boolean value) { ensureLoaded(); if (valid(id)) MASTER_ENABLED[id] = value; }\n    public static synchronized void applyGlobalSettings(boolean globalEnabled, JsonObject masterSettings) {\n        ensureLoaded();\n        globallyEnabled = globalEnabled;\n        if (masterSettings == null) return;\n        for (int id = 1; id <= 25; id++) {\n            String key = String.valueOf(id);\n            if (masterSettings.has(key) && masterSettings.get(key).isJsonPrimitive()\n                    && masterSettings.get(key).getAsJsonPrimitive().isBoolean()) {\n                MASTER_ENABLED[id] = masterSettings.get(key).getAsBoolean();\n            }\n        }\n    }
+    public static synchronized void applyGlobalSettings(boolean globalEnabled, JsonObject masterSettings) { ensureLoaded(); globallyEnabled = globalEnabled; if (masterSettings != null) for (int id = 1; id <= 25; id++) { String key = String.valueOf(id); if (masterSettings.has(key) && masterSettings.get(key).isJsonPrimitive() && masterSettings.get(key).getAsJsonPrimitive().isBoolean()) MASTER_ENABLED[id] = masterSettings.get(key).getAsBoolean(); } }
     public static synchronized String getText(int id) {
         ensureLoaded();
         Egg egg = getEgg(id);
@@ -287,14 +287,11 @@ public final class EasterEggManager {
                 JsonElement parsed = new JsonParser().parse(reader);
                 if (parsed != null && parsed.isJsonObject()) {
                     JsonObject root = parsed.getAsJsonObject();
-                    if (root.has("globallyEnabled")) globallyEnabled = root.get("globallyEnabled").getAsBoolean();
                     JsonObject user = root.getAsJsonObject("userEnabled");
-                    JsonObject master = root.getAsJsonObject("masterEnabled");
                     JsonObject custom = root.getAsJsonObject("customText");
                     for (int id = 1; id <= 25; id++) {
                         String key = String.valueOf(id);
                         if (user != null && user.has(key)) USER_ENABLED[id] = user.get(key).getAsBoolean();
-                        if (master != null && master.has(key)) MASTER_ENABLED[id] = master.get(key).getAsBoolean();
                         if (custom != null && custom.has(key)) CUSTOM_TEXT[id] = custom.get(key).getAsString();
                     }
                 }
@@ -311,12 +308,10 @@ public final class EasterEggManager {
         File parent = file.getParentFile();
         if (parent != null && !parent.exists() && !parent.mkdirs()) return;
         JsonObject root = new JsonObject();
-        root.addProperty("globallyEnabled", globallyEnabled);
-        JsonObject user = new JsonObject(), master = new JsonObject(), custom = new JsonObject();
+        JsonObject user = new JsonObject(), custom = new JsonObject();
         for (int id = 1; id <= 25; id++) {
             String key = String.valueOf(id);
             user.addProperty(key, USER_ENABLED[id]);
-            master.addProperty(key, MASTER_ENABLED[id]);
             if (CUSTOM_TEXT[id] != null) custom.addProperty(key, CUSTOM_TEXT[id]);
         }
         root.add("userEnabled", user); root.add("customText", custom);
