@@ -18,6 +18,16 @@ public final class AlphaModuleRegistry {
     private static final List<AlphaModule> MODULES = new ArrayList<AlphaModule>();
 
     static {
+        AlphaModule misc = new AlphaModule(
+                "misc",
+                "Misc",
+                "Miscellaneous client features.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(misc);
+
         AlphaModule quality = new AlphaModule(
                 "quality",
                 "Quality",
