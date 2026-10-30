@@ -38,8 +38,8 @@ public final class FightHistoryGui extends AlphaGuiScreen {
         List<FightHistoryManager.FightEntry> entries = FightHistoryManager.getEntries();
         int listTop = panelTop + 58;
         int listBottom = panelBottom - 48;
-        int rowHeight = 36;
-        visibleRows = Math.max(1, (listBottom - listTop) / rowHeight);
+        int rowHeight = 30;
+        visibleRows = Math.min(5, Math.max(1, (listBottom - listTop) / rowHeight));
         scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, entries.size() - visibleRows)));
         int end = Math.min(entries.size(), scrollOffset + visibleRows);
         visibleEntries = entries.subList(scrollOffset, end);
@@ -57,7 +57,7 @@ public final class FightHistoryGui extends AlphaGuiScreen {
 
         List<FightHistoryManager.FightEntry> entries = FightHistoryManager.getEntries();
         int listTop = panelTop + 58;
-        int rowHeight = 36;
+        int rowHeight = 30;
         if (entries.isEmpty()) {
             drawCenteredString(fontRendererObj, "No fights recorded yet",
                     width / 2, listTop + 38, 0xFFB8BDC8);
@@ -69,7 +69,7 @@ public final class FightHistoryGui extends AlphaGuiScreen {
                 int y = listTop + i * rowHeight;
                 int rowLeft = panelLeft + 12;
                 int rowRight = panelRight - 12;
-                drawRect(rowLeft, y, rowRight, y + 32, 0x9914171E);
+                drawRect(rowLeft, y, rowRight, y + 27, 0x9914171E);
                 drawRect(rowLeft, y, rowRight, y + 1, 0x554B515D);
                 drawString(fontRendererObj, entry.getPlayerName(), rowLeft + 8, y + 5, 0xFFF3F4F6);
                 drawString(fontRendererObj, "Fight Count: " + entry.getFightCount(),
