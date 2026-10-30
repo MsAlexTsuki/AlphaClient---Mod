@@ -21,6 +21,7 @@ import com.alpharip.staffmod.gui.WTapSettingsGui;
 import com.alpharip.staffmod.hud.AfkTimerHud;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.hud.SessionTimerHud;
+import com.alpharip.staffmod.combat.AimAssistSettings;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
@@ -67,6 +68,11 @@ public final class AlphaClientCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
+
+        if ("aimassist".equals(route)) {
+            handleAimAssistCommand(sender, args);
+            return;
+        }
 
         if ("easteregg".equals(route) || "alphaclient:easteregg".equals(route)) {
             handleEasterEggCommand(sender, args);
@@ -380,6 +386,12 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/playtime help", "Show Playtime Tracker commands and settings");
             guideLine(sender, "/staffmods help", "Show StaffMods folder commands");
             guideLine(sender, "/alphaperms help", "Show the Founder permission-manager guide");
+        } else if ("aimassist".equals(name)) {
+            guideHeader(sender, "AIMASSIST");
+            guideLine(sender, "/aimassist on", "Enable AimAssist");
+            guideLine(sender, "/aimassist off", "Disable AimAssist");
+            guideLine(sender, "/aimassist area <fullbody|upperbody|torso|head>", "Select the target area");
+            guideLine(sender, "/alphaclient module aim-assist <on|off|toggle>", "Use the core AlphaClient module command");
         } else if ("alphaclient".equals(name) || "alphaclient:help".equals(name)) {
             guideHeader(sender, "ALPHACLIENT");
             guideLine(sender, "/alphaclient help", "Show this guide");
@@ -1085,12 +1097,64 @@ public final class AlphaClientCommand extends CommandBase {
         return "alphaclient:settings";
     }
 
+    private void handleAimAssistCommand(ICommandSender sender, String[] args) {
+        if (!SupabaseCommunityService.isSignedInFounder()) {
+            reply(sender, "Access denied: AimAssist is Founder-only.");
+            return;
+        }
+
+        AlphaModule module = AlphaModuleRegistry.find("aim-assist");
+        if (module == null || !module.isImplemented() || !module.isUnlocked()) {
+            reply(sender, "AimAssist is currently unavailable.");
+            return;
+        }
+        if (args == null || args.length == 0 || (args.length == 1 && "help".equalsIgnoreCase(args[0]))) {
+            showCommandGuide(sender, "aimassist");
+            return;
+        }
+
+        String action = args[0].toLowerCase(Locale.ROOT);
+        if ("on".equals(action) || "off".equals(action) || "toggle".equals(action)) {
+            boolean enabled = "on".equals(action) || ("toggle".equals(action) && !module.isEnabled());
+            module.setEnabled(enabled);
+            reply(sender, "AimAssist " + (module.isEnabled() ? "enabled." : "disabled."));
+            return;
+        }
+
+        if ("area".equals(action)) {
+            if (args.length < 2) {
+                reply(sender, "Usage: /aimassist area <fullbody|upperbody|torso|head>");
+                return;
+            }
+            String areaName = joinArgs(args, 1).replace("-", "").replace("_", "").replace(" ", "")
+                    .toUpperCase(Locale.ROOT);
+            AimAssistSettings.TargetArea area;
+            if ("FULLBODY".equals(areaName)) area = AimAssistSettings.TargetArea.FULL_BODY;
+            else if ("UPPERBODY".equals(areaName)) area = AimAssistSettings.TargetArea.UPPER_BODY;
+            else if ("TORSO".equals(areaName)) area = AimAssistSettings.TargetArea.TORSO;
+            else if ("HEAD".equals(areaName)) area = AimAssistSettings.TargetArea.HEAD;
+            else {
+                reply(sender, "Unknown AimAssist area. Use fullbody, upperbody, torso, or head.");
+                return;
+            }
+            AimAssistSettings.setTargetArea(area);
+            reply(sender, "AimAssist target area set to " + area.getLabel() + ".");
+            return;
+        }
+
+        reply(sender, "Usage: /aimassist <on|off|area <area>>");
+    }
+
     private void handleModule(ICommandSender sender, String[] args) {
         if (args.length != 2) {
             reply(sender, "Usage: /alphaclient module <module> <on|off|toggle>");
             return;
         }
         String rawId = args[0].toLowerCase(Locale.ROOT);
+        if ("aim-assist".equals(rawId) || "aimassist".equals(rawId)) {
+            handleAimAssistCommand(sender, new String[] { args[1] });
+            return;
+        }
         if ("staffmods".equals(rawId)) {
             reply(sender, "StaffMods is a folder, not a module. Use /staffmods to open it.");
             return;
@@ -1155,6 +1219,7 @@ public final class AlphaClientCommand extends CommandBase {
 
     private boolean hasModuleAccess(AlphaModule module) {
         if (module == null) return false;
+        if ("aim-assist".equals(module.getId())) return module.isImplemented() && module.isUnlocked();
         String permissionKey = moduleCommandPermission(module.getId());
         Boolean commandOverride = PermissionService.getCommandPermissionOverride(permissionKey);
         if (commandOverride != null) return commandOverride.booleanValue();
@@ -1715,6 +1780,13 @@ public final class AlphaClientCommand extends CommandBase {
                 if ("delete".equalsIgnoreCase(args[0]) || !"Default".equalsIgnoreCase(profile.getProfileName())) {
                     options.add(profile.getProfileName());
                 }
+            }
+        } else if ("aimassist".equals(commandName)) {
+            if (!SupabaseCommunityService.isSignedInFounder()) return options;
+            if (args.length == 1) {
+                options.add("on"); options.add("off"); options.add("area"); options.add("help");
+            } else if (args.length == 2 && "area".equalsIgnoreCase(args[0])) {
+                options.add("fullbody"); options.add("upperbody"); options.add("torso"); options.add("head");
             }
         } else if ("easteregg".equals(commandName) || "alphaclient:easteregg".equals(commandName)) {
             if (!SupabaseCommunityService.isSignedInFounder()) return options;
