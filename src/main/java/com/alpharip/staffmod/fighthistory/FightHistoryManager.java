@@ -205,7 +205,12 @@ public final class FightHistoryManager {
             reader = new FileReader(file);
             JsonElement root = new JsonParser().parse(reader);
             if (root == null || !root.isJsonObject()) return;
-            JsonElement entriesValue = root.getAsJsonObject().get("fights");
+            JsonObject rootObject = root.getAsJsonObject();
+            JsonElement enabledValue = rootObject.get("enabled");
+            if (enabledValue != null && enabledValue.isJsonPrimitive()) {
+                enabled = enabledValue.getAsBoolean();
+            }
+            JsonElement entriesValue = rootObject.get("fights");
             if (entriesValue == null || !entriesValue.isJsonArray()) return;
 
             JsonArray entries = entriesValue.getAsJsonArray();
