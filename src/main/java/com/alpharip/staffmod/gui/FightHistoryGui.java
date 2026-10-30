@@ -4,7 +4,6 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.fighthistory.FightHistoryManager;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -17,7 +16,6 @@ public final class FightHistoryGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private final GuiScreen parent;
     private int panelLeft, panelRight, panelTop, panelBottom;
-    private int scrollOffset;
     private int visibleRows;
     private List<FightHistoryManager.FightEntry> visibleEntries;
 
@@ -37,12 +35,8 @@ public final class FightHistoryGui extends AlphaGuiScreen {
 
         List<FightHistoryManager.FightEntry> entries = FightHistoryManager.getEntries();
         int listTop = panelTop + 58;
-        int listBottom = panelBottom - 48;
-        int rowHeight = 30;
-        visibleRows = Math.min(5, Math.max(1, (listBottom - listTop) / rowHeight));
-        scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, entries.size() - visibleRows)));
-        int end = Math.min(entries.size(), scrollOffset + visibleRows);
-        visibleEntries = entries.subList(scrollOffset, end);
+        visibleRows = Math.min(5, entries.size());
+        visibleEntries = entries.subList(0, visibleRows);
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 80, 20, "BACK"));
     }
 
@@ -83,10 +77,6 @@ public final class FightHistoryGui extends AlphaGuiScreen {
         }
         drawString(fontRendererObj, entries.size() + " PLAYERS RECORDED",
                 panelLeft + 12, panelBottom - 40, 0xFFB8BDC8);
-        if (entries.size() > visibleRows) {
-            drawString(fontRendererObj, "Scroll to view all players",
-                    panelRight - 170, panelBottom - 40, 0xFF8E95A3);
-        }
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
@@ -97,17 +87,6 @@ public final class FightHistoryGui extends AlphaGuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button != null && button.id == BACK) mc.displayGuiScreen(parent);
-    }
-
-    @Override
-    public void handleMouseInput() throws IOException {
-        int wheel = Mouse.getDWheel();
-        super.handleMouseInput();
-        if (wheel != 0) {
-            int maxScroll = Math.max(0, FightHistoryManager.getEntries().size() - visibleRows);
-            scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset + (wheel < 0 ? 1 : -1)));
-            initGui();
-        }
     }
 
     @Override
