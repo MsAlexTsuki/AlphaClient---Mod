@@ -102,7 +102,6 @@ public final class AlphaHelpGui extends GuiScreen {
 
         if (com.alpharip.staffmod.permissions.SupabaseCommunityService.hasStaffOperationsAccess())
             addCommand("Staff Operations", "/staffoperations", "Menu.StaffOperations", true);
-        }
         if (com.alpharip.staffmod.permissions.SupabaseCommunityService.canUseAlphaNoteCommand()) {
             addCommand("Create private staff note", "/alphanote <player> <note>", "command.alphanote", true);
         }
