@@ -49,7 +49,7 @@ public final class FightHistoryManager {
 
     public static synchronized List<FightEntry> getEntries() {
         List<FightEntry> entries = new ArrayList<FightEntry>(INSTANCE.history);
-        Collections.sort(entries, (a, b) -> Long.compare(b.lastSeenAt, a.lastSeenAt));
+        Collections.sort(entries, (a, b) -> Long.compare(b.lastDamageAt, a.lastDamageAt));
         return Collections.unmodifiableList(entries);
     }
 
