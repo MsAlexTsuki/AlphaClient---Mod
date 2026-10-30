@@ -319,8 +319,14 @@ public final class AlphaClientCommand extends CommandBase {
                 return;
             }
             boolean enabled = "on".equals(action);
-            EasterEggManager.setMasterEnabled(id.intValue(), enabled);
-            reply(sender, "Easter Egg " + id + " globally " + (enabled ? "enabled" : "disabled") + ".");
+            try {
+                SupabaseCommunityService.setGlobalEasterEggIdEnabled(id.intValue(), enabled);
+                reply(sender, "Easter Egg " + id + " globally " + (enabled ? "enabled" : "disabled") + " for all AlphaClient users.");
+            } catch (Exception error) {
+                String message = error.getMessage();
+                reply(sender, "Could not update global Easter Egg " + id + ": "
+                        + (message == null || message.trim().isEmpty() ? "server request failed." : message));
+            }
             return;
         }
         if ("activate".equals(action) && args.length == 2) {
