@@ -82,9 +82,11 @@ public final class ServerHistoryManager {
                     String name = readString(server, "name");
                     String address = readString(server, "address");
                     long lastVisited = readLong(server, "lastVisited");
+                    int joinCount = readInt(server, "joinCount");
                     if (address.isEmpty()) continue;
                     addLoadedEntry(new Entry(name.isEmpty() ? address : name, address,
-                            lastVisited > 0L ? lastVisited : System.currentTimeMillis()));
+                            lastVisited > 0L ? lastVisited : System.currentTimeMillis(),
+                            Math.max(1, joinCount)));
                 }
             }
             trimEntries();
@@ -122,15 +124,18 @@ public final class ServerHistoryManager {
         if (address.isEmpty()) return;
 
         String key = address.toLowerCase(Locale.ROOT);
+        int joinCount = 1;
         for (int i = ENTRIES.size() - 1; i >= 0; i--) {
-            if (ENTRIES.get(i).address.toLowerCase(Locale.ROOT).equals(key)) {
+            Entry existing = ENTRIES.get(i);
+            if (existing.address.toLowerCase(Locale.ROOT).equals(key)) {
+                joinCount = existing.joinCount + 1;
                 ENTRIES.remove(i);
             }
         }
 
         String name = serverData.serverName == null || serverData.serverName.trim().isEmpty()
                 ? address : serverData.serverName.trim();
-        ENTRIES.add(0, new Entry(name, address, System.currentTimeMillis()));
+        ENTRIES.add(0, new Entry(name, address, System.currentTimeMillis(), joinCount));
         trimEntries();
         save();
     }
@@ -165,6 +170,15 @@ public final class ServerHistoryManager {
         }
     }
 
+    private static int readInt(JsonObject object, String key) {
+        JsonElement value = object.get(key);
+        try {
+            return value != null && value.isJsonPrimitive() ? value.getAsInt() : 1;
+        } catch (Exception ignored) {
+            return 1;
+        }
+    }
+
     private static synchronized void save() {
         File file = settingsFile();
         File parent = file.getParentFile();
@@ -181,6 +195,7 @@ public final class ServerHistoryManager {
             server.addProperty("name", entry.name);
             server.addProperty("address", entry.address);
             server.addProperty("lastVisited", entry.lastVisited);
+            server.addProperty("joinCount", entry.joinCount);
             servers.add(server);
         }
         root.add("servers", servers);
@@ -209,15 +224,18 @@ public final class ServerHistoryManager {
         private final String name;
         private final String address;
         private final long lastVisited;
+        private final int joinCount;
 
-        private Entry(String name, String address, long lastVisited) {
+        private Entry(String name, String address, long lastVisited, int joinCount) {
             this.name = name;
             this.address = address;
             this.lastVisited = lastVisited;
+            this.joinCount = joinCount;
         }
 
         public String getName() { return name; }
         public String getAddress() { return address; }
         public long getLastVisited() { return lastVisited; }
+        public int getJoinCount() { return joinCount; }
     }
 }
