@@ -270,15 +270,20 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     || module.getDescription().toLowerCase(Locale.ROOT).contains(query)) result.add(module);
         }
 
-        // Quality is a dedicated folder opener and must remain the final module in General.
+        // Keep the dedicated folders together at the end of General, in a fixed order.
         if (selectedCategory == AlphaModule.Category.PUBLIC) {
+            AlphaModule quality = null;
+            AlphaModule misc = null;
             for (int i = result.size() - 1; i >= 0; i--) {
-                if ("quality".equals(result.get(i).getId())) {
-                    AlphaModule quality = result.remove(i);
-                    result.add(quality);
-                    break;
+                String id = result.get(i).getId();
+                if ("quality".equals(id)) {
+                    quality = result.remove(i);
+                } else if ("misc".equals(id)) {
+                    misc = result.remove(i);
                 }
             }
+            if (quality != null) result.add(quality);
+            if (misc != null) result.add(misc);
         }
         return result;
     }
@@ -519,6 +524,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     searchFocused = false;
                     if (searchField != null) searchField.setFocused(false);
                     mc.displayGuiScreen(new QualityGui(this));
+                    return;
+                }
+                if ("misc".equals(clickedModule.getId())) {
+                    searchFocused = false;
+                    if (searchField != null) searchField.setFocused(false);
+                    mc.displayGuiScreen(new MiscGui(this));
                     return;
                 }
                 if ("staffmods".equals(clickedModule.getId())) {
