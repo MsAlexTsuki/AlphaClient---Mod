@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -221,12 +222,15 @@ public final class EasterEggManager {
         String text = getText(id);
         if (text == null) return;
         activeEggId = id;
-        if (id == 21 && screen.buttonList != null) {
+        if (id == 21) {
+            List<GuiButton> buttons = ReflectionHelper.getPrivateValue(
+                    GuiScreen.class, screen, "buttonList", "field_146292_n");
+            if (buttons == null) return;
             if (!specialButtonAssignmentMade) {
                 closeButtonIsZero = RANDOM.nextBoolean();
                 specialButtonAssignmentMade = true;
             }
-            for (GuiButton button : screen.buttonList) {
+            for (GuiButton button : buttons) {
                 if (button.id == 0 || button.id == 1) button.displayString = "YES";
             }
         }
