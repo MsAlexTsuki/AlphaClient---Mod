@@ -35,7 +35,6 @@ import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.founderfun.PixelGardenMessageNotifier;
 import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
-import com.alpharip.staffmod.misc.CloudHeightSettings;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -111,7 +110,6 @@ public final class AlphaClient {
         SupabaseCommunityService.start();
 
         AlphaClientConfig.load();
-        CloudHeightSettings.load();
         AutoGGMod.loadSettings();
         AutoReconnectMod.loadSettings();
         BhopHud.loadHudPosition();
@@ -169,7 +167,6 @@ public final class AlphaClient {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
-        CloudHeightSettings.apply();
         Minecraft guiMinecraft = Minecraft.getMinecraft();
         if (PermissionService.isOnlineRankVerified() && !PermissionService.hasPixelGardenRankAccess()
                 && PixelGardenModuleSettings.getInstance().isEnabled()) {
