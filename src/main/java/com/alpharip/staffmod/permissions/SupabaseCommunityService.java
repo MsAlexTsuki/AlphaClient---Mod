@@ -429,6 +429,50 @@ public final class SupabaseCommunityService {
 
     public static boolean isSignedIn() { return accessToken != null; }
 
+    /** Loads the public server-owned Easter Egg configuration and applies it to the local runtime cache. */
+    public static synchronized JsonObject synchronizeGlobalEasterEggSettings() throws Exception {
+        JsonObject payload = new JsonObject();
+        payload.addProperty("action", "config_get");
+        JsonObject response = requestJson("POST", "/functions/v1/easter-egg-settings", null, payload.toString());
+        applyGlobalEasterEggSettings(response);
+        return response.has("settings") && response.get("settings").isJsonObject()
+                ? response.getAsJsonObject("settings") : new JsonObject();
+    }
+
+    /** Changes the global Easter Egg master switch. The Edge Function independently enforces Founder access. */
+    public static synchronized void setGlobalEasterEggEnabled(boolean enabled) throws Exception {
+        if (!isSignedInFounder()) throw new SecurityException("Only Founder can change global Easter Egg settings.");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("action", "config_set_global");
+        payload.addProperty("enabled", enabled);
+        JsonObject response = requestJson("POST", "/functions/v1/easter-egg-settings", accessToken, payload.toString());
+        applyGlobalEasterEggSettings(response);
+    }
+
+    /** Changes one global Easter Egg ID permission. Personal per-user settings are not modified. */
+    public static synchronized void setGlobalEasterEggIdEnabled(int eggId, boolean enabled) throws Exception {
+        if (!isSignedInFounder()) throw new SecurityException("Only Founder can change global Easter Egg settings.");
+        if (eggId < 1 || eggId > 25) throw new IllegalArgumentException("Easter Egg ID must be between 1 and 25.");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("action", "config_set_id");
+        payload.addProperty("egg_id", eggId);
+        payload.addProperty("enabled", enabled);
+        JsonObject response = requestJson("POST", "/functions/v1/easter-egg-settings", accessToken, payload.toString());
+        applyGlobalEasterEggSettings(response);
+    }
+
+    private static void applyGlobalEasterEggSettings(JsonObject response) {
+        if (response == null || !response.has("settings") || !response.get("settings").isJsonObject()) {
+            throw new IllegalStateException("The server returned an invalid global Easter Egg configuration.");
+        }
+        JsonObject settings = response.getAsJsonObject("settings");
+        boolean globalEnabled = getBoolean(settings, "globally_enabled");
+        JsonObject master = settings.has("master_enabled") && settings.get("master_enabled").isJsonObject()
+                ? settings.getAsJsonObject("master_enabled") : new JsonObject();
+        com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager
+                .applyGlobalSettings(globalEnabled, master);
+    }
+
     /** Queues an Easter Egg for another Alpha Account; the server independently verifies Founder access. */
     public static synchronized JsonObject activateEasterEggForUser(String username, int eggId) throws Exception {
         if (!isSignedInFounder()) throw new SecurityException("Only the authenticated Founder can activate an Easter Egg for another account.");
