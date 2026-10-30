@@ -216,7 +216,6 @@ public final class EasterEggManager {
                 acknowledge.start();
             }
         }
-    }
 
     private void applyToDeathScreen(Minecraft mc, GuiScreen screen, int id) {
         String text = getText(id);
