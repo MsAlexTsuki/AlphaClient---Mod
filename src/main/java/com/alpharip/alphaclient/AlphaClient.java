@@ -88,7 +88,8 @@ import com.alpharip.staffmod.hud.HeldItemDurabilityHud;
 import com.alpharip.staffmod.hud.StaffUtilityTrackingModules;
 import com.alpharip.staffmod.hud.PersonalUtilityFeatures;
 import com.alpharip.staffmod.movement.AutoSprintMod;
-import com.alpharip.staffmod.inventory.AutoToolMod;
+import com.alpharip.staffmod.AutoTool.AutoToolCommand;
+import com.alpharip.staffmod.AutoTool.AutoToolMod;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -149,6 +150,7 @@ public final class AlphaClient {
         registerClientCommands();
         ClientCommandHandler.instance.registerCommand(new CommandPaletteCommand());
         ClientCommandHandler.instance.registerCommand(new BlockPlacementPreviewCommand());
+        ClientCommandHandler.instance.registerCommand(new AutoToolCommand());
         WaypointManager.getInstance().load();
         ClientCommandHandler.instance.registerCommand(new WaypointCommand());
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
