@@ -66,7 +66,9 @@ public final class WaypointCommand extends CommandBase {
                 reply(sender,"Recent coordinates (newest first):");
                 for(int i=0;i<history.size()&&i<15;i++) {
                     WaypointTracker.CoordinateEntry entry=history.get(i);
-                    reply(sender,(i+1)+". "+(int)Math.floor(entry.getX())+", "+(int)Math.floor(entry.getY())+", "+(int)Math.floor(entry.getZ()));
+                    long ageSeconds=Math.max(0L,(System.currentTimeMillis()-entry.getTimestamp())/1000L);
+                    String age=ageSeconds<60L?ageSeconds+"s ago":(ageSeconds/60L)+"m ago";
+                    reply(sender,(i+1)+". "+(int)Math.floor(entry.getX())+", "+(int)Math.floor(entry.getY())+", "+(int)Math.floor(entry.getZ())+" ("+age+")");
                 }
                 reply(sender,"Create one with /waypoint history add <number> [name].");
             } else if("add".equals(action)) {
@@ -75,6 +77,7 @@ public final class WaypointCommand extends CommandBase {
                 StaffWaypoint p=manager.add(name,mc.thePlayer.posX,mc.thePlayer.posY,mc.thePlayer.posZ);
                 reply(sender,"Waypoint saved: "+p.getLabel()+" ("+coords(p)+").");
             } else if("addat".equals(action)) {
+                if(mc.thePlayer==null){reply(sender,"Join a world before creating a waypoint.");return;}
                 if(args.length<4){reply(sender,"Usage: /waypoint addat <x> <y> <z>");return;}
                 String name=args.length>4?join(args,4):"Chat waypoint";
                 StaffWaypoint p=manager.add(name,Double.parseDouble(args[1]),Double.parseDouble(args[2]),Double.parseDouble(args[3]));
@@ -147,6 +150,7 @@ public final class WaypointCommand extends CommandBase {
                 StaffWaypoint point=manager.find(args[1]);
                 if(point==null){reply(sender,"Waypoint not found.");return;}
                 String color=args[3].replace("#","");
+                if(color.length()!=6){reply(sender,"Use a six-digit RGB color, for example FF8800.");return;}
                 int rgb=Integer.parseInt(color,16);
                 point.setCategory(args[2]); point.setColor(rgb); manager.saveChanges();
                 reply(sender,"Updated "+point.getLabel()+" to category "+point.getCategory()+".");
@@ -168,7 +172,7 @@ public final class WaypointCommand extends CommandBase {
                 reply(sender,"Unknown action. Use /waypoint help.");
             }
         } catch(NumberFormatException e) {
-            reply(sender,"Coordinates must be numbers.");
+            reply(sender,"Enter valid numbers for coordinates, history positions, colors, and timer durations.");
         } catch(Exception e) {
             reply(sender,"Waypoint action failed: "+safe(e.getMessage()));
         }

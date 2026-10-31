@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /** Local, server-specific chat patterns that start countdowns and optionally add coordinate waypoints. */
 public final class EventCountdownHub {
@@ -31,7 +34,21 @@ public final class EventCountdownHub {
     private File patternsFile(String key) {
         File base=new File(Minecraft.getMinecraft().mcDataDir,"config/alphaclient");
         if(!base.exists())base.mkdirs();
+        return new File(base,"waypoint_event_patterns_"+keyDigest(key)+".properties");
+    }
+    private File legacyPatternsFile(String key) {
+        File base=new File(Minecraft.getMinecraft().mcDataDir,"config/alphaclient");
         return new File(base,"waypoint_event_patterns_"+Integer.toHexString(key.hashCode())+".properties");
+    }
+    private static String keyDigest(String key) {
+        try {
+            byte[] digest=MessageDigest.getInstance("SHA-256").digest(key.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex=new StringBuilder(digest.length*2);
+            for(byte value:digest)hex.append(String.format("%02x",value&0xFF));
+            return hex.toString();
+        } catch(NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException("SHA-256 is unavailable",impossible);
+        }
     }
 
     private synchronized void ensureLoaded() {
@@ -39,10 +56,20 @@ public final class EventCountdownHub {
         if(current.equals(loadedServerKey))return;
         patterns.clear();
         loadedServerKey=current;
-        Properties p=new Properties(); FileInputStream in=null;
+        Properties p=new Properties();
+        File currentFile=patternsFile(current);
+        File source=currentFile;
+        boolean migrate=false;
+        if(!source.isFile()) {
+            source=legacyPatternsFile(current);
+            migrate=source.isFile();
+        }
+        if(!source.isFile())return;
+        FileInputStream in=null;
+        boolean loadedSuccessfully=false;
         try {
-            File f=patternsFile(current); if(!f.isFile())return;
-            in=new FileInputStream(f); p.load(in);
+            in=new FileInputStream(source);
+            p.load(in);
             int count=Integer.parseInt(p.getProperty("count","0"));
             for(int i=0;i<count;i++) {
                 String name=p.getProperty("name."+i,"").trim();
@@ -51,8 +78,10 @@ public final class EventCountdownHub {
                 if(!name.isEmpty()&&!regex.isEmpty()&&seconds>0)
                     patterns.add(new EventPattern(name,Pattern.compile(regex,Pattern.CASE_INSENSITIVE),seconds));
             }
+            loadedSuccessfully=true;
         } catch(Exception e) { System.err.println("[AlphaClient] Could not load waypoint event patterns: "+e.getMessage()); }
         finally { if(in!=null)try{in.close();}catch(Exception ignored){} }
+        if(migrate&&loadedSuccessfully)savePatterns();
     }
 
     private synchronized void savePatterns() {
@@ -64,9 +93,15 @@ public final class EventCountdownHub {
             p.setProperty("regex."+i,value.pattern.pattern());
             p.setProperty("seconds."+i,String.valueOf(value.seconds));
         }
+        File destination=patternsFile(loadedServerKey);
+        File temporary=new File(destination.getParentFile(),destination.getName()+".tmp");
         FileOutputStream out=null;
-        try { out=new FileOutputStream(patternsFile(loadedServerKey)); p.store(out,"AlphaClient local event patterns"); }
-        catch(Exception e) { System.err.println("[AlphaClient] Could not save waypoint event patterns: "+e.getMessage()); }
+        try {
+            out=new FileOutputStream(temporary);
+            p.store(out,"AlphaClient local event patterns");
+            out.close();out=null;
+            WaypointFileUtils.replaceAtomically(temporary,destination);
+        } catch(Exception e) { System.err.println("[AlphaClient] Could not save waypoint event patterns: "+e.getMessage()); }
         finally { if(out!=null)try{out.close();}catch(Exception ignored){} }
     }
 
@@ -99,6 +134,7 @@ public final class EventCountdownHub {
     public synchronized List<String> getActiveCountdowns() {
         List<String> values=new ArrayList<String>();
         long now=System.currentTimeMillis();
+        for(int i=active.size()-1;i>=0;i--)if(active.get(i).endAt<=now)active.remove(i);
         String current=serverKey();
         for(Countdown c:active)if(c.endAt>now&&current.equals(c.serverKey))
             values.add(c.name+" "+format((c.endAt-now)/1000L));
@@ -134,17 +170,13 @@ public final class EventCountdownHub {
 
     @SubscribeEvent
     public void onOverlay(RenderGameOverlayEvent.Text event) {
-        if(event.type!=RenderGameOverlayEvent.ElementType.TEXT)return;
+        if(event==null||event.type!=RenderGameOverlayEvent.ElementType.TEXT)return;
         Minecraft mc=Minecraft.getMinecraft();
         if(mc==null||mc.thePlayer==null||mc.fontRendererObj==null||mc.gameSettings.hideGUI||mc.gameSettings.showDebugInfo)return;
         List<String> lines=getActiveCountdowns(); int y=6;
         for(String line:lines) {
             mc.fontRendererObj.drawStringWithShadow("EVENT  "+line,6,y,0xFF55FFFF);
             y+=mc.fontRendererObj.FONT_HEIGHT+2;
-        }
-        synchronized(this) {
-            long now=System.currentTimeMillis();
-            for(int i=active.size()-1;i>=0;i--)if(active.get(i).endAt<=now)active.remove(i);
         }
     }
 

@@ -13,9 +13,6 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -117,17 +114,13 @@ public final class WaypointTracker {
     }
 
     private void saveHistory() {
-        File file=historyFile(),temporary=new File(historyFile().getParentFile(),"waypoint-coordinate-history.json.tmp");
+        File file=historyFile(),temporary=new File(file.getParentFile(),"waypoint-coordinate-history.json.tmp");
         OutputStreamWriter writer=null;
         try {
             writer=new OutputStreamWriter(new FileOutputStream(temporary),"UTF-8");
             GSON.toJson(history,HISTORY_TYPE,writer);
             writer.close();writer=null;
-            try {
-                Files.move(temporary.toPath(),file.toPath(),StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
-            } catch(AtomicMoveNotSupportedException ignored) {
-                Files.move(temporary.toPath(),file.toPath(),StandardCopyOption.REPLACE_EXISTING);
-            }
+            WaypointFileUtils.replaceAtomically(temporary,file);
         } catch(Exception e) {
             System.err.println("[AlphaClient] Could not save waypoint coordinate history: "+e.getMessage());
         } finally { if(writer!=null)try{writer.close();}catch(Exception ignored){} }

@@ -31,15 +31,13 @@ Records are stored locally in `config/alphaclient/waypoints.json`. Profiles sepa
 
 ### Waypoint screen
 
-The compact screen lists waypoints in the current dimension using the selected sort order, with favorites pinned first. It lets you:
+The compact screen lists waypoints in the current dimension and lets you:
 
 - Create a marker at your current position.
 - Select a marker as the navigation target.
 - Delete the selected marker.
 - Export the current server's waypoints.
 - Import the waypoints file currently in the AlphaClient config folder.
-- Pin a selected waypoint as a favorite; favorites stay above other rows.
-- Sort by distance, name, category, or recently modified from Options.
 
 Open it with `/waypoint open`. The screen does not pause the game.
 
@@ -56,7 +54,7 @@ A route can connect two or more saved waypoints in the same server and dimension
 
 ### World markers
 
-Waypoints in the current server and dimension appear as colored vertical pins with a floating label, icon text, and distance. Markers are drawn within 256 blocks. Beam height and label size are configurable. A block outline can highlight the waypoint's block. Markers and radar can be hidden temporarily without deleting waypoints.
+Waypoints in the current server and dimension appear as colored vertical pins with a floating label, icon text, and distance. Markers are drawn within 256 blocks. Beam height and label size are configurable. A block outline can highlight the waypoint's block. Temporary hiding conceals world markers and radar without deleting waypoints; it resets when Minecraft restarts.
 
 ```text
 /waypoint markers off
@@ -116,7 +114,7 @@ Favorites stay at the top of the list. Options cycles the remaining waypoints by
 
 ### Coordinate history
 
-Recent positions are sampled as the player explores and stored locally, up to 100 locations. `/waypoint history` lists recent positions in the current world; `/waypoint history add <number> [name]` creates a waypoint from one. History samples are recorded after moving about 32 blocks and at least 10 seconds since the previous sample.
+Recent positions are sampled as the player explores and stored locally, up to 100 locations. `/waypoint history` lists recent positions in the current world; `/waypoint history add <number> [name]` creates a waypoint from one. History samples are recorded after moving about 32 blocks and at least 10 seconds since the previous sample; each entry also shows how long ago it was recorded.
 
 ### Event countdowns
 
@@ -133,7 +131,7 @@ The timer lasts for the configured number of seconds. Active timers last only fo
 
 ### Local sharing and import/export
 
-`export` and `share` write the current server's waypoints to:
+`export` and `share` write the active profile's waypoints for the current server to:
 
 ```text
 config/alphaclient/waypoints-share.tsv
@@ -179,6 +177,7 @@ This feature does not upload data, message friends, or synchronize through a ser
 | `StaffWaypoint.java` | One saved waypoint and its fields |
 | `WaypointManager.java` | CRUD, profiles, current context, selection, routes, and JSON persistence |
 | `WaypointSettings.java` | Local saved toggles and active visual options |
+| `WaypointFileUtils.java` | Shared safe replacement for local settings, history, and waypoint files |
 | `WaypointTracker.java` | Arrival detection and local coordinate history |
 | `WaypointVisualSettingsGui.java` | Chroma, beams, labels, profiles, sorting, and arrival controls |
 | `ServerWaypointIntegration.java` | Server/world identity and context checks; no network integration |
@@ -206,4 +205,4 @@ This feature does not upload data, message friends, or synchronize through a ser
 
 ## Verification status
 
-The code has been added to the `mod-ideas` branch, but this branch does not contain its Gradle build setup. It has not been compiled or tested in-game. Treat runtime behavior as unverified until a build and Minecraft session test are run.
+The code is on the `mod-ideas` branch. This branch does not include Gradle build files. It has not been compiled or tested in-game. Treat runtime behavior as unverified until a build and Minecraft session test are run.

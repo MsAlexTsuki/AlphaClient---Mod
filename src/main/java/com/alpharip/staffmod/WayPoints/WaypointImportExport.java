@@ -6,9 +6,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 /** UTF-8 TSV import/export for moving local waypoints between friends or servers. */
 public final class WaypointImportExport {
@@ -33,7 +30,8 @@ public final class WaypointImportExport {
         List<StaffWaypoint> out = new ArrayList<StaffWaypoint>();
         if (text == null || text.trim().isEmpty()) return Collections.unmodifiableList(out);
         String[] lines = text.split("\\r?\\n");
-        int first = lines.length > 0 && lines[0].startsWith("name") ? 1 : 0;
+        String firstLine=lines.length==0?"":lines[0].replace("\uFEFF","");
+        int first=firstLine.startsWith("name\tserver\tdimension\t")?1:0;
         for (int i=first; i<lines.length; i++) {
             if (lines[i].trim().isEmpty()) continue;
             String[] p=lines[i].split("\\t",-1);
@@ -51,9 +49,8 @@ public final class WaypointImportExport {
                 point.setCategory(dec(p[6]));
                 point.setColor((int)Long.parseLong(p[7],16));
                 point.setIconId(dec(p[8]));
-                if (p.length == 10) {
-                    if (!"true".equalsIgnoreCase(p[9]) && !"false".equalsIgnoreCase(p[9]))
-                        throw new IllegalArgumentException("Invalid death waypoint flag");
+                if (p.length >= 10) {
+                    if (!validBoolean(p[9])) throw new IllegalArgumentException("Invalid death waypoint flag");
                     point.setDeathWaypoint(Boolean.parseBoolean(p[9]));
                 }
                 if(p.length==12) {
@@ -88,12 +85,7 @@ public final class WaypointImportExport {
             writer.write(exportWaypoints(points));
             writer.close();
             writer = null;
-            try {
-                Files.move(temporary.toPath(), absolute.toPath(),
-                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException ignored) {
-                Files.move(temporary.toPath(), absolute.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
+            WaypointFileUtils.replaceAtomically(temporary,absolute);
         } finally {
             if (writer != null) writer.close();
         }

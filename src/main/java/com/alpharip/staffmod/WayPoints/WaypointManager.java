@@ -9,10 +9,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 /** Central local store for waypoint records. Each record is tagged by server and dimension. */
 public final class WaypointManager {
@@ -64,12 +60,7 @@ public final class WaypointManager {
             GSON.toJson(points, LIST_TYPE, writer);
             writer.close();
             writer = null;
-            try {
-                Files.move(temporary.toPath(), file.toPath(),
-                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException ignored) {
-                Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
+            WaypointFileUtils.replaceAtomically(temporary,file);
         } catch (Exception e) {
             System.err.println("[AlphaClient] Could not save waypoints: " + e.getMessage());
         } finally {

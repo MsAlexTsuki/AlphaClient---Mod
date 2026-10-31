@@ -3,7 +3,6 @@ package com.alpharip.staffmod.WayPoints;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.util.ChatComponentText;
 import org.lwjgl.input.Mouse;
 import java.io.File;
 import java.io.IOException;

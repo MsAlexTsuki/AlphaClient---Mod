@@ -29,7 +29,11 @@ public final class WaypointSettings {
         return new File(base,"waypoints.properties");
     }
     public static synchronized boolean getBoolean(String key,boolean fallback) {
-        load(); return Boolean.parseBoolean(VALUES.getProperty(key,String.valueOf(fallback)));
+        load();
+        String value=VALUES.getProperty(key);
+        if("true".equalsIgnoreCase(value))return true;
+        if("false".equalsIgnoreCase(value))return false;
+        return fallback;
     }
     public static synchronized int getInt(String key,int fallback,int minimum,int maximum) {
         load();
@@ -56,9 +60,16 @@ public final class WaypointSettings {
         save();
     }
     private static void save() {
+        File destination=file();
+        File temporary=new File(destination.getParentFile(),destination.getName()+".tmp");
         FileOutputStream out=null;
-        try { out=new FileOutputStream(file()); VALUES.store(out,"AlphaClient waypoint settings"); }
-        catch(Exception e) { System.err.println("[AlphaClient] Could not save waypoint settings: "+e.getMessage()); }
-        finally { if(out!=null)try{out.close();}catch(Exception ignored){} }
+        try {
+            out=new FileOutputStream(temporary);
+            VALUES.store(out,"AlphaClient waypoint settings");
+            out.close();out=null;
+            WaypointFileUtils.replaceAtomically(temporary,destination);
+        } catch(Exception e) {
+            System.err.println("[AlphaClient] Could not save waypoint settings: "+e.getMessage());
+        } finally { if(out!=null)try{out.close();}catch(Exception ignored){} }
     }
 }
