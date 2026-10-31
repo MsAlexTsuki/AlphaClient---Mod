@@ -33,7 +33,8 @@ public final class WaypointManager {
         try {
             reader = new InputStreamReader(new FileInputStream(file), "UTF-8");
             List<StaffWaypoint> saved = GSON.fromJson(reader, LIST_TYPE);
-            if (saved != null) for (StaffWaypoint point : saved) {
+            if (saved == null) throw new IOException("Waypoint file did not contain a JSON array.");
+            for (StaffWaypoint point : saved) {
                 if (point == null) continue;
                 point.normalize();
                 if (finite(point.getX()) && finite(point.getY()) && finite(point.getZ())) points.add(point);

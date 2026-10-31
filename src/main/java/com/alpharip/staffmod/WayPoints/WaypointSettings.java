@@ -10,6 +10,7 @@ import java.util.Properties;
 public final class WaypointSettings {
     private static final Properties VALUES=new Properties();
     private static boolean loaded;
+    private static boolean loadFailed;
     private static boolean temporarilyHidden;
     private WaypointSettings(){}
 
@@ -19,7 +20,10 @@ public final class WaypointSettings {
         try {
             File file=file();
             if(file.isFile()){in=new FileInputStream(file);VALUES.load(in);}
-        } catch(Exception e) { System.err.println("[AlphaClient] Could not load waypoint settings: "+e.getMessage()); }
+        } catch(Exception e) {
+            loadFailed=true;
+            System.err.println("[AlphaClient] Could not load waypoint settings; saving is disabled to protect the existing file: "+e.getMessage());
+        }
         finally { if(in!=null)try{in.close();}catch(Exception ignored){} }
     }
     private static File file() {
@@ -60,6 +64,7 @@ public final class WaypointSettings {
         save();
     }
     private static void save() {
+        if(loadFailed)return;
         File destination=file();
         File temporary=new File(destination.getParentFile(),destination.getName()+".tmp");
         FileOutputStream out=null;

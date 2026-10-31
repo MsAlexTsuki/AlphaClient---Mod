@@ -45,8 +45,8 @@ public final class WaypointCommand extends CommandBase {
                 reply(sender,(point.isFavorite()?"Pinned ":"Unpinned ")+point.getLabel()+".");
             } else if("icon".equals(action)) {
                 if(args.length<3){reply(sender,"Usage: /waypoint icon <waypoint name> <symbol up to 4 characters>");return;}
-                StaffWaypoint point=manager.find(args[1]);
-                String symbol=join(args,2);
+                StaffWaypoint point=args.length>2?manager.find(join(args,1,args.length-1)):null;
+                String symbol=args[args.length-1];
                 if(point==null){reply(sender,"Waypoint not found in this profile.");return;}
                 if(symbol.trim().isEmpty()||symbol.length()>4){reply(sender,"Custom icons need 1 to 4 characters.");return;}
                 point.setIconId(symbol);manager.saveChanges();
@@ -108,18 +108,13 @@ public final class WaypointCommand extends CommandBase {
                 if(manager.remove(join(args,1))) reply(sender,"Waypoint removed.");
                 else reply(sender,"Waypoint not found.");
             } else if("route".equals(action)) {
-                if(args.length<3){reply(sender,"Usage: /waypoint route <start> <end> [stop ...]; quote names with spaces.");return;}
+                List<String> routeNames=parseQuotedArguments(args,1);
+                if(routeNames.size()<2){reply(sender,"Usage: /waypoint route <start> <end> [stop ...]; quote names with spaces.");return;}
                 List<StaffWaypoint> routePoints=new ArrayList<StaffWaypoint>();
-                if(args.length==3) {
-                    StaffWaypoint start=manager.find(args[1]),end=manager.find(args[2]);
-                    if(start==null||end==null){reply(sender,"Both waypoints must exist in this profile.");return;}
-                    routePoints.add(start);routePoints.add(end);
-                } else {
-                    for(int i=1;i<args.length;i++) {
-                        StaffWaypoint point=manager.find(args[i]);
-                        if(point==null){reply(sender,"Waypoint not found: "+args[i]);return;}
-                        routePoints.add(point);
-                    }
+                for(String routeName:routeNames) {
+                    StaffWaypoint point=manager.find(routeName);
+                    if(point==null){reply(sender,"Waypoint not found: "+routeName);return;}
+                    routePoints.add(point);
                 }
                 StaffWaypoint first=routePoints.get(0),last=routePoints.get(routePoints.size()-1);
                 for(StaffWaypoint point:routePoints)
@@ -147,12 +142,13 @@ public final class WaypointCommand extends CommandBase {
                 reply(sender,"Imported "+added+" new waypoint(s); skipped "+(imported.size()-added)+" duplicate(s) from "+file.getName()+".");
             } else if("category".equals(action)) {
                 if(args.length<4){reply(sender,"Usage: /waypoint category <name> <category> <hex-color>");return;}
-                StaffWaypoint point=manager.find(args[1]);
+                StaffWaypoint point=manager.find(join(args,1,args.length-2));
                 if(point==null){reply(sender,"Waypoint not found.");return;}
-                String color=args[3].replace("#","");
+                String category=args[args.length-2];
+                String color=args[args.length-1].replace("#","");
                 if(color.length()!=6){reply(sender,"Use a six-digit RGB color, for example FF8800.");return;}
                 int rgb=Integer.parseInt(color,16);
-                point.setCategory(args[2]); point.setColor(rgb); manager.saveChanges();
+                point.setCategory(category); point.setColor(rgb); manager.saveChanges();
                 reply(sender,"Updated "+point.getLabel()+" to category "+point.getCategory()+".");
             } else if("minimap".equals(action)||"death".equals(action)||"clickcoords".equals(action)||"markers".equals(action)||"arrival".equals(action)) {
                 if(args.length<2){reply(sender,"Usage: /waypoint "+action+" <on|off>");return;}
@@ -193,10 +189,51 @@ public final class WaypointCommand extends CommandBase {
     private static StaffWaypoint find(WaypointManager manager,String[] args,int start) {
         return args.length<=start?null:manager.find(join(args,start));
     }
-    private static String join(String[] values,int start) {
+    private static String join(String[] values,int start) { return join(values,start,values.length); }
+    private static String join(String[] values,int start,int end) {
         StringBuilder out=new StringBuilder();
-        for(int i=start;i<values.length;i++){if(i>start)out.append(' ');out.append(values[i]);}
-        return out.toString().trim();
+        for(int i=start;i<end;i++){if(i>start)out.append(' ');out.append(values[i]);}
+        String result=out.toString().trim();
+        if(result.length()>=2&&result.charAt(0)=='"'&&result.charAt(result.length()-1)=='"')
+            result=result.substring(1,result.length()-1);
+        return result;
+    }
+    private static List<String> parseQuotedArguments(String[] values,int start) {
+        List<String> result=new ArrayList<String>();
+        StringBuilder token=new StringBuilder();
+        boolean quoted=false;
+        for(int i=start;i<values.length;i++) {
+            String value=values[i];
+            if(!quoted) {
+                if(value.startsWith("\"")) {
+                    String remainder=value.substring(1);
+                    int closing=remainder.indexOf('"');
+                    if(closing>=0) {
+                        token.append(remainder,0,closing);
+                        result.add(token.toString());
+                        token.setLength(0);
+                        String trailing=remainder.substring(closing+1);
+                        if(!trailing.isEmpty())result.add(trailing);
+                    } else {
+                        token.append(remainder);
+                        quoted=true;
+                    }
+                } else result.add(value);
+            } else {
+                int closing=value.indexOf('"');
+                token.append(' ');
+                if(closing>=0) {
+                    token.append(value,0,closing);
+                    result.add(token.toString());
+                    token.setLength(0);
+                    quoted=false;
+                    String trailing=value.substring(closing+1);
+                    if(!trailing.isEmpty())result.add(trailing);
+                } else token.append(value);
+            }
+        }
+        if(quoted)result.add(token.toString());
+        return result;
     }
     private static String coords(StaffWaypoint p) {
         return (int)Math.floor(p.getX())+", "+(int)Math.floor(p.getY())+", "+(int)Math.floor(p.getZ());

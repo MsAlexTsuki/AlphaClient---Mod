@@ -105,7 +105,8 @@ public final class WaypointTracker {
         try {
             reader=new InputStreamReader(new FileInputStream(file),"UTF-8");
             List<CoordinateEntry> saved=GSON.fromJson(reader,HISTORY_TYPE);
-            if(saved!=null)for(CoordinateEntry entry:saved)
+            if(saved==null)throw new java.io.IOException("Coordinate history did not contain a JSON array.");
+            for(CoordinateEntry entry:saved)
                 if(entry!=null&&entry.serverKey!=null&&!entry.serverKey.trim().isEmpty()
                         &&finite(entry.x)&&finite(entry.y)&&finite(entry.z))history.add(entry);
             while(history.size()>MAX_HISTORY)history.remove(history.size()-1);

@@ -27,6 +27,7 @@ public final class EventCountdownHub {
     private final List<EventPattern> patterns=new ArrayList<EventPattern>();
     private final List<Countdown> active=new ArrayList<Countdown>();
     private String loadedServerKey="";
+    private boolean patternsLoadFailed;
 
     private EventCountdownHub(){}
 
@@ -55,6 +56,7 @@ public final class EventCountdownHub {
         String current=serverKey();
         if(current.equals(loadedServerKey))return;
         patterns.clear();
+        patternsLoadFailed=false;
         loadedServerKey=current;
         Properties p=new Properties();
         File currentFile=patternsFile(current);
@@ -71,6 +73,7 @@ public final class EventCountdownHub {
             in=new FileInputStream(source);
             p.load(in);
             int count=Integer.parseInt(p.getProperty("count","0"));
+            if(count<0||count>256)throw new IllegalArgumentException("Event pattern count is outside the supported range.");
             for(int i=0;i<count;i++) {
                 String name=p.getProperty("name."+i,"").trim();
                 String regex=p.getProperty("regex."+i,"");
@@ -79,13 +82,17 @@ public final class EventCountdownHub {
                     patterns.add(new EventPattern(name,Pattern.compile(regex,Pattern.CASE_INSENSITIVE),seconds));
             }
             loadedSuccessfully=true;
-        } catch(Exception e) { System.err.println("[AlphaClient] Could not load waypoint event patterns: "+e.getMessage()); }
+        } catch(Exception e) {
+            patternsLoadFailed=true;
+            System.err.println("[AlphaClient] Could not load waypoint event patterns; saving is disabled to protect the existing file: "+e.getMessage());
+        }
         finally { if(in!=null)try{in.close();}catch(Exception ignored){} }
         if(migrate&&loadedSuccessfully)savePatterns();
     }
 
     private synchronized void savePatterns() {
         ensureLoaded();
+        if(patternsLoadFailed)throw new IllegalStateException("Event pattern file could not be read; it was left unchanged.");
         Properties p=new Properties(); p.setProperty("count",String.valueOf(patterns.size()));
         for(int i=0;i<patterns.size();i++) {
             EventPattern value=patterns.get(i);
@@ -107,6 +114,7 @@ public final class EventCountdownHub {
 
     public synchronized void addPattern(String id,String regex,int seconds) {
         ensureLoaded();
+        if(patternsLoadFailed)throw new IllegalStateException("Event pattern file could not be read; it was left unchanged.");
         if(id==null||id.trim().isEmpty()||regex==null||regex.isEmpty()||seconds<1)
             throw new IllegalArgumentException("Pattern needs a name, regex and positive duration.");
         Pattern compiled=Pattern.compile(regex,Pattern.CASE_INSENSITIVE);
@@ -117,6 +125,7 @@ public final class EventCountdownHub {
 
     public synchronized boolean removePattern(String id) {
         ensureLoaded();
+        if(patternsLoadFailed)throw new IllegalStateException("Event pattern file could not be read; it was left unchanged.");
         if(id==null)return false;
         for(int i=0;i<patterns.size();i++)if(patterns.get(i).id.equalsIgnoreCase(id.trim())) {
             patterns.remove(i); savePatterns(); return true;
@@ -147,10 +156,15 @@ public final class EventCountdownHub {
         String message=event.message.getUnformattedText();
         synchronized(this) {
             ensureLoaded();
+            if(patternsLoadFailed)return;
             for(EventPattern p:patterns) {
                 Matcher matcher=p.pattern.matcher(message);
                 if(!matcher.find())continue;
                 String server=serverKey();
+                for(int i=active.size()-1;i>=0;i--) {
+                    Countdown previous=active.get(i);
+                    if(server.equals(previous.serverKey)&&p.id.equalsIgnoreCase(previous.name))active.remove(i);
+                }
                 active.add(new Countdown(p.id,System.currentTimeMillis()+p.seconds*1000L,server));
                 if(matcher.groupCount()>=3) {
                     try {
