@@ -47,6 +47,8 @@ import com.alpharip.staffmod.quality.AutoRespawnMod;
 import com.alpharip.staffmod.combat.LowHealthWarningMod;
 import com.alpharip.staffmod.hud.PotionExpirationWarningMod;
 import com.alpharip.staffmod.hud.BlockCounterHud;
+import com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreview;
+import com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewCommand;
 import com.alpharip.staffmod.CommandPalette.CommandPalette;
 import com.alpharip.staffmod.CommandPalette.CommandPaletteCommand;
 import com.alpharip.staffmod.WayPoints.DeathWaypointMod;
@@ -140,11 +142,13 @@ public final class AlphaClient {
         System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
 
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(BlockPlacementPreview.getInstance());
         DeveloperDiagnostics.initialize();
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
         registerClientCommands();
         ClientCommandHandler.instance.registerCommand(new CommandPaletteCommand());
+        ClientCommandHandler.instance.registerCommand(new BlockPlacementPreviewCommand());
         WaypointManager.getInstance().load();
         ClientCommandHandler.instance.registerCommand(new WaypointCommand());
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
