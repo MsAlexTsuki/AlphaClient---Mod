@@ -3,7 +3,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 /** Coordinate extraction and waypoint data model; chat click handling and map rendering are pending. */
 public final class ChatBeacon {
-    private static final Pattern COORDINATES = Pattern.compile("(?<!\\\\d)(-?\\\\d{1,7})\\\\s*[, ]\\\\s*(-?\\\\d{1,7})(?:\\\\s*[, ]\\\\s*(-?\\\\d{1,7}))?(?!\\\\d)");
+    private static final Pattern COORDINATES = Pattern.compile("(?<!\\d)(-?\\d{1,7})\\s*[, ]\\s*(-?\\d{1,7})(?:\\s*[, ]\\s*(-?\\d{1,7}))?(?!\\d)");
     public static final class Waypoint {
         public final int x, y, z;
         public final boolean hasY;
