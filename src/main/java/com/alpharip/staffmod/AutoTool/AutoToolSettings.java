@@ -202,11 +202,13 @@ public final class AutoToolSettings {
     private static String profileIdentity() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null) return null;
+        if (mc.isIntegratedServerRunning() && mc.getIntegratedServer() != null) {
+            return "world:" + mc.getIntegratedServer().getFolderName();
+        }
         if (mc.getCurrentServerData() != null && mc.getCurrentServerData().serverIP != null) {
             return "server:" + mc.getCurrentServerData().serverIP.trim().toLowerCase(Locale.ROOT);
         }
-        String worldName = mc.theWorld.getWorldInfo() == null ? null : mc.theWorld.getWorldInfo().getWorldName();
-        return worldName == null || worldName.trim().isEmpty() ? null : "world:" + worldName.trim();
+        return null;
     }
 
     private static String hashProfileIdentity(String identity) {

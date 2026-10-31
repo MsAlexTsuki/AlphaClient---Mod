@@ -34,7 +34,7 @@ Use registry IDs (including the namespace, such as `minecraft:`). Preferences ar
 
 ## Settings and profiles
 
-Settings are stored locally in `config/alphaclient/autotool.properties`. These act as global defaults. Per-server or per-singleplayer-world overrides are saved under `config/alphaclient/autotool-profiles/`; filenames use a SHA-256 hash of the server address or world name, so the raw identity is not written into the profile filename. A local profile overrides only the values it sets and inherits the rest from the global settings.
+Settings are stored locally in `config/alphaclient/autotool.properties`. These act as global defaults. Per-server or per-singleplayer-world overrides are saved under `config/alphaclient/autotool-profiles/`; filenames use a SHA-256 hash of the server address or singleplayer save folder name, so the raw identity is not written into the profile filename. A local profile overrides only the values it sets and inherits the rest from the global settings.
 
 Older `swapBack=true` settings are read as the `release` mode. New settings are written as profile overrides when a world/server is active.
 
