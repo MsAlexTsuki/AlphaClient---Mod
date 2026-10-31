@@ -168,21 +168,25 @@ public final class CommandPaletteGui extends GuiScreen {
         if(pendingInput==null)return;
         String value=sanitize(searchField.getText());
         if(value.isEmpty()){status="Enter a value first.";return;}
+        if(mc==null||mc.thePlayer==null){status="Join a world before using this action.";return;}
         Action a=pendingInput;pendingInput=null;searchField.setText("");invalidate();
         String command=a.commandTemplate.replace("{value}",value);
-        CommandPaletteStore.getInstance().recordUsed(a.id);
-        dispatchCommand(a.name,command);
+        dispatchCommand(a.id,a.name,command);
     }
     private void dispatch(Action a){
         if("home".equals(a.id)){CommandPaletteStore.getInstance().recordUsed(a.id);invalidate();mc.displayGuiScreen(new AlphaClientHomeMenu());return;}
         if(a.commandTemplate!=null){
-            CommandPaletteStore.getInstance().recordUsed(a.id);invalidate();
-            dispatchCommand(a.name,a.commandTemplate);
+            if(mc==null||mc.thePlayer==null){status="Join a world before using this action.";return;}
+            dispatchCommand(a.id,a.name,a.commandTemplate);
         }
     }
-    private void dispatchCommand(String name,String command){
+    private void dispatchCommand(String id,String name,String command){
         if(mc==null||mc.thePlayer==null){status="Join a world before using this action.";return;}
-        mc.thePlayer.sendChatMessage(command);status="Running "+name+".";
+        CommandPaletteStore.getInstance().recordUsed(id);
+        invalidate();
+        mc.displayGuiScreen(null);
+        mc.thePlayer.sendChatMessage(command);
+        status="Running "+name+".";
     }
     private void toggleSelectedFavorite(){List<Action> list=filtered();if(selected>=0&&selected<list.size())toggleFavorite(list.get(selected));}
     private void toggleFavorite(Action a){
@@ -271,7 +275,7 @@ public final class CommandPaletteGui extends GuiScreen {
                 out.add(Action.status("module-status:"+m.getId(),m.getName(),detail,m));continue;
             }
             out.add(Action.toggle("module-toggle:"+m.getId(),"Toggle "+m.getName(),"Status: "+state+". "+m.getDescription(),m));
-            out.add(Action.screen("module-settings:"+m.getId(),"Configure "+m.getName(),"Open settings for "+m.getName(),"/alphaclient:settings "+m.getId(),m));
+            out.add(Action.moduleSettings("module-settings:"+m.getId(),"Configure "+m.getName(),"Open settings for "+m.getName(),"/alphaclient:settings "+m.getId(),m));
         }
         Collections.sort(out,new Comparator<Action>(){public int compare(Action a,Action b){return a.name.compareToIgnoreCase(b.name);}});
         return Collections.unmodifiableList(out);
@@ -291,6 +295,7 @@ public final class CommandPaletteGui extends GuiScreen {
         static Action screen(String id,String name,String desc,String command,AlphaModule module){return new Action(id,name,desc,"Screens","screen",command,null,module);}
         static Action command(String id,String name,String desc,String category,String command){return new Action(id,name,desc,category,"command",command,null,null);}
         static Action input(String id,String name,String desc,String category,String command,String prompt){return new Action(id,name,desc,category,"input",command,prompt,null);}
+        static Action moduleSettings(String id,String name,String desc,String command,AlphaModule module){return new Action(id,name,desc,"Modules","screen",command,null,module);}
         static Action toggle(String id,String name,String desc,AlphaModule module){return new Action(id,name,desc,"Modules","toggle",null,null,module);}
         static Action status(String id,String name,String desc,AlphaModule module){return new Action(id,name,desc,"Modules","status",null,null,module);}
     }
