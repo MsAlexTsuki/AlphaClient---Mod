@@ -61,8 +61,10 @@ public final class WorldWaypointIcons {
                     GlStateManager.scale(-0.025F,-0.025F,0.025F);
                     GlStateManager.disableDepth();
                     GlStateManager.enableTexture2D();
-                    String label="["+point.getIconId()+"] "+point.getLabel()+"  "+Math.round(Math.sqrt(distanceSq))+"m";
+                    String label="["+point.getIconId()+"] "+point.getLabel();
+                    String distance=Math.round(Math.sqrt(distanceSq))+"m";
                     mc.fontRendererObj.drawStringWithShadow(label,-mc.fontRendererObj.getStringWidth(label)/2,0,point.getColor());
+                    mc.fontRendererObj.drawStringWithShadow(distance,-mc.fontRendererObj.getStringWidth(distance)/2,10,0xFFE6E8ED);
                 } finally {
                     GlStateManager.enableDepth();
                     GlStateManager.popMatrix();
