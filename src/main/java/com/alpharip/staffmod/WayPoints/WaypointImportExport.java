@@ -35,8 +35,15 @@ public final class WaypointImportExport {
             String[] p=lines[i].split("\\t",-1);
             if (p.length != 9) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
             try {
-                StaffWaypoint point = new StaffWaypoint(dec(p[0]), dec(p[1]), Integer.parseInt(p[2]),
-                        Double.parseDouble(p[3]), Double.parseDouble(p[4]), Double.parseDouble(p[5]));
+                double x = Double.parseDouble(p[3]);
+                double y = Double.parseDouble(p[4]);
+                double z = Double.parseDouble(p[5]);
+                if (Double.isNaN(x) || Double.isInfinite(x)
+                        || Double.isNaN(y) || Double.isInfinite(y)
+                        || Double.isNaN(z) || Double.isInfinite(z)) {
+                    throw new IllegalArgumentException("Coordinates must be finite");
+                }
+                StaffWaypoint point = new StaffWaypoint(dec(p[0]), dec(p[1]), Integer.parseInt(p[2]), x, y, z);
                 point.setCategory(dec(p[6]));
                 point.setColor((int)Long.parseLong(p[7],16));
                 point.setIconId(dec(p[8]));

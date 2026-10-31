@@ -55,7 +55,7 @@ public final class WaypointsGui extends GuiScreen {
                 status="Exported to "+file.getName();
             } else if(button.id==5) {
                 List<StaffWaypoint> points=new WaypointImportExport().read(manager.getExportFile());
-                manager.addAllImported(points);status="Imported "+points.size()+" waypoint(s).";
+                int added=manager.addAllImported(points);status="Imported "+added+" new waypoint(s); skipped "+(points.size()-added)+" duplicate(s).";
             } else if(button.id==6) mc.displayGuiScreen(parent);
         } catch(Exception e){status="Waypoint action failed: "+e.getMessage();}
     }

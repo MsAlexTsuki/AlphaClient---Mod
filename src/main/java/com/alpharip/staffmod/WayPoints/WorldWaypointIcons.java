@@ -44,12 +44,14 @@ public final class WorldWaypointIcons {
                 float red=((point.getColor()>>16)&255)/255.0F;
                 float green=((point.getColor()>>8)&255)/255.0F;
                 float blue=(point.getColor()&255)/255.0F;
+                GlStateManager.disableTexture2D();
                 GL11.glLineWidth(2.0F);
                 GL11.glColor4f(red,green,blue,0.9F);
                 GL11.glBegin(GL11.GL_LINES);
                 GL11.glVertex3d(dx,dy,dz);
                 GL11.glVertex3d(dx,dy+1.8D,dz);
                 GL11.glEnd();
+                GlStateManager.enableTexture2D();
 
                 GlStateManager.pushMatrix();
                 try {

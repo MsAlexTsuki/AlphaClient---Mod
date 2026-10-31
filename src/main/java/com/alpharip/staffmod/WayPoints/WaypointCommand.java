@@ -45,7 +45,18 @@ public final class WaypointCommand extends CommandBase {
                 List<StaffWaypoint> list=manager.getSortedCurrentWorld();
                 if(list.isEmpty()){reply(sender,"No waypoints in this world yet.");return;}
                 reply(sender,"Waypoints (nearest first):");
-                for(StaffWaypoint p:list) reply(sender,p.getLabel()+" — "+coords(p)+(p.getId().equals(manager.getSelectedId())?" [selected]":""));
+                if (mc.thePlayer != null) {
+                    for (StaffWaypoint p : list) {
+                        double dx = p.getX() - mc.thePlayer.posX;
+                        double dy = p.getY() - mc.thePlayer.posY;
+                        double dz = p.getZ() - mc.thePlayer.posZ;
+                        long distance = Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz));
+                        reply(sender, p.getLabel() + " — " + coords(p) + " (" + distance + "m)"
+                                + (p.getId().equals(manager.getSelectedId()) ? " [selected]" : ""));
+                    }
+                } else {
+                    for (StaffWaypoint p : list) reply(sender, p.getLabel() + " — " + coords(p));
+                }
             } else if("select".equals(action)||"goto".equals(action)||"navigate".equals(action)) {
                 StaffWaypoint p=find(manager,args,1);
                 if(p==null){reply(sender,"Waypoint not found on this server.");return;}
@@ -76,8 +87,8 @@ public final class WaypointCommand extends CommandBase {
             } else if("import".equals(action)) {
                 File file=manager.getExportFile();
                 List<StaffWaypoint> imported=codec.read(file);
-                manager.addAllImported(imported);
-                reply(sender,"Imported "+imported.size()+" waypoint(s) from "+file.getName()+".");
+                int added = manager.addAllImported(imported);
+                reply(sender,"Imported "+added+" new waypoint(s); skipped "+(imported.size()-added)+" duplicate(s) from "+file.getName()+".");
             } else if("category".equals(action)) {
                 if(args.length<4){reply(sender,"Usage: /waypoint category <name> <category> <hex-color>");return;}
                 StaffWaypoint point=manager.find(args[1]);
@@ -142,7 +153,7 @@ public final class WaypointCommand extends CommandBase {
             String[] actions={"open","add","addat","list","select","remove","route","clearroute","import","export","share","clear","category","minimap","death","clickcoords","markers","pattern","help"};
             String prefix=args[0].toLowerCase(Locale.ROOT);
             for(String a:actions) if(a.startsWith(prefix)) result.add(a);
-        } else if(args.length>=2&&("select".equalsIgnoreCase(args[0])||"remove".equalsIgnoreCase(args[0])||"delete".equalsIgnoreCase(args[0])||"goto".equalsIgnoreCase(args[0]))) {
+        } else if(args.length>=2&&("select".equalsIgnoreCase(args[0])||"remove".equalsIgnoreCase(args[0])||"delete".equalsIgnoreCase(args[0])||"goto".equalsIgnoreCase(args[0])||"route".equalsIgnoreCase(args[0]))) {
             return autocomplete.complete(args[args.length-1],WaypointManager.getInstance().getForCurrentServer());
         } else if(args.length==2&&"pattern".equalsIgnoreCase(args[0])) {
             if("add".startsWith(args[1].toLowerCase(Locale.ROOT)))result.add("add");

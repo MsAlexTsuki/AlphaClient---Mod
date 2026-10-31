@@ -71,10 +71,24 @@ public final class WaypointManager {
     }
 
     public synchronized boolean addImported(StaffWaypoint incoming) {
-        if (incoming == null || incoming.getLabel().trim().isEmpty()) return false;
         load();
+        if (!copyImported(incoming)) return false;
+        save();
+        return true;
+    }
+
+    private boolean copyImported(StaffWaypoint incoming) {
+        if (incoming == null || incoming.getLabel() == null || incoming.getLabel().trim().isEmpty()) return false;
         Minecraft mc = Minecraft.getMinecraft();
         String server = ServerWaypointIntegration.currentServerKey(mc);
+        for (StaffWaypoint existing : points) {
+            if (server.equals(existing.getServerKey())
+                    && existing.getDimensionId() == incoming.getDimensionId()
+                    && existing.getLabel().equalsIgnoreCase(incoming.getLabel().trim())
+                    && Math.abs(existing.getX() - incoming.getX()) < 0.001D
+                    && Math.abs(existing.getY() - incoming.getY()) < 0.001D
+                    && Math.abs(existing.getZ() - incoming.getZ()) < 0.001D) return false;
+        }
         StaffWaypoint point = new StaffWaypoint(incoming.getLabel(), server, incoming.getDimensionId(),
                 incoming.getX(), incoming.getY(), incoming.getZ());
         point.setCategory(incoming.getCategory());
@@ -82,7 +96,6 @@ public final class WaypointManager {
         point.setIconId(incoming.getIconId());
         point.setDeathWaypoint(incoming.isDeathWaypoint());
         points.add(point);
-        save();
         return true;
     }
 
@@ -116,11 +129,16 @@ public final class WaypointManager {
         if (key == null) return null;
         load();
         String normalized = key.trim();
+        if (normalized.isEmpty()) return null;
+        String server = ServerWaypointIntegration.currentServerKey(Minecraft.getMinecraft());
         for (StaffWaypoint point : points) {
+            if (!server.equals(point.getServerKey())) continue;
             if (point.getId().equalsIgnoreCase(normalized)
                     || point.getLabel().equalsIgnoreCase(normalized)) return point;
         }
-        for (StaffWaypoint point : points) if (point.getId().startsWith(normalized)) return point;
+        for (StaffWaypoint point : points) {
+            if (server.equals(point.getServerKey()) && point.getId().startsWith(normalized)) return point;
+        }
         return null;
     }
 
@@ -163,9 +181,13 @@ public final class WaypointManager {
                 mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
     }
 
-    public synchronized void addAllImported(List<StaffWaypoint> imported) {
-        if (imported == null) return;
-        for (StaffWaypoint point : imported) addImported(point);
+    public synchronized int addAllImported(List<StaffWaypoint> imported) {
+        if (imported == null || imported.isEmpty()) return 0;
+        load();
+        int added = 0;
+        for (StaffWaypoint point : imported) if (copyImported(point)) added++;
+        if (added > 0) save();
+        return added;
     }
 
     public File getExportFile() {
