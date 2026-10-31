@@ -1,43 +1,13 @@
-package com.alpharip.staffmod.staffops.ideas;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/** Local queue of planned evidence captures; does not take screenshots itself. */
+package com.alpharip.staffmod.hud;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+/** Local evidence-capture queue marker for staff review; does not upload evidence. */
 public final class EvidenceCaptureQueue {
-    private final List<QueueItem> items = new ArrayList<QueueItem>();
-    private long nextId = 1L;
-
-    public QueueItem enqueue(String description, long requestedAtMillis) {
-        if (description == null || description.trim().isEmpty()) {
-            throw new IllegalArgumentException("Description must not be blank");
-        }
-        QueueItem item = new QueueItem(nextId++, description.trim(), requestedAtMillis);
-        items.add(item);
-        return item;
-    }
-
-    public List<QueueItem> getItems() {
-        return Collections.unmodifiableList(new ArrayList<QueueItem>(items));
-    }
-
-    public static final class QueueItem {
-        private final long id;
-        private final String description;
-        private final long requestedAtMillis;
-        private boolean completed;
-
-        private QueueItem(long id, String description, long requestedAtMillis) {
-            this.id = id;
-            this.description = description;
-            this.requestedAtMillis = requestedAtMillis;
-        }
-
-        public long getId() { return id; }
-        public String getDescription() { return description; }
-        public long getRequestedAtMillis() { return requestedAtMillis; }
-        public boolean isCompleted() { return completed; }
-        public void setCompleted(boolean completed) { this.completed = completed; }
-    }
+ private int queued; private String latest="No evidence queued";
+ private boolean enabled(){AlphaModule m=AlphaModuleRegistry.find("evidence-capture-queue");return m!=null&&m.isEnabled()&&m.isUnlocked();}
+ @SubscribeEvent public void onChat(net.minecraftforge.client.event.ClientChatEvent e){if(e.message!=null&&e.message.equalsIgnoreCase("/evidencequeue add")){queued++;latest="Evidence item "+queued+" queued locally";e.setCanceled(true);}else if(e.message!=null&&e.message.equalsIgnoreCase("/evidencequeue clear")){queued=0;latest="Queue cleared locally";e.setCanceled(true);}}
+ @SubscribeEvent public void onOverlay(RenderGameOverlayEvent.Text e){if(e.type!=RenderGameOverlayEvent.ElementType.TEXT||!enabled())return;Minecraft mc=Minecraft.getMinecraft();if(mc.thePlayer==null||mc.gameSettings.showDebugInfo)return;mc.fontRendererObj.drawStringWithShadow("Evidence Queue: "+queued,6,54,0xFFFFC83D);mc.fontRendererObj.drawStringWithShadow(latest,6,65,0xFFFFFFFF);}
 }

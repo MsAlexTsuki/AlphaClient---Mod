@@ -1,23 +1,11 @@
-package com.alpharip.staffmod.staffops.ideas;
-
-/** Presentation data for a timestamp overlay; rendering is handled elsewhere. */
+package com.alpharip.staffmod.hud;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+/** Standalone client-side evidence utility; requires later module/event registration. */
 public final class EvidenceTimestampOverlay {
-    private long timestampMillis;
-    private String label = "";
-    private boolean visible;
-
-    public void show(long timestampMillis, String label) {
-        this.timestampMillis = timestampMillis;
-        this.label = label == null ? "" : label;
-        this.visible = true;
-    }
-
-    public void hide() {
-        visible = false;
-        label = "";
-    }
-
-    public long getTimestampMillis() { return timestampMillis; }
-    public String getLabel() { return label; }
-    public boolean isVisible() { return visible; }
+private boolean enabled(){AlphaModule m=AlphaModuleRegistry.find("evidence-timestamp-overlay");return m!=null&&m.isEnabled()&&m.isUnlocked();}
+@SubscribeEvent public void render(RenderGameOverlayEvent.Text e){if(e.type!=RenderGameOverlayEvent.ElementType.TEXT||!enabled())return;Minecraft m=Minecraft.getMinecraft();if(m.fontRendererObj==null||m.gameSettings.showDebugInfo)return;String stamp=new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());m.fontRendererObj.drawStringWithShadow("Evidence timestamp: "+stamp,6,6,-1);}
 }

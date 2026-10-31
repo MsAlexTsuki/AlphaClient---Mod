@@ -1,21 +1,11 @@
-package com.alpharip.staffmod.staffops.ideas;
-
-/**
- * Local metadata marker for the server context associated with evidence.
- * The supplied address/name is descriptive metadata, not server verification.
- */
+package com.alpharip.staffmod.hud;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+/** Standalone client-side utility; requires later module/event registration. */
 public final class EvidenceServerMarker {
-    private String serverName = "";
-    private String serverAddress = "";
-    private long observedAtMillis;
-
-    public void set(String serverName, String serverAddress, long observedAtMillis) {
-        this.serverName = serverName == null ? "" : serverName;
-        this.serverAddress = serverAddress == null ? "" : serverAddress;
-        this.observedAtMillis = observedAtMillis;
-    }
-
-    public String getServerName() { return serverName; }
-    public String getServerAddress() { return serverAddress; }
-    public long getObservedAtMillis() { return observedAtMillis; }
+ private boolean enabled(){AlphaModule m=AlphaModuleRegistry.find("evidence-server-marker");return m!=null&&m.isEnabled()&&m.isUnlocked();}
+ @SubscribeEvent public void render(RenderGameOverlayEvent.Text e){if(e.type!=RenderGameOverlayEvent.ElementType.TEXT||!enabled())return;Minecraft m=Minecraft.getMinecraft();if(m.fontRendererObj==null||m.gameSettings.showDebugInfo)return;String server="Singleplayer";if(m.getCurrentServerData()!=null)server=m.getCurrentServerData().serverIP;m.fontRendererObj.drawStringWithShadow("Server marker: "+server,6,6,0xFFFFFF55);}
 }

@@ -1,29 +1,11 @@
-package com.alpharip.staffmod.staffops.ideas;
-
-/** Local coordinate marker for evidence context already known to the client. */
+package com.alpharip.staffmod.hud;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+/** Standalone client-side evidence utility; requires later module/event registration. */
 public final class EvidenceLocationMarker {
-    private String label = "";
-    private String dimension = "";
-    private double x, y, z;
-    private boolean active;
-
-    public void set(String label, String dimension, double x, double y, double z) {
-        this.label = label == null ? "" : label;
-        this.dimension = dimension == null ? "" : dimension;
-        this.x = x; this.y = y; this.z = z;
-        active = true;
-    }
-
-    public void clear() {
-        label = ""; dimension = "";
-        x = y = z = 0.0D;
-        active = false;
-    }
-
-    public String getLabel() { return label; }
-    public String getDimension() { return dimension; }
-    public double getX() { return x; }
-    public double getY() { return y; }
-    public double getZ() { return z; }
-    public boolean isActive() { return active; }
+private boolean enabled(){AlphaModule m=AlphaModuleRegistry.find("evidence-location-marker");return m!=null&&m.isEnabled()&&m.isUnlocked();}
+@SubscribeEvent public void render(RenderGameOverlayEvent.Text e){if(e.type!=RenderGameOverlayEvent.ElementType.TEXT||!enabled())return;Minecraft m=Minecraft.getMinecraft();if(m.thePlayer==null||m.fontRendererObj==null||m.gameSettings.showDebugInfo)return;m.fontRendererObj.drawStringWithShadow(String.format("Evidence Location: %.3f, %.3f, %.3f",m.thePlayer.posX,m.thePlayer.posY,m.thePlayer.posZ),6,6,0xFFFFFF55);}
 }
