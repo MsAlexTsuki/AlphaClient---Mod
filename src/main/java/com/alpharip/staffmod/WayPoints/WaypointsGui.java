@@ -12,12 +12,17 @@ import java.util.List;
 /** Compact Alpha-styled local waypoint manager screen. */
 public final class WaypointsGui extends GuiScreen {
     private static final int GOLD=0xFFFFC83D;
+    private static final int[] WAYPOINT_COLORS={
+            0xFFFF5555,0xFFFFAA00,0xFFFFFF55,0xFF55FF55,0xFF55FFFF,
+            0xFF5555FF,0xFFAA55FF,0xFFFF55FF,0xFFFFFFFF,0xFFFFC83D
+    };
     private final GuiScreen parent;
     private GuiTextField nameField;
     private String selectedId="";
     private String status="Click a waypoint to select it.";
-    private int left,top,panelWidth=390,panelHeight=270,listTop;
+    private int left,top,panelWidth=390,panelHeight=300,listTop,paletteTop;
     private int scroll;
+    private int selectedColor=GOLD;
 
     public WaypointsGui(GuiScreen parent){this.parent=parent;}
 
@@ -28,7 +33,8 @@ public final class WaypointsGui extends GuiScreen {
         left=(width-panelWidth)/2; top=(height-panelHeight)/2;
         nameField=new GuiTextField(20,fontRendererObj,left+14,top+50,panelWidth-28,18);
         nameField.setMaxStringLength(40);
-        listTop=top+82;
+        paletteTop=top+72;
+        listTop=top+98;
         int y=top+panelHeight-30, gap=5;
         int w=(panelWidth-28-gap*4)/5;
         buttonList.add(new GuiButton(1,left+14,y,w,20,"Create"));
@@ -65,6 +71,8 @@ public final class WaypointsGui extends GuiScreen {
         String name=nameField.getText().trim();
         if(name.isEmpty())name="Waypoint "+(WaypointManager.getInstance().getForCurrentServer().size()+1);
         StaffWaypoint point=WaypointManager.getInstance().add(name,mc.thePlayer.posX,mc.thePlayer.posY,mc.thePlayer.posZ);
+        point.setColor(selectedColor);
+        WaypointManager.getInstance().saveChanges();
         selectedId=point.getId();nameField.setText("");status="Created "+point.getLabel()+".";
     }
 
@@ -82,11 +90,27 @@ public final class WaypointsGui extends GuiScreen {
     @Override protected void mouseClicked(int mouseX,int mouseY,int mouseButton)throws IOException {
         super.mouseClicked(mouseX,mouseY,mouseButton);
         if(nameField!=null)nameField.mouseClicked(mouseX,mouseY,mouseButton);
+        int paletteX=left+52;
+        for(int i=0;i<WAYPOINT_COLORS.length;i++) {
+            int x=paletteX+i*16;
+            if(mouseX>=x&&mouseX<x+13&&mouseY>=paletteTop&&mouseY<paletteTop+13) {
+                selectedColor=WAYPOINT_COLORS[i];
+                StaffWaypoint selected=WaypointManager.getInstance().find(selectedId);
+                if(selected!=null) {
+                    selected.setColor(selectedColor);
+                    WaypointManager.getInstance().saveChanges();
+                    status="Color updated for "+selected.getLabel()+".";
+                } else status="Color selected for the next waypoint.";
+                return;
+            }
+        }
         List<StaffWaypoint> points=WaypointManager.getInstance().getSortedCurrentWorld();
         int row=(mouseY-listTop)/16;
         int visible=Math.max(0,(top+panelHeight-57-listTop)/16);
         if(mouseX>=left+12&&mouseX<=left+panelWidth-12&&mouseY>=listTop&&row>=0&&row<visible&&row+scroll<points.size()) {
-            selectedId=points.get(row+scroll).getId();status="Selected "+points.get(row+scroll).getLabel()+".";
+            StaffWaypoint point=points.get(row+scroll);
+            selectedId=point.getId();selectedColor=point.getColor();
+            status="Selected "+point.getLabel()+".";
         }
     }
 
@@ -108,6 +132,13 @@ public final class WaypointsGui extends GuiScreen {
         drawString(fontRendererObj,"LOCAL MARKERS  ·  SORTED BY DISTANCE",left+14,top+30,GOLD);
         drawString(fontRendererObj,"Name",left+14,top+42,0xFFB8BDC8);
         nameField.drawTextBox();
+        drawString(fontRendererObj,"Color",left+14,paletteTop+2,0xFFB8BDC8);
+        for(int i=0;i<WAYPOINT_COLORS.length;i++) {
+            int x=left+52+i*16;
+            int color=WAYPOINT_COLORS[i];
+            if(color==selectedColor) drawRect(x-2,paletteTop-2,x+15,paletteTop+15,0xFFFFFFFF);
+            drawRect(x,paletteTop,x+13,paletteTop+13,color);
+        }
         drawRect(left+12,listTop-3,left+panelWidth-12,top+panelHeight-39,0x55212630);
         List<StaffWaypoint> points=WaypointManager.getInstance().getSortedCurrentWorld();
         int visible=Math.max(0,(top+panelHeight-57-listTop)/16);
