@@ -18,7 +18,7 @@ public final class MinimapWithWaypoints {
 
     @SubscribeEvent
     public void onOverlay(RenderGameOverlayEvent.Text event) {
-        if(!enabled||event.type!=RenderGameOverlayEvent.ElementType.TEXT) return;
+        if(!enabled||WaypointSettings.isTemporarilyHidden()||event.type!=RenderGameOverlayEvent.ElementType.TEXT) return;
         Minecraft mc=Minecraft.getMinecraft();
         if(mc==null||mc.thePlayer==null||mc.gameSettings.hideGUI||mc.gameSettings.showDebugInfo) return;
         List<StaffWaypoint> points=WaypointManager.getInstance().getForCurrentWorld();
@@ -39,7 +39,7 @@ public final class MinimapWithWaypoints {
                 if(distance>RANGE) continue;
                 int px=centerX+(int)Math.round(dx/RANGE*(SIZE/2-10));
                 int py=centerY+(int)Math.round(dz/RANGE*(SIZE/2-10));
-                int color=0xFF000000|(p.getColor()&0xFFFFFF);
+                int color=WorldWaypointIcons.getDisplayColor(p);
                 Gui.drawRect(px-2,py-2,px+3,py+3,color);
             }
             RouteBetweenWaypoints route=WaypointManager.getInstance().getRoute();
@@ -55,7 +55,7 @@ public final class MinimapWithWaypoints {
             if(selected!=null&&ServerWaypointIntegration.belongsToCurrentWorld(selected,mc)) {
                 String line=selected.getLabel()+"  "+Math.round(mc.thePlayer.getDistance(selected.getX(),selected.getY(),selected.getZ()))+"m";
                 int width=mc.fontRendererObj.getStringWidth(line);
-                mc.fontRendererObj.drawStringWithShadow(line,Math.max(4,left+(SIZE-width)/2),top+SIZE+3,selected.getColor());
+                mc.fontRendererObj.drawStringWithShadow(line,Math.max(4,left+(SIZE-width)/2),top+SIZE+3,WorldWaypointIcons.getDisplayColor(selected));
             }
             mc.fontRendererObj.drawStringWithShadow("N",centerX-2,top+3,0xFFE6E8ED);
         } finally { GlStateManager.popMatrix(); }

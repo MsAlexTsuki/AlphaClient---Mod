@@ -124,6 +124,7 @@ public final class EventCountdownHub {
                         StaffWaypoint point=WaypointManager.getInstance().add(p.id,x,y,z);
                         point.setCategory("Event");
                         point.setColor(WaypointCategoriesColors.colorFor("Event"));
+                        point.setIconId("event");
                         WaypointManager.getInstance().saveChanges();
                     } catch(Exception ignored) { }
                 }

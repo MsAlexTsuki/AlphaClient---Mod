@@ -86,6 +86,7 @@ public final class WaypointManager {
         int dimension = mc != null && mc.thePlayer != null ? mc.thePlayer.dimension : 0;
         StaffWaypoint point = new StaffWaypoint(name, server, dimension, x, y, z);
         point.setColor(WaypointCategoriesColors.colorFor(point.getCategory()));
+        point.setIconId(WaypointSettings.getString("defaultIcon","pin"));
         points.add(point);
         save();
         return point;

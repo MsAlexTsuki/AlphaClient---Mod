@@ -10,6 +10,7 @@ import java.util.Properties;
 public final class WaypointSettings {
     private static final Properties VALUES=new Properties();
     private static boolean loaded;
+    private static boolean temporarilyHidden;
     private WaypointSettings(){}
 
     private static synchronized void load() {
@@ -30,8 +31,31 @@ public final class WaypointSettings {
     public static synchronized boolean getBoolean(String key,boolean fallback) {
         load(); return Boolean.parseBoolean(VALUES.getProperty(key,String.valueOf(fallback)));
     }
+    public static synchronized int getInt(String key,int fallback,int minimum,int maximum) {
+        load();
+        try { return Math.max(minimum,Math.min(maximum,Integer.parseInt(VALUES.getProperty(key,String.valueOf(fallback))))); }
+        catch(NumberFormatException ignored) { return fallback; }
+    }
+    public static synchronized String getString(String key,String fallback) {
+        load();
+        String value=VALUES.getProperty(key,fallback);
+        return value==null||value.trim().isEmpty()?fallback:value.trim();
+    }
+    public static synchronized boolean isTemporarilyHidden() { return temporarilyHidden; }
+    public static synchronized void setTemporarilyHidden(boolean value) { temporarilyHidden=value; }
+
     public static synchronized void setBoolean(String key,boolean value) {
-        load(); VALUES.setProperty(key,String.valueOf(value));
+        load(); VALUES.setProperty(key,String.valueOf(value)); save();
+    }
+    public static synchronized void setInt(String key,int value) {
+        load(); VALUES.setProperty(key,String.valueOf(value)); save();
+    }
+    public static synchronized void setString(String key,String value) {
+        load();
+        if(value==null) VALUES.remove(key); else VALUES.setProperty(key,value);
+        save();
+    }
+    private static void save() {
         FileOutputStream out=null;
         try { out=new FileOutputStream(file()); VALUES.store(out,"AlphaClient waypoint settings"); }
         catch(Exception e) { System.err.println("[AlphaClient] Could not save waypoint settings: "+e.getMessage()); }

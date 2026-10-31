@@ -22,7 +22,7 @@ public final class DeathWaypointMod {
         boolean alive=!mc.thePlayer.isDead&&mc.thePlayer.getHealth()>0.0F;
         if(enabled&&wasAlive&&!alive) {
             StaffWaypoint point=WaypointManager.getInstance().add("Death",mc.thePlayer.posX,mc.thePlayer.posY,mc.thePlayer.posZ);
-            point.setCategory("Death"); point.setColor(WaypointCategoriesColors.colorFor("Death")); point.setDeathWaypoint(true); WaypointManager.getInstance().saveChanges();
+            point.setCategory("Death"); point.setColor(WaypointCategoriesColors.colorFor("Death")); point.setIconId("death"); point.setDeathWaypoint(true); WaypointManager.getInstance().saveChanges();
             mc.thePlayer.addChatMessage(new net.minecraft.util.ChatComponentText(
                     "§cDeath waypoint saved: §f"+Math.floor(mc.thePlayer.posX)+", "+Math.floor(mc.thePlayer.posY)+", "+Math.floor(mc.thePlayer.posZ)));
         }

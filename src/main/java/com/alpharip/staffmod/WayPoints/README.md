@@ -61,7 +61,9 @@ Waypoints in the current server and dimension appear as colored vertical pins wi
 /waypoint markers on
 ```
 
-Icon IDs are labels shown with the marker, not image files.
+Open the visual controls with /waypoint visuals or the Options button. Chroma animates waypoint colors. Beam height cycles through Off, 2, 8, and 32 blocks. Label size cycles from 75% to 150%. The icon control cycles through pin, home, star, death, diamond, chest, and event; with a waypoint selected it changes that waypoint, otherwise it sets the default for new waypoints. Hide waypoints temporarily hides the world markers and radar without deleting data. Block highlight draws an outline around each waypoint block.
+
+Icon IDs are rendered as compact text symbols beside the label, not image files.
 
 ### Radar minimap
 
@@ -140,6 +142,7 @@ This feature does not upload data, message friends, or synchronize through a ser
 | Command | Behavior |
 | --- | --- |
 | `/waypoint`, `/waypoint open` | Open the waypoint screen |
+| `/waypoint visuals` | Open marker display options |
 | `/waypoint add <name>` | Save your current coordinates |
 | `/waypoint addat <x> <y> <z> [name]` | Save known coordinates |
 | `/waypoint list` | List current-dimension waypoints, nearest first |

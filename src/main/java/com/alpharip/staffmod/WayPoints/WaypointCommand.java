@@ -18,7 +18,7 @@ public final class WaypointCommand extends CommandBase {
     private final ShareWaypointsWithFriends sharing = new ShareWaypointsWithFriends();
 
     @Override public String getCommandName() { return "waypoint"; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/waypoint [open|add|list|select|remove|route|import|export]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/waypoint [open|visuals|add|list|select|remove|route|import|export]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override
@@ -27,6 +27,9 @@ public final class WaypointCommand extends CommandBase {
         if(mc==null) return;
         if(args==null||args.length==0||"open".equalsIgnoreCase(args[0])) {
             mc.displayGuiScreen(new WaypointsGui(mc.currentScreen)); return;
+        }
+        if("visuals".equalsIgnoreCase(args[0])||"options".equalsIgnoreCase(args[0])) {
+            mc.displayGuiScreen(new WaypointVisualSettingsGui(mc.currentScreen)); return;
         }
         String action=args[0].toLowerCase(Locale.ROOT);
         WaypointManager manager=WaypointManager.getInstance();
@@ -109,7 +112,7 @@ public final class WaypointCommand extends CommandBase {
             } else if("pattern".equals(action)) {
                 handlePattern(sender,args);
             } else if("help".equals(action)) {
-                reply(sender,"/waypoint open | add <name> | addat <x> <y> <z> | list | select <name> | remove <name> | route <start> <end> | clearroute | import | export | clear confirm | category | minimap | pattern <add|remove> ...");
+                reply(sender,"/waypoint open | visuals | add <name> | addat <x> <y> <z> | list | select <name> | remove <name> | route <start> <end> | clearroute | import | export | clear confirm | category | minimap | pattern <add|remove> ...");
             } else {
                 reply(sender,"Unknown action. Use /waypoint help.");
             }
@@ -150,7 +153,7 @@ public final class WaypointCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender,String[] args,BlockPos pos) {
         List<String> result=new ArrayList<String>();
         if(args.length==1) {
-            String[] actions={"open","add","addat","list","select","remove","route","clearroute","import","export","share","clear","category","minimap","death","clickcoords","markers","pattern","help"};
+            String[] actions={"open","visuals","options","add","addat","list","select","remove","route","clearroute","import","export","share","clear","category","minimap","death","clickcoords","markers","pattern","help"};
             String prefix=args[0].toLowerCase(Locale.ROOT);
             for(String a:actions) if(a.startsWith(prefix)) result.add(a);
         } else if(args.length>=2&&("select".equalsIgnoreCase(args[0])||"remove".equalsIgnoreCase(args[0])||"delete".equalsIgnoreCase(args[0])||"goto".equalsIgnoreCase(args[0])||"route".equalsIgnoreCase(args[0]))) {
