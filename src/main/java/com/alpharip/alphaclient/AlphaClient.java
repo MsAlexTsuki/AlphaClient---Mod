@@ -53,6 +53,7 @@ import com.alpharip.staffmod.WayPoints.MinimapWithWaypoints;
 import com.alpharip.staffmod.WayPoints.WaypointCommand;
 import com.alpharip.staffmod.WayPoints.WaypointFromClickableCoordinates;
 import com.alpharip.staffmod.WayPoints.WaypointManager;
+import com.alpharip.staffmod.WayPoints.WaypointTracker;
 import com.alpharip.staffmod.WayPoints.WorldWaypointIcons;
 import com.alpharip.staffmod.hud.ArmorDurabilityWarningMod;
 import com.alpharip.staffmod.hud.TargetDistanceHud;
@@ -172,6 +173,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new PotionExpirationWarningMod());
         MinecraftForge.EVENT_BUS.register(new BlockCounterHud());
         MinecraftForge.EVENT_BUS.register(DeathWaypointMod.getInstance());
+        MinecraftForge.EVENT_BUS.register(WaypointTracker.getInstance());
         MinecraftForge.EVENT_BUS.register(WaypointFromClickableCoordinates.getInstance());
         MinecraftForge.EVENT_BUS.register(EventCountdownHub.getInstance());
         MinecraftForge.EVENT_BUS.register(MinimapWithWaypoints.getInstance());

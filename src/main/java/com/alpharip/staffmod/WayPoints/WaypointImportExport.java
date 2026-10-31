@@ -12,7 +12,7 @@ import java.nio.file.StandardCopyOption;
 
 /** UTF-8 TSV import/export for moving local waypoints between friends or servers. */
 public final class WaypointImportExport {
-    private static final String HEADER = "name\tserver\tdimension\tx\ty\tz\tcategory\tcolor\ticon\tdeath\n";
+    private static final String HEADER = "name\tserver\tdimension\tx\ty\tz\tcategory\tcolor\ticon\tdeath\tfavorite\tvisited\n";
 
     public String exportWaypoints(List<StaffWaypoint> list) {
         StringBuilder out = new StringBuilder(HEADER);
@@ -23,7 +23,8 @@ public final class WaypointImportExport {
                 .append(p.getDimensionId()).append('\t').append(p.getX()).append('\t')
                 .append(p.getY()).append('\t').append(p.getZ()).append('\t')
                 .append(enc(p.getCategory())).append('\t').append(Integer.toHexString(p.getColor()))
-                .append('\t').append(enc(p.getIconId())).append('\t').append(p.isDeathWaypoint()).append('\n');
+                .append('\t').append(enc(p.getIconId())).append('\t').append(p.isDeathWaypoint())
+                .append('\t').append(p.isFavorite()).append('\t').append(p.isVisited()).append('\n');
         }
         return out.toString();
     }
@@ -36,7 +37,7 @@ public final class WaypointImportExport {
         for (int i=first; i<lines.length; i++) {
             if (lines[i].trim().isEmpty()) continue;
             String[] p=lines[i].split("\\t",-1);
-            if (p.length != 9 && p.length != 10) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
+            if (p.length != 9 && p.length != 10 && p.length != 12) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
             try {
                 double x = Double.parseDouble(p[3]);
                 double y = Double.parseDouble(p[4]);
@@ -54,6 +55,12 @@ public final class WaypointImportExport {
                     if (!"true".equalsIgnoreCase(p[9]) && !"false".equalsIgnoreCase(p[9]))
                         throw new IllegalArgumentException("Invalid death waypoint flag");
                     point.setDeathWaypoint(Boolean.parseBoolean(p[9]));
+                }
+                if(p.length==12) {
+                    if(!validBoolean(p[10])||!validBoolean(p[11]))
+                        throw new IllegalArgumentException("Invalid waypoint state flag");
+                    point.setFavorite(Boolean.parseBoolean(p[10]));
+                    point.setVisited(Boolean.parseBoolean(p[11]));
                 }
                 out.add(point);
             } catch (RuntimeException e) {
@@ -99,6 +106,9 @@ public final class WaypointImportExport {
             while ((n=reader.read(buf)) >= 0) text.append(buf,0,n);
             return importWaypoints(text.toString());
         } finally { reader.close(); }
+    }
+    private static boolean validBoolean(String value) {
+        return "true".equalsIgnoreCase(value)||"false".equalsIgnoreCase(value);
     }
     private static String enc(String value) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(

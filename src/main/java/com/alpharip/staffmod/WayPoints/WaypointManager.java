@@ -77,6 +77,8 @@ public final class WaypointManager {
         }
     }
 
+    private String currentProfile() { return WaypointSettings.getString("activeProfile","default"); }
+
     public synchronized StaffWaypoint add(String name, double x, double y, double z) {
         if (!finite(x) || !finite(y) || !finite(z))
             throw new IllegalArgumentException("Waypoint coordinates must be finite.");
@@ -87,6 +89,7 @@ public final class WaypointManager {
         StaffWaypoint point = new StaffWaypoint(name, server, dimension, x, y, z);
         point.setColor(WaypointCategoriesColors.colorFor(point.getCategory()));
         point.setIconId(WaypointSettings.getString("defaultIcon","pin"));
+        point.setProfileId(currentProfile());
         points.add(point);
         save();
         return point;
@@ -104,8 +107,10 @@ public final class WaypointManager {
                 || !finite(incoming.getX()) || !finite(incoming.getY()) || !finite(incoming.getZ())) return false;
         Minecraft mc = Minecraft.getMinecraft();
         String server = ServerWaypointIntegration.currentServerKey(mc);
+        String profile=currentProfile();
         for (StaffWaypoint existing : points) {
             if (server.equals(existing.getServerKey())
+                    && profile.equalsIgnoreCase(existing.getProfileId())
                     && existing.getDimensionId() == incoming.getDimensionId()
                     && existing.getLabel().equalsIgnoreCase(incoming.getLabel().trim())
                     && Math.abs(existing.getX() - incoming.getX()) < 0.001D
@@ -118,6 +123,9 @@ public final class WaypointManager {
         point.setColor(incoming.getColor());
         point.setIconId(incoming.getIconId());
         point.setDeathWaypoint(incoming.isDeathWaypoint());
+        point.setFavorite(incoming.isFavorite());
+        point.setVisited(incoming.isVisited());
+        point.setProfileId(profile);
         points.add(point);
         return true;
     }
@@ -131,12 +139,31 @@ public final class WaypointManager {
         return Collections.unmodifiableList(new ArrayList<StaffWaypoint>(points));
     }
 
+    public synchronized List<String> getProfilesForCurrentServer() {
+        load();
+        Minecraft mc=Minecraft.getMinecraft();
+        String server=ServerWaypointIntegration.currentServerKey(mc);
+        List<String> result=new ArrayList<String>();
+        result.add("default");
+        for(StaffWaypoint point:points)
+            if(server.equals(point.getServerKey())&&!containsIgnoreCase(result,point.getProfileId()))result.add(point.getProfileId());
+        String active=currentProfile();
+        if(!containsIgnoreCase(result,active))result.add(active);
+        return Collections.unmodifiableList(result);
+    }
+    private static boolean containsIgnoreCase(List<String> values,String value) {
+        for(String existing:values)if(existing.equalsIgnoreCase(value))return true;
+        return false;
+    }
+
     public synchronized List<StaffWaypoint> getForCurrentServer() {
         load();
         Minecraft mc = Minecraft.getMinecraft();
         String server = ServerWaypointIntegration.currentServerKey(mc);
+        String profile = currentProfile();
         List<StaffWaypoint> result = new ArrayList<StaffWaypoint>();
-        for (StaffWaypoint point : points) if (server.equals(point.getServerKey())) result.add(point);
+        for (StaffWaypoint point : points)
+            if (server.equals(point.getServerKey()) && profile.equalsIgnoreCase(point.getProfileId())) result.add(point);
         return Collections.unmodifiableList(result);
     }
 
@@ -146,8 +173,10 @@ public final class WaypointManager {
         List<StaffWaypoint> result = new ArrayList<StaffWaypoint>();
         if (mc == null || mc.thePlayer == null) return Collections.unmodifiableList(result);
         String server = ServerWaypointIntegration.currentServerKey(mc);
+        String profile = currentProfile();
         for (StaffWaypoint point : points) {
-            if (server.equals(point.getServerKey()) && point.getDimensionId() == mc.thePlayer.dimension) result.add(point);
+            if (server.equals(point.getServerKey()) && profile.equalsIgnoreCase(point.getProfileId())
+                    && point.getDimensionId() == mc.thePlayer.dimension) result.add(point);
         }
         return Collections.unmodifiableList(result);
     }
@@ -159,12 +188,13 @@ public final class WaypointManager {
         if (normalized.isEmpty()) return null;
         String server = ServerWaypointIntegration.currentServerKey(Minecraft.getMinecraft());
         for (StaffWaypoint point : points) {
-            if (!server.equals(point.getServerKey())) continue;
+            if (!server.equals(point.getServerKey()) || !currentProfile().equalsIgnoreCase(point.getProfileId())) continue;
             if (point.getId().equalsIgnoreCase(normalized)
                     || point.getLabel().equalsIgnoreCase(normalized)) return point;
         }
         for (StaffWaypoint point : points) {
-            if (server.equals(point.getServerKey()) && point.getId().regionMatches(true, 0, normalized, 0, normalized.length())) return point;
+            if (server.equals(point.getServerKey()) && currentProfile().equalsIgnoreCase(point.getProfileId())
+                    && point.getId().regionMatches(true, 0, normalized, 0, normalized.length())) return point;
         }
         return null;
     }
@@ -174,9 +204,7 @@ public final class WaypointManager {
         if (point == null) return false;
         points.remove(point);
         if (point.getId().equals(selectedId)) selectedId = "";
-        RouteBetweenWaypoints activeRoute = getRoute();
-        if (point.getId().equals(activeRoute.getStartWaypointId())
-                || point.getId().equals(activeRoute.getEndWaypointId())) clearRoute();
+        if (getRoute().contains(point.getId())) clearRoute();
         save();
         return true;
     }
@@ -184,7 +212,9 @@ public final class WaypointManager {
     public synchronized void clearCurrentServer() {
         load();
         String server = ServerWaypointIntegration.currentServerKey(Minecraft.getMinecraft());
-        for (int i=points.size()-1; i>=0; i--) if (server.equals(points.get(i).getServerKey())) points.remove(i);
+        String profile = currentProfile();
+        for (int i=points.size()-1; i>=0; i--)
+            if (server.equals(points.get(i).getServerKey()) && profile.equalsIgnoreCase(points.get(i).getProfileId())) points.remove(i);
         selectedId = "";
         clearRoute();
         save();
@@ -201,15 +231,38 @@ public final class WaypointManager {
     public synchronized String getSelectedId() { return selectedId; }
     public synchronized RouteBetweenWaypoints getRoute() { return route; }
     public synchronized void setRoute(String startId, String endId) { route.set(startId, endId); select(endId); }
+    public synchronized boolean setRoute(List<StaffWaypoint> waypoints) {
+        boolean set=route.setPath(waypoints);
+        if(set)select(route.getEndWaypointId());
+        return set;
+    }
+    public synchronized List<StaffWaypoint> getRouteWaypoints() {
+        List<StaffWaypoint> result=new ArrayList<StaffWaypoint>();
+        for(String id:route.getWaypointIds()) {
+            StaffWaypoint point=find(id);
+            if(point==null)return Collections.emptyList();
+            result.add(point);
+        }
+        return Collections.unmodifiableList(result);
+    }
     public synchronized void clearRoute() { route.clear(); }
+    public synchronized void setActiveProfile(String profile) {
+        if (profile == null || profile.trim().isEmpty()) throw new IllegalArgumentException("Profile name cannot be empty.");
+        String normalized=profile.trim();
+        if(normalized.length()>32)throw new IllegalArgumentException("Profile names can contain at most 32 characters.");
+        WaypointSettings.setString("activeProfile",normalized);
+        selectedId="";
+        route.clear();
+    }
     public synchronized void saveChanges() { save(); }
 
     public synchronized List<StaffWaypoint> getSortedCurrentWorld() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null) return getForCurrentWorld();
-        return new WaypointsSortedByDistance().sort(getAll(),
-                ServerWaypointIntegration.currentServerKey(mc), mc.thePlayer.dimension,
-                mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+        return new WaypointsSortedByDistance().sort(getForCurrentWorld(),
+                ServerWaypointIntegration.currentServerKey(mc), currentProfile(), mc.thePlayer.dimension,
+                mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ,
+                WaypointSettings.getString("sortMode","distance"));
     }
 
     public synchronized int addAllImported(List<StaffWaypoint> imported) {

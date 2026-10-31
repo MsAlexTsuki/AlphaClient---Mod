@@ -39,7 +39,9 @@ public final class WorldWaypointIcons {
         if("diamond".equalsIgnoreCase(id))return "<>";
         if("chest".equalsIgnoreCase(id))return "C";
         if("event".equalsIgnoreCase(id))return "E";
-        return "P";
+        if(id==null||id.trim().isEmpty()||"pin".equalsIgnoreCase(id))return "P";
+        String custom=id.trim();
+        return custom.length()>4?custom.substring(0,4):custom;
     }
 
     private static void drawBlockOutline(StaffWaypoint point,RenderManager rm,float red,float green,float blue) {
@@ -122,19 +124,21 @@ public final class WorldWaypointIcons {
                     GlStateManager.popMatrix();
                 }
             }
-            RouteBetweenWaypoints route=WaypointManager.getInstance().getRoute();
-            if(route.isActive()) {
-                StaffWaypoint start=WaypointManager.getInstance().find(route.getStartWaypointId());
-                StaffWaypoint end=WaypointManager.getInstance().find(route.getEndWaypointId());
-                if(start!=null&&end!=null&&start.getServerKey().equals(end.getServerKey())
-                        &&start.getDimensionId()==end.getDimensionId()
-                        &&ServerWaypointIntegration.belongsToCurrentWorld(start,mc)) {
+            List<StaffWaypoint> routePoints=WaypointManager.getInstance().getRouteWaypoints();
+            if(routePoints.size()>=2) {
+                boolean sameWorld=true;
+                for(StaffWaypoint point:routePoints)
+                    if(!ServerWaypointIntegration.belongsToCurrentWorld(point,mc)){sameWorld=false;break;}
+                if(sameWorld) {
                     GlStateManager.disableTexture2D();
                     GL11.glColor4f(1.0F,0.78F,0.24F,0.85F);
                     GL11.glLineWidth(2.0F);
                     GL11.glBegin(GL11.GL_LINES);
-                    GL11.glVertex3d(start.getX()+0.5D-rm.viewerPosX,start.getY()+0.5D-rm.viewerPosY,start.getZ()+0.5D-rm.viewerPosZ);
-                    GL11.glVertex3d(end.getX()+0.5D-rm.viewerPosX,end.getY()+0.5D-rm.viewerPosY,end.getZ()+0.5D-rm.viewerPosZ);
+                    for(int i=1;i<routePoints.size();i++) {
+                        StaffWaypoint start=routePoints.get(i-1),end=routePoints.get(i);
+                        GL11.glVertex3d(start.getX()+0.5D-rm.viewerPosX,start.getY()+0.5D-rm.viewerPosY,start.getZ()+0.5D-rm.viewerPosZ);
+                        GL11.glVertex3d(end.getX()+0.5D-rm.viewerPosX,end.getY()+0.5D-rm.viewerPosY,end.getZ()+0.5D-rm.viewerPosZ);
+                    }
                     GL11.glEnd();
                     GlStateManager.enableTexture2D();
                 }

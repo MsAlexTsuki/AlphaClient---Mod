@@ -18,7 +18,7 @@ public final class WaypointCommand extends CommandBase {
     private final ShareWaypointsWithFriends sharing = new ShareWaypointsWithFriends();
 
     @Override public String getCommandName() { return "waypoint"; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/waypoint [open|visuals|add|list|select|remove|route|import|export]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/waypoint [open|visuals|profile|add|list|select|favorite|icon|route|history]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override
@@ -34,7 +34,42 @@ public final class WaypointCommand extends CommandBase {
         String action=args[0].toLowerCase(Locale.ROOT);
         WaypointManager manager=WaypointManager.getInstance();
         try {
-            if("add".equals(action)) {
+            if("profile".equals(action)) {
+                if(args.length<2){reply(sender,"Active waypoint profile: "+WaypointSettings.getString("activeProfile","default"));return;}
+                manager.setActiveProfile(join(args,1));
+                reply(sender,"Switched to waypoint profile "+WaypointSettings.getString("activeProfile","default")+".");
+            } else if("favorite".equals(action)) {
+                StaffWaypoint point=find(manager,args,1);
+                if(point==null){reply(sender,"Waypoint not found in this profile.");return;}
+                point.setFavorite(!point.isFavorite());manager.saveChanges();
+                reply(sender,(point.isFavorite()?"Pinned ":"Unpinned ")+point.getLabel()+".");
+            } else if("icon".equals(action)) {
+                if(args.length<3){reply(sender,"Usage: /waypoint icon <waypoint name> <symbol up to 4 characters>");return;}
+                StaffWaypoint point=manager.find(args[1]);
+                String symbol=join(args,2);
+                if(point==null){reply(sender,"Waypoint not found in this profile.");return;}
+                if(symbol.trim().isEmpty()||symbol.length()>4){reply(sender,"Custom icons need 1 to 4 characters.");return;}
+                point.setIconId(symbol);manager.saveChanges();
+                reply(sender,"Icon updated for "+point.getLabel()+".");
+            } else if("history".equals(action)) {
+                List<WaypointTracker.CoordinateEntry> history=WaypointTracker.getInstance().getHistoryForCurrentWorld();
+                if(args.length>=3&&"add".equalsIgnoreCase(args[1])) {
+                    int index=Integer.parseInt(args[2])-1;
+                    if(index<0||index>=history.size()){reply(sender,"History index is out of range.");return;}
+                    WaypointTracker.CoordinateEntry entry=history.get(index);
+                    String name=args.length>3?join(args,3):"History "+(index+1);
+                    StaffWaypoint point=manager.add(name,entry.getX(),entry.getY(),entry.getZ());
+                    reply(sender,"Waypoint created from history: "+point.getLabel()+" ("+coords(point)+").");
+                    return;
+                }
+                if(history.isEmpty()){reply(sender,"No coordinate history for this world yet.");return;}
+                reply(sender,"Recent coordinates (newest first):");
+                for(int i=0;i<history.size()&&i<15;i++) {
+                    WaypointTracker.CoordinateEntry entry=history.get(i);
+                    reply(sender,(i+1)+". "+(int)Math.floor(entry.getX())+", "+(int)Math.floor(entry.getY())+", "+(int)Math.floor(entry.getZ()));
+                }
+                reply(sender,"Create one with /waypoint history add <number> [name].");
+            } else if("add".equals(action)) {
                 if(mc.thePlayer==null){reply(sender,"Join a world before creating a waypoint.");return;}
                 String name=args.length>1?join(args,1):"Waypoint";
                 StaffWaypoint p=manager.add(name,mc.thePlayer.posX,mc.thePlayer.posY,mc.thePlayer.posZ);
@@ -47,14 +82,15 @@ public final class WaypointCommand extends CommandBase {
             } else if("list".equals(action)) {
                 List<StaffWaypoint> list=manager.getSortedCurrentWorld();
                 if(list.isEmpty()){reply(sender,"No waypoints in this world yet.");return;}
-                reply(sender,"Waypoints (nearest first):");
+                reply(sender,"Waypoints (favorites first; sort: "+WaypointSettings.getString("sortMode","distance")+"):");
                 if (mc.thePlayer != null) {
                     for (StaffWaypoint p : list) {
                         double dx = p.getX() - mc.thePlayer.posX;
                         double dy = p.getY() - mc.thePlayer.posY;
                         double dz = p.getZ() - mc.thePlayer.posZ;
                         long distance = Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz));
-                        reply(sender, p.getLabel() + " — " + coords(p) + " (" + distance + "m)"
+                        reply(sender, (p.isFavorite()?"[F] ":"") + p.getLabel() + " — " + coords(p) + " (" + distance + "m)"
+                                + (p.isVisited()?" [visited]":"")
                                 + (p.getId().equals(manager.getSelectedId()) ? " [selected]" : ""));
                     }
                 } else {
@@ -69,21 +105,35 @@ public final class WaypointCommand extends CommandBase {
                 if(manager.remove(join(args,1))) reply(sender,"Waypoint removed.");
                 else reply(sender,"Waypoint not found.");
             } else if("route".equals(action)) {
-                if(args.length<3){reply(sender,"Usage: /waypoint route <start name> <end name> (quote names with spaces)");return;}
-                StaffWaypoint start=manager.find(args[1]), end=manager.find(join(args,2));
-                if(start==null||end==null){reply(sender,"Both waypoints must exist.");return;}
-                if(!start.getServerKey().equals(end.getServerKey())||start.getDimensionId()!=end.getDimensionId()) {
-                    reply(sender,"A route can only connect waypoints in the same server and dimension.");return;
+                if(args.length<3){reply(sender,"Usage: /waypoint route <start> <end> [stop ...]; quote names with spaces.");return;}
+                List<StaffWaypoint> routePoints=new ArrayList<StaffWaypoint>();
+                if(args.length==3) {
+                    StaffWaypoint start=manager.find(args[1]),end=manager.find(args[2]);
+                    if(start==null||end==null){reply(sender,"Both waypoints must exist in this profile.");return;}
+                    routePoints.add(start);routePoints.add(end);
+                } else {
+                    for(int i=1;i<args.length;i++) {
+                        StaffWaypoint point=manager.find(args[i]);
+                        if(point==null){reply(sender,"Waypoint not found: "+args[i]);return;}
+                        routePoints.add(point);
+                    }
                 }
-                manager.setRoute(start.getId(),end.getId());
-                reply(sender,"Route set: "+start.getLabel()+" → "+end.getLabel()+" ("+Math.round(manager.getRoute().getDistance(start,end))+"m).");
+                StaffWaypoint first=routePoints.get(0),last=routePoints.get(routePoints.size()-1);
+                for(StaffWaypoint point:routePoints)
+                    if(!first.getServerKey().equals(point.getServerKey())||first.getDimensionId()!=point.getDimensionId()) {
+                        reply(sender,"Every route point must be in the same server and dimension.");return;
+                    }
+                if(!manager.setRoute(routePoints)){reply(sender,"Could not create this route.");return;}
+                double direct=manager.getRoute().getDistance(first,last);
+                double via=manager.getRoute().getTotalDistance(routePoints);
+                reply(sender,"Route set with "+routePoints.size()+" points. Direct: "+Math.round(direct)+"m; via stops: "+Math.round(via)+"m.");
             } else if("clearroute".equals(action)) {
                 manager.clearRoute(); reply(sender,"Route cleared.");
             } else if("clear".equals(action)) {
                 if(args.length<2||!"confirm".equalsIgnoreCase(args[1])) {
-                    reply(sender,"This deletes every waypoint on this server. Confirm with /waypoint clear confirm."); return;
+                    reply(sender,"This deletes waypoints in the active profile on this server. Confirm with /waypoint clear confirm."); return;
                 }
-                manager.clearCurrentServer(); reply(sender,"Waypoints for this server were cleared.");
+                manager.clearCurrentServer(); reply(sender,"Waypoints for this profile and server were cleared.");
             } else if("export".equals(action)||"share".equals(action)) {
                 File file=sharing.exportForSharing(manager.getForCurrentServer());
                 reply(sender,"Local waypoint export saved to "+file.getAbsolutePath()+". Share this file with a friend.");
@@ -100,19 +150,20 @@ public final class WaypointCommand extends CommandBase {
                 int rgb=Integer.parseInt(color,16);
                 point.setCategory(args[2]); point.setColor(rgb); manager.saveChanges();
                 reply(sender,"Updated "+point.getLabel()+" to category "+point.getCategory()+".");
-            } else if("minimap".equals(action)||"death".equals(action)||"clickcoords".equals(action)||"markers".equals(action)) {
+            } else if("minimap".equals(action)||"death".equals(action)||"clickcoords".equals(action)||"markers".equals(action)||"arrival".equals(action)) {
                 if(args.length<2){reply(sender,"Usage: /waypoint "+action+" <on|off>");return;}
                 boolean value="on".equalsIgnoreCase(args[1]);
                 if(!value&&!"off".equalsIgnoreCase(args[1])){reply(sender,"Usage: /waypoint "+action+" <on|off>");return;}
                 if("minimap".equals(action)) MinimapWithWaypoints.getInstance().setEnabled(value);
                 else if("death".equals(action)) DeathWaypointMod.getInstance().setEnabled(value);
                 else if("clickcoords".equals(action)) WaypointFromClickableCoordinates.getInstance().setEnabled(value);
+                else if("arrival".equals(action)) WaypointSettings.setBoolean("arrivalDetectionEnabled",value);
                 else WorldWaypointIcons.getInstance().setEnabled(value);
                 reply(sender,"Waypoint "+action+" "+(value?"enabled.":"disabled."));
             } else if("pattern".equals(action)) {
                 handlePattern(sender,args);
             } else if("help".equals(action)) {
-                reply(sender,"/waypoint open | visuals | add <name> | addat <x> <y> <z> | list | select <name> | remove <name> | route <start> <end> | clearroute | import | export | clear confirm | category | minimap | pattern <add|remove> ...");
+                reply(sender,"/waypoint open | visuals | profile <name> | favorite <name> | icon <name> <symbol> | history [add <number> [name]] | add <name> | addat <x> <y> <z> | list | select <name> | remove <name> | route <start> <end> [stop ...] | clearroute | import | export | clear confirm | category | minimap | arrival <on|off> | pattern <add|remove> ...");
             } else {
                 reply(sender,"Unknown action. Use /waypoint help.");
             }
@@ -153,11 +204,13 @@ public final class WaypointCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender,String[] args,BlockPos pos) {
         List<String> result=new ArrayList<String>();
         if(args.length==1) {
-            String[] actions={"open","visuals","options","add","addat","list","select","remove","route","clearroute","import","export","share","clear","category","minimap","death","clickcoords","markers","pattern","help"};
+            String[] actions={"open","visuals","options","profile","favorite","icon","history","add","addat","list","select","remove","route","clearroute","import","export","share","clear","category","minimap","death","clickcoords","markers","arrival","pattern","help"};
             String prefix=args[0].toLowerCase(Locale.ROOT);
             for(String a:actions) if(a.startsWith(prefix)) result.add(a);
-        } else if(args.length>=2&&("select".equalsIgnoreCase(args[0])||"remove".equalsIgnoreCase(args[0])||"delete".equalsIgnoreCase(args[0])||"goto".equalsIgnoreCase(args[0])||"route".equalsIgnoreCase(args[0]))) {
+        } else if(args.length>=2&&("select".equalsIgnoreCase(args[0])||"remove".equalsIgnoreCase(args[0])||"delete".equalsIgnoreCase(args[0])||"goto".equalsIgnoreCase(args[0])||"route".equalsIgnoreCase(args[0])||"favorite".equalsIgnoreCase(args[0]))) {
             return autocomplete.complete(args[args.length-1],WaypointManager.getInstance().getForCurrentServer());
+        } else if(args.length==2&&"icon".equalsIgnoreCase(args[0])) {
+            return autocomplete.complete(args[1],WaypointManager.getInstance().getForCurrentServer());
         } else if(args.length==2&&"pattern".equalsIgnoreCase(args[0])) {
             if("add".startsWith(args[1].toLowerCase(Locale.ROOT)))result.add("add");
             if("remove".startsWith(args[1].toLowerCase(Locale.ROOT)))result.add("remove");

@@ -43,13 +43,13 @@ public final class MinimapWithWaypoints {
                 Gui.drawRect(px-2,py-2,px+3,py+3,color);
             }
             RouteBetweenWaypoints route=WaypointManager.getInstance().getRoute();
-            if(route.isActive()) {
-                StaffWaypoint start=WaypointManager.getInstance().find(route.getStartWaypointId());
-                StaffWaypoint end=WaypointManager.getInstance().find(route.getEndWaypointId());
-                if(start!=null&&end!=null) {
-                    String routeText="ROUTE "+start.getLabel()+" -> "+end.getLabel()+" "+Math.round(route.getDistance(start,end))+"m";
-                    mc.fontRendererObj.drawStringWithShadow(routeText,left+5,top+SIZE-10,0xFFFFC83D);
-                }
+            List<StaffWaypoint> routePoints=WaypointManager.getInstance().getRouteWaypoints();
+            if(route.isActive()&&routePoints.size()>=2) {
+                StaffWaypoint start=routePoints.get(0),end=routePoints.get(routePoints.size()-1);
+                double direct=route.getDistance(start,end);
+                double via=route.getTotalDistance(routePoints);
+                String routeText="ROUTE "+Math.round(direct)+"m / "+Math.round(via)+"m";
+                mc.fontRendererObj.drawStringWithShadow(routeText,left+5,top+SIZE-10,0xFFFFC83D);
             }
             StaffWaypoint selected=WaypointManager.getInstance().getSelected();
             if(selected!=null&&ServerWaypointIntegration.belongsToCurrentWorld(selected,mc)) {

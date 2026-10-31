@@ -135,7 +135,7 @@ public final class WaypointsGui extends GuiScreen {
         drawRect(left,top,left+panelWidth,top+2,GOLD);
         drawRect(left+1,top+1,left+2,top+panelHeight-1,0x664B515D);
         drawString(fontRendererObj,"ALPHA  /  WAYPOINTS",left+14,top+12,0xFFF0F1F4);
-        drawString(fontRendererObj,"LOCAL MARKERS  ·  SORTED BY DISTANCE",left+14,top+30,GOLD);
+        drawString(fontRendererObj,"PROFILE "+WaypointSettings.getString("activeProfile","default")+"  ·  SORT "+WaypointSettings.getString("sortMode","distance"),left+14,top+30,GOLD);
         drawString(fontRendererObj,"Name",left+14,top+42,0xFFB8BDC8);
         nameField.drawTextBox();
         drawString(fontRendererObj,"Color",left+14,paletteTop+2,0xFFB8BDC8);
@@ -152,7 +152,7 @@ public final class WaypointsGui extends GuiScreen {
             StaffWaypoint p=points.get(i);int y=listTop+(i-scroll)*16;
             if(p.getId().equals(selectedId))drawRect(left+13,y-1,left+panelWidth-13,y+14,0xAA363B45);
             drawRect(left+18,y+3,left+24,y+9,WorldWaypointIcons.getDisplayColor(p));
-            String line=p.getLabel()+"   "+(int)Math.floor(p.getX())+", "+(int)Math.floor(p.getY())+", "+(int)Math.floor(p.getZ());
+            String line=(p.isFavorite()?"* ":"")+p.getLabel()+(p.isVisited()?" [visited]":"")+"   "+(int)Math.floor(p.getX())+", "+(int)Math.floor(p.getY())+", "+(int)Math.floor(p.getZ());
             int max=panelWidth-76;if(fontRendererObj.getStringWidth(line)>max)line=fontRendererObj.trimStringToWidth(line,max-8)+"…";
             fontRendererObj.drawStringWithShadow(line,left+29,y+2,0xFFE6E8ED);
         }
