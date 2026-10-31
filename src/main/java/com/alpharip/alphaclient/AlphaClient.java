@@ -47,6 +47,8 @@ import com.alpharip.staffmod.quality.AutoRespawnMod;
 import com.alpharip.staffmod.combat.LowHealthWarningMod;
 import com.alpharip.staffmod.hud.PotionExpirationWarningMod;
 import com.alpharip.staffmod.hud.BlockCounterHud;
+import com.alpharip.staffmod.CommandPalette.CommandPalette;
+import com.alpharip.staffmod.CommandPalette.CommandPaletteCommand;
 import com.alpharip.staffmod.WayPoints.DeathWaypointMod;
 import com.alpharip.staffmod.WayPoints.EventCountdownHub;
 import com.alpharip.staffmod.WayPoints.MinimapWithWaypoints;
@@ -142,6 +144,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
         registerClientCommands();
+        ClientCommandHandler.instance.registerCommand(new CommandPaletteCommand());
         WaypointManager.getInstance().load();
         ClientCommandHandler.instance.registerCommand(new WaypointCommand());
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
@@ -240,6 +243,7 @@ public final class AlphaClient {
                 "AlphaClient"
         );
         ClientRegistry.registerKeyBinding(openModMenuKey);
+        CommandPalette.getInstance().register();
         syncBhopKeyBindingVisibility();
 
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
