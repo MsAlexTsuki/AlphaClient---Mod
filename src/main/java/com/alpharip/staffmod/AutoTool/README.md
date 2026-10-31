@@ -1,59 +1,43 @@
 # AutoTool
 
-AutoTool is a client-side Minecraft 1.8.9 helper. When enabled, it selects a suitable hotbar item when the local player starts mining a block.
+AutoTool is a client-side Minecraft 1.8.9 helper. It chooses a suitable item from the hotbar when the local player starts mining a block.
 
-## Current behavior
+## Implemented behavior
 
-- Checks all nine hotbar slots.
-- Prefers items that can harvest the targeted block, then compares block-breaking strength.
-- Treats an empty hand as the normal baseline and ignores invalid or non-finite strength values.
-- Synchronizes a changed slot before vanilla sends its block-breaking action.
-- Optional switch-back to the original slot after mining stops.
-- Leaves a manual hotbar selection alone.
-- Does not move items or alter inventory stacks.
-- Disabled by default. Settings are stored in `config/alphaclient/autotool.properties`.
+- Checks all nine hotbar slots and does not move items or change stack contents.
+- Prefers an item that can harvest the block. When suitable options exist, it avoids tools below the configured remaining-durability reserve.
+- Supports an item preference for each block and an ignore list for tools.
+- Compares base block-breaking strength and, when enabled, the vanilla Efficiency enchantment bonus.
+- When strength and harvestability are tied, it can prefer the tool with more durability remaining.
+- Synchronizes a changed slot before vanilla sends the block-breaking action.
+- Offers three switch-back modes: never, after attack is released, or after the block breaks. Release mode has a configurable tick delay.
+- Can be paused with the **AutoTool: Pause** keybind (default **P**). Choose hold-to-pause or toggle-to-pause. While paused, a HUD notice explains the state.
+- Optional context pauses: while using an item, while sneaking, or in Survival, Creative, or Adventure.
+- Optional chat feedback names the selected tool and why it was chosen. A cooldown prevents message spam.
+- Disabled by default.
 
-Open the settings screen with `/autotool settings`. The GUI has toggles for AutoTool and switch-back; press **Done** or **Esc** to return to the previous screen.
+## GUI and commands
+
+Open the three-page settings GUI with `/autotool settings`. It includes the main toggles, switch-back mode and delay, durability reserve, Efficiency ranking, tie-breaker, pause mode, and context rules. The GUI also displays whether settings use global defaults or the local profile. Press **Esc** or **Done** to return.
 
 Commands:
 
 - `/autotool on|off|toggle`
-- `/autotool revert on|off`
+- `/autotool profile` — shows whether global settings or a local profile is active.
+- `/autotool swapback <never|release|broken> [delayTicks]` — delay is 0–100 ticks and applies to release mode.
+- `/autotool durability <0-100>` — minimum remaining durability percentage.
+- `/autotool pausemode <hold|toggle>`
+- `/autotool prefer <block-id> <item-id|clear>` — example: `/autotool prefer minecraft:stone minecraft:diamond_pickaxe`.
+- `/autotool ignore <add|remove> <item-id>` — example: `/autotool ignore add minecraft:diamond_pickaxe`.
 
-Selection uses Minecraft 1.8.9's `ItemStack.canHarvestBlock` and `ItemStack.getStrVsBlock`. Server-specific rules and custom item behavior may still differ.
+Use registry IDs (including the namespace, such as `minecraft:`). Preferences are used only when the chosen stack can harvest the target block. If all suitable tools are below the durability reserve, AutoTool still chooses the best available tool.
 
-## Worked-out ideas
+## Settings and profiles
 
-### 1. Per-block tool preferences — high value
-Let the player choose a preferred hotbar slot or tool type for a block (for example, always use a silk-touch pickaxe for ore). Use the preference only when that item is present and can harvest the block; otherwise fall back to normal selection. Store preferences locally and provide a clear reset option.
+Settings are stored locally in `config/alphaclient/autotool.properties`. These act as global defaults. Per-server or per-singleplayer-world overrides are saved under `config/alphaclient/autotool-profiles/`; filenames use a SHA-256 hash of the server address or world name, so the raw identity is not written into the profile filename. A local profile overrides only the values it sets and inherits the rest from the global settings.
 
-### 2. Tool durability protection — high value
-Add a configurable minimum durability reserve. AutoTool should avoid a nearly broken tool when another tool can still harvest the block. If every suitable tool is below the threshold, choose the best available one instead of refusing to help.
+Older `swapBack=true` settings are read as the `release` mode. New settings are written as profile overrides when a world/server is active.
 
-### 3. Switch-back modes — high value
-Offer three predictable modes: never switch back, switch back shortly after attack is released, or switch back after the targeted block is destroyed. A short delay should be configurable and canceled if the player changes slots manually or starts mining another block.
+## Selection notes
 
-### 4. Temporary pause key — medium value
-Add a keybind to pause AutoTool while held, plus an optional toggle mode. Show a small status indicator so the player knows why automatic selection is paused. Manual slot changes should always take priority.
-
-### 5. Ignore and preferred-item lists — medium value
-Allow items to be excluded (such as a silk-touch tool) and optional preferred items to be named for certain blocks. Keep selection safe: ignore entries should never cause an unsuitable tool to be selected when a valid alternative exists.
-
-### 6. Efficiency-aware selection — medium value
-Use known enchantment bonuses when comparing tools, but only where the game client can calculate them correctly. Keep harvestability as a hard preference and fall back to the current vanilla strength comparison for unknown modded item behavior.
-
-### 7. Context rules — medium value
-Add opt-in rules to pause switching while using an item, sneaking, or playing in selected game modes. Default these rules off so they do not unexpectedly disable AutoTool.
-
-### 8. Selection feedback — low effort
-Optionally show the chosen tool name and a short reason such as “can harvest” or “faster” in the action bar. Add a cooldown so the message does not repeat every tick or for every block in a vein.
-
-### 9. Durability tie-breaker — low effort
-When two items have equal harvestability and nearly identical strength, prefer the one with more durability remaining. This complements the durability threshold without replacing it.
-
-### 10. Per-world profiles — later
-Save settings and preferences separately per server/world, with a global fallback profile. Profiles should be local-only and identify servers carefully so unrelated servers do not accidentally share settings.
-
-## Suggested order
-
-Start with durability protection, per-block preferences, and switch-back modes because they change the core tool choice in useful, understandable ways. Add pause and feedback afterward. Keep profiles and enchantment-aware ranking for later, since they need more settings and careful compatibility handling.
+AutoTool uses Minecraft 1.8.9's `ItemStack.canHarvestBlock` and `ItemStack.getStrVsBlock`, then adds the known vanilla Efficiency bonus when requested. Server-side plugins, custom items, or modded block rules can still disagree with client-side estimates. Item preferences, ignored item IDs, and profile values are local to the client.
