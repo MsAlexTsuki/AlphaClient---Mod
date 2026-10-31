@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /** UTF-8 TSV import/export for moving local waypoints between friends or servers. */
 public final class WaypointImportExport {
@@ -66,8 +69,27 @@ public final class WaypointImportExport {
         return new File(base, "waypoints-share.tsv");
     }
     public void write(File file, List<StaffWaypoint> points) throws IOException {
-        Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
-        try { writer.write(exportWaypoints(points)); } finally { writer.close(); }
+        if (file == null) throw new IOException("Export file is missing.");
+        File absolute = file.getAbsoluteFile();
+        File parent = absolute.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.isDirectory())
+            throw new IOException("Could not create export directory.");
+        File temporary = new File(parent, absolute.getName() + ".tmp");
+        Writer writer = null;
+        try {
+            writer = new OutputStreamWriter(new FileOutputStream(temporary), StandardCharsets.UTF_8);
+            writer.write(exportWaypoints(points));
+            writer.close();
+            writer = null;
+            try {
+                Files.move(temporary.toPath(), absolute.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException ignored) {
+                Files.move(temporary.toPath(), absolute.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            if (writer != null) writer.close();
+        }
     }
     public List<StaffWaypoint> read(File file) throws IOException {
         if (file == null || !file.isFile()) return Collections.emptyList();

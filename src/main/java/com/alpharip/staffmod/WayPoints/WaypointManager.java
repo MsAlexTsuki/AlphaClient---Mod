@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /** Central local store for waypoint records. Each record is tagged by server and dimension. */
 public final class WaypointManager {
@@ -33,7 +36,11 @@ public final class WaypointManager {
         try {
             reader = new InputStreamReader(new FileInputStream(file), "UTF-8");
             List<StaffWaypoint> saved = GSON.fromJson(reader, LIST_TYPE);
-            if (saved != null) for (StaffWaypoint point : saved) if (point != null) points.add(point);
+            if (saved != null) for (StaffWaypoint point : saved) {
+                if (point == null) continue;
+                point.normalize();
+                if (finite(point.getX()) && finite(point.getY()) && finite(point.getZ())) points.add(point);
+            }
         } catch (Exception e) {
             System.err.println("[AlphaClient] Could not load waypoints: " + e.getMessage());
         } finally { if (reader != null) try { reader.close(); } catch (IOException ignored) { } }
@@ -49,13 +56,25 @@ public final class WaypointManager {
     private synchronized void save() {
         load();
         Writer writer = null;
+        File temporary = null;
         try {
             File file = getFile();
-            writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
+            temporary = new File(file.getParentFile(), file.getName() + ".tmp");
+            writer = new OutputStreamWriter(new FileOutputStream(temporary), "UTF-8");
             GSON.toJson(points, LIST_TYPE, writer);
+            writer.close();
+            writer = null;
+            try {
+                Files.move(temporary.toPath(), file.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException ignored) {
+                Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (Exception e) {
             System.err.println("[AlphaClient] Could not save waypoints: " + e.getMessage());
-        } finally { if (writer != null) try { writer.close(); } catch (IOException ignored) { } }
+        } finally {
+            if (writer != null) try { writer.close(); } catch (IOException ignored) { }
+        }
     }
 
     public synchronized StaffWaypoint add(String name, double x, double y, double z) {

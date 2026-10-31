@@ -45,6 +45,17 @@ public final class StaffWaypoint {
     public String getIconId() { return iconId; }
     public boolean isDeathWaypoint() { return deathWaypoint; }
 
+    /** Repairs optional fields when loading older or partially written local records. */
+    void normalize() {
+        if (id == null || id.trim().isEmpty()) id = UUID.randomUUID().toString();
+        label = clean(label, "Waypoint");
+        serverKey = clean(serverKey, "singleplayer");
+        dimension = String.valueOf(dimensionId);
+        category = clean(category, "General");
+        iconId = clean(iconId, "pin");
+        color = 0xFF000000 | (color & 0xFFFFFF);
+    }
+
     public void set(String label, String dimension, double x, double y, double z) {
         this.label = clean(label, "Waypoint");
         this.dimension = clean(dimension, "0");
