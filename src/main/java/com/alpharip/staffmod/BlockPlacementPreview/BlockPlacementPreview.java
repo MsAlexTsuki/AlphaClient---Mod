@@ -56,8 +56,8 @@ public final class BlockPlacementPreview {
         Block block = itemBlock.getBlock();
         BlockPos clickedPos = hit.getBlockPos();
         IBlockState clickedState = world.getBlockState(clickedPos);
-        BlockPos placePos = clickedState.getBlock().isReplaceable(world, clickedPos)
-                ? clickedPos : clickedPos.offset(hit.sideHit);
+        boolean replacingTarget = clickedState.getBlock().isReplaceable(world, clickedPos);
+        BlockPos placePos = replacingTarget ? clickedPos : clickedPos.offset(hit.sideHit);
 
         float hitX = clampToBlock(hit.hitVec.xCoord - clickedPos.getX());
         float hitY = clampToBlock(hit.hitVec.yCoord - clickedPos.getY());
@@ -94,9 +94,32 @@ public final class BlockPlacementPreview {
         boolean blocked = !block.canPlaceBlockAt(world, placePos);
         if (!blocked && collisionBox != null) {
             List<AxisAlignedBB> collisions = world.getCollidingBoundingBoxes(player, collisionBox);
+            if (collisions != null && replacingTarget) {
+                AxisAlignedBB replacedBox = null;
+                try {
+                    replacedBox = clickedState.getBlock().getCollisionBoundingBox(
+                            world, clickedPos, clickedState);
+                } catch (RuntimeException ignored) {
+                    // Keep the other collision results if the replaced block has no valid bounds.
+                }
+                removeFirstMatchingBox(collisions, replacedBox);
+            }
             blocked = collisions != null && !collisions.isEmpty();
         }
         return new Preview(displayBox, blocked);
+    }
+
+    private static void removeFirstMatchingBox(List<AxisAlignedBB> boxes, AxisAlignedBB ignoredBox) {
+        if (boxes == null || ignoredBox == null) return;
+        for (int i = 0; i < boxes.size(); i++) {
+            AxisAlignedBB box = boxes.get(i);
+            if (box != null && box.minX == ignoredBox.minX && box.minY == ignoredBox.minY
+                    && box.minZ == ignoredBox.minZ && box.maxX == ignoredBox.maxX
+                    && box.maxY == ignoredBox.maxY && box.maxZ == ignoredBox.maxZ) {
+                boxes.remove(i);
+                return;
+            }
+        }
     }
 
     private static AxisAlignedBB getBakedModelBounds(World world, BlockPos pos, IBlockState state) {
