@@ -118,7 +118,8 @@ public final class WaypointsGui extends GuiScreen {
         super.handleMouseInput();
         int wheel=Mouse.getDWheel();
         if(wheel!=0) {
-            int max=Math.max(0,WaypointManager.getInstance().getSortedCurrentWorld().size()-8);
+            int visible=Math.max(0,(top+panelHeight-57-listTop)/16);
+            int max=Math.max(0,WaypointManager.getInstance().getSortedCurrentWorld().size()-visible);
             scroll=Math.max(0,Math.min(max,scroll+(wheel>0?-1:1)));
         }
     }

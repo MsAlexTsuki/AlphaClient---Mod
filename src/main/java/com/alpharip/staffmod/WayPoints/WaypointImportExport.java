@@ -9,7 +9,7 @@ import java.util.List;
 
 /** UTF-8 TSV import/export for moving local waypoints between friends or servers. */
 public final class WaypointImportExport {
-    private static final String HEADER = "name\tserver\tdimension\tx\ty\tz\tcategory\tcolor\ticon\n";
+    private static final String HEADER = "name\tserver\tdimension\tx\ty\tz\tcategory\tcolor\ticon\tdeath\n";
 
     public String exportWaypoints(List<StaffWaypoint> list) {
         StringBuilder out = new StringBuilder(HEADER);
@@ -20,7 +20,7 @@ public final class WaypointImportExport {
                 .append(p.getDimensionId()).append('\t').append(p.getX()).append('\t')
                 .append(p.getY()).append('\t').append(p.getZ()).append('\t')
                 .append(enc(p.getCategory())).append('\t').append(Integer.toHexString(p.getColor()))
-                .append('\t').append(enc(p.getIconId())).append('\n');
+                .append('\t').append(enc(p.getIconId())).append('\t').append(p.isDeathWaypoint()).append('\n');
         }
         return out.toString();
     }
@@ -33,7 +33,7 @@ public final class WaypointImportExport {
         for (int i=first; i<lines.length; i++) {
             if (lines[i].trim().isEmpty()) continue;
             String[] p=lines[i].split("\\t",-1);
-            if (p.length != 9) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
+            if (p.length != 9 && p.length != 10) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
             try {
                 double x = Double.parseDouble(p[3]);
                 double y = Double.parseDouble(p[4]);
@@ -47,6 +47,11 @@ public final class WaypointImportExport {
                 point.setCategory(dec(p[6]));
                 point.setColor((int)Long.parseLong(p[7],16));
                 point.setIconId(dec(p[8]));
+                if (p.length == 10) {
+                    if (!"true".equalsIgnoreCase(p[9]) && !"false".equalsIgnoreCase(p[9]))
+                        throw new IllegalArgumentException("Invalid death waypoint flag");
+                    point.setDeathWaypoint(Boolean.parseBoolean(p[9]));
+                }
                 out.add(point);
             } catch (RuntimeException e) {
                 throw new IllegalArgumentException("Invalid waypoint data on line " + (i+1), e);

@@ -59,6 +59,8 @@ public final class WaypointManager {
     }
 
     public synchronized StaffWaypoint add(String name, double x, double y, double z) {
+        if (!finite(x) || !finite(y) || !finite(z))
+            throw new IllegalArgumentException("Waypoint coordinates must be finite.");
         load();
         Minecraft mc = Minecraft.getMinecraft();
         String server = ServerWaypointIntegration.currentServerKey(mc);
@@ -78,7 +80,8 @@ public final class WaypointManager {
     }
 
     private boolean copyImported(StaffWaypoint incoming) {
-        if (incoming == null || incoming.getLabel() == null || incoming.getLabel().trim().isEmpty()) return false;
+        if (incoming == null || incoming.getLabel() == null || incoming.getLabel().trim().isEmpty()
+                || !finite(incoming.getX()) || !finite(incoming.getY()) || !finite(incoming.getZ())) return false;
         Minecraft mc = Minecraft.getMinecraft();
         String server = ServerWaypointIntegration.currentServerKey(mc);
         for (StaffWaypoint existing : points) {
@@ -97,6 +100,10 @@ public final class WaypointManager {
         point.setDeathWaypoint(incoming.isDeathWaypoint());
         points.add(point);
         return true;
+    }
+
+    private static boolean finite(double value) {
+        return !Double.isNaN(value) && !Double.isInfinite(value);
     }
 
     public synchronized List<StaffWaypoint> getAll() {
@@ -137,7 +144,7 @@ public final class WaypointManager {
                     || point.getLabel().equalsIgnoreCase(normalized)) return point;
         }
         for (StaffWaypoint point : points) {
-            if (server.equals(point.getServerKey()) && point.getId().startsWith(normalized)) return point;
+            if (server.equals(point.getServerKey()) && point.getId().regionMatches(true, 0, normalized, 0, normalized.length())) return point;
         }
         return null;
     }
@@ -147,6 +154,9 @@ public final class WaypointManager {
         if (point == null) return false;
         points.remove(point);
         if (point.getId().equals(selectedId)) selectedId = "";
+        RouteBetweenWaypoints activeRoute = getRoute();
+        if (point.getId().equals(activeRoute.getStartWaypointId())
+                || point.getId().equals(activeRoute.getEndWaypointId())) clearRoute();
         save();
         return true;
     }
@@ -156,6 +166,7 @@ public final class WaypointManager {
         String server = ServerWaypointIntegration.currentServerKey(Minecraft.getMinecraft());
         for (int i=points.size()-1; i>=0; i--) if (server.equals(points.get(i).getServerKey())) points.remove(i);
         selectedId = "";
+        clearRoute();
         save();
     }
 
