@@ -11,8 +11,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 /**
- * Selects the strongest available hotbar tool when the local player starts mining a block.
- * The feature only changes the selected hotbar slot; Minecraft synchronizes that selection normally.
+ * Selects the best hotbar tool when the local player starts mining a block.
  */
 public final class AutoToolMod {
     private int originalSlot = -1;
@@ -41,23 +40,27 @@ public final class AutoToolMod {
 
         IBlockState state = event.world.getBlockState(event.pos);
         if (state == null || state.getBlock() == null) return;
+
         Block block = state.getBlock();
         int currentSlot = player.inventory.currentItem;
         ItemStack currentStack = player.inventory.getStackInSlot(currentSlot);
+        boolean currentCanHarvest = canHarvest(currentStack, block);
         float currentStrength = strength(currentStack, block);
         int bestSlot = currentSlot;
+        boolean bestCanHarvest = currentCanHarvest;
         float bestStrength = currentStrength;
 
         for (int slot = 0; slot < 9; slot++) {
             ItemStack candidate = player.inventory.getStackInSlot(slot);
+            boolean candidateCanHarvest = canHarvest(candidate, block);
             float candidateStrength = strength(candidate, block);
-            if (candidateStrength > bestStrength + 0.001F) {
+            if (isBetter(candidateCanHarvest, candidateStrength, bestCanHarvest, bestStrength)) {
+                bestCanHarvest = candidateCanHarvest;
                 bestStrength = candidateStrength;
                 bestSlot = slot;
             }
         }
 
-        // Do not switch to a random item when no hotbar stack is better than the held item.
         if (bestSlot == currentSlot) return;
 
         if (originalSlot < 0 || sessionPlayer != player || sessionWorld != event.world) {
@@ -68,6 +71,12 @@ public final class AutoToolMod {
         ticksSinceSwitch = 0;
         sessionPlayer = player;
         sessionWorld = event.world;
+
+        // PlayerControllerMP synchronizes before raising this interaction event.
+        // Synchronize again now, before vanilla sends START_DESTROY_BLOCK.
+        if (mc.playerController != null) {
+            mc.playerController.updateController();
+        }
     }
 
     @SubscribeEvent
@@ -82,7 +91,6 @@ public final class AutoToolMod {
         }
 
         if (sessionPlayer.inventory.currentItem != autoSelectedSlot) {
-            // The player selected another slot manually; do not override that choice.
             clearSession();
             return;
         }
@@ -92,20 +100,44 @@ public final class AutoToolMod {
                 || mc.currentScreen != null || !AutoToolSettings.isEnabled();
         if (!finishedMining) return;
 
+        boolean changedSlot = false;
         if (AutoToolSettings.isSwapBackEnabled()
                 && originalSlot >= 0 && originalSlot < 9
                 && sessionPlayer.inventory.currentItem == autoSelectedSlot) {
             sessionPlayer.inventory.currentItem = originalSlot;
+            changedSlot = true;
         }
         clearSession();
+
+        if (changedSlot && mc.playerController != null) {
+            mc.playerController.updateController();
+        }
+    }
+
+    private static boolean isBetter(boolean candidateCanHarvest, float candidateStrength,
+                                    boolean currentCanHarvest, float currentStrength) {
+        if (candidateCanHarvest != currentCanHarvest) return candidateCanHarvest;
+        return candidateStrength > currentStrength + 0.001F;
+    }
+
+    private static boolean canHarvest(ItemStack stack, Block block) {
+        if (stack == null || stack.stackSize <= 0 || block == null) return false;
+        try {
+            return stack.canHarvestBlock(block);
+        } catch (RuntimeException invalidItem) {
+            return false;
+        }
     }
 
     private static float strength(ItemStack stack, Block block) {
-        if (stack == null || stack.stackSize <= 0 || block == null) return 0.0F;
+        // The empty hand is the baseline, not a zero-strength tool.
+        if (stack == null || stack.stackSize <= 0 || block == null) return 1.0F;
         try {
-            return stack.getStrVsBlock(block);
+            float strength = stack.getStrVsBlock(block);
+            return Float.isNaN(strength) || Float.isInfinite(strength) || strength < 0.0F
+                    ? 1.0F : strength;
         } catch (RuntimeException invalidItem) {
-            return 0.0F;
+            return 1.0F;
         }
     }
 
