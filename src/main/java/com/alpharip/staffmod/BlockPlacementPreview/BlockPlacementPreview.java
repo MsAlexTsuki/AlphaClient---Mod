@@ -3,18 +3,23 @@ package com.alpharip.staffmod.BlockPlacementPreview;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.resources.model.IBakedModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -69,35 +74,87 @@ public final class BlockPlacementPreview {
         }
         if (state == null) return null;
 
-        AxisAlignedBB box;
+        AxisAlignedBB collisionBox;
         try {
-            box = block.getCollisionBoundingBox(world, placePos, state);
+            collisionBox = block.getCollisionBoundingBox(world, placePos, state);
         } catch (RuntimeException invalidBounds) {
-            box = null;
+            collisionBox = null;
         }
-        if (box == null) {
-            box = AxisAlignedBB.getBoundingBox(placePos.getX(), placePos.getY(), placePos.getZ(),
+
+        // Collision boxes are ideal when present. For non-solid blocks, derive visual bounds
+        // from the vanilla baked model so plants, torches, rails, and similar blocks preview
+        // as their actual shape instead of an unrelated full cube.
+        AxisAlignedBB displayBox = collisionBox != null
+                ? collisionBox : getBakedModelBounds(world, placePos, state);
+        if (displayBox == null) {
+            displayBox = AxisAlignedBB.getBoundingBox(placePos.getX(), placePos.getY(), placePos.getZ(),
                     placePos.getX() + 1.0D, placePos.getY() + 1.0D, placePos.getZ() + 1.0D);
         }
 
         boolean blocked = !block.canPlaceBlockAt(world, placePos);
-        if (!blocked) {
-            List<AxisAlignedBB> collisions = world.getCollidingBoundingBoxes(player, box);
+        if (!blocked && collisionBox != null) {
+            List<AxisAlignedBB> collisions = world.getCollidingBoundingBoxes(player, collisionBox);
             blocked = collisions != null && !collisions.isEmpty();
         }
-        if (!blocked) {
-            List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, box);
+        if (!blocked && collisionBox != null) {
+            List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, collisionBox);
             if (entities != null) {
                 for (Entity entity : entities) {
                     AxisAlignedBB entityBox = entity == null ? null : entity.getEntityBoundingBox();
-                    if (entityBox != null && entityBox.intersectsWith(box)) {
+                    if (entityBox != null && entityBox.intersectsWith(collisionBox)) {
                         blocked = true;
                         break;
                     }
                 }
             }
         }
-        return new Preview(box, blocked);
+        return new Preview(displayBox, blocked);
+    }
+
+    private static AxisAlignedBB getBakedModelBounds(World world, BlockPos pos, IBlockState state) {
+        try {
+            BlockRendererDispatcher dispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
+            IBakedModel model = dispatcher.getModelFromBlockState(state, world, pos);
+            if (model == null) return null;
+
+            double[] bounds = {
+                    Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY,
+                    Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY
+            };
+            for (EnumFacing face : EnumFacing.values()) {
+                for (BakedQuad quad : model.getFaceQuads(face)) {
+                    includeQuad(quad, bounds);
+                }
+            }
+            for (BakedQuad quad : model.getGeneralQuads()) {
+                includeQuad(quad, bounds);
+            }
+
+            if (Double.isInfinite(bounds[0])) return null;
+            return AxisAlignedBB.getBoundingBox(
+                    pos.getX() + bounds[0], pos.getY() + bounds[1], pos.getZ() + bounds[2],
+                    pos.getX() + bounds[3], pos.getY() + bounds[4], pos.getZ() + bounds[5]);
+        } catch (RuntimeException unavailableModel) {
+            return null;
+        }
+    }
+
+    /** Baked block vertex data uses the BLOCK vertex format: seven integers per vertex. */
+    private static void includeQuad(BakedQuad quad, double[] bounds) {
+        int[] vertices = quad.getVertexData();
+        for (int i = 0; i + 2 < vertices.length; i += 7) {
+            double x = Float.intBitsToFloat(vertices[i]);
+            double y = Float.intBitsToFloat(vertices[i + 1]);
+            double z = Float.intBitsToFloat(vertices[i + 2]);
+            if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)
+                    || Double.isInfinite(x) || Double.isInfinite(y) || Double.isInfinite(z)) continue;
+            bounds[0] = Math.min(bounds[0], x);
+            bounds[1] = Math.min(bounds[1], y);
+            bounds[2] = Math.min(bounds[2], z);
+            bounds[3] = Math.max(bounds[3], x);
+            bounds[4] = Math.max(bounds[4], y);
+            bounds[5] = Math.max(bounds[5], z);
+        }
     }
 
     private static float clampToBlock(double value) {
