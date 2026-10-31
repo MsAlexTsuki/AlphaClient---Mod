@@ -90,6 +90,8 @@ import com.alpharip.staffmod.hud.PersonalUtilityFeatures;
 import com.alpharip.staffmod.movement.AutoSprintMod;
 import com.alpharip.staffmod.AutoTool.AutoToolCommand;
 import com.alpharip.staffmod.AutoTool.AutoToolMod;
+import com.alpharip.staffmod.InventorySearch.InventorySearchCommand;
+import com.alpharip.staffmod.InventorySearch.InventorySearchMod;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -151,6 +153,7 @@ public final class AlphaClient {
         ClientCommandHandler.instance.registerCommand(new CommandPaletteCommand());
         ClientCommandHandler.instance.registerCommand(new BlockPlacementPreviewCommand());
         ClientCommandHandler.instance.registerCommand(new AutoToolCommand());
+        ClientCommandHandler.instance.registerCommand(new InventorySearchCommand());
         WaypointManager.getInstance().load();
         ClientCommandHandler.instance.registerCommand(new WaypointCommand());
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
@@ -219,6 +222,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new PersonalUtilityFeatures());
         MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
+        MinecraftForge.EVENT_BUS.register(new InventorySearchMod());
         RankCache.INSTANCE.start();
         // Restore the Alpha Account session and keep rank/module permissions in sync.
         SupabaseCommunityService.start();
