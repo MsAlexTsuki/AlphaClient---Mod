@@ -6,6 +6,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -15,7 +16,11 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 
 import java.util.List;
 
@@ -81,6 +86,18 @@ public final class BlockPlacementPreview {
             List<AxisAlignedBB> collisions = world.getCollidingBoundingBoxes(player, box);
             blocked = collisions != null && !collisions.isEmpty();
         }
+        if (!blocked) {
+            List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, box);
+            if (entities != null) {
+                for (Entity entity : entities) {
+                    AxisAlignedBB entityBox = entity == null ? null : entity.getEntityBoundingBox();
+                    if (entityBox != null && entityBox.intersectsWith(box)) {
+                        blocked = true;
+                        break;
+                    }
+                }
+            }
+        }
         return new Preview(box, blocked);
     }
 
@@ -101,6 +118,7 @@ public final class BlockPlacementPreview {
         float green = showCollision && preview.blocked ? 0.2F : 0.9F;
         float blue = showCollision && preview.blocked ? 0.2F : 0.45F;
         float alpha = Math.max(0.05F, Math.min(1.0F, opacity));
+        RenderState previous = RenderState.capture();
 
         GlStateManager.pushMatrix();
         try {
@@ -112,22 +130,15 @@ public final class BlockPlacementPreview {
             GlStateManager.depthMask(false);
             GlStateManager.disableCull();
 
-            GL11.glColor4f(red, green, blue, alpha);
+            GlStateManager.color(red, green, blue, alpha);
             drawFaces(minX, minY, minZ, maxX, maxY, maxZ);
 
             GL11.glLineWidth(2.0F);
-            GL11.glColor4f(red, green, blue, Math.min(1.0F, alpha + 0.35F));
+            GlStateManager.color(red, green, blue, Math.min(1.0F, alpha + 0.35F));
             drawEdges(minX, minY, minZ, maxX, maxY, maxZ);
         } finally {
-            GlStateManager.enableCull();
-            GlStateManager.depthMask(true);
-            GlStateManager.enableDepth();
-            GlStateManager.enableTexture2D();
-            GlStateManager.enableLighting();
-            GlStateManager.disableBlend();
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            GL11.glLineWidth(1.0F);
             GlStateManager.popMatrix();
+            previous.restore();
         }
     }
 
@@ -152,6 +163,58 @@ public final class BlockPlacementPreview {
 
     private static void edge(double ax,double ay,double az,double bx,double by,double bz) {
         GL11.glVertex3d(ax,ay,az); GL11.glVertex3d(bx,by,bz);
+    }
+
+    private static final class RenderState {
+        final boolean blend, texture, lighting, depth, cull, depthMask;
+        final int blendSourceRgb, blendDestinationRgb, blendSourceAlpha, blendDestinationAlpha;
+        final float red, green, blue, alpha, lineWidth;
+
+        private RenderState(boolean blend, boolean texture, boolean lighting, boolean depth,
+                            boolean cull, boolean depthMask, int sourceRgb, int destinationRgb,
+                            int sourceAlpha, int destinationAlpha, float red, float green,
+                            float blue, float alpha, float lineWidth) {
+            this.blend=blend; this.texture=texture; this.lighting=lighting; this.depth=depth;
+            this.cull=cull; this.depthMask=depthMask;
+            this.blendSourceRgb=sourceRgb; this.blendDestinationRgb=destinationRgb;
+            this.blendSourceAlpha=sourceAlpha; this.blendDestinationAlpha=destinationAlpha;
+            this.red=red; this.green=green; this.blue=blue; this.alpha=alpha; this.lineWidth=lineWidth;
+        }
+
+        static RenderState capture() {
+            FloatBuffer color=BufferUtils.createFloatBuffer(4);
+            GL11.glGetFloat(GL11.GL_CURRENT_COLOR,color);
+            FloatBuffer line=BufferUtils.createFloatBuffer(1);
+            GL11.glGetFloat(GL11.GL_LINE_WIDTH,line);
+            ByteBuffer depthWrite=BufferUtils.createByteBuffer(1);
+            GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK,depthWrite);
+            return new RenderState(GL11.glIsEnabled(GL11.GL_BLEND),GL11.glIsEnabled(GL11.GL_TEXTURE_2D),
+                    GL11.glIsEnabled(GL11.GL_LIGHTING),GL11.glIsEnabled(GL11.GL_DEPTH_TEST),
+                    GL11.glIsEnabled(GL11.GL_CULL_FACE),depthWrite.get(0)!=0,
+                    GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB),GL11.glGetInteger(GL14.GL_BLEND_DST_RGB),
+                    GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA),GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA),
+                    color.get(0),color.get(1),color.get(2),color.get(3),line.get(0));
+        }
+
+        void restore() {
+            setEnabled(GL11.GL_BLEND,blend);
+            setEnabled(GL11.GL_TEXTURE_2D,texture);
+            setEnabled(GL11.GL_LIGHTING,lighting);
+            setEnabled(GL11.GL_DEPTH_TEST,depth);
+            setEnabled(GL11.GL_CULL_FACE,cull);
+            GlStateManager.depthMask(depthMask);
+            GlStateManager.tryBlendFuncSeparate(blendSourceRgb,blendDestinationRgb,blendSourceAlpha,blendDestinationAlpha);
+            GlStateManager.color(red,green,blue,alpha);
+            GL11.glLineWidth(lineWidth);
+        }
+
+        private static void setEnabled(int capability, boolean enabled) {
+            if (capability==GL11.GL_BLEND) { if(enabled)GlStateManager.enableBlend();else GlStateManager.disableBlend(); }
+            else if (capability==GL11.GL_TEXTURE_2D) { if(enabled)GlStateManager.enableTexture2D();else GlStateManager.disableTexture2D(); }
+            else if (capability==GL11.GL_LIGHTING) { if(enabled)GlStateManager.enableLighting();else GlStateManager.disableLighting(); }
+            else if (capability==GL11.GL_DEPTH_TEST) { if(enabled)GlStateManager.enableDepth();else GlStateManager.disableDepth(); }
+            else if (capability==GL11.GL_CULL_FACE) { if(enabled)GlStateManager.enableCull();else GlStateManager.disableCull(); }
+        }
     }
 
     private static final class Preview {
