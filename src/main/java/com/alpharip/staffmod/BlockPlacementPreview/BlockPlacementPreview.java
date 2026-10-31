@@ -1,6 +1,5 @@
 package com.alpharip.staffmod.BlockPlacementPreview;
 
-import com.alpharip.staffmod.WayPoints.WaypointFileUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -16,13 +15,13 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.util.List;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-
-import java.util.List;
 
 /** Shows a translucent placement volume for the block currently held by the player. */
 public final class BlockPlacementPreview {
