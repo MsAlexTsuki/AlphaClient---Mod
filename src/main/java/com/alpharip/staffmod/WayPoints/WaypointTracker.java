@@ -25,6 +25,7 @@ public final class WaypointTracker {
     private static final int MAX_HISTORY=100;
     private final List<CoordinateEntry> history=new ArrayList<CoordinateEntry>();
     private boolean historyLoaded;
+    private boolean historyLoadFailed;
     private String lastServer="";
     private int lastDimension=Integer.MIN_VALUE;
     private double lastX,lastY,lastZ;
@@ -109,11 +110,13 @@ public final class WaypointTracker {
                         &&finite(entry.x)&&finite(entry.y)&&finite(entry.z))history.add(entry);
             while(history.size()>MAX_HISTORY)history.remove(history.size()-1);
         } catch(Exception e) {
-            System.err.println("[AlphaClient] Could not load waypoint coordinate history: "+e.getMessage());
+            historyLoadFailed=true;
+            System.err.println("[AlphaClient] Could not load waypoint coordinate history; saving is disabled to protect the existing file: "+e.getMessage());
         } finally { if(reader!=null)try{reader.close();}catch(Exception ignored){} }
     }
 
     private void saveHistory() {
+        if(historyLoadFailed)return;
         File file=historyFile(),temporary=new File(file.getParentFile(),"waypoint-coordinate-history.json.tmp");
         OutputStreamWriter writer=null;
         try {

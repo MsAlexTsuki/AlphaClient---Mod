@@ -18,6 +18,7 @@ public final class WaypointManager {
     private final List<StaffWaypoint> points = new ArrayList<StaffWaypoint>();
     private String selectedId = "";
     private boolean loaded;
+    private boolean loadFailed;
     private RouteBetweenWaypoints route = new RouteBetweenWaypoints();
 
     private WaypointManager() { }
@@ -38,7 +39,8 @@ public final class WaypointManager {
                 if (finite(point.getX()) && finite(point.getY()) && finite(point.getZ())) points.add(point);
             }
         } catch (Exception e) {
-            System.err.println("[AlphaClient] Could not load waypoints: " + e.getMessage());
+            loadFailed = true;
+            System.err.println("[AlphaClient] Could not load waypoints; saving is disabled to protect the existing file: " + e.getMessage());
         } finally { if (reader != null) try { reader.close(); } catch (IOException ignored) { } }
     }
 
@@ -51,6 +53,7 @@ public final class WaypointManager {
 
     private synchronized void save() {
         load();
+        if (loadFailed) return;
         Writer writer = null;
         File temporary = null;
         try {
@@ -221,7 +224,9 @@ public final class WaypointManager {
 
     public synchronized String getSelectedId() { return selectedId; }
     public synchronized RouteBetweenWaypoints getRoute() { return route; }
-    public synchronized void setRoute(String startId, String endId) { route.set(startId, endId); select(endId); }
+    public synchronized void setRoute(String startId, String endId) {
+        if (route.set(startId, endId)) select(endId);
+    }
     public synchronized boolean setRoute(List<StaffWaypoint> waypoints) {
         boolean set=route.setPath(waypoints);
         if(set)select(route.getEndWaypointId());
