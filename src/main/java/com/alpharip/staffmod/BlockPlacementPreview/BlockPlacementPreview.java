@@ -8,7 +8,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.model.IBakedModel;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -19,14 +18,14 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.util.List;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
+
+import java.util.List;
 
 /** Shows a translucent placement volume for the block currently held by the player. */
 public final class BlockPlacementPreview {
@@ -65,9 +64,10 @@ public final class BlockPlacementPreview {
         float hitZ = clampToBlock(hit.hitVec.zCoord - clickedPos.getZ());
         IBlockState state;
         try {
-            state = block.getStateFromMeta(itemBlock.getMetadata(held.getMetadata()));
+            int placementMetadata = itemBlock.getMetadata(held.getMetadata());
+            state = block.getStateFromMeta(placementMetadata);
             IBlockState placedState = block.onBlockPlaced(world, placePos, hit.sideHit,
-                    hitX, hitY, hitZ, held.getMetadata(), player);
+                    hitX, hitY, hitZ, placementMetadata, player);
             if (placedState != null) state = placedState;
         } catch (RuntimeException invalidState) {
             return null;
@@ -95,18 +95,6 @@ public final class BlockPlacementPreview {
         if (!blocked && collisionBox != null) {
             List<AxisAlignedBB> collisions = world.getCollidingBoundingBoxes(player, collisionBox);
             blocked = collisions != null && !collisions.isEmpty();
-        }
-        if (!blocked && collisionBox != null) {
-            List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, collisionBox);
-            if (entities != null) {
-                for (Entity entity : entities) {
-                    AxisAlignedBB entityBox = entity == null ? null : entity.getEntityBoundingBox();
-                    if (entityBox != null && entityBox.intersectsWith(collisionBox)) {
-                        blocked = true;
-                        break;
-                    }
-                }
-            }
         }
         return new Preview(displayBox, blocked);
     }
@@ -139,10 +127,13 @@ public final class BlockPlacementPreview {
         }
     }
 
-    /** Baked block vertex data uses the BLOCK vertex format: seven integers per vertex. */
+    /** Reads the position triplet at the start of each four-vertex baked quad. */
     private static void includeQuad(BakedQuad quad, double[] bounds) {
         int[] vertices = quad.getVertexData();
-        for (int i = 0; i + 2 < vertices.length; i += 7) {
+        if (vertices.length < 12 || vertices.length % 4 != 0) return;
+        int vertexStride = vertices.length / 4;
+        if (vertexStride < 3) return;
+        for (int i = 0; i + 2 < vertices.length; i += vertexStride) {
             double x = Float.intBitsToFloat(vertices[i]);
             double y = Float.intBitsToFloat(vertices[i + 1]);
             double z = Float.intBitsToFloat(vertices[i + 2]);
