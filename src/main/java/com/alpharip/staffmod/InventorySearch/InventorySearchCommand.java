@@ -12,6 +12,6 @@ public final class InventorySearchCommand extends CommandBase {
  @Override public List<String> getCommandAliases(){return Collections.singletonList("invsearch");}
  @Override public String getCommandUsage(ICommandSender sender){return "/inventorysearch";}
  @Override public int getRequiredPermissionLevel(){return 0;}
- @Override public void processCommand(ICommandSender sender,String[] args)throws CommandException{Minecraft.getMinecraft().displayGuiScreen(new InventorySearchGui(Minecraft.getMinecraft().currentScreen));}
+ @Override public void processCommand(ICommandSender sender,String[] args)throws CommandException{InventorySearchSettings.load();Minecraft.getMinecraft().displayGuiScreen(new InventorySearchGui(Minecraft.getMinecraft().currentScreen));}
  @Override public List<String> addTabCompletionOptions(ICommandSender sender,String[] args,BlockPos pos){return Collections.emptyList();}
 }
