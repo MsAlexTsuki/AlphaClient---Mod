@@ -7,6 +7,7 @@ import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggSettingsGui;
+import com.alpharip.staffmod.inventorysearch.InventorySearchGui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -23,6 +24,7 @@ public final class QualityGui extends AlphaGuiScreen {
     private static final int AUTO_GG = 6;
     private static final int AUTO_RECONNECT = 7;
     private static final int EASTER_EGGS = 8;
+    private static final int SEARCH_INV = 9;
     private static final int AFK_TIMER_INDEX = 7;
     private static final int SESSION_TIMER_INDEX = 8;
     private static final int PLAYTIME_TRACKER_INDEX = 9;
@@ -33,7 +35,7 @@ public final class QualityGui extends AlphaGuiScreen {
             "Fullbright", "Alpha Module Manager", "Mod Profiles", "Auto GG", "Keybind Profiles",
             "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Session Timer", "Playtime Tracker",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
-            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Deathscreens"
+            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Deathscreens", "Search Inv"
     };
 
     private final GuiScreen parent;
@@ -84,6 +86,8 @@ public final class QualityGui extends AlphaGuiScreen {
                         "Fullbright: " + (FullbrightMod.isEnabled() ? "ON" : "OFF"), true));
             } else if (i == 18) {
                 buttonList.add(new AlphaButton(EASTER_EGGS, x, y, tileWidth, tileHeight, "Deathscreens", true));
+            } else if (i == 19) {
+                buttonList.add(new AlphaButton(SEARCH_INV, x, y, tileWidth, tileHeight, "Search Inv", true));
             } else if (i == AFK_TIMER_INDEX) {
                 buttonList.add(new AlphaButton(AFK_TIMER, x, y, tileWidth, tileHeight, "AFK Timer", true));
             } else if (i == SESSION_TIMER_INDEX) {
@@ -136,6 +140,8 @@ public final class QualityGui extends AlphaGuiScreen {
             initGui();
         } else if (button.id == EASTER_EGGS) {
             mc.displayGuiScreen(new EasterEggSettingsGui(this));
+        } else if (button.id == SEARCH_INV) {
+            mc.displayGuiScreen(new InventorySearchGui(this));
         }
     }
 
