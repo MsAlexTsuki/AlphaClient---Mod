@@ -35,6 +35,16 @@ public final class AlphaChatAutocomplete {
 
     private AlphaChatAutocomplete() { }
 
+    /**
+     * Forge 1.8.9 also passes ordinary chat text to ClientCommandHandler.
+     * Keep slash commands intact and make plain text unmatchable as a client command.
+     */
+    public static String prepareCommandMessage(String message) {
+        if (message == null) return "\u0000";
+        String trimmed = message.trim();
+        return trimmed.startsWith("/") ? trimmed : "\u0000" + trimmed;
+    }
+
     public static String[] filter(String[] suggestions) {
         if (suggestions == null || suggestions.length == 0) return suggestions;
         List<String> visible = new ArrayList<String>(suggestions.length);
