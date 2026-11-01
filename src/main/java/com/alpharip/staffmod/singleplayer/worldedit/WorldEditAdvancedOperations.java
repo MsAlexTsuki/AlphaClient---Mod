@@ -38,7 +38,7 @@ public final class WorldEditAdvancedOperations {
         record(w,b.minX,b.minY,b.minZ,b.maxX,Math.min(255,b.maxY+1),b.maxZ);
         for (int x=b.minX;x<=b.maxX;x++) for (int z=b.minZ;z<=b.maxZ;z++) {
             BlockPos top=w.getTopSolidOrLiquidBlock(new BlockPos(x,b.maxY,z));
-            if (top.getY() >= b.minY && top.getY() <= b.maxY)
+            if (top.getY() >= b.minY && top.getY() < b.maxY && top.getY() < 255)
                 w.setBlockState(top.up(), state, 2);
         }
     }
@@ -72,7 +72,7 @@ public final class WorldEditAdvancedOperations {
     public static void sphere(WorldServer w, BlockPos c, int rx, int ry, int rz,
                               IBlockState state, boolean hollow) {
         record(w,c.getX()-rx,c.getY()-ry,c.getZ()-rz,c.getX()+rx,c.getY()+ry,c.getZ()+rz);
-        for(int x=-rx;x<=rx;x++) for(int y=-ry;y<=ry;y++) for(int z=-rz;z<=rz;z++) {
+        for(int x=-rx;x<=rx;x++) for(int y=Math.max(-ry,-c.getY());y<=Math.min(ry,255-c.getY());y++) for(int z=-rz;z<=rz;z++) {
             double d=(double)x*x/(rx*rx)+(double)y*y/(ry*ry)+(double)z*z/(rz*rz);
             if(d<=1.0 && (!hollow || d>=0.75))
                 w.setBlockState(c.add(x,y,z),state,2);
@@ -83,7 +83,7 @@ public final class WorldEditAdvancedOperations {
                                 IBlockState state, boolean hollow) {
         record(w,c.getX()-radius,c.getY(),c.getZ()-radius,c.getX()+radius,c.getY()+height-1,c.getZ()+radius);
         int r2=radius*radius;
-        for(int y=0;y<height;y++) for(int x=-radius;x<=radius;x++) for(int z=-radius;z<=radius;z++) {
+        for(int y=0;y<height && c.getY()+y<=255;y++) for(int x=-radius;x<=radius;x++) for(int z=-radius;z<=radius;z++) {
             int d=x*x+z*z;
             if(d<=r2 && (!hollow || d>=(radius-1)*(radius-1)))
                 w.setBlockState(c.add(x,y,z),state,2);
@@ -92,7 +92,7 @@ public final class WorldEditAdvancedOperations {
 
     public static void pyramid(WorldServer w, BlockPos c, int size, IBlockState state, boolean hollow) {
         record(w,c.getX()-size+1,c.getY(),c.getZ()-size+1,c.getX()+size-1,c.getY()+size-1,c.getZ()+size-1);
-        for(int y=0;y<size;y++) {
+        for(int y=0;y<size && c.getY()+y<=255;y++) {
             int radius=size-y-1;
             for(int x=-radius;x<=radius;x++) for(int z=-radius;z<=radius;z++) {
                 if(!hollow || Math.abs(x)==radius || Math.abs(z)==radius || y==0)
@@ -121,7 +121,7 @@ public final class WorldEditAdvancedOperations {
                                   IBlockState from, IBlockState to) {
         record(w,center.getX()-radius,center.getY()-radius,center.getZ()-radius,center.getX()+radius,center.getY()+radius,center.getZ()+radius);
         int changed=0, r2=radius*radius;
-        for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
+        for(int x=-radius;x<=radius;x++) for(int y=Math.max(-radius,-center.getY());y<=Math.min(radius,255-center.getY());y++) for(int z=-radius;z<=radius;z++) {
             if(x*x+y*y+z*z>r2) continue;
             BlockPos p=center.add(x,y,z);
             if(w.getBlockState(p).getBlock()==from.getBlock()) {
@@ -217,7 +217,7 @@ public final class WorldEditAdvancedOperations {
             BlockPos top=w.getTopSolidOrLiquidBlock(new BlockPos(x,b.maxY,z));
             if(top.getY()<b.minY || top.getY()>b.maxY) continue;
             BlockPos above=top.up();
-            if(mode==0 && w.isAirBlock(above) && w.getBlockState(top).getBlock().isFullBlock()) {
+            if(mode==0 && top.getY()<255 && w.isAirBlock(above) && w.getBlockState(top).getBlock().isFullBlock()) {
                 w.setBlockState(above,Blocks.snow_layer.getDefaultState(),2); changed++;
             } else if(mode==1) {
                 if(w.getBlockState(above).getBlock()==Blocks.snow_layer || w.getBlockState(top).getBlock()==Blocks.ice) {
