@@ -21,7 +21,8 @@ public final class WorldEditFeatureOperations {
     private WorldEditFeatureOperations() { }
 
     private static void record(WorldServer world, WorldEditSelection.Bounds b) {
-        WorldEditHistory.record(world,b);
+        int minY=Math.max(0,b.minY),maxY=Math.min(255,b.maxY);
+        if(minY<=maxY)WorldEditHistory.record(world,new WorldEditSelection.Bounds(b.minX,minY,b.minZ,b.maxX,maxY,b.maxZ));
     }
 
     public static void curve(WorldServer world, BlockPos start, BlockPos control,
@@ -124,7 +125,7 @@ public final class WorldEditFeatureOperations {
                 IBlockState flower=(random.nextBoolean()?Blocks.yellow_flower:Blocks.red_flower).getDefaultState();
                 if(world.isAirBlock(place)&&flower.getBlock().canPlaceBlockAt(world,place)){world.setBlockState(place,flower,2);planted++;}
             } else {
-                IBlockState grass=Blocks.tallgrass.getDefaultState();
+                IBlockState grass=Blocks.tallgrass.getStateFromMeta(1);
                 if(world.isAirBlock(place)&&grass.getBlock().canPlaceBlockAt(world,place)){world.setBlockState(place,grass,2);planted++;}
             }
         }
