@@ -127,6 +127,33 @@ public final class WorldEditAdvancedOperations {
         return changed;
     }
 
+    public static void smooth(WorldServer w, WorldEditSelection.Bounds b, int iterations) {
+        for(int pass=0;pass<iterations;pass++) {
+            java.util.Map<BlockPos,Integer> heights=new java.util.HashMap<BlockPos,Integer>();
+            for(int x=b.minX;x<=b.maxX;x++) for(int z=b.minZ;z<=b.maxZ;z++) {
+                int total=0,count=0;
+                for(int dx=-1;dx<=1;dx++) for(int dz=-1;dz<=1;dz++) {
+                    int nx=x+dx,nz=z+dz;
+                    if(nx<b.minX||nx>b.maxX||nz<b.minZ||nz>b.maxZ) continue;
+                    int h=w.getTopSolidOrLiquidBlock(new BlockPos(nx,b.maxY,nz)).getY();
+                    total+=h;count++;
+                }
+                if(count>0) heights.put(new BlockPos(x,0,z),total/count);
+            }
+            for(java.util.Map.Entry<BlockPos,Integer> entry:heights.entrySet()) {
+                int x=entry.getKey().getX(),z=entry.getKey().getZ(),target=entry.getValue();
+                int current=w.getTopSolidOrLiquidBlock(new BlockPos(x,b.maxY,z)).getY();
+                if(current>target) for(int y=target+1;y<=current&&y<=b.maxY;y++)
+                    w.setBlockState(new BlockPos(x,y,z),Blocks.air.getDefaultState(),2);
+                else if(current<target) {
+                    IBlockState fill=w.getBlockState(new BlockPos(x,current,z));
+                    for(int y=current+1;y<=target&&y<=b.maxY;y++)
+                        w.setBlockState(new BlockPos(x,y,z),fill,2);
+                }
+            }
+        }
+    }
+
     public static IBlockState[][][] rotateY(IBlockState[][][] input, int degrees) {
         int turns=((degrees%360)+360)%360/90;
         IBlockState[][][] result=input;
