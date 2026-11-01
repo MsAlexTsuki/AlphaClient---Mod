@@ -171,7 +171,7 @@ public final class WorldEditFeatureOperations {
                 center.getX()+radius,Math.min(255,center.getY()+radius+amount),center.getZ()+radius);
         record(world,b);
         for(int x=center.getX()-radius;x<=center.getX()+radius;x++)for(int z=center.getZ()-radius;z<=center.getZ()+radius;z++) {
-            BlockPos top=world.getTopSolidOrLiquidBlock(new BlockPos(x,center.getY()+radius,z));
+            BlockPos top=world.getTopSolidOrLiquidBlock(new BlockPos(x,Math.min(255,center.getY()+radius),z));
             int target=Math.max(1,Math.min(254,top.getY()+amount));
             IBlockState ground=world.getBlockState(top.down());
             if(amount>0) {
