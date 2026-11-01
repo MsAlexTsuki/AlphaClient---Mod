@@ -88,6 +88,18 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe pyramid <block> <size>", "Generate a solid pyramid.");
         addCommand("//acwe hpyramid <block> <size>", "Generate a hollow pyramid.");
 
+        addSection("GENERAL");
+        addCommand("//acwe limit <blocks>", "Set the maximum permitted region volume.");
+        addCommand("//acwe gmask <block|off>", "Set or clear the global block mask used by set.");
+        addCommand("//acwe searchitem <text>", "Search registered item identifiers.");
+        addCommand("//acwe calc <a><operator><b>", "Calculate a basic integer expression.");
+        addCommand("//acwe ceil", "Move above the highest block at your current position.");
+        addCommand("//acwe generatebiome <name>", "Set the biome across the selected columns.");
+
+        addSection("FILL UTILITIES");
+        addCommand("//acwe fill <block> [depth]", "Fill air downward from the block above your target.");
+        addCommand("//acwe fillr <block> [radius]", "Flood-fill connected air within a bounded radius.");
+
         addSection("HISTORY");
         addCommand("//acwe undo", "Restore the previous recorded block state.");
         addCommand("//acwe redo", "Reapply the last undone block state.");
