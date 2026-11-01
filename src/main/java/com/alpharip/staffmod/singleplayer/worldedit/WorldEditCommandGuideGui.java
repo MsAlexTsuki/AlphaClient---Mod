@@ -126,6 +126,7 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe br <type> [block] [radius]", "Alias for brush.");
         addCommand("//acwe superpickaxe <single|area|recursive>", "Configure left-click block removal modes.");
         addCommand("//acwe sp <single|area|recursive>", "Alias for superpickaxe.");
+        addCommand("//acwe superpickaxe none", "Disable the active Super Pickaxe mode.");
 
         addSection("TOOLS");
         addCommand("//acwe tool <none|info|tree|repl|cycler|floodfill|deltree|farwand>", "Assign a click tool to your interactions.");
@@ -160,6 +161,7 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe fixwater", "Convert flowing water in the selection to source water.");
         addCommand("//acwe fixlava", "Convert flowing lava in the selection to source lava.");
         addCommand("//acwe remove", "Clear all blocks in the selected region.");
+        addCommand("//acwe butcher [-a] [radius]", "Remove hostile mobs nearby; -a also includes passive animals.");
     }
 
     private void addSection(String title) {
