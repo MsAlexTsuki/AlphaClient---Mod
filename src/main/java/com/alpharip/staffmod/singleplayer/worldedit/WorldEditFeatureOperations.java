@@ -115,6 +115,26 @@ public final class WorldEditFeatureOperations {
         return planted;
     }
 
+    public static int gravity(WorldServer world, BlockPos center, int radius) {
+        WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(center.getX()-radius,Math.max(0,center.getY()-radius),center.getZ()-radius,
+                center.getX()+radius,Math.min(255,center.getY()+radius),center.getZ()+radius);
+        record(world,b);int moved=0;
+        for(int x=b.minX;x<=b.maxX;x++)for(int z=b.minZ;z<=b.maxZ;z++) {
+            for(int y=b.maxY;y>b.minY;y--) {
+                BlockPos source=new BlockPos(x,y,z);
+                IBlockState state=world.getBlockState(source);
+                if(state.getBlock()==Blocks.air||!state.getBlock().getMaterial().isSolid())continue;
+                int destination=y;
+                while(destination>b.minY&&world.isAirBlock(new BlockPos(x,destination-1,z)))destination--;
+                if(destination<y) {
+                    world.setBlockState(new BlockPos(x,destination,z),state,2);
+                    world.setBlockToAir(source);moved++;
+                }
+            }
+        }
+        return moved;
+    }
+
     public static void raiseLower(WorldServer world, BlockPos center, int radius, int amount) {
         WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(center.getX()-radius,Math.max(0,center.getY()-radius-amount),center.getZ()-radius,
                 center.getX()+radius,Math.min(255,center.getY()+radius+amount),center.getZ()+radius);
