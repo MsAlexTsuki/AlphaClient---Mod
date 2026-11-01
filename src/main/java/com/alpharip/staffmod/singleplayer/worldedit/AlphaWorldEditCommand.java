@@ -440,6 +440,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             final WorldEditSelection.Bounds b = selection(sender);
             if (state == null || b == null) return;
             onServer(sender, new Task() { public void run(WorldServer w) {
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
                 WorldEditAdvancedOperations.center(w,b,state); reply(sender,"Region center set.");
             }});
             return;
@@ -836,6 +837,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             if(!"info".equals(mode)&&!"tree".equals(mode)&&!"repl".equals(mode)&&!"cycler".equals(mode)&&!"floodfill".equals(mode)&&!"deltree".equals(mode)&&!"farwand".equals(mode)&&!"lrbuild".equals(mode)){
                 reply(sender,"Unknown World Edit tool: "+mode);return;
             }
+            if("floodfill".equals(mode)&&args.length==2)toolTo=net.minecraft.init.Blocks.stone.getDefaultState();
             if("floodfill".equals(mode)&&args.length==3){
                 toolTo=WorldEditBlockParser.parse(args[2]);
                 if(toolTo==null){reply(sender,"Unknown flood-fill block.");return;}
@@ -1131,6 +1133,9 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 event.setCanceled(true);return;
             }
             if(!right)return;
+            WorldEditSelection.Bounds toolArea=new WorldEditSelection.Bounds(clicked.getX()-8,Math.max(0,clicked.getY()-8),clicked.getZ()-8,
+                    clicked.getX()+8,Math.min(255,clicked.getY()+8),clicked.getZ()+8);
+            if(!WorldEditOperations.regionLoaded(world,toolArea)){reply(event.entityPlayer,"Tool area contains unloaded chunks.");event.setCanceled(true);return;}
             if("tree".equals(toolMode)) {
                 WorldEditHistory.record(world,new WorldEditSelection.Bounds(adjacent.getX()-3,Math.max(0,adjacent.getY()-1),adjacent.getZ()-3,adjacent.getX()+3,Math.min(255,adjacent.getY()+8),adjacent.getZ()+3));
                 boolean generated=new net.minecraft.world.gen.feature.WorldGenTrees(true).generate(world,new java.util.Random(),adjacent);
@@ -1161,6 +1166,15 @@ public final class AlphaWorldEditCommand extends CommandBase {
 
         if(!right||"none".equals(brushMode))return;
         final BlockPos center=adjacent;
+        WorldEditSelection.Bounds brushArea;
+        if("clipboard".equals(brushMode)&&CLIPBOARD.hasBlocks()) {
+            brushArea=new WorldEditSelection.Bounds(center.getX(),center.getY(),center.getZ(),
+                    center.getX()+CLIPBOARD.getSizeX()-1,center.getY()+CLIPBOARD.getSizeY()-1,center.getZ()+CLIPBOARD.getSizeZ()-1);
+        } else {
+            brushArea=new WorldEditSelection.Bounds(center.getX()-brushRadius,Math.max(0,center.getY()-brushRadius-8),center.getZ()-brushRadius,
+                    center.getX()+brushRadius,Math.min(255,center.getY()+brushRadius+16),center.getZ()+brushRadius);
+        }
+        if(!WorldEditOperations.regionLoaded(world,brushArea)){reply(event.entityPlayer,"Brush area contains unloaded chunks.");event.setCanceled(true);return;}
         if("sphere".equals(brushMode)||"set".equals(brushMode)||"paint".equals(brushMode)||"apply".equals(brushMode)) {
             WorldEditAdvancedOperations.sphere(world,center,brushRadius,brushRadius,brushRadius,brushBlock,false);
         } else if("cylinder".equals(brushMode)) {
