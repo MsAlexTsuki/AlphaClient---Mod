@@ -817,9 +817,9 @@ public final class AlphaWorldEditCommand extends CommandBase {
             if(args.length!=2){reply(sender,"Usage: //acwe superpickaxe <single|area|recursive>");return;}
             String mode=args[1].toLowerCase(Locale.ROOT);
             if("recur".equals(mode))mode="recursive";
-            if(!"single".equals(mode)&&!"area".equals(mode)&&!"recursive".equals(mode)){reply(sender,"Mode must be single, area, or recursive.");return;}
+            if(!"none".equals(mode)&&!"single".equals(mode)&&!"area".equals(mode)&&!"recursive".equals(mode)){reply(sender,"Mode must be single, area, or recursive.");return;}
             pickaxeMode=mode;
-            reply(sender,"Super Pickaxe "+mode+" mode enabled. Left-click a block to use it.");
+            reply(sender,"none".equals(mode)?"Super Pickaxe disabled.":"Super Pickaxe "+mode+" mode enabled. Left-click a block to use it.");
             return;
         }
         if ("tool".equals(cmd)) {
@@ -1081,6 +1081,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
         if(mc==null||!mc.isSingleplayer()||mc.thePlayer==null
                 ||!event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID()))return;
         if(!(event.world instanceof WorldServer))return;
+        if(isWorldEditWand(event.entityPlayer.getHeldItem()))return;
         final WorldServer world=(WorldServer)event.world;
         final BlockPos clicked=event.pos;
         final BlockPos adjacent=event.face==null?clicked.up():clicked.offset(event.face);
@@ -1107,23 +1108,26 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 event.setCanceled(true);return;
             }
             if("lrbuild".equals(toolMode)&&left) {
-                if(toolFrom!=null)world.setBlockState(adjacent,toolFrom,2);
+                if(toolFrom!=null){WorldEditHistory.record(world,new WorldEditSelection.Bounds(adjacent.getX(),adjacent.getY(),adjacent.getZ(),adjacent.getX(),adjacent.getY(),adjacent.getZ()));world.setBlockState(adjacent,toolFrom,2);}
                 reply(event.entityPlayer,"Left-click build block placed.");
                 event.setCanceled(true);return;
             }
             if(!right)return;
             if("tree".equals(toolMode)) {
+                WorldEditHistory.record(world,new WorldEditSelection.Bounds(adjacent.getX()-3,Math.max(0,adjacent.getY()-1),adjacent.getZ()-3,adjacent.getX()+3,Math.min(255,adjacent.getY()+8),adjacent.getZ()+3));
                 boolean generated=new net.minecraft.world.gen.feature.WorldGenTrees(true).generate(world,new java.util.Random(),adjacent);
                 reply(event.entityPlayer,generated?"Tree generated.":"Could not generate a tree here.");
             } else if("repl".equals(toolMode)) {
                 int changed=WorldEditFeatureOperations.replaceNear(world,clicked,4,toolFrom,toolTo);
                 reply(event.entityPlayer,"Tool replaced "+changed+" block(s).");
             } else if("cycler".equals(toolMode)) {
+                WorldEditHistory.record(world,new WorldEditSelection.Bounds(clicked.getX(),clicked.getY(),clicked.getZ(),clicked.getX(),clicked.getY(),clicked.getZ()));
                 IBlockState current=world.getBlockState(clicked);
                 int meta=(current.getBlock().getMetaFromState(current)+1)&15;
                 world.setBlockState(clicked,current.getBlock().getStateFromMeta(meta),2);
                 reply(event.entityPlayer,"Block state cycled.");
             } else if("floodfill".equals(toolMode)) {
+                WorldEditHistory.record(world,new WorldEditSelection.Bounds(adjacent.getX()-6,Math.max(0,adjacent.getY()-6),adjacent.getZ()-6,adjacent.getX()+6,Math.min(255,adjacent.getY()+6),adjacent.getZ()+6));
                 IBlockState fill=toolTo==null?net.minecraft.init.Blocks.stone.getDefaultState():toolTo;
                 int changed=WorldEditAdvancedOperations.floodFillAir(world,adjacent,6,fill);
                 reply(event.entityPlayer,"Flood fill placed "+changed+" block(s).");
@@ -1131,7 +1135,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 int changed=WorldEditFeatureOperations.deleteTree(world,clicked,6);
                 reply(event.entityPlayer,"Tree tool removed "+changed+" log/leaf block(s).");
             } else if("lrbuild".equals(toolMode)) {
-                if(toolTo!=null)world.setBlockState(adjacent,toolTo,2);
+                if(toolTo!=null){WorldEditHistory.record(world,new WorldEditSelection.Bounds(adjacent.getX(),adjacent.getY(),adjacent.getZ(),adjacent.getX(),adjacent.getY(),adjacent.getZ()));world.setBlockState(adjacent,toolTo,2);}
                 reply(event.entityPlayer,"Right-click build block placed.");
             }
             event.setCanceled(true);return;
