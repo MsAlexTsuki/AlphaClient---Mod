@@ -3,20 +3,23 @@ package com.alpharip.singleplayer;
 
 import com.alpharip.staffmod.gui.AlphaButton;
 import com.alpharip.staffmod.gui.AlphaGuiScreen;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.WorldServer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Singleplayer-only WorldEdit control screen.
- *
- * Editing is sent to the integrated server through vanilla /fill and /clone
- * commands. No command is ever sent while connected to a multiplayer server.
+ * WorldEdit-style region editor for local singleplayer worlds.
+ * All changes are applied directly to the integrated server world; commands
+ * and cheats are not used.
  */
 public final class WorldEditGui extends AlphaGuiScreen {
     private static final int BACK = 1;
@@ -31,14 +34,17 @@ public final class WorldEditGui extends AlphaGuiScreen {
     private static final int PASTE = 10;
 
     private static final int ACCENT = 0xFFFFD866;
-    private final GuiScreen parent;
+    private static final int MAX_BLOCKS_PER_OPERATION = 32768;
 
+    private final GuiScreen parent;
     private GuiTextField blockField;
     private GuiTextField replaceField;
     private BlockPos pos1;
     private BlockPos pos2;
-    private BlockPos clipboardMin;
-    private BlockPos clipboardMax;
+    private IBlockState[][][] clipboard;
+    private int clipboardX;
+    private int clipboardY;
+    private int clipboardZ;
     private String status = "Select the two corners of your region.";
 
     public WorldEditGui(GuiScreen parent) {
@@ -100,7 +106,8 @@ public final class WorldEditGui extends AlphaGuiScreen {
     }
 
     private boolean isSingleplayerAvailable() {
-        return mc != null && mc.isSingleplayer() && mc.thePlayer != null && mc.theWorld != null;
+        return mc != null && mc.isSingleplayer() && mc.thePlayer != null && mc.theWorld != null
+                && mc.getIntegratedServer() != null;
     }
 
     @Override
@@ -123,120 +130,186 @@ public final class WorldEditGui extends AlphaGuiScreen {
             return;
         }
 
+        if (button.id == PASTE) {
+            pasteAtPlayer();
+            return;
+        }
+
         if (!hasSelection()) {
             status = "Set both positions before editing.";
             return;
         }
 
-        String block = normalizeBlock(blockField == null ? "" : blockField.getText());
-        String replacement = normalizeBlock(replaceField == null ? "" : replaceField.getText());
-        if (button.id == SET) {
-            if (block == null) { status = "Enter a valid block ID."; return; }
-            send(fillCommand(region(), block));
-            status = "Set region to " + block + ".";
-        } else if (button.id == REPLACE) {
-            if (block == null || replacement == null) { status = "Enter valid block IDs."; return; }
-            send(fillCommand(region(), block) + " replace " + replacement);
-            status = "Replaced " + replacement + " with " + block + ".";
-        } else if (button.id == WALLS || button.id == OUTLINE || button.id == HOLLOW) {
-            if (block == null) { status = "Enter a valid block ID."; return; }
-            if (button.id == WALLS) runWalls(block); else runShell(block, button.id == HOLLOW);
-            status = button.id == WALLS ? "Built the four side walls."
-                    : (button.id == OUTLINE ? "Built the region outline." : "Built a hollow region.");
-        } else if (button.id == COPY) {
-            clipboardMin = min(pos1, pos2);
-            clipboardMax = max(pos1, pos2);
-            status = "Selection stored. Paste clones the current source blocks."
-        } else if (button.id == PASTE) {
-            if (clipboardMin == null || clipboardMax == null) {
-                status = "Copy a region before pasting.";
-                return;
-            }
-            BlockPos destination = mc.thePlayer.getPosition();
-            send("/clone " + coords(clipboardMin) + " " + coords(clipboardMax) + " "
-                    + destination.getX() + " " + destination.getY() + " " + destination.getZ());
-            status = "Pasting copied region at your position.";
+        final Bounds bounds = getBounds();
+        if (!isValidVolume(bounds)) return;
+
+        if (button.id == COPY) {
+            copySelection(bounds);
+            return;
         }
+
+        final IBlockState selectedBlock = parseBlock(blockField == null ? "" : blockField.getText());
+        if (selectedBlock == null) {
+            status = "Enter a valid block ID (optional metadata: minecraft:stone:0).";
+            return;
+        }
+
+        final IBlockState replacement = button.id == REPLACE
+                ? parseBlock(replaceField == null ? "" : replaceField.getText()) : null;
+        if (button.id == REPLACE && replacement == null) {
+            status = "Enter a valid replacement block ID.";
+            return;
+        }
+
+        if (button.id == SET || button.id == REPLACE) {
+            applyFill(bounds, selectedBlock, replacement);
+        } else if (button.id == WALLS || button.id == OUTLINE || button.id == HOLLOW) {
+            applyShape(bounds, selectedBlock, button.id);
+        }
+    }
+
+    private void applyFill(final Bounds bounds, final IBlockState state, final IBlockState filter) {
+        runOnIntegratedServer(new WorldEditTask() {
+            @Override
+            public void run(WorldServer world) {
+                if (!regionLoaded(world, bounds)) { status = "Selection contains unloaded chunks."; return; }
+                for (int x = bounds.minX; x <= bounds.maxX; x++)
+                    for (int y = bounds.minY; y <= bounds.maxY; y++)
+                        for (int z = bounds.minZ; z <= bounds.maxZ; z++) {
+                            BlockPos p = new BlockPos(x, y, z);
+                            if (filter == null || world.getBlockState(p).getBlock() == filter.getBlock())
+                                world.setBlockState(p, state, 2);
+                        }
+                status = filter == null ? "Region filled without using cheats." : "Matching blocks replaced.";
+            }
+        });
+    }
+
+    private void applyShape(final Bounds b, final IBlockState state, final int operation) {
+        runOnIntegratedServer(new WorldEditTask() {
+            @Override
+            public void run(WorldServer world) {
+                if (!regionLoaded(world, b)) { status = "Selection contains unloaded chunks."; return; }
+                for (int x = b.minX; x <= b.maxX; x++)
+                    for (int y = b.minY; y <= b.maxY; y++)
+                        for (int z = b.minZ; z <= b.maxZ; z++) {
+                            boolean xEdge = x == b.minX || x == b.maxX;
+                            boolean yEdge = y == b.minY || y == b.maxY;
+                            boolean zEdge = z == b.minZ || z == b.maxZ;
+                            boolean edge;
+                            if (operation == WALLS) edge = xEdge || zEdge;
+                            else if (operation == OUTLINE) edge = xEdge || yEdge || zEdge;
+                            else edge = xEdge || yEdge || zEdge;
+                            if (!edge && operation == HOLLOW) {
+                                world.setBlockState(new BlockPos(x, y, z),
+                                        net.minecraft.init.Blocks.air.getDefaultState(), 2);
+                            } else if (edge) {
+                                world.setBlockState(new BlockPos(x, y, z), state, 2);
+                            }
+                        }
+                status = operation == WALLS ? "Side walls built."
+                        : operation == OUTLINE ? "Region outline built." : "Hollow region built.";
+            }
+        });
+    }
+
+    private void copySelection(final Bounds b) {
+        runOnIntegratedServer(new WorldEditTask() {
+            @Override
+            public void run(WorldServer world) {
+                if (!regionLoaded(world, b)) { status = "Selection contains unloaded chunks."; return; }
+                int sx = b.sizeX(), sy = b.sizeY(), sz = b.sizeZ();
+                IBlockState[][][] copied = new IBlockState[sx][sy][sz];
+                for (int x = 0; x < sx; x++)
+                    for (int y = 0; y < sy; y++)
+                        for (int z = 0; z < sz; z++)
+                            copied[x][y][z] = world.getBlockState(
+                                    new BlockPos(b.minX + x, b.minY + y, b.minZ + z));
+                clipboard = copied;
+                clipboardX = sx;
+                clipboardY = sy;
+                clipboardZ = sz;
+                status = "Region copied to the WorldEdit clipboard.";
+            }
+        });
+    }
+
+    private void pasteAtPlayer() {
+        if (clipboard == null) { status = "Copy a region before pasting."; return; }
+        final BlockPos destination = mc.thePlayer.getPosition();
+        final IBlockState[][][] copied = clipboard;
+        final int sx = clipboardX, sy = clipboardY, sz = clipboardZ;
+        final Bounds target = new Bounds(destination.getX(), destination.getY(), destination.getZ(),
+                destination.getX() + sx - 1, destination.getY() + sy - 1, destination.getZ() + sz - 1);
+        if (!isValidVolume(target)) return;
+
+        runOnIntegratedServer(new WorldEditTask() {
+            @Override
+            public void run(WorldServer world) {
+                if (!regionLoaded(world, target)) { status = "Paste area contains unloaded chunks."; return; }
+                for (int x = 0; x < sx; x++)
+                    for (int y = 0; y < sy; y++)
+                        for (int z = 0; z < sz; z++)
+                            world.setBlockState(new BlockPos(destination.getX() + x,
+                                    destination.getY() + y, destination.getZ() + z), copied[x][y][z], 2);
+                status = "Clipboard pasted at your position.";
+            }
+        });
+    }
+
+    private void runOnIntegratedServer(final WorldEditTask task) {
+        final IntegratedServer server = mc.getIntegratedServer();
+        if (server == null) { status = "Integrated server is unavailable."; return; }
+        status = "Applying WorldEdit operation...";
+        server.addScheduledTask(new Runnable() {
+            @Override
+            public void run() {
+                WorldServer world = server.worldServerForDimension(mc.theWorld.provider.getDimensionId());
+                if (world == null) { status = "Singleplayer world is unavailable."; return; }
+                task.run(world);
+            }
+        });
+    }
+
+    private boolean regionLoaded(WorldServer world, Bounds b) {
+        for (int x = b.minX >> 4; x <= b.maxX >> 4; x++)
+            for (int z = b.minZ >> 4; z <= b.maxZ >> 4; z++)
+                if (!world.getChunkProvider().chunkExists(x, z)) return false;
+        return true;
+    }
+
+    private boolean isValidVolume(Bounds b) {
+        if (b.minY < 0 || b.maxY > 255) { status = "Selection must stay between Y=0 and Y=255."; return false; }
+        long volume = (long) b.sizeX() * b.sizeY() * b.sizeZ();
+        if (volume > MAX_BLOCKS_PER_OPERATION) {
+            status = "Selection is too large. Maximum: " + MAX_BLOCKS_PER_OPERATION + " blocks.";
+            return false;
+        }
+        return true;
+    }
+
+    private IBlockState parseBlock(String input) {
+        if (input == null) return null;
+        String value = input.trim().toLowerCase(java.util.Locale.ROOT);
+        if (!value.matches("[a-z0-9_]+(:[a-z0-9_]+)?(:[0-9]{1,2})?")) return null;
+        String[] parts = value.split(":");
+        String name = parts.length == 1 ? "minecraft:" + parts[0]
+                : parts[0] + ":" + parts[1];
+        Block block = Block.getBlockFromName(new ResourceLocation(name));
+        if (block == null) return null;
+        int meta = parts.length == 3 ? Integer.parseInt(parts[2]) : 0;
+        if (meta < 0 || meta > 15) return null;
+        return block.getStateFromMeta(meta);
     }
 
     private boolean hasSelection() {
         return pos1 != null && pos2 != null;
     }
 
-    private String[] region() {
-        BlockPos low = min(pos1, pos2);
-        BlockPos high = max(pos1, pos2);
-        return new String[] { coords(low), coords(high) };
-    }
-
-    private String fillCommand(String[] bounds, String block) {
-        return "/fill " + bounds[0] + " " + bounds[1] + " " + block;
-    }
-
-    private void runWalls(String block) {
-        BlockPos low = min(pos1, pos2);
-        BlockPos high = max(pos1, pos2);
-        send("/fill " + low.getX() + " " + low.getY() + " " + low.getZ()
-                + " " + low.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
-        send("/fill " + high.getX() + " " + low.getY() + " " + low.getZ()
-                + " " + high.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
-        send("/fill " + low.getX() + " " + low.getY() + " " + low.getZ()
-                + " " + high.getX() + " " + high.getY() + " " + low.getZ() + " " + block);
-        send("/fill " + low.getX() + " " + low.getY() + " " + high.getZ()
-                + " " + high.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
-    }
-
-    private void runShell(String block, boolean hollow) {
-        BlockPos low = min(pos1, pos2);
-        BlockPos high = max(pos1, pos2);
-        List<String> commands = new ArrayList<String>();
-        commands.add("/fill " + low.getX() + " " + low.getY() + " " + low.getZ()
-                + " " + high.getX() + " " + low.getY() + " " + high.getZ() + " " + block);
-        commands.add("/fill " + low.getX() + " " + high.getY() + " " + low.getZ()
-                + " " + high.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
-        commands.add("/fill " + low.getX() + " " + low.getY() + " " + low.getZ()
-                + " " + low.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
-        commands.add("/fill " + high.getX() + " " + low.getY() + " " + low.getZ()
-                + " " + high.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
-        commands.add("/fill " + low.getX() + " " + low.getY() + " " + low.getZ()
-                + " " + high.getX() + " " + high.getY() + " " + low.getZ() + " " + block);
-        commands.add("/fill " + low.getX() + " " + low.getY() + " " + high.getZ()
-                + " " + high.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
-
-        if (hollow) {
-            int innerMinX = low.getX() + 1, innerMinY = low.getY() + 1, innerMinZ = low.getZ() + 1;
-            int innerMaxX = high.getX() - 1, innerMaxY = high.getY() - 1, innerMaxZ = high.getZ() - 1;
-            if (innerMinX <= innerMaxX && innerMinY <= innerMaxY && innerMinZ <= innerMaxZ) {
-                commands.add("/fill " + innerMinX + " " + innerMinY + " " + innerMinZ
-                        + " " + innerMaxX + " " + innerMaxY + " " + innerMaxZ + " minecraft:air");
-            }
-        }
-        for (String command : commands) send(command);
-    }
-
-    private void send(String command) {
-        if (isSingleplayerAvailable()) mc.thePlayer.sendChatMessage(command);
-    }
-
-    private String normalizeBlock(String value) {
-        if (value == null) return null;
-        String block = value.trim().toLowerCase(java.util.Locale.ROOT);
-        if (block.isEmpty() || !block.matches("[a-z0-9_]+(:[a-z0-9_]+)?")) return null;
-        return block.indexOf(':') >= 0 ? block : "minecraft:" + block;
-    }
-
-    private BlockPos min(BlockPos a, BlockPos b) {
-        return new BlockPos(Math.min(a.getX(), b.getX()), Math.min(a.getY(), b.getY()),
-                Math.min(a.getZ(), b.getZ()));
-    }
-
-    private BlockPos max(BlockPos a, BlockPos b) {
-        return new BlockPos(Math.max(a.getX(), b.getX()), Math.max(a.getY(), b.getY()),
-                Math.max(a.getZ(), b.getZ()));
-    }
-
-    private String coords(BlockPos pos) {
-        return pos.getX() + " " + pos.getY() + " " + pos.getZ();
+    private Bounds getBounds() {
+        return new Bounds(Math.min(pos1.getX(), pos2.getX()), Math.min(pos1.getY(), pos2.getY()),
+                Math.min(pos1.getZ(), pos2.getZ()), Math.max(pos1.getX(), pos2.getX()),
+                Math.max(pos1.getY(), pos2.getY()), Math.max(pos1.getZ(), pos2.getZ()));
     }
 
     private String format(BlockPos pos) {
@@ -298,11 +371,11 @@ public final class WorldEditGui extends AlphaGuiScreen {
                 left + 14, top + 157, 0xFFE7E9EE);
         drawString(fontRendererObj, "POS 2: " + (pos2 == null ? "Not set" : format(pos2)),
                 left + 14, top + 169, 0xFFE7E9EE);
-        drawString(fontRendererObj, "SOURCE: " + (clipboardMin == null ? "Not stored" : "Selection stored"),
+        drawString(fontRendererObj, "CLIPBOARD: " + (clipboard == null ? "Empty" : "Stored"),
                 left + 14, top + 183, 0xFFB8BDC8);
         drawString(fontRendererObj, fit(status, panelWidth - 28), left + 14,
                 top + 218, ACCENT);
-        drawString(fontRendererObj, "Requires singleplayer cheats (vanilla /fill and /clone).",
+        drawString(fontRendererObj, "Direct local-world editing. Cheats are not required.",
                 left + 14, top + 245, 0xFF9298A4);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
@@ -315,5 +388,20 @@ public final class WorldEditGui extends AlphaGuiScreen {
     @Override
     public boolean doesGuiPauseGame() {
         return false;
+    }
+
+    private interface WorldEditTask {
+        void run(WorldServer world);
+    }
+
+    private static final class Bounds {
+        final int minX, minY, minZ, maxX, maxY, maxZ;
+        Bounds(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+            this.minX = minX; this.minY = minY; this.minZ = minZ;
+            this.maxX = maxX; this.maxY = maxY; this.maxZ = maxZ;
+        }
+        int sizeX() { return maxX - minX + 1; }
+        int sizeY() { return maxY - minY + 1; }
+        int sizeZ() { return maxZ - minZ + 1; }
     }
 }
