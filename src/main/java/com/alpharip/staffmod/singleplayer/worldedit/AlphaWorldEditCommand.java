@@ -392,6 +392,84 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
 
+        // Clipboard editing.
+        if ("cut".equals(cmd)) {
+            final WorldEditSelection.Bounds b=selection(sender);
+            if(b==null)return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
+                CLIPBOARD.setBlocks(WorldEditOperations.copy(w,b));
+                WorldEditOperations.fill(w,b,net.minecraft.init.Blocks.air.getDefaultState(),null);
+                reply(sender,"Region cut to the Alpha World Edit clipboard.");
+            }});
+            return;
+        }
+        if ("rotate".equals(cmd) && args.length==2 && CLIPBOARD.hasBlocks()) {
+            final int degrees;
+            try{degrees=Integer.parseInt(args[1]);}
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe rotate <90|180|270>");return;}
+            if(degrees!=90&&degrees!=180&&degrees!=270){reply(sender,"Rotation must be 90, 180, or 270 degrees.");return;}
+            CLIPBOARD.setBlocks(WorldEditAdvancedOperations.rotateY(CLIPBOARD.getBlocks(),degrees));
+            reply(sender,"Clipboard rotated "+degrees+" degrees around the vertical axis.");
+            return;
+        }
+        if ("flip".equals(cmd) && args.length==2 && CLIPBOARD.hasBlocks()) {
+            String axis=args[1].toLowerCase(Locale.ROOT);
+            if(!"x".equals(axis)&&!"y".equals(axis)&&!"z".equals(axis)){reply(sender,"Usage: //acwe flip <x|y|z>");return;}
+            CLIPBOARD.setBlocks(WorldEditAdvancedOperations.flip(CLIPBOARD.getBlocks(),axis));
+            reply(sender,"Clipboard flipped on the "+axis+" axis.");
+            return;
+        }
+
+        // Surface and nearby block utilities.
+        if ("snow".equals(cmd)||"thaw".equals(cmd)||"green".equals(cmd)) {
+            final WorldEditSelection.Bounds b=selection(sender);
+            if(b==null)return;
+            final int mode="snow".equals(cmd)?0:("thaw".equals(cmd)?1:2);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
+                int changed=WorldEditAdvancedOperations.changeSurface(w,b,mode);
+                reply(sender,cmd+" changed "+changed+" surface block(s).");
+            }});
+            return;
+        }
+        if ("fixwater".equals(cmd)||"fixlava".equals(cmd)) {
+            final WorldEditSelection.Bounds b=selection(sender);
+            if(b==null)return;
+            final boolean lava="fixlava".equals(cmd);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
+                int changed=WorldEditAdvancedOperations.fixLiquid(w,b,lava);
+                reply(sender,cmd+" updated "+changed+" liquid block(s).");
+            }});
+            return;
+        }
+        if ("remove".equals(cmd)) {
+            final WorldEditSelection.Bounds b=selection(sender);
+            if(b==null)return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
+                WorldEditOperations.fill(w,b,net.minecraft.init.Blocks.air.getDefaultState(),null);
+                reply(sender,"Selected region cleared.");
+            }});
+            return;
+        }
+        if ("removenear".equals(cmd)&&args.length>=2&&args.length<=3) {
+            final IBlockState target=WorldEditBlockParser.parse(args[1]);
+            final int radius;
+            try{radius=args.length==3?Integer.parseInt(args[2]):5;}
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe removenear <block> [radius]");return;}
+            if(target==null||radius<1||radius>16){reply(sender,"Invalid block or radius (1-16).");return;}
+            final BlockPos center=mc.thePlayer.getPosition();
+            final WorldEditSelection.Bounds area=new WorldEditSelection.Bounds(center.getX()-radius,Math.max(0,center.getY()-radius),center.getZ()-radius,center.getX()+radius,Math.min(255,center.getY()+radius),center.getZ()+radius);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,area)){reply(sender,"Area contains unloaded chunks.");return;}
+                int changed=WorldEditAdvancedOperations.removeNear(w,center,radius,target);
+                reply(sender,"Removed "+changed+" nearby block(s).");
+            }});
+            return;
+        }
+
         reply(sender, "Unknown or unsupported Alpha World Edit command. Use //acwe help.");
     }
 
@@ -447,7 +525,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomeinfo","chunkinfo","set","replace","walls","outline","hollow","copy","paste","clearclipboard"};
+            String[] values = {"help","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","line","center","overlay","naturalize","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
