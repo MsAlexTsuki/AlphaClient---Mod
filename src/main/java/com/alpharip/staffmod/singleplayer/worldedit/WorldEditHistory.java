@@ -17,6 +17,7 @@ public final class WorldEditHistory {
     private WorldEditHistory(){}
 
     public static void record(WorldServer world,WorldEditSelection.Bounds bounds) {
+        WorldEditAuditLog.captureBefore(world,bounds);
         UNDO.push(new Snapshot(bounds,WorldEditOperations.copy(world,bounds)));
         while(UNDO.size()>MAX_ENTRIES)UNDO.removeLast();
         REDO.clear();
@@ -25,6 +26,7 @@ public final class WorldEditHistory {
     public static boolean undo(WorldServer world) {
         if(UNDO.isEmpty())return false;
         Snapshot previous=UNDO.pop();
+        WorldEditAuditLog.captureBefore(world,previous.bounds);
         REDO.push(new Snapshot(previous.bounds,WorldEditOperations.copy(world,previous.bounds)));
         apply(world,previous);
         return true;
@@ -33,6 +35,7 @@ public final class WorldEditHistory {
     public static boolean redo(WorldServer world) {
         if(REDO.isEmpty())return false;
         Snapshot next=REDO.pop();
+        WorldEditAuditLog.captureBefore(world,next.bounds);
         UNDO.push(new Snapshot(next.bounds,WorldEditOperations.copy(world,next.bounds)));
         apply(world,next);
         return true;
