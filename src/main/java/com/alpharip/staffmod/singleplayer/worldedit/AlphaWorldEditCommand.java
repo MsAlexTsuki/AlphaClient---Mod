@@ -236,6 +236,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
                     chunk.setBiomeArray(data);changed.add(chunk);
                 }
                 for(net.minecraft.world.chunk.Chunk chunk:changed)chunk.setChunkModified();
+                WorldEditAuditLog.recordSummary(w,activeAuditCommand,"Biome changed to "+found.biomeName,b.sizeX()*b.sizeZ(),new BlockPos(b.minX,b.minY,b.minZ));
                 reply(sender,"Biome set to "+found.biomeName+" across the selected columns.");
             }});
             return;
@@ -991,6 +992,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             final BlockPos center=mc.thePlayer.getPosition();
             onServer(sender,new Task(){public void run(WorldServer w){
                 int removed=WorldEditFeatureOperations.butcher(w,center,radius,animals);
+                WorldEditAuditLog.recordSummary(w,activeAuditCommand,"Mobs removed",removed,center);
                 reply(sender,"Removed "+removed+(animals?" hostile and passive":" hostile")+" mob(s).");
             }});
             return;
