@@ -121,7 +121,15 @@ public final class RankViewerRenderer {
             GlStateManager.rotate(playerViewX, 1.0F, 0.0F, 0.0F);
             GlStateManager.scale(-scale, -scale, scale);
             GlStateManager.disableLighting();
-            GlStateManager.disableDepth();
+            // The local F5 nametag must be occluded by world geometry while sneaking.
+            // Other nametags keep their existing through-wall rendering behavior.
+            boolean localPlayerSneaking = player != null && minecraft.thePlayer != null
+                    && player.getUniqueID().equals(minecraft.thePlayer.getUniqueID()) && sneaking;
+            if (localPlayerSneaking) {
+                GlStateManager.enableDepth();
+            } else {
+                GlStateManager.disableDepth();
+            }
             // Rank textures contain transparent pixels; blend them instead of relying on
             // whatever blend state the previous world renderer left active.
             GlStateManager.enableBlend();
