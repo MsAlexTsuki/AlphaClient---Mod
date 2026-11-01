@@ -42,8 +42,11 @@ public final class InventorySearchMod {
         GuiContainer container = (GuiContainer) screen;
         int left = read(container, "guiLeft", "field_147003_i");
         int top = read(container, "guiTop", "field_147009_r");
+        boolean playerInventory = InventorySearchInventory.supports(container);
+        int searchX = playerInventory ? left + 40 : left + 72;
+        int searchY = playerInventory ? top + 168 : top + 4;
         field = new GuiTextField(
-                9231, MC.fontRendererObj, left + 72, top + 4, 96, 12
+                9231, MC.fontRendererObj, searchX, searchY, 96, 12
         );
         field.setMaxStringLength(64);
         field.setText(query);
