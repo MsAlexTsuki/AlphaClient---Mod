@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** AlphaClient-only WorldEdit namespace. */
@@ -33,6 +34,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     private static int brushRadius = 3;
     private static IBlockState brushBlock = net.minecraft.init.Blocks.stone.getDefaultState();
     private static IBlockState toolFrom, toolTo;
+    private static String activeAuditCommand = "Alpha World Edit operation";
     private static final String WAND_TAG = "AlphaWorldEditWand";
     private static final int WALLS = 1, OUTLINE = 2, HOLLOW = 3;
     private static final WorldEditSelection SELECTION = new WorldEditSelection();
@@ -61,7 +63,12 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
 
         String cmd = args[0].toLowerCase(Locale.ROOT);
+        activeAuditCommand = "//acwe " + joinArguments(args);
 
+        if ("logs".equals(cmd)) {
+            AlphaClient.openGuiFromCommand(new WorldEditAuditGui(mc.currentScreen));
+            return;
+        }
         if ("limit".equals(cmd) && args.length==2) {
             try {
                 int requested=Integer.parseInt(args[1]);
@@ -1019,10 +1026,13 @@ public final class AlphaWorldEditCommand extends CommandBase {
         final IntegratedServer server = mc == null ? null : mc.getIntegratedServer();
         if (server == null || mc.theWorld == null) { reply(sender, "Integrated server is unavailable."); return; }
         final int dimension = mc.theWorld.provider.getDimensionId();
+        final String auditAction = activeAuditCommand;
         server.addScheduledTask(new Runnable() { public void run() {
+            WorldEditAuditLog.setCurrentAction(auditAction);
             WorldServer world = server.worldServerForDimension(dimension);
             if (world == null) { reply(sender, "Singleplayer world is unavailable."); return; }
-            task.run(world);
+            try { task.run(world); }
+            finally { WorldEditAuditLog.clearCurrentAction(); }
         }});
     }
 
@@ -1044,7 +1054,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","regen","generate","gen","g","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","logs","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","regen","generate","gen","g","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         else if(args!=null&&args.length==2) {
@@ -1111,6 +1121,12 @@ public final class AlphaWorldEditCommand extends CommandBase {
         final BlockPos adjacent=event.face==null?clicked.up():clicked.offset(event.face);
         boolean left=event.action==PlayerInteractEvent.Action.LEFT_CLICK_BLOCK;
         boolean right=event.action==PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK;
+        if (left || right) {
+            String action = !"none".equals(pickaxeMode) && left ? "Super Pickaxe: " + pickaxeMode
+                    : (!"none".equals(toolMode) ? "Tool: " + toolMode
+                    : (!"none".equals(brushMode) && right ? "Brush: " + brushMode : "World Edit interaction"));
+            WorldEditAuditLog.setCurrentAction(action);
+        }
         if(!left&&!right)return;
 
         if(left&&!"none".equals(pickaxeMode)) {
@@ -1215,6 +1231,20 @@ public final class AlphaWorldEditCommand extends CommandBase {
             WorldEditFeatureOperations.raiseLower(world,center,brushRadius,-1);
         }
         event.setCanceled(true);
+    }
+
+    private static String joinArguments(String[] args) {
+        StringBuilder value = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if (i > 0) value.append(" ");
+            value.append(args[i]);
+        }
+        return value.toString();
+    }
+
+    @SubscribeEvent
+    public void onAuditWorldTick(TickEvent.WorldTickEvent event) {
+        WorldEditAuditLog.onWorldTick(event);
     }
 
     private interface Task { void run(WorldServer world); }
