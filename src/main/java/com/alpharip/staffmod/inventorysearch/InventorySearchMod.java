@@ -27,10 +27,24 @@ public final class InventorySearchMod {
         }
 
         GuiContainer container = (GuiContainer) screen;
-        return InventorySearchInventory.supports(container)
-                || (screen instanceof GuiChest
-                && (InventorySearchChest.supports((GuiChest) screen)
-                || InventorySearchEnderChest.supports((GuiChest) screen)));
+        InventorySearchSettings.Mode mode = InventorySearchSettings.getMode();
+        boolean inventory = InventorySearchInventory.supports(container);
+        boolean chest = screen instanceof GuiChest
+                && InventorySearchChest.supports((GuiChest) screen);
+        boolean ender = screen instanceof GuiChest
+                && InventorySearchEnderChest.supports((GuiChest) screen);
+
+        switch (mode) {
+            case INVENTORY:
+                return inventory;
+            case CHEST:
+                return chest;
+            case ENDER:
+                return ender;
+            case ALL:
+            default:
+                return inventory || chest || ender;
+        }
     }
 
     private static void init(GuiScreen screen) {
