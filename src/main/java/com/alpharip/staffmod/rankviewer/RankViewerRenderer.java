@@ -88,7 +88,9 @@ public final class RankViewerRenderer {
         int nameColor = getRelationshipNameColor(minecraft, name, rank);
         // Vanilla 1.8.9 makes sneaking name tags translucent. Apply the same fade
         // to the local F5 name and badge without changing their position.
-        float sneakAlpha = player != null && player.isSneaking() ? 0.25F : 1.0F;
+        boolean sneaking = player != null && player.isSneaking();
+        // Vanilla 1.8.9 draws sneaking name text with ARGB 0x20FFFFFF (about 12.5% alpha).
+        float sneakAlpha = sneaking ? (32.0F / 255.0F) : 1.0F;
         nameColor = withAlpha(nameColor, sneakAlpha);
 
         // Capture the state that this renderer changes. World rendering and the vanilla HUD
@@ -131,11 +133,14 @@ public final class RankViewerRenderer {
             int right = cursor + totalWidth + 1;
             int top = -1;
             int bottom = BADGE_SIZE + 1;
-            Gui.drawRect(left, top, right, bottom, withAlpha(0x10000000, sneakAlpha));
-            Gui.drawRect(left, top, right, top + 1, withAlpha(0x18000000, sneakAlpha));
-            Gui.drawRect(left, bottom - 1, right, bottom, withAlpha(0x18000000, sneakAlpha));
-            Gui.drawRect(left, top, left + 1, bottom, withAlpha(0x18000000, sneakAlpha));
-            Gui.drawRect(right - 1, top, right, bottom, withAlpha(0x18000000, sneakAlpha));
+            // Vanilla sneaking nametags use a 25%-opaque black background.
+            int panelColor = sneaking ? 0x40000000 : 0x10000000;
+            int borderColor = sneaking ? 0x40000000 : 0x18000000;
+            Gui.drawRect(left, top, right, bottom, panelColor);
+            Gui.drawRect(left, top, right, top + 1, borderColor);
+            Gui.drawRect(left, bottom - 1, right, bottom, borderColor);
+            Gui.drawRect(left, top, left + 1, bottom, borderColor);
+            Gui.drawRect(right - 1, top, right, bottom, borderColor);
 
             if (rank != null) {
                 GlStateManager.pushMatrix();
