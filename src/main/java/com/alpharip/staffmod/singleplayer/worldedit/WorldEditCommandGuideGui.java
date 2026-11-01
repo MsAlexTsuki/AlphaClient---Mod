@@ -27,6 +27,7 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
 
         addSection("SELECTION");
         addCommand("//acwe wand", "Receive the dedicated World Edit Wand. Left-click a block for position 1; right-click for position 2.");
+        addCommand("//acwe toggleeditwand", "Enable or disable selection clicks from the dedicated World Edit Wand.");
         addCommand("//acwe pos1", "Set position 1 to your current player position.");
         addCommand("//acwe pos2", "Set position 2 to your current player position.");
         addCommand("//acwe desel", "Clear the current selection.");
