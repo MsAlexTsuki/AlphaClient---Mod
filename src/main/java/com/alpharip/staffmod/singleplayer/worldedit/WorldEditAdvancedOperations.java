@@ -117,6 +117,36 @@ public final class WorldEditAdvancedOperations {
                 w.setBlockState(new BlockPos(x,y,z),Blocks.air.getDefaultState(),2);
     }
 
+    public static int fillDown(WorldServer w, BlockPos start, int depth, IBlockState state) {
+        int changed=0;
+        for(int y=start.getY();y>=Math.max(0,start.getY()-depth);y--) {
+            BlockPos p=new BlockPos(start.getX(),y,start.getZ());
+            if(!w.isAirBlock(p))break;
+            w.setBlockState(p,state,2);changed++;
+        }
+        return changed;
+    }
+
+    public static int floodFillAir(WorldServer w, BlockPos start, int radius, IBlockState state) {
+        java.util.ArrayDeque<BlockPos> queue=new java.util.ArrayDeque<BlockPos>();
+        java.util.HashSet<BlockPos> visited=new java.util.HashSet<BlockPos>();
+        queue.add(start);
+        int changed=0, limit=8192, r2=radius*radius;
+        while(!queue.isEmpty()&&changed<limit) {
+            BlockPos p=queue.removeFirst();
+            if(visited.contains(p))continue;
+            visited.add(p);
+            int dx=p.getX()-start.getX(),dy=p.getY()-start.getY(),dz=p.getZ()-start.getZ();
+            if(dx*dx+dy*dy+dz*dz>r2||p.getY()<0||p.getY()>255)continue;
+            if(!w.isAirBlock(p))continue;
+            w.setBlockState(p,state,2);changed++;
+            queue.add(p.add(1,0,0));queue.add(p.add(-1,0,0));
+            queue.add(p.add(0,1,0));queue.add(p.add(0,-1,0));
+            queue.add(p.add(0,0,1));queue.add(p.add(0,0,-1));
+        }
+        return changed;
+    }
+
     public static int replaceNear(WorldServer w, BlockPos center, int radius,
                                   IBlockState from, IBlockState to) {
         record(w,center.getX()-radius,center.getY()-radius,center.getZ()-radius,center.getX()+radius,center.getY()+radius,center.getZ()+radius);
