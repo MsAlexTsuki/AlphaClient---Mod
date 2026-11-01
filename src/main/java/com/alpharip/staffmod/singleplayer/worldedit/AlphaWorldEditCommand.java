@@ -970,5 +970,103 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
     }
 
+    /** Applies configured Alpha World Edit tools only to the local Singleplayer player. */
+    @SubscribeEvent
+    public void onWorldEditToolUse(PlayerInteractEvent event) {
+        if(event==null||event.world==null||event.world.isRemote||event.entityPlayer==null||event.pos==null)return;
+        AlphaModule module=AlphaModuleRegistry.find("world-edit");
+        if(module==null||!module.isEnabled())return;
+        Minecraft mc=Minecraft.getMinecraft();
+        if(mc==null||!mc.isSingleplayer()||mc.thePlayer==null
+                ||!event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID()))return;
+        if(!(event.world instanceof WorldServer))return;
+        final WorldServer world=(WorldServer)event.world;
+        final BlockPos clicked=event.pos;
+        final BlockPos adjacent=event.face==null?clicked.up():clicked.offset(event.face);
+        boolean left=event.action==PlayerInteractEvent.Action.LEFT_CLICK_BLOCK;
+        boolean right=event.action==PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK;
+        if(!left&&!right)return;
+
+        if(left&&!"none".equals(pickaxeMode)) {
+            int mode="single".equals(pickaxeMode)?0:("area".equals(pickaxeMode)?1:2);
+            int removed=WorldEditFeatureOperations.superPick(world,clicked,mode,3);
+            reply(event.entityPlayer,"Super Pickaxe removed "+removed+" block(s).");
+            event.setCanceled(true);return;
+        }
+
+        if(!"none".equals(toolMode)) {
+            if("farwand".equals(toolMode)) {
+                if(left)SELECTION.setPos1(clicked);else SELECTION.setPos2(clicked);
+                reply(event.entityPlayer,(left?"Position 1":"Position 2")+" set: "+clicked.getX()+", "+clicked.getY()+", "+clicked.getZ());
+                event.setCanceled(true);return;
+            }
+            if("info".equals(toolMode)) {
+                IBlockState state=world.getBlockState(clicked);
+                reply(event.entityPlayer,"Block: "+state.getBlock().getRegistryName()+" (metadata "+state.getBlock().getMetaFromState(state)+")");
+                event.setCanceled(true);return;
+            }
+            if(!right)return;
+            if("tree".equals(toolMode)) {
+                boolean generated=new net.minecraft.world.gen.feature.WorldGenTrees(true).generate(world,new java.util.Random(),adjacent);
+                reply(event.entityPlayer,generated?"Tree generated.":"Could not generate a tree here.");
+            } else if("repl".equals(toolMode)) {
+                int changed=WorldEditFeatureOperations.replaceNear(world,clicked,4,toolFrom,toolTo);
+                reply(event.entityPlayer,"Tool replaced "+changed+" block(s).");
+            } else if("cycler".equals(toolMode)) {
+                IBlockState current=world.getBlockState(clicked);
+                int meta=(current.getBlock().getMetaFromState(current)+1)&15;
+                world.setBlockState(clicked,current.getBlock().getStateFromMeta(meta),2);
+                reply(event.entityPlayer,"Block state cycled.");
+            } else if("floodfill".equals(toolMode)) {
+                IBlockState fill=toolTo==null?net.minecraft.init.Blocks.stone.getDefaultState():toolTo;
+                int changed=WorldEditAdvancedOperations.floodFillAir(world,adjacent,6,fill);
+                reply(event.entityPlayer,"Flood fill placed "+changed+" block(s).");
+            } else if("deltree".equals(toolMode)) {
+                int changed=WorldEditFeatureOperations.deleteTree(world,clicked,6);
+                reply(event.entityPlayer,"Tree tool removed "+changed+" log/leaf block(s).");
+            } else if("lrbuild".equals(toolMode)) {
+                if(toolTo!=null)world.setBlockState(adjacent,toolTo,2);
+                reply(event.entityPlayer,"Right-click build block placed.");
+            }
+            event.setCanceled(true);return;
+        }
+
+        if(!right||"none".equals(brushMode))return;
+        final BlockPos center=adjacent;
+        if("sphere".equals(brushMode)||"set".equals(brushMode)||"paint".equals(brushMode)||"apply".equals(brushMode)) {
+            WorldEditAdvancedOperations.sphere(world,center,brushRadius,brushRadius,brushRadius,brushBlock,false);
+        } else if("cylinder".equals(brushMode)) {
+            WorldEditAdvancedOperations.cylinder(world,center,brushRadius,brushRadius*2+1,brushBlock,false);
+        } else if("clipboard".equals(brushMode)) {
+            if(CLIPBOARD.hasBlocks())WorldEditOperations.paste(world,center,CLIPBOARD.getBlocks());
+        } else if("smooth".equals(brushMode)) {
+            WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(center.getX()-brushRadius,Math.max(0,center.getY()-brushRadius),center.getZ()-brushRadius,
+                    center.getX()+brushRadius,Math.min(255,center.getY()+brushRadius),center.getZ()+brushRadius);
+            if(WorldEditOperations.regionLoaded(world,b))WorldEditAdvancedOperations.smooth(world,b,1);
+        } else if("ex".equals(brushMode)) {
+            WorldEditFeatureOperations.butcher(world,center,brushRadius,false);
+            WorldEditAdvancedOperations.extinguish(world,center,brushRadius);
+        } else if("gravity".equals(brushMode)) {
+            int moved=WorldEditFeatureOperations.gravity(world,center,brushRadius);
+            reply(event.entityPlayer,"Gravity brush moved "+moved+" block(s).");
+        } else if("butcher".equals(brushMode)) {
+            int removed=WorldEditFeatureOperations.butcher(world,center,brushRadius,true);
+            reply(event.entityPlayer,"Butcher brush removed "+removed+" mob(s).");
+        } else if("deform".equals(brushMode)) {
+            WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(center.getX()-brushRadius,Math.max(0,center.getY()-brushRadius),center.getZ()-brushRadius,
+                    center.getX()+brushRadius,Math.min(255,center.getY()+brushRadius),center.getZ()+brushRadius);
+            WorldEditFeatureOperations.deform(world,b,Math.max(1,brushRadius/2.0D),0.35D);
+        } else if("forest".equals(brushMode)) {
+            WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(center.getX()-brushRadius,Math.max(0,center.getY()-8),center.getZ()-brushRadius,
+                    center.getX()+brushRadius,Math.min(255,center.getY()+16),center.getZ()+brushRadius);
+            WorldEditFeatureOperations.forest(world,b,4,new java.util.Random());
+        } else if("raise".equals(brushMode)) {
+            WorldEditFeatureOperations.raiseLower(world,center,brushRadius,1);
+        } else if("lower".equals(brushMode)) {
+            WorldEditFeatureOperations.raiseLower(world,center,brushRadius,-1);
+        }
+        event.setCanceled(true);
+    }
+
     private interface Task { void run(WorldServer world); }
 }
