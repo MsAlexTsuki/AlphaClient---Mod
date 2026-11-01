@@ -26,7 +26,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         panelBottom = Math.min(height - 12, panelTop + 300);
 
         buttonList.add(new AlphaButton(WORLD_EDIT, panelLeft + 14, panelTop + 78,
-                panelRight - panelLeft - 28, 42, "WORLDEDIT", true));
+                panelRight - panelLeft - 28, 42, "World Edit", true));
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
     }
 
