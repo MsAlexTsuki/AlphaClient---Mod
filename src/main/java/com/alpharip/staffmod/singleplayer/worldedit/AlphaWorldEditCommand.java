@@ -5,6 +5,9 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -15,6 +18,8 @@ import net.minecraft.world.WorldServer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** AlphaClient-only WorldEdit namespace. */
 public final class AlphaWorldEditCommand extends CommandBase {
@@ -51,6 +56,27 @@ public final class AlphaWorldEditCommand extends CommandBase {
             if ("pos1".equals(cmd)) SELECTION.setPos1(pos); else SELECTION.setPos2(pos);
             reply(sender, ("pos1".equals(cmd) ? "Position 1: " : "Position 2: ")
                     + pos.getX() + ", " + pos.getY() + ", " + pos.getZ());
+            return;
+        }
+        if ("wand".equals(cmd)) {
+            if (!(mc.thePlayer instanceof EntityPlayer)) {
+                reply(sender, "Could not give the WorldEdit wand.");
+                return;
+            }
+            EntityPlayer player = mc.thePlayer;
+            for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
+                ItemStack stack = player.inventory.getStackInSlot(i);
+                if (stack != null && stack.getItem() == Items.wooden_axe) {
+                    reply(sender, "You already have the WorldEdit wooden axe.");
+                    return;
+                }
+            }
+            if (player.inventory.addItemStackToInventory(new ItemStack(Items.wooden_axe))) {
+                player.inventoryContainer.detectAndSendChanges();
+                reply(sender, "WorldEdit wand added to your inventory.");
+            } else {
+                reply(sender, "Your inventory is full. Make room for the WorldEdit wand.");
+            }
             return;
         }
         if ("desel".equals(cmd) || "deselect".equals(cmd)) {
@@ -147,7 +173,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
 
     private void help(ICommandSender sender) {
         reply(sender, "Implemented Alpha World Edit commands:");
-        reply(sender, "//acwe pos1 | pos2 | desel");
+        reply(sender, "//acwe wand | pos1 | pos2 | desel");
         reply(sender, "//acwe set <block> | replace <from> <to>");
         reply(sender, "//acwe walls <block> | outline <block> | hollow <block>");
         reply(sender, "//acwe copy | paste | clearclipboard");
@@ -161,10 +187,39 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","pos1","pos2","desel","set","replace","walls","outline","hollow","copy","paste","clearclipboard"};
+            String[] values = {"help","wand","pos1","pos2","desel","set","replace","walls","outline","hollow","copy","paste","clearclipboard"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
+    }
+
+    /** Wooden axe selection wand: left click sets pos1, right click sets pos2. */
+    @SubscribeEvent
+    public void onWorldEditWandUse(PlayerInteractEvent event) {
+        if (event == null || event.world == null || event.world.isRemote
+                || event.entityPlayer == null || !event.entityPlayer.worldObj.isRemote == false) {
+            return;
+        }
+        AlphaModule module = AlphaModuleRegistry.find("world-edit");
+        if (module == null || !module.isEnabled()) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || !mc.isSingleplayer() || mc.thePlayer == null
+                || event.entityPlayer.getUniqueID() == null
+                || !event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID())) return;
+        ItemStack held = event.entityPlayer.getHeldItem();
+        if (held == null || held.getItem() != Items.wooden_axe || event.pos == null) return;
+
+        if (event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
+            SELECTION.setPos1(event.pos);
+            reply(event.entityPlayer, "Position 1 set to " + event.pos.getX() + ", "
+                    + event.pos.getY() + ", " + event.pos.getZ());
+            event.setCanceled(true);
+        } else if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
+            SELECTION.setPos2(event.pos);
+            reply(event.entityPlayer, "Position 2 set to " + event.pos.getX() + ", "
+                    + event.pos.getY() + ", " + event.pos.getZ());
+            event.setCanceled(true);
+        }
     }
 
     private interface Task { void run(WorldServer world); }
