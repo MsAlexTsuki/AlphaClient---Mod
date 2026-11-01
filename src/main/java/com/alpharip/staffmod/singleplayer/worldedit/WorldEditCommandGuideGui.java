@@ -88,6 +88,11 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe pyramid <block> <size>", "Generate a solid pyramid.");
         addCommand("//acwe hpyramid <block> <size>", "Generate a hollow pyramid.");
 
+        addSection("HISTORY");
+        addCommand("//acwe undo", "Restore the previous recorded block state.");
+        addCommand("//acwe redo", "Reapply the last undone block state.");
+        addCommand("//acwe clearhistory", "Clear the in-memory undo and redo history.");
+
         addSection("LOCAL UTILITIES");
         addCommand("//acwe drain [radius]", "Remove liquid blocks in a bounded radius around you.");
         addCommand("//acwe extinguish [radius]", "Remove fire blocks in a bounded radius around you.");
