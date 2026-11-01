@@ -55,6 +55,88 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
 
         String cmd = args[0].toLowerCase(Locale.ROOT);
+
+        // Selection commands and aliases.
+        if ("hpos1".equals(cmd) || "hpos2".equals(cmd)) {
+            if (mc.objectMouseOver == null || mc.objectMouseOver.getBlockPos() == null) {
+                reply(sender, "Look at a block first.");
+                return;
+            }
+            BlockPos target = mc.objectMouseOver.getBlockPos();
+            if ("hpos1".equals(cmd)) SELECTION.setPos1(target); else SELECTION.setPos2(target);
+            reply(sender, ("hpos1".equals(cmd) ? "Position 1: " : "Position 2: ")
+                    + target.getX() + ", " + target.getY() + ", " + target.getZ());
+            return;
+        }
+        if ("sel".equals(cmd) || "desel".equals(cmd) || "deselect".equals(cmd)) {
+            SELECTION.setPos1(null);
+            SELECTION.setPos2(null);
+            reply(sender, "Selection cleared.");
+            return;
+        }
+        if ("size".equals(cmd) || "count".equals(cmd)) {
+            if (!SELECTION.hasSelection()) {
+                reply(sender, "No selection. Set both positions first.");
+                return;
+            }
+            WorldEditSelection.Bounds selected = SELECTION.getBounds();
+            reply(sender, "Selection: " + selected.sizeX() + " x " + selected.sizeY()
+                    + " x " + selected.sizeZ() + " (" + selected.volume() + " blocks).");
+            return;
+        }
+        if ("chunk".equals(cmd)) {
+            int cx = mc.thePlayer.getPosition().getX() >> 4;
+            int cz = mc.thePlayer.getPosition().getZ() >> 4;
+            int minX = cx << 4;
+            int minZ = cz << 4;
+            SELECTION.setPos1(new BlockPos(minX, 0, minZ));
+            SELECTION.setPos2(new BlockPos(minX + 15, 255, minZ + 15));
+            reply(sender, "Selection set to your current chunk. Note: operations remain subject to the region size limit.");
+            return;
+        }
+
+        // Singleplayer navigation helpers.
+        if ("up".equals(cmd) || "ascend".equals(cmd) || "asc".equals(cmd)
+                || "descend".equals(cmd) || "desc".equals(cmd) || "unstuck".equals(cmd)
+                || "!".equals(cmd)) {
+            int amount = 1;
+            if (args.length > 1) {
+                try { amount = Math.max(1, Math.min(64, Integer.parseInt(args[1]))); }
+                catch (NumberFormatException ignored) { reply(sender, "Usage: //acwe " + cmd + " [distance]"); return; }
+            }
+            int targetY = mc.thePlayer.getPosition().getY();
+            if ("descend".equals(cmd) || "desc".equals(cmd)) targetY -= amount;
+            else targetY += amount;
+            targetY = Math.max(1, Math.min(254, targetY));
+            mc.thePlayer.setPositionAndUpdate(mc.thePlayer.posX, targetY, mc.thePlayer.posZ);
+            reply(sender, "Moved to Y=" + targetY + ".");
+            return;
+        }
+        if ("jumpto".equals(cmd) || "j".equals(cmd) || "thru".equals(cmd)) {
+            if (mc.objectMouseOver == null || mc.objectMouseOver.getBlockPos() == null) {
+                reply(sender, "Look at a block first.");
+                return;
+            }
+            BlockPos target = mc.objectMouseOver.getBlockPos().up();
+            mc.thePlayer.setPositionAndUpdate(target.getX() + 0.5D, target.getY(), target.getZ() + 0.5D);
+            reply(sender, "Teleported to the targeted block.");
+            return;
+        }
+
+        if ("biomeinfo".equals(cmd)) {
+            BlockPos at = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null
+                    ? mc.objectMouseOver.getBlockPos() : mc.thePlayer.getPosition();
+            net.minecraft.world.biome.BiomeGenBase biome = mc.theWorld.getBiomeGenForCoords(at);
+            reply(sender, "Biome at " + at.getX() + ", " + at.getY() + ", " + at.getZ()
+                    + ": " + (biome == null ? "unknown" : biome.biomeName));
+            return;
+        }
+        if ("chunkinfo".equals(cmd)) {
+            BlockPos at = mc.thePlayer.getPosition();
+            reply(sender, "Chunk: " + (at.getX() >> 4) + ", " + (at.getZ() >> 4)
+                    + " (block origin " + ((at.getX() >> 4) << 4) + ", " + ((at.getZ() >> 4) << 4) + ").");
+            return;
+        }
         if ("pos1".equals(cmd) || "pos2".equals(cmd)) {
             BlockPos pos = mc.thePlayer.getPosition();
             if ("pos1".equals(cmd)) SELECTION.setPos1(pos); else SELECTION.setPos2(pos);
