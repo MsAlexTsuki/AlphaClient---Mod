@@ -794,7 +794,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
         if ("brush".equals(cmd)||"br".equals(cmd)) {
             if(args.length<2){reply(sender,"Usage: //acwe brush <sphere|cylinder|clipboard|smooth|ex|gravity|butcher|deform|set|paint|apply|forest|raise|lower> [block] [radius]");return;}
             String mode=args[1].toLowerCase(Locale.ROOT);
-            String[] allowed={"sphere","cylinder","clipboard","smooth","ex","gravity","butcher","deform","set","paint","apply","forest","raise","lower"};
+            String[] allowed={"none","sphere","cylinder","clipboard","smooth","ex","gravity","butcher","deform","set","paint","apply","forest","raise","lower"};
             boolean found=false;for(String value:allowed)if(value.equals(mode)){found=true;break;}
             if(!found){reply(sender,"Unknown brush type: "+mode);return;}
             if("none".equals(mode)){brushMode="none";reply(sender,"Brush disabled.");return;}
@@ -829,6 +829,10 @@ public final class AlphaWorldEditCommand extends CommandBase {
             if(!"info".equals(mode)&&!"tree".equals(mode)&&!"repl".equals(mode)&&!"cycler".equals(mode)&&!"floodfill".equals(mode)&&!"deltree".equals(mode)&&!"farwand".equals(mode)&&!"lrbuild".equals(mode)){
                 reply(sender,"Unknown World Edit tool: "+mode);return;
             }
+            if("floodfill".equals(mode)&&args.length==3){
+                toolTo=WorldEditBlockParser.parse(args[2]);
+                if(toolTo==null){reply(sender,"Unknown flood-fill block.");return;}
+            }
             if("repl".equals(mode)){
                 if(args.length!=4){reply(sender,"Usage: //acwe tool repl <from> <to>");return;}
                 toolFrom=WorldEditBlockParser.parse(args[2]);toolTo=WorldEditBlockParser.parse(args[3]);
@@ -840,6 +844,34 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 if(toolFrom==null||toolTo==null){reply(sender,"Unknown build block.");return;}
             }
             toolMode=mode;reply(sender,"World Edit tool "+mode+" selected. Use left/right-click on a block.");
+            return;
+        }
+
+        if ("regen".equals(cmd)) {
+            final WorldEditSelection.Bounds b=selection(sender);if(b==null)return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Regeneration area contains unloaded chunks.");return;}
+                WorldEditFeatureOperations.regenerate(w,b,w.getSeed()^System.nanoTime());
+                reply(sender,"Selected area regenerated with Alpha World Edit terrain generation.");
+            }});
+            return;
+        }
+        if (("generate".equals(cmd)||"gen".equals(cmd)||"g".equals(cmd)) && args.length>=3) {
+            final IBlockState state=WorldEditBlockParser.parse(args[1]);
+            if(state==null){reply(sender,"Usage: //acwe generate <block> <expression> (variables: x, y, z; place blocks where the result is <= 0)");return;}
+            final StringBuilder expressionBuilder=new StringBuilder();
+            for(int i=2;i<args.length;i++){if(i>2)expressionBuilder.append(' ');expressionBuilder.append(args[i]);}
+            final String expression=expressionBuilder.toString();
+            try{WorldEditExpression.evaluate(expression,0,0,0);}
+            catch(IllegalArgumentException ex){reply(sender,"Invalid generation expression: "+ex.getMessage());return;}
+            final WorldEditSelection.Bounds b=selection(sender);if(b==null)return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Generation area contains unloaded chunks.");return;}
+                try{
+                    int placed=WorldEditFeatureOperations.generate(w,b,state,expression);
+                    reply(sender,"Expression generation placed "+placed+" block(s).");
+                }catch(IllegalArgumentException ex){reply(sender,"Generation failed: "+ex.getMessage());}
+            }});
             return;
         }
 
@@ -999,7 +1031,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","regen","generate","gen","g","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
@@ -1074,6 +1106,11 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 reply(event.entityPlayer,"Block: "+state.getBlock().getRegistryName()+" (metadata "+state.getBlock().getMetaFromState(state)+")");
                 event.setCanceled(true);return;
             }
+            if("lrbuild".equals(toolMode)&&left) {
+                if(toolFrom!=null)world.setBlockState(adjacent,toolFrom,2);
+                reply(event.entityPlayer,"Left-click build block placed.");
+                event.setCanceled(true);return;
+            }
             if(!right)return;
             if("tree".equals(toolMode)) {
                 boolean generated=new net.minecraft.world.gen.feature.WorldGenTrees(true).generate(world,new java.util.Random(),adjacent);
@@ -1113,7 +1150,6 @@ public final class AlphaWorldEditCommand extends CommandBase {
                     center.getX()+brushRadius,Math.min(255,center.getY()+brushRadius),center.getZ()+brushRadius);
             if(WorldEditOperations.regionLoaded(world,b))WorldEditAdvancedOperations.smooth(world,b,1);
         } else if("ex".equals(brushMode)) {
-            WorldEditFeatureOperations.butcher(world,center,brushRadius,false);
             WorldEditAdvancedOperations.extinguish(world,center,brushRadius);
         } else if("gravity".equals(brushMode)) {
             int moved=WorldEditFeatureOperations.gravity(world,center,brushRadius);
