@@ -39,6 +39,7 @@ import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
 import com.alpharip.staffmod.inventorysearch.InventorySearchCommand;
 import com.alpharip.staffmod.inventorysearch.InventorySearchMod;
+import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -90,6 +91,7 @@ public final class AlphaClient {
     public void initialize(FMLInitializationEvent event) {
         instance = this;
         System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
+        InventorySearchSettings.load();
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(PixelGardenMessageNotifier.getInstance());
