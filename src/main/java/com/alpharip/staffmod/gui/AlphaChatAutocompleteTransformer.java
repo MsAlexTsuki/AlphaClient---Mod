@@ -14,14 +14,16 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 /**
- * Filters AlphaClient command suggestions at Forge's client-command autocomplete source.
- * GuiChat's server response hook is retained for server-provided suggestions.
+ * Filters AlphaClient command suggestions and requires a leading slash for
+ * Forge client commands. GuiChat's server response hook is retained.
  */
 public final class AlphaChatAutocompleteTransformer implements IClassTransformer {
     private static final String GUI_CHAT = "net.minecraft.client.gui.GuiChat";
     private static final String CLIENT_COMMAND_HANDLER = "net.minecraftforge.client.ClientCommandHandler";
     private static final String BRIDGE = "com/alpharip/staffmod/permissions/AlphaChatAutocomplete";
     private static final String ARRAY_DESC = "[Ljava/lang/String;";
+    private static final String COMMAND_DESC =
+            "(Lnet/minecraft/command/ICommandSender;Ljava/lang/String;)I";
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
@@ -64,7 +66,28 @@ public final class AlphaChatAutocompleteTransformer implements IClassTransformer
             ClassNode node = new ClassNode();
             new ClassReader(basicClass).accept(node, 0);
             boolean changed = false;
+            boolean autocompleteHookApplied = false;
+            boolean slashGuardApplied = false;
+
             for (MethodNode method : node.methods) {
+                // Forge 1.8.9 calls executeCommand for ordinary chat as well as slash commands.
+                // Convert non-slash input into an unknown command so Forge sends it as chat.
+                if (COMMAND_DESC.equals(method.desc)
+                        && ("executeCommand".equals(method.name) || "func_71556_a".equals(method.name))
+                        && !containsCommandGuardHook(method)) {
+                    AbstractInsnNode first = firstReal(method);
+                    if (first != null) {
+                        InsnList guard = new InsnList();
+                        guard.add(new VarInsnNode(Opcodes.ALOAD, 2));
+                        guard.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BRIDGE, "prepareCommandMessage",
+                                "(Ljava/lang/String;)Ljava/lang/String;", false));
+                        guard.add(new VarInsnNode(Opcodes.ASTORE, 2));
+                        method.instructions.insertBefore(first, guard);
+                        changed = true;
+                        slashGuardApplied = true;
+                    }
+                }
+
                 // Forge 1.8.9 builds the local client-command list in autoComplete(String, String).
                 if (!"(Ljava/lang/String;Ljava/lang/String;)V".equals(method.desc)) continue;
                 if (!("autoComplete".equals(method.name) || "func_".equals(method.name))) continue;
@@ -82,16 +105,21 @@ public final class AlphaChatAutocompleteTransformer implements IClassTransformer
                     hook.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, "latestAutoComplete", ARRAY_DESC));
                     method.instructions.insertBefore(instruction, hook);
                     changed = true;
+                    autocompleteHookApplied = true;
                 }
             }
-            if (!changed) {
-                System.err.println("[AlphaClient] Forge ClientCommandHandler autocomplete hook not found; client commands unchanged.");
-                return basicClass;
+
+            if (slashGuardApplied) {
+                System.out.println("[AlphaClient] Applied slash-only guard to Forge client commands.");
+            } else {
+                System.err.println("[AlphaClient] Forge client-command slash guard not found or already applied.");
             }
-            System.out.println("[AlphaClient] Applied rank filter to Forge client-command autocomplete.");
-            return write(node);
+            if (autocompleteHookApplied) {
+                System.out.println("[AlphaClient] Applied rank filter to Forge client-command autocomplete.");
+            }
+            return changed ? write(node) : basicClass;
         } catch (Throwable error) {
-            System.err.println("[AlphaClient] Forge client-command autocomplete filter failed; suggestions unchanged.");
+            System.err.println("[AlphaClient] Forge client-command transformation failed; client commands unchanged.");
             error.printStackTrace();
             return basicClass;
         }
@@ -114,6 +142,16 @@ public final class AlphaChatAutocompleteTransformer implements IClassTransformer
             if (instruction instanceof MethodInsnNode) {
                 MethodInsnNode call = (MethodInsnNode) instruction;
                 if (BRIDGE.equals(call.owner) && "filter".equals(call.name)) return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsCommandGuardHook(MethodNode method) {
+        for (AbstractInsnNode instruction : method.instructions.toArray()) {
+            if (instruction instanceof MethodInsnNode) {
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                if (BRIDGE.equals(call.owner) && "prepareCommandMessage".equals(call.name)) return true;
             }
         }
         return false;
