@@ -1111,6 +1111,9 @@ public final class AlphaWorldEditCommand extends CommandBase {
         if(!left&&!right)return;
 
         if(left&&!"none".equals(pickaxeMode)) {
+            WorldEditSelection.Bounds pickBounds=new WorldEditSelection.Bounds(clicked.getX()-3,Math.max(0,clicked.getY()-3),clicked.getZ()-3,
+                    clicked.getX()+3,Math.min(255,clicked.getY()+3),clicked.getZ()+3);
+            if(!WorldEditOperations.regionLoaded(world,pickBounds)){reply(event.entityPlayer,"Super Pickaxe area contains unloaded chunks.");event.setCanceled(true);return;}
             int mode="single".equals(pickaxeMode)?0:("area".equals(pickaxeMode)?1:2);
             int removed=WorldEditFeatureOperations.superPick(world,clicked,mode,3);
             reply(event.entityPlayer,"Super Pickaxe removed "+removed+" block(s).");
