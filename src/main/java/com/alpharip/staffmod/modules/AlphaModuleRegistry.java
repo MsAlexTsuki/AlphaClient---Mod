@@ -18,6 +18,16 @@ public final class AlphaModuleRegistry {
     private static final List<AlphaModule> MODULES = new ArrayList<AlphaModule>();
 
     static {
+        AlphaModule singleplayer = new AlphaModule(
+                "singleplayer",
+                "Singleplayer",
+                "Mods designed specifically for singleplayer worlds.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(singleplayer);
+
         AlphaModule misc = new AlphaModule(
                 "misc",
                 "Misc",
