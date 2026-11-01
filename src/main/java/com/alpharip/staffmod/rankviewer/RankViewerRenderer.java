@@ -89,9 +89,12 @@ public final class RankViewerRenderer {
         // Vanilla 1.8.9 makes sneaking name tags translucent. Apply the same fade
         // to the local F5 name and badge without changing their position.
         boolean sneaking = player != null && player.isSneaking();
-        // Vanilla 1.8.9 draws sneaking name text with ARGB 0x20FFFFFF (about 12.5% alpha).
-        float sneakAlpha = sneaking ? (32.0F / 255.0F) : 1.0F;
-        nameColor = withAlpha(nameColor, sneakAlpha);
+        // While sneaking, darken the name itself to the same translucent black
+        // used by the nametag panel, so it does not remain readable through blocks.
+        float sneakAlpha = sneaking ? 0.25F : 1.0F;
+        if (sneaking) {
+            nameColor = 0x40000000;
+        }
 
         // Capture the state that this renderer changes. World rendering and the vanilla HUD
         // share the OpenGL context, so forcing states to "enabled" can leak into later renders.
@@ -147,7 +150,11 @@ public final class RankViewerRenderer {
                 try {
                     minecraft.getTextureManager().bindTexture(rank.texture());
                     GlStateManager.enableTexture2D();
-                    GlStateManager.color(1.0F, 1.0F, 1.0F, sneakAlpha);
+                    if (sneaking) {
+                        GlStateManager.color(0.0F, 0.0F, 0.0F, sneakAlpha);
+                    } else {
+                        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                    }
                     Gui.drawModalRectWithCustomSizedTexture(
                             cursor, 0, 0.0F, 0.0F,
                             BADGE_SIZE, BADGE_SIZE, BADGE_SIZE, BADGE_SIZE);
