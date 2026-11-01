@@ -146,7 +146,7 @@ public final class WorldEditGui extends AlphaGuiScreen {
         } else if (button.id == COPY) {
             clipboardMin = min(pos1, pos2);
             clipboardMax = max(pos1, pos2);
-            status = "Region copied. Use PASTE AT PLAYER to place it.";
+            status = "Selection stored. Paste clones the current source blocks."
         } else if (button.id == PASTE) {
             if (clipboardMin == null || clipboardMax == null) {
                 status = "Copy a region before pasting.";
@@ -298,7 +298,7 @@ public final class WorldEditGui extends AlphaGuiScreen {
                 left + 14, top + 157, 0xFFE7E9EE);
         drawString(fontRendererObj, "POS 2: " + (pos2 == null ? "Not set" : format(pos2)),
                 left + 14, top + 169, 0xFFE7E9EE);
-        drawString(fontRendererObj, "COPY: " + (clipboardMin == null ? "Empty" : "Region stored"),
+        drawString(fontRendererObj, "SOURCE: " + (clipboardMin == null ? "Not stored" : "Selection stored"),
                 left + 14, top + 183, 0xFFB8BDC8);
         drawString(fontRendererObj, fit(status, panelWidth - 28), left + 14,
                 top + 218, ACCENT);
