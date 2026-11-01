@@ -40,6 +40,7 @@ import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
 import com.alpharip.staffmod.inventorysearch.InventorySearchCommand;
 import com.alpharip.staffmod.inventorysearch.InventorySearchMod;
 import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
+import com.alpharip.staffmod.singleplayer.worldedit.AlphaWorldEditCommand;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -100,6 +101,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
         registerClientCommands();
+        ClientCommandHandler.instance.registerCommand(new AlphaWorldEditCommand());
         ClientCommandHandler.instance.registerCommand(new InventorySearchCommand());
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
         MinecraftForge.EVENT_BUS.register(new InventorySearchMod());
