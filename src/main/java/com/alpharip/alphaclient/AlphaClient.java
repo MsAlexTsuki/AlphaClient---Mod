@@ -37,6 +37,8 @@ import com.alpharip.staffmod.fighthistory.FightHistoryManager;
 import com.alpharip.staffmod.founderfun.PixelGardenMessageNotifier;
 import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
+import com.alpharip.staffmod.inventorysearch.InventorySearchCommand;
+import com.alpharip.staffmod.inventorysearch.InventorySearchMod;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -96,7 +98,9 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
         registerClientCommands();
+        ClientCommandHandler.instance.registerCommand(new InventorySearchCommand());
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
+        MinecraftForge.EVENT_BUS.register(new InventorySearchMod());
         MinecraftForge.EVENT_BUS.register(new RankViewerRenderer());
         MinecraftForge.EVENT_BUS.register(new FpsMod());
         MinecraftForge.EVENT_BUS.register(new PingMod());
