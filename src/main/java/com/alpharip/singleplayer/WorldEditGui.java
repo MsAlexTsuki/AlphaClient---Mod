@@ -11,7 +11,6 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldServer;
 
 import java.io.IOException;
@@ -295,7 +294,7 @@ public final class WorldEditGui extends AlphaGuiScreen {
         String[] parts = value.split(":");
         String name = parts.length == 1 ? "minecraft:" + parts[0]
                 : parts[0] + ":" + parts[1];
-        Block block = Block.getBlockFromName(new ResourceLocation(name));
+        Block block = Block.getBlockFromName(name);
         if (block == null) return null;
         int meta = parts.length == 3 ? Integer.parseInt(parts[2]) : 0;
         if (meta < 0 || meta > 15) return null;
