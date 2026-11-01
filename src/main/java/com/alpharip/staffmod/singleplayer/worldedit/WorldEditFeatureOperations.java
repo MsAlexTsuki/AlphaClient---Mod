@@ -115,6 +115,69 @@ public final class WorldEditFeatureOperations {
         return planted;
     }
 
+    public static void raiseLower(WorldServer world, BlockPos center, int radius, int amount) {
+        WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(center.getX()-radius,Math.max(0,center.getY()-radius-amount),center.getZ()-radius,
+                center.getX()+radius,Math.min(255,center.getY()+radius+amount),center.getZ()+radius);
+        record(world,b);
+        for(int x=center.getX()-radius;x<=center.getX()+radius;x++)for(int z=center.getZ()-radius;z<=center.getZ()+radius;z++) {
+            BlockPos top=world.getTopSolidOrLiquidBlock(new BlockPos(x,center.getY()+radius,z));
+            int target=Math.max(1,Math.min(254,top.getY()+amount));
+            IBlockState ground=world.getBlockState(top.down());
+            if(amount>0) {
+                for(int y=top.getY();y<target;y++)world.setBlockState(new BlockPos(x,y,z),ground,2);
+            } else {
+                for(int y=target;y<top.getY();y++)world.setBlockState(new BlockPos(x,y,z),Blocks.air.getDefaultState(),2);
+            }
+        }
+    }
+
+    public static int superPick(WorldServer world, BlockPos target, int mode, int radius) {
+        IBlockState original=world.getBlockState(target);
+        if(original.getBlock()==Blocks.air)return 0;
+        if(mode==0) {
+            record(world,new WorldEditSelection.Bounds(target.getX(),target.getY(),target.getZ(),target.getX(),target.getY(),target.getZ()));
+            world.setBlockToAir(target);return 1;
+        }
+        if(mode==1) {
+            WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(target.getX()-radius,target.getY()-radius,target.getZ()-radius,
+                    target.getX()+radius,target.getY()+radius,target.getZ()+radius);
+            record(world,b);int removed=0;
+            for(int x=b.minX;x<=b.maxX;x++)for(int y=Math.max(0,b.minY);y<=Math.min(255,b.maxY);y++)for(int z=b.minZ;z<=b.maxZ;z++) {
+                BlockPos p=new BlockPos(x,y,z);
+                if(world.getBlockState(p).getBlock()==original.getBlock()){world.setBlockToAir(p);removed++;}
+            }
+            return removed;
+        }
+        java.util.ArrayDeque<BlockPos> queue=new java.util.ArrayDeque<BlockPos>();
+        java.util.HashSet<BlockPos> visited=new java.util.HashSet<BlockPos>();
+        queue.add(target);int removed=0;
+        WorldEditSelection.Bounds history=new WorldEditSelection.Bounds(target.getX()-radius,Math.max(0,target.getY()-radius),target.getZ()-radius,
+                target.getX()+radius,Math.min(255,target.getY()+radius),target.getZ()+radius);
+        record(world,history);
+        while(!queue.isEmpty()&&removed<4096) {
+            BlockPos p=queue.removeFirst();
+            if(!visited.add(p)||p.getY()<0||p.getY()>255)continue;
+            if(Math.abs(p.getX()-target.getX())>radius||Math.abs(p.getY()-target.getY())>radius||Math.abs(p.getZ()-target.getZ())>radius)continue;
+            if(world.getBlockState(p).getBlock()!=original.getBlock())continue;
+            world.setBlockToAir(p);removed++;
+            queue.add(p.add(1,0,0));queue.add(p.add(-1,0,0));queue.add(p.add(0,1,0));
+            queue.add(p.add(0,-1,0));queue.add(p.add(0,0,1));queue.add(p.add(0,0,-1));
+        }
+        return removed;
+    }
+
+    public static int deleteTree(WorldServer world, BlockPos center, int radius) {
+        WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(center.getX()-radius,Math.max(0,center.getY()-radius),center.getZ()-radius,
+                center.getX()+radius,Math.min(255,center.getY()+radius),center.getZ()+radius);
+        record(world,b);int removed=0;
+        for(int x=b.minX;x<=b.maxX;x++)for(int y=b.minY;y<=b.maxY;y++)for(int z=b.minZ;z<=b.maxZ;z++) {
+            BlockPos p=new BlockPos(x,y,z);
+            net.minecraft.block.Block block=world.getBlockState(p).getBlock();
+            if(block==Blocks.log||block==Blocks.log2||block==Blocks.leaves||block==Blocks.leaves2){world.setBlockToAir(p);removed++;}
+        }
+        return removed;
+    }
+
     public static int butcher(WorldServer world, BlockPos center, int radius, boolean animals) {
         AxisAlignedBB box=new AxisAlignedBB(center.getX()-radius,Math.max(0,center.getY()-radius),center.getZ()-radius,
                 center.getX()+radius+1,Math.min(256,center.getY()+radius+1),center.getZ()+radius+1);
