@@ -136,8 +136,8 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe tool none", "Disable the currently selected tool.");
 
         addSection("SNAPSHOTS");
-        addCommand("//acwe snapshot before <name>", "Save the selected region as a named snapshot.");
-        addCommand("//acwe snapshot after <name>", "Save the selected region as a named snapshot.");
+        addCommand("//acwe snapshot before <name>", "Save the selected region as a separate named before snapshot.");
+        addCommand("//acwe snapshot after <name>", "Save the selected region as a separate named after snapshot.");
         addCommand("//acwe snapshot list", "List saved snapshots.");
         addCommand("//acwe snapshot use <name>", "Load a snapshot into the clipboard.");
         addCommand("//acwe snapshot sel <name>", "Restore the selection bounds stored in a snapshot.");
