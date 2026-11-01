@@ -39,7 +39,7 @@ public final class RankViewerRenderer {
 
         // RenderPlayerEvent.Specials.Pre already runs with the entity transform applied.
         // Use local entity coordinates here; event.x/y/z would apply the position twice.
-        drawNameWithBadge(minecraft, rank, player.getName(), 0.0D,
+        drawNameWithBadge(minecraft, player, rank, player.getName(), 0.0D,
                 player.height + 0.72D, 0.0D,
                 minecraft.getRenderManager().playerViewY,
                 minecraft.getRenderManager().playerViewX, 0.02F);
@@ -74,18 +74,22 @@ public final class RankViewerRenderer {
         // signed-in rank or cached Minecraft UUID rank always takes precedence.
         if (rank == null) rank = AlphaRank.MEMBER;
         // Name Viewer displays the player's name together with their rank badge.
-        drawNameWithBadge(minecraft, rank, player.getName(), x,
+        drawNameWithBadge(minecraft, player, rank, player.getName(), x,
                 y + player.height + 0.5D, z,
                 renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
     }
 
-    private void drawNameWithBadge(Minecraft minecraft, AlphaRank rank, String name,
+    private void drawNameWithBadge(Minecraft minecraft, EntityPlayer player, AlphaRank rank, String name,
                                    double x, double y, double z,
                                    float playerViewY, float playerViewX, float scale) {
         int nameWidth = minecraft.fontRendererObj.getStringWidth(name);
         int badgeWidth = rank == null ? 0 : BADGE_SIZE + BADGE_GAP;
         int totalWidth = nameWidth + badgeWidth;
         int nameColor = getRelationshipNameColor(minecraft, name, rank);
+        // Vanilla 1.8.9 makes sneaking name tags translucent. Apply the same fade
+        // to the local F5 name and badge without changing their position.
+        float sneakAlpha = player != null && player.isSneaking() ? 0.25F : 1.0F;
+        nameColor = withAlpha(nameColor, sneakAlpha);
 
         // Capture the state that this renderer changes. World rendering and the vanilla HUD
         // share the OpenGL context, so forcing states to "enabled" can leak into later renders.
@@ -127,18 +131,18 @@ public final class RankViewerRenderer {
             int right = cursor + totalWidth + 1;
             int top = -1;
             int bottom = BADGE_SIZE + 1;
-            Gui.drawRect(left, top, right, bottom, 0x10000000);
-            Gui.drawRect(left, top, right, top + 1, 0x18000000);
-            Gui.drawRect(left, bottom - 1, right, bottom, 0x18000000);
-            Gui.drawRect(left, top, left + 1, bottom, 0x18000000);
-            Gui.drawRect(right - 1, top, right, bottom, 0x18000000);
+            Gui.drawRect(left, top, right, bottom, withAlpha(0x10000000, sneakAlpha));
+            Gui.drawRect(left, top, right, top + 1, withAlpha(0x18000000, sneakAlpha));
+            Gui.drawRect(left, bottom - 1, right, bottom, withAlpha(0x18000000, sneakAlpha));
+            Gui.drawRect(left, top, left + 1, bottom, withAlpha(0x18000000, sneakAlpha));
+            Gui.drawRect(right - 1, top, right, bottom, withAlpha(0x18000000, sneakAlpha));
 
             if (rank != null) {
                 GlStateManager.pushMatrix();
                 try {
                     minecraft.getTextureManager().bindTexture(rank.texture());
                     GlStateManager.enableTexture2D();
-                    GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                    GlStateManager.color(1.0F, 1.0F, 1.0F, sneakAlpha);
                     Gui.drawModalRectWithCustomSizedTexture(
                             cursor, 0, 0.0F, 0.0F,
                             BADGE_SIZE, BADGE_SIZE, BADGE_SIZE, BADGE_SIZE);
@@ -211,6 +215,12 @@ public final class RankViewerRenderer {
             }
         }
         return 0xFFFFFFFF;
+    }
+
+    private static int withAlpha(int color, float alphaMultiplier) {
+        int originalAlpha = (color >>> 24) & 0xFF;
+        int alpha = Math.max(0, Math.min(255, Math.round(originalAlpha * alphaMultiplier)));
+        return (color & 0x00FFFFFF) | (alpha << 24);
     }
 
     private static int getFormattingColor(EnumChatFormatting format) {
