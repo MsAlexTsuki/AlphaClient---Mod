@@ -68,6 +68,36 @@ public final class WorldEditFeatureOperations {
         }
     }
 
+    /** Rebuilds a bounded selection as simple generated rolling terrain. */
+    public static void regenerate(WorldServer world, WorldEditSelection.Bounds b, long seed) {
+        record(world,b);
+        Random random=new Random(seed);
+        int base=b.minY+Math.max(1,b.sizeY()/2);
+        int amplitude=Math.max(1,Math.min(12,b.sizeY()/4));
+        for(int x=b.minX;x<=b.maxX;x++)for(int z=b.minZ;z<=b.maxZ;z++) {
+            double wave=Math.sin((x-b.minX)*0.13D+seed%31)*Math.cos((z-b.minZ)*0.13D);
+            int surface=Math.max(b.minY,Math.min(b.maxY,base+(int)Math.round(wave*amplitude)+(random.nextInt(3)-1)));
+            for(int y=b.minY;y<=b.maxY;y++) {
+                BlockPos p=new BlockPos(x,y,z);
+                if(y>surface)world.setBlockState(p,Blocks.air.getDefaultState(),2);
+                else if(y==surface)world.setBlockState(p,Blocks.grass.getDefaultState(),2);
+                else if(y>=surface-3)world.setBlockState(p,Blocks.dirt.getDefaultState(),2);
+                else world.setBlockState(p,Blocks.stone.getDefaultState(),2);
+            }
+        }
+    }
+
+    public static int generate(WorldServer world,WorldEditSelection.Bounds b,IBlockState state,String expression) {
+        record(world,b);
+        int placed=0;
+        double cx=(b.sizeX()-1)/2.0D,cy=(b.sizeY()-1)/2.0D,cz=(b.sizeZ()-1)/2.0D;
+        for(int x=b.minX;x<=b.maxX;x++)for(int y=b.minY;y<=b.maxY;y++)for(int z=b.minZ;z<=b.maxZ;z++) {
+            double value=WorldEditExpression.evaluate(expression,x-b.minX-cx,y-b.minY-cy,z-b.minZ-cz);
+            if(value<=0.0D){world.setBlockState(new BlockPos(x,y,z),state,2);placed++;}
+        }
+        return placed;
+    }
+
     public static int forest(WorldServer world, WorldEditSelection.Bounds b, int density, Random random) {
         record(world,b);
         int planted=0;
