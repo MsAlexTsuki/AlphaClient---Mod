@@ -26,7 +26,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** AlphaClient-only WorldEdit namespace. */
 public final class AlphaWorldEditCommand extends CommandBase {
-    private static int MAX_BLOCKS = 32768;
+    private static int MAX_BLOCKS = 65536;
     private static IBlockState GLOBAL_MASK;
     private static boolean editWandEnabled = true;
     private static String brushMode = "none", toolMode = "none", pickaxeMode = "none";
