@@ -77,6 +77,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             NBTTagCompound wandTag = new NBTTagCompound();
             wandTag.setBoolean(WAND_TAG, true);
             wand.setTagCompound(wandTag);
+            wand.setStackDisplayName("World Edit Wand");
             if (player.inventory.addItemStackToInventory(wand)) {
                 player.inventoryContainer.detectAndSendChanges();
                 reply(sender, "WorldEdit wand added to your inventory.");
