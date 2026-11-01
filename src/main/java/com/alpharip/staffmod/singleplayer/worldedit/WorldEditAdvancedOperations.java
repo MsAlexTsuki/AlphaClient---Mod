@@ -134,7 +134,7 @@ public final class WorldEditAdvancedOperations {
     public static int drain(WorldServer w, BlockPos center, int radius) {
         record(w,center.getX()-radius,center.getY()-radius,center.getZ()-radius,center.getX()+radius,center.getY()+radius,center.getZ()+radius);
         int changed=0, r2=radius*radius;
-        for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
+        for(int x=-radius;x<=radius;x++) for(int y=Math.max(-radius,-center.getY());y<=Math.min(radius,255-center.getY());y++) for(int z=-radius;z<=radius;z++) {
             if(x*x+y*y+z*z>r2) continue;
             BlockPos p=center.add(x,y,z);
             if(w.getBlockState(p).getBlock().getMaterial().isLiquid()) {
@@ -200,7 +200,7 @@ public final class WorldEditAdvancedOperations {
     public static int removeNear(WorldServer w, BlockPos center, int radius, IBlockState target) {
         record(w,center.getX()-radius,center.getY()-radius,center.getZ()-radius,center.getX()+radius,center.getY()+radius,center.getZ()+radius);
         int changed=0, r2=radius*radius;
-        for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
+        for(int x=-radius;x<=radius;x++) for(int y=Math.max(-radius,-center.getY());y<=Math.min(radius,255-center.getY());y++) for(int z=-radius;z<=radius;z++) {
             if(x*x+y*y+z*z>r2) continue;
             BlockPos p=center.add(x,y,z);
             if(w.getBlockState(p).getBlock()==target.getBlock()) {
@@ -247,7 +247,7 @@ public final class WorldEditAdvancedOperations {
     public static int extinguish(WorldServer w, BlockPos center, int radius) {
         record(w,center.getX()-radius,center.getY()-radius,center.getZ()-radius,center.getX()+radius,center.getY()+radius,center.getZ()+radius);
         int changed=0;
-        for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
+        for(int x=-radius;x<=radius;x++) for(int y=Math.max(-radius,-center.getY());y<=Math.min(radius,255-center.getY());y++) for(int z=-radius;z<=radius;z++) {
             BlockPos p=center.add(x,y,z);
             if(w.getBlockState(p).getBlock()==Blocks.fire) {
                 w.setBlockState(p,Blocks.air.getDefaultState(),2); changed++;
