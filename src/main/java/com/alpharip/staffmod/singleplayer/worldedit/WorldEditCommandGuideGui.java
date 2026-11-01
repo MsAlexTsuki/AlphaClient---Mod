@@ -1,0 +1,162 @@
+// --- Made By MsAlexTsuki ---
+package com.alpharip.staffmod.singleplayer.worldedit;
+
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import org.lwjgl.input.Mouse;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/** Read-only command guide for the AlphaClient Singleplayer World Edit commands. */
+public final class WorldEditCommandGuideGui extends GuiScreen {
+    private static final int ROW_HEIGHT = 34;
+    private static final int HEADER_HEIGHT = 20;
+
+    private final GuiScreen parent;
+    private final List<GuideRow> rows = new ArrayList<GuideRow>();
+    private int scrollOffset;
+    private int listTop;
+    private int listBottom;
+
+    public WorldEditCommandGuideGui(GuiScreen parent) {
+        this.parent = parent;
+        addSection("GENERAL");
+        addCommand("//acwe help", "Open this command guide.");
+
+        addSection("SELECTION");
+        addCommand("//acwe wand", "Receive the dedicated World Edit Wand. Left-click a block for position 1; right-click for position 2.");
+        addCommand("//acwe pos1", "Set position 1 to your current player position.");
+        addCommand("//acwe pos2", "Set position 2 to your current player position.");
+        addCommand("//acwe desel", "Clear the current selection.");
+        addCommand("//acwe deselect", "Alias for //acwe desel.");
+
+        addSection("REGION");
+        addCommand("//acwe set <block>", "Fill the selected region with the specified block.");
+        addCommand("//acwe replace <from> <to>", "Replace matching blocks in the selected region.");
+        addCommand("//acwe walls <block>", "Build the four side walls of the selected region.");
+        addCommand("//acwe outline <block>", "Build the outline of the selected region.");
+        addCommand("//acwe hollow <block>", "Build a hollow shell around the selected region.");
+
+        addSection("CLIPBOARD");
+        addCommand("//acwe copy", "Copy the selected region to the Alpha World Edit clipboard.");
+        addCommand("//acwe paste", "Paste the clipboard at your current player position.");
+        addCommand("//acwe clearclipboard", "Clear the Alpha World Edit clipboard.");
+    }
+
+    private void addSection(String title) {
+        rows.add(new GuideRow(title, null, true));
+    }
+
+    private void addCommand(String syntax, String description) {
+        rows.add(new GuideRow(null, syntax, description, false));
+    }
+
+    @Override
+    public void initGui() {
+        buttonList.clear();
+        buttonList.add(new GuiButton(1, 8, height - 28, 70, 20, "Back"));
+        listTop = 48;
+        listBottom = height - 36;
+        clampScroll();
+    }
+
+    @Override
+    protected void actionPerformed(GuiButton button) {
+        if (button != null && button.id == 1) {
+            mc.displayGuiScreen(parent);
+        }
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (keyCode == 1) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
+        super.keyTyped(typedChar, keyCode);
+    }
+
+    @Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int wheel = Mouse.getEventDWheel();
+        if (wheel != 0) {
+            scrollOffset += wheel > 0 ? -2 : 2;
+            clampScroll();
+        }
+    }
+
+    private void clampScroll() {
+        int visibleRows = Math.max(1, (listBottom - listTop) / ROW_HEIGHT);
+        scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, rows.size() - visibleRows)));
+    }
+
+    @Override
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawDefaultBackground();
+
+        int panelWidth = Math.min(520, width - 24);
+        int left = (width - panelWidth) / 2;
+        int right = left + panelWidth;
+        listTop = 48;
+        listBottom = height - 36;
+
+        drawRect(left, 12, right, listBottom + 4, 0xE00A0C11);
+        drawRect(left, 12, right, 14, 0xFFFFD866);
+        drawCenteredString(fontRendererObj, "SINGLEPLAYER WORLD EDIT", width / 2, 20, 0xFFF3F4F6);
+        drawCenteredString(fontRendererObj, "AlphaClient command guide", width / 2, 34, 0xFFB8B8B8);
+        drawRect(left + 8, listTop - 3, right - 8, listBottom, 0xAA111318);
+
+        int y = listTop;
+        int skipped = 0;
+        for (GuideRow row : rows) {
+            int rowHeight = row.section ? HEADER_HEIGHT : ROW_HEIGHT;
+            if (skipped < scrollOffset) {
+                skipped++;
+                continue;
+            }
+            if (y + rowHeight > listBottom) break;
+
+            if (row.section) {
+                drawRect(left + 9, y, right - 9, y + HEADER_HEIGHT - 1, 0x553A3020);
+                drawString(fontRendererObj, row.title, left + 16, y + 6, 0xFFFFD866);
+            } else {
+                drawRect(left + 9, y, right - 9, y + ROW_HEIGHT - 1, 0x33222222);
+                drawString(fontRendererObj, row.syntax, left + 16, y + 4, 0xFFFFFFFF);
+                drawString(fontRendererObj, trim(row.description, panelWidth - 34), left + 16, y + 18, 0xFFBDBDBD);
+            }
+            y += rowHeight;
+        }
+
+        drawString(fontRendererObj, "Scroll to view commands. ESC or Back to close.", 88, height - 22, 0xFFAAAAAA);
+        super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    private String trim(String value, int maxPixels) {
+        String result = value == null ? "" : value;
+        while (!result.isEmpty() && fontRendererObj.getStringWidth(result) > maxPixels) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
+    }
+
+    private static final class GuideRow {
+        private final String title;
+        private final String syntax;
+        private final String description;
+        private final boolean section;
+
+        private GuideRow(String title, String syntax, boolean section) {
+            this(title, syntax, null, section);
+        }
+
+        private GuideRow(String title, String syntax, String description, boolean section) {
+            this.title = title;
+            this.syntax = syntax;
+            this.description = description;
+            this.section = section;
+        }
+    }
+}
