@@ -887,8 +887,9 @@ public final class AlphaWorldEditCommand extends CommandBase {
         // Chunk utilities.
         if ("listchunks".equals(cmd)) {
             final BlockPos at=mc.thePlayer.getPosition();
-            final WorldEditSelection.Bounds b=SELECTION.hasSelection()?SELECTION.getBounds():
+            final WorldEditSelection.Bounds b=SELECTION.hasSelection()?selection(sender):
                     new WorldEditSelection.Bounds(at.getX()-16,0,at.getZ()-16,at.getX()+16,255,at.getZ()+16);
+            if(b==null)return;
             int minCx=b.minX>>4,maxCx=b.maxX>>4,minCz=b.minZ>>4,maxCz=b.maxZ>>4;
             StringBuilder out=new StringBuilder("Chunks: ");
             int shown=0,total=0;
@@ -1174,6 +1175,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             brushArea=new WorldEditSelection.Bounds(center.getX()-brushRadius,Math.max(0,center.getY()-brushRadius-8),center.getZ()-brushRadius,
                     center.getX()+brushRadius,Math.min(255,center.getY()+brushRadius+16),center.getZ()+brushRadius);
         }
+        if(brushArea.minY<0||brushArea.maxY>255){reply(event.entityPlayer,"Brush area must stay between Y=0 and Y=255.");event.setCanceled(true);return;}
         if(!WorldEditOperations.regionLoaded(world,brushArea)){reply(event.entityPlayer,"Brush area contains unloaded chunks.");event.setCanceled(true);return;}
         if("sphere".equals(brushMode)||"set".equals(brushMode)||"paint".equals(brushMode)||"apply".equals(brushMode)) {
             WorldEditAdvancedOperations.sphere(world,center,brushRadius,brushRadius,brushRadius,brushBlock,false);
