@@ -378,6 +378,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 biomeData[index] = (byte) found.biomeID;
                 chunk.setBiomeArray(biomeData);
                 chunk.setChunkModified();
+                WorldEditAuditLog.recordSummary(w,activeAuditCommand,"Chunk biome changed to "+found.biomeName,256,target);
                 reply(sender, "Biome changed to " + found.biomeName + " for the current chunk.");
             }});
             return;
