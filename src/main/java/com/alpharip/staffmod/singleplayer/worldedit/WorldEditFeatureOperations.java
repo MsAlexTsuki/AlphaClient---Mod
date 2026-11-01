@@ -220,6 +220,29 @@ public final class WorldEditFeatureOperations {
         return removed;
     }
 
+    /** Replaces matching block states inside a bounded spherical area around the clicked block. */
+    public static int replaceNear(WorldServer world, BlockPos center, int radius, IBlockState from, IBlockState to) {
+        if (world == null || center == null || from == null || to == null || radius < 0) return 0;
+        WorldEditSelection.Bounds bounds = new WorldEditSelection.Bounds(
+                center.getX() - radius, Math.max(0, center.getY() - radius), center.getZ() - radius,
+                center.getX() + radius, Math.min(255, center.getY() + radius), center.getZ() + radius);
+        record(world, bounds);
+        int changed = 0;
+        int radiusSquared = radius * radius;
+        for (int x = bounds.minX; x <= bounds.maxX; x++) {
+            for (int y = bounds.minY; y <= bounds.maxY; y++) {
+                for (int z = bounds.minZ; z <= bounds.maxZ; z++) {
+                    int dx = x - center.getX(), dy = y - center.getY(), dz = z - center.getZ();
+                    if (dx * dx + dy * dy + dz * dz > radiusSquared) continue;
+                    BlockPos pos = new BlockPos(x, y, z);
+                    if (world.getBlockState(pos).equals(from)) {
+                        if (world.setBlockState(pos, to, 2)) changed++;
+                    }
+                }
+            }
+        }
+        return changed;
+    }
     public static int deleteTree(WorldServer world, BlockPos center, int radius) {
         WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(center.getX()-radius,Math.max(0,center.getY()-radius),center.getZ()-radius,
                 center.getX()+radius,Math.min(255,center.getY()+radius),center.getZ()+radius);
