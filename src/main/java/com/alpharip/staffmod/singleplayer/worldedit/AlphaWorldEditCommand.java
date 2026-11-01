@@ -26,7 +26,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** AlphaClient-only WorldEdit namespace. */
 public final class AlphaWorldEditCommand extends CommandBase {
-    private static final int MAX_BLOCKS = 32768;
+    private static int MAX_BLOCKS = 32768;
+    private static IBlockState GLOBAL_MASK;
     private static final String WAND_TAG = "AlphaWorldEditWand";
     private static final int WALLS = 1, OUTLINE = 2, HOLLOW = 3;
     private static final WorldEditSelection SELECTION = new WorldEditSelection();
@@ -55,6 +56,56 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
 
         String cmd = args[0].toLowerCase(Locale.ROOT);
+
+        if ("limit".equals(cmd) && args.length==2) {
+            try {
+                int requested=Integer.parseInt(args[1]);
+                if(requested<1||requested>1000000){reply(sender,"Limit must be between 1 and 1000000 blocks.");return;}
+                MAX_BLOCKS=requested;
+                reply(sender,"Maximum region size set to "+MAX_BLOCKS+" blocks.");
+            } catch(NumberFormatException ex){reply(sender,"Usage: //acwe limit <blocks>");}
+            return;
+        }
+        if ("gmask".equals(cmd)||"mask".equals(cmd)) {
+            if(args.length!=2){reply(sender,"Usage: //acwe gmask <block|off>");return;}
+            if("off".equalsIgnoreCase(args[1])||"none".equalsIgnoreCase(args[1])) {
+                GLOBAL_MASK=null;reply(sender,"Global block mask disabled.");return;
+            }
+            IBlockState parsed=WorldEditBlockParser.parse(args[1]);
+            if(parsed==null){reply(sender,"Unknown mask block.");return;}
+            GLOBAL_MASK=parsed;reply(sender,"Global mask set to "+args[1]+".");
+            return;
+        }
+        if ("searchitem".equals(cmd) && args.length>=2) {
+            String query=args[1].toLowerCase(Locale.ROOT);
+            java.util.List<String> matches=new java.util.ArrayList<String>();
+            for(Object key:net.minecraft.item.Item.itemRegistry.getKeys()) {
+                String id=String.valueOf(key);
+                if(id.toLowerCase(Locale.ROOT).contains(query)&&matches.size()<12)matches.add(id);
+            }
+            reply(sender,matches.isEmpty()?"No items matched: "+query:"Items: "+matches.toString());
+            return;
+        }
+        if ("calc".equals(cmd) && args.length==2) {
+            java.util.regex.Matcher m=java.util.regex.Pattern.compile("^(-?[0-9]+)([+*/%-])(-?[0-9]+)$").matcher(args[1]);
+            if(!m.matches()){reply(sender,"Usage: //acwe calc <number><+|-|*|/|%><number>");return;}
+            try {
+                long a=Long.parseLong(m.group(1)),b=Long.parseLong(m.group(3)),v;
+                String op=m.group(2);
+                if("/".equals(op)||"%".equals(op)){if(b==0){reply(sender,"Division by zero.");return;}}
+                if("+".equals(op))v=a+b;else if("-".equals(op))v=a-b;else if("*".equals(op))v=a*b;else if("/".equals(op))v=a/b;else v=a%b;
+                reply(sender,"Result: "+v);
+            } catch(NumberFormatException ex){reply(sender,"Calculation is outside the supported integer range.");}
+            return;
+        }
+        if ("ceil".equals(cmd)) {
+            BlockPos at=mc.thePlayer.getPosition();
+            BlockPos top=mc.theWorld.getTopSolidOrLiquidBlock(at);
+            int y=Math.min(254,Math.max(at.getY()+2,top.getY()+2));
+            mc.thePlayer.setPositionAndUpdate(mc.thePlayer.posX,y,mc.thePlayer.posZ);
+            reply(sender,"Moved above the highest block at your position.");
+            return;
+        }
 
         // Selection commands and aliases.
         if ("hpos1".equals(cmd) || "hpos2".equals(cmd)) {
@@ -155,6 +206,28 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
 
+        if ("generatebiome".equals(cmd)||"genbiome".equals(cmd)||"gb".equals(cmd)) {
+            if(args.length!=2){reply(sender,"Usage: //acwe generatebiome <biome>");return;}
+            final String requested=args[1].replace('_',' ').toLowerCase(Locale.ROOT);
+            final WorldEditSelection.Bounds b=selection(sender);if(b==null)return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
+                net.minecraft.world.biome.BiomeGenBase found=null;
+                net.minecraft.world.biome.BiomeGenBase[] all=net.minecraft.world.biome.BiomeGenBase.getBiomeGenArray();
+                if(all!=null)for(net.minecraft.world.biome.BiomeGenBase biome:all)
+                    if(biome!=null&&biome.biomeName.toLowerCase(Locale.ROOT).equals(requested)){found=biome;break;}
+                if(found==null){reply(sender,"Unknown biome: "+requested);return;}
+                java.util.HashSet<net.minecraft.world.chunk.Chunk> changed=new java.util.HashSet<net.minecraft.world.chunk.Chunk>();
+                for(int x=b.minX;x<=b.maxX;x++)for(int z=b.minZ;z<=b.maxZ;z++){
+                    net.minecraft.world.chunk.Chunk chunk=w.getChunkFromBlockCoords(new BlockPos(x,b.minY,z));
+                    byte[] data=chunk.getBiomeArray();data[(z&15)<<4|(x&15)]=(byte)found.biomeID;
+                    chunk.setBiomeArray(data);changed.add(chunk);
+                }
+                for(net.minecraft.world.chunk.Chunk chunk:changed)chunk.setChunkModified();
+                reply(sender,"Biome set to "+found.biomeName+" across the selected columns.");
+            }});
+            return;
+        }
         if ("biomeinfo".equals(cmd)) {
             BlockPos at = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null
                     ? mc.objectMouseOver.getBlockPos() : mc.thePlayer.getPosition();
@@ -236,7 +309,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
         if ("set".equals(cmd) && args.length == 2) {
             IBlockState block = WorldEditBlockParser.parse(args[1]);
             if (block == null) { reply(sender, "Usage: //acwe set <block>"); return; }
-            fill(sender, block, null); return;
+            fill(sender, block, GLOBAL_MASK); return;
         }
         if ("replace".equals(cmd) && args.length == 3) {
             IBlockState from = WorldEditBlockParser.parse(args[1]);
@@ -572,6 +645,23 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
 
+        if (("fill".equals(cmd)||"fillr".equals(cmd)) && args.length>=2 && args.length<=3) {
+            final IBlockState state=WorldEditBlockParser.parse(args[1]);
+            final int radius;
+            try{radius=args.length==3?Integer.parseInt(args[2]):5;}
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" <block> [radius]");return;}
+            if(state==null||radius<1||radius>16){reply(sender,"Invalid block or radius (1-16).");return;}
+            final BlockPos target=mc.objectMouseOver!=null&&mc.objectMouseOver.getBlockPos()!=null?mc.objectMouseOver.getBlockPos():mc.thePlayer.getPosition();
+            final WorldEditSelection.Bounds area=new WorldEditSelection.Bounds(target.getX()-radius,Math.max(0,target.getY()-radius),target.getZ()-radius,target.getX()+radius,Math.min(255,target.getY()+radius),target.getZ()+radius);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,area)){reply(sender,"Fill area contains unloaded chunks.");return;}
+                WorldEditHistory.record(w,area);
+                int changed="fill".equals(cmd)?WorldEditAdvancedOperations.fillDown(w,target,radius,state):WorldEditAdvancedOperations.floodFillAir(w,target,radius,state);
+                reply(sender,cmd+" placed "+changed+" block(s).");
+            }});
+            return;
+        }
+
         // Surface and nearby block utilities.
         if ("snow".equals(cmd)||"thaw".equals(cmd)||"green".equals(cmd)) {
             final WorldEditSelection.Bounds b=selection(sender);
@@ -676,7 +766,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","limit","fast","gmask","mask","toggleplace","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
