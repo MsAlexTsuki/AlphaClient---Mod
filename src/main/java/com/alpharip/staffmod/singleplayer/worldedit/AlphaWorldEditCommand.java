@@ -717,6 +717,107 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
 
+        // Chunk utilities.
+        if ("listchunks".equals(cmd)) {
+            final BlockPos at=mc.thePlayer.getPosition();
+            final WorldEditSelection.Bounds b=SELECTION.hasSelection()?SELECTION.getBounds():
+                    new WorldEditSelection.Bounds(at.getX()-16,0,at.getZ()-16,at.getX()+16,255,at.getZ()+16);
+            int minCx=b.minX>>4,maxCx=b.maxX>>4,minCz=b.minZ>>4,maxCz=b.maxZ>>4;
+            StringBuilder out=new StringBuilder("Chunks: ");
+            int shown=0,total=0;
+            for(int cx=minCx;cx<=maxCx;cx++)for(int cz=minCz;cz<=maxCz;cz++){
+                boolean loaded=mc.theWorld.isBlockLoaded(new BlockPos(cx<<4,64,cz<<4));
+                total++;
+                if(shown<12){if(shown>0)out.append(", ");out.append(cx).append('/').append(cz).append(loaded?" (loaded)":" (not loaded)");shown++;}
+            }
+            out.append(" | ").append(total).append(" chunk(s) checked");
+            reply(sender,out.toString());
+            return;
+        }
+        if ("delchunks".equals(cmd)) {
+            final BlockPos at=mc.thePlayer.getPosition();
+            final int cx=at.getX()>>4,cz=at.getZ()>>4;
+            final WorldEditSelection.Bounds chunkBounds=new WorldEditSelection.Bounds(cx<<4,0,cz<<4,(cx<<4)+15,255,(cz<<4)+15);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,chunkBounds)){reply(sender,"Current chunk is not fully loaded.");return;}
+                WorldEditHistory.record(w,chunkBounds);
+                int changed=0;
+                for(int x=chunkBounds.minX;x<=chunkBounds.maxX;x++)for(int y=0;y<=255;y++)for(int z=chunkBounds.minZ;z<=chunkBounds.maxZ;z++){
+                    BlockPos p=new BlockPos(x,y,z);
+                    if(!w.isAirBlock(p)){w.setBlockState(p,net.minecraft.init.Blocks.air.getDefaultState(),2);changed++;}
+                }
+                reply(sender,"Cleared "+changed+" block(s) in the current chunk. The chunk itself remains loaded.");
+            }});
+            return;
+        }
+
+        // Advanced region and natural generation commands.
+        if ("curve".equals(cmd) && args.length==2) {
+            final IBlockState state=WorldEditBlockParser.parse(args[1]);
+            final WorldEditSelection.Bounds b=selection(sender);
+            if(state==null||b==null){reply(sender,"Usage: //acwe curve <block>");return;}
+            final BlockPos start=SELECTION.getPos1(),end=SELECTION.getPos2(),control=mc.thePlayer.getPosition();
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Curve area contains unloaded chunks.");return;}
+                WorldEditFeatureOperations.curve(w,start,control,end,state);reply(sender,"Curve drawn between the selected corners using your position as its control point.");
+            }});
+            return;
+        }
+        if ("deform".equals(cmd) && args.length>=2 && args.length<=3) {
+            final double amplitude,frequency;
+            try{amplitude=Double.parseDouble(args[1]);frequency=args.length==3?Double.parseDouble(args[2]):0.25D;}
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe deform <amplitude> [frequency]");return;}
+            if(amplitude<0.0D||amplitude>32.0D||frequency<=0.0D||frequency>2.0D){reply(sender,"Amplitude must be 0-32 and frequency must be greater than 0 and at most 2.");return;}
+            final WorldEditSelection.Bounds b=selection(sender);if(b==null)return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Deform area contains unloaded chunks.");return;}
+                WorldEditFeatureOperations.deform(w,b,amplitude,frequency);reply(sender,"Selected terrain deformed.");
+            }});
+            return;
+        }
+        if ("forest".equals(cmd)||"flora".equals(cmd)||"pumpkins".equals(cmd)) {
+            final int density;
+            try{density=args.length>1?Integer.parseInt(args[1]):("forest".equals(cmd)?8:64);}
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" [count]");return;}
+            if(density<1||density>512){reply(sender,"Count must be between 1 and 512.");return;}
+            final WorldEditSelection.Bounds b=selection(sender);if(b==null)return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,cmd+" area contains unloaded chunks.");return;}
+                java.util.Random random=new java.util.Random(w.getSeed()^System.nanoTime());
+                int placed="forest".equals(cmd)?WorldEditFeatureOperations.forest(w,b,density,random):
+                        ("flora".equals(cmd)?WorldEditFeatureOperations.flora(w,b,density,random):WorldEditFeatureOperations.pumpkins(w,b,density,random));
+                reply(sender,cmd+" placed "+placed+" feature(s).");
+            }});
+            return;
+        }
+        if ("forestgen".equals(cmd) && args.length>=2 && args.length<=3) {
+            final int radius,count;
+            try{radius=Integer.parseInt(args[1]);count=args.length==3?Integer.parseInt(args[2]):32;}
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe forestgen <radius> [tree-count]");return;}
+            if(radius<1||radius>32||count<1||count>256){reply(sender,"Radius must be 1-32 and tree count 1-256.");return;}
+            final BlockPos at=mc.thePlayer.getPosition();
+            final WorldEditSelection.Bounds b=new WorldEditSelection.Bounds(at.getX()-radius,Math.max(0,at.getY()-16),at.getZ()-radius,at.getX()+radius,Math.min(255,at.getY()+32),at.getZ()+radius);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Forest generation area contains unloaded chunks.");return;}
+                int placed=WorldEditFeatureOperations.forest(w,b,Math.max(1,(radius*radius*4)/count),new java.util.Random(w.getSeed()^System.nanoTime()));
+                reply(sender,"Forest generated: "+placed+" tree(s) placed in the bounded area.");
+            }});
+            return;
+        }
+        if ("butcher".equals(cmd) && args.length<=3) {
+            final boolean animals=args.length>1&&"-a".equalsIgnoreCase(args[1]);
+            final int radius;
+            try{radius=args.length>(animals?2:1)?Integer.parseInt(args[animals?2:1]):16;}
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe butcher [-a] [radius]");return;}
+            if(radius<1||radius>64){reply(sender,"Radius must be between 1 and 64.");return;}
+            final BlockPos center=mc.thePlayer.getPosition();
+            onServer(sender,new Task(){public void run(WorldServer w){
+                int removed=WorldEditFeatureOperations.butcher(w,center,radius,animals);
+                reply(sender,"Removed "+removed+(animals?" hostile and passive":" hostile")+" mob(s).");
+            }});
+            return;
+        }
+
         reply(sender, "Unknown or unsupported Alpha World Edit command. Use //acwe help.");
     }
 
@@ -772,7 +873,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
