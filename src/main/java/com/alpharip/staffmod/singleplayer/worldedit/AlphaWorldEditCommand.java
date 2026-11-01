@@ -197,7 +197,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     @SubscribeEvent
     public void onWorldEditWandUse(PlayerInteractEvent event) {
         if (event == null || event.world == null || event.world.isRemote
-                || event.entityPlayer == null || !event.entityPlayer.worldObj.isRemote == false) {
+                || event.entityPlayer == null) {
             return;
         }
         AlphaModule module = AlphaModuleRegistry.find("world-edit");
