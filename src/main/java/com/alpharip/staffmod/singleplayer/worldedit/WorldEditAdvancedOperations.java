@@ -127,6 +127,75 @@ public final class WorldEditAdvancedOperations {
         return changed;
     }
 
+    public static IBlockState[][][] rotateY(IBlockState[][][] input, int degrees) {
+        int turns=((degrees%360)+360)%360/90;
+        IBlockState[][][] result=input;
+        for(int t=0;t<turns;t++) {
+            int sx=result.length, sy=result[0].length, sz=result[0][0].length;
+            IBlockState[][][] rotated=new IBlockState[sz][sy][sx];
+            for(int x=0;x<sx;x++) for(int y=0;y<sy;y++) for(int z=0;z<sz;z++)
+                rotated[sz-1-z][y][x]=result[x][y][z];
+            result=rotated;
+        }
+        return result;
+    }
+
+    public static IBlockState[][][] flip(IBlockState[][][] input, String axis) {
+        int sx=input.length, sy=input[0].length, sz=input[0][0].length;
+        IBlockState[][][] result=new IBlockState[sx][sy][sz];
+        for(int x=0;x<sx;x++) for(int y=0;y<sy;y++) for(int z=0;z<sz;z++) {
+            int tx="x".equals(axis)?sx-1-x:x;
+            int ty="y".equals(axis)?sy-1-y:y;
+            int tz="z".equals(axis)?sz-1-z:z;
+            result[tx][ty][tz]=input[x][y][z];
+        }
+        return result;
+    }
+
+    public static int removeNear(WorldServer w, BlockPos center, int radius, IBlockState target) {
+        int changed=0, r2=radius*radius;
+        for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
+            if(x*x+y*y+z*z>r2) continue;
+            BlockPos p=center.add(x,y,z);
+            if(w.getBlockState(p).getBlock()==target.getBlock()) {
+                w.setBlockState(p,Blocks.air.getDefaultState(),2); changed++;
+            }
+        }
+        return changed;
+    }
+
+    public static int changeSurface(WorldServer w, WorldEditSelection.Bounds b, int mode) {
+        int changed=0;
+        for(int x=b.minX;x<=b.maxX;x++) for(int z=b.minZ;z<=b.maxZ;z++) {
+            BlockPos top=w.getTopSolidOrLiquidBlock(new BlockPos(x,b.maxY,z));
+            if(top.getY()<b.minY || top.getY()>b.maxY) continue;
+            BlockPos above=top.up();
+            if(mode==0 && w.isAirBlock(above) && w.getBlockState(top).getBlock().isFullBlock()) {
+                w.setBlockState(above,Blocks.snow_layer.getDefaultState(),2); changed++;
+            } else if(mode==1) {
+                if(w.getBlockState(above).getBlock()==Blocks.snow_layer || w.getBlockState(top).getBlock()==Blocks.ice) {
+                    w.setBlockState(above,Blocks.air.getDefaultState(),2);
+                    if(w.getBlockState(top).getBlock()==Blocks.ice) w.setBlockState(top,Blocks.water.getDefaultState(),2);
+                    changed++;
+                }
+            } else if(mode==2 && w.getBlockState(top).getBlock()==Blocks.dirt) {
+                w.setBlockState(top,Blocks.grass.getDefaultState(),2); changed++;
+            }
+        }
+        return changed;
+    }
+
+    public static int fixLiquid(WorldServer w, WorldEditSelection.Bounds b, boolean lava) {
+        int changed=0;
+        net.minecraft.block.Block flowing=lava?Blocks.flowing_lava:Blocks.flowing_water;
+        IBlockState source=lava?Blocks.lava.getDefaultState():Blocks.water.getDefaultState();
+        for(int x=b.minX;x<=b.maxX;x++) for(int y=b.minY;y<=b.maxY;y++) for(int z=b.minZ;z<=b.maxZ;z++) {
+            BlockPos p=new BlockPos(x,y,z);
+            if(w.getBlockState(p).getBlock()==flowing) { w.setBlockState(p,source,2); changed++; }
+        }
+        return changed;
+    }
+
     public static int extinguish(WorldServer w, BlockPos center, int radius) {
         int changed=0;
         for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
