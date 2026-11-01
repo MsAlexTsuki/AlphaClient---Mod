@@ -74,7 +74,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             reply(sender, "Selection cleared.");
             return;
         }
-        if ("size".equals(cmd) || "count".equals(cmd)) {
+        if ("size".equals(cmd) || ("count".equals(cmd) && args.length == 1)) {
             if (!SELECTION.hasSelection()) {
                 reply(sender, "No selection. Set both positions first.");
                 return;
@@ -82,6 +82,38 @@ public final class AlphaWorldEditCommand extends CommandBase {
             WorldEditSelection.Bounds selected = SELECTION.getBounds();
             reply(sender, "Selection: " + selected.sizeX() + " x " + selected.sizeY()
                     + " x " + selected.sizeZ() + " (" + selected.volume() + " blocks).");
+            return;
+        }
+        if ("count".equals(cmd) && args.length == 2) {
+            final IBlockState target = WorldEditBlockParser.parse(args[1]);
+            final WorldEditSelection.Bounds b = selection(sender);
+            if (target == null || b == null) { reply(sender, "Usage: //acwe count <block>"); return; }
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
+                int count=0;
+                for(int x=b.minX;x<=b.maxX;x++)for(int y=b.minY;y<=b.maxY;y++)for(int z=b.minZ;z<=b.maxZ;z++)
+                    if(w.getBlockState(new BlockPos(x,y,z)).getBlock()==target.getBlock())count++;
+                reply(sender,"Found "+count+" matching block(s).");
+            }});
+            return;
+        }
+        if ("distr".equals(cmd)) {
+            final WorldEditSelection.Bounds b=selection(sender);
+            if(b==null)return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
+                java.util.Map<String,Integer> counts=new java.util.TreeMap<String,Integer>();
+                for(int x=b.minX;x<=b.maxX;x++)for(int y=b.minY;y<=b.maxY;y++)for(int z=b.minZ;z<=b.maxZ;z++){
+                    String name=String.valueOf(net.minecraft.block.Block.blockRegistry.getNameForObject(w.getBlockState(new BlockPos(x,y,z)).getBlock()));
+                    Integer n=counts.get(name);counts.put(name,n==null?1:n+1);
+                }
+                int shown=0;
+                for(java.util.Map.Entry<String,Integer> e:counts.entrySet()){
+                    if(shown++==10)break;
+                    reply(sender,e.getKey()+": "+e.getValue());
+                }
+                if(counts.isEmpty())reply(sender,"Selection is empty.");
+            }});
             return;
         }
         if ("chunk".equals(cmd)) {
@@ -212,10 +244,10 @@ public final class AlphaWorldEditCommand extends CommandBase {
             if (from == null || to == null) { reply(sender, "Usage: //acwe replace <from> <to>"); return; }
             fill(sender, to, from); return;
         }
-        if (("walls".equals(cmd) || "outline".equals(cmd) || "hollow".equals(cmd)) && args.length == 2) {
+        if (("walls".equals(cmd) || "outline".equals(cmd) || "faces".equals(cmd) || "hollow".equals(cmd)) && args.length == 2) {
             final IBlockState block = WorldEditBlockParser.parse(args[1]);
             if (block == null) { reply(sender, "Usage: //acwe " + cmd + " <block>"); return; }
-            final int op = "walls".equals(cmd) ? WALLS : ("outline".equals(cmd) ? OUTLINE : HOLLOW);
+            final int op = "walls".equals(cmd) ? WALLS : (("outline".equals(cmd) || "faces".equals(cmd)) ? OUTLINE : HOLLOW);
             final WorldEditSelection.Bounds b = selection(sender);
             if (b == null) return;
             onServer(sender, new Task() { public void run(WorldServer w) {
@@ -261,6 +293,53 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
 
         // Region commands.
+        // Selection geometry adjustments.
+        if (("expand".equals(cmd)||"contract".equals(cmd)||"shift".equals(cmd)) && args.length>=2) {
+            if(!SELECTION.hasSelection()){reply(sender,"Select two positions first.");return;}
+            final int amount;
+            try{amount=Integer.parseInt(args[1]);}catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" <amount> [direction]");return;}
+            int dx=0,dy=0,dz=0;
+            String direction=args.length>2?args[2].toLowerCase(Locale.ROOT):"forward";
+            if("up".equals(direction))dy=1;else if("down".equals(direction))dy=-1;
+            else if("north".equals(direction))dz=-1;else if("south".equals(direction))dz=1;
+            else if("east".equals(direction))dx=1;else if("west".equals(direction))dx=-1;
+            else if("forward".equals(direction)){net.minecraft.util.EnumFacing f=mc.thePlayer.getHorizontalFacing();dx=f.getFrontOffsetX();dz=f.getFrontOffsetZ();}
+            else {reply(sender,"Direction must be up, down, north, south, east, west, or forward.");return;}
+            BlockPos p1=SELECTION.getPos1(),p2=SELECTION.getPos2();
+            if("shift".equals(cmd)){
+                SELECTION.setPos1(p1.add(dx*amount,dy*amount,dz*amount));
+                SELECTION.setPos2(p2.add(dx*amount,dy*amount,dz*amount));
+            }else{
+                boolean expand="expand".equals(cmd);
+                int sign=expand?1:-1;
+                int ax=dx*amount*sign,ay=dy*amount*sign,az=dz*amount*sign;
+                int minX=Math.min(p1.getX(),p2.getX()),maxX=Math.max(p1.getX(),p2.getX());
+                int minY=Math.min(p1.getY(),p2.getY()),maxY=Math.max(p1.getY(),p2.getY());
+                int minZ=Math.min(p1.getZ(),p2.getZ()),maxZ=Math.max(p1.getZ(),p2.getZ());
+                if(ax<0)minX+=ax;else maxX+=ax;
+                if(ay<0)minY+=ay;else maxY+=ay;
+                if(az<0)minZ+=az;else maxZ+=az;
+                SELECTION.setPos1(new BlockPos(minX,minY,minZ));
+                SELECTION.setPos2(new BlockPos(maxX,maxY,maxZ));
+            }
+            reply(sender,"Selection "+cmd+" completed: "+SELECTION.getBounds().volume()+" blocks.");
+            return;
+        }
+        if (("outset".equals(cmd)||"inset".equals(cmd)) && args.length<=2) {
+            if(!SELECTION.hasSelection()){reply(sender,"Select two positions first.");return;}
+            int amount=1;
+            try{if(args.length==2)amount=Integer.parseInt(args[1]);}catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" [amount]");return;}
+            int sign="outset".equals(cmd)?1:-1;
+            WorldEditSelection.Bounds b=SELECTION.getBounds();
+            int minX=b.minX-sign*amount,maxX=b.maxX+sign*amount;
+            int minY=b.minY-sign*amount,maxY=b.maxY+sign*amount;
+            int minZ=b.minZ-sign*amount,maxZ=b.maxZ+sign*amount;
+            if(minX>maxX||minY>maxY||minZ>maxZ){reply(sender,"Inset amount is larger than the selection.");return;}
+            SELECTION.setPos1(new BlockPos(minX,minY,minZ));SELECTION.setPos2(new BlockPos(maxX,maxY,maxZ));
+            reply(sender,"Selection "+cmd+" completed.");
+            return;
+        }
+
         if ("line".equals(cmd) && args.length == 2) {
             final IBlockState state = WorldEditBlockParser.parse(args[1]);
             if (state == null || !SELECTION.hasSelection()) { reply(sender, "Usage: //acwe line <block> (select two positions first)"); return; }
@@ -284,6 +363,17 @@ public final class AlphaWorldEditCommand extends CommandBase {
             final WorldEditSelection.Bounds b = selection(sender);
             if (state == null || b == null) return;
             onServer(sender, new Task() { public void run(WorldServer w) {\n                if (!WorldEditOperations.regionLoaded(w,b)) { reply(sender,"Selection contains unloaded chunks."); return; }\n                WorldEditAdvancedOperations.overlay(w,b,state); reply(sender,"Surface overlay applied.");\n            }});
+            return;
+        }
+        if ("smooth".equals(cmd) && args.length<=2) {
+            final int iterations;
+            try{iterations=args.length==2?Integer.parseInt(args[1]):1;}catch(NumberFormatException ex){reply(sender,"Usage: //acwe smooth [iterations]");return;}
+            if(iterations<1||iterations>5){reply(sender,"Iterations must be between 1 and 5.");return;}
+            final WorldEditSelection.Bounds b=selection(sender);if(b==null)return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
+                WorldEditAdvancedOperations.smooth(w,b,iterations);reply(sender,"Terrain smoothed ("+iterations+" iteration(s)).");
+            }});
             return;
         }
         if ("naturalize".equals(cmd)) {
