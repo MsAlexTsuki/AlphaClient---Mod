@@ -103,9 +103,18 @@ public final class InventorySearchMod {
         }
 
         init(event.gui);
+        field.drawTextBox();
+        String searchText = field.getText().trim();
+        if (searchText.isEmpty()) {
+            MC.fontRendererObj.drawStringWithShadow(
+                    "Search items...", field.xPosition + 5, field.yPosition + 5, 0xFFAAAAAA
+            );
+            return;
+        }
+
         GuiContainer container = (GuiContainer) event.gui;
-        int left = read(container, "guiLeft");
-        int top = read(container, "guiTop");
+        int left = read(container, "guiLeft", "field_147003_i");
+        int top = read(container, "guiTop", "field_147009_r");
         int hits = 0;
         int total = 0;
 
@@ -120,11 +129,7 @@ public final class InventorySearchMod {
             }
 
             total++;
-            if (container.getSlotUnderMouse() == slot) {
-                continue;
-            }
-
-            boolean matches = InventorySearchMatcher.matches(slot.getStack(), field.getText());
+            boolean matches = InventorySearchMatcher.matches(slot.getStack(), searchText);
             if (matches) {
                 hits++;
             }
@@ -134,24 +139,21 @@ public final class InventorySearchMod {
             Gui.drawRect(x, y, x + 16, y + 16, matches ? 0x5533FF55 : 0x99000000);
         }
 
-        field.drawTextBox();
-        if (field.getText().isEmpty()) {
-            MC.fontRendererObj.drawStringWithShadow(
-                    "Search items...", field.xPosition + 5, field.yPosition + 5, 0xFFAAAAAA
-            );
-        }
         MC.fontRendererObj.drawStringWithShadow(
                 hits + "/" + total, field.xPosition + field.width + 5, field.yPosition + 5, 0xFFFFFFFF
         );
     }
 
-    private static int read(GuiContainer container, String name) {
-        try {
-            Field field = GuiContainer.class.getDeclaredField(name);
-            field.setAccessible(true);
-            return field.getInt(container);
-        } catch (Exception ignored) {
-            return 0;
+    private static int read(GuiContainer container, String... names) {
+        for (String name : names) {
+            try {
+                Field reflected = GuiContainer.class.getDeclaredField(name);
+                reflected.setAccessible(true);
+                return reflected.getInt(container);
+            } catch (Exception ignored) {
+                // Try the next mapped/obfuscated field name.
+            }
         }
+        return 0;
     }
 }
