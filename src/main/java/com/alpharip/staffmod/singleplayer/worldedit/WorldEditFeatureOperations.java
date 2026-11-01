@@ -89,13 +89,16 @@ public final class WorldEditFeatureOperations {
     }
 
     public static int generate(WorldServer world,WorldEditSelection.Bounds b,IBlockState state,String expression) {
-        record(world,b);
-        int placed=0;
+        boolean[][][] mask=new boolean[b.sizeX()][b.sizeY()][b.sizeZ()];
         double cx=(b.sizeX()-1)/2.0D,cy=(b.sizeY()-1)/2.0D,cz=(b.sizeZ()-1)/2.0D;
+        int placed=0;
         for(int x=b.minX;x<=b.maxX;x++)for(int y=b.minY;y<=b.maxY;y++)for(int z=b.minZ;z<=b.maxZ;z++) {
             double value=WorldEditExpression.evaluate(expression,x-b.minX-cx,y-b.minY-cy,z-b.minZ-cz);
-            if(value<=0.0D){world.setBlockState(new BlockPos(x,y,z),state,2);placed++;}
+            if(value<=0.0D){mask[x-b.minX][y-b.minY][z-b.minZ]=true;placed++;}
         }
+        record(world,b);
+        for(int x=0;x<mask.length;x++)for(int y=0;y<mask[x].length;y++)for(int z=0;z<mask[x][y].length;z++)
+            if(mask[x][y][z])world.setBlockState(new BlockPos(b.minX+x,b.minY+y,b.minZ+z),state,2);
         return placed;
     }
 
