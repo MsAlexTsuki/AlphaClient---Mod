@@ -270,8 +270,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     || module.getDescription().toLowerCase(Locale.ROOT).contains(query)) result.add(module);
         }
 
-        // Misc is a dedicated folder immediately before Quality; Quality must remain last in General.
+        // Keep the dedicated General folders in a fixed order at the end of the list.
         if (selectedCategory == AlphaModule.Category.PUBLIC) {
+            AlphaModule singleplayer = null;
             AlphaModule misc = null;
             AlphaModule quality = null;
             for (int i = result.size() - 1; i >= 0; i--) {
@@ -280,8 +281,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     quality = result.remove(i);
                 } else if ("misc".equals(id)) {
                     misc = result.remove(i);
+                } else if ("singleplayer".equals(id)) {
+                    singleplayer = result.remove(i);
                 }
             }
+            if (singleplayer != null) result.add(singleplayer);
             if (misc != null) result.add(misc);
             if (quality != null) result.add(quality);
         }
@@ -518,6 +522,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     if (PermissionService.hasCommandPermission("menu.pixelgarden", false)) {
                         mc.displayGuiScreen(new PixelGardenGUI(this));
                     }
+                    return;
+                }
+                if ("singleplayer".equals(clickedModule.getId())) {
+                    searchFocused = false;
+                    if (searchField != null) searchField.setFocused(false);
+                    mc.displayGuiScreen(new SingleplayerGui(this));
                     return;
                 }
                 if ("misc".equals(clickedModule.getId())) {
