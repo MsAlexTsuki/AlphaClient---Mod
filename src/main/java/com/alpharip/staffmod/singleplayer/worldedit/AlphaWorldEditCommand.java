@@ -651,7 +651,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             try{radius=args.length==3?Integer.parseInt(args[2]):5;}
             catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" <block> [radius]");return;}
             if(state==null||radius<1||radius>16){reply(sender,"Invalid block or radius (1-16).");return;}
-            final BlockPos target=mc.objectMouseOver!=null&&mc.objectMouseOver.getBlockPos()!=null?mc.objectMouseOver.getBlockPos():mc.thePlayer.getPosition();
+            final BlockPos target=mc.objectMouseOver!=null&&mc.objectMouseOver.getBlockPos()!=null?("fill".equals(cmd)?mc.objectMouseOver.getBlockPos().up():mc.objectMouseOver.getBlockPos().offset(mc.objectMouseOver.sideHit)):mc.thePlayer.getPosition();
             final WorldEditSelection.Bounds area=new WorldEditSelection.Bounds(target.getX()-radius,Math.max(0,target.getY()-radius),target.getZ()-radius,target.getX()+radius,Math.min(255,target.getY()+radius),target.getZ()+radius);
             onServer(sender,new Task(){public void run(WorldServer w){
                 if(!WorldEditOperations.regionLoaded(w,area)){reply(sender,"Fill area contains unloaded chunks.");return;}
@@ -766,7 +766,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","limit","fast","gmask","mask","toggleplace","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
