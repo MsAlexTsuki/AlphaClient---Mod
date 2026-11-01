@@ -8,6 +8,7 @@ import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggSettingsGui;
 import com.alpharip.staffmod.inventorysearch.InventorySearchGui;
+import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -87,7 +88,9 @@ public final class QualityGui extends AlphaGuiScreen {
             } else if (i == 18) {
                 buttonList.add(new AlphaButton(EASTER_EGGS, x, y, tileWidth, tileHeight, "Deathscreens", true));
             } else if (i == 19) {
-                buttonList.add(new AlphaButton(SEARCH_INV, x, y, tileWidth, tileHeight, "Search Inv", true));
+                boolean searchInvEnabled = InventorySearchSettings.isEnabled();
+                buttonList.add(new AlphaButton(SEARCH_INV, x, y, tileWidth, tileHeight,
+                        "Search Inv: " + (searchInvEnabled ? "ON" : "OFF"), searchInvEnabled));
             } else if (i == AFK_TIMER_INDEX) {
                 buttonList.add(new AlphaButton(AFK_TIMER, x, y, tileWidth, tileHeight, "AFK Timer", true));
             } else if (i == SESSION_TIMER_INDEX) {
