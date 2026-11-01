@@ -721,6 +721,75 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
 
+        if ("cs".equals(cmd)) {
+            if(args.length!=2){reply(sender,"Usage: //acwe cs <script-name>");return;}
+            try{WorldEditScriptStore.create(args[1]);reply(sender,"Script template created in AlphaWorldEdit/scripts: "+args[1]+".acs");}
+            catch(java.io.IOException ex){reply(sender,"Could not create script: "+ex.getMessage());}
+            return;
+        }
+        if (".s".equals(cmd)) {
+            if(args.length!=2){reply(sender,"Usage: //acwe .s <script-name>");return;}
+            try{
+                java.util.List<String> lines=WorldEditScriptStore.read(args[1]);
+                int executed=0;
+                for(String line:lines){
+                    if(line.startsWith("//acwe "))line=line.substring(7).trim();
+                    if(line.startsWith("/")){reply(sender,"Scripts may contain only Alpha World Edit commands.");return;}
+                    String[] scriptArgs=line.split("\\s+");
+                    if(scriptArgs.length==0)continue;
+                    String first=scriptArgs[0].toLowerCase(Locale.ROOT);
+                    if("cs".equals(first)||".s".equals(first)||"help".equals(first)){reply(sender,"Nested scripts and help are not allowed inside scripts.");return;}
+                    processCommand(sender,scriptArgs);
+                    executed++;
+                }
+                reply(sender,"Executed "+executed+" Alpha World Edit script command(s).");
+            }catch(java.io.IOException ex){reply(sender,"Could not run script: "+ex.getMessage());}
+            return;
+        }
+        if ("snapshot".equals(cmd) && args.length>=2) {
+            String action=args[1].toLowerCase(Locale.ROOT);
+            if("list".equals(action)){
+                java.util.List<String> names=WorldEditSnapshotStore.list();
+                reply(sender,names.isEmpty()?"No snapshots saved.":"Snapshots: "+names.toString());return;
+            }
+            if(args.length!=3){reply(sender,"Usage: //acwe snapshot <before|after|use|sel> <name>");return;}
+            String name=args[2];
+            if("before".equals(action)||"after".equals(action)){
+                final WorldEditSelection.Bounds b=selection(sender);if(b==null)return;
+                onServer(sender,new Task(){public void run(WorldServer w){
+                    if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Snapshot area contains unloaded chunks.");return;}
+                    try{WorldEditSnapshotStore.save(name,w,b);reply(sender,"Snapshot "+action+" saved: "+name);}
+                    catch(java.io.IOException ex){reply(sender,"Could not save snapshot: "+ex.getMessage());}
+                }});
+                return;
+            }
+            try{
+                WorldEditSnapshotStore.Snapshot snapshot=WorldEditSnapshotStore.load(name);
+                if("use".equals(action)){CLIPBOARD.setBlocks(snapshot.blocks);reply(sender,"Snapshot loaded into clipboard: "+name);return;}
+                if("sel".equals(action)){
+                    WorldEditSelection.Bounds b=snapshot.bounds();
+                    SELECTION.setPos1(new BlockPos(b.minX,b.minY,b.minZ));SELECTION.setPos2(new BlockPos(b.maxX,b.maxY,b.maxZ));
+                    reply(sender,"Selection restored from snapshot: "+name);return;
+                }
+                reply(sender,"Unknown snapshot action. Use before, after, use, sel, or list.");
+            }catch(java.io.IOException ex){reply(sender,"Could not load snapshot: "+ex.getMessage());}
+            return;
+        }
+        if ("restore".equals(cmd) && args.length==2) {
+            final String name=args[1];
+            final WorldEditSnapshotStore.Snapshot snapshot;
+            try{snapshot=WorldEditSnapshotStore.load(name);}
+            catch(java.io.IOException ex){reply(sender,"Could not load snapshot: "+ex.getMessage());return;}
+            final WorldEditSelection.Bounds b=snapshot.bounds();
+            if(!valid(sender,b))return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Restore area contains unloaded chunks.");return;}
+                WorldEditHistory.record(w,b);WorldEditOperations.paste(w,snapshot.origin,snapshot.blocks);
+                reply(sender,"Snapshot restored: "+name);
+            }});
+            return;
+        }
+
         // Brush configuration; the selected brush is applied with a right-click.
         if ("brush".equals(cmd)||"br".equals(cmd)) {
             if(args.length<2){reply(sender,"Usage: //acwe brush <sphere|cylinder|clipboard|smooth|ex|gravity|butcher|deform|set|paint|apply|forest|raise|lower> [block] [radius]");return;}
@@ -930,7 +999,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
