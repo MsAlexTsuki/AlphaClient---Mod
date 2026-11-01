@@ -140,8 +140,8 @@ public final class WorldEditGui extends AlphaGuiScreen {
             status = "Replaced " + replacement + " with " + block + ".";
         } else if (button.id == WALLS || button.id == OUTLINE || button.id == HOLLOW) {
             if (block == null) { status = "Enter a valid block ID."; return; }
-            runShell(block, button.id == HOLLOW);
-            status = button.id == WALLS ? "Built the four walls."
+            if (button.id == WALLS) runWalls(block); else runShell(block, button.id == HOLLOW);
+            status = button.id == WALLS ? "Built the four side walls."
                     : (button.id == OUTLINE ? "Built the region outline." : "Built a hollow region.");
         } else if (button.id == COPY) {
             clipboardMin = min(pos1, pos2);
@@ -171,6 +171,19 @@ public final class WorldEditGui extends AlphaGuiScreen {
 
     private String fillCommand(String[] bounds, String block) {
         return "/fill " + bounds[0] + " " + bounds[1] + " " + block;
+    }
+
+    private void runWalls(String block) {
+        BlockPos low = min(pos1, pos2);
+        BlockPos high = max(pos1, pos2);
+        send("/fill " + low.getX() + " " + low.getY() + " " + low.getZ()
+                + " " + low.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
+        send("/fill " + high.getX() + " " + low.getY() + " " + low.getZ()
+                + " " + high.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
+        send("/fill " + low.getX() + " " + low.getY() + " " + low.getZ()
+                + " " + high.getX() + " " + high.getY() + " " + low.getZ() + " " + block);
+        send("/fill " + low.getX() + " " + low.getY() + " " + high.getZ()
+                + " " + high.getX() + " " + high.getY() + " " + high.getZ() + " " + block);
     }
 
     private void runShell(String block, boolean hollow) {
