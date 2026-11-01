@@ -28,6 +28,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public final class AlphaWorldEditCommand extends CommandBase {
     private static int MAX_BLOCKS = 32768;
     private static IBlockState GLOBAL_MASK;
+    private static boolean editWandEnabled = true;
     private static final String WAND_TAG = "AlphaWorldEditWand";
     private static final int WALLS = 1, OUTLINE = 2, HOLLOW = 3;
     private static final WorldEditSelection SELECTION = new WorldEditSelection();
@@ -278,6 +279,11 @@ public final class AlphaWorldEditCommand extends CommandBase {
         if ("desel".equals(cmd) || "deselect".equals(cmd)) {
             SELECTION.setPos1(null); SELECTION.setPos2(null);
             reply(sender, "Selection cleared."); return;
+        }
+        if ("toggleeditwand".equals(cmd)) {
+            editWandEnabled=!editWandEnabled;
+            reply(sender,"World Edit wand selection is "+(editWandEnabled?"enabled.":"disabled."));
+            return;
         }
         if ("clearclipboard".equals(cmd)) {
             CLIPBOARD.clear(); reply(sender, "Clipboard cleared."); return;
@@ -766,7 +772,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
@@ -785,7 +791,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
         AlphaModule module = AlphaModuleRegistry.find("world-edit");
-        if (module == null || !module.isEnabled()) return;
+        if (module == null || !module.isEnabled() || !editWandEnabled) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || !mc.isSingleplayer() || mc.thePlayer == null
                 || event.entityPlayer.getUniqueID() == null
