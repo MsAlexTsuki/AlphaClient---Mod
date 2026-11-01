@@ -43,6 +43,15 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe copy", "Copy the selected region to the Alpha World Edit clipboard.");
         addCommand("//acwe paste", "Paste the clipboard at your current player position.");
         addCommand("//acwe clearclipboard", "Clear the Alpha World Edit clipboard.");
+        addCommand("//acwe cut", "Copy the selected region and clear its original blocks.");
+        addCommand("//acwe rotate <90|180|270>", "Rotate the clipboard around the vertical axis.");
+        addCommand("//acwe flip <x|y|z>", "Flip the clipboard on the selected axis.");
+        addCommand("//acwe schematic save <name>", "Save the clipboard in AlphaClient's compressed .acwe format.");
+        addCommand("//acwe schematic load <name>", "Load an AlphaClient .acwe schematic into the clipboard.");
+        addCommand("//acwe schematic delete <name>", "Delete a saved AlphaClient schematic.");
+        addCommand("//acwe schematic list", "List saved AlphaClient schematics.");
+        addCommand("//acwe schematic formats", "Show the schematic format supported by AlphaClient.");
+
 
         addSection("SELECTION TOOLS");
         addCommand("//acwe hpos1 / hpos2", "Set a selection corner to the block you are looking at.");
