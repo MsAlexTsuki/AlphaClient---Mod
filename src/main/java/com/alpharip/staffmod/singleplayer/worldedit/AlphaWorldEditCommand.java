@@ -263,6 +263,24 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
         if ("wand".equals(cmd)) {
+            if (args.length == 2 && "gone".equalsIgnoreCase(args[1])) {
+                EntityPlayer player = mc.thePlayer;
+                int removed = 0;
+                for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
+                    if (isWorldEditWand(player.inventory.getStackInSlot(i))) {
+                        player.inventory.setInventorySlotContents(i, null);
+                        removed++;
+                    }
+                }
+                player.inventory.markDirty();
+                player.inventoryContainer.detectAndSendChanges();
+                reply(sender, "Removed " + removed + " WorldEdit wand(s) from your inventory.");
+                return;
+            }
+            if (args.length != 1) {
+                reply(sender, "Usage: //acwe wand [gone]");
+                return;
+            }
             if (!(mc.thePlayer instanceof EntityPlayer)) {
                 reply(sender, "Could not give the WorldEdit wand.");
                 return;
@@ -1079,32 +1097,41 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 && stack.hasTagCompound() && stack.getTagCompound().getBoolean(WAND_TAG);
     }
 
-    /** Only the tagged //acwe wand wooden axe may change WorldEdit selections. */
+    /** The tagged //acwe wand selects positions and never performs vanilla block interaction. */
     @SubscribeEvent
     public void onWorldEditWandUse(PlayerInteractEvent event) {
-        if (event == null || event.world == null || event.world.isRemote
-                || event.entityPlayer == null) {
-            return;
-        }
+        if (event == null || event.world == null || event.entityPlayer == null
+                || event.pos == null) return;
+
         AlphaModule module = AlphaModuleRegistry.find("world-edit");
         if (module == null || !module.isEnabled() || !editWandEnabled) return;
+
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || !mc.isSingleplayer() || mc.thePlayer == null
                 || event.entityPlayer.getUniqueID() == null
-                || !event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID())) return;
-        ItemStack held = event.entityPlayer.getHeldItem();
-        if (!isWorldEditWand(held) || event.pos == null) return;
+                || !event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID())
+                || !isWorldEditWand(event.entityPlayer.getHeldItem())) return;
 
-        if (event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
+        boolean firstPosition = event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK;
+        boolean secondPosition = event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK;
+        if (!firstPosition && !secondPosition) return;
+
+        // Cancel on both logical sides: this prevents creative block breaking and
+        // normal right-click block interaction while the selection wand is held.
+        event.setCanceled(true);
+
+        // The integrated server also receives this event. Only the client updates
+        // selection state and prints feedback, avoiding duplicate messages.
+        if (!event.world.isRemote) return;
+
+        if (firstPosition) {
             SELECTION.setPos1(event.pos);
-            reply(event.entityPlayer, "Position 1 set to " + event.pos.getX() + ", "
+            reply(mc.thePlayer, "Position 1 set to " + event.pos.getX() + ", "
                     + event.pos.getY() + ", " + event.pos.getZ());
-            event.setCanceled(true);
-        } else if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
+        } else {
             SELECTION.setPos2(event.pos);
-            reply(event.entityPlayer, "Position 2 set to " + event.pos.getX() + ", "
+            reply(mc.thePlayer, "Position 2 set to " + event.pos.getX() + ", "
                     + event.pos.getY() + ", " + event.pos.getZ());
-            event.setCanceled(true);
         }
     }
 
