@@ -449,7 +449,10 @@ public final class AlphaWorldEditCommand extends CommandBase {
             final IBlockState state = WorldEditBlockParser.parse(args[1]);
             final WorldEditSelection.Bounds b = selection(sender);
             if (state == null || b == null) return;
-            onServer(sender, new Task() { public void run(WorldServer w) {\n                if (!WorldEditOperations.regionLoaded(w,b)) { reply(sender,"Selection contains unloaded chunks."); return; }\n                WorldEditAdvancedOperations.overlay(w,b,state); reply(sender,"Surface overlay applied.");\n            }});
+            onServer(sender, new Task() { public void run(WorldServer w) {
+                if (!WorldEditOperations.regionLoaded(w,b)) { reply(sender,"Selection contains unloaded chunks."); return; }
+                WorldEditAdvancedOperations.overlay(w,b,state); reply(sender,"Surface overlay applied.");
+            }});
             return;
         }
         if ("smooth".equals(cmd) && args.length<=2) {
