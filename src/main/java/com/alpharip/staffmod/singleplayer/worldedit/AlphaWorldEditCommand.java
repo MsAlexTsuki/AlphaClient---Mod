@@ -236,7 +236,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
                     chunk.setBiomeArray(data);changed.add(chunk);
                 }
                 for(net.minecraft.world.chunk.Chunk chunk:changed)chunk.setChunkModified();
-                WorldEditAuditLog.recordSummary(w,activeAuditCommand,"Biome changed to "+found.biomeName,b.sizeX()*b.sizeZ(),new BlockPos(b.minX,b.minY,b.minZ));
+                WorldEditAuditLog.recordCurrentSummary(w,"Biome changed to "+found.biomeName,b.sizeX()*b.sizeZ(),new BlockPos(b.minX,b.minY,b.minZ));
                 reply(sender,"Biome set to "+found.biomeName+" across the selected columns.");
             }});
             return;
@@ -378,7 +378,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 biomeData[index] = (byte) found.biomeID;
                 chunk.setBiomeArray(biomeData);
                 chunk.setChunkModified();
-                WorldEditAuditLog.recordSummary(w,activeAuditCommand,"Chunk biome changed to "+found.biomeName,256,target);
+                WorldEditAuditLog.recordCurrentSummary(w,"Chunk biome changed to "+found.biomeName,1,target);
                 reply(sender, "Biome changed to " + found.biomeName + " for the current chunk.");
             }});
             return;
@@ -993,7 +993,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             final BlockPos center=mc.thePlayer.getPosition();
             onServer(sender,new Task(){public void run(WorldServer w){
                 int removed=WorldEditFeatureOperations.butcher(w,center,radius,animals);
-                WorldEditAuditLog.recordSummary(w,activeAuditCommand,"Mobs removed",removed,center);
+                WorldEditAuditLog.recordCurrentSummary(w,"Mobs removed",removed,center);
                 reply(sender,"Removed "+removed+(animals?" hostile and passive":" hostile")+" mob(s).");
             }});
             return;
