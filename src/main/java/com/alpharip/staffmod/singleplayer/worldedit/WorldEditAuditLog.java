@@ -186,6 +186,11 @@ public final class WorldEditAuditLog {
         root.setTag("entries", kept);
     }
 
+    public static void recordCurrentSummary(WorldServer world, String summary,
+                                            int count, BlockPos location) {
+        recordSummary(world, currentAction, summary, count, location);
+    }
+
     public static void recordSummary(WorldServer world, String action, String summary,
                                      int count, BlockPos location) {
         if (world == null || count <= 0) return;
