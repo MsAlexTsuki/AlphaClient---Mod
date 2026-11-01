@@ -39,8 +39,11 @@ public final class InventorySearchMod {
         }
 
         owner = screen;
+        GuiContainer container = (GuiContainer) screen;
+        int left = read(container, "guiLeft", "field_147003_i");
+        int top = read(container, "guiTop", "field_147009_r");
         field = new GuiTextField(
-                9231, MC.fontRendererObj, Math.max(4, screen.width / 2 - 100), 5, 200, 18
+                9231, MC.fontRendererObj, left + 72, top + 4, 96, 12
         );
         field.setMaxStringLength(64);
         field.setText(query);
