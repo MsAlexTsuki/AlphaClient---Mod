@@ -101,6 +101,47 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe fill <block> [depth]", "Fill air downward from the block above your target.");
         addCommand("//acwe fillr <block> [radius]", "Flood-fill connected air within a bounded radius.");
 
+        addSection("CHUNKS");
+        addCommand("//acwe listchunks", "List chunk coordinates around you or inside the current selection, with loaded status.");
+        addCommand("//acwe delchunks", "Clear all blocks in your current chunk; the chunk remains loaded.");
+
+        addSection("ADVANCED REGION");
+        addCommand("//acwe curve <block>", "Draw a quadratic curve from pos1 to pos2 using your position as the control point.");
+        addCommand("//acwe deform <amplitude> [frequency]", "Apply bounded sinusoidal terrain deformation to the selection.");
+        addCommand("//acwe regen", "Rebuild the selected area as generated rolling terrain.");
+        addCommand("//acwe forest [density]", "Generate trees in the selected area.");
+        addCommand("//acwe flora [count]", "Scatter grass and flowers in the selected area.");
+
+        addSection("GENERATION");
+        addCommand("//acwe forestgen <radius> [tree-count]", "Generate a bounded forest around your position.");
+        addCommand("//acwe pumpkins [count]", "Scatter pumpkins on suitable surfaces in the selection.");
+        addCommand("//acwe generate <block> <expression>", "Generate blocks where an arithmetic x/y/z expression evaluates to 0 or less.");
+
+        addSection("SCRIPTING");
+        addCommand("//acwe cs <name>", "Create a local .acs script template under AlphaWorldEdit/scripts.");
+        addCommand("//acwe .s <name>", "Execute up to 64 Alpha World Edit commands from a local script.");
+
+        addSection("BRUSH");
+        addCommand("//acwe brush <type> [block] [radius]", "Configure a right-click brush. Types: sphere, cylinder, clipboard, smooth, ex, gravity, butcher, deform, set, paint, apply, forest, raise, lower, none.");
+        addCommand("//acwe br <type> [block] [radius]", "Alias for brush.");
+        addCommand("//acwe superpickaxe <single|area|recursive>", "Configure left-click block removal modes.");
+        addCommand("//acwe sp <single|area|recursive>", "Alias for superpickaxe.");
+
+        addSection("TOOLS");
+        addCommand("//acwe tool <none|info|tree|repl|cycler|floodfill|deltree|farwand>", "Assign a click tool to your interactions.");
+        addCommand("//acwe tool repl <from> <to>", "Replace matching nearby blocks on right-click.");
+        addCommand("//acwe tool floodfill <block>", "Fill connected air from the clicked block.");
+        addCommand("//acwe tool lrbuild <left-block> <right-block>", "Place one block on left-click and another on right-click.");
+        addCommand("//acwe tool none", "Disable the currently selected tool.");
+
+        addSection("SNAPSHOTS");
+        addCommand("//acwe snapshot before <name>", "Save the selected region as a named snapshot.");
+        addCommand("//acwe snapshot after <name>", "Save the selected region as a named snapshot.");
+        addCommand("//acwe snapshot list", "List saved snapshots.");
+        addCommand("//acwe snapshot use <name>", "Load a snapshot into the clipboard.");
+        addCommand("//acwe snapshot sel <name>", "Restore the selection bounds stored in a snapshot.");
+        addCommand("//acwe restore <name>", "Restore a saved snapshot to its original coordinates.");
+
         addSection("HISTORY");
         addCommand("//acwe undo", "Restore the previous recorded block state.");
         addCommand("//acwe redo", "Reapply the last undone block state.");
