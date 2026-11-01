@@ -14,6 +14,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.WorldServer;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 /** AlphaClient-only WorldEdit namespace. */
 public final class AlphaWorldEditCommand extends CommandBase {
     private static final int MAX_BLOCKS = 32768;
+    private static final String WAND_TAG = "AlphaWorldEditWand";
     private static final int WALLS = 1, OUTLINE = 2, HOLLOW = 3;
     private static final WorldEditSelection SELECTION = new WorldEditSelection();
     private static final WorldEditClipboard CLIPBOARD = new WorldEditClipboard();
@@ -66,12 +68,16 @@ public final class AlphaWorldEditCommand extends CommandBase {
             EntityPlayer player = mc.thePlayer;
             for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
                 ItemStack stack = player.inventory.getStackInSlot(i);
-                if (stack != null && stack.getItem() == Items.wooden_axe) {
+                if (isWorldEditWand(stack)) {
                     reply(sender, "You already have the WorldEdit wooden axe.");
                     return;
                 }
             }
-            if (player.inventory.addItemStackToInventory(new ItemStack(Items.wooden_axe))) {
+            ItemStack wand = new ItemStack(Items.wooden_axe);
+            NBTTagCompound wandTag = new NBTTagCompound();
+            wandTag.setBoolean(WAND_TAG, true);
+            wand.setTagCompound(wandTag);
+            if (player.inventory.addItemStackToInventory(wand)) {
                 player.inventoryContainer.detectAndSendChanges();
                 reply(sender, "WorldEdit wand added to your inventory.");
             } else {
@@ -193,7 +199,12 @@ public final class AlphaWorldEditCommand extends CommandBase {
         return result;
     }
 
-    /** Wooden axe selection wand: left click sets pos1, right click sets pos2. */
+    private static boolean isWorldEditWand(ItemStack stack) {
+        return stack != null && stack.getItem() == Items.wooden_axe
+                && stack.hasTagCompound() && stack.getTagCompound().getBoolean(WAND_TAG);
+    }
+
+    /** Only the tagged //acwe wand wooden axe may change WorldEdit selections. */
     @SubscribeEvent
     public void onWorldEditWandUse(PlayerInteractEvent event) {
         if (event == null || event.world == null || event.world.isRemote
@@ -207,7 +218,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 || event.entityPlayer.getUniqueID() == null
                 || !event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID())) return;
         ItemStack held = event.entityPlayer.getHeldItem();
-        if (held == null || held.getItem() != Items.wooden_axe || event.pos == null) return;
+        if (!isWorldEditWand(held) || event.pos == null) return;
 
         if (event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
             SELECTION.setPos1(event.pos);
