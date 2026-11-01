@@ -488,6 +488,20 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
 
+        if ("clearhistory".equals(cmd)) {
+            WorldEditHistory.clear();
+            reply(sender,"World Edit undo and redo history cleared.");
+            return;
+        }
+        if ("undo".equals(cmd)||"redo".equals(cmd)) {
+            final boolean undo="undo".equals(cmd);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                boolean changed=undo?WorldEditHistory.undo(w):WorldEditHistory.redo(w);
+                reply(sender,changed?(undo?"Undo completed.":"Redo completed."):"Nothing to "+cmd+".");
+            }});
+            return;
+        }
+
         // Local AlphaClient schematic files (independent .acwe NBT format).
         if (("schematic".equals(cmd)||"schem".equals(cmd)) && args.length>=2) {
             String action=args[1].toLowerCase(Locale.ROOT);
@@ -662,7 +676,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
