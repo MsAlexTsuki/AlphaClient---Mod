@@ -1,10 +1,12 @@
 // --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.singleplayer.worldedit;
 
+import com.alpharip.alphaclient.AlphaClient;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -179,11 +181,13 @@ public final class AlphaWorldEditCommand extends CommandBase {
     }
 
     private void help(ICommandSender sender) {
-        reply(sender, "Implemented Alpha World Edit commands:");
-        reply(sender, "//acwe wand | pos1 | pos2 | desel");
-        reply(sender, "//acwe set <block> | replace <from> <to>");
-        reply(sender, "//acwe walls <block> | outline <block> | hollow <block>");
-        reply(sender, "//acwe copy | paste | clearclipboard");
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null) {
+            reply(sender, "World Edit command guide is unavailable.");
+            return;
+        }
+        GuiScreen parent = mc.currentScreen;
+        AlphaClient.openGuiFromCommand(new WorldEditCommandGuideGui(parent));
     }
 
     private void reply(ICommandSender sender, String message) {
