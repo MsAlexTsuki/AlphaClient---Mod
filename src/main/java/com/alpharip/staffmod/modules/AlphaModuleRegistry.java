@@ -28,6 +28,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(singleplayer);
 
+        AlphaModule worldEdit = new AlphaModule(
+                "world-edit",
+                "World Edit",
+                "Singleplayer WorldEdit commands controlled through the World Edit toggle.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(worldEdit);
+
         AlphaModule misc = new AlphaModule(
                 "misc",
                 "Misc",
