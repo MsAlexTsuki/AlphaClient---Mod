@@ -11,7 +11,9 @@ public final class WorldEditAdvancedOperations {
     private WorldEditAdvancedOperations() { }
 
     private static void record(WorldServer w,int minX,int minY,int minZ,int maxX,int maxY,int maxZ) {
-        WorldEditHistory.record(w,new WorldEditSelection.Bounds(minX,minY,minZ,maxX,maxY,maxZ));
+        int lowY=Math.max(0,minY), highY=Math.min(255,maxY);
+        if(lowY>highY)return;
+        WorldEditHistory.record(w,new WorldEditSelection.Bounds(minX,lowY,minZ,maxX,highY,maxZ));
     }
 
     public static void line(WorldServer w, BlockPos a, BlockPos b, IBlockState state) {
