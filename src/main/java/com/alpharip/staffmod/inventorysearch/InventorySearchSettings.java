@@ -8,10 +8,33 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-/** Persists the local InventorySearch enabled setting. */
+/** Persists local InventorySearch settings. */
 public final class InventorySearchSettings {
+    public enum Mode {
+        ALL("All"),
+        INVENTORY("Inventory"),
+        CHEST("Chest"),
+        ENDER("Ender");
+
+        private final String label;
+
+        Mode(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public Mode next() {
+            Mode[] modes = values();
+            return modes[(ordinal() + 1) % modes.length];
+        }
+    }
+
     private static boolean enabled;
     private static boolean loaded;
+    private static Mode mode = Mode.ALL;
     private static final File FILE = new File(
             new File(Minecraft.getMinecraft().mcDataDir, "config/alphaclient"),
             "inventorysearch.properties"
@@ -21,7 +44,22 @@ public final class InventorySearchSettings {
     }
 
     public static boolean isEnabled() {
+        load();
         return enabled;
+    }
+
+    public static Mode getMode() {
+        load();
+        return mode;
+    }
+
+    public static void setMode(Mode value) {
+        load();
+        if (value == null) {
+            return;
+        }
+        mode = value;
+        save();
     }
 
     public static void load() {
@@ -38,15 +76,24 @@ public final class InventorySearchSettings {
         try (FileInputStream input = new FileInputStream(FILE)) {
             properties.load(input);
             enabled = Boolean.parseBoolean(properties.getProperty("enabled", "false"));
+            try {
+                mode = Mode.valueOf(properties.getProperty("mode", "ALL").toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+                mode = Mode.ALL;
+            }
         } catch (IOException ignored) {
             enabled = false;
+            mode = Mode.ALL;
         }
     }
 
     public static void setEnabled(boolean value) {
         load();
         enabled = value;
+        save();
+    }
 
+    private static void save() {
         File parent = FILE.getParentFile();
         if (!parent.exists() && !parent.mkdirs()) {
             return;
@@ -54,10 +101,11 @@ public final class InventorySearchSettings {
 
         Properties properties = new Properties();
         properties.setProperty("enabled", Boolean.toString(enabled));
+        properties.setProperty("mode", mode.name());
         try (FileOutputStream output = new FileOutputStream(FILE)) {
             properties.store(output, "AlphaClient InventorySearch");
         } catch (IOException ignored) {
-            // Keep the in-memory setting if the local configuration cannot be written.
+            // Keep the in-memory settings if the local configuration cannot be written.
         }
     }
 }
