@@ -280,7 +280,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","wand","pos1","pos2","desel","set","replace","walls","outline","hollow","copy","paste","clearclipboard"};
+            String[] values = {"help","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomeinfo","chunkinfo","set","replace","walls","outline","hollow","copy","paste","clearclipboard"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
