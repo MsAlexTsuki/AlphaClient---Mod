@@ -75,7 +75,7 @@ public final class RankViewerRenderer {
         if (rank == null) rank = AlphaRank.MEMBER;
         // Name Viewer displays the player's name together with their rank badge.
         drawNameWithBadge(minecraft, player, rank, player.getName(), x,
-                y + player.height + 0.5D, z,
+                y + player.height + 0.5D - (player.isSneaking() ? 0.25D : 0.0D), z,
                 renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
     }
 
