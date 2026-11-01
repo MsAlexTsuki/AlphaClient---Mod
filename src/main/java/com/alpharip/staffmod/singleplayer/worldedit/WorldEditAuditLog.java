@@ -186,6 +186,46 @@ public final class WorldEditAuditLog {
         root.setTag("entries", kept);
     }
 
+    public static void recordSummary(WorldServer world, String action, String summary,
+                                     int count, BlockPos location) {
+        if (world == null || count <= 0) return;
+        try {
+            NBTTagCompound entry = new NBTTagCompound();
+            entry.setLong("timestamp", System.currentTimeMillis());
+            entry.setString("action", action == null ? "Alpha World Edit action" : action);
+            entry.setInteger("dimension", world.provider.getDimensionId());
+            entry.setInteger("changed", count);
+            if (location != null) {
+                entry.setInteger("minX", location.getX());
+                entry.setInteger("minY", location.getY());
+                entry.setInteger("minZ", location.getZ());
+                entry.setInteger("maxX", location.getX());
+                entry.setInteger("maxY", location.getY());
+                entry.setInteger("maxZ", location.getZ());
+                NBTTagList samples = new NBTTagList();
+                NBTTagCompound sample = new NBTTagCompound();
+                sample.setString("value", location.getX() + "," + location.getY() + "," + location.getZ());
+                samples.appendTag(sample);
+                entry.setTag("samples", samples);
+            }
+            NBTTagList changes = new NBTTagList();
+            NBTTagCompound change = new NBTTagCompound();
+            change.setString("transition", summary);
+            change.setInteger("count", count);
+            changes.appendTag(change);
+            entry.setTag("changes", changes);
+            File file = getFile(world);
+            NBTTagCompound root = readRoot(file);
+            NBTTagList entries = root.getTagList("entries", 10);
+            entries.appendTag(entry);
+            root.setTag("entries", entries);
+            prune(root, System.currentTimeMillis());
+            writeRoot(file, root);
+        } catch (Exception exception) {
+            System.err.println("[AlphaClient] World Edit audit summary failed: " + exception.getMessage());
+        }
+    }
+
     public static List<AuditEntry> getEntries() {
         net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || !mc.isSingleplayer()
