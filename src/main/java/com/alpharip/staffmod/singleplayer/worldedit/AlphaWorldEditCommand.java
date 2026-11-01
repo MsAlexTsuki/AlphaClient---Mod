@@ -29,6 +29,10 @@ public final class AlphaWorldEditCommand extends CommandBase {
     private static int MAX_BLOCKS = 32768;
     private static IBlockState GLOBAL_MASK;
     private static boolean editWandEnabled = true;
+    private static String brushMode = "none", toolMode = "none", pickaxeMode = "none";
+    private static int brushRadius = 3;
+    private static IBlockState brushBlock = net.minecraft.init.Blocks.stone.getDefaultState();
+    private static IBlockState toolFrom, toolTo;
     private static final String WAND_TAG = "AlphaWorldEditWand";
     private static final int WALLS = 1, OUTLINE = 2, HOLLOW = 3;
     private static final WorldEditSelection SELECTION = new WorldEditSelection();
@@ -717,6 +721,59 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
 
+        // Brush configuration; the selected brush is applied with a right-click.
+        if ("brush".equals(cmd)||"br".equals(cmd)) {
+            if(args.length<2){reply(sender,"Usage: //acwe brush <sphere|cylinder|clipboard|smooth|ex|gravity|butcher|deform|set|paint|apply|forest|raise|lower> [block] [radius]");return;}
+            String mode=args[1].toLowerCase(Locale.ROOT);
+            String[] allowed={"sphere","cylinder","clipboard","smooth","ex","gravity","butcher","deform","set","paint","apply","forest","raise","lower"};
+            boolean found=false;for(String value:allowed)if(value.equals(mode)){found=true;break;}
+            if(!found){reply(sender,"Unknown brush type: "+mode);return;}
+            if("none".equals(mode)){brushMode="none";reply(sender,"Brush disabled.");return;}
+            int blockIndex=2,radiusIndex=3;
+            IBlockState configured=brushBlock;
+            if(args.length>2) {
+                IBlockState parsed=WorldEditBlockParser.parse(args[2]);
+                if(parsed!=null){configured=parsed;blockIndex=3;radiusIndex=4;}
+                else if(args.length>2){reply(sender,"Unknown brush block: "+args[2]);return;}
+            }
+            int radius=brushRadius;
+            try{if(args.length>radiusIndex)radius=Integer.parseInt(args[radiusIndex]);}
+            catch(NumberFormatException ex){reply(sender,"Brush radius must be an integer.");return;}
+            if(radius<1||radius>16){reply(sender,"Brush radius must be between 1 and 16.");return;}
+            brushMode=mode;brushBlock=configured;brushRadius=radius;
+            reply(sender,"Brush "+mode+" selected (radius "+radius+"). Right-click a block to apply it.");
+            return;
+        }
+        if ("superpickaxe".equals(cmd)||"pickaxe".equals(cmd)||"sp".equals(cmd)) {
+            if(args.length!=2){reply(sender,"Usage: //acwe superpickaxe <single|area|recursive>");return;}
+            String mode=args[1].toLowerCase(Locale.ROOT);
+            if("recur".equals(mode))mode="recursive";
+            if(!"single".equals(mode)&&!"area".equals(mode)&&!"recursive".equals(mode)){reply(sender,"Mode must be single, area, or recursive.");return;}
+            pickaxeMode=mode;
+            reply(sender,"Super Pickaxe "+mode+" mode enabled. Left-click a block to use it.");
+            return;
+        }
+        if ("tool".equals(cmd)) {
+            if(args.length<2){reply(sender,"Usage: //acwe tool <none|info|tree|repl|cycler|floodfill|deltree|farwand|lrbuild> [arguments]");return;}
+            String mode=args[1].toLowerCase(Locale.ROOT);
+            if("none".equals(mode)){toolMode="none";reply(sender,"World Edit tool disabled.");return;}
+            if(!"info".equals(mode)&&!"tree".equals(mode)&&!"repl".equals(mode)&&!"cycler".equals(mode)&&!"floodfill".equals(mode)&&!"deltree".equals(mode)&&!"farwand".equals(mode)&&!"lrbuild".equals(mode)){
+                reply(sender,"Unknown World Edit tool: "+mode);return;
+            }
+            if("repl".equals(mode)){
+                if(args.length!=4){reply(sender,"Usage: //acwe tool repl <from> <to>");return;}
+                toolFrom=WorldEditBlockParser.parse(args[2]);toolTo=WorldEditBlockParser.parse(args[3]);
+                if(toolFrom==null||toolTo==null){reply(sender,"Unknown replacement block.");return;}
+            }
+            if("lrbuild".equals(mode)){
+                if(args.length!=4){reply(sender,"Usage: //acwe tool lrbuild <left-block> <right-block>");return;}
+                toolFrom=WorldEditBlockParser.parse(args[2]);toolTo=WorldEditBlockParser.parse(args[3]);
+                if(toolFrom==null||toolTo==null){reply(sender,"Unknown build block.");return;}
+            }
+            toolMode=mode;reply(sender,"World Edit tool "+mode+" selected. Use left/right-click on a block.");
+            return;
+        }
+
         // Chunk utilities.
         if ("listchunks".equals(cmd)) {
             final BlockPos at=mc.thePlayer.getPosition();
@@ -873,7 +930,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
