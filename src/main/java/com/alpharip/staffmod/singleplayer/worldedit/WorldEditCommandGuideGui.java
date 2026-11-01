@@ -89,8 +89,20 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
     }
 
     private void clampScroll() {
-        int visibleRows = Math.max(1, (listBottom - listTop) / ROW_HEIGHT);
-        scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, rows.size() - visibleRows)));
+        int availableHeight = Math.max(1, listBottom - listTop);
+        int maximumOffset = 0;
+        for (int offset = 0; offset < rows.size(); offset++) {
+            int remainingHeight = 0;
+            for (int i = offset; i < rows.size(); i++) {
+                remainingHeight += rows.get(i).section ? HEADER_HEIGHT : ROW_HEIGHT;
+            }
+            if (remainingHeight <= availableHeight) {
+                maximumOffset = offset;
+                break;
+            }
+            maximumOffset = offset + 1;
+        }
+        scrollOffset = Math.max(0, Math.min(scrollOffset, maximumOffset));
     }
 
     @Override
