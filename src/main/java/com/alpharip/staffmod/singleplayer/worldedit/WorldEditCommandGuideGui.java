@@ -24,6 +24,7 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         this.parent = parent;
         addSection("GENERAL");
         addCommand("//acwe help", "Open this command guide.");
+        addCommand("//acwe logs", "Open the local seven-day audit log of Alpha World Edit changes.");
 
         addSection("SELECTION");
         addCommand("//acwe wand", "Receive the dedicated World Edit Wand. Left-click a block for position 1; right-click for position 2.");
