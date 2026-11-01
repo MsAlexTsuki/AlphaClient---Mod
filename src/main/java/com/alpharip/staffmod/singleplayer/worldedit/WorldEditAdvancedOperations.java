@@ -10,7 +10,12 @@ import net.minecraft.world.WorldServer;
 public final class WorldEditAdvancedOperations {
     private WorldEditAdvancedOperations() { }
 
+    private static void record(WorldServer w,int minX,int minY,int minZ,int maxX,int maxY,int maxZ) {
+        WorldEditHistory.record(w,new WorldEditSelection.Bounds(minX,minY,minZ,maxX,maxY,maxZ));
+    }
+
     public static void line(WorldServer w, BlockPos a, BlockPos b, IBlockState state) {
+        record(w,Math.min(a.getX(),b.getX()),Math.min(a.getY(),b.getY()),Math.min(a.getZ(),b.getZ()),Math.max(a.getX(),b.getX()),Math.max(a.getY(),b.getY()),Math.max(a.getZ(),b.getZ()));
         int dx=b.getX()-a.getX(), dy=b.getY()-a.getY(), dz=b.getZ()-a.getZ();
         int steps=Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz)));
         if (steps == 0) { w.setBlockState(a, state, 2); return; }
@@ -22,11 +27,13 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static void center(WorldServer w, WorldEditSelection.Bounds b, IBlockState state) {
+        record(w,(b.minX+b.maxX)/2,(b.minY+b.maxY)/2,(b.minZ+b.maxZ)/2,(b.minX+b.maxX)/2,(b.minY+b.maxY)/2,(b.minZ+b.maxZ)/2);
         w.setBlockState(new BlockPos((b.minX+b.maxX)/2, (b.minY+b.maxY)/2,
                 (b.minZ+b.maxZ)/2), state, 2);
     }
 
     public static void overlay(WorldServer w, WorldEditSelection.Bounds b, IBlockState state) {
+        record(w,b.minX,b.minY,b.minZ,b.maxX,Math.min(255,b.maxY+1),b.maxZ);
         for (int x=b.minX;x<=b.maxX;x++) for (int z=b.minZ;z<=b.maxZ;z++) {
             BlockPos top=w.getTopSolidOrLiquidBlock(new BlockPos(x,b.maxY,z));
             if (top.getY() >= b.minY && top.getY() <= b.maxY)
@@ -35,6 +42,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static void naturalize(WorldServer w, WorldEditSelection.Bounds b) {
+        record(w,b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);
         for (int x=b.minX;x<=b.maxX;x++) for (int z=b.minZ;z<=b.maxZ;z++) {
             int surface=-1;
             for (int y=b.maxY;y>=b.minY;y--) {
@@ -61,6 +69,7 @@ public final class WorldEditAdvancedOperations {
 
     public static void sphere(WorldServer w, BlockPos c, int rx, int ry, int rz,
                               IBlockState state, boolean hollow) {
+        record(w,c.getX()-rx,c.getY()-ry,c.getZ()-rz,c.getX()+rx,c.getY()+ry,c.getZ()+rz);
         for(int x=-rx;x<=rx;x++) for(int y=-ry;y<=ry;y++) for(int z=-rz;z<=rz;z++) {
             double d=(double)x*x/(rx*rx)+(double)y*y/(ry*ry)+(double)z*z/(rz*rz);
             if(d<=1.0 && (!hollow || d>=0.75))
@@ -70,6 +79,7 @@ public final class WorldEditAdvancedOperations {
 
     public static void cylinder(WorldServer w, BlockPos c, int radius, int height,
                                 IBlockState state, boolean hollow) {
+        record(w,c.getX()-radius,c.getY(),c.getZ()-radius,c.getX()+radius,c.getY()+height-1,c.getZ()+radius);
         int r2=radius*radius;
         for(int y=0;y<height;y++) for(int x=-radius;x<=radius;x++) for(int z=-radius;z<=radius;z++) {
             int d=x*x+z*z;
@@ -79,6 +89,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static void pyramid(WorldServer w, BlockPos c, int size, IBlockState state, boolean hollow) {
+        record(w,c.getX()-size+1,c.getY(),c.getZ()-size+1,c.getX()+size-1,c.getY()+size-1,c.getZ()+size-1);
         for(int y=0;y<size;y++) {
             int radius=size-y-1;
             for(int x=-radius;x<=radius;x++) for(int z=-radius;z<=radius;z++) {
@@ -89,6 +100,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static void removeAbove(WorldServer w, BlockPos p, int height) {
+        record(w,p.getX()-8,p.getY()+1,p.getZ()-8,p.getX()+8,Math.min(255,p.getY()+height),p.getZ()+8);
         int max=Math.min(255,p.getY()+height);
         for(int y=p.getY()+1;y<=max;y++) for(int x=p.getX()-8;x<=p.getX()+8;x++)
             for(int z=p.getZ()-8;z<=p.getZ()+8;z++)
@@ -96,6 +108,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static void removeBelow(WorldServer w, BlockPos p, int depth) {
+        record(w,p.getX()-8,Math.max(0,p.getY()-depth),p.getZ()-8,p.getX()+8,p.getY()-1,p.getZ()+8);
         int min=Math.max(0,p.getY()-depth);
         for(int y=min;y<p.getY();y++) for(int x=p.getX()-8;x<=p.getX()+8;x++)
             for(int z=p.getZ()-8;z<=p.getZ()+8;z++)
@@ -104,6 +117,7 @@ public final class WorldEditAdvancedOperations {
 
     public static int replaceNear(WorldServer w, BlockPos center, int radius,
                                   IBlockState from, IBlockState to) {
+        record(w,center.getX()-radius,center.getY()-radius,center.getZ()-radius,center.getX()+radius,center.getY()+radius,center.getZ()+radius);
         int changed=0, r2=radius*radius;
         for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
             if(x*x+y*y+z*z>r2) continue;
@@ -116,6 +130,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static int drain(WorldServer w, BlockPos center, int radius) {
+        record(w,center.getX()-radius,center.getY()-radius,center.getZ()-radius,center.getX()+radius,center.getY()+radius,center.getZ()+radius);
         int changed=0, r2=radius*radius;
         for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
             if(x*x+y*y+z*z>r2) continue;
@@ -128,6 +143,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static void smooth(WorldServer w, WorldEditSelection.Bounds b, int iterations) {
+        record(w,b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);
         for(int pass=0;pass<iterations;pass++) {
             java.util.Map<BlockPos,Integer> heights=new java.util.HashMap<BlockPos,Integer>();
             for(int x=b.minX;x<=b.maxX;x++) for(int z=b.minZ;z<=b.maxZ;z++) {
@@ -180,6 +196,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static int removeNear(WorldServer w, BlockPos center, int radius, IBlockState target) {
+        record(w,center.getX()-radius,center.getY()-radius,center.getZ()-radius,center.getX()+radius,center.getY()+radius,center.getZ()+radius);
         int changed=0, r2=radius*radius;
         for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
             if(x*x+y*y+z*z>r2) continue;
@@ -192,6 +209,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static int changeSurface(WorldServer w, WorldEditSelection.Bounds b, int mode) {
+        record(w,b.minX,b.minY,b.minZ,b.maxX,Math.min(255,b.maxY+1),b.maxZ);
         int changed=0;
         for(int x=b.minX;x<=b.maxX;x++) for(int z=b.minZ;z<=b.maxZ;z++) {
             BlockPos top=w.getTopSolidOrLiquidBlock(new BlockPos(x,b.maxY,z));
@@ -213,6 +231,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static int fixLiquid(WorldServer w, WorldEditSelection.Bounds b, boolean lava) {
+        record(w,b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);
         int changed=0;
         net.minecraft.block.Block flowing=lava?Blocks.flowing_lava:Blocks.flowing_water;
         IBlockState source=lava?Blocks.lava.getDefaultState():Blocks.water.getDefaultState();
@@ -224,6 +243,7 @@ public final class WorldEditAdvancedOperations {
     }
 
     public static int extinguish(WorldServer w, BlockPos center, int radius) {
+        record(w,center.getX()-radius,center.getY()-radius,center.getZ()-radius,center.getX()+radius,center.getY()+radius,center.getZ()+radius);
         int changed=0;
         for(int x=-radius;x<=radius;x++) for(int y=-radius;y<=radius;y++) for(int z=-radius;z<=radius;z++) {
             BlockPos p=center.add(x,y,z);
