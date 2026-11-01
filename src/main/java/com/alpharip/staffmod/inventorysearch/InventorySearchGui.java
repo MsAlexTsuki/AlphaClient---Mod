@@ -12,6 +12,7 @@ import java.io.IOException;
 public final class InventorySearchGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int TOGGLE = 2;
+    private static final int MODE = 3;
 
     private final GuiScreen parent;
     private int left, top, right, bottom;
@@ -26,13 +27,17 @@ public final class InventorySearchGui extends AlphaGuiScreen {
 
         left = width / 2 - 130;
         right = left + 260;
-        top = height / 2 - 56;
-        bottom = top + 112;
+        top = height / 2 - 70;
+        bottom = top + 140;
 
         buttonList.add(new AlphaButton(
                 TOGGLE, left + 20, top + 55, 220, 20,
                 "SEARCH BAR: " + (InventorySearchSettings.isEnabled() ? "ON" : "OFF"),
                 false, InventorySearchSettings.isEnabled()
+        ));
+        buttonList.add(new AlphaButton(
+                MODE, left + 20, top + 81, 220, 20,
+                "MODE: " + InventorySearchSettings.getMode().getLabel()
         ));
         buttonList.add(new AlphaButton(BACK, left + 10, bottom - 25, 72, 18, "BACK"));
     }
@@ -45,7 +50,7 @@ public final class InventorySearchGui extends AlphaGuiScreen {
 
         drawCenteredString(fontRendererObj, "INVENTORY SEARCH",
                 width / 2, top + 15, 0xFFF3F4F6);
-        drawCenteredString(fontRendererObj, "Search items in inventories and containers",
+        drawCenteredString(fontRendererObj, "Search items in selected container types",
                 width / 2, top + 34, 0xFFB8BDC8);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -59,6 +64,9 @@ public final class InventorySearchGui extends AlphaGuiScreen {
             mc.displayGuiScreen(parent);
         } else if (button.id == TOGGLE) {
             InventorySearchSettings.setEnabled(!InventorySearchSettings.isEnabled());
+            initGui();
+        } else if (button.id == MODE) {
+            InventorySearchSettings.setMode(InventorySearchSettings.getMode().next());
             initGui();
         }
     }
