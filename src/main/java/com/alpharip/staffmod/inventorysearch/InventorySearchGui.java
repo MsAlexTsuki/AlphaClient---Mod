@@ -33,7 +33,7 @@ public final class InventorySearchGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(
                 TOGGLE, left + 20, top + 55, 220, 20,
                 "SEARCH BAR: " + (InventorySearchSettings.isEnabled() ? "ON" : "OFF"),
-                false, InventorySearchSettings.isEnabled()
+                InventorySearchSettings.isEnabled()
         ));
         buttonList.add(new AlphaButton(
                 MODE, left + 20, top + 81, 220, 20,
