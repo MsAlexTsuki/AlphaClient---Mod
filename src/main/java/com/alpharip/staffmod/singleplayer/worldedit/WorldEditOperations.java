@@ -21,6 +21,7 @@ public final class WorldEditOperations {
 
     public static void fill(WorldServer world, WorldEditSelection.Bounds bounds,
                             IBlockState state, IBlockState filter) {
+        WorldEditHistory.record(world, bounds);
         for (int x=bounds.minX; x<=bounds.maxX; x++)
             for (int y=bounds.minY; y<=bounds.maxY; y++)
                 for (int z=bounds.minZ; z<=bounds.maxZ; z++) {
@@ -33,6 +34,7 @@ public final class WorldEditOperations {
     public static void shape(WorldServer world, WorldEditSelection.Bounds bounds,
                              IBlockState state, int operation,
                              int wallsId, int outlineId, int hollowId) {
+        WorldEditHistory.record(world, bounds);
         for (int x=bounds.minX; x<=bounds.maxX; x++)
             for (int y=bounds.minY; y<=bounds.maxY; y++)
                 for (int z=bounds.minZ; z<=bounds.maxZ; z++) {
@@ -60,6 +62,7 @@ public final class WorldEditOperations {
     }
 
     public static void paste(WorldServer world, BlockPos destination, IBlockState[][][] blocks) {
+        WorldEditHistory.record(world, new WorldEditSelection.Bounds(destination.getX(), destination.getY(), destination.getZ(), destination.getX()+blocks.length-1, destination.getY()+blocks[0].length-1, destination.getZ()+blocks[0][0].length-1));
         for (int x=0; x<blocks.length; x++)
             for (int y=0; y<blocks[x].length; y++)
                 for (int z=0; z<blocks[x][y].length; z++)
