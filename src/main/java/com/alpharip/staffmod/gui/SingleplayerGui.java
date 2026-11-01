@@ -1,7 +1,7 @@
 // --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.gui;
 
-import com.alpharip.singleplayer.WorldEditGui;
+import com.alpharip.staffmod.singleplayer.worldedit.WorldEditGui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
