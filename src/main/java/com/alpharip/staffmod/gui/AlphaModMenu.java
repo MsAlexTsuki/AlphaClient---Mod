@@ -262,6 +262,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         List<AlphaModule> result = new ArrayList<AlphaModule>();
         String query = searchField == null ? "" : searchField.getText().trim().toLowerCase(Locale.ROOT);
         for (AlphaModule module : AlphaModuleRegistry.getForCategory(selectedCategory)) {
+            // World Edit is managed only from the Singleplayer -> World Edit screen.
+            if ("world-edit".equals(module.getId())) continue;
             // Bhop is exclusive to STAFFMODS -> GENERAL, never a rank-category module.
             if ("staffmods".equals(module.getId())) continue;
             // Do not render locked modules; visibility must match the effective permission result.
