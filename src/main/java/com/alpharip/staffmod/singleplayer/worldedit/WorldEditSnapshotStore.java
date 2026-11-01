@@ -73,6 +73,8 @@ public final class WorldEditSnapshotStore {
         return new Snapshot(new BlockPos(root.getInteger("OriginX"),root.getInteger("OriginY"),root.getInteger("OriginZ")),blocks);
     }
 
+    public static boolean exists(String name){File target=file(name);return target!=null&&target.isFile();}
+
     public static List<String> list(){
         List<String> names=new ArrayList<String>();
         File[] files=directory().listFiles();
