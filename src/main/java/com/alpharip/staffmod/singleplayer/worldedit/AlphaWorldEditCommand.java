@@ -755,16 +755,20 @@ public final class AlphaWorldEditCommand extends CommandBase {
             if(args.length!=3){reply(sender,"Usage: //acwe snapshot <before|after|use|sel> <name>");return;}
             String name=args[2];
             if("before".equals(action)||"after".equals(action)){
+                if(!name.matches("[A-Za-z0-9_-]{1,41}")){reply(sender,"Snapshot names must use 1-41 letters, numbers, underscores, or hyphens.");return;}
+                final String snapshotName=name+"-"+action;
                 final WorldEditSelection.Bounds b=selection(sender);if(b==null)return;
                 onServer(sender,new Task(){public void run(WorldServer w){
                     if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Snapshot area contains unloaded chunks.");return;}
-                    try{WorldEditSnapshotStore.save(name,w,b);reply(sender,"Snapshot "+action+" saved: "+name);}
+                    try{WorldEditSnapshotStore.save(snapshotName,w,b);reply(sender,"Snapshot "+action+" saved: "+name);}
                     catch(java.io.IOException ex){reply(sender,"Could not save snapshot: "+ex.getMessage());}
                 }});
                 return;
             }
             try{
-                WorldEditSnapshotStore.Snapshot snapshot=WorldEditSnapshotStore.load(name);
+                String snapshotName=WorldEditSnapshotStore.exists(name+"-after")?name+"-after":
+                        (WorldEditSnapshotStore.exists(name+"-before")?name+"-before":name);
+                WorldEditSnapshotStore.Snapshot snapshot=WorldEditSnapshotStore.load(snapshotName);
                 if("use".equals(action)){CLIPBOARD.setBlocks(snapshot.blocks);reply(sender,"Snapshot loaded into clipboard: "+name);return;}
                 if("sel".equals(action)){
                     WorldEditSelection.Bounds b=snapshot.bounds();
@@ -778,8 +782,11 @@ public final class AlphaWorldEditCommand extends CommandBase {
         if ("restore".equals(cmd) && args.length==2) {
             final String name=args[1];
             final WorldEditSnapshotStore.Snapshot snapshot;
-            try{snapshot=WorldEditSnapshotStore.load(name);}
-            catch(java.io.IOException ex){reply(sender,"Could not load snapshot: "+ex.getMessage());return;}
+            try{
+                String snapshotName=WorldEditSnapshotStore.exists(name+"-after")?name+"-after":
+                        (WorldEditSnapshotStore.exists(name+"-before")?name+"-before":name);
+                snapshot=WorldEditSnapshotStore.load(snapshotName);
+            }catch(java.io.IOException ex){reply(sender,"Could not load snapshot: "+ex.getMessage());return;}
             final WorldEditSelection.Bounds b=snapshot.bounds();
             if(!valid(sender,b))return;
             onServer(sender,new Task(){public void run(WorldServer w){
