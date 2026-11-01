@@ -103,7 +103,7 @@ public final class WorldEditAuditGui extends GuiScreen {
                 drawString(fontRendererObj, trim(entry.action, panelWidth - 180),
                         listLeft + 8, y + 4, 0xFFFFFFFF);
                 drawString(fontRendererObj, format(entry.timestamp) + "  ·  "
-                        + entry.changed + " block(s) changed", listLeft + 8, y + 16, 0xFFBDBDBD);
+                        + entry.changed + " change(s)", listLeft + 8, y + 16, 0xFFBDBDBD);
             }
         }
 
@@ -115,7 +115,7 @@ public final class WorldEditAuditGui extends GuiScreen {
             drawString(fontRendererObj, trim(entry.action, 245), detailX + 8, listTop + 26, 0xFFFFFFFF);
             drawString(fontRendererObj, format(entry.timestamp), detailX + 8, listTop + 40, 0xFFBDBDBD);
             drawString(fontRendererObj, "Dimension: " + entry.dimension, detailX + 8, listTop + 54, 0xFFBDBDBD);
-            drawString(fontRendererObj, "Changed: " + entry.changed, detailX + 8, listTop + 68, 0xFFBDBDBD);
+            drawString(fontRendererObj, "Changes: " + entry.changed, detailX + 8, listTop + 68, 0xFFBDBDBD);
             drawString(fontRendererObj, "Bounds: " + entry.minX + "," + entry.minY + "," + entry.minZ,
                     detailX + 8, listTop + 82, 0xFFBDBDBD);
             drawString(fontRendererObj, "to " + entry.maxX + "," + entry.maxY + "," + entry.maxZ,
