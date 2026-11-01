@@ -225,6 +225,173 @@ public final class AlphaWorldEditCommand extends CommandBase {
             }});
             return;
         }
+        // Biome commands.
+        if ("biomelist".equals(cmd) || "biomels".equals(cmd)) {
+            StringBuilder names = new StringBuilder("Biomes: ");
+            net.minecraft.world.biome.BiomeGenBase[] biomes = net.minecraft.world.biome.BiomeGenBase.getBiomeGenArray();
+            int shown = 0;
+            if (biomes != null) for (net.minecraft.world.biome.BiomeGenBase biome : biomes) {
+                if (biome != null && shown < 24) {
+                    if (shown > 0) names.append(", ");
+                    names.append(biome.biomeName);
+                    shown++;
+                }
+            }
+            reply(sender, names.toString());
+            return;
+        }
+        if ("setbiome".equals(cmd) && args.length == 2) {
+            final String requested = args[1].replace('_', ' ').toLowerCase(Locale.ROOT);
+            final BlockPos target = mc.thePlayer.getPosition();
+            onServer(sender, new Task() { public void run(WorldServer w) {
+                net.minecraft.world.biome.BiomeGenBase found = null;
+                net.minecraft.world.biome.BiomeGenBase[] all = net.minecraft.world.biome.BiomeGenBase.getBiomeGenArray();
+                if (all != null) for (net.minecraft.world.biome.BiomeGenBase biome : all)
+                    if (biome != null && biome.biomeName.toLowerCase(Locale.ROOT).equals(requested)) { found = biome; break; }
+                if (found == null) { reply(sender, "Unknown biome: " + requested); return; }
+                net.minecraft.world.chunk.Chunk chunk = w.getChunkFromBlockCoords(target);
+                byte[] biomeData = chunk.getBiomeArray();
+                int index = (target.getZ() & 15) << 4 | (target.getX() & 15);
+                biomeData[index] = (byte) found.biomeID;
+                chunk.setBiomeArray(biomeData);
+                chunk.setChunkModified();
+                reply(sender, "Biome changed to " + found.biomeName + " for the current chunk.");
+            }});
+            return;
+        }
+
+        // Region commands.
+        if ("line".equals(cmd) && args.length == 2) {
+            final IBlockState state = WorldEditBlockParser.parse(args[1]);
+            if (state == null || !SELECTION.hasSelection()) { reply(sender, "Usage: //acwe line <block> (select two positions first)"); return; }
+            final BlockPos a = SELECTION.getPos1(), b = SELECTION.getPos2();
+            onServer(sender, new Task() { public void run(WorldServer w) {
+                WorldEditAdvancedOperations.line(w,a,b,state); reply(sender,"Line drawn.");
+            }});
+            return;
+        }
+        if ("center".equals(cmd) && args.length == 2) {
+            final IBlockState state = WorldEditBlockParser.parse(args[1]);
+            final WorldEditSelection.Bounds b = selection(sender);
+            if (state == null || b == null) return;
+            onServer(sender, new Task() { public void run(WorldServer w) {
+                WorldEditAdvancedOperations.center(w,b,state); reply(sender,"Region center set.");
+            }});
+            return;
+        }
+        if ("overlay".equals(cmd) && args.length == 2) {
+            final IBlockState state = WorldEditBlockParser.parse(args[1]);
+            final WorldEditSelection.Bounds b = selection(sender);
+            if (state == null || b == null) return;
+            onServer(sender, new Task() { public void run(WorldServer w) {\n                if (!WorldEditOperations.regionLoaded(w,b)) { reply(sender,"Selection contains unloaded chunks."); return; }\n                WorldEditAdvancedOperations.overlay(w,b,state); reply(sender,"Surface overlay applied.");\n            }});
+            return;
+        }
+        if ("naturalize".equals(cmd)) {
+            final WorldEditSelection.Bounds b = selection(sender);
+            if (b == null) return;
+            onServer(sender, new Task() { public void run(WorldServer w) {
+                if (!WorldEditOperations.regionLoaded(w,b)) { reply(sender,"Selection contains unloaded chunks."); return; }
+                WorldEditAdvancedOperations.naturalize(w,b); reply(sender,"Selected terrain naturalized.");
+            }});
+            return;
+        }
+        if ("move".equals(cmd) && args.length == 4) {
+            final int dx,dy,dz;
+            try { dx=Integer.parseInt(args[1]); dy=Integer.parseInt(args[2]); dz=Integer.parseInt(args[3]); }
+            catch(NumberFormatException ex) { reply(sender,"Usage: //acwe move <x> <y> <z>"); return; }
+            final WorldEditSelection.Bounds b=selection(sender);
+            if(b==null) return;
+            final WorldEditSelection.Bounds dest=new WorldEditSelection.Bounds(b.minX+dx,b.minY+dy,b.minZ+dz,b.maxX+dx,b.maxY+dy,b.maxZ+dz);
+            if(!valid(sender,dest)) return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)||!WorldEditOperations.regionLoaded(w,dest)){reply(sender,"Move area contains unloaded chunks.");return;}
+                WorldEditAdvancedOperations.move(w,b,dx,dy,dz); reply(sender,"Region moved.");
+            }});
+            return;
+        }
+        if ("stack".equals(cmd) && args.length >= 2 && args.length <= 5) {
+            final int count,dx,dy,dz;
+            try { count=Integer.parseInt(args[1]); dx=args.length>2?Integer.parseInt(args[2]):0; dy=args.length>3?Integer.parseInt(args[3]):0; dz=args.length>4?Integer.parseInt(args[4]):1; }
+            catch(NumberFormatException ex) { reply(sender,"Usage: //acwe stack <count> [dx dy dz]"); return; }
+            if(count<1||count>32){reply(sender,"Stack count must be between 1 and 32.");return;}
+            final WorldEditSelection.Bounds b=selection(sender);
+            if(b==null)return;
+            final WorldEditSelection.Bounds dest=new WorldEditSelection.Bounds(b.minX+dx*count,b.minY+dy*count,b.minZ+dz*count,b.maxX+dx*count,b.maxY+dy*count,b.maxZ+dz*count);
+            if(!valid(sender,dest))return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,b)||!WorldEditOperations.regionLoaded(w,dest)){reply(sender,"Stack area contains unloaded chunks.");return;}
+                WorldEditAdvancedOperations.stack(w,b,count,dx,dy,dz);reply(sender,"Region stacked "+count+" time(s).");
+            }});
+            return;
+        }
+
+        // Primitive generation around the player.
+        if (("sphere".equals(cmd)||"hsphere".equals(cmd)||"cyl".equals(cmd)||"hcyl".equals(cmd)
+                ||"pyramid".equals(cmd)||"hpyramid".equals(cmd)) && args.length >= 3) {
+            final IBlockState state=WorldEditBlockParser.parse(args[1]);
+            final int radius,heightArg;
+            try { radius=Integer.parseInt(args[2]); heightArg=args.length>3?Integer.parseInt(args[3]):radius*2+1; }
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" <block> <radius> [height]");return;}
+            if(state==null||radius<1||radius>32||heightArg<1||heightArg>64){reply(sender,"Invalid block, radius, or height (radius 1-32, height 1-64).");return;}
+            final BlockPos center=mc.thePlayer.getPosition();
+            final WorldEditSelection.Bounds bounds=new WorldEditSelection.Bounds(center.getX()-radius,center.getY(),center.getZ()-radius,center.getX()+radius,center.getY()+heightArg-1,center.getZ()+radius);
+            if(!valid(sender,bounds))return;
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,bounds)){reply(sender,"Generation area contains unloaded chunks.");return;}
+                if(cmd.endsWith("sphere")) WorldEditAdvancedOperations.sphere(w,center,radius,radius,radius,state,cmd.startsWith("h"));
+                else if(cmd.endsWith("cyl")) WorldEditAdvancedOperations.cylinder(w,center,radius,heightArg,state,cmd.startsWith("h"));
+                else WorldEditAdvancedOperations.pyramid(w,center,radius,state,cmd.startsWith("h"));
+                reply(sender,cmd+" generated.");
+            }});
+            return;
+        }
+
+        // Utility commands with bounded local radius.
+        if (("drain".equals(cmd)||"extinguish".equals(cmd)) && args.length <= 2) {
+            final int radius;
+            try { radius=args.length>1?Integer.parseInt(args[1]):5; }
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" [radius]");return;}
+            if(radius<1||radius>16){reply(sender,"Radius must be between 1 and 16.");return;}
+            final BlockPos center=mc.thePlayer.getPosition();
+            final WorldEditSelection.Bounds area=new WorldEditSelection.Bounds(center.getX()-radius,Math.max(0,center.getY()-radius),center.getZ()-radius,center.getX()+radius,Math.min(255,center.getY()+radius),center.getZ()+radius);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,area)){reply(sender,"Area contains unloaded chunks.");return;}
+                int changed="drain".equals(cmd)?WorldEditAdvancedOperations.drain(w,center,radius):WorldEditAdvancedOperations.extinguish(w,center,radius);
+                reply(sender,cmd+" removed "+changed+" block(s).");
+            }});
+            return;
+        }
+        if (("removeabove".equals(cmd)||"removebelow".equals(cmd)) && args.length<=2) {
+            final int distance;
+            try { distance=args.length>1?Integer.parseInt(args[1]):20; }
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" [distance]");return;}
+            if(distance<1||distance>64){reply(sender,"Distance must be between 1 and 64.");return;}
+            final BlockPos at=mc.thePlayer.getPosition();
+            final WorldEditSelection.Bounds area=new WorldEditSelection.Bounds(at.getX()-8,Math.max(0,at.getY()-distance),at.getZ()-8,at.getX()+8,Math.min(255,at.getY()+distance),at.getZ()+8);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,area)){reply(sender,"Area contains unloaded chunks.");return;}
+                if("removeabove".equals(cmd))WorldEditAdvancedOperations.removeAbove(w,at,distance);
+                else WorldEditAdvancedOperations.removeBelow(w,at,distance);
+                reply(sender,cmd+" completed.");
+            }});
+            return;
+        }
+        if ("replacenear".equals(cmd) && args.length>=3 && args.length<=4) {
+            final IBlockState from=WorldEditBlockParser.parse(args[1]), to=WorldEditBlockParser.parse(args[2]);
+            final int radius;
+            try{radius=args.length==4?Integer.parseInt(args[3]):5;}
+            catch(NumberFormatException ex){reply(sender,"Usage: //acwe replacenear <from> <to> [radius]");return;}
+            if(from==null||to==null||radius<1||radius>16){reply(sender,"Invalid block or radius (1-16).");return;}
+            final BlockPos center=mc.thePlayer.getPosition();
+            final WorldEditSelection.Bounds area=new WorldEditSelection.Bounds(center.getX()-radius,Math.max(0,center.getY()-radius),center.getZ()-radius,center.getX()+radius,Math.min(255,center.getY()+radius),center.getZ()+radius);
+            onServer(sender,new Task(){public void run(WorldServer w){
+                if(!WorldEditOperations.regionLoaded(w,area)){reply(sender,"Area contains unloaded chunks.");return;}
+                int changed=WorldEditAdvancedOperations.replaceNear(w,center,radius,from,to);
+                reply(sender,"Replaced "+changed+" nearby block(s).");
+            }});
+            return;
+        }
+
         reply(sender, "Unknown or unsupported Alpha World Edit command. Use //acwe help.");
     }
 
