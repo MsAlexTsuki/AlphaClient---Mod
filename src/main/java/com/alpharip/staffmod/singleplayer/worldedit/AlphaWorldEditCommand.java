@@ -482,6 +482,47 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
 
+        // Local AlphaClient schematic files (independent .acwe NBT format).
+        if (("schematic".equals(cmd)||"schem".equals(cmd)) && args.length>=2) {
+            String action=args[1].toLowerCase(Locale.ROOT);
+            if ("formats".equals(action)) { reply(sender,"Supported schematic format: AlphaClient .acwe (compressed NBT)."); return; }
+            if ("list".equals(action)) {
+                java.util.List<String> names=WorldEditSchematicStore.list();
+                reply(sender,names.isEmpty()?"No AlphaClient schematics saved.":"Schematics: "+names.toString());
+                return;
+            }
+            if (args.length!=3) { reply(sender,"Usage: //acwe schematic <load|save|delete> <name>"); return; }
+            String name=args[2];
+            if ("save".equals(action)) {
+                if(!CLIPBOARD.hasBlocks()){reply(sender,"Copy a region before saving a schematic.");return;}
+                try{WorldEditSchematicStore.save(name,CLIPBOARD.getBlocks());reply(sender,"Schematic saved: "+name);}
+                catch(java.io.IOException ex){reply(sender,"Could not save schematic: "+ex.getMessage());}
+                return;
+            }
+            if ("load".equals(action)) {
+                try{CLIPBOARD.setBlocks(WorldEditSchematicStore.load(name));reply(sender,"Schematic loaded to clipboard: "+name);}
+                catch(java.io.IOException ex){reply(sender,"Could not load schematic: "+ex.getMessage());}
+                return;
+            }
+            if ("delete".equals(action)) {
+                reply(sender,WorldEditSchematicStore.delete(name)?"Schematic deleted: "+name:"Schematic not found: "+name);
+                return;
+            }
+            reply(sender,"Unknown schematic action. Use load, save, delete, formats, or list.");
+            return;
+        }
+        if (("load".equals(cmd)||"save".equals(cmd)) && args.length==2) {
+            if ("save".equals(cmd)) {
+                if(!CLIPBOARD.hasBlocks()){reply(sender,"Copy a region before saving a schematic.");return;}
+                try{WorldEditSchematicStore.save(args[1],CLIPBOARD.getBlocks());reply(sender,"Schematic saved: "+args[1]);}
+                catch(java.io.IOException ex){reply(sender,"Could not save schematic: "+ex.getMessage());}
+            } else {
+                try{CLIPBOARD.setBlocks(WorldEditSchematicStore.load(args[1]));reply(sender,"Schematic loaded to clipboard: "+args[1]);}
+                catch(java.io.IOException ex){reply(sender,"Could not load schematic: "+ex.getMessage());}
+            }
+            return;
+        }
+
         // Clipboard editing.
         if ("cut".equals(cmd)) {
             final WorldEditSelection.Bounds b=selection(sender);
@@ -615,7 +656,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","wand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         return result;
