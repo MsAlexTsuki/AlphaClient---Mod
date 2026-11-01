@@ -344,7 +344,10 @@ public final class AlphaWorldEditCommand extends CommandBase {
             final IBlockState state = WorldEditBlockParser.parse(args[1]);
             if (state == null || !SELECTION.hasSelection()) { reply(sender, "Usage: //acwe line <block> (select two positions first)"); return; }
             final BlockPos a = SELECTION.getPos1(), b = SELECTION.getPos2();
+            final WorldEditSelection.Bounds lineBounds=new WorldEditSelection.Bounds(Math.min(a.getX(),b.getX()),Math.min(a.getY(),b.getY()),Math.min(a.getZ(),b.getZ()),Math.max(a.getX(),b.getX()),Math.max(a.getY(),b.getY()),Math.max(a.getZ(),b.getZ()));
+            if(!valid(sender,lineBounds))return;
             onServer(sender, new Task() { public void run(WorldServer w) {
+                if(!WorldEditOperations.regionLoaded(w,lineBounds)){reply(sender,"Line area contains unloaded chunks.");return;}
                 WorldEditAdvancedOperations.line(w,a,b,state); reply(sender,"Line drawn.");
             }});
             return;
@@ -424,11 +427,14 @@ public final class AlphaWorldEditCommand extends CommandBase {
             catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" <block> <radius> [height]");return;}
             if(state==null||radius<1||radius>32||heightArg<1||heightArg>64){reply(sender,"Invalid block, radius, or height (radius 1-32, height 1-64).");return;}
             final BlockPos center=mc.thePlayer.getPosition();
-            final WorldEditSelection.Bounds bounds=new WorldEditSelection.Bounds(center.getX()-radius,center.getY(),center.getZ()-radius,center.getX()+radius,center.getY()+heightArg-1,center.getZ()+radius);
+            final boolean sphereCommand=cmd.endsWith("sphere");
+            final int minY=sphereCommand?center.getY()-radius:center.getY();
+            final int maxY=sphereCommand?center.getY()+radius:center.getY()+heightArg-1;
+            final WorldEditSelection.Bounds bounds=new WorldEditSelection.Bounds(center.getX()-radius,Math.max(0,minY),center.getZ()-radius,center.getX()+radius,Math.min(255,maxY),center.getZ()+radius);
             if(!valid(sender,bounds))return;
             onServer(sender,new Task(){public void run(WorldServer w){
                 if(!WorldEditOperations.regionLoaded(w,bounds)){reply(sender,"Generation area contains unloaded chunks.");return;}
-                if(cmd.endsWith("sphere")) WorldEditAdvancedOperations.sphere(w,center,radius,radius,radius,state,cmd.startsWith("h"));
+                if(sphereCommand) WorldEditAdvancedOperations.sphere(w,center,radius,radius,radius,state,cmd.startsWith("h"));
                 else if(cmd.endsWith("cyl")) WorldEditAdvancedOperations.cylinder(w,center,radius,heightArg,state,cmd.startsWith("h"));
                 else WorldEditAdvancedOperations.pyramid(w,center,radius,state,cmd.startsWith("h"));
                 reply(sender,cmd+" generated.");
