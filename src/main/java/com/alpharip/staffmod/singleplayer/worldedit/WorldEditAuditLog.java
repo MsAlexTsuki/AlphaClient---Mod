@@ -20,6 +20,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /** Persistent, world-local seven-day audit trail for Alpha World Edit block changes. */
 public final class WorldEditAuditLog {
@@ -166,8 +168,7 @@ public final class WorldEditAuditLog {
         FileOutputStream output = new FileOutputStream(temporary);
         try { CompressedStreamTools.writeCompressed(root, output); }
         finally { output.close(); }
-        if (file.exists() && !file.delete()) throw new java.io.IOException("Could not replace audit log.");
-        if (!temporary.renameTo(file)) throw new java.io.IOException("Could not finalize audit log.");
+        Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     private static void prune(NBTTagCompound root, long now) {
