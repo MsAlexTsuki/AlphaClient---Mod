@@ -40,9 +40,9 @@ public final class AlphaChatAutocomplete {
      * Keep slash commands intact and make plain text unmatchable as a client command.
      */
     public static String prepareCommandMessage(String message) {
-        if (message == null) return "\u0000";
+        if (message == null) return "#";
         String trimmed = message.trim();
-        return trimmed.startsWith("/") ? trimmed : "\u0000" + trimmed;
+        return trimmed.startsWith("/") ? trimmed : "#" + trimmed;
     }
 
     public static String[] filter(String[] suggestions) {
