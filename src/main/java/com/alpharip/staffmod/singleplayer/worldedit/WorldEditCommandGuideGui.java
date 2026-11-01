@@ -43,6 +43,55 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe copy", "Copy the selected region to the Alpha World Edit clipboard.");
         addCommand("//acwe paste", "Paste the clipboard at your current player position.");
         addCommand("//acwe clearclipboard", "Clear the Alpha World Edit clipboard.");
+
+        addSection("SELECTION TOOLS");
+        addCommand("//acwe hpos1 / hpos2", "Set a selection corner to the block you are looking at.");
+        addCommand("//acwe chunk", "Select the chunk containing your player position.");
+        addCommand("//acwe size", "Show the selected region dimensions and volume.");
+        addCommand("//acwe count <block>", "Count matching blocks in the selected region.");
+        addCommand("//acwe distr", "Show the most common block types in the selected region.");
+        addCommand("//acwe expand <amount> [direction]", "Expand the selection in a direction.");
+        addCommand("//acwe contract <amount> [direction]", "Contract the selection in a direction.");
+        addCommand("//acwe shift <amount> [direction]", "Move the selection without moving blocks.");
+        addCommand("//acwe outset [amount]", "Expand the selection on all sides.");
+        addCommand("//acwe inset [amount]", "Shrink the selection on all sides.");
+
+        addSection("BIOME");
+        addCommand("//acwe biomelist", "List available registered biomes.");
+        addCommand("//acwe biomeinfo", "Show the biome at your target block or player position.");
+        addCommand("//acwe setbiome <name>", "Change the biome of the chunk containing your player.");
+
+        addSection("REGION OPERATIONS");
+        addCommand("//acwe line <block>", "Draw a line between the two selected corners.");
+        addCommand("//acwe center <block>", "Place a block at the center of the selection.");
+        addCommand("//acwe overlay <block>", "Place a surface layer across the selected columns.");
+        addCommand("//acwe naturalize", "Apply grass and dirt to the top layers of selected terrain.");
+        addCommand("//acwe smooth [iterations]", "Smooth the selected terrain (1-5 iterations).");
+        addCommand("//acwe move <x> <y> <z>", "Move the selected blocks by an offset.");
+        addCommand("//acwe stack <count> [dx dy dz]", "Repeat the selected region in an offset direction.");
+        addCommand("//acwe faces <block>", "Alias for the selected-region outline operation.");
+
+        addSection("GENERATION");
+        addCommand("//acwe sphere <block> <radius>", "Generate a solid sphere around your player.");
+        addCommand("//acwe hsphere <block> <radius>", "Generate a hollow sphere around your player.");
+        addCommand("//acwe cyl <block> <radius> [height]", "Generate a solid vertical cylinder.");
+        addCommand("//acwe hcyl <block> <radius> [height]", "Generate a hollow vertical cylinder.");
+        addCommand("//acwe pyramid <block> <size>", "Generate a solid pyramid.");
+        addCommand("//acwe hpyramid <block> <size>", "Generate a hollow pyramid.");
+
+        addSection("LOCAL UTILITIES");
+        addCommand("//acwe drain [radius]", "Remove liquid blocks in a bounded radius around you.");
+        addCommand("//acwe extinguish [radius]", "Remove fire blocks in a bounded radius around you.");
+        addCommand("//acwe removeabove [distance]", "Clear blocks above your position in a bounded column area.");
+        addCommand("//acwe removebelow [distance]", "Clear blocks below your position in a bounded column area.");
+        addCommand("//acwe removenear <block> [radius]", "Remove matching blocks near your position.");
+        addCommand("//acwe replacenear <from> <to> [radius]", "Replace matching nearby blocks.");
+        addCommand("//acwe snow", "Add snow layers to exposed selected surfaces.");
+        addCommand("//acwe thaw", "Remove snow layers and melt ice in the selected area.");
+        addCommand("//acwe green", "Convert exposed dirt surfaces in the selected area to grass.");
+        addCommand("//acwe fixwater", "Convert flowing water in the selection to source water.");
+        addCommand("//acwe fixlava", "Convert flowing lava in the selection to source lava.");
+        addCommand("//acwe remove", "Clear all blocks in the selected region.");
     }
 
     private void addSection(String title) {
