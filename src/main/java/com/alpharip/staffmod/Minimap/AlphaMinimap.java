@@ -175,10 +175,10 @@ public final class AlphaMinimap {
         // When the player is underground, map the local cave floor instead of
         // continuing to show the distant surface above the cave.
         if (playerY < surfaceY - 4) {
-            int minimumY = Math.max(1, playerY - 24);
+            int minimumY = Math.max(1, playerY - 8);
             for (int scanY = Math.min(255, playerY); scanY >= minimumY; scanY--) {
                 BlockPos candidatePos = new BlockPos(x, scanY, z);
-                IBlockState candidate = mc.theWorld.getBlockState(candidatePos);
+                IBlockState candidate = chunk.getBlockState(candidatePos);
                 if (candidate.getBlock().getMaterial().blocksMovement()) {
                     sampleY = scanY;
                     break;
@@ -187,7 +187,7 @@ public final class AlphaMinimap {
         }
 
         BlockPos pos = new BlockPos(x, sampleY, z);
-        IBlockState state = mc.theWorld.getBlockState(pos);
+        IBlockState state = chunk.getBlockState(pos);
         int rgb = state.getBlock().getMapColor(state).colorValue;
         if (state.getBlock().getMaterial().isLiquid()) rgb = 0xFF315D9A;
         else rgb = shade(rgb, sampleY);
