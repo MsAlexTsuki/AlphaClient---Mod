@@ -435,12 +435,24 @@ public final class AlphaMinimap {
             int py = cy + (int) Math.round(dz / range * radius);
             int mapDx = px - cx, mapDy = py - cy;
             if (MinimapSettings.round() && mapDx * mapDx + mapDy * mapDy > radius * radius) continue;
-            drawCircle(px, py, 4.2F, 0xEE11151C);
-            drawCircle(px, py, 3.0F, point.getColor());
+            int markerColor = brightenWaypointColor(WorldWaypointIcons.getDisplayColor(point));
+            drawCircle(px, py, 5.0F, 0xFF080B10);
+            drawCircle(px, py, 4.2F, 0xFFF2F4F8);
+            drawCircle(px, py, 3.5F, markerColor);
             String icon = waypointIcon(point);
             int iconWidth = mc.fontRendererObj.getStringWidth(icon);
             mc.fontRendererObj.drawStringWithShadow(icon, px - iconWidth / 2, py - 4, 0xFF101318);
         }
+    }
+
+    private int brightenWaypointColor(int color) {
+        int red = (color >> 16) & 255;
+        int green = (color >> 8) & 255;
+        int blue = color & 255;
+        red = Math.min(255, red + (255 - red) * 42 / 100);
+        green = Math.min(255, green + (255 - green) * 42 / 100);
+        blue = Math.min(255, blue + (255 - blue) * 42 / 100);
+        return 0xFF000000 | (red << 16) | (green << 8) | blue;
     }
 
     private String waypointIcon(StaffWaypoint point) {
