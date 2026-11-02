@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** AlphaClient-only WorldEdit namespace. */
@@ -264,46 +265,74 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
         if ("wand".equals(cmd)) {
             if (args.length == 2 && "gone".equalsIgnoreCase(args[1])) {
-                EntityPlayer player = mc.thePlayer;
-                int removed = 0;
-                for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
-                    if (isWorldEditWand(player.inventory.getStackInSlot(i))) {
-                        player.inventory.setInventorySlotContents(i, null);
-                        removed++;
+                final java.util.UUID playerId = mc.thePlayer.getUniqueID();
+                onServer(sender, new Task() {
+                    public void run(WorldServer world) {
+                        EntityPlayer player = null;
+                        for (Object entry : world.playerEntities) {
+                            EntityPlayer candidate = (EntityPlayer) entry;
+                            if (playerId.equals(candidate.getUniqueID())) {
+                                player = candidate;
+                                break;
+                            }
+                        }
+                        if (player == null) {
+                            reply(sender, "Could not find your singleplayer inventory.");
+                            return;
+                        }
+                        int removed = 0;
+                        for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
+                            if (isWorldEditWand(player.inventory.getStackInSlot(i))) {
+                                player.inventory.setInventorySlotContents(i, null);
+                                removed++;
+                            }
+                        }
+                        player.inventory.markDirty();
+                        player.inventoryContainer.detectAndSendChanges();
+                        reply(player, "Removed " + removed + " WorldEdit wand(s) from your inventory.");
                     }
-                }
-                player.inventory.markDirty();
-                player.inventoryContainer.detectAndSendChanges();
-                reply(sender, "Removed " + removed + " WorldEdit wand(s) from your inventory.");
+                });
                 return;
             }
             if (args.length != 1) {
                 reply(sender, "Usage: //acwe wand [gone]");
                 return;
             }
-            if (!(mc.thePlayer instanceof EntityPlayer)) {
-                reply(sender, "Could not give the WorldEdit wand.");
-                return;
-            }
-            EntityPlayer player = mc.thePlayer;
-            for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
-                ItemStack stack = player.inventory.getStackInSlot(i);
-                if (isWorldEditWand(stack)) {
-                    reply(sender, "You already have the WorldEdit wooden axe.");
-                    return;
+            final java.util.UUID playerId = mc.thePlayer.getUniqueID();
+            onServer(sender, new Task() {
+                public void run(WorldServer world) {
+                    EntityPlayer player = null;
+                    for (Object entry : world.playerEntities) {
+                        EntityPlayer candidate = (EntityPlayer) entry;
+                        if (playerId.equals(candidate.getUniqueID())) {
+                            player = candidate;
+                            break;
+                        }
+                    }
+                    if (player == null) {
+                        reply(sender, "Could not find your singleplayer inventory.");
+                        return;
+                    }
+                    for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
+                        if (isWorldEditWand(player.inventory.getStackInSlot(i))) {
+                            reply(player, "You already have the WorldEdit wooden axe.");
+                            return;
+                        }
+                    }
+                    ItemStack wand = new ItemStack(Items.wooden_axe);
+                    NBTTagCompound wandTag = new NBTTagCompound();
+                    wandTag.setBoolean(WAND_TAG, true);
+                    wand.setTagCompound(wandTag);
+                    wand.setStackDisplayName("World Edit Wand");
+                    if (player.inventory.addItemStackToInventory(wand)) {
+                        player.inventory.markDirty();
+                        player.inventoryContainer.detectAndSendChanges();
+                        reply(player, "WorldEdit wand added to your inventory.");
+                    } else {
+                        reply(player, "Your inventory is full. Make room for the WorldEdit wand.");
+                    }
                 }
-            }
-            ItemStack wand = new ItemStack(Items.wooden_axe);
-            NBTTagCompound wandTag = new NBTTagCompound();
-            wandTag.setBoolean(WAND_TAG, true);
-            wand.setTagCompound(wandTag);
-            wand.setStackDisplayName("World Edit Wand");
-            if (player.inventory.addItemStackToInventory(wand)) {
-                player.inventoryContainer.detectAndSendChanges();
-                reply(sender, "WorldEdit wand added to your inventory.");
-            } else {
-                reply(sender, "Your inventory is full. Make room for the WorldEdit wand.");
-            }
+            });
             return;
         }
         if ("desel".equals(cmd) || "deselect".equals(cmd)) {
@@ -1098,17 +1127,14 @@ public final class AlphaWorldEditCommand extends CommandBase {
     }
 
     /** The tagged //acwe wand selects positions and never performs vanilla block interaction. */
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onWorldEditWandUse(PlayerInteractEvent event) {
-        if (event == null || event.world == null || event.entityPlayer == null
-                || event.pos == null) return;
+        if (event == null || event.world == null || event.entityPlayer == null || event.pos == null) return;
 
         AlphaModule module = AlphaModuleRegistry.find("world-edit");
-        if (module == null || !module.isEnabled() || !editWandEnabled) return;
-
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || !mc.isSingleplayer() || mc.thePlayer == null
-                || event.entityPlayer.getUniqueID() == null
+        if (module == null || !module.isEnabled() || !editWandEnabled
+                || mc == null || !mc.isSingleplayer() || mc.thePlayer == null
                 || !event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID())
                 || !isWorldEditWand(event.entityPlayer.getHeldItem())) return;
 
@@ -1116,22 +1142,19 @@ public final class AlphaWorldEditCommand extends CommandBase {
         boolean secondPosition = event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK;
         if (!firstPosition && !secondPosition) return;
 
-        // Cancel on both logical sides: this prevents creative block breaking and
-        // normal right-click block interaction while the selection wand is held.
+        // Cancel the client-side right-click and the authoritative server interaction.
+        // In Forge 1.8.9, LEFT_CLICK_BLOCK is handled authoritatively by the integrated server.
         event.setCanceled(true);
-
-        // The integrated server also receives this event. Only the client updates
-        // selection state and prints feedback, avoiding duplicate messages.
-        if (!event.world.isRemote) return;
+        if (event.world.isRemote) return;
 
         if (firstPosition) {
             SELECTION.setPos1(event.pos);
-            reply(mc.thePlayer, "Position 1 set to " + event.pos.getX() + ", "
-                    + event.pos.getY() + ", " + event.pos.getZ());
+            reply(event.entityPlayer, "pos1 is set (" + event.pos.getX() + ", "
+                    + event.pos.getY() + ", " + event.pos.getZ() + ")");
         } else {
             SELECTION.setPos2(event.pos);
-            reply(mc.thePlayer, "Position 2 set to " + event.pos.getX() + ", "
-                    + event.pos.getY() + ", " + event.pos.getZ());
+            reply(event.entityPlayer, "pos2 is set (" + event.pos.getX() + ", "
+                    + event.pos.getY() + ", " + event.pos.getZ() + ")");
         }
     }
 
