@@ -7,6 +7,7 @@ import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
 import com.alpharip.staffmod.founderfun.PixelGardenGUI;
+import com.alpharip.staffmod.waypoints.WaypointsGui;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.permissions.PermissionService;
@@ -34,6 +35,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int SEARCH_ID = 304;
     private static final int HUD_EDITOR = 305;
     private static final int STAFF_MODS = 306;
+    private static final int WAYPOINTS = 307;
     private static final int PROFILE_SELECT_BASE = 400;
     private static final int PROFILE_CREATE = 430;
     private static final int PROFILE_EDIT = 431;
@@ -88,8 +90,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         searchField.setDisabledTextColour(0xFFB8BDC8);
         buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + 5, 16, 16, ""));
         buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + 5, 16, 16, ""));
-        // Keep the HUD editor available at the bottom-left of the Mods menu.
-        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 37, 76, 18, "HUD EDITOR"));
+        // Keep Waypoints and the HUD editor permanently available at the bottom of the sidebar.
+        buttonList.add(new AlphaButton(WAYPOINTS, panelLeft + 5, panelTop + panelHeight - 59, 60, 18, "WAYPOINTS", true));
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 37, 60, 18, "HUD EDITOR"));
 
         List<AlphaModule.Category> sidebarCategories = new ArrayList<AlphaModule.Category>();
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
@@ -445,6 +448,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
         if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
+        if (button.id == WAYPOINTS) {
+            mc.displayGuiScreen(new WaypointsGui(this));
+            return;
+        }
         if (button.id == HUD_EDITOR) {
             mc.displayGuiScreen(new HudEditorGui(this));
             return;
