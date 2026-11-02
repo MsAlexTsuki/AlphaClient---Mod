@@ -1,6 +1,8 @@
 package com.alpharip.staffmod.waypoints;
 
 import net.minecraft.client.Minecraft;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -154,7 +156,10 @@ public final class WaypointCommand extends CommandBase {
                 if(args.length<2){reply(sender,"Usage: /waypoint "+action+" <on|off>");return;}
                 boolean value="on".equalsIgnoreCase(args[1]);
                 if(!value&&!"off".equalsIgnoreCase(args[1])){reply(sender,"Usage: /waypoint "+action+" <on|off>");return;}
-                if("minimap".equals(action)) MinimapWithWaypoints.getInstance().setEnabled(value);
+                if("minimap".equals(action)) {
+                    AlphaModule minimap = AlphaModuleRegistry.find("minimap");
+                    if (minimap != null) minimap.setEnabled(value);
+                }
                 else if("death".equals(action)) DeathWaypointMod.getInstance().setEnabled(value);
                 else if("clickcoords".equals(action)) WaypointFromClickableCoordinates.getInstance().setEnabled(value);
                 else if("arrival".equals(action)) WaypointSettings.setBoolean("arrivalDetectionEnabled",value);
