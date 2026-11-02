@@ -351,6 +351,8 @@ public final class AlphaMinimap {
             cachedRound = round;
             cachedRotation = rotation;
             cachedColors = new int[size][size];
+            double angle = Math.toRadians(rotation);
+            double cos = Math.cos(angle), sin = Math.sin(angle);
             for (int py = 0; py < size; py++) {
                 for (int px = 0; px < size; px++) {
                     int dx = px - size / 2;
@@ -358,8 +360,6 @@ public final class AlphaMinimap {
                     if (MinimapSettings.round() && dx * dx + dz * dz > radius * radius) continue;
                     double screenX = dx * range / (double) radius;
                     double screenZ = dz * range / (double) radius;
-                    double angle = Math.toRadians(rotation);
-                    double cos = Math.cos(angle), sin = Math.sin(angle);
                     double worldDx = screenX * cos + screenZ * sin;
                     double worldDz = -screenX * sin + screenZ * cos;
                     int worldX = MathHelper.floor_double(playerX + worldDx);
