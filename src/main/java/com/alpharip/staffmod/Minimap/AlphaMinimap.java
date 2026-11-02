@@ -239,11 +239,23 @@ public final class AlphaMinimap {
         Gui.drawRect(left, top - 1, left + width, top, 0xFFFFC83D);
         int color = 0xFF000000 | (MinimapSettings.coordinateColor() & 0xFFFFFF);
         Minecraft mc = Minecraft.getMinecraft();
+        primary = fitText(primary, width - 8);
+        secondary = fitText(secondary, width - 8);
         mc.fontRendererObj.drawStringWithShadow(primary,
                 left + (width - mc.fontRendererObj.getStringWidth(primary)) / 2, top + 1, color);
         mc.fontRendererObj.drawStringWithShadow(secondary,
                 left + (width - mc.fontRendererObj.getStringWidth(secondary)) / 2,
                 top + lineHeight + 2, 0xFFB8BEC8);
+    }
+
+    private String fitText(String value, int maxWidth) {
+        if (value == null) return "";
+        String result = value;
+        while (!result.isEmpty() && Minecraft.getMinecraft().fontRendererObj.getStringWidth(result) > maxWidth) {
+            if (result.length() <= 4) return result;
+            result = result.substring(0, result.length() - 4) + "...";
+        }
+        return result;
     }
 
     private String nearestWaypointText(Minecraft mc) {
