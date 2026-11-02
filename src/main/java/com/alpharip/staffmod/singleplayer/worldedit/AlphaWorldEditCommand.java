@@ -379,13 +379,22 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
         if ("thru".equals(cmd)) {
-            net.minecraft.util.Vec3 destination = findThruDestination(mc.thePlayer, mc.theWorld);
-            if (destination == null) {
-                reply(sender, "No clear space was found beyond a wall within 12 blocks.");
-                return;
-            }
-            mc.thePlayer.setPositionAndUpdate(destination.xCoord, destination.yCoord, destination.zCoord);
-            reply(sender, "Moved through the wall.");
+            if (args.length != 1) { reply(sender, "Usage: //acwe thru"); return; }
+            final java.util.UUID playerId = mc.thePlayer.getUniqueID();
+            onServer(sender, new Task() { public void run(WorldServer world) {
+                EntityPlayer player = findPlayer(world, playerId);
+                if (player == null || !player.isEntityAlive()) {
+                    reply(sender, "Could not find your singleplayer player entity.");
+                    return;
+                }
+                net.minecraft.util.Vec3 destination = findThruDestination(player, world);
+                if (destination == null) {
+                    reply(sender, "No clear space was found beyond a wall within 12 blocks.");
+                    return;
+                }
+                player.setPositionAndUpdate(destination.xCoord, destination.yCoord, destination.zCoord);
+                reply(sender, "Moved through the wall.");
+            }});
             return;
         }
         if ("jumpto".equals(cmd) || "j".equals(cmd)) {
@@ -1514,23 +1523,30 @@ public final class AlphaWorldEditCommand extends CommandBase {
      * Finds the first collision-free player position after a wall in the look direction.
      * The scan is deliberately bounded so the command cannot teleport across large distances.
      */
+    /**
+     * Finds a collision-free position beyond an obstruction in the player's horizontal look direction.
+     * The player's height is preserved so looking up or down cannot create an invalid body trajectory.
+     */
     private static net.minecraft.util.Vec3 findThruDestination(EntityPlayer player, net.minecraft.world.World world) {
         net.minecraft.util.Vec3 look = player.getLook(1.0F);
-        net.minecraft.util.Vec3 eyes = player.getPositionEyes(1.0F);
+        double horizontalLength = Math.sqrt(look.xCoord * look.xCoord + look.zCoord * look.zCoord);
+        if (horizontalLength < 0.05D) return null;
+
+        double directionX = look.xCoord / horizontalLength;
+        double directionZ = look.zCoord / horizontalLength;
         boolean enteredWall = false;
 
-        for (double distance = 0.25D; distance <= 12.0D; distance += 0.25D) {
-            double x = eyes.xCoord + look.xCoord * distance;
-            double y = eyes.yCoord + look.yCoord * distance - player.getEyeHeight();
-            double z = eyes.zCoord + look.zCoord * distance;
+        for (double distance = 0.25D; distance <= 12.0D; distance += 0.125D) {
+            double x = player.posX + directionX * distance;
+            double z = player.posZ + directionZ * distance;
             net.minecraft.util.AxisAlignedBB candidate = player.getEntityBoundingBox().offset(
-                    x - player.posX, y - player.posY, z - player.posZ);
+                    x - player.posX, 0.0D, z - player.posZ);
             boolean clear = world.getCollidingBoundingBoxes(player, candidate).isEmpty();
 
             if (!clear) {
                 enteredWall = true;
             } else if (enteredWall) {
-                return new net.minecraft.util.Vec3(x, y, z);
+                return new net.minecraft.util.Vec3(x, player.posY, z);
             }
         }
         return null;
