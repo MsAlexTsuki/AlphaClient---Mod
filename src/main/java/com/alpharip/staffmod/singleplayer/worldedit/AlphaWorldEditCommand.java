@@ -107,8 +107,8 @@ public final class AlphaWorldEditCommand extends CommandBase {
             if (args.length != 1) { reply(sender, "Usage: //acwe toggleplace"); return; }
             togglePlace = !togglePlace;
             reply(sender, togglePlace
-                    ? "Brush placement will use the targeted block."
-                    : "Brush placement will use the adjacent block.");
+                    ? "Placement position set to selection position 1."
+                    : "Placement position set to your player position.");
             return;
         }
 
@@ -495,7 +495,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
         if ("paste".equals(cmd)) {
             if (!CLIPBOARD.hasBlocks()) { reply(sender, "Copy a region before pasting."); return; }
-            final BlockPos dest = mc.thePlayer.getPosition();
+            final BlockPos dest = placementPosition(mc.thePlayer.getPosition());
             final IBlockState[][][] blocks = CLIPBOARD.getBlocks();
             final WorldEditSelection.Bounds b = new WorldEditSelection.Bounds(dest.getX(), dest.getY(), dest.getZ(),
                     dest.getX() + CLIPBOARD.getSizeX() - 1, dest.getY() + CLIPBOARD.getSizeY() - 1,
@@ -548,7 +548,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
         if ("setbiome".equals(cmd) && args.length == 2) {
             final String requested = args[1].replace('_', ' ').toLowerCase(Locale.ROOT);
-            final BlockPos target = mc.thePlayer.getPosition();
+            final BlockPos target = placementPosition(mc.thePlayer.getPosition());
             onServer(sender, new Task() { public void run(WorldServer w) {
                 net.minecraft.world.biome.BiomeGenBase found = null;
                 net.minecraft.world.biome.BiomeGenBase[] all = net.minecraft.world.biome.BiomeGenBase.getBiomeGenArray();
@@ -705,7 +705,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             try { radius=Integer.parseInt(args[2]); heightArg=args.length>3?Integer.parseInt(args[3]):radius*2+1; }
             catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" <block> <radius> [height]");return;}
             if(state==null||radius<1||radius>32||heightArg<1||heightArg>64){reply(sender,"Invalid block, radius, or height (radius 1-32, height 1-64).");return;}
-            final BlockPos center=mc.thePlayer.getPosition();
+            final BlockPos center=placementPosition(mc.thePlayer.getPosition());
             final boolean sphereCommand=cmd.endsWith("sphere");
             final int minY=sphereCommand?center.getY()-radius:center.getY();
             final int maxY=sphereCommand?center.getY()+radius:center.getY()+heightArg-1;
@@ -741,7 +741,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             try { distance=args.length>1?Integer.parseInt(args[1]):20; }
             catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" [distance]");return;}
             if(distance<1||distance>64){reply(sender,"Distance must be between 1 and 64.");return;}
-            final BlockPos at=mc.thePlayer.getPosition();
+            final BlockPos at=placementPosition(mc.thePlayer.getPosition());
             final WorldEditSelection.Bounds area=new WorldEditSelection.Bounds(at.getX()-8,Math.max(0,at.getY()-distance),at.getZ()-8,at.getX()+8,Math.min(255,at.getY()+distance),at.getZ()+8);
             onServer(sender,new Task(){public void run(WorldServer w){
                 if(!WorldEditOperations.regionLoaded(w,area)){reply(sender,"Area contains unloaded chunks.");return;}
@@ -857,7 +857,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             try{radius=args.length==3?Integer.parseInt(args[2]):5;}
             catch(NumberFormatException ex){reply(sender,"Usage: //acwe "+cmd+" <block> [radius]");return;}
             if(state==null||radius<1||radius>16){reply(sender,"Invalid block or radius (1-16).");return;}
-            final BlockPos target=mc.objectMouseOver!=null&&mc.objectMouseOver.getBlockPos()!=null?("fill".equals(cmd)?mc.objectMouseOver.getBlockPos().up():mc.objectMouseOver.getBlockPos().offset(mc.objectMouseOver.sideHit)):mc.thePlayer.getPosition();
+            final BlockPos target=mc.objectMouseOver!=null&&mc.objectMouseOver.getBlockPos()!=null?("fill".equals(cmd)?mc.objectMouseOver.getBlockPos().up():mc.objectMouseOver.getBlockPos().offset(mc.objectMouseOver.sideHit)):placementPosition(mc.thePlayer.getPosition());
             final WorldEditSelection.Bounds area=new WorldEditSelection.Bounds(target.getX()-radius,Math.max(0,target.getY()-radius),target.getZ()-radius,target.getX()+radius,Math.min(255,target.getY()+radius),target.getZ()+radius);
             onServer(sender,new Task(){public void run(WorldServer w){
                 if(!WorldEditOperations.regionLoaded(w,area)){reply(sender,"Fill area contains unloaded chunks.");return;}
@@ -1381,7 +1381,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
 
         if(!right||"none".equals(brushMode))return;
-        final BlockPos center=togglePlace?clicked:adjacent;
+        final BlockPos center=adjacent;
         WorldEditSelection.Bounds brushArea;
         if("clipboard".equals(brushMode)&&CLIPBOARD.hasBlocks()) {
             brushArea=new WorldEditSelection.Bounds(center.getX(),center.getY(),center.getZ(),
@@ -1424,6 +1424,11 @@ public final class AlphaWorldEditCommand extends CommandBase {
             WorldEditFeatureOperations.raiseLower(world,center,brushRadius,-1);
         }
         event.setCanceled(true);
+    }
+
+    private static BlockPos placementPosition(BlockPos playerPosition) {
+        BlockPos first = SELECTION.getPos1();
+        return togglePlace && first != null ? first : playerPosition;
     }
 
     private static EntityPlayer findPlayer(WorldServer world, java.util.UUID playerId) {
