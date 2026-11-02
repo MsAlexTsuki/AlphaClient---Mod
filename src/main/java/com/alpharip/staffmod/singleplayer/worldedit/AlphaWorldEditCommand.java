@@ -243,13 +243,16 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
         if ("count".equals(cmd) && args.length == 2) {
             final IBlockState target = WorldEditBlockParser.parse(args[1]);
+            final boolean metadataSpecified = args[1].split(":").length == 3;
             final WorldEditSelection.Bounds b = selection(sender);
-            if (target == null || b == null) { reply(sender, "Usage: //acwe count <block>"); return; }
+            if (target == null || b == null) { reply(sender, "Usage: //acwe count <block[:metadata]>"); return; }
             onServer(sender,new Task(){public void run(WorldServer w){
                 if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
                 int count=0;
-                for(int x=b.minX;x<=b.maxX;x++)for(int y=b.minY;y<=b.maxY;y++)for(int z=b.minZ;z<=b.maxZ;z++)
-                    if(w.getBlockState(new BlockPos(x,y,z)).getBlock()==target.getBlock())count++;
+                for(int x=b.minX;x<=b.maxX;x++)for(int y=b.minY;y<=b.maxY;y++)for(int z=b.minZ;z<=b.maxZ;z++) {
+                    IBlockState current = w.getBlockState(new BlockPos(x,y,z));
+                    if(current.getBlock()==target.getBlock() && (!metadataSpecified || current.equals(target))) count++;
+                }
                 reply(sender,"Found "+count+" matching block(s).");
             }});
             return;
