@@ -648,10 +648,10 @@ public final class AlphaWorldEditCommand extends CommandBase {
         // Local AlphaClient schematic files (independent .acwe NBT format).
         if (("schematic".equals(cmd)||"schem".equals(cmd)) && args.length>=2) {
             String action=args[1].toLowerCase(Locale.ROOT);
-            if ("formats".equals(action)) { reply(sender,"Supported schematic format: AlphaClient .acwe (compressed NBT)."); return; }
+            if ("formats".equals(action)) { reply(sender,"Supported formats: Minecraft 1.8.9 .schematic (MCEdit/WorldEdit) and AlphaClient .acwe."); return; }
             if ("list".equals(action)) {
                 java.util.List<String> names=WorldEditSchematicStore.list();
-                reply(sender,names.isEmpty()?"No AlphaClient schematics saved.":"Schematics: "+names.toString());
+                reply(sender,names.isEmpty()?"No schematics found.":"Schematics: "+names.toString());
                 return;
             }
             if (args.length!=3) { reply(sender,"Usage: //acwe schematic <load|save|delete> <name>"); return; }
