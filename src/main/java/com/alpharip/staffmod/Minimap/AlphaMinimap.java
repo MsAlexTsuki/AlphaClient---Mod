@@ -66,6 +66,7 @@ public final class AlphaMinimap {
             drawTerrain(mc, left, top, size, centerX, centerY);
             drawEntities(mc, centerX, centerY, size);
             drawWaypoints(mc, centerX, centerY, size);
+            drawBorder(left, top, size);
             Gui.drawRect(centerX - 2, centerY - 2, centerX + 3, centerY + 3, 0xFFFFFFFF);
             mc.fontRendererObj.drawStringWithShadow("N", centerX - 3, top + 3, 0xFFE6E8ED);
             String coords = MathHelper.floor_double(mc.thePlayer.posX) + " "
@@ -78,6 +79,14 @@ public final class AlphaMinimap {
         } finally {
             GlStateManager.popMatrix();
         }
+    }
+
+    private void drawBorder(int left, int top, int size) {
+        if (MinimapSettings.round()) return;
+        Gui.drawRect(left, top, left + size, top + 1, 0xFFFFC83D);
+        Gui.drawRect(left, top, left + 1, top + size, 0x66555A63);
+        Gui.drawRect(left + size - 1, top, left + size, top + size, 0x66555A63);
+        Gui.drawRect(left, top + size - 1, left + size, top + size, 0xFF555A63);
     }
 
     private void drawFrame(int left, int top, int size, int cx, int cy) {
