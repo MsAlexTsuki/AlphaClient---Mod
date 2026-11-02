@@ -2,6 +2,7 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.singleplayer.worldedit.WorldEditGui;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -17,9 +18,20 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         this.parent = parent;
     }
 
+    private boolean hasActiveSingleplayerWorld() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        return minecraft != null && minecraft.isSingleplayer()
+                && minecraft.thePlayer != null && minecraft.theWorld != null
+                && minecraft.getIntegratedServer() != null;
+    }
+
     @Override
     public void initGui() {
         buttonList.clear();
+        if (!hasActiveSingleplayerWorld()) {
+            if (mc != null) mc.displayGuiScreen(parent);
+            return;
+        }
         panelLeft = Math.max(12, width / 2 - Math.min(230, width / 2 - 12));
         panelRight = Math.min(width - 12, panelLeft + 460);
         panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
@@ -31,12 +43,20 @@ public final class SingleplayerGui extends AlphaGuiScreen {
     }
 
     @Override
+    public void updateScreen() {
+        super.updateScreen();
+        if (!hasActiveSingleplayerWorld() && mc != null) {
+            mc.displayGuiScreen(parent);
+        }
+    }
+
+    @Override
     protected void actionPerformed(GuiButton button) {
         if (button == null) return;
         if (button.id == BACK) {
             mc.displayGuiScreen(parent);
         } else if (button.id == WORLD_EDIT) {
-            if (mc.isSingleplayer() && mc.thePlayer != null && mc.theWorld != null) {
+            if (hasActiveSingleplayerWorld()) {
                 mc.displayGuiScreen(new WorldEditGui(this));
             }
         }
