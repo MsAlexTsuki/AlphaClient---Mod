@@ -6,6 +6,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
@@ -59,7 +60,7 @@ public final class WorldEditIdGuideGui extends GuiScreen {
         } else if (selectedTab == 1) {
             for (Object key : Item.itemRegistry.getKeys()) {
                 String id = String.valueOf(key);
-                Item item = (Item) Item.itemRegistry.getObject(key);
+                Item item = Item.itemRegistry.getObject((ResourceLocation) key);
                 if (item == null) continue;
                 int numericId = Item.getIdFromItem(item);
                 allEntries.add(new GuideEntry(id, "Numeric item ID: " + numericId
