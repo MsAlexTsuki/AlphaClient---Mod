@@ -116,11 +116,30 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
         if ("ceil".equals(cmd)) {
-            BlockPos at=mc.thePlayer.getPosition();
-            BlockPos top=mc.theWorld.getTopSolidOrLiquidBlock(at);
-            int y=Math.min(254,Math.max(at.getY()+2,top.getY()+2));
-            mc.thePlayer.setPositionAndUpdate(mc.thePlayer.posX,y,mc.thePlayer.posZ);
-            reply(sender,"Moved above the highest block at your position.");
+            int clearance = 1;
+            if (args.length > 2) { reply(sender, "Usage: //acwe ceil [clearance]"); return; }
+            if (args.length == 2) {
+                try { clearance = Integer.parseInt(args[1]); }
+                catch (NumberFormatException ex) { reply(sender, "Usage: //acwe ceil [clearance]"); return; }
+            }
+            if (clearance < 1 || clearance > 64) { reply(sender, "Clearance must be between 1 and 64."); return; }
+            final int requestedClearance = clearance;
+            final java.util.UUID playerId = mc.thePlayer.getUniqueID();
+            onServer(sender, new Task() { public void run(WorldServer world) {
+                EntityPlayer player = findPlayer(world, playerId);
+                if (player == null) { reply(sender, "Could not find your singleplayer player entity."); return; }
+                BlockPos at = player.getPosition();
+                BlockPos top = world.getTopSolidOrLiquidBlock(at);
+                int targetY = top.getY() + requestedClearance + 1;
+                if (targetY < 2 || targetY > 254) { reply(sender, "No safe ceiling position is available within the world height."); return; }
+                if (!isClearPlayerPosition(player, world, targetY)) { reply(sender, "The requested ceiling position is obstructed."); return; }
+                BlockPos support = new BlockPos(at.getX(), targetY - 1, at.getZ());
+                if (!world.isSideSolid(support, net.minecraft.util.EnumFacing.UP)) {
+                    world.setBlockState(support, net.minecraft.init.Blocks.glass.getDefaultState(), 2);
+                }
+                player.setPositionAndUpdate(player.posX, targetY, player.posZ);
+                reply(sender, "Moved to the ceiling with " + requestedClearance + " block(s) of clearance.");
+            }});
             return;
         }
 
@@ -196,20 +215,74 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
 
         // Singleplayer navigation helpers.
-        if ("up".equals(cmd) || "ascend".equals(cmd) || "asc".equals(cmd)
-                || "descend".equals(cmd) || "desc".equals(cmd) || "unstuck".equals(cmd)
-                || "!".equals(cmd)) {
+        if ("unstuck".equals(cmd) || "!".equals(cmd)) {
+            if (args.length != 1) { reply(sender, "Usage: //acwe unstuck"); return; }
+            final java.util.UUID playerId = mc.thePlayer.getUniqueID();
+            onServer(sender, new Task() { public void run(WorldServer world) {
+                EntityPlayer player = findPlayer(world, playerId);
+                if (player == null) { reply(sender, "Could not find your singleplayer player entity."); return; }
+                int currentY = player.getPosition().getY();
+                if (isClearPlayerPosition(player, world, currentY)) {
+                    reply(sender, "You are not stuck in a block.");
+                    return;
+                }
+                int targetY = findSafeStandingY(player, world, currentY + 1, 1, 1);
+                if (targetY < 0) { reply(sender, "No safe position was found above you."); return; }
+                player.setPositionAndUpdate(player.posX, targetY, player.posZ);
+                reply(sender, "Moved to the nearest safe position above you (Y=" + targetY + ").");
+            }});
+            return;
+        }
+        if ("up".equals(cmd)) {
             int amount = 1;
-            if (args.length > 1) {
-                try { amount = Math.max(1, Math.min(64, Integer.parseInt(args[1]))); }
-                catch (NumberFormatException ignored) { reply(sender, "Usage: //acwe " + cmd + " [distance]"); return; }
+            if (args.length > 2) { reply(sender, "Usage: //acwe up [distance]"); return; }
+            if (args.length == 2) {
+                try { amount = Integer.parseInt(args[1]); }
+                catch (NumberFormatException ex) { reply(sender, "Usage: //acwe up [distance]"); return; }
             }
-            int targetY = mc.thePlayer.getPosition().getY();
-            if ("descend".equals(cmd) || "desc".equals(cmd)) targetY -= amount;
-            else targetY += amount;
-            targetY = Math.max(1, Math.min(254, targetY));
-            mc.thePlayer.setPositionAndUpdate(mc.thePlayer.posX, targetY, mc.thePlayer.posZ);
-            reply(sender, "Moved to Y=" + targetY + ".");
+            if (amount < 1 || amount > 64) { reply(sender, "Distance must be between 1 and 64."); return; }
+            final int distance = amount;
+            final java.util.UUID playerId = mc.thePlayer.getUniqueID();
+            onServer(sender, new Task() { public void run(WorldServer world) {
+                EntityPlayer player = findPlayer(world, playerId);
+                if (player == null) { reply(sender, "Could not find your singleplayer player entity."); return; }
+                int targetY = player.getPosition().getY() + distance;
+                if (targetY > 254 || !isClearPlayerPosition(player, world, targetY)) {
+                    reply(sender, "There is not enough clear space above you.");
+                    return;
+                }
+                BlockPos support = new BlockPos(player.getPosition().getX(), targetY - 1, player.getPosition().getZ());
+                if (!world.isSideSolid(support, net.minecraft.util.EnumFacing.UP)) {
+                    world.setBlockState(support, net.minecraft.init.Blocks.glass.getDefaultState(), 2);
+                }
+                player.setPositionAndUpdate(player.posX, targetY, player.posZ);
+                reply(sender, "Moved up " + distance + " block(s).");
+            }});
+            return;
+        }
+        if ("ascend".equals(cmd) || "asc".equals(cmd) || "descend".equals(cmd) || "desc".equals(cmd)) {
+            int levels = 1;
+            if (args.length > 2) { reply(sender, "Usage: //acwe " + cmd + " [levels]"); return; }
+            if (args.length == 2) {
+                try { levels = Integer.parseInt(args[1]); }
+                catch (NumberFormatException ex) { reply(sender, "Usage: //acwe " + cmd + " [levels]"); return; }
+            }
+            if (levels < 1 || levels > 32) { reply(sender, "Levels must be between 1 and 32."); return; }
+            final int requestedLevels = levels;
+            final boolean ascending = "ascend".equals(cmd) || "asc".equals(cmd);
+            final java.util.UUID playerId = mc.thePlayer.getUniqueID();
+            onServer(sender, new Task() { public void run(WorldServer world) {
+                EntityPlayer player = findPlayer(world, playerId);
+                if (player == null) { reply(sender, "Could not find your singleplayer player entity."); return; }
+                int targetY = findSafeStandingY(player, world, player.getPosition().getY() + (ascending ? 1 : -1),
+                        ascending ? 1 : -1, requestedLevels);
+                if (targetY < 0) {
+                    reply(sender, ascending ? "Could not find that many safe floors above you." : "Could not find that many safe floors below you.");
+                    return;
+                }
+                player.setPositionAndUpdate(player.posX, targetY, player.posZ);
+                reply(sender, "Moved " + (ascending ? "up" : "down") + " " + requestedLevels + " floor(s) to Y=" + targetY + ".");
+            }});
             return;
         }
         if ("thru".equals(cmd)) {
@@ -1302,6 +1375,41 @@ public final class AlphaWorldEditCommand extends CommandBase {
             WorldEditFeatureOperations.raiseLower(world,center,brushRadius,-1);
         }
         event.setCanceled(true);
+    }
+
+    private static EntityPlayer findPlayer(WorldServer world, java.util.UUID playerId) {
+        for (Object entry : world.playerEntities) {
+            EntityPlayer candidate = (EntityPlayer) entry;
+            if (playerId.equals(candidate.getUniqueID())) return candidate;
+        }
+        return null;
+    }
+
+    private static boolean isClearPlayerPosition(EntityPlayer player, net.minecraft.world.World world, int y) {
+        if (y < 1 || y > 254) return false;
+        net.minecraft.util.AxisAlignedBB candidate = player.getEntityBoundingBox().offset(0.0D, y - player.posY, 0.0D);
+        return world.getCollidingBoundingBoxes(player, candidate).isEmpty();
+    }
+
+    /**
+     * Finds successive positions with a solid floor and enough collision-free room for the player.
+     */
+    private static int findSafeStandingY(EntityPlayer player, net.minecraft.world.World world,
+                                         int startY, int direction, int levels) {
+        int found = 0;
+        int x = player.getPosition().getX();
+        int z = player.getPosition().getZ();
+        int y = startY;
+        while (y >= 1 && y <= 254) {
+            BlockPos floor = new BlockPos(x, y - 1, z);
+            if (world.isSideSolid(floor, net.minecraft.util.EnumFacing.UP)
+                    && isClearPlayerPosition(player, world, y)) {
+                found++;
+                if (found >= levels) return y;
+            }
+            y += direction;
+        }
+        return -1;
     }
 
     /**
