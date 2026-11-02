@@ -84,6 +84,38 @@ public final class AlphaMinimap {
         }
     }
 
+    /** Draws the same live map at a larger size inside the fullscreen map screen. */
+    public void drawFullscreenMap(int screenWidth, int screenHeight) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null || mc.thePlayer == null) return;
+
+        int size = Math.min(320, Math.min(screenWidth - 48, screenHeight - 92));
+        size = Math.max(112, size);
+        int left = (screenWidth - size) / 2;
+        int top = (screenHeight - size) / 2 + 8;
+        int centerX = left + size / 2;
+        int centerY = top + size / 2;
+        GlStateManager.pushMatrix();
+        try {
+            drawFrame(left, top, size, centerX, centerY);
+            drawTerrain(mc, left, top, size, centerX, centerY);
+            drawEntities(mc, centerX, centerY, size);
+            drawWaypoints(mc, centerX, centerY, size);
+            drawBorder(left, top, size);
+            Gui.drawRect(centerX - 3, centerY - 3, centerX + 4, centerY + 4, 0xFFFFFFFF);
+            mc.fontRendererObj.drawStringWithShadow("N", centerX - 3, top + 4, 0xFFE6E8ED);
+            String coords = MathHelper.floor_double(mc.thePlayer.posX) + " "
+                    + MathHelper.floor_double(mc.thePlayer.posY) + " "
+                    + MathHelper.floor_double(mc.thePlayer.posZ);
+            int color = 0xFF000000 | (MinimapSettings.coordinateColor() & 0xFFFFFF);
+            mc.fontRendererObj.drawStringWithShadow(coords,
+                    centerX - mc.fontRendererObj.getStringWidth(coords) / 2,
+                    top + size + 6, color);
+        } finally {
+            GlStateManager.popMatrix();
+        }
+    }
+
     private void drawBorder(int left, int top, int size) {
         if (MinimapSettings.round()) return;
         Gui.drawRect(left, top, left + size, top + 1, 0xFFFFC83D);
