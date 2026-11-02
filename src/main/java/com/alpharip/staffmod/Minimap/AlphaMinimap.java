@@ -57,7 +57,7 @@ public final class AlphaMinimap {
         int offset = MinimapSettings.offset();
         String corner = MinimapSettings.corner();
         int left = corner.endsWith("left") ? offset : scaled.getScaledWidth() - size - offset;
-        int coordinateHeight = mc.fontRendererObj.FONT_HEIGHT + 4;
+        int coordinateHeight = mc.fontRendererObj.FONT_HEIGHT * 2 + 9;
         int top = corner.startsWith("bottom")
                 ? scaled.getScaledHeight() - size - offset - coordinateHeight : offset;
         int centerX = left + size / 2;
@@ -70,15 +70,9 @@ public final class AlphaMinimap {
             drawEntities(mc, centerX, centerY, size);
             drawWaypoints(mc, centerX, centerY, size);
             drawBorder(left, top, size);
-            Gui.drawRect(centerX - 2, centerY - 2, centerX + 3, centerY + 3, 0xFFFFFFFF);
-            mc.fontRendererObj.drawStringWithShadow("N", centerX - 3, top + 3, 0xFFE6E8ED);
-            String coords = MathHelper.floor_double(mc.thePlayer.posX) + " "
-                    + MathHelper.floor_double(mc.thePlayer.posY) + " "
-                    + MathHelper.floor_double(mc.thePlayer.posZ);
-            int color = 0xFF000000 | (MinimapSettings.coordinateColor() & 0xFFFFFF);
-            mc.fontRendererObj.drawStringWithShadow(coords,
-                    centerX - mc.fontRendererObj.getStringWidth(coords) / 2,
-                    top + size + 3, color);
+            drawCompass(left, top, size, centerX, centerY);
+            drawPlayerArrow(centerX, centerY, mc.thePlayer.rotationYaw, 6);
+            drawCoordinatePanel(mc, left, top, size);
         } finally {
             GlStateManager.popMatrix();
         }
@@ -109,25 +103,165 @@ public final class AlphaMinimap {
             int playerRadius = size / 2 - 5;
             int playerX = centerX + (int)Math.round((mc.thePlayer.posX - mapCenterX) / range * playerRadius);
             int playerY = centerY + (int)Math.round((mc.thePlayer.posZ - mapCenterZ) / range * playerRadius);
-            Gui.drawRect(playerX - 3, playerY - 3, playerX + 4, playerY + 4, 0xFFFFFFFF);
-            mc.fontRendererObj.drawStringWithShadow("N", centerX - 3, top + 4, 0xFFE6E8ED);
+            drawCompass(left, top, size, centerX, centerY);
+            drawPlayerArrow(playerX, playerY, mc.thePlayer.rotationYaw, 7);
             String coords = "Center " + mapCenterX + " " + MathHelper.floor_double(mc.thePlayer.posY) + " " + mapCenterZ
                     + "  |  Zoom " + range + " blocks";
-            int color = 0xFF000000 | (MinimapSettings.coordinateColor() & 0xFFFFFF);
-            mc.fontRendererObj.drawStringWithShadow(coords,
-                    centerX - mc.fontRendererObj.getStringWidth(coords) / 2,
-                    top + size + 6, color);
+            drawInfoPanel(left, top + size + 3, size, coords, nearestWaypointText(mc));
         } finally {
             GlStateManager.popMatrix();
         }
     }
 
     private void drawBorder(int left, int top, int size) {
-        if (MinimapSettings.round()) return;
-        Gui.drawRect(left, top, left + size, top + 1, 0xFFFFC83D);
+        if (MinimapSettings.round()) {
+            int cx = left + size / 2;
+            int cy = top + size / 2;
+            int radius = size / 2 - 1;
+            GlStateManager.disableTexture2D();
+            GlStateManager.enableBlend();
+            GL11.glLineWidth(1.5F);
+            GL11.glColor4f(1.0F, 0.78F, 0.24F, 0.95F);
+            GL11.glBegin(GL11.GL_LINE_LOOP);
+            for (int i = 0; i < 64; i++) {
+                double angle = Math.PI * 2.0D * i / 64.0D;
+                GL11.glVertex2d(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
+            }
+            GL11.glEnd();
+            GL11.glLineWidth(1.0F);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.enableTexture2D();
+            return;
+        }
+        Gui.drawRect(left - 1, top - 1, left + size + 1, top, 0xAA000000);
+        Gui.drawRect(left - 1, top + size, left + size + 1, top + size + 1, 0xAA000000);
+        Gui.drawRect(left - 1, top, left, top + size, 0xAA000000);
+        Gui.drawRect(left + size, top, left + size + 1, top + size, 0xAA000000);
+        Gui.drawRect(left, top, left + size, top + 2, 0xFFFFC83D);
+        Gui.drawRect(left, top + size - 1, left + size, top + size, 0xAA080A0F);
         Gui.drawRect(left, top, left + 1, top + size, 0x66555A63);
         Gui.drawRect(left + size - 1, top, left + size, top + size, 0x66555A63);
-        Gui.drawRect(left, top + size - 1, left + size, top + size, 0xFF555A63);
+    }
+
+    private void drawCompass(int left, int top, int size, int cx, int cy) {
+        int text = 0xFFE8EAF0;
+        int muted = 0xFF9CA3AF;
+        drawCompassLabel("N", cx, top + 4, text);
+        drawCompassLabel("E", left + size - 8, cy - 3, muted);
+        drawCompassLabel("S", cx, top + size - 10, muted);
+        drawCompassLabel("W", left + 3, cy - 3, muted);
+    }
+
+    private void drawCompassLabel(String label, int x, int y, int color) {
+        Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(label, x, y, color);
+    }
+
+    private void drawPlayerArrow(int x, int y, float yaw, int radius) {
+        double angle = Math.toRadians(yaw);
+        double forwardX = -Math.sin(angle);
+        double forwardY = Math.cos(angle);
+        double rightX = Math.cos(angle);
+        double rightY = Math.sin(angle);
+        double tipX = x + forwardX * radius;
+        double tipY = y + forwardY * radius;
+        double baseX = x - forwardX * radius * 0.72D;
+        double baseY = y - forwardY * radius * 0.72D;
+        double wing = radius * 0.68D;
+
+        GlStateManager.disableTexture2D();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GL11.glColor4f(0.035F, 0.045F, 0.065F, 1.0F);
+        GL11.glBegin(GL11.GL_TRIANGLES);
+        GL11.glVertex2d(tipX, tipY);
+        GL11.glVertex2d(baseX + rightX * wing, baseY + rightY * wing);
+        GL11.glVertex2d(baseX - rightX * wing, baseY - rightY * wing);
+        GL11.glEnd();
+
+        double innerTipX = x + forwardX * (radius - 1.2D);
+        double innerTipY = y + forwardY * (radius - 1.2D);
+        double innerBaseX = x - forwardX * (radius * 0.55D);
+        double innerBaseY = y - forwardY * (radius * 0.55D);
+        GL11.glColor4f(1.0F, 0.78F, 0.24F, 1.0F);
+        GL11.glBegin(GL11.GL_TRIANGLES);
+        GL11.glVertex2d(innerTipX, innerTipY);
+        GL11.glVertex2d(innerBaseX + rightX * wing * 0.72D, innerBaseY + rightY * wing * 0.72D);
+        GL11.glVertex2d(innerBaseX - rightX * wing * 0.72D, innerBaseY - rightY * wing * 0.72D);
+        GL11.glEnd();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableTexture2D();
+    }
+
+    private void drawCircle(int x, int y, float radius, int color) {
+        GlStateManager.disableTexture2D();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GL11.glColor4f(((color >> 16) & 255) / 255.0F, ((color >> 8) & 255) / 255.0F,
+                (color & 255) / 255.0F, ((color >>> 24) & 255) / 255.0F);
+        GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+        GL11.glVertex2d(x, y);
+        for (int i = 0; i <= 16; i++) {
+            double angle = Math.PI * 2.0D * i / 16.0D;
+            GL11.glVertex2d(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+        }
+        GL11.glEnd();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableTexture2D();
+    }
+
+    private void drawDiamond(int x, int y, float radius, int color) {
+        GlStateManager.disableTexture2D();
+        GlStateManager.enableBlend();
+        GL11.glColor4f(((color >> 16) & 255) / 255.0F, ((color >> 8) & 255) / 255.0F,
+                (color & 255) / 255.0F, ((color >>> 24) & 255) / 255.0F);
+        GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+        GL11.glVertex2d(x, y - radius);
+        GL11.glVertex2d(x + radius, y);
+        GL11.glVertex2d(x, y + radius);
+        GL11.glVertex2d(x - radius, y);
+        GL11.glVertex2d(x, y - radius);
+        GL11.glEnd();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableTexture2D();
+    }
+
+    private void drawCoordinatePanel(Minecraft mc, int left, int top, int size) {
+        String coords = MathHelper.floor_double(mc.thePlayer.posX) + " "
+                + MathHelper.floor_double(mc.thePlayer.posY) + " "
+                + MathHelper.floor_double(mc.thePlayer.posZ);
+        drawInfoPanel(left, top + size + 3, size, coords, nearestWaypointText(mc));
+    }
+
+    private void drawInfoPanel(int left, int top, int width, String primary, String secondary) {
+        int lineHeight = Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT;
+        Gui.drawRect(left, top - 1, left + width, top + lineHeight * 2 + 5, 0xD9080A0F);
+        Gui.drawRect(left, top - 1, left + width, top, 0xFFFFC83D);
+        int color = 0xFF000000 | (MinimapSettings.coordinateColor() & 0xFFFFFF);
+        Minecraft mc = Minecraft.getMinecraft();
+        mc.fontRendererObj.drawStringWithShadow(primary,
+                left + (width - mc.fontRendererObj.getStringWidth(primary)) / 2, top + 1, color);
+        mc.fontRendererObj.drawStringWithShadow(secondary,
+                left + (width - mc.fontRendererObj.getStringWidth(secondary)) / 2,
+                top + lineHeight + 2, 0xFFB8BEC8);
+    }
+
+    private String nearestWaypointText(Minecraft mc) {
+        StaffWaypoint nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+        for (StaffWaypoint point : WaypointManager.getInstance().getForCurrentWorld()) {
+            double dx = point.getX() - mc.thePlayer.posX;
+            double dy = point.getY() - mc.thePlayer.posY;
+            double dz = point.getZ() - mc.thePlayer.posZ;
+            double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (distance < nearestDistance) {
+                nearest = point;
+                nearestDistance = distance;
+            }
+        }
+        if (nearest == null) return "No nearby waypoints";
+        String label = nearest.getLabel();
+        if (label.length() > 12) label = label.substring(0, 11) + "...";
+        return label + "  " + (int)Math.round(nearestDistance) + "m";
     }
 
     private void drawFrame(int left, int top, int size, int cx, int cy) {
@@ -259,8 +393,13 @@ public final class AlphaMinimap {
             int py = cy + (int) Math.round(dz / range * radius);
             int mapDx = px - cx, mapDy = py - cy;
             if (MinimapSettings.round() && mapDx * mapDx + mapDy * mapDy > radius * radius) continue;
-            int color = entity instanceof EntityPlayer ? 0xFFFF5555 : 0xFFFFAA44;
-            Gui.drawRect(px - 2, py - 2, px + 3, py + 3, color);
+            if (entity instanceof EntityPlayer) {
+                drawDiamond(px, py, 3.5F, 0xFF171A20);
+                drawDiamond(px, py, 2.5F, 0xFFFF6262);
+            } else {
+                drawCircle(px, py, 3.2F, 0xFF171A20);
+                drawCircle(px, py, 2.2F, 0xFFFFB454);
+            }
         }
     }
 
@@ -279,7 +418,23 @@ public final class AlphaMinimap {
             int py = cy + (int) Math.round(dz / range * radius);
             int mapDx = px - cx, mapDy = py - cy;
             if (MinimapSettings.round() && mapDx * mapDx + mapDy * mapDy > radius * radius) continue;
-            Gui.drawRect(px - 2, py - 2, px + 3, py + 3, point.getColor());
+            drawCircle(px, py, 4.2F, 0xEE11151C);
+            drawCircle(px, py, 3.0F, point.getColor());
+            String icon = waypointIcon(point);
+            int iconWidth = mc.fontRendererObj.getStringWidth(icon);
+            mc.fontRendererObj.drawStringWithShadow(icon, px - iconWidth / 2, py - 4, 0xFF101318);
         }
+    }
+
+    private String waypointIcon(StaffWaypoint point) {
+        if (point.isDeathWaypoint()) return "!";
+        String id = point.getIconId();
+        if ("home".equalsIgnoreCase(id)) return "H";
+        if ("star".equalsIgnoreCase(id)) return "*";
+        if ("death".equalsIgnoreCase(id)) return "!";
+        if ("diamond".equalsIgnoreCase(id)) return "D";
+        if ("chest".equalsIgnoreCase(id)) return "C";
+        if ("event".equalsIgnoreCase(id)) return "E";
+        return "P";
     }
 }
