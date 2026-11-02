@@ -49,26 +49,34 @@ public final class WorldWaypointIcons {
         double radius=0.58D;
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
-        GlStateManager.disableDepth();
-        GL11.glColor4f(red,green,blue,0.20F);
-        GL11.glBegin(GL11.GL_TRIANGLE_FAN);
-        GL11.glVertex3d(centerX,centerY,centerZ);
-        for(int i=0;i<=48;i++) {
-            double angle=Math.PI*2.0D*i/48.0D;
-            GL11.glVertex3d(centerX+Math.cos(angle)*radius,centerY,centerZ+Math.sin(angle)*radius);
-        }
-        GL11.glEnd();
-        GL11.glLineWidth(3.5F);
-        GL11.glColor4f(red,green,blue,0.95F);
-        GL11.glBegin(GL11.GL_LINE_LOOP);
-        for(int i=0;i<48;i++) {
-            double angle=Math.PI*2.0D*i/48.0D;
-            GL11.glVertex3d(centerX+Math.cos(angle)*radius,centerY+0.006D,centerZ+Math.sin(angle)*radius);
-        }
-        GL11.glEnd();
-        GL11.glLineWidth(1.0F);
+        // Keep depth testing enabled so terrain and solid blocks occlude the circle.
+        // Disable depth writes only, preventing this translucent marker from affecting later rendering.
         GlStateManager.enableDepth();
-        GlStateManager.enableTexture2D();
+        GlStateManager.depthMask(false);
+        try {
+            GL11.glColor4f(red,green,blue,0.20F);
+            GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+            GL11.glVertex3d(centerX,centerY,centerZ);
+            for(int i=0;i<=48;i++) {
+                double angle=Math.PI*2.0D*i/48.0D;
+                GL11.glVertex3d(centerX+Math.cos(angle)*radius,centerY,centerZ+Math.sin(angle)*radius);
+            }
+            GL11.glEnd();
+            GL11.glLineWidth(3.5F);
+            GL11.glColor4f(red,green,blue,0.95F);
+            GL11.glBegin(GL11.GL_LINE_LOOP);
+            for(int i=0;i<48;i++) {
+                double angle=Math.PI*2.0D*i/48.0D;
+                GL11.glVertex3d(centerX+Math.cos(angle)*radius,centerY+0.006D,centerZ+Math.sin(angle)*radius);
+            }
+            GL11.glEnd();
+        } finally {
+            GL11.glLineWidth(1.0F);
+            GlStateManager.depthMask(true);
+            GlStateManager.enableDepth();
+            GlStateManager.enableTexture2D();
+            GlStateManager.color(1.0F,1.0F,1.0F,1.0F);
+        }
     }
 
     private static void drawBeam(double x,double y,double z,int height,float red,float green,float blue) {
