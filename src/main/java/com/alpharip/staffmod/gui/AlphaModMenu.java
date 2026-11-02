@@ -212,6 +212,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         StringBuilder fingerprint = new StringBuilder(PermissionService.getEffectiveRank().name());
         fingerprint.append('|').append(PermissionService.getVerifiedOnlineRanks());
         fingerprint.append('|').append(PermissionService.areModEntitlementsVerified());
+        fingerprint.append("|singleplayer=").append(hasActiveSingleplayerWorld());
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             fingerprint.append('|').append(module.getId()).append('=').append(module.isUnlocked());
         }
@@ -225,6 +226,13 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (!current.equals(accessFingerprint)) {
             initGui();
         }
+    }
+
+    private boolean hasActiveSingleplayerWorld() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        return minecraft != null && minecraft.isSingleplayer()
+                && minecraft.thePlayer != null && minecraft.theWorld != null
+                && minecraft.getIntegratedServer() != null;
     }
 
     private boolean hasBhopAccess() {
@@ -262,6 +270,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         List<AlphaModule> result = new ArrayList<AlphaModule>();
         String query = searchField == null ? "" : searchField.getText().trim().toLowerCase(Locale.ROOT);
         for (AlphaModule module : AlphaModuleRegistry.getForCategory(selectedCategory)) {
+            // The Singleplayer folder is only available inside an active integrated-server world.
+            if ("singleplayer".equals(module.getId()) && !hasActiveSingleplayerWorld()) continue;
             // World Edit is managed only from the Singleplayer -> World Edit screen.
             if ("world-edit".equals(module.getId())) continue;
             // Bhop is exclusive to STAFFMODS -> GENERAL, never a rank-category module.
@@ -305,6 +315,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         // Pixel Garden opens only through an explicit click on its module tile.
         if (selectedCategory == AlphaModule.Category.SCOUT) return null;
         AlphaModule module = AlphaModuleRegistry.find(selectedModuleId);
+        if ("singleplayer".equals(selectedModuleId) && !hasActiveSingleplayerWorld()) return null;
         if ("staffmods".equals(selectedModuleId)
                 && (module == null || module.getCategory() != selectedCategory)) {
             // Keep the profile manager visible until the user chooses a module category.
