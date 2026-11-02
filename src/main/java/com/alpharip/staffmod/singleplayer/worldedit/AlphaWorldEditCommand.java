@@ -212,7 +212,17 @@ public final class AlphaWorldEditCommand extends CommandBase {
             reply(sender, "Moved to Y=" + targetY + ".");
             return;
         }
-        if ("jumpto".equals(cmd) || "j".equals(cmd) || "thru".equals(cmd)) {
+        if ("thru".equals(cmd)) {
+            net.minecraft.util.Vec3 destination = findThruDestination(mc.thePlayer, mc.theWorld);
+            if (destination == null) {
+                reply(sender, "No clear space was found beyond a wall within 12 blocks.");
+                return;
+            }
+            mc.thePlayer.setPositionAndUpdate(destination.xCoord, destination.yCoord, destination.zCoord);
+            reply(sender, "Moved through the wall.");
+            return;
+        }
+        if ("jumpto".equals(cmd) || "j".equals(cmd)) {
             if (mc.objectMouseOver == null || mc.objectMouseOver.getBlockPos() == null) {
                 reply(sender, "Look at a block first.");
                 return;
@@ -1292,6 +1302,32 @@ public final class AlphaWorldEditCommand extends CommandBase {
             WorldEditFeatureOperations.raiseLower(world,center,brushRadius,-1);
         }
         event.setCanceled(true);
+    }
+
+    /**
+     * Finds the first collision-free player position after a wall in the look direction.
+     * The scan is deliberately bounded so the command cannot teleport across large distances.
+     */
+    private static net.minecraft.util.Vec3 findThruDestination(EntityPlayer player, net.minecraft.world.World world) {
+        net.minecraft.util.Vec3 look = player.getLook(1.0F);
+        net.minecraft.util.Vec3 eyes = player.getPositionEyes(1.0F);
+        boolean enteredWall = false;
+
+        for (double distance = 0.25D; distance <= 12.0D; distance += 0.25D) {
+            double x = eyes.xCoord + look.xCoord * distance;
+            double y = eyes.yCoord + look.yCoord * distance - player.getEyeHeight();
+            double z = eyes.zCoord + look.zCoord * distance;
+            net.minecraft.util.AxisAlignedBB candidate = player.getEntityBoundingBox().offset(
+                    x - player.posX, y - player.posY, z - player.posZ);
+            boolean clear = world.getCollidingBoundingBoxes(player, candidate).isEmpty();
+
+            if (!clear) {
+                enteredWall = true;
+            } else if (enteredWall) {
+                return new net.minecraft.util.Vec3(x, y, z);
+            }
+        }
+        return null;
     }
 
     private static String joinArguments(String[] args) {
