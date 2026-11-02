@@ -152,13 +152,13 @@ public final class AlphaWorldEditCommand extends CommandBase {
             }
             final String query = joinArguments(java.util.Arrays.copyOfRange(args, index, args.length)).toLowerCase(Locale.ROOT);
             java.util.Set<String> matches = new java.util.TreeSet<String>();
-            if (!itemsOnly) {
+            if (!itemsOnly || blocksOnly) {
                 for (Object key : net.minecraft.block.Block.blockRegistry.getKeys()) {
                     String id = String.valueOf(key);
                     if (id.toLowerCase(Locale.ROOT).contains(query)) matches.add(id);
                 }
             }
-            if (!blocksOnly) {
+            if (!blocksOnly || itemsOnly) {
                 for (Object key : net.minecraft.item.Item.itemRegistry.getKeys()) {
                     String id = String.valueOf(key);
                     if (id.toLowerCase(Locale.ROOT).contains(query)) matches.add(id);
