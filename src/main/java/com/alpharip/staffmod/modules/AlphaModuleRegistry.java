@@ -87,6 +87,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(nameViewer);
 
+        AlphaModule minimap = new AlphaModule(
+                "minimap",
+                "Minimap",
+                "Terrain, entity and waypoint map with configurable position and appearance.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(minimap);
+
         AlphaModule fps = new AlphaModule(
                 "fps",
                 "FPS",
