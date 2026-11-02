@@ -46,6 +46,7 @@ import com.alpharip.staffmod.waypoints.WaypointManager;
 import com.alpharip.staffmod.waypoints.WaypointTracker;
 import com.alpharip.staffmod.Minimap.AlphaMinimap;
 import com.alpharip.staffmod.Minimap.MinimapSettingsGui;
+import com.alpharip.staffmod.Minimap.FullscreenMinimapGui;
 import com.alpharip.staffmod.Minimap.MinimapCommand;
 import com.alpharip.staffmod.waypoints.WorldWaypointIcons;
 import com.alpharip.staffmod.inventorysearch.InventorySearchMod;
@@ -91,6 +92,7 @@ public final class AlphaClient {
     private KeyBinding toggleBhopKey;
     private KeyBinding toggleMinimapKey;
     private KeyBinding openMinimapSettingsKey;
+    private KeyBinding openFullscreenMinimapKey;
     private int partnerAutoConnectTicks = -1;
     private int presenceHeartbeatTicks = 0;
     private long lastStaffInputAt = System.currentTimeMillis();
@@ -169,8 +171,10 @@ public final class AlphaClient {
         ClientRegistry.registerKeyBinding(openModMenuKey);
         toggleMinimapKey = new KeyBinding("AlphaClient: Toggle Minimap", Keyboard.KEY_NONE, "AlphaClient");
         openMinimapSettingsKey = new KeyBinding("AlphaClient: Open Minimap Settings", Keyboard.KEY_NONE, "AlphaClient");
+        openFullscreenMinimapKey = new KeyBinding("AlphaClient: Open Fullscreen Minimap", Keyboard.KEY_NONE, "AlphaClient");
         ClientRegistry.registerKeyBinding(toggleMinimapKey);
         ClientRegistry.registerKeyBinding(openMinimapSettingsKey);
+        ClientRegistry.registerKeyBinding(openFullscreenMinimapKey);
         syncBhopKeyBindingVisibility();
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
     }
@@ -315,6 +319,13 @@ public final class AlphaClient {
         if (openMinimapSettingsKey != null && openMinimapSettingsKey.isPressed()
                 && minecraft.currentScreen == null) {
             minecraft.displayGuiScreen(new MinimapSettingsGui(null));
+        }
+        if (openFullscreenMinimapKey != null && openFullscreenMinimapKey.isPressed()
+                && minecraft.currentScreen == null) {
+            AlphaModule minimap = AlphaModuleRegistry.find("minimap");
+            if (minimap != null && minimap.isImplemented() && minimap.isEnabled()) {
+                minecraft.displayGuiScreen(new FullscreenMinimapGui(null));
+            }
         }
     }
 
