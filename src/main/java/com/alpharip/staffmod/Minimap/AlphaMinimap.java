@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import org.lwjgl.opengl.GL11;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
@@ -185,7 +186,7 @@ public final class AlphaMinimap {
         for (Object object : mc.theWorld.loadedEntityList) {
             if (!(object instanceof Entity) || object == mc.thePlayer) continue;
             Entity entity = (Entity) object;
-            if (!(entity instanceof EntityPlayer) && entity.isDead) continue;
+            if (!(entity instanceof EntityLivingBase) || entity.isDead) continue;
             double dx = entity.posX - mc.thePlayer.posX;
             double dz = entity.posZ - mc.thePlayer.posZ;
             double distance = Math.sqrt(dx * dx + dz * dz);
