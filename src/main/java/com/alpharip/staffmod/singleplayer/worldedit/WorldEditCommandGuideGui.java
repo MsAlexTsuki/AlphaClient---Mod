@@ -106,7 +106,7 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addSection("GENERAL");
         addCommand("//acwe limit <blocks>", "Set the maximum permitted region volume.");
         addCommand("//acwe gmask <block|off>", "Set or clear the global block mask used by set.");
-        addCommand("//acwe searchitem [-b] [-i] [-p page] <query...>", "Search block and item identifiers with optional type filters and 12 results per page.");
+        addCommand("//acwe searchitem [-bi] [-p page] <query...>", "Search block and item identifiers with optional type filters and 12 results per page.");
         addCommand("//acwe search <query...>", "Alias for searchitem.");
         addCommand("//acwe l <query...>", "Alias for searchitem.");
         addCommand("//acwe calc <a><operator><b>", "Calculate a basic integer expression.");
