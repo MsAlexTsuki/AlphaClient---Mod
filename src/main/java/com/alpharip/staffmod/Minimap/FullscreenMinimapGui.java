@@ -58,8 +58,12 @@ public final class FullscreenMinimapGui extends AlphaGuiScreen {
         int range = MinimapSettings.fullscreenRange();
         int deltaX = mouseX - lastMouseX;
         int deltaY = mouseY - lastMouseY;
-        panRemainderX -= deltaX * range / radius;
-        panRemainderZ -= deltaY * range / radius;
+        double screenWorldX = -deltaX * range / radius;
+        double screenWorldZ = -deltaY * range / radius;
+        double angle = Math.toRadians(180.0D - mc.thePlayer.rotationYaw);
+        double cos = Math.cos(angle), sin = Math.sin(angle);
+        panRemainderX += screenWorldX * cos + screenWorldZ * sin;
+        panRemainderZ += -screenWorldX * sin + screenWorldZ * cos;
         int wholeX = (int) panRemainderX;
         int wholeZ = (int) panRemainderZ;
         if (wholeX != 0 || wholeZ != 0) {
