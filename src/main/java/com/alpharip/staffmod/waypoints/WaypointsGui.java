@@ -131,8 +131,8 @@ public final class WaypointsGui extends AlphaGuiScreen {
     }
 
     @Override public void drawScreen(int mouseX,int mouseY,float partialTicks) {
-        drawRect(0,0,width,height,0x99000000);
-        drawRect(left,top,left+panelWidth,top+panelHeight,0xF00B0D12);
+        drawRect(0,0,width,height,0x18000000);
+        drawRect(left,top,left+panelWidth,top+panelHeight,0xD90A0C11);
         drawRect(left,top,left+panelWidth,top+2,GOLD);
         drawRect(left+1,top+1,left+2,top+panelHeight-1,0x664B515D);
         drawString(fontRendererObj,"ALPHA  /  WAYPOINTS",left+14,top+12,0xFFF0F1F4);
