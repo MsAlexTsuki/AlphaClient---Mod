@@ -1142,10 +1142,14 @@ public final class AlphaWorldEditCommand extends CommandBase {
         boolean secondPosition = event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK;
         if (!firstPosition && !secondPosition) return;
 
-        // Cancel the client-side right-click and the authoritative server interaction.
-        // In Forge 1.8.9, LEFT_CLICK_BLOCK is handled authoritatively by the integrated server.
+        // Let the client send RIGHT_CLICK_BLOCK to the integrated server.
+        // The server then cancels the normal interaction and records pos2.
+        if (event.world.isRemote) {
+            if (secondPosition) return;
+            event.setCanceled(true);
+            return;
+        }
         event.setCanceled(true);
-        if (event.world.isRemote) return;
 
         if (firstPosition) {
             SELECTION.setPos1(event.pos);
