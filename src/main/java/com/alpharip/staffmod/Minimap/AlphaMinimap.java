@@ -163,7 +163,8 @@ public final class AlphaMinimap {
 
     private void drawRotatingCompass(int left, int top, int size, int cx, int cy, int rotation) {
         Minecraft mc = Minecraft.getMinecraft();
-        int radius = size / 2 - 9;
+        // Place compass labels against the map perimeter instead of over the terrain.
+        int radius = size / 2 - mc.fontRendererObj.FONT_HEIGHT / 2 - 1;
         String[] labels = {"N", "E", "S", "W"};
         double[] xs = {0.0D, 1.0D, 0.0D, -1.0D};
         double[] ys = {-1.0D, 0.0D, 1.0D, 0.0D};
@@ -412,9 +413,14 @@ public final class AlphaMinimap {
         if (surfaceY <= 0) return 0xFF26303A;
 
         int sampleY = Math.min(255, surfaceY - 1);
-        // When the player is underground, map the local cave floor instead of
-        // continuing to show the distant surface above the cave.
-        if (playerY < surfaceY - 4) {
+        // Only switch to cave-level sampling when the player is actually below
+        // ground. Being lower than a neighboring hill must not reveal its interior.
+        BlockPos playerEyeColumn = new BlockPos(
+                MathHelper.floor_double(mc.thePlayer.posX), playerY + 1,
+                MathHelper.floor_double(mc.thePlayer.posZ));
+        boolean playerIsUnderground = !mc.theWorld.canSeeSky(playerEyeColumn);
+        if (playerIsUnderground && playerY < surfaceY - 4
+                && !mc.theWorld.canSeeSky(new BlockPos(x, playerY + 1, z))) {
             int minimumY = Math.max(1, playerY - 8);
             for (int scanY = Math.min(255, playerY); scanY >= minimumY; scanY--) {
                 BlockPos candidatePos = new BlockPos(x, scanY, z);
