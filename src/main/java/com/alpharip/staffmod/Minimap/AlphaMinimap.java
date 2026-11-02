@@ -36,6 +36,7 @@ public final class AlphaMinimap {
     private int cachedDimension = Integer.MIN_VALUE;
     private int cachedRange = -1;
     private boolean cachedRound;
+    private int cachedRotation = Integer.MIN_VALUE;
 
     private AlphaMinimap() { }
     public static AlphaMinimap getInstance() { return INSTANCE; }
@@ -66,12 +67,16 @@ public final class AlphaMinimap {
         GlStateManager.pushMatrix();
         try {
             drawFrame(left, top, size, centerX, centerY);
-            drawTerrain(mc, left, top, size, centerX, centerY);
-            drawEntities(mc, centerX, centerY, size);
-            drawWaypoints(mc, centerX, centerY, size);
+            int rotation = mapRotation(mc.thePlayer.rotationYaw);
+            drawTerrain(mc, left, top, size, centerX, centerY, mc.thePlayer.posX, mc.thePlayer.posZ,
+                    MinimapSettings.range(), rotation);
+            drawEntities(mc, centerX, centerY, size, mc.thePlayer.posX, mc.thePlayer.posZ,
+                    MinimapSettings.range(), rotation);
+            drawWaypoints(mc, centerX, centerY, size, mc.thePlayer.posX, mc.thePlayer.posZ,
+                    MinimapSettings.range(), rotation);
             drawBorder(left, top, size);
-            drawCompass(left, top, size, centerX, centerY);
-            drawPlayerArrow(centerX, centerY, mc.thePlayer.rotationYaw, 6);
+            drawRotatingCompass(left, top, size, centerX, centerY, rotation);
+            drawPlayerArrow(centerX, centerY, 180.0F, 6);
             drawCoordinatePanel(mc, left, top, size);
         } finally {
             GlStateManager.popMatrix();
@@ -96,15 +101,16 @@ public final class AlphaMinimap {
         GlStateManager.pushMatrix();
         try {
             drawFrame(left, top, size, centerX, centerY);
-            drawTerrain(mc, left, top, size, centerX, centerY, mapCenterX, mapCenterZ, range);
-            drawEntities(mc, centerX, centerY, size, mapCenterX, mapCenterZ, range);
-            drawWaypoints(mc, centerX, centerY, size, mapCenterX, mapCenterZ, range);
+            int rotation = mapRotation(mc.thePlayer.rotationYaw);
+            drawTerrain(mc, left, top, size, centerX, centerY, mapCenterX, mapCenterZ, range, rotation);
+            drawEntities(mc, centerX, centerY, size, mapCenterX, mapCenterZ, range, rotation);
+            drawWaypoints(mc, centerX, centerY, size, mapCenterX, mapCenterZ, range, rotation);
             drawBorder(left, top, size);
             int playerRadius = size / 2 - 5;
-            int playerX = centerX + (int)Math.round((mc.thePlayer.posX - mapCenterX) / range * playerRadius);
-            int playerY = centerY + (int)Math.round((mc.thePlayer.posZ - mapCenterZ) / range * playerRadius);
-            drawCompass(left, top, size, centerX, centerY);
-            drawPlayerArrow(playerX, playerY, mc.thePlayer.rotationYaw, 7);
+            int[] playerPosition = mapPosition(mc.thePlayer.posX - mapCenterX, mc.thePlayer.posZ - mapCenterZ,
+                    centerX, centerY, playerRadius, range, rotation);
+            drawRotatingCompass(left, top, size, centerX, centerY, rotation);
+            drawPlayerArrow(playerPosition[0], playerPosition[1], 180.0F, 7);
             String coords = "Center " + mapCenterX + " " + MathHelper.floor_double(mc.thePlayer.posY) + " " + mapCenterZ
                     + "  |  Zoom " + range + " blocks";
             drawInfoPanel(left, top + size + 3, size, coords, nearestWaypointText(mc));
@@ -151,6 +157,38 @@ public final class AlphaMinimap {
         drawCompassLabel("E", left + size - 8, cy - mc.fontRendererObj.FONT_HEIGHT / 2, muted);
         drawCompassLabel("S", cx - mc.fontRendererObj.getStringWidth("S") / 2, top + size - 10, muted);
         drawCompassLabel("W", left + 3, cy - mc.fontRendererObj.FONT_HEIGHT / 2, muted);
+    }
+
+    private void drawRotatingCompass(int left, int top, int size, int cx, int cy, int rotation) {
+        Minecraft mc = Minecraft.getMinecraft();
+        int radius = size / 2 - 9;
+        String[] labels = {"N", "E", "S", "W"};
+        double[] xs = {0.0D, 1.0D, 0.0D, -1.0D};
+        double[] ys = {-1.0D, 0.0D, 1.0D, 0.0D};
+        double angle = Math.toRadians(rotation);
+        double cos = Math.cos(angle), sin = Math.sin(angle);
+        for (int i = 0; i < labels.length; i++) {
+            double rx = xs[i] * cos - ys[i] * sin;
+            double ry = xs[i] * sin + ys[i] * cos;
+            int x = cx + (int)Math.round(rx * radius) - mc.fontRendererObj.getStringWidth(labels[i]) / 2;
+            int y = cy + (int)Math.round(ry * radius) - mc.fontRendererObj.FONT_HEIGHT / 2;
+            drawCompassLabel(labels[i], x, y, i == 0 ? 0xFFE8EAF0 : 0xFF9CA3AF);
+        }
+    }
+
+    private int mapRotation(float yaw) {
+        int rotation = Math.round((180.0F - yaw) / 2.0F) * 2;
+        rotation %= 360;
+        return rotation < 0 ? rotation + 360 : rotation;
+    }
+
+    private int[] mapPosition(double worldDx, double worldDz, int cx, int cy, int radius, int range, int rotation) {
+        double angle = Math.toRadians(rotation);
+        double cos = Math.cos(angle), sin = Math.sin(angle);
+        double screenX = worldDx * cos - worldDz * sin;
+        double screenY = worldDx * sin + worldDz * cos;
+        return new int[] { cx + (int)Math.round(screenX / range * radius),
+                cy + (int)Math.round(screenY / range * radius) };
     }
 
     private void drawCompassLabel(String label, int x, int y, int color) {
@@ -293,32 +331,39 @@ public final class AlphaMinimap {
     }
 
     private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy) {
-        drawTerrain(mc, left, top, size, cx, cy, mc.thePlayer.posX, mc.thePlayer.posZ, MinimapSettings.range());
+        drawTerrain(mc, left, top, size, cx, cy, mc.thePlayer.posX, mc.thePlayer.posZ,
+                MinimapSettings.range(), mapRotation(mc.thePlayer.rotationYaw));
     }
 
-    private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy, double playerX, double playerZ, int range) {
+    private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy,
+            double playerX, double playerZ, int range, int rotation) {
         int radius = size / 2 - 3;
         boolean round = MinimapSettings.round();
         // Refresh at 10 Hz instead of on every render frame. Sampling follows
         // the player's precise position, while this throttle avoids expensive
         // chunk lookups every frame.
         if (++refreshTicks >= 2 || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size
-                || cachedRange != range || cachedRound != round) {
+                || cachedRange != range || cachedRound != round || cachedRotation != rotation) {
             refreshTicks = 0;
             cachedCenterX = playerX; cachedCenterZ = playerZ;
             cachedDimension = mc.thePlayer.dimension;
             cachedRange = range;
             cachedRound = round;
+            cachedRotation = rotation;
             cachedColors = new int[size][size];
             for (int py = 0; py < size; py++) {
                 for (int px = 0; px < size; px++) {
                     int dx = px - size / 2;
                     int dz = py - size / 2;
                     if (MinimapSettings.round() && dx * dx + dz * dz > radius * radius) continue;
-                    double rx = (dx * range / (double) radius);
-                    double rz = (dz * range / (double) radius);
-                    int worldX = MathHelper.floor_double(playerX + rx);
-                    int worldZ = MathHelper.floor_double(playerZ + rz);
+                    double screenX = dx * range / (double) radius;
+                    double screenZ = dz * range / (double) radius;
+                    double angle = Math.toRadians(rotation);
+                    double cos = Math.cos(angle), sin = Math.sin(angle);
+                    double worldDx = screenX * cos + screenZ * sin;
+                    double worldDz = -screenX * sin + screenZ * cos;
+                    int worldX = MathHelper.floor_double(playerX + worldDx);
+                    int worldZ = MathHelper.floor_double(playerZ + worldDz);
                     cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ, MathHelper.floor_double(mc.thePlayer.posY));
                 }
             }
@@ -393,10 +438,12 @@ public final class AlphaMinimap {
     }
 
     private void drawEntities(Minecraft mc, int cx, int cy, int size) {
-        drawEntities(mc, cx, cy, size, mc.thePlayer.posX, mc.thePlayer.posZ, MinimapSettings.range());
+        drawEntities(mc, cx, cy, size, mc.thePlayer.posX, mc.thePlayer.posZ,
+                MinimapSettings.range(), mapRotation(mc.thePlayer.rotationYaw));
     }
 
-    private void drawEntities(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ, int range) {
+    private void drawEntities(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ,
+            int range, int rotation) {
         int radius = size / 2 - 5;
         for (Object object : mc.theWorld.loadedEntityList) {
             if (!(object instanceof Entity) || object == mc.thePlayer) continue;
@@ -406,8 +453,9 @@ public final class AlphaMinimap {
             double dz = entity.posZ - mapCenterZ;
             double distance = Math.sqrt(dx * dx + dz * dz);
             if (distance > range) continue;
-            int px = cx + (int) Math.round(dx / range * radius);
-            int py = cy + (int) Math.round(dz / range * radius);
+            int[] position = mapPosition(dx, dz, cx, cy, radius, range, rotation);
+            int px = position[0];
+            int py = position[1];
             int mapDx = px - cx, mapDy = py - cy;
             if (MinimapSettings.round() && mapDx * mapDx + mapDy * mapDy > radius * radius) continue;
             if (entity instanceof EntityPlayer) {
@@ -421,18 +469,21 @@ public final class AlphaMinimap {
     }
 
     private void drawWaypoints(Minecraft mc, int cx, int cy, int size) {
-        drawWaypoints(mc, cx, cy, size, mc.thePlayer.posX, mc.thePlayer.posZ, MinimapSettings.range());
+        drawWaypoints(mc, cx, cy, size, mc.thePlayer.posX, mc.thePlayer.posZ,
+                MinimapSettings.range(), mapRotation(mc.thePlayer.rotationYaw));
     }
 
-    private void drawWaypoints(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ, int range) {
+    private void drawWaypoints(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ,
+            int range, int rotation) {
         int radius = size / 2 - 7;
         List<StaffWaypoint> points = WaypointManager.getInstance().getForCurrentWorld();
         for (StaffWaypoint point : points) {
             double dx = point.getX() - mapCenterX;
             double dz = point.getZ() - mapCenterZ;
             if (Math.sqrt(dx * dx + dz * dz) > range) continue;
-            int px = cx + (int) Math.round(dx / range * radius);
-            int py = cy + (int) Math.round(dz / range * radius);
+            int[] position = mapPosition(dx, dz, cx, cy, radius, range, rotation);
+            int px = position[0];
+            int py = position[1];
             int mapDx = px - cx, mapDy = py - cy;
             if (MinimapSettings.round() && mapDx * mapDx + mapDy * mapDy > radius * radius) continue;
             int markerColor = brightenWaypointColor(WorldWaypointIcons.getDisplayColor(point));
