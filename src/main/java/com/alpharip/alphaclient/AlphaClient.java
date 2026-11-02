@@ -45,6 +45,9 @@ import com.alpharip.staffmod.waypoints.WaypointCommand;
 import com.alpharip.staffmod.waypoints.WaypointFromClickableCoordinates;
 import com.alpharip.staffmod.waypoints.WaypointManager;
 import com.alpharip.staffmod.waypoints.WaypointTracker;
+import com.alpharip.staffmod.Minimap.AlphaMinimap;
+import com.alpharip.staffmod.Minimap.MinimapSettingsGui;
+import com.alpharip.staffmod.Minimap.MinimapCommand;
 import com.alpharip.staffmod.waypoints.WorldWaypointIcons;
 import com.alpharip.staffmod.inventorysearch.InventorySearchMod;
 import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
@@ -87,6 +90,8 @@ public final class AlphaClient {
 
     private KeyBinding openModMenuKey;
     private KeyBinding toggleBhopKey;
+    private KeyBinding toggleMinimapKey;
+    private KeyBinding openMinimapSettingsKey;
     private int partnerAutoConnectTicks = -1;
     private int presenceHeartbeatTicks = 0;
     private long lastStaffInputAt = System.currentTimeMillis();
@@ -111,6 +116,7 @@ public final class AlphaClient {
         registerClientCommands();
         WaypointManager.getInstance().load();
         ClientCommandHandler.instance.registerCommand(new WaypointCommand());
+        ClientCommandHandler.instance.registerCommand(new MinimapCommand());
         AlphaWorldEditCommand worldEditCommand = new AlphaWorldEditCommand();
         ClientCommandHandler.instance.registerCommand(worldEditCommand);
         MinecraftForge.EVENT_BUS.register(worldEditCommand);
@@ -121,7 +127,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(WaypointTracker.getInstance());
         MinecraftForge.EVENT_BUS.register(WaypointFromClickableCoordinates.getInstance());
         MinecraftForge.EVENT_BUS.register(EventCountdownHub.getInstance());
-        MinecraftForge.EVENT_BUS.register(MinimapWithWaypoints.getInstance());
+        // AlphaMinimap now owns terrain, entity and waypoint rendering.
+        MinecraftForge.EVENT_BUS.register(AlphaMinimap.getInstance());
         MinecraftForge.EVENT_BUS.register(WorldWaypointIcons.getInstance());
         MinecraftForge.EVENT_BUS.register(new RankViewerRenderer());
         MinecraftForge.EVENT_BUS.register(new FpsMod());
@@ -161,6 +168,10 @@ public final class AlphaClient {
 
         openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu", Keyboard.KEY_RCONTROL, "AlphaClient");
         ClientRegistry.registerKeyBinding(openModMenuKey);
+        toggleMinimapKey = new KeyBinding("AlphaClient: Toggle Minimap", Keyboard.KEY_NONE, "AlphaClient");
+        openMinimapSettingsKey = new KeyBinding("AlphaClient: Open Minimap Settings", Keyboard.KEY_NONE, "AlphaClient");
+        ClientRegistry.registerKeyBinding(toggleMinimapKey);
+        ClientRegistry.registerKeyBinding(openMinimapSettingsKey);
         syncBhopKeyBindingVisibility();
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
     }
@@ -297,6 +308,14 @@ public final class AlphaClient {
             }
             staffmods.setEnabled(!staffmods.isEnabled());
             syncBhopModuleState();
+        }
+        if (toggleMinimapKey != null && toggleMinimapKey.isPressed()) {
+            AlphaModule minimap = AlphaModuleRegistry.find("minimap");
+            if (minimap != null && minimap.isImplemented()) minimap.setEnabled(!minimap.isConfiguredEnabled());
+        }
+        if (openMinimapSettingsKey != null && openMinimapSettingsKey.isPressed()
+                && minecraft.currentScreen == null) {
+            minecraft.displayGuiScreen(new MinimapSettingsGui(null));
         }
     }
 
