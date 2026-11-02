@@ -19,20 +19,20 @@ public final class MinimapSettingsGui extends AlphaGuiScreen {
         buttonList.clear();
         int center = width / 2;
         int y = height / 2 - 82;
-        buttonList.add(new AlphaButton(SHAPE, center - 100, y, 200, 20, "Shape: " + (MinimapSettings.round() ? "Round" : "Square")));
+        buttonList.add(new AlphaButton(SHAPE, center - 100, y, 200, 20, "Map shape: " + (MinimapSettings.round() ? "Round" : "Square")));
         y += 24;
         buttonList.add(new GuiButton(CORNER, center - 100, y, 200, 20, "Position: " + title(MinimapSettings.corner())));
         y += 24;
-        buttonList.add(new GuiButton(SIZE_DOWN, center - 100, y, 96, 20, "Size -"));
-        buttonList.add(new GuiButton(SIZE_UP, center + 4, y, 96, 20, "Size +"));
+        buttonList.add(new GuiButton(SIZE_DOWN, center - 100, y, 96, 20, "Size: " + MinimapSettings.size() + "  -"));
+        buttonList.add(new GuiButton(SIZE_UP, center + 4, y, 96, 20, "Size: " + MinimapSettings.size() + "  +"));
         y += 24;
-        buttonList.add(new GuiButton(OFFSET_DOWN, center - 100, y, 96, 20, "Offset -"));
-        buttonList.add(new GuiButton(OFFSET_UP, center + 4, y, 96, 20, "Offset +"));
+        buttonList.add(new GuiButton(OFFSET_DOWN, center - 100, y, 96, 20, "Offset: " + MinimapSettings.offset() + "  -"));
+        buttonList.add(new GuiButton(OFFSET_UP, center + 4, y, 96, 20, "Offset: " + MinimapSettings.offset() + "  +"));
         y += 24;
-        buttonList.add(new GuiButton(RANGE_DOWN, center - 100, y, 96, 20, "Range -"));
-        buttonList.add(new GuiButton(RANGE_UP, center + 4, y, 96, 20, "Range +"));
+        buttonList.add(new GuiButton(RANGE_DOWN, center - 100, y, 96, 20, "Range: " + MinimapSettings.range() + "  -"));
+        buttonList.add(new GuiButton(RANGE_UP, center + 4, y, 96, 20, "Range: " + MinimapSettings.range() + "  +"));
         y += 24;
-        buttonList.add(new GuiButton(COLOR, center - 100, y, 200, 20, "Coordinate text color: cycle"));
+        buttonList.add(new GuiButton(COLOR, center - 100, y, 200, 20, "Coordinate color: " + colorName(MinimapSettings.coordinateColor())));
         y += 24;
         buttonList.add(new GuiButton(BACK, center - 100, y, 200, 20, "Done"));
     }
@@ -42,6 +42,15 @@ public final class MinimapSettingsGui extends AlphaGuiScreen {
         if (MinimapSettings.BOTTOM_LEFT.equals(value)) return "Bottom Left";
         if (MinimapSettings.BOTTOM_RIGHT.equals(value)) return "Bottom Right";
         return "Top Right";
+    }
+
+    private String colorName(int color) {
+        if (color == 0xFFD866) return "Alpha Gold";
+        if (color == 0xFFFFFF) return "White";
+        if (color == 0x55FFFF) return "Aqua";
+        if (color == 0x55FF55) return "Green";
+        if (color == 0xFF5555) return "Red";
+        return "Custom";
     }
 
     @Override
@@ -81,6 +90,8 @@ public final class MinimapSettingsGui extends AlphaGuiScreen {
         drawRect(left, top, left + 232, top + 1, 0xFFFFD866);
         drawRect(left, top + 231, left + 232, top + 232, 0x66555A63);
         drawCenteredString(fontRendererObj, "ALPHA MINIMAP SETTINGS", width / 2, top + 8, 0xFFFFD866);
+        drawCenteredString(fontRendererObj, "Customize the HUD without changing waypoint data.", width / 2, top + 22, 0xFF9CA3AF);
+        drawCenteredString(fontRendererObj, "Range controls how many blocks are visible from the center.", width / 2, top + 207, 0xFF9CA3AF);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 }
