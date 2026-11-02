@@ -153,7 +153,7 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe mat <block>", "Set the material used by compatible brushes.");
         addCommand("//acwe material <block>", "Alias for mat.");
         addCommand("//acwe range <1-16>", "Set the active brush radius.");
-        addCommand("//acwe toggleplace", "Toggle brush placement between the targeted block and the adjacent block.");
+        addCommand("//acwe toggleplace", "Switch placement-based commands between your player position and selection position 1.");
 
         addSection("SNAPSHOTS");
         addCommand("//acwe snapshot before <name>", "Save the selected region as a separate named before snapshot.");
