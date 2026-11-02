@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.Minimap;
 
 import com.alpharip.staffmod.gui.AlphaGuiScreen;
+import com.alpharip.staffmod.gui.AlphaButton;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
@@ -18,7 +19,7 @@ public final class MinimapSettingsGui extends AlphaGuiScreen {
         buttonList.clear();
         int center = width / 2;
         int y = height / 2 - 82;
-        buttonList.add(new GuiButton(SHAPE, center - 100, y, 200, 20, "Shape: " + (MinimapSettings.round() ? "Round" : "Square")));
+        buttonList.add(new AlphaButton(SHAPE, center - 100, y, 200, 20, "Shape: " + (MinimapSettings.round() ? "Round" : "Square")));
         y += 24;
         buttonList.add(new GuiButton(CORNER, center - 100, y, 200, 20, "Position: " + title(MinimapSettings.corner())));
         y += 24;
@@ -73,8 +74,13 @@ public final class MinimapSettingsGui extends AlphaGuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawDefaultBackground();
-        drawCenteredString(fontRendererObj, "ALPHA MINIMAP SETTINGS", width / 2, height / 2 - 108, 0xFFFFD866);
+        drawRect(0, 0, width, height, 0x88000000);
+        int left = width / 2 - 116;
+        int top = height / 2 - 112;
+        drawRect(left, top, left + 232, top + 232, 0xE00A0C11);
+        drawRect(left, top, left + 232, top + 1, 0xFFFFD866);
+        drawRect(left, top + 231, left + 232, top + 232, 0x66555A63);
+        drawCenteredString(fontRendererObj, "ALPHA MINIMAP SETTINGS", width / 2, top + 8, 0xFFFFD866);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 }
