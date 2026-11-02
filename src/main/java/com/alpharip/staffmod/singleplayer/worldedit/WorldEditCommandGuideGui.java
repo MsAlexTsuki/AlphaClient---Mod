@@ -72,7 +72,7 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe hpos1 / hpos2", "Set a selection corner to the block you are looking at.");
         addCommand("//acwe chunk", "Select the chunk containing your player position.");
         addCommand("//acwe size", "Show the selected region dimensions and volume.");
-        addCommand("//acwe count <block>", "Count matching blocks in the selected region.");
+        addCommand("//acwe count <block[:metadata]>", "Count a block type in the selected region; add metadata to count only that exact block state.");
         addCommand("//acwe distr [page]", "Show block types in the selected region, sorted by frequency, with 10 entries per page.");
         addCommand("//acwe expand <amount> [direction]", "Expand the selection in a direction.");
         addCommand("//acwe contract <amount> [direction]", "Contract the selection in a direction.");
