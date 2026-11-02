@@ -31,8 +31,8 @@ public final class AlphaMinimap {
     private static final AlphaMinimap INSTANCE = new AlphaMinimap();
     private int refreshTicks;
     private int[][] cachedColors = new int[0][0];
-    private int cachedCenterX = Integer.MIN_VALUE;
-    private int cachedCenterZ = Integer.MIN_VALUE;
+    private double cachedCenterX = Double.NaN;
+    private double cachedCenterZ = Double.NaN;
     private int cachedDimension = Integer.MIN_VALUE;
     private int cachedRange = -1;
     private boolean cachedRound;
@@ -90,8 +90,8 @@ public final class AlphaMinimap {
         int top = (screenHeight - size) / 2 + 8;
         int centerX = left + size / 2;
         int centerY = top + size / 2;
-        int mapCenterX = MathHelper.floor_double(mc.thePlayer.posX) + MinimapSettings.panX();
-        int mapCenterZ = MathHelper.floor_double(mc.thePlayer.posZ) + MinimapSettings.panZ();
+        double mapCenterX = mc.thePlayer.posX + MinimapSettings.panX();
+        double mapCenterZ = mc.thePlayer.posZ + MinimapSettings.panZ();
         int range = MinimapSettings.fullscreenRange();
         GlStateManager.pushMatrix();
         try {
@@ -293,13 +293,13 @@ public final class AlphaMinimap {
     }
 
     private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy) {
-        drawTerrain(mc, left, top, size, cx, cy, MathHelper.floor_double(mc.thePlayer.posX), MathHelper.floor_double(mc.thePlayer.posZ), MinimapSettings.range());
+        drawTerrain(mc, left, top, size, cx, cy, mc.thePlayer.posX, mc.thePlayer.posZ, MinimapSettings.range());
     }
 
-    private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy, int playerX, int playerZ, int range) {
+    private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy, double playerX, double playerZ, int range) {
         int radius = size / 2 - 3;
         boolean round = MinimapSettings.round();
-        if (++refreshTicks >= 10 || cachedCenterX != playerX || cachedCenterZ != playerZ
+        if (++refreshTicks >= 2 || Double.compare(cachedCenterX, playerX) != 0 || Double.compare(cachedCenterZ, playerZ) != 0
                 || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size
                 || cachedRange != range || cachedRound != round) {
             refreshTicks = 0;
@@ -315,8 +315,8 @@ public final class AlphaMinimap {
                     if (MinimapSettings.round() && dx * dx + dz * dz > radius * radius) continue;
                     double rx = (dx * range / (double) radius);
                     double rz = (dz * range / (double) radius);
-                    int worldX = playerX + (int) Math.round(rx);
-                    int worldZ = playerZ + (int) Math.round(rz);
+                    int worldX = MathHelper.floor_double(playerX + rx);
+                    int worldZ = MathHelper.floor_double(playerZ + rz);
                     cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ, MathHelper.floor_double(mc.thePlayer.posY));
                 }
             }
@@ -391,7 +391,7 @@ public final class AlphaMinimap {
     }
 
     private void drawEntities(Minecraft mc, int cx, int cy, int size) {
-        drawEntities(mc, cx, cy, size, MathHelper.floor_double(mc.thePlayer.posX), MathHelper.floor_double(mc.thePlayer.posZ), MinimapSettings.range());
+        drawEntities(mc, cx, cy, size, mc.thePlayer.posX, mc.thePlayer.posZ, MinimapSettings.range());
     }
 
     private void drawEntities(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ, int range) {
@@ -419,7 +419,7 @@ public final class AlphaMinimap {
     }
 
     private void drawWaypoints(Minecraft mc, int cx, int cy, int size) {
-        drawWaypoints(mc, cx, cy, size, MathHelper.floor_double(mc.thePlayer.posX), MathHelper.floor_double(mc.thePlayer.posZ), MinimapSettings.range());
+        drawWaypoints(mc, cx, cy, size, mc.thePlayer.posX, mc.thePlayer.posZ, MinimapSettings.range());
     }
 
     private void drawWaypoints(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ, int range) {
