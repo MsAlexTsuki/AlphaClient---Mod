@@ -26,6 +26,19 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe help", "Open this command guide.");
         addCommand("//acwe logs", "Open the local seven-day audit log of Alpha World Edit changes.");
 
+        addSection("NAVIGATION");
+        addCommand("//acwe unstuck", "If embedded in blocks, move upward to the nearest clear position.");
+        addCommand("//acwe !", "Alias for unstuck.");
+        addCommand("//acwe ascend [levels]", "Move to one or more safe floors above your current position.");
+        addCommand("//acwe asc [levels]", "Alias for ascend.");
+        addCommand("//acwe descend [levels]", "Move to one or more safe floors below your current position.");
+        addCommand("//acwe desc [levels]", "Alias for descend.");
+        addCommand("//acwe thru", "Move through a wall in the direction you are looking, when a clear destination is found.");
+        addCommand("//acwe jumpto", "Teleport above the block you are looking at.");
+        addCommand("//acwe j", "Alias for jumpto.");
+        addCommand("//acwe up [distance]", "Move vertically upward and place a glass support block if needed.");
+        addCommand("//acwe ceil [clearance]", "Move above the highest block at your position with a glass support block if needed.");
+
         addSection("SELECTION");
         addCommand("//acwe wand", "Receive the dedicated World Edit Wand. Left-click a block for position 1; right-click for position 2.");
         addCommand("//acwe toggleeditwand", "Enable or disable selection clicks from the dedicated World Edit Wand.");
