@@ -93,8 +93,10 @@ public final class MinimapSettings {
     public static int panX() { return getInt("fullscreenPanX", 0, -100000, 100000); }
     public static int panZ() { return getInt("fullscreenPanZ", 0, -100000, 100000); }
     public static void setFullscreenRange(int value) { setInt("fullscreenRange", Math.max(16, Math.min(512, value))); }
-    public static void setPan(int x, int z) {
-        setInt("fullscreenPanX", Math.max(-100000, Math.min(100000, x)));
-        setInt("fullscreenPanZ", Math.max(-100000, Math.min(100000, z)));
+    public static synchronized void setPan(int x, int z) {
+        load();
+        VALUES.setProperty("fullscreenPanX", String.valueOf(Math.max(-100000, Math.min(100000, x))));
+        VALUES.setProperty("fullscreenPanZ", String.valueOf(Math.max(-100000, Math.min(100000, z))));
+        save();
     }
 }
