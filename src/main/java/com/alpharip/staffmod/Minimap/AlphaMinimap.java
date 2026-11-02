@@ -341,10 +341,11 @@ public final class AlphaMinimap {
             double playerX, double playerZ, int range, int rotation) {
         int radius = size / 2 - 3;
         boolean round = MinimapSettings.round();
-        // Refresh at 10 Hz instead of on every render frame. Sampling follows
-        // the player's precise position, while this throttle avoids expensive
-        // chunk lookups every frame.
-        if (++refreshTicks >= 2 || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size
+        // Sample at twice the display resolution so terrain transitions are less blocky.
+        // Refresh every four render frames to keep the extra sampling cost bounded.
+        final int sampleScale = 2;
+        final int sampleSize = size * sampleScale;
+        if (++refreshTicks >= 4 || cachedDimension != mc.thePlayer.dimension || cachedColors.length != sampleSize
                 || cachedRange != range || cachedRound != round || cachedRotation != rotation) {
             refreshTicks = 0;
             cachedCenterX = playerX; cachedCenterZ = playerZ;
@@ -352,16 +353,16 @@ public final class AlphaMinimap {
             cachedRange = range;
             cachedRound = round;
             cachedRotation = rotation;
-            cachedColors = new int[size][size];
+            cachedColors = new int[sampleSize][sampleSize];
             double angle = Math.toRadians(rotation);
             double cos = Math.cos(angle), sin = Math.sin(angle);
-            for (int py = 0; py < size; py++) {
-                for (int px = 0; px < size; px++) {
-                    int dx = px - size / 2;
-                    int dz = py - size / 2;
-                    if (MinimapSettings.round() && dx * dx + dz * dz > radius * radius) continue;
-                    double screenX = dx * range / (double) radius;
-                    double screenZ = dz * range / (double) radius;
+            for (int py = 0; py < sampleSize; py++) {
+                for (int px = 0; px < sampleSize; px++) {
+                    double dx = (px + 0.5D - sampleSize / 2.0D) / sampleScale;
+                    double dz = (py + 0.5D - sampleSize / 2.0D) / sampleScale;
+                    if (round && dx * dx + dz * dz > radius * radius) continue;
+                    double screenX = dx * range / radius;
+                    double screenZ = dz * range / radius;
                     double worldDx = screenX * cos + screenZ * sin;
                     double worldDz = -screenX * sin + screenZ * cos;
                     int worldX = MathHelper.floor_double(playerX + worldDx);
@@ -376,16 +377,20 @@ public final class AlphaMinimap {
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer renderer = tessellator.getWorldRenderer();
         renderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        for (int py = 0; py < size; py++) {
-            for (int px = 0; px < size; px++) {
+        for (int py = 0; py < sampleSize; py++) {
+            for (int px = 0; px < sampleSize; px++) {
                 int color = cachedColors[py][px];
                 if (color == 0) continue;
-                int dx = px - size / 2, dz = py - size / 2;
-                if (MinimapSettings.round() && dx * dx + dz * dz > radius * radius) continue;
+                double dx = (px + 0.5D - sampleSize / 2.0D) / sampleScale;
+                double dz = (py + 0.5D - sampleSize / 2.0D) / sampleScale;
+                if (round && dx * dx + dz * dz > radius * radius) continue;
                 float red = ((color >> 16) & 255) / 255.0F;
                 float green = ((color >> 8) & 255) / 255.0F;
                 float blue = (color & 255) / 255.0F;
-                double x1 = left + px, y1 = top + py, x2 = x1 + 1, y2 = y1 + 1;
+                double x1 = left + px / (double) sampleScale;
+                double y1 = top + py / (double) sampleScale;
+                double x2 = x1 + 1.0D / sampleScale;
+                double y2 = y1 + 1.0D / sampleScale;
                 renderer.pos(x1, y2, 0).color(red, green, blue, 1.0F).endVertex();
                 renderer.pos(x2, y2, 0).color(red, green, blue, 1.0F).endVertex();
                 renderer.pos(x2, y1, 0).color(red, green, blue, 1.0F).endVertex();
