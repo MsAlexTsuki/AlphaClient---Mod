@@ -3,7 +3,6 @@ package com.alpharip.staffmod.Minimap;
 import com.alpharip.staffmod.gui.AlphaGuiScreen;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
-import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
 
 /** Large view of the live AlphaClient minimap. */
@@ -23,7 +22,7 @@ public final class FullscreenMinimapGui extends AlphaGuiScreen {
         drawRect(0, 0, width, 2, 0xFFFFC83D);
         drawCenteredString(fontRendererObj, "ALPHA WORLD MAP", width / 2, 12, 0xFFFFD866);
         AlphaMinimap.getInstance().drawFullscreenMap(width, height);
-        drawCenteredString(fontRendererObj, "Press ESC to close", width / 2, height - 18, 0xFFB8BEC8);
+        drawCenteredString(fontRendererObj, "Scroll to zoom  |  Drag to pan  |  ESC to close", width / 2, height - 18, 0xFFB8BEC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
