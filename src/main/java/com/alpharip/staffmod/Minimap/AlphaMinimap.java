@@ -423,7 +423,7 @@ public final class AlphaMinimap {
 
         BlockPos pos = new BlockPos(x, sampleY, z);
         IBlockState state = chunk.getBlockState(pos);
-        int block = state.getBlock();
+        net.minecraft.block.Block block = state.getBlock();
         int rgb = block.getMapColor(state).colorValue;
         net.minecraft.world.biome.BiomeGenBase biome = mc.theWorld.getBiomeGenForCoords(pos);
 
