@@ -34,6 +34,8 @@ public final class AlphaMinimap {
     private int cachedCenterX = Integer.MIN_VALUE;
     private int cachedCenterZ = Integer.MIN_VALUE;
     private int cachedDimension = Integer.MIN_VALUE;
+    private int cachedRange = -1;
+    private boolean cachedRound;
 
     private AlphaMinimap() { }
     public static AlphaMinimap getInstance() { return INSTANCE; }
@@ -110,11 +112,15 @@ public final class AlphaMinimap {
         int playerZ = MathHelper.floor_double(mc.thePlayer.posZ);
         int radius = size / 2 - 3;
         int range = MinimapSettings.range();
+        boolean round = MinimapSettings.round();
         if (++refreshTicks >= 10 || cachedCenterX != playerX || cachedCenterZ != playerZ
-                || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size) {
+                || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size
+                || cachedRange != range || cachedRound != round) {
             refreshTicks = 0;
             cachedCenterX = playerX; cachedCenterZ = playerZ;
             cachedDimension = mc.thePlayer.dimension;
+            cachedRange = range;
+            cachedRound = round;
             cachedColors = new int[size][size];
             for (int py = 0; py < size; py++) {
                 for (int px = 0; px < size; px++) {
