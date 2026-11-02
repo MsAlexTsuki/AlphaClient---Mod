@@ -95,13 +95,11 @@ public final class AlphaMinimap {
         int playerZ = MathHelper.floor_double(mc.thePlayer.posZ);
         int radius = size / 2 - 3;
         int range = MinimapSettings.range();
-        float yaw = mc.thePlayer.rotationYaw;
         if (++refreshTicks >= 10 || cachedCenterX != playerX || cachedCenterZ != playerZ
-                || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size\n                || Math.abs(cachedYaw - yaw) > 2.0F) {
+                || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size) {
             refreshTicks = 0;
             cachedCenterX = playerX; cachedCenterZ = playerZ;
             cachedDimension = mc.thePlayer.dimension;
-            cachedYaw = yaw;
             cachedColors = new int[size][size];
             for (int py = 0; py < size; py++) {
                 for (int px = 0; px < size; px++) {
@@ -110,9 +108,8 @@ public final class AlphaMinimap {
                     if (MinimapSettings.round() && dx * dx + dz * dz > radius * radius) continue;
                     double rx = (dx * range / (double) radius);
                     double rz = (dz * range / (double) radius);
-                    double radians = Math.toRadians(yaw);
-                    int worldX = playerX + (int) Math.round(rx * Math.cos(radians) - rz * Math.sin(radians));
-                    int worldZ = playerZ + (int) Math.round(rx * Math.sin(radians) + rz * Math.cos(radians));
+                    int worldX = playerX + (int) Math.round(rx);
+                    int worldZ = playerZ + (int) Math.round(rz);
                     cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ);
                 }
             }
@@ -164,9 +161,10 @@ public final class AlphaMinimap {
             double dz = entity.posZ - mc.thePlayer.posZ;
             double distance = Math.sqrt(dx * dx + dz * dz);
             if (distance > range) continue;
-            double radians = Math.toRadians(mc.thePlayer.rotationYaw);
-            int px = cx + (int) Math.round((dx * Math.cos(radians) - dz * Math.sin(radians)) / range * radius);
-            int py = cy + (int) Math.round((dx * Math.sin(radians) + dz * Math.cos(radians)) / range * radius);
+            int px = cx + (int) Math.round(dx / range * radius);
+            int py = cy + (int) Math.round(dz / range * radius);
+            int mapDx = px - cx, mapDy = py - cy;
+            if (MinimapSettings.round() && mapDx * mapDx + mapDy * mapDy > radius * radius) continue;
             int color = entity instanceof EntityPlayer ? 0xFFFF5555 : 0xFFFFAA44;
             Gui.drawRect(px - 2, py - 2, px + 3, py + 3, color);
         }
@@ -180,9 +178,10 @@ public final class AlphaMinimap {
             double dx = point.getX() - mc.thePlayer.posX;
             double dz = point.getZ() - mc.thePlayer.posZ;
             if (Math.sqrt(dx * dx + dz * dz) > range) continue;
-            double radians = Math.toRadians(mc.thePlayer.rotationYaw);
-            int px = cx + (int) Math.round((dx * Math.cos(radians) - dz * Math.sin(radians)) / range * radius);
-            int py = cy + (int) Math.round((dx * Math.sin(radians) + dz * Math.cos(radians)) / range * radius);
+            int px = cx + (int) Math.round(dx / range * radius);
+            int py = cy + (int) Math.round(dz / range * radius);
+            int mapDx = px - cx, mapDy = py - cy;
+            if (MinimapSettings.round() && mapDx * mapDx + mapDy * mapDy > radius * radius) continue;
             Gui.drawRect(px - 2, py - 2, px + 3, py + 3, point.getColor());
         }
     }
