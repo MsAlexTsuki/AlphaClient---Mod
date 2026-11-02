@@ -79,30 +79,41 @@ public final class WorldWaypointIcons {
         }
     }
 
-    private static void drawBeam(double x,double y,double z,int height,float red,float green,float blue) {
-        double halfWidth=0.105D;
+    private static void drawBeam(double x,double y,double z,double height,float red,float green,float blue) {
+        final double radius=0.105D;
+        final int segments=32;
+        boolean cullingEnabled=GL11.glIsEnabled(GL11.GL_CULL_FACE);
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
         GlStateManager.disableLighting();
-        GL11.glColor4f(red,green,blue,0.58F);
-        GL11.glBegin(GL11.GL_QUADS);
-        GL11.glVertex3d(x-halfWidth,y,z); GL11.glVertex3d(x+halfWidth,y,z);
-        GL11.glVertex3d(x+halfWidth,y+height,z); GL11.glVertex3d(x-halfWidth,y+height,z);
-        GL11.glVertex3d(x,y,z-halfWidth); GL11.glVertex3d(x,y,z+halfWidth);
-        GL11.glVertex3d(x,y+height,z+halfWidth); GL11.glVertex3d(x,y+height,z-halfWidth);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glColor4f(red,green,blue,0.62F);
+        GL11.glBegin(GL11.GL_QUAD_STRIP);
+        for(int i=0;i<=segments;i++) {
+            double angle=Math.PI*2.0D*i/segments;
+            double offsetX=Math.cos(angle)*radius;
+            double offsetZ=Math.sin(angle)*radius;
+            GL11.glNormal3d(Math.cos(angle),0.0D,Math.sin(angle));
+            GL11.glVertex3d(x+offsetX,y,z+offsetZ);
+            GL11.glVertex3d(x+offsetX,y+height,z+offsetZ);
+        }
         GL11.glEnd();
+        if(cullingEnabled) GL11.glEnable(GL11.GL_CULL_FACE);
         GlStateManager.enableLighting();
         GlStateManager.enableTexture2D();
     }
 
     private static void drawWaypointLabel(Minecraft mc,StaffWaypoint point,RenderManager rm,
-                                          double dx,double dy,double dz,int beamHeight,int displayColor) {
+                                          double dx,double dy,double dz,double beamHeight,
+                                          double distance,int displayColor) {
         GlStateManager.pushMatrix();
         try {
             GlStateManager.translate(dx,dy+Math.max(2.0D,beamHeight+0.35D),dz);
             GlStateManager.rotate(-rm.playerViewY,0.0F,1.0F,0.0F);
             GlStateManager.rotate(rm.playerViewX,1.0F,0.0F,0.0F);
-            float labelScale=0.035F*(WaypointSettings.getInt("labelSize",100,50,200)/100.0F);
+            float baseScale=0.035F*(WaypointSettings.getInt("labelSize",100,50,200)/100.0F);
+            float distanceScale=1.0F+0.8F*(float)(Math.min(distance,300.0D)/300.0D);
+            float labelScale=baseScale*distanceScale;
             GlStateManager.scale(-labelScale,-labelScale,labelScale);
             GlStateManager.disableLighting();
             GlStateManager.depthMask(false);
@@ -179,13 +190,12 @@ public final class WorldWaypointIcons {
                 float green=((displayColor>>8)&255)/255.0F;
                 float blue=(displayColor&255)/255.0F;
 
-                // Scale the beam with distance: one block of height per block away,
-                // capped at 32 blocks.
-                int beamHeight=Math.min(32,Math.max(1,(int)Math.ceil(distance)));
-                if(beamHeight>0) drawBeam(dx,dy,dz,beamHeight,red,green,blue);
+                // Grow the cylindrical beam linearly with distance, reaching 32 blocks at 300.
+                double beamHeight=Math.min(32.0D,distance*(32.0D/300.0D));
+                if(beamHeight>0.0D) drawBeam(dx,dy,dz,beamHeight,red,green,blue);
                 if(WaypointSettings.getBoolean("blockHighlightEnabled",true))
                     drawGroundCircle(dx,dy,dz,red,green,blue);
-                drawWaypointLabel(mc,point,rm,dx,dy,dz,beamHeight,displayColor);
+                drawWaypointLabel(mc,point,rm,dx,dy,dz,beamHeight,distance,displayColor);
             }
             List<StaffWaypoint> routePoints=WaypointManager.getInstance().getRouteWaypoints();
             if(routePoints.size()>=2) {
