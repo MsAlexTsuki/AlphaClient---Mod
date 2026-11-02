@@ -86,6 +86,7 @@ public final class AlphaMinimap {
 
     /** Draws the same live map at a larger size inside the fullscreen map screen. */
     public void drawFullscreenMap(int screenWidth, int screenHeight) {
+        if (!isEnabled()) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || mc.thePlayer == null) return;
 
