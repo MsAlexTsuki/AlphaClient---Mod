@@ -146,10 +146,11 @@ public final class AlphaMinimap {
     private void drawCompass(int left, int top, int size, int cx, int cy) {
         int text = 0xFFE8EAF0;
         int muted = 0xFF9CA3AF;
-        drawCompassLabel("N", cx, top + 4, text);
-        drawCompassLabel("E", left + size - 8, cy - 3, muted);
-        drawCompassLabel("S", cx, top + size - 10, muted);
-        drawCompassLabel("W", left + 3, cy - 3, muted);
+        Minecraft mc = Minecraft.getMinecraft();
+        drawCompassLabel("N", cx - mc.fontRendererObj.getStringWidth("N") / 2, top + 4, text);
+        drawCompassLabel("E", left + size - 8, cy - mc.fontRendererObj.FONT_HEIGHT / 2, muted);
+        drawCompassLabel("S", cx - mc.fontRendererObj.getStringWidth("S") / 2, top + size - 10, muted);
+        drawCompassLabel("W", left + 3, cy - mc.fontRendererObj.FONT_HEIGHT / 2, muted);
     }
 
     private void drawCompassLabel(String label, int x, int y, int color) {
@@ -261,7 +262,7 @@ public final class AlphaMinimap {
         if (nearest == null) return "No nearby waypoints";
         String label = nearest.getLabel();
         if (label.length() > 12) label = label.substring(0, 11) + "...";
-        return label + "  " + (int)Math.round(nearestDistance) + "m";
+        return label + "  " + (int)Math.round(nearestDistance) + "b";
     }
 
     private void drawFrame(int left, int top, int size, int cx, int cy) {
@@ -368,7 +369,9 @@ public final class AlphaMinimap {
     }
 
     private int shade(int rgb, int height) {
-        float factor = 0.82F + Math.min(0.28F, Math.max(0, height) / 900.0F);
+        // A wider height-based brightness range makes ridges and low ground
+        // easier to distinguish without changing the underlying map colors.
+        float factor = 0.68F + Math.min(0.42F, Math.max(0, height) / 400.0F);
         int r = Math.min(255, (int) (((rgb >> 16) & 255) * factor));
         int g = Math.min(255, (int) (((rgb >> 8) & 255) * factor));
         int b = Math.min(255, (int) ((rgb & 255) * factor));
