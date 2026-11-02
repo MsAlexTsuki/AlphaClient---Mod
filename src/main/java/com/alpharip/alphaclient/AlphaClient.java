@@ -40,7 +40,6 @@ import com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager;
 import com.alpharip.staffmod.inventorysearch.InventorySearchCommand;
 import com.alpharip.staffmod.waypoints.DeathWaypointMod;
 import com.alpharip.staffmod.waypoints.EventCountdownHub;
-import com.alpharip.staffmod.waypoints.MinimapWithWaypoints;
 import com.alpharip.staffmod.waypoints.WaypointCommand;
 import com.alpharip.staffmod.waypoints.WaypointFromClickableCoordinates;
 import com.alpharip.staffmod.waypoints.WaypointManager;
