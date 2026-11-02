@@ -127,19 +127,27 @@ public final class AlphaWorldEditCommand extends CommandBase {
             boolean blocksOnly = false, itemsOnly = false;
             while (index < args.length && args[index].startsWith("-")) {
                 String flag = args[index].toLowerCase(Locale.ROOT);
-                if ("-b".equals(flag)) { blocksOnly = true; index++; }
-                else if ("-i".equals(flag)) { itemsOnly = true; index++; }
-                else if ("-p".equals(flag) && index + 1 < args.length) {
+                if ("-p".equals(flag) && index + 1 < args.length) {
                     try { page = Integer.parseInt(args[index + 1]); }
-                    catch (NumberFormatException ex) { reply(sender, "Usage: //acwe searchitem [-b] [-i] [-p page] <query...>"); return; }
+                    catch (NumberFormatException ex) { reply(sender, "Usage: //acwe searchitem [-bi] [-p page] <query...>"); return; }
                     index += 2;
+                } else if (flag.length() > 1 && flag.charAt(0) == '-') {
+                    boolean validFlags = true;
+                    for (int flagIndex = 1; flagIndex < flag.length(); flagIndex++) {
+                        char option = flag.charAt(flagIndex);
+                        if (option == 'b') blocksOnly = true;
+                        else if (option == 'i') itemsOnly = true;
+                        else validFlags = false;
+                    }
+                    if (!validFlags) { reply(sender, "Usage: //acwe searchitem [-bi] [-p page] <query...>"); return; }
+                    index++;
                 } else {
-                    reply(sender, "Usage: //acwe searchitem [-b] [-i] [-p page] <query...>");
+                    reply(sender, "Usage: //acwe searchitem [-bi] [-p page] <query...>");
                     return;
                 }
             }
-            if (index >= args.length || page < 1 || page > 1000 || (blocksOnly && itemsOnly)) {
-                reply(sender, "Usage: //acwe searchitem [-b] [-i] [-p page] <query...>");
+            if (index >= args.length || page < 1 || page > 1000) {
+                reply(sender, "Usage: //acwe searchitem [-bi] [-p page] <query...>");
                 return;
             }
             final String query = joinArguments(java.util.Arrays.copyOfRange(args, index, args.length)).toLowerCase(Locale.ROOT);
