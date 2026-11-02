@@ -61,7 +61,7 @@ public final class MinimapSettingsGui extends AlphaGuiScreen {
             case RANGE_DOWN: MinimapSettings.setInt("range", MinimapSettings.range() - 16); break;
             case RANGE_UP: MinimapSettings.setInt("range", MinimapSettings.range() + 16); break;
             case COLOR:
-                int[] colors = {0xFFFFD866, 0xFFFFFFFF, 0xFF55FFFF, 0xFF55FF55, 0xFFFF5555};
+                int[] colors = {0xFFD866, 0xFFFFFF, 0x55FFFF, 0x55FF55, 0xFF5555};
                 int index = 0;
                 for (int i = 0; i < colors.length; i++) if (colors[i] == MinimapSettings.coordinateColor()) index = (i + 1) % colors.length;
                 MinimapSettings.setInt("coordinateColor", colors[index]); break;
