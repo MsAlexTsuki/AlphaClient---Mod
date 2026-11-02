@@ -153,7 +153,13 @@ public final class WorldEditIdGuideGui extends GuiScreen {
         Set<IBlockState> seenStates = new HashSet<IBlockState>();
 
         for (int metadata = 0; metadata <= 15; metadata++) {
-            IBlockState state = block.getStateFromMeta(metadata);
+            IBlockState state;
+            try {
+                state = block.getStateFromMeta(metadata);
+            } catch (IllegalArgumentException ignored) {
+                // Some 1.8.9 blocks reject metadata values that are not valid states.
+                continue;
+            }
             if (state == null || state.getPropertyNames().isEmpty() || !seenStates.add(state)) {
                 continue;
             }
