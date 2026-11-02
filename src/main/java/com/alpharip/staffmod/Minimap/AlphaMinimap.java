@@ -96,18 +96,23 @@ public final class AlphaMinimap {
         int top = (screenHeight - size) / 2 + 8;
         int centerX = left + size / 2;
         int centerY = top + size / 2;
+        int mapCenterX = MathHelper.floor_double(mc.thePlayer.posX) + MinimapSettings.panX();
+        int mapCenterZ = MathHelper.floor_double(mc.thePlayer.posZ) + MinimapSettings.panZ();
+        int range = MinimapSettings.fullscreenRange();
         GlStateManager.pushMatrix();
         try {
             drawFrame(left, top, size, centerX, centerY);
-            drawTerrain(mc, left, top, size, centerX, centerY);
-            drawEntities(mc, centerX, centerY, size);
-            drawWaypoints(mc, centerX, centerY, size);
+            drawTerrain(mc, left, top, size, centerX, centerY, mapCenterX, mapCenterZ, range);
+            drawEntities(mc, centerX, centerY, size, mapCenterX, mapCenterZ, range);
+            drawWaypoints(mc, centerX, centerY, size, mapCenterX, mapCenterZ, range);
             drawBorder(left, top, size);
-            Gui.drawRect(centerX - 3, centerY - 3, centerX + 4, centerY + 4, 0xFFFFFFFF);
+            int playerRadius = size / 2 - 5;
+            int playerX = centerX + (int)Math.round((mc.thePlayer.posX - mapCenterX) / range * playerRadius);
+            int playerY = centerY + (int)Math.round((mc.thePlayer.posZ - mapCenterZ) / range * playerRadius);
+            Gui.drawRect(playerX - 3, playerY - 3, playerX + 4, playerY + 4, 0xFFFFFFFF);
             mc.fontRendererObj.drawStringWithShadow("N", centerX - 3, top + 4, 0xFFE6E8ED);
-            String coords = MathHelper.floor_double(mc.thePlayer.posX) + " "
-                    + MathHelper.floor_double(mc.thePlayer.posY) + " "
-                    + MathHelper.floor_double(mc.thePlayer.posZ);
+            String coords = "Center " + mapCenterX + " " + MathHelper.floor_double(mc.thePlayer.posY) + " " + mapCenterZ
+                    + "  |  Zoom " + range + " blocks";
             int color = 0xFF000000 | (MinimapSettings.coordinateColor() & 0xFFFFFF);
             mc.fontRendererObj.drawStringWithShadow(coords,
                     centerX - mc.fontRendererObj.getStringWidth(coords) / 2,
@@ -141,10 +146,11 @@ public final class AlphaMinimap {
     }
 
     private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy) {
-        int playerX = MathHelper.floor_double(mc.thePlayer.posX);
-        int playerZ = MathHelper.floor_double(mc.thePlayer.posZ);
+        drawTerrain(mc, left, top, size, cx, cy, MathHelper.floor_double(mc.thePlayer.posX), MathHelper.floor_double(mc.thePlayer.posZ), MinimapSettings.range());
+    }
+
+    private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy, int playerX, int playerZ, int range) {
         int radius = size / 2 - 3;
-        int range = MinimapSettings.range();
         boolean round = MinimapSettings.round();
         if (++refreshTicks >= 10 || cachedCenterX != playerX || cachedCenterZ != playerZ
                 || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size
@@ -236,14 +242,17 @@ public final class AlphaMinimap {
     }
 
     private void drawEntities(Minecraft mc, int cx, int cy, int size) {
-        int range = MinimapSettings.range();
+        drawEntities(mc, cx, cy, size, MathHelper.floor_double(mc.thePlayer.posX), MathHelper.floor_double(mc.thePlayer.posZ), MinimapSettings.range());
+    }
+
+    private void drawEntities(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ, int range) {
         int radius = size / 2 - 5;
         for (Object object : mc.theWorld.loadedEntityList) {
             if (!(object instanceof Entity) || object == mc.thePlayer) continue;
             Entity entity = (Entity) object;
             if (!(entity instanceof EntityLivingBase) || entity.isDead) continue;
-            double dx = entity.posX - mc.thePlayer.posX;
-            double dz = entity.posZ - mc.thePlayer.posZ;
+            double dx = entity.posX - mapCenterX;
+            double dz = entity.posZ - mapCenterZ;
             double distance = Math.sqrt(dx * dx + dz * dz);
             if (distance > range) continue;
             int px = cx + (int) Math.round(dx / range * radius);
@@ -256,12 +265,15 @@ public final class AlphaMinimap {
     }
 
     private void drawWaypoints(Minecraft mc, int cx, int cy, int size) {
-        int range = MinimapSettings.range();
+        drawWaypoints(mc, cx, cy, size, MathHelper.floor_double(mc.thePlayer.posX), MathHelper.floor_double(mc.thePlayer.posZ), MinimapSettings.range());
+    }
+
+    private void drawWaypoints(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ, int range) {
         int radius = size / 2 - 7;
         List<StaffWaypoint> points = WaypointManager.getInstance().getForCurrentWorld();
         for (StaffWaypoint point : points) {
-            double dx = point.getX() - mc.thePlayer.posX;
-            double dz = point.getZ() - mc.thePlayer.posZ;
+            double dx = point.getX() - mapCenterX;
+            double dz = point.getZ() - mapCenterZ;
             if (Math.sqrt(dx * dx + dz * dz) > range) continue;
             int px = cx + (int) Math.round(dx / range * radius);
             int py = cy + (int) Math.round(dz / range * radius);
