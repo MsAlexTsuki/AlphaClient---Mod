@@ -164,7 +164,7 @@ public final class WorldWaypointIcons {
 
                 // Hide the complete waypoint marker when the player is within five blocks.
                 if(distance<=5.0D) continue;
-                if(distance>256.0D) continue;
+                if(distance>3000.0D) continue;
 
                 int displayColor=getDisplayColor(point);
                 float red=((displayColor>>16)&255)/255.0F;
