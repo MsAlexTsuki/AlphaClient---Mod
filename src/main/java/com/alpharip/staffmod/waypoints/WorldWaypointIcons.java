@@ -122,12 +122,12 @@ public final class WorldWaypointIcons {
             GlStateManager.tryBlendFuncSeparate(770,771,1,0);
             GlStateManager.color(1.0F,1.0F,1.0F,1.0F);
             String label=point.getLabel();
-            String distance=Math.round(Math.sqrt(
+            String distanceText=Math.round(Math.sqrt(
                     (point.getX()-mc.thePlayer.posX)*(point.getX()-mc.thePlayer.posX)
                     +(point.getY()-mc.thePlayer.posY)*(point.getY()-mc.thePlayer.posY)
                     +(point.getZ()-mc.thePlayer.posZ)*(point.getZ()-mc.thePlayer.posZ)))+"m";
             int boxWidth=Math.max(mc.fontRendererObj.getStringWidth(label),
-                    mc.fontRendererObj.getStringWidth(distance))+16;
+                    mc.fontRendererObj.getStringWidth(distanceText))+16;
             int boxHeight=mc.fontRendererObj.FONT_HEIGHT*2+12;
             double x0=-boxWidth/2.0D, x1=boxWidth/2.0D;
             GlStateManager.disableTexture2D();
@@ -145,8 +145,8 @@ public final class WorldWaypointIcons {
             GlStateManager.enableTexture2D();
             mc.fontRendererObj.drawStringWithShadow(label,
                     -mc.fontRendererObj.getStringWidth(label)/2,0,0xFFFFFFFF);
-            mc.fontRendererObj.drawStringWithShadow(distance,
-                    -mc.fontRendererObj.getStringWidth(distance)/2,mc.fontRendererObj.FONT_HEIGHT+3,0xFFE1E5EC);
+            mc.fontRendererObj.drawStringWithShadow(distanceText,
+                    -mc.fontRendererObj.getStringWidth(distanceText)/2,mc.fontRendererObj.FONT_HEIGHT+3,0xFFE1E5EC);
         } finally {
             GlStateManager.color(1.0F,1.0F,1.0F,1.0F);
             GlStateManager.depthMask(true);
