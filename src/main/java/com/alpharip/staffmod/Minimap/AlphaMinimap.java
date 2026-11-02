@@ -131,7 +131,7 @@ public final class AlphaMinimap {
                     double rz = (dz * range / (double) radius);
                     int worldX = playerX + (int) Math.round(rx);
                     int worldZ = playerZ + (int) Math.round(rz);
-                    cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ);
+                    cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ, MathHelper.floor_double(mc.thePlayer.posY));
                 }
             }
         }
@@ -164,17 +164,33 @@ public final class AlphaMinimap {
         Gui.drawRect(cx - radius, cy - 1, cx + radius, cy + 1, 0x334B515D);
     }
 
-    private int sampleLoadedSurface(Minecraft mc, int x, int z) {
+    private int sampleLoadedSurface(Minecraft mc, int x, int z, int playerY) {
         if (!mc.theWorld.isBlockLoaded(new BlockPos(x, 0, z))) return 0;
         Chunk chunk = mc.theWorld.getChunkFromBlockCoords(new BlockPos(x, 0, z));
         if (chunk == null || !chunk.isLoaded()) return 0;
-        int y = chunk.getHeightValue(x & 15, z & 15);
-        if (y <= 0) return 0xFF26303A;
-        BlockPos pos = new BlockPos(x, Math.min(255, y - 1), z);
+        int surfaceY = chunk.getHeightValue(x & 15, z & 15);
+        if (surfaceY <= 0) return 0xFF26303A;
+
+        int sampleY = Math.min(255, surfaceY - 1);
+        // When the player is underground, map the local cave floor instead of
+        // continuing to show the distant surface above the cave.
+        if (playerY < surfaceY - 4) {
+            int minimumY = Math.max(1, playerY - 24);
+            for (int scanY = Math.min(255, playerY); scanY >= minimumY; scanY--) {
+                BlockPos candidatePos = new BlockPos(x, scanY, z);
+                IBlockState candidate = mc.theWorld.getBlockState(candidatePos);
+                if (candidate.getBlock().getMaterial().blocksMovement()) {
+                    sampleY = scanY;
+                    break;
+                }
+            }
+        }
+
+        BlockPos pos = new BlockPos(x, sampleY, z);
         IBlockState state = mc.theWorld.getBlockState(pos);
         int rgb = state.getBlock().getMapColor(state).colorValue;
         if (state.getBlock().getMaterial().isLiquid()) rgb = 0xFF315D9A;
-        else rgb = shade(rgb, y);
+        else rgb = shade(rgb, sampleY);
         return 0xFF000000 | (rgb & 0xFFFFFF);
     }
 
