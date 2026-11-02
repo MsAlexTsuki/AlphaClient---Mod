@@ -31,6 +31,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     private static int MAX_BLOCKS = 65536;
     private static IBlockState GLOBAL_MASK;
     private static boolean editWandEnabled = true;
+    private static boolean togglePlace;
     private static String brushMode = "none", toolMode = "none", pickaxeMode = "none";
     private static int brushRadius = 3;
     private static IBlockState brushBlock = net.minecraft.init.Blocks.stone.getDefaultState();
@@ -99,6 +100,15 @@ public final class AlphaWorldEditCommand extends CommandBase {
             if (requested < 1 || requested > 16) { reply(sender, "Brush range must be between 1 and 16."); return; }
             brushRadius = requested;
             reply(sender, "Brush range set to " + brushRadius + ".");
+            return;
+        }
+
+        if ("toggleplace".equals(cmd)) {
+            if (args.length != 1) { reply(sender, "Usage: //acwe toggleplace"); return; }
+            togglePlace = !togglePlace;
+            reply(sender, togglePlace
+                    ? "Brush placement will use the targeted block."
+                    : "Brush placement will use the adjacent block.");
             return;
         }
 
@@ -204,21 +214,41 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
         if ("distr".equals(cmd)) {
+            if (args.length > 2) { reply(sender, "Usage: //acwe distr [page]"); return; }
+            int page = 1;
+            if (args.length == 2) {
+                try { page = Integer.parseInt(args[1]); }
+                catch (NumberFormatException ex) { reply(sender, "Usage: //acwe distr [page]"); return; }
+            }
+            if (page < 1 || page > 1000) { reply(sender, "Page must be between 1 and 1000."); return; }
+            final int requestedPage = page;
             final WorldEditSelection.Bounds b=selection(sender);
             if(b==null)return;
             onServer(sender,new Task(){public void run(WorldServer w){
                 if(!WorldEditOperations.regionLoaded(w,b)){reply(sender,"Selection contains unloaded chunks.");return;}
-                java.util.Map<String,Integer> counts=new java.util.TreeMap<String,Integer>();
+                java.util.Map<String,Integer> counts=new java.util.HashMap<String,Integer>();
                 for(int x=b.minX;x<=b.maxX;x++)for(int y=b.minY;y<=b.maxY;y++)for(int z=b.minZ;z<=b.maxZ;z++){
                     String name=String.valueOf(net.minecraft.block.Block.blockRegistry.getNameForObject(w.getBlockState(new BlockPos(x,y,z)).getBlock()));
                     Integer n=counts.get(name);counts.put(name,n==null?1:n+1);
                 }
-                int shown=0;
-                for(java.util.Map.Entry<String,Integer> e:counts.entrySet()){
-                    if(shown++==10)break;
-                    reply(sender,e.getKey()+": "+e.getValue());
+                java.util.List<java.util.Map.Entry<String,Integer>> entries =
+                        new java.util.ArrayList<java.util.Map.Entry<String,Integer>>(counts.entrySet());
+                java.util.Collections.sort(entries, new java.util.Comparator<java.util.Map.Entry<String,Integer>>() {
+                    public int compare(java.util.Map.Entry<String,Integer> a, java.util.Map.Entry<String,Integer> b) {
+                        int byCount = b.getValue().compareTo(a.getValue());
+                        return byCount != 0 ? byCount : a.getKey().compareTo(b.getKey());
+                    }
+                });
+                if(entries.isEmpty()){reply(sender,"Selection is empty.");return;}
+                int pageSize = 10;
+                int pages = (entries.size()+pageSize-1)/pageSize;
+                if(requestedPage>pages){reply(sender,"Page "+requestedPage+" does not exist. Total pages: "+pages+".");return;}
+                reply(sender,"Block distribution — page "+requestedPage+"/"+pages+" ("+entries.size()+" block types):");
+                int start=(requestedPage-1)*pageSize,end=Math.min(entries.size(),start+pageSize);
+                for(int i=start;i<end;i++){
+                    java.util.Map.Entry<String,Integer> entry=entries.get(i);
+                    reply(sender,entry.getKey()+": "+entry.getValue());
                 }
-                if(counts.isEmpty())reply(sender,"Selection is empty.");
             }});
             return;
         }
@@ -1210,7 +1240,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","helpids","logs","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","regen","generate","gen","g","limit","gmask","mask","searchitem","mat","material","range","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","helpids","logs","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","regen","generate","gen","g","limit","gmask","mask","searchitem","mat","material","range","toggleplace","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         else if(args!=null&&args.length==2) {
@@ -1351,7 +1381,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }
 
         if(!right||"none".equals(brushMode))return;
-        final BlockPos center=adjacent;
+        final BlockPos center=togglePlace?clicked:adjacent;
         WorldEditSelection.Bounds brushArea;
         if("clipboard".equals(brushMode)&&CLIPBOARD.hasBlocks()) {
             brushArea=new WorldEditSelection.Bounds(center.getX(),center.getY(),center.getZ(),
