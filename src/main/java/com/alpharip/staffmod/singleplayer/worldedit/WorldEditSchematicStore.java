@@ -67,7 +67,11 @@ public final class WorldEditSchematicStore {
         if(name!=null&&name.toLowerCase(java.util.Locale.ROOT).endsWith(".schematic"))
             return loadLegacy(name);
         File source=file(name);
-        if(source==null||!source.isFile())throw new IOException("Schematic not found.");
+        if(source==null||!source.isFile()){
+            File legacy=legacyFile(name);
+            if(legacy!=null&&legacy.isFile())return loadLegacy(name);
+            throw new IOException("Schematic not found.");
+        }
         FileInputStream in=new FileInputStream(source);
         NBTTagCompound root;
         try{root=CompressedStreamTools.readCompressed(in);}finally{in.close();}
