@@ -160,12 +160,20 @@ public final class WorldWaypointIcons {
                 double dy=markerY-rm.viewerPosY;
                 double dz=markerZ-rm.viewerPosZ;
                 double distanceSq=dx*dx+dy*dy+dz*dz;
-                if(distanceSq>256.0D*256.0D) continue;
+                double distance=Math.sqrt(distanceSq);
+
+                // Hide the complete waypoint marker when the player is within five blocks.
+                if(distance<=5.0D) continue;
+                if(distance>256.0D) continue;
+
                 int displayColor=getDisplayColor(point);
                 float red=((displayColor>>16)&255)/255.0F;
                 float green=((displayColor>>8)&255)/255.0F;
                 float blue=(displayColor&255)/255.0F;
-                int beamHeight=WaypointSettings.getInt("beamHeight",8,0,32);
+
+                // Scale the beam with distance: one block of height per block away,
+                // capped at 32 blocks.
+                int beamHeight=Math.min(32,Math.max(1,(int)Math.ceil(distance)));
                 if(beamHeight>0) drawBeam(dx,dy,dz,beamHeight,red,green,blue);
                 if(WaypointSettings.getBoolean("blockHighlightEnabled",true))
                     drawGroundCircle(dx,dy,dz,red,green,blue);
