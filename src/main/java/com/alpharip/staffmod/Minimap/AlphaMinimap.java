@@ -1,0 +1,189 @@
+package com.alpharip.staffmod.Minimap;
+
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.waypoints.StaffWaypoint;
+import com.alpharip.staffmod.waypoints.WaypointManager;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import java.util.List;
+
+/**
+ * Client-side terrain minimap. It samples only already-loaded client chunks;
+ * it never requests or generates chunks to populate the map.
+ */
+public final class AlphaMinimap {
+    private static final AlphaMinimap INSTANCE = new AlphaMinimap();
+    private int refreshTicks;
+    private int[][] cachedColors = new int[0][0];
+    private int cachedCenterX = Integer.MIN_VALUE;
+    private int cachedCenterZ = Integer.MIN_VALUE;
+    private int cachedDimension = Integer.MIN_VALUE;
+    private float cachedYaw;
+
+    private AlphaMinimap() { }
+    public static AlphaMinimap getInstance() { return INSTANCE; }
+
+    public static boolean isEnabled() {
+        AlphaModule module = AlphaModuleRegistry.find("minimap");
+        return module != null && module.isImplemented() && module.isEnabled();
+    }
+
+    @SubscribeEvent
+    public void onOverlay(RenderGameOverlayEvent.Text event) {
+        if (event.type != RenderGameOverlayEvent.ElementType.TEXT || !isEnabled()) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null || mc.thePlayer == null
+                || mc.gameSettings.hideGUI || mc.gameSettings.showDebugInfo) return;
+
+        ScaledResolution scaled = new ScaledResolution(mc);
+        int size = MinimapSettings.size();
+        int offset = MinimapSettings.offset();
+        String corner = MinimapSettings.corner();
+        int left = corner.endsWith("left") ? offset : scaled.getScaledWidth() - size - offset;
+        int top = corner.startsWith("bottom") ? scaled.getScaledHeight() - size - offset : offset;
+        int centerX = left + size / 2;
+        int centerY = top + size / 2;
+
+        GlStateManager.pushMatrix();
+        try {
+            drawFrame(left, top, size, centerX, centerY);
+            drawTerrain(mc, left, top, size, centerX, centerY);
+            drawEntities(mc, centerX, centerY, size);
+            drawWaypoints(mc, centerX, centerY, size);
+            Gui.drawRect(centerX - 2, centerY - 2, centerX + 3, centerY + 3, 0xFFFFFFFF);
+            mc.fontRendererObj.drawStringWithShadow("N", centerX - 3, top + 3, 0xFFE6E8ED);
+            String coords = MathHelper.floor_double(mc.thePlayer.posX) + " "
+                    + MathHelper.floor_double(mc.thePlayer.posY) + " "
+                    + MathHelper.floor_double(mc.thePlayer.posZ);
+            int color = 0xFF000000 | (MinimapSettings.coordinateColor() & 0xFFFFFF);
+            mc.fontRendererObj.drawStringWithShadow(coords,
+                    centerX - mc.fontRendererObj.getStringWidth(coords) / 2,
+                    top + size + 3, color);
+        } finally {
+            GlStateManager.popMatrix();
+        }
+    }
+
+    private void drawFrame(int left, int top, int size, int cx, int cy) {
+        int background = 0xD9080A0F;
+        if (MinimapSettings.round()) {
+            int radius = size / 2;
+            for (int y = -radius; y <= radius; y++) {
+                int half = (int) Math.sqrt(Math.max(0, radius * radius - y * y));
+                Gui.drawRect(cx - half, cy + y, cx + half + 1, cy + y + 1, background);
+            }
+        } else {
+            Gui.drawRect(left, top, left + size, top + size, background);
+            Gui.drawRect(left, top, left + size, top + 1, 0xFFFFC83D);
+            Gui.drawRect(left, top + size - 1, left + size, top + size, 0xFF555A63);
+        }
+    }
+
+    private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy) {
+        int playerX = MathHelper.floor_double(mc.thePlayer.posX);
+        int playerZ = MathHelper.floor_double(mc.thePlayer.posZ);
+        int radius = size / 2 - 3;
+        int range = MinimapSettings.range();
+        float yaw = mc.thePlayer.rotationYaw;
+        if (++refreshTicks >= 10 || cachedCenterX != playerX || cachedCenterZ != playerZ
+                || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size) {
+            refreshTicks = 0;
+            cachedCenterX = playerX; cachedCenterZ = playerZ;
+            cachedDimension = mc.thePlayer.dimension;
+            cachedYaw = yaw;
+            cachedColors = new int[size][size];
+            for (int py = 0; py < size; py++) {
+                for (int px = 0; px < size; px++) {
+                    int dx = px - size / 2;
+                    int dz = py - size / 2;
+                    if (MinimapSettings.round() && dx * dx + dz * dz > radius * radius) continue;
+                    double rx = (dx * range / (double) radius);
+                    double rz = (dz * range / (double) radius);
+                    double radians = Math.toRadians(yaw);
+                    int worldX = playerX + (int) Math.round(rx * Math.cos(radians) - rz * Math.sin(radians));
+                    int worldZ = playerZ + (int) Math.round(rx * Math.sin(radians) + rz * Math.cos(radians));
+                    cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ);
+                }
+            }
+        }
+        for (int py = 0; py < size; py++) {
+            for (int px = 0; px < size; px++) {
+                int color = cachedColors[py][px];
+                if (color == 0) continue;
+                int dx = px - size / 2, dz = py - size / 2;
+                if (MinimapSettings.round() && dx * dx + dz * dz > radius * radius) continue;
+                Gui.drawRect(left + px, top + py, left + px + 1, top + py + 1, color);
+            }
+        }
+        // Cardinal crosshair remains visible above the terrain layer.
+        Gui.drawRect(cx - 1, cy - radius, cx + 1, cy + radius, 0x334B515D);
+        Gui.drawRect(cx - radius, cy - 1, cx + radius, cy + 1, 0x334B515D);
+    }
+
+    private int sampleLoadedSurface(Minecraft mc, int x, int z) {
+        if (!mc.theWorld.isBlockLoaded(new BlockPos(x, 0, z))) return 0;
+        Chunk chunk = mc.theWorld.getChunkFromBlockCoords(new BlockPos(x, 0, z));
+        if (chunk == null || !chunk.isLoaded()) return 0;
+        int y = chunk.getHeightValue(x & 15, z & 15);
+        if (y <= 0) return 0xFF26303A;
+        BlockPos pos = new BlockPos(x, Math.min(255, y - 1), z);
+        IBlockState state = mc.theWorld.getBlockState(pos);
+        int rgb = state.getBlock().getMapColor(state).colorValue;
+        if (state.getBlock().getMaterial().isLiquid()) rgb = 0xFF315D9A;
+        else rgb = shade(rgb, y);
+        return 0xFF000000 | (rgb & 0xFFFFFF);
+    }
+
+    private int shade(int rgb, int height) {
+        float factor = 0.82F + Math.min(0.28F, Math.max(0, height) / 900.0F);
+        int r = Math.min(255, (int) (((rgb >> 16) & 255) * factor));
+        int g = Math.min(255, (int) (((rgb >> 8) & 255) * factor));
+        int b = Math.min(255, (int) ((rgb & 255) * factor));
+        return (r << 16) | (g << 8) | b;
+    }
+
+    private void drawEntities(Minecraft mc, int cx, int cy, int size) {
+        int range = MinimapSettings.range();
+        int radius = size / 2 - 5;
+        for (Object object : mc.theWorld.loadedEntityList) {
+            if (!(object instanceof Entity) || object == mc.thePlayer) continue;
+            Entity entity = (Entity) object;
+            if (!(entity instanceof EntityPlayer) && entity.isDead) continue;
+            double dx = entity.posX - mc.thePlayer.posX;
+            double dz = entity.posZ - mc.thePlayer.posZ;
+            double distance = Math.sqrt(dx * dx + dz * dz);
+            if (distance > range) continue;
+            double radians = Math.toRadians(mc.thePlayer.rotationYaw);
+            int px = cx + (int) Math.round((dx * Math.cos(radians) - dz * Math.sin(radians)) / range * radius);
+            int py = cy + (int) Math.round((dx * Math.sin(radians) + dz * Math.cos(radians)) / range * radius);
+            int color = entity instanceof EntityPlayer ? 0xFFFF5555 : 0xFFFFAA44;
+            Gui.drawRect(px - 2, py - 2, px + 3, py + 3, color);
+        }
+    }
+
+    private void drawWaypoints(Minecraft mc, int cx, int cy, int size) {
+        int range = MinimapSettings.range();
+        int radius = size / 2 - 7;
+        List<StaffWaypoint> points = WaypointManager.getInstance().getForCurrentWorld();
+        for (StaffWaypoint point : points) {
+            double dx = point.getX() - mc.thePlayer.posX;
+            double dz = point.getZ() - mc.thePlayer.posZ;
+            if (Math.sqrt(dx * dx + dz * dz) > range) continue;
+            double radians = Math.toRadians(mc.thePlayer.rotationYaw);
+            int px = cx + (int) Math.round((dx * Math.cos(radians) - dz * Math.sin(radians)) / range * radius);
+            int py = cy + (int) Math.round((dx * Math.sin(radians) + dz * Math.cos(radians)) / range * radius);
+            Gui.drawRect(px - 2, py - 2, px + 3, py + 3, point.getColor());
+        }
+    }
+}
