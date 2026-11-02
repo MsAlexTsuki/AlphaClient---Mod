@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.singleplayer.worldedit;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -13,8 +15,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /** Searchable reference guide for block/item identifiers and Alpha World Edit tools. */
 public final class WorldEditIdGuideGui extends GuiScreen {
@@ -52,8 +56,13 @@ public final class WorldEditIdGuideGui extends GuiScreen {
                         "Numeric block ID: " + numericId + "  |  Parser metadata: 0-15",
                         id));
             }
-            addLogMetadataVariants("minecraft:log", "Oak", "Spruce", "Birch", "Jungle");
-            addLogMetadataVariants("minecraft:log2", "Acacia", "Dark Oak");
+            for (Object key : Block.blockRegistry.getKeys()) {
+                String id = String.valueOf(key);
+                Block block = Block.getBlockFromName(id);
+                if (block != null) {
+                    addBlockMetadataVariants(id, block, Block.getIdFromBlock(block));
+                }
+            }
             Collections.sort(allEntries, new Comparator<GuideEntry>() {
                 @Override public int compare(GuideEntry a, GuideEntry b) {
                     return a.title.compareToIgnoreCase(b.title);
@@ -137,26 +146,32 @@ public final class WorldEditIdGuideGui extends GuiScreen {
     }
 
     /**
-     * Adds the legacy 1.8.9 log species and axis metadata as separately searchable entries.
-     * Metadata bits 0-1 select the species; bits 2-3 select the log axis.
+     * Adds every distinct metadata-backed block state exposed by the 1.8.9 block.
+     * The identifier is kept in the same block-id:metadata format accepted by the parser.
      */
-    private void addLogMetadataVariants(String blockId, String... species) {
-        Block block = Block.getBlockFromName(blockId);
-        if (block == null) return;
+    private void addBlockMetadataVariants(String blockId, Block block, int numericId) {
+        Set<IBlockState> seenStates = new HashSet<IBlockState>();
 
-        int numericId = Block.getIdFromBlock(block);
-        String[] axes = { "Y axis", "X axis", "Z axis", "Bark on all sides" };
-        int[] axisMetadata = { 0, 4, 8, 12 };
-
-        for (int speciesIndex = 0; speciesIndex < species.length; speciesIndex++) {
-            for (int axisIndex = 0; axisIndex < axes.length; axisIndex++) {
-                int metadata = speciesIndex | axisMetadata[axisIndex];
-                String identifier = blockId + ":" + metadata;
-                String title = species[speciesIndex] + " Log (" + axes[axisIndex] + ")";
-                String description = "Block ID: " + numericId + "  |  Metadata: " + metadata
-                        + "  |  Copy the identifier to use this exact variant.";
-                allEntries.add(new GuideEntry(title, description, identifier));
+        for (int metadata = 0; metadata <= 15; metadata++) {
+            IBlockState state = block.getStateFromMeta(metadata);
+            if (state == null || state.getPropertyNames().isEmpty() || !seenStates.add(state)) {
+                continue;
             }
+
+            StringBuilder properties = new StringBuilder();
+            for (Object propertyObject : state.getPropertyNames()) {
+                IProperty property = (IProperty) propertyObject;
+                Comparable value = (Comparable) state.getValue(property);
+                if (properties.length() > 0) properties.append(", ");
+                properties.append(property.getName(value)).append("=")
+                        .append(property.getName(value));
+            }
+
+            String identifier = blockId + ":" + metadata;
+            String title = blockId + ":" + metadata + " (" + properties + ")";
+            String description = "Numeric block ID: " + numericId + "  |  Metadata: " + metadata
+                    + "  |  State: " + properties;
+            allEntries.add(new GuideEntry(title, description, identifier));
         }
     }
 
