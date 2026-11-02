@@ -122,14 +122,47 @@ public final class AlphaWorldEditCommand extends CommandBase {
             GLOBAL_MASK=parsed;reply(sender,"Global mask set to "+args[1]+".");
             return;
         }
-        if ("searchitem".equals(cmd) && args.length>=2) {
-            String query=args[1].toLowerCase(Locale.ROOT);
-            java.util.List<String> matches=new java.util.ArrayList<String>();
-            for(Object key:net.minecraft.item.Item.itemRegistry.getKeys()) {
-                String id=String.valueOf(key);
-                if(id.toLowerCase(Locale.ROOT).contains(query)&&matches.size()<12)matches.add(id);
+        if ("searchitem".equals(cmd) || "search".equals(cmd) || "l".equals(cmd)) {
+            int index = 1, page = 1;
+            boolean blocksOnly = false, itemsOnly = false;
+            while (index < args.length && args[index].startsWith("-")) {
+                String flag = args[index].toLowerCase(Locale.ROOT);
+                if ("-b".equals(flag)) { blocksOnly = true; index++; }
+                else if ("-i".equals(flag)) { itemsOnly = true; index++; }
+                else if ("-p".equals(flag) && index + 1 < args.length) {
+                    try { page = Integer.parseInt(args[index + 1]); }
+                    catch (NumberFormatException ex) { reply(sender, "Usage: //acwe searchitem [-b] [-i] [-p page] <query...>"); return; }
+                    index += 2;
+                } else {
+                    reply(sender, "Usage: //acwe searchitem [-b] [-i] [-p page] <query...>");
+                    return;
+                }
             }
-            reply(sender,matches.isEmpty()?"No items matched: "+query:"Items: "+matches.toString());
+            if (index >= args.length || page < 1 || page > 1000 || (blocksOnly && itemsOnly)) {
+                reply(sender, "Usage: //acwe searchitem [-b] [-i] [-p page] <query...>");
+                return;
+            }
+            final String query = joinArguments(java.util.Arrays.copyOfRange(args, index, args.length)).toLowerCase(Locale.ROOT);
+            java.util.Set<String> matches = new java.util.TreeSet<String>();
+            if (!itemsOnly) {
+                for (Object key : net.minecraft.block.Block.blockRegistry.getKeys()) {
+                    String id = String.valueOf(key);
+                    if (id.toLowerCase(Locale.ROOT).contains(query)) matches.add(id);
+                }
+            }
+            if (!blocksOnly) {
+                for (Object key : net.minecraft.item.Item.itemRegistry.getKeys()) {
+                    String id = String.valueOf(key);
+                    if (id.toLowerCase(Locale.ROOT).contains(query)) matches.add(id);
+                }
+            }
+            java.util.List<String> results = new java.util.ArrayList<String>(matches);
+            int pageSize = 12, pages = Math.max(1, (results.size() + pageSize - 1) / pageSize);
+            if (results.isEmpty()) { reply(sender, "No items matched: " + query); return; }
+            if (page > pages) { reply(sender, "Page " + page + " does not exist. Total pages: " + pages + "."); return; }
+            reply(sender, "Search results for '" + query + "' — page " + page + "/" + pages + ":");
+            int start = (page - 1) * pageSize, end = Math.min(results.size(), start + pageSize);
+            for (int i = start; i < end; i++) reply(sender, results.get(i));
             return;
         }
         if ("calc".equals(cmd) && args.length==2) {
@@ -1240,7 +1273,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","helpids","logs","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","regen","generate","gen","g","limit","gmask","mask","searchitem","mat","material","range","toggleplace","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","helpids","logs","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","regen","generate","gen","g","limit","gmask","mask","searchitem","search","l","mat","material","range","toggleplace","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         else if(args!=null&&args.length==2) {
