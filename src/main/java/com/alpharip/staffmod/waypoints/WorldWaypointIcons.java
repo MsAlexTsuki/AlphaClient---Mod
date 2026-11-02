@@ -44,10 +44,8 @@ public final class WorldWaypointIcons {
         return custom.length()>4?custom.substring(0,4):custom;
     }
 
-    private static void drawGroundCircle(StaffWaypoint point,RenderManager rm,float red,float green,float blue) {
-        double centerX=Math.floor(point.getX())+0.5D-rm.viewerPosX;
-        double centerY=Math.floor(point.getY())+0.035D-rm.viewerPosY;
-        double centerZ=Math.floor(point.getZ())+0.5D-rm.viewerPosZ;
+    private static void drawGroundCircle(double centerX,double centerY,double centerZ,
+                                          float red,float green,float blue) {
         double radius=0.58D;
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
@@ -98,9 +96,12 @@ public final class WorldWaypointIcons {
             GlStateManager.rotate(rm.playerViewX,1.0F,0.0F,0.0F);
             float labelScale=0.035F*(WaypointSettings.getInt("labelSize",100,50,200)/100.0F);
             GlStateManager.scale(-labelScale,-labelScale,labelScale);
+            GlStateManager.disableLighting();
+            GlStateManager.depthMask(false);
             GlStateManager.disableDepth();
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770,771,1,0);
+            GlStateManager.color(1.0F,1.0F,1.0F,1.0F);
             String label=point.getLabel();
             String distance=Math.round(Math.sqrt(
                     (point.getX()-mc.thePlayer.posX)*(point.getX()-mc.thePlayer.posX)
@@ -111,7 +112,7 @@ public final class WorldWaypointIcons {
             int boxHeight=mc.fontRendererObj.FONT_HEIGHT*2+12;
             double x0=-boxWidth/2.0D, x1=boxWidth/2.0D;
             GlStateManager.disableTexture2D();
-            GL11.glColor4f(0.035F,0.045F,0.065F,0.88F);
+            GL11.glColor4f(0.025F,0.032F,0.048F,0.96F);
             GL11.glBegin(GL11.GL_QUADS);
             GL11.glVertex3d(x0,-5,0); GL11.glVertex3d(x1,-5,0);
             GL11.glVertex3d(x1,boxHeight-5,0); GL11.glVertex3d(x0,boxHeight-5,0);
@@ -128,7 +129,10 @@ public final class WorldWaypointIcons {
             mc.fontRendererObj.drawStringWithShadow(distance,
                     -mc.fontRendererObj.getStringWidth(distance)/2,mc.fontRendererObj.FONT_HEIGHT+3,0xFFE1E5EC);
         } finally {
+            GlStateManager.color(1.0F,1.0F,1.0F,1.0F);
+            GlStateManager.depthMask(true);
             GlStateManager.enableDepth();
+            GlStateManager.enableLighting();
             GlStateManager.enableTexture2D();
             GlStateManager.popMatrix();
         }
@@ -147,9 +151,14 @@ public final class WorldWaypointIcons {
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770,771,1,0);
             for(StaffWaypoint point:points) {
-                double dx=point.getX()+0.5D-rm.viewerPosX;
-                double dy=point.getY()-rm.viewerPosY;
-                double dz=point.getZ()+0.5D-rm.viewerPosZ;
+                // Use the center of the waypoint's block for every marker element.
+                // This keeps the beam, ground circle and nametag on one shared vertical axis.
+                double markerX=Math.floor(point.getX())+0.5D;
+                double markerY=Math.floor(point.getY())+0.035D;
+                double markerZ=Math.floor(point.getZ())+0.5D;
+                double dx=markerX-rm.viewerPosX;
+                double dy=markerY-rm.viewerPosY;
+                double dz=markerZ-rm.viewerPosZ;
                 double distanceSq=dx*dx+dy*dy+dz*dz;
                 if(distanceSq>256.0D*256.0D) continue;
                 int displayColor=getDisplayColor(point);
@@ -159,7 +168,7 @@ public final class WorldWaypointIcons {
                 int beamHeight=WaypointSettings.getInt("beamHeight",8,0,32);
                 if(beamHeight>0) drawBeam(dx,dy,dz,beamHeight,red,green,blue);
                 if(WaypointSettings.getBoolean("blockHighlightEnabled",true))
-                    drawGroundCircle(point,rm,red,green,blue);
+                    drawGroundCircle(dx,dy,dz,red,green,blue);
                 drawWaypointLabel(mc,point,rm,dx,dy,dz,beamHeight,displayColor);
             }
             List<StaffWaypoint> routePoints=WaypointManager.getInstance().getRouteWaypoints();
