@@ -10,6 +10,11 @@ import java.util.List;
 
 /** Compact top-right waypoint radar showing nearby local markers and the selected destination. */
 public final class MinimapWithWaypoints {
+    private static final MinimapWithWaypoints INSTANCE = new MinimapWithWaypoints();
+    public static MinimapWithWaypoints getInstance() { return INSTANCE; }
+
+    private MinimapWithWaypoints() { }
+
     public boolean enabled = WaypointSettings.getBoolean("minimapEnabled", true);
     public String category = "HUD/navigation";
     public String style = "default";
