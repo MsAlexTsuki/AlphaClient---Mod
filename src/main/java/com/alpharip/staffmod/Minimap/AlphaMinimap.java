@@ -4,6 +4,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.waypoints.StaffWaypoint;
 import com.alpharip.staffmod.waypoints.WaypointManager;
+import com.alpharip.staffmod.waypoints.WorldWaypointIcons;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
