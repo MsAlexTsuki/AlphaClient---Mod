@@ -48,6 +48,7 @@ import com.alpharip.staffmod.Minimap.AlphaMinimap;
 import com.alpharip.staffmod.Minimap.MinimapSettingsGui;
 import com.alpharip.staffmod.Minimap.FullscreenMinimapGui;
 import com.alpharip.staffmod.Minimap.MinimapCommand;
+import com.alpharip.staffmod.Minimap.MinimapSettings;
 import com.alpharip.staffmod.waypoints.WorldWaypointIcons;
 import com.alpharip.staffmod.inventorysearch.InventorySearchMod;
 import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
@@ -93,6 +94,7 @@ public final class AlphaClient {
     private KeyBinding toggleMinimapKey;
     private KeyBinding openMinimapSettingsKey;
     private KeyBinding openFullscreenMinimapKey;
+    private KeyBinding createQuickWaypointKey;
     private int partnerAutoConnectTicks = -1;
     private int presenceHeartbeatTicks = 0;
     private long lastStaffInputAt = System.currentTimeMillis();
@@ -169,12 +171,18 @@ public final class AlphaClient {
 
         openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu", Keyboard.KEY_RCONTROL, "AlphaClient");
         ClientRegistry.registerKeyBinding(openModMenuKey);
-        toggleMinimapKey = new KeyBinding("AlphaClient: Toggle Minimap", Keyboard.KEY_NONE, "AlphaClient");
-        openMinimapSettingsKey = new KeyBinding("AlphaClient: Open Minimap Settings", Keyboard.KEY_NONE, "AlphaClient");
-        openFullscreenMinimapKey = new KeyBinding("AlphaClient: Open Fullscreen Minimap", Keyboard.KEY_NONE, "AlphaClient");
+        toggleMinimapKey = new KeyBinding("AlphaClient: Toggle Minimap",
+                MinimapSettings.getInt("keyToggleMinimap", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
+        openMinimapSettingsKey = new KeyBinding("AlphaClient: Open Minimap Settings",
+                MinimapSettings.getInt("keyOpenMinimapSettings", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
+        openFullscreenMinimapKey = new KeyBinding("AlphaClient: Open Fullscreen Minimap",
+                MinimapSettings.getInt("keyOpenFullscreenMinimap", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
+        createQuickWaypointKey = new KeyBinding("AlphaClient: Create Quick Waypoint",
+                MinimapSettings.getInt("keyCreateQuickWaypoint", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
         ClientRegistry.registerKeyBinding(toggleMinimapKey);
         ClientRegistry.registerKeyBinding(openMinimapSettingsKey);
         ClientRegistry.registerKeyBinding(openFullscreenMinimapKey);
+        ClientRegistry.registerKeyBinding(createQuickWaypointKey);
         syncBhopKeyBindingVisibility();
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
     }
@@ -233,6 +241,7 @@ public final class AlphaClient {
         }
         tickStaffPresence();
         syncBhopKeyBindingVisibility();
+        persistMinimapKeyBindings();
         if (!fpsOptimizationInitialized) fpsOptimizationInitialized = FpsOptimization.applyOnce();
         if (partnerAutoConnectConsumed) return;
         String partnerServer = System.getProperty("alphaclient.partnerServer");
@@ -327,6 +336,26 @@ public final class AlphaClient {
                 minecraft.displayGuiScreen(new FullscreenMinimapGui(null));
             }
         }
+        if (createQuickWaypointKey != null && createQuickWaypointKey.isPressed()
+                && minecraft.currentScreen == null && minecraft.theWorld != null && minecraft.thePlayer != null) {
+            WaypointManager manager = WaypointManager.getInstance();
+            String name = "Quick Waypoint " + (manager.getForCurrentServer().size() + 1);
+            manager.add(name, minecraft.thePlayer.posX, minecraft.thePlayer.posY, minecraft.thePlayer.posZ);
+        }
+    }
+
+    private void persistMinimapKeyBindings() {
+        saveKeyBinding("keyToggleMinimap", toggleMinimapKey);
+        saveKeyBinding("keyOpenMinimapSettings", openMinimapSettingsKey);
+        saveKeyBinding("keyOpenFullscreenMinimap", openFullscreenMinimapKey);
+        saveKeyBinding("keyCreateQuickWaypoint", createQuickWaypointKey);
+    }
+
+    private void saveKeyBinding(String setting, KeyBinding binding) {
+        if (binding == null) return;
+        int currentKey = binding.getKeyCode();
+        int savedKey = MinimapSettings.getInt(setting, currentKey, -1, 65535);
+        if (savedKey != currentKey) MinimapSettings.setInt(setting, currentKey);
     }
 
     private void syncBhopKeyBindingVisibility() {
