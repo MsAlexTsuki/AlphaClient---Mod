@@ -44,28 +44,94 @@ public final class WorldWaypointIcons {
         return custom.length()>4?custom.substring(0,4):custom;
     }
 
-    private static void drawBlockOutline(StaffWaypoint point,RenderManager rm,float red,float green,float blue) {
-        double x0=Math.floor(point.getX())-rm.viewerPosX, x1=x0+1.0D;
-        double y0=Math.floor(point.getY())-rm.viewerPosY, y1=y0+1.0D;
-        double z0=Math.floor(point.getZ())-rm.viewerPosZ, z1=z0+1.0D;
+    private static void drawGroundCircle(StaffWaypoint point,RenderManager rm,float red,float green,float blue) {
+        double centerX=Math.floor(point.getX())+0.5D-rm.viewerPosX;
+        double centerY=Math.floor(point.getY())+0.035D-rm.viewerPosY;
+        double centerZ=Math.floor(point.getZ())+0.5D-rm.viewerPosZ;
+        double radius=0.58D;
         GlStateManager.disableTexture2D();
-        GL11.glLineWidth(2.0F);
-        GL11.glColor4f(red,green,blue,0.95F);
-        GL11.glBegin(GL11.GL_LINES);
-        GL11.glVertex3d(x0,y0,z0); GL11.glVertex3d(x1,y0,z0);
-        GL11.glVertex3d(x0,y0,z1); GL11.glVertex3d(x1,y0,z1);
-        GL11.glVertex3d(x0,y1,z0); GL11.glVertex3d(x1,y1,z0);
-        GL11.glVertex3d(x0,y1,z1); GL11.glVertex3d(x1,y1,z1);
-        GL11.glVertex3d(x0,y0,z0); GL11.glVertex3d(x0,y1,z0);
-        GL11.glVertex3d(x1,y0,z0); GL11.glVertex3d(x1,y1,z0);
-        GL11.glVertex3d(x0,y0,z1); GL11.glVertex3d(x0,y1,z1);
-        GL11.glVertex3d(x1,y0,z1); GL11.glVertex3d(x1,y1,z1);
-        GL11.glVertex3d(x0,y0,z0); GL11.glVertex3d(x0,y0,z1);
-        GL11.glVertex3d(x1,y0,z0); GL11.glVertex3d(x1,y0,z1);
-        GL11.glVertex3d(x0,y1,z0); GL11.glVertex3d(x0,y1,z1);
-        GL11.glVertex3d(x1,y1,z0); GL11.glVertex3d(x1,y1,z1);
+        GlStateManager.enableBlend();
+        GlStateManager.disableDepth();
+        GL11.glColor4f(red,green,blue,0.20F);
+        GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+        GL11.glVertex3d(centerX,centerY,centerZ);
+        for(int i=0;i<=48;i++) {
+            double angle=Math.PI*2.0D*i/48.0D;
+            GL11.glVertex3d(centerX+Math.cos(angle)*radius,centerY,centerZ+Math.sin(angle)*radius);
+        }
         GL11.glEnd();
+        GL11.glLineWidth(3.5F);
+        GL11.glColor4f(red,green,blue,0.95F);
+        GL11.glBegin(GL11.GL_LINE_LOOP);
+        for(int i=0;i<48;i++) {
+            double angle=Math.PI*2.0D*i/48.0D;
+            GL11.glVertex3d(centerX+Math.cos(angle)*radius,centerY+0.006D,centerZ+Math.sin(angle)*radius);
+        }
+        GL11.glEnd();
+        GL11.glLineWidth(1.0F);
+        GlStateManager.enableDepth();
         GlStateManager.enableTexture2D();
+    }
+
+    private static void drawBeam(double x,double y,double z,int height,float red,float green,float blue) {
+        double halfWidth=0.105D;
+        GlStateManager.disableTexture2D();
+        GlStateManager.enableBlend();
+        GlStateManager.disableLighting();
+        GL11.glColor4f(red,green,blue,0.58F);
+        GL11.glBegin(GL11.GL_QUADS);
+        GL11.glVertex3d(x-halfWidth,y,z); GL11.glVertex3d(x+halfWidth,y,z);
+        GL11.glVertex3d(x+halfWidth,y+height,z); GL11.glVertex3d(x-halfWidth,y+height,z);
+        GL11.glVertex3d(x,y,z-halfWidth); GL11.glVertex3d(x,y,z+halfWidth);
+        GL11.glVertex3d(x,y+height,z+halfWidth); GL11.glVertex3d(x,y+height,z-halfWidth);
+        GL11.glEnd();
+        GlStateManager.enableLighting();
+        GlStateManager.enableTexture2D();
+    }
+
+    private static void drawWaypointLabel(Minecraft mc,StaffWaypoint point,RenderManager rm,
+                                          double dx,double dy,double dz,int beamHeight,int displayColor) {
+        GlStateManager.pushMatrix();
+        try {
+            GlStateManager.translate(dx,dy+Math.max(2.0D,beamHeight+0.35D),dz);
+            GlStateManager.rotate(-rm.playerViewY,0.0F,1.0F,0.0F);
+            GlStateManager.rotate(rm.playerViewX,1.0F,0.0F,0.0F);
+            float labelScale=0.035F*(WaypointSettings.getInt("labelSize",100,50,200)/100.0F);
+            GlStateManager.scale(-labelScale,-labelScale,labelScale);
+            GlStateManager.disableDepth();
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(770,771,1,0);
+            String label=point.getLabel();
+            String distance=Math.round(Math.sqrt(
+                    (point.getX()-mc.thePlayer.posX)*(point.getX()-mc.thePlayer.posX)
+                    +(point.getY()-mc.thePlayer.posY)*(point.getY()-mc.thePlayer.posY)
+                    +(point.getZ()-mc.thePlayer.posZ)*(point.getZ()-mc.thePlayer.posZ)))+"m";
+            int boxWidth=Math.max(mc.fontRendererObj.getStringWidth(label),
+                    mc.fontRendererObj.getStringWidth(distance))+16;
+            int boxHeight=mc.fontRendererObj.FONT_HEIGHT*2+12;
+            double x0=-boxWidth/2.0D, x1=boxWidth/2.0D;
+            GlStateManager.disableTexture2D();
+            GL11.glColor4f(0.035F,0.045F,0.065F,0.88F);
+            GL11.glBegin(GL11.GL_QUADS);
+            GL11.glVertex3d(x0,-5,0); GL11.glVertex3d(x1,-5,0);
+            GL11.glVertex3d(x1,boxHeight-5,0); GL11.glVertex3d(x0,boxHeight-5,0);
+            GL11.glEnd();
+            GL11.glColor4f(((displayColor>>16)&255)/255.0F,((displayColor>>8)&255)/255.0F,
+                    (displayColor&255)/255.0F,1.0F);
+            GL11.glBegin(GL11.GL_QUADS);
+            GL11.glVertex3d(x0,-5,0.001D); GL11.glVertex3d(x1,-5,0.001D);
+            GL11.glVertex3d(x1,-2,0.001D); GL11.glVertex3d(x0,-2,0.001D);
+            GL11.glEnd();
+            GlStateManager.enableTexture2D();
+            mc.fontRendererObj.drawStringWithShadow(label,
+                    -mc.fontRendererObj.getStringWidth(label)/2,0,0xFFFFFFFF);
+            mc.fontRendererObj.drawStringWithShadow(distance,
+                    -mc.fontRendererObj.getStringWidth(distance)/2,mc.fontRendererObj.FONT_HEIGHT+3,0xFFE1E5EC);
+        } finally {
+            GlStateManager.enableDepth();
+            GlStateManager.enableTexture2D();
+            GlStateManager.popMatrix();
+        }
     }
 
     @SubscribeEvent
@@ -91,38 +157,10 @@ public final class WorldWaypointIcons {
                 float green=((displayColor>>8)&255)/255.0F;
                 float blue=(displayColor&255)/255.0F;
                 int beamHeight=WaypointSettings.getInt("beamHeight",8,0,32);
-                if(beamHeight>0) {
-                    GlStateManager.disableTexture2D();
-                    GL11.glLineWidth(2.0F);
-                    GL11.glColor4f(red,green,blue,0.9F);
-                    GL11.glBegin(GL11.GL_LINES);
-                    GL11.glVertex3d(dx,dy,dz);
-                    GL11.glVertex3d(dx,dy+beamHeight,dz);
-                    GL11.glEnd();
-                    GlStateManager.enableTexture2D();
-                }
+                if(beamHeight>0) drawBeam(dx,dy,dz,beamHeight,red,green,blue);
                 if(WaypointSettings.getBoolean("blockHighlightEnabled",true))
-                    drawBlockOutline(point,rm,red,green,blue);
-
-
-                GlStateManager.pushMatrix();
-                try {
-                    GlStateManager.translate(dx,dy+Math.max(2.0D,beamHeight+0.2D),dz);
-                    GlStateManager.rotate(-rm.playerViewY,0.0F,1.0F,0.0F);
-                    GlStateManager.rotate(rm.playerViewX,1.0F,0.0F,0.0F);
-                    float labelScale=0.025F*(WaypointSettings.getInt("labelSize",100,50,200)/100.0F);
-                    GlStateManager.scale(-labelScale,-labelScale,labelScale);
-                    GlStateManager.disableDepth();
-                    GlStateManager.enableTexture2D();
-                    String label="["+iconText(point.getIconId())+"] "+point.getLabel();
-                    String distance=Math.round(Math.sqrt(distanceSq))+"m";
-                    int labelColor=displayColor;
-                    mc.fontRendererObj.drawStringWithShadow(label,-mc.fontRendererObj.getStringWidth(label)/2,0,labelColor);
-                    mc.fontRendererObj.drawStringWithShadow(distance,-mc.fontRendererObj.getStringWidth(distance)/2,mc.fontRendererObj.FONT_HEIGHT+2,0xFFE6E8ED);
-                } finally {
-                    GlStateManager.enableDepth();
-                    GlStateManager.popMatrix();
-                }
+                    drawGroundCircle(point,rm,red,green,blue);
+                drawWaypointLabel(mc,point,rm,dx,dy,dz,beamHeight,displayColor);
             }
             List<StaffWaypoint> routePoints=WaypointManager.getInstance().getRouteWaypoints();
             if(routePoints.size()>=2) {
