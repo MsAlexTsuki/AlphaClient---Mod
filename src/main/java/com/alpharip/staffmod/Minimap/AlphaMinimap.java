@@ -97,7 +97,7 @@ public final class AlphaMinimap {
         int range = MinimapSettings.range();
         float yaw = mc.thePlayer.rotationYaw;
         if (++refreshTicks >= 10 || cachedCenterX != playerX || cachedCenterZ != playerZ
-                || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size) {
+                || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size\n                || Math.abs(cachedYaw - yaw) > 2.0F) {
             refreshTicks = 0;
             cachedCenterX = playerX; cachedCenterZ = playerZ;
             cachedDimension = mc.thePlayer.dimension;
