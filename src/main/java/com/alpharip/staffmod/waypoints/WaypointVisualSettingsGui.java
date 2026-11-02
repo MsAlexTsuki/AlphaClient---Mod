@@ -28,7 +28,7 @@ public final class WaypointVisualSettingsGui extends AlphaGuiScreen {
         add(3,"Label size: "+WaypointSettings.getInt("labelSize",100,50,200)+"%",y);y+=21;
         add(4,"Icon: "+iconName(),y);y+=21;
         add(5,"Hide waypoints: "+onOff(WaypointSettings.isTemporarilyHidden()),y);y+=21;
-        add(6,"Block highlight: "+onOff(WaypointSettings.getBoolean("blockHighlightEnabled",true)),y);y+=21;
+        add(6,"Ground circle: "+onOff(WaypointSettings.getBoolean("blockHighlightEnabled",true)),y);y+=21;
         add(7,favoriteName(),y);y+=21;
         add(8,"Sort: "+sortName(WaypointSettings.getString("sortMode","distance")),y);y+=21;
         add(9,"Profile: "+WaypointSettings.getString("activeProfile","default"),y);y+=21;
