@@ -60,7 +60,7 @@ public final class AlphaMinimap {
         int offset = MinimapSettings.offset();
         String corner = MinimapSettings.corner();
         int left = corner.endsWith("left") ? offset : scaled.getScaledWidth() - size - offset;
-        int coordinateHeight = mc.fontRendererObj.FONT_HEIGHT * 2 + 9;
+        int coordinateHeight = mc.fontRendererObj.FONT_HEIGHT + 6;
         int top = corner.startsWith("bottom")
                 ? scaled.getScaledHeight() - size - offset - coordinateHeight : offset;
         int centerX = left + size / 2;
@@ -115,7 +115,7 @@ public final class AlphaMinimap {
             drawPlayerArrow(playerPosition[0], playerPosition[1], 180.0F, 7);
             String coords = "Center " + mapCenterX + " " + MathHelper.floor_double(mc.thePlayer.posY) + " " + mapCenterZ
                     + "  |  Zoom " + range + " blocks";
-            drawInfoPanel(left, top + size + 3, size, coords, nearestWaypointText(mc));
+            drawInfoPanel(left, top + size + 3, size, coords);
         } finally {
             GlStateManager.popMatrix();
         }
@@ -271,22 +271,18 @@ public final class AlphaMinimap {
         String coords = MathHelper.floor_double(mc.thePlayer.posX) + " "
                 + MathHelper.floor_double(mc.thePlayer.posY) + " "
                 + MathHelper.floor_double(mc.thePlayer.posZ);
-        drawInfoPanel(left, top + size + 3, size, coords, nearestWaypointText(mc));
+        drawInfoPanel(left, top + size + 3, size, coords);
     }
 
-    private void drawInfoPanel(int left, int top, int width, String primary, String secondary) {
+    private void drawInfoPanel(int left, int top, int width, String primary) {
         int lineHeight = Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT;
-        Gui.drawRect(left, top - 1, left + width, top + lineHeight * 2 + 5, 0xD9080A0F);
+        Gui.drawRect(left, top - 1, left + width, top + lineHeight + 3, 0xD9080A0F);
         Gui.drawRect(left, top - 1, left + width, top, 0xFFFFC83D);
         int color = 0xFF000000 | (MinimapSettings.coordinateColor() & 0xFFFFFF);
         Minecraft mc = Minecraft.getMinecraft();
         primary = fitText(primary, width - 8);
-        secondary = fitText(secondary, width - 8);
         mc.fontRendererObj.drawStringWithShadow(primary,
                 left + (width - mc.fontRendererObj.getStringWidth(primary)) / 2, top + 1, color);
-        mc.fontRendererObj.drawStringWithShadow(secondary,
-                left + (width - mc.fontRendererObj.getStringWidth(secondary)) / 2,
-                top + lineHeight + 2, 0xFFB8BEC8);
     }
 
     private String fitText(String value, int maxWidth) {
@@ -297,25 +293,6 @@ public final class AlphaMinimap {
             result = result.substring(0, result.length() - 4) + "...";
         }
         return result;
-    }
-
-    private String nearestWaypointText(Minecraft mc) {
-        StaffWaypoint nearest = null;
-        double nearestDistance = Double.MAX_VALUE;
-        for (StaffWaypoint point : WaypointManager.getInstance().getForCurrentWorld()) {
-            double dx = point.getX() - mc.thePlayer.posX;
-            double dy = point.getY() - mc.thePlayer.posY;
-            double dz = point.getZ() - mc.thePlayer.posZ;
-            double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            if (distance < nearestDistance) {
-                nearest = point;
-                nearestDistance = distance;
-            }
-        }
-        if (nearest == null) return "No nearby waypoints";
-        String label = nearest.getLabel();
-        if (label.length() > 12) label = label.substring(0, 11) + "...";
-        return label + "  " + (int)Math.round(nearestDistance) + "b";
     }
 
     private void drawFrame(int left, int top, int size, int cx, int cy) {
