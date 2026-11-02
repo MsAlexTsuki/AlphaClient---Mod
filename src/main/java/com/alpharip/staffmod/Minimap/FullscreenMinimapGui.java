@@ -2,6 +2,7 @@ package com.alpharip.staffmod.Minimap;
 
 import com.alpharip.staffmod.gui.AlphaGuiScreen;
 import net.minecraft.client.gui.GuiScreen;
+import java.io.IOException;
 
 /** Large view of the live AlphaClient minimap. */
 public final class FullscreenMinimapGui extends AlphaGuiScreen {
@@ -22,11 +23,16 @@ public final class FullscreenMinimapGui extends AlphaGuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) {
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) {
             mc.displayGuiScreen(parent);
             return;
         }
         super.keyTyped(typedChar, keyCode);
+    }
+
+    @Override
+    public boolean doesGuiPauseGame() {
+        return false;
     }
 }
