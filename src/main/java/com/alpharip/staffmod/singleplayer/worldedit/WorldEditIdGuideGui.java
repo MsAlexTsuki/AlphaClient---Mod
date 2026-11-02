@@ -163,7 +163,7 @@ public final class WorldEditIdGuideGui extends GuiScreen {
                 IProperty property = (IProperty) propertyObject;
                 Comparable value = (Comparable) state.getValue(property);
                 if (properties.length() > 0) properties.append(", ");
-                properties.append(property.getName(value)).append("=")
+                properties.append(property.getName()).append("=")
                         .append(property.getName(value));
             }
 
