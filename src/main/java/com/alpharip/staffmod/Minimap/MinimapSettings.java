@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.Minimap;
 
 import net.minecraft.client.Minecraft;
+import com.alpharip.staffmod.waypoints.WaypointFileUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -74,8 +75,7 @@ public final class MinimapSettings {
             out = new FileOutputStream(temporary);
             VALUES.store(out, "AlphaClient minimap settings");
             out.close(); out = null;
-            if (destination.exists() && !destination.delete()) throw new IllegalStateException("Could not replace minimap settings.");
-            if (!temporary.renameTo(destination)) throw new IllegalStateException("Could not save minimap settings.");
+            WaypointFileUtils.replaceAtomically(temporary, destination);
         } catch (Exception e) {
             System.err.println("[AlphaClient] Could not save minimap settings: " + e.getMessage());
         } finally {
