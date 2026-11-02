@@ -9,6 +9,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import org.lwjgl.opengl.GL11;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.BlockPos;
@@ -29,7 +33,6 @@ public final class AlphaMinimap {
     private int cachedCenterX = Integer.MIN_VALUE;
     private int cachedCenterZ = Integer.MIN_VALUE;
     private int cachedDimension = Integer.MIN_VALUE;
-    private float cachedYaw;
 
     private AlphaMinimap() { }
     public static AlphaMinimap getInstance() { return INSTANCE; }
@@ -114,15 +117,30 @@ public final class AlphaMinimap {
                 }
             }
         }
+        GlStateManager.disableTexture2D();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        Tessellator tessellator = Tessellator.getInstance();
+        WorldRenderer renderer = tessellator.getWorldRenderer();
+        renderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
         for (int py = 0; py < size; py++) {
             for (int px = 0; px < size; px++) {
                 int color = cachedColors[py][px];
                 if (color == 0) continue;
                 int dx = px - size / 2, dz = py - size / 2;
                 if (MinimapSettings.round() && dx * dx + dz * dz > radius * radius) continue;
-                Gui.drawRect(left + px, top + py, left + px + 1, top + py + 1, color);
+                float red = ((color >> 16) & 255) / 255.0F;
+                float green = ((color >> 8) & 255) / 255.0F;
+                float blue = (color & 255) / 255.0F;
+                double x1 = left + px, y1 = top + py, x2 = x1 + 1, y2 = y1 + 1;
+                renderer.pos(x1, y2, 0).color(red, green, blue, 1.0F).endVertex();
+                renderer.pos(x2, y2, 0).color(red, green, blue, 1.0F).endVertex();
+                renderer.pos(x2, y1, 0).color(red, green, blue, 1.0F).endVertex();
+                renderer.pos(x1, y1, 0).color(red, green, blue, 1.0F).endVertex();
             }
         }
+        tessellator.draw();
+        GlStateManager.enableTexture2D();
         // Cardinal crosshair remains visible above the terrain layer.
         Gui.drawRect(cx - 1, cy - radius, cx + 1, cy + radius, 0x334B515D);
         Gui.drawRect(cx - radius, cy - 1, cx + radius, cy + 1, 0x334B515D);
