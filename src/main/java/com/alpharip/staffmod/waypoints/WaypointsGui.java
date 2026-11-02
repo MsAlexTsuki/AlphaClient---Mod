@@ -71,7 +71,7 @@ public final class WaypointsGui extends AlphaGuiScreen {
         int visible=Math.max(0,(top+panelHeight-57-listTop)/16);
         if(mouseX>=left+12&&mouseX<=left+panelWidth-12&&mouseY>=listTop&&row>=0&&row<visible&&row+scroll<points.size()) {
             StaffWaypoint point=points.get(row+scroll);
-            selectedId=point.getId();selectedColor=point.getColor();
+            selectedId=point.getId();
             WaypointManager.getInstance().select(point.getId());
             status="Selected "+point.getLabel()+".";
         }
