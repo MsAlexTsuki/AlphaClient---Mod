@@ -149,6 +149,11 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe tool lrbuild <left-block> <right-block>", "Place one block on left-click and another on right-click.");
         addCommand("//acwe tool none", "Disable the currently selected tool.");
 
+        addSection("BRUSH SETTINGS");
+        addCommand("//acwe mat <block>", "Set the material used by compatible brushes.");
+        addCommand("//acwe material <block>", "Alias for mat.");
+        addCommand("//acwe range <1-16>", "Set the active brush radius.");
+
         addSection("SNAPSHOTS");
         addCommand("//acwe snapshot before <name>", "Save the selected region as a separate named before snapshot.");
         addCommand("//acwe snapshot after <name>", "Save the selected region as a separate named after snapshot.");
