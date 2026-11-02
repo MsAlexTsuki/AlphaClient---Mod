@@ -83,6 +83,25 @@ public final class AlphaWorldEditCommand extends CommandBase {
             } catch(NumberFormatException ex){reply(sender,"Usage: //acwe limit <blocks>");}
             return;
         }
+        if ("mat".equals(cmd) || "material".equals(cmd)) {
+            if (args.length != 2) { reply(sender, "Usage: //acwe mat <block>"); return; }
+            IBlockState parsed = WorldEditBlockParser.parse(args[1]);
+            if (parsed == null) { reply(sender, "Unknown brush material: " + args[1]); return; }
+            brushBlock = parsed;
+            reply(sender, "Brush material set to " + args[1] + ".");
+            return;
+        }
+        if ("range".equals(cmd)) {
+            if (args.length != 2) { reply(sender, "Usage: //acwe range <1-16>"); return; }
+            int requested;
+            try { requested = Integer.parseInt(args[1]); }
+            catch (NumberFormatException ex) { reply(sender, "Usage: //acwe range <1-16>"); return; }
+            if (requested < 1 || requested > 16) { reply(sender, "Brush range must be between 1 and 16."); return; }
+            brushRadius = requested;
+            reply(sender, "Brush range set to " + brushRadius + ".");
+            return;
+        }
+
         if ("gmask".equals(cmd)||"mask".equals(cmd)) {
             if(args.length!=2){reply(sender,"Usage: //acwe gmask <block|off>");return;}
             if("off".equalsIgnoreCase(args[1])||"none".equalsIgnoreCase(args[1])) {
@@ -1191,7 +1210,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         List<String> result = new ArrayList<String>();
         if (args != null && args.length == 1) {
-            String[] values = {"help","helpids","logs","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","regen","generate","gen","g","limit","gmask","mask","searchitem","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
+            String[] values = {"help","helpids","logs","cs",".s","snapshot","restore","brush","br","superpickaxe","pickaxe","sp","tool","listchunks","delchunks","curve","deform","forest","flora","pumpkins","forestgen","butcher","regen","generate","gen","g","limit","gmask","mask","searchitem","mat","material","range","calc","ceil","generatebiome","genbiome","gb","fill","fillr","wand","toggleeditwand","pos1","pos2","hpos1","hpos2","chunk","size","count","distr","sel","desel","deselect","unstuck","!","ascend","asc","descend","desc","up","thru","jumpto","j","biomelist","biomels","biomeinfo","setbiome","chunkinfo","expand","contract","shift","outset","inset","line","center","overlay","naturalize","smooth","move","stack","sphere","hsphere","cyl","hcyl","pyramid","hpyramid","set","replace","walls","outline","faces","hollow","undo","redo","clearhistory","schematic","schem","load","save","copy","cut","paste","rotate","flip","clearclipboard","drain","extinguish","removeabove","removebelow","replacenear","removenear","snow","thaw","green","fixwater","fixlava","remove"};
             for (String value : values) if (value.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(value);
         }
         else if(args!=null&&args.length==2) {
