@@ -6,6 +6,7 @@ import com.alpharip.staffmod.waypoints.StaffWaypoint;
 import com.alpharip.staffmod.waypoints.WaypointManager;
 import com.alpharip.staffmod.waypoints.WorldWaypointIcons;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
@@ -422,19 +423,43 @@ public final class AlphaMinimap {
 
         BlockPos pos = new BlockPos(x, sampleY, z);
         IBlockState state = chunk.getBlockState(pos);
-        int rgb = state.getBlock().getMapColor(state).colorValue;
-        if (state.getBlock().getMaterial().isLiquid()) rgb = 0xFF315D9A;
-        else rgb = shade(rgb, sampleY);
-        return 0xFF000000 | (rgb & 0xFFFFFF);
+        int block = state.getBlock();
+        int rgb = block.getMapColor(state).colorValue;
+        net.minecraft.world.biome.BiomeGenBase biome = mc.theWorld.getBiomeGenForCoords(pos);
+
+        // Apply the biome tint to blocks whose in-game appearance is biome-colored.
+        if (block == Blocks.grass || block == Blocks.tallgrass || block == Blocks.double_plant) {
+            rgb = biome.getGrassColorAtPos(pos);
+        } else if (block == Blocks.leaves || block == Blocks.leaves2) {
+            rgb = biome.getFoliageColorAtPos(pos);
+        } else if (block == Blocks.water || block == Blocks.flowing_water) {
+            rgb = biome.getWaterColorMultiplier();
+        }
+
+        // Use neighboring loaded columns to add directional relief shading.
+        // Missing neighboring chunks are ignored; no chunks are requested.
+        int west = loadedSurfaceHeight(mc, x - 1, z, surfaceY);
+        int east = loadedSurfaceHeight(mc, x + 1, z, surfaceY);
+        int north = loadedSurfaceHeight(mc, x, z - 1, surfaceY);
+        int south = loadedSurfaceHeight(mc, x, z + 1, surfaceY);
+        float relief = ((west - east) * 0.035F) + ((north - south) * 0.035F);
+        return 0xFF000000 | (shade(rgb, relief) & 0xFFFFFF);
     }
 
-    private int shade(int rgb, int height) {
-        // A wider height-based brightness range makes ridges and low ground
-        // easier to distinguish without changing the underlying map colors.
-        float factor = 0.68F + Math.min(0.42F, Math.max(0, height) / 400.0F);
-        int r = Math.min(255, (int) (((rgb >> 16) & 255) * factor));
-        int g = Math.min(255, (int) (((rgb >> 8) & 255) * factor));
-        int b = Math.min(255, (int) ((rgb & 255) * factor));
+    private int loadedSurfaceHeight(Minecraft mc, int x, int z, int fallback) {
+        BlockPos pos = new BlockPos(x, 0, z);
+        if (!mc.theWorld.isBlockLoaded(pos)) return fallback;
+        Chunk chunk = mc.theWorld.getChunkFromBlockCoords(pos);
+        if (chunk == null || !chunk.isLoaded()) return fallback;
+        return chunk.getHeightValue(x & 15, z & 15);
+    }
+
+    private int shade(int rgb, float relief) {
+        // Local height gradients create subtle directional highlights and shadows.
+        float factor = Math.max(0.72F, Math.min(1.18F, 0.94F + relief));
+        int r = Math.min(255, Math.max(0, (int) (((rgb >> 16) & 255) * factor)));
+        int g = Math.min(255, Math.max(0, (int) (((rgb >> 8) & 255) * factor)));
+        int b = Math.min(255, Math.max(0, (int) ((rgb & 255) * factor)));
         return (r << 16) | (g << 8) | b;
     }
 
