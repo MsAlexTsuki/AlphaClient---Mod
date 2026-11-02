@@ -73,7 +73,7 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe chunk", "Select the chunk containing your player position.");
         addCommand("//acwe size", "Show the selected region dimensions and volume.");
         addCommand("//acwe count <block>", "Count matching blocks in the selected region.");
-        addCommand("//acwe distr", "Show the most common block types in the selected region.");
+        addCommand("//acwe distr [page]", "Show block types in the selected region, sorted by frequency, with 10 entries per page.");
         addCommand("//acwe expand <amount> [direction]", "Expand the selection in a direction.");
         addCommand("//acwe contract <amount> [direction]", "Contract the selection in a direction.");
         addCommand("//acwe shift <amount> [direction]", "Move the selection without moving blocks.");
@@ -153,6 +153,7 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe mat <block>", "Set the material used by compatible brushes.");
         addCommand("//acwe material <block>", "Alias for mat.");
         addCommand("//acwe range <1-16>", "Set the active brush radius.");
+        addCommand("//acwe toggleplace", "Toggle brush placement between the targeted block and the adjacent block.");
 
         addSection("SNAPSHOTS");
         addCommand("//acwe snapshot before <name>", "Save the selected region as a separate named before snapshot.");
