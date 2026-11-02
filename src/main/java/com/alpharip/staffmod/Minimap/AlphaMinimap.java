@@ -54,7 +54,9 @@ public final class AlphaMinimap {
         int offset = MinimapSettings.offset();
         String corner = MinimapSettings.corner();
         int left = corner.endsWith("left") ? offset : scaled.getScaledWidth() - size - offset;
-        int top = corner.startsWith("bottom") ? scaled.getScaledHeight() - size - offset : offset;
+        int coordinateHeight = mc.fontRendererObj.FONT_HEIGHT + 4;
+        int top = corner.startsWith("bottom")
+                ? scaled.getScaledHeight() - size - offset - coordinateHeight : offset;
         int centerX = left + size / 2;
         int centerY = top + size / 2;
 
