@@ -299,8 +299,10 @@ public final class AlphaMinimap {
     private void drawTerrain(Minecraft mc, int left, int top, int size, int cx, int cy, double playerX, double playerZ, int range) {
         int radius = size / 2 - 3;
         boolean round = MinimapSettings.round();
-        if (++refreshTicks >= 2 || Double.compare(cachedCenterX, playerX) != 0 || Double.compare(cachedCenterZ, playerZ) != 0
-                || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size
+        // Refresh at 10 Hz instead of on every render frame. Sampling follows
+        // the player's precise position, while this throttle avoids expensive
+        // chunk lookups every frame.
+        if (++refreshTicks >= 2 || cachedDimension != mc.thePlayer.dimension || cachedColors.length != size
                 || cachedRange != range || cachedRound != round) {
             refreshTicks = 0;
             cachedCenterX = playerX; cachedCenterZ = playerZ;
