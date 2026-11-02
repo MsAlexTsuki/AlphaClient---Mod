@@ -52,6 +52,8 @@ public final class WorldEditIdGuideGui extends GuiScreen {
                         "Numeric block ID: " + numericId + "  |  Parser metadata: 0-15",
                         id));
             }
+            addLogMetadataVariants("minecraft:log", "Oak", "Spruce", "Birch", "Jungle");
+            addLogMetadataVariants("minecraft:log2", "Acacia", "Dark Oak");
             Collections.sort(allEntries, new Comparator<GuideEntry>() {
                 @Override public int compare(GuideEntry a, GuideEntry b) {
                     return a.title.compareToIgnoreCase(b.title);
@@ -131,6 +133,30 @@ public final class WorldEditIdGuideGui extends GuiScreen {
             add("//acwe tool floodfill [block]", "Optional fill block; defaults to stone.");
             add("//acwe tool repl <from> <to>", "Requires two block IDs.");
             add("//acwe tool lrbuild <left-block> <right-block>", "Requires two block IDs.");
+        }
+    }
+
+    /**
+     * Adds the legacy 1.8.9 log species and axis metadata as separately searchable entries.
+     * Metadata bits 0-1 select the species; bits 2-3 select the log axis.
+     */
+    private void addLogMetadataVariants(String blockId, String... species) {
+        Block block = Block.getBlockFromName(blockId);
+        if (block == null) return;
+
+        int numericId = Block.getIdFromBlock(block);
+        String[] axes = { "Y axis", "X axis", "Z axis", "Bark on all sides" };
+        int[] axisMetadata = { 0, 4, 8, 12 };
+
+        for (int speciesIndex = 0; speciesIndex < species.length; speciesIndex++) {
+            for (int axisIndex = 0; axisIndex < axes.length; axisIndex++) {
+                int metadata = speciesIndex | axisMetadata[axisIndex];
+                String identifier = blockId + ":" + metadata;
+                String title = species[speciesIndex] + " Log (" + axes[axisIndex] + ")";
+                String description = "Block ID: " + numericId + "  |  Metadata: " + metadata
+                        + "  |  Copy the identifier to use this exact variant.";
+                allEntries.add(new GuideEntry(title, description, identifier));
+            }
         }
     }
 
