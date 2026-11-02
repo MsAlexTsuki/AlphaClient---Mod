@@ -58,6 +58,9 @@ public final class WorldEditAuditLog {
     public static void onWorldTick(TickEvent.WorldTickEvent event) {
         if (event == null || event.phase != TickEvent.Phase.END
                 || !(event.world instanceof WorldServer)) return;
+        net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getMinecraft();
+        if (minecraft == null || !minecraft.isSingleplayer()
+                || minecraft.getIntegratedServer() == null || minecraft.theWorld == null) return;
         WorldServer world = (WorldServer) event.world;
         Iterator<PendingChange> iterator = PENDING.iterator();
         while (iterator.hasNext()) {
