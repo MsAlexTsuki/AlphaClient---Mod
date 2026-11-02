@@ -49,10 +49,10 @@ public final class WorldEditCommandGuideGui extends GuiScreen {
         addCommand("//acwe rotate <90|180|270>", "Rotate the clipboard around the vertical axis.");
         addCommand("//acwe flip <x|y|z>", "Flip the clipboard on the selected axis.");
         addCommand("//acwe schematic save <name>", "Save the clipboard in AlphaClient's compressed .acwe format.");
-        addCommand("//acwe schematic load <name>", "Load an AlphaClient .acwe schematic into the clipboard.");
+        addCommand("//acwe schematic load <name>", "Load an AlphaClient .acwe or classic Minecraft 1.8.9 .schematic file into the clipboard.");
         addCommand("//acwe schematic delete <name>", "Delete a saved AlphaClient schematic.");
         addCommand("//acwe schematic list", "List saved AlphaClient schematics.");
-        addCommand("//acwe schematic formats", "Show the schematic format supported by AlphaClient.");
+        addCommand("//acwe schematic formats", "Show supported formats: classic MCEdit/WorldEdit 1.8.9 .schematic and AlphaClient .acwe.");
 
 
         addSection("SELECTION TOOLS");
