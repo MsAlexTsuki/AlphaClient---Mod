@@ -82,7 +82,7 @@ public final class WaypointPathfinder {
 
         try {
             WalkNodeProcessor processor = new WalkNodeProcessor();
-            processor.setCanEnterDoors(true);
+            processor.setEnterDoors(true);
             processor.setCanSwim(true);
 
             PathFinder finder = new PathFinder(processor);
