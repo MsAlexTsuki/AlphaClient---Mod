@@ -31,9 +31,14 @@ public final class WinLossTracker {
         if (normalized.isEmpty()) return null;
         WinLossServerProfile existing = findProfileByAddress(normalized);
         if (existing != null) return existing;
-        WinLossServerProfile profile = new WinLossServerProfile(normalized, normalized);
+        String profileId = normalized;
+        int suffix = 2;
+        while (profiles.containsKey(profileId)) {
+            profileId = normalized + "#" + suffix++;
+        }
+        WinLossServerProfile profile = new WinLossServerProfile(profileId, normalized);
         profile.addAddress(normalized);
-        profiles.put(normalized, profile);
+        profiles.put(profileId, profile);
         return profile;
     }
     public synchronized List<WinLossServerProfile> getServerProfiles() {
