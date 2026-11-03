@@ -1,43 +1,35 @@
 # AlphaClient Practice Win/Loss Tracker
 
-A server-bound Practice win/loss tracker foundation.
+The tracker is designed for Minecraft Practice matches across different servers and modes. It does not require a separate tracker per mode.
 
-## Current implementation
+## Implemented in this feature folder
 
-- Server profiles can group multiple explicitly registered hostnames.
-- Unknown connected hostnames can receive their own basic profile through `getOrCreateProfileForAddress`.
-- One profile can aggregate matches across its registered hostnames.
-- Current-address statistics remain isolated to the exact connected hostname.
+- Server profiles group multiple explicitly registered hostnames.
+- Previously unseen connected hostnames receive a basic profile automatically.
+- Overall statistics aggregate matches across every hostname registered to one profile.
+- Current-address statistics remain limited to the exact hostname currently connected.
 - Individual address statistics can be retrieved separately.
-- A hostname can be linked to an existing profile through `addAddressToProfile`.
-- Confirmed match results can be recorded against the current connected hostname.
-- Overall, current-address, and individual-address visibility preferences are represented by `WinLossTrackerSettings`.
-- `WinLossTrackerStorage` saves and restores profiles, aliases, match records, timestamps, current address, and settings to a caller-supplied local file.
+- Hostnames can be linked to an existing server profile through `addAddressToProfile`.
+- Confirmed WIN/LOSS results can be recorded against the active server address.
+- Display preferences exist for overall, current-address, and individual-address statistics.
+- Properties-based local persistence stores profiles, aliases, records, timestamps, current address, and display preferences.
+- `WinLossResultDetector` recognizes a limited set of explicit victory/defeat phrases.
+- `WinLossTrackerRuntime` contains Forge chat, client-tick, and HUD overlay handlers.
 
 ## Example: Minemen Club
 
-A Minemen Club profile may explicitly register:
-- `minemen.club`
-- `eu.minemen.club`
-- `na.minemen.club`
-- `as.minemen.club`
+One profile can register `minemen.club`, `eu.minemen.club`, `na.minemen.club`, and `as.minemen.club`.
 
 Overall statistics aggregate matches across all registered addresses. Current-address statistics only include matches from the exact hostname currently connected.
 
-## Integration still required
+## Remaining integration and verification
 
-- Registering the tracker with the Minecraft 1.8.9 / Forge client lifecycle.
-- Reading the connected server hostname from the active Minecraft connection.
-- Calling storage load/save from the appropriate client lifecycle and shutdown points.
-- Connecting the three display preferences to an in-game settings screen.
-- Rendering the selected statistics in a HUD or tracker screen.
-- Detecting completed Practice matches from reliable server result messages.
-- Preventing duplicate result registration when a server emits repeated messages.
+- The runtime listener must be registered from AlphaClient's existing initialization code. That central entrypoint has not been modified as part of this feature-only scope.
+- The three visibility settings need an in-game settings interface. The current overlay displays overall and current-address statistics; individual-address breakdown is not rendered yet.
+- The result detector currently recognizes a limited set of common explicit phrases. It is not guaranteed to recognize every server's wording and must be validated against actual Practice result messages.
+- The duplicate guard suppresses identical result text for ten seconds; this is a basic safeguard, not a universal match identifier.
+- Build and in-game verification have not been performed.
 
 ## Detection limitation
 
-There is no universal Practice result packet or chat format shared by every Minecraft server. The current code records a result only when another component confirms `WIN` or `LOSS`. Automatic result detection must be connected to verified result signals; generic chat keyword matching must not count arbitrary messages as matches.
-
-## Verification
-
-This change has not been built or tested in Minecraft.
+Minecraft Forge does not provide one universal Practice match-result event. Servers use different result messages. The detector deliberately ignores neutral or ambiguous chat, but additional server-specific result phrases may need to be added after observing the actual messages.
