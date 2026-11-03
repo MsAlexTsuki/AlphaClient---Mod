@@ -40,8 +40,26 @@ public final class WaypointTracker {
         Minecraft mc=Minecraft.getMinecraft();
         if(mc==null||mc.thePlayer==null||mc.theWorld==null)return;
         recordPosition(mc);
-        if(!WaypointSettings.getBoolean("arrivalDetectionEnabled",true))return;
         WaypointManager manager=WaypointManager.getInstance();
+
+        // Navigation arrival is independent of the optional general visited-marker detector.
+        StaffWaypoint navigationTarget=manager.getSelected();
+        if(navigationTarget!=null&&ServerWaypointIntegration.belongsToCurrentWorld(navigationTarget,mc)) {
+            double navDx=mc.thePlayer.posX-navigationTarget.getX();
+            double navDy=mc.thePlayer.posY-navigationTarget.getY();
+            double navDz=mc.thePlayer.posZ-navigationTarget.getZ();
+            if(navDx*navDx+navDy*navDy+navDz*navDz<=100.0D) {
+                navigationTarget.setVisited(true);
+                mc.thePlayer.addChatMessage(new ChatComponentText(
+                        "You have arrived at "+navigationTarget.getLabel()));
+                manager.select("");
+                manager.clearRoute();
+                manager.saveChanges();
+                return;
+            }
+        }
+
+        if(!WaypointSettings.getBoolean("arrivalDetectionEnabled",true))return;
         boolean changed=false;
         for(StaffWaypoint point:manager.getForCurrentWorld()) {
             if(point.isVisited())continue;
