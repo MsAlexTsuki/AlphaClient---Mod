@@ -6,7 +6,7 @@ package com.alpharip.staffmod.optimization;
  * These profiles do not change Minecraft graphics or player options.
  */
 public enum PerformanceProfile {
-    DEFAULT("Default", 40, 200),
+    DEFAULT("Default", 20, 100),
     BALANCED("Balanced", 40, 200),
     PERFORMANCE("Performance", 100, 400),
     MAXIMUM_PERFORMANCE("Maximum Performance", 200, 800);
