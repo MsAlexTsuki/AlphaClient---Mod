@@ -345,6 +345,20 @@ public final class AlphaMinimap {
             cachedRound = round;
             cachedRotation = rotation;
             cachedColors = new int[sampleSize][sampleSize];
+            int playerY = MathHelper.floor_double(mc.thePlayer.posY);
+            BlockPos playerEyeColumn = new BlockPos(
+                    MathHelper.floor_double(mc.thePlayer.posX), playerY + 1,
+                    MathHelper.floor_double(mc.thePlayer.posZ));
+            boolean playerIsUnderground = !mc.theWorld.canSeeSky(playerEyeColumn);
+
+            // Resolve each loaded chunk at most once during this terrain refresh.
+            int minChunkX = (MathHelper.floor_double(playerX - range) - 1) >> 4;
+            int maxChunkX = (MathHelper.floor_double(playerX + range) + 1) >> 4;
+            int minChunkZ = (MathHelper.floor_double(playerZ - range) - 1) >> 4;
+            int maxChunkZ = (MathHelper.floor_double(playerZ + range) + 1) >> 4;
+            Chunk[][] chunkCache = new Chunk[maxChunkZ - minChunkZ + 1][maxChunkX - minChunkX + 1];
+            boolean[][] chunkChecked = new boolean[chunkCache.length][chunkCache[0].length];
+
             double angle = Math.toRadians(rotation);
             double cos = Math.cos(angle), sin = Math.sin(angle);
             for (int py = 0; py < sampleSize; py++) {
@@ -358,7 +372,8 @@ public final class AlphaMinimap {
                     double worldDz = -screenX * sin + screenZ * cos;
                     int worldX = MathHelper.floor_double(playerX + worldDx);
                     int worldZ = MathHelper.floor_double(playerZ + worldDz);
-                    cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ, MathHelper.floor_double(mc.thePlayer.posY));
+                    cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ, playerY,
+                            playerIsUnderground, chunkCache, chunkChecked, minChunkX, minChunkZ);
                 }
             }
             rebuildTerrainDisplayList(sampleSize, sampleScale, round, radius);
@@ -413,20 +428,17 @@ public final class AlphaMinimap {
         terrainDisplayListReady = true;
     }
 
-    private int sampleLoadedSurface(Minecraft mc, int x, int z, int playerY) {
-        if (!mc.theWorld.isBlockLoaded(new BlockPos(x, 0, z))) return 0;
-        Chunk chunk = mc.theWorld.getChunkFromBlockCoords(new BlockPos(x, 0, z));
-        if (chunk == null || !chunk.isLoaded()) return 0;
+    private int sampleLoadedSurface(Minecraft mc, int x, int z, int playerY,
+            boolean playerIsUnderground, Chunk[][] chunkCache, boolean[][] chunkChecked,
+            int minChunkX, int minChunkZ) {
+        Chunk chunk = getCachedLoadedChunk(mc, x, z, chunkCache, chunkChecked, minChunkX, minChunkZ);
+        if (chunk == null) return 0;
         int surfaceY = chunk.getHeightValue(x & 15, z & 15);
         if (surfaceY <= 0) return 0xFF26303A;
 
         int sampleY = Math.min(255, surfaceY - 1);
         // Only switch to cave-level sampling when the player is actually below
         // ground. Being lower than a neighboring hill must not reveal its interior.
-        BlockPos playerEyeColumn = new BlockPos(
-                MathHelper.floor_double(mc.thePlayer.posX), playerY + 1,
-                MathHelper.floor_double(mc.thePlayer.posZ));
-        boolean playerIsUnderground = !mc.theWorld.canSeeSky(playerEyeColumn);
         if (playerIsUnderground && playerY < surfaceY - 4
                 && !mc.theWorld.canSeeSky(new BlockPos(x, playerY + 1, z))) {
             int minimumY = Math.max(1, playerY - 8);
@@ -455,22 +467,41 @@ public final class AlphaMinimap {
             rgb = biome.getWaterColorMultiplier();
         }
 
-        // Use neighboring loaded columns to add directional relief shading.
-        // Missing neighboring chunks are ignored; no chunks are requested.
-        int west = loadedSurfaceHeight(mc, x - 1, z, surfaceY);
-        int east = loadedSurfaceHeight(mc, x + 1, z, surfaceY);
-        int north = loadedSurfaceHeight(mc, x, z - 1, surfaceY);
-        int south = loadedSurfaceHeight(mc, x, z + 1, surfaceY);
+        // Reuse the per-refresh chunk cache for all four relief neighbors.
+        int west = loadedSurfaceHeight(mc, x - 1, z, surfaceY, chunkCache, chunkChecked, minChunkX, minChunkZ);
+        int east = loadedSurfaceHeight(mc, x + 1, z, surfaceY, chunkCache, chunkChecked, minChunkX, minChunkZ);
+        int north = loadedSurfaceHeight(mc, x, z - 1, surfaceY, chunkCache, chunkChecked, minChunkX, minChunkZ);
+        int south = loadedSurfaceHeight(mc, x, z + 1, surfaceY, chunkCache, chunkChecked, minChunkX, minChunkZ);
         float relief = ((west - east) * 0.035F) + ((north - south) * 0.035F);
         return 0xFF000000 | (shade(rgb, relief) & 0xFFFFFF);
     }
 
-    private int loadedSurfaceHeight(Minecraft mc, int x, int z, int fallback) {
-        BlockPos pos = new BlockPos(x, 0, z);
-        if (!mc.theWorld.isBlockLoaded(pos)) return fallback;
-        Chunk chunk = mc.theWorld.getChunkFromBlockCoords(pos);
-        if (chunk == null || !chunk.isLoaded()) return fallback;
-        return chunk.getHeightValue(x & 15, z & 15);
+    private int loadedSurfaceHeight(Minecraft mc, int x, int z, int fallback,
+            Chunk[][] chunkCache, boolean[][] chunkChecked, int minChunkX, int minChunkZ) {
+        Chunk chunk = getCachedLoadedChunk(mc, x, z, chunkCache, chunkChecked, minChunkX, minChunkZ);
+        return chunk == null ? fallback : chunk.getHeightValue(x & 15, z & 15);
+    }
+
+    private Chunk getCachedLoadedChunk(Minecraft mc, int x, int z, Chunk[][] chunkCache,
+            boolean[][] chunkChecked, int minChunkX, int minChunkZ) {
+        int chunkX = x >> 4;
+        int chunkZ = z >> 4;
+        int cacheX = chunkX - minChunkX;
+        int cacheZ = chunkZ - minChunkZ;
+        if (cacheZ < 0 || cacheZ >= chunkCache.length || cacheX < 0 || cacheX >= chunkCache[0].length) {
+            return null;
+        }
+        if (!chunkChecked[cacheZ][cacheX]) {
+            chunkChecked[cacheZ][cacheX] = true;
+            BlockPos pos = new BlockPos(x, 0, z);
+            if (mc.theWorld.isBlockLoaded(pos)) {
+                Chunk loaded = mc.theWorld.getChunkFromBlockCoords(pos);
+                if (loaded != null && loaded.isLoaded()) {
+                    chunkCache[cacheZ][cacheX] = loaded;
+                }
+            }
+        }
+        return chunkCache[cacheZ][cacheX];
     }
 
     private int shade(int rgb, float relief) {
