@@ -449,6 +449,20 @@ public final class AlphaMinimap {
         if (surfaceY <= 0) return 0xFF26303A;
 
         int sampleY = Math.min(255, surfaceY - 1);
+        // The chunk height map can stop at the terrain below a fluid column.
+        // Find the top water block above that height so oceans, lakes, and
+        // rivers are sampled as water instead of showing their seabed.
+        if (!playerIsUnderground) {
+            for (int scanY = 255; scanY >= surfaceY; scanY--) {
+                IBlockState candidate = chunk.getBlockState(new BlockPos(x, scanY, z));
+                net.minecraft.block.Block candidateBlock = candidate.getBlock();
+                if (candidateBlock == Blocks.water || candidateBlock == Blocks.flowing_water) {
+                    sampleY = scanY;
+                    break;
+                }
+            }
+        }
+
         // Only switch to cave-level sampling when the player is actually below
         // ground. Being lower than a neighboring hill must not reveal its interior.
         if (playerIsUnderground
