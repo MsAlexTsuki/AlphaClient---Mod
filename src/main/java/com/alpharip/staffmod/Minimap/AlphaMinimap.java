@@ -451,7 +451,7 @@ public final class AlphaMinimap {
         int sampleY = Math.min(255, surfaceY - 1);
         // Only switch to cave-level sampling when the player is actually below
         // ground. Being lower than a neighboring hill must not reveal its interior.
-        if (playerIsUnderground && playerY < surfaceY - 4
+        if (playerIsUnderground
                 && !mc.theWorld.canSeeSky(new BlockPos(x, playerY + 1, z))) {
             int minimumY = Math.max(1, playerY - 8);
             for (int scanY = Math.min(255, playerY); scanY >= minimumY; scanY--) {
