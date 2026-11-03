@@ -42,6 +42,9 @@ public final class SupabaseCommunityService {
     private static volatile String accessToken;
     private static volatile String refreshToken;
     private static volatile String signedInUserId;
+    // A unique runtime session lets one Alpha account publish several Minecraft UUIDs
+    // without treating any UUID as the permanent owner of the Alpha rank.
+    private static volatile String publicBadgeSessionId;
     private static volatile long accessTokenExpiresAt;
     private static volatile String signedInEmail;
     private static volatile String signedInAlphaName;
@@ -174,6 +177,7 @@ public final class SupabaseCommunityService {
         accessToken = token;
         refreshToken = nextRefreshToken;
         signedInUserId = userId;
+        publicBadgeSessionId = UUID.randomUUID().toString();
         accessTokenExpiresAt = (System.currentTimeMillis() / 1000L) + Math.max(60L, getLong(auth, "expires_in", 3600L));
         signedInEmail = email.trim();
         signedInAlphaName = resolveAlphaName(user, signedInEmail);
@@ -215,6 +219,7 @@ public final class SupabaseCommunityService {
         accessToken = nextAccessToken;
         refreshToken = nextRefreshToken;
         signedInUserId = userId;
+        if (publicBadgeSessionId == null) publicBadgeSessionId = UUID.randomUUID().toString();
         if (email != null) signedInEmail = email;
         if (user != null) signedInAlphaName = resolveAlphaName(user, signedInEmail);
         accessTokenExpiresAt = (System.currentTimeMillis() / 1000L) + Math.max(60L, getLong(auth, "expires_in", 3600L));
@@ -312,36 +317,37 @@ public final class SupabaseCommunityService {
                     + permissionException.getMessage());
         }
 
-        // Re-link the currently active Minecraft UUID whenever the authenticated
-        // Alpha account syncs. This also covers restored sessions and Microsoft-account switches.
-        linkCurrentMinecraftUuid(token);
+        // Refresh the active public badge presence on every authenticated account sync.
+        // The session expires automatically if this client stops heartbeating or crashes.
+        heartbeatCurrentMinecraftUuid(token);
     }
 
     /**
-     * Links this authenticated community profile to the current online Minecraft UUID
-     * for public rank display only. This mapping must never grant client/server permissions.
+     * Publishes the currently active server UUID as a temporary badge presence.
+     * A heartbeat is renewed while this Alpha account remains signed in and expires
+     * automatically after 90 seconds without a successful sync.
      */
-    private static void linkCurrentMinecraftUuid(String token) {
+    private static void heartbeatCurrentMinecraftUuid(String token) {
         if (PermissionService.isOfflineTestSession()) return;
         try {
             Minecraft minecraft = Minecraft.getMinecraft();
-            // The active player entity carries the UUID assigned by the connected server.
-            // This is the UUID other clients see and use for nametag rank lookups; the
-            // Microsoft session UUID can differ on offline-mode servers.
             if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null) return;
             UUID uuid = minecraft.thePlayer.getUniqueID();
-            if (uuid == null) return;
+            String sessionId = publicBadgeSessionId;
+            if (uuid == null || sessionId == null) return;
             JsonObject payload = new JsonObject();
             payload.addProperty("target_uuid", uuid.toString());
-            requestJson("POST", "/rest/v1/rpc/link_minecraft_uuid", token, payload.toString());
+            payload.addProperty("client_session_id", sessionId);
+            requestJson("POST", "/rest/v1/rpc/heartbeat_public_badge_session", token, payload.toString());
         } catch (Exception exception) {
-            System.err.println("[AlphaClient] Could not link active server Minecraft UUID for public rank display: "
+            System.err.println("[AlphaClient] Could not refresh active public badge presence: "
                     + exception.getMessage());
         }
     }
 
     public static synchronized void signOut() {
         String token = accessToken;
+        String badgeSessionId = publicBadgeSessionId;
         try {
             JsonObject event = new JsonObject();
             event.addProperty("event", "logout");
@@ -350,6 +356,16 @@ public final class SupabaseCommunityService {
                     getSignedInAlphaName(), event);
         } catch (Exception activityException) {
             System.err.println("[AlphaClient] Logout activity was not recorded: " + activityException.getMessage());
+        }
+        if (token != null && badgeSessionId != null) {
+            try {
+                JsonObject payload = new JsonObject();
+                payload.addProperty("client_session_id", badgeSessionId);
+                requestJson("POST", "/rest/v1/rpc/end_public_badge_session", token, payload.toString());
+            } catch (Exception exception) {
+                System.err.println("[AlphaClient] Could not end public badge presence immediately; it will expire automatically: "
+                        + exception.getMessage());
+            }
         }
         clearInMemorySession();
         sessionStatus = "Signed out. This Alpha Account session was removed from this installation.";
@@ -368,6 +384,7 @@ public final class SupabaseCommunityService {
         accessToken = null;
         refreshToken = null;
         signedInUserId = null;
+        publicBadgeSessionId = null;
         accessTokenExpiresAt = 0L;
         signedInEmail = null;
         signedInAlphaName = null;
