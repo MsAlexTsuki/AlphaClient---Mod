@@ -354,6 +354,11 @@ public final class AlphaMinimap {
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer renderer = tessellator.getWorldRenderer();
+        // Keep each upload small. A fullscreen map can contain over 100,000
+        // terrain quads; building them in one BufferBuilder can overflow its
+        // direct byte buffer on the legacy 1.8.9 renderer.
+        final int maxQuadsPerBatch = 1024;
+        int pendingQuads = 0;
         renderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
         for (int py = 0; py < sampleSize; py++) {
             for (int px = 0; px < sampleSize; px++) {
@@ -373,9 +378,16 @@ public final class AlphaMinimap {
                 renderer.pos(x2, y2, 0).color(red, green, blue, 1.0F).endVertex();
                 renderer.pos(x2, y1, 0).color(red, green, blue, 1.0F).endVertex();
                 renderer.pos(x1, y1, 0).color(red, green, blue, 1.0F).endVertex();
+                if (++pendingQuads >= maxQuadsPerBatch) {
+                    tessellator.draw();
+                    renderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+                    pendingQuads = 0;
+                }
             }
         }
-        tessellator.draw();
+        if (pendingQuads > 0) {
+            tessellator.draw();
+        }
         GlStateManager.enableTexture2D();
         // Cardinal crosshair remains visible above the terrain layer.
         Gui.drawRect(cx - 1, cy - radius, cx + 1, cy + radius, 0x334B515D);
