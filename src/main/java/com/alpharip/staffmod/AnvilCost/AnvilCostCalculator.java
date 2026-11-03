@@ -83,7 +83,7 @@ public final class AnvilCostCalculator {
                 }
 
                 previews.add(new Preview(
-                        describeOperation(target, candidate),
+                        describeOperation(target, candidate, result),
                         candidate.getDisplayName(),
                         levels,
                         materials
@@ -115,9 +115,9 @@ public final class AnvilCostCalculator {
                 + stack.stackSize + ":" + tag;
     }
 
-    private static String describeOperation(ItemStack target, ItemStack candidate) {
+    private static String describeOperation(ItemStack target, ItemStack candidate, ItemStack result) {
         if (candidate.getItem() == Items.enchanted_book) {
-            String enchantments = describeEnchantments(candidate);
+            String enchantments = describeAppliedEnchantments(target, result);
             return enchantments.isEmpty() ? "Enchanted Book" : enchantments + " Book";
         }
 
@@ -132,13 +132,19 @@ public final class AnvilCostCalculator {
         return "Use " + candidate.getDisplayName();
     }
 
-    private static String describeEnchantments(ItemStack book) {
-        Map<Integer, Integer> enchantments = new TreeMap<Integer, Integer>(
-                EnchantmentHelper.getEnchantments(book)
+    private static String describeAppliedEnchantments(ItemStack original, ItemStack resultStack) {
+        Map<Integer, Integer> originalEnchantments = EnchantmentHelper.getEnchantments(original);
+        Map<Integer, Integer> resultEnchantments = new TreeMap<Integer, Integer>(
+                EnchantmentHelper.getEnchantments(resultStack)
         );
         StringBuilder result = new StringBuilder();
 
-        for (Map.Entry<Integer, Integer> entry : enchantments.entrySet()) {
+        for (Map.Entry<Integer, Integer> entry : resultEnchantments.entrySet()) {
+            int previousLevel = originalEnchantments.containsKey(entry.getKey())
+                    ? originalEnchantments.get(entry.getKey()) : 0;
+            if (entry.getValue() <= previousLevel) {
+                continue;
+            }
             Enchantment enchantment = Enchantment.getEnchantmentById(entry.getKey());
             if (enchantment == null) {
                 continue;
