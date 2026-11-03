@@ -199,6 +199,35 @@ public final class WorldWaypointIcons {
                     drawGroundCircle(dx,dy,dz,red,green,blue);
                 drawWaypointLabel(mc,point,rm,dx,dy,dz,beamHeight,distance,displayColor);
             }
+            StaffWaypoint navigationTarget=WaypointManager.getInstance().getSelected();
+            if(navigationTarget!=null&&ServerWaypointIntegration.belongsToCurrentWorld(navigationTarget,mc)) {
+                double playerX=mc.thePlayer.lastTickPosX
+                        +(mc.thePlayer.posX-mc.thePlayer.lastTickPosX)*event.partialTicks;
+                double playerY=mc.thePlayer.lastTickPosY
+                        +(mc.thePlayer.posY-mc.thePlayer.lastTickPosY)*event.partialTicks
+                        +mc.thePlayer.getEyeHeight()*0.45D;
+                double playerZ=mc.thePlayer.lastTickPosZ
+                        +(mc.thePlayer.posZ-mc.thePlayer.lastTickPosZ)*event.partialTicks;
+                double targetX=Math.floor(navigationTarget.getX())+0.5D;
+                double targetY=Math.floor(navigationTarget.getY())+0.5D;
+                double targetZ=Math.floor(navigationTarget.getZ())+0.5D;
+                int trailColor=getDisplayColor(navigationTarget);
+                float trailRed=((trailColor>>16)&255)/255.0F;
+                float trailGreen=((trailColor>>8)&255)/255.0F;
+                float trailBlue=(trailColor&255)/255.0F;
+                GlStateManager.disableTexture2D();
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(770,771,1,0);
+                GL11.glLineWidth(3.0F);
+                GL11.glColor4f(trailRed,trailGreen,trailBlue,0.95F);
+                GL11.glBegin(GL11.GL_LINES);
+                GL11.glVertex3d(playerX-rm.viewerPosX,playerY-rm.viewerPosY,playerZ-rm.viewerPosZ);
+                GL11.glVertex3d(targetX-rm.viewerPosX,targetY-rm.viewerPosY,targetZ-rm.viewerPosZ);
+                GL11.glEnd();
+                GL11.glLineWidth(1.0F);
+                GlStateManager.color(1.0F,1.0F,1.0F,1.0F);
+                GlStateManager.enableTexture2D();
+            }
             List<StaffWaypoint> routePoints=WaypointManager.getInstance().getRouteWaypoints();
             if(routePoints.size()>=2) {
                 boolean sameWorld=true;
