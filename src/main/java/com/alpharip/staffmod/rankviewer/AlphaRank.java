@@ -68,7 +68,8 @@ public enum AlphaRank {
         if ("plat_admin".equals(key) || "platform_admin".equals(key)) return PLATFORM_ADMIN;
         if ("sr_mod".equals(key) || "senior_mod".equals(key)) return SENIOR_MODERATOR;
         if ("trial_mod".equals(key) || "t_mod".equals(key)) return TRIAL_MODERATOR;
-        if ("management".equals(key) || "manager".equals(key)) return MANAGER;
+        if ("management".equals(key)) return PLATFORM_ADMIN;
+        if ("manager".equals(key)) return MANAGER;
         try {
             return valueOf(key.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ignored) {
