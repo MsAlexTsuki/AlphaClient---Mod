@@ -63,9 +63,11 @@ public enum AlphaRank {
                 .replace('-', '_')
                 .replace(' ', '_');
         if ("user".equals(key) || "public".equals(key)) return MEMBER;
-        if ("sr_admin".equals(key)) return SENIOR_ADMIN;
+        if ("sr_admin".equals(key) || "senior_admin".equals(key)) return SENIOR_ADMIN;
+        if ("plat_admin".equals(key) || "platform_admin".equals(key)) return MANAGEMENT;
         if ("sr_mod".equals(key) || "senior_mod".equals(key)) return SENIOR_MODERATOR;
         if ("trial_mod".equals(key) || "t_mod".equals(key)) return TRIAL_MODERATOR;
+        if ("management".equals(key) || "manager".equals(key)) return MANAGEMENT;
         try {
             return valueOf(key.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ignored) {
