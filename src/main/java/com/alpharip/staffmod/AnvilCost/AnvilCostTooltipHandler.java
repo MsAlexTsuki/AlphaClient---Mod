@@ -42,6 +42,9 @@ public final class AnvilCostTooltipHandler {
                     + " levels";
             if (preview.getLevels() >= 40 && !player.capabilities.isCreativeMode) {
                 cost += EnumChatFormatting.RED + " (Too Expensive)";
+            } else if (preview.getLevels() > player.experienceLevel) {
+                int missingLevels = preview.getLevels() - player.experienceLevel;
+                cost += EnumChatFormatting.RED + " (Need " + missingLevels + " more)";
             }
 
             tooltip.add(EnumChatFormatting.GRAY + preview.getOperation()
