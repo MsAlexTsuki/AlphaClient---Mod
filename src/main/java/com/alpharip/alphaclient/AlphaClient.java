@@ -92,6 +92,7 @@ import com.alpharip.staffmod.AutoTool.AutoToolCommand;
 import com.alpharip.staffmod.AutoTool.AutoToolMod;
 import com.alpharip.staffmod.InventorySearch.InventorySearchCommand;
 import com.alpharip.staffmod.InventorySearch.InventorySearchMod;
+import com.alpharip.staffmod.AnvilCost.AnvilCostTooltipHandler;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -223,6 +224,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new AutoSprintMod());
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         MinecraftForge.EVENT_BUS.register(new InventorySearchMod());
+        MinecraftForge.EVENT_BUS.register(new AnvilCostTooltipHandler());
         RankCache.INSTANCE.start();
         // Restore the Alpha Account session and keep rank/module permissions in sync.
         SupabaseCommunityService.start();
