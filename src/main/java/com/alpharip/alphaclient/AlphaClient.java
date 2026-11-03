@@ -20,6 +20,7 @@ import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.combat.AimAssist;
 import com.alpharip.staffmod.pvp.LegacyPvpMod;
 import com.alpharip.staffmod.optimization.FpsOptimization;
+import com.alpharip.staffmod.optimization.AlphaPerformanceCore;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
@@ -116,6 +117,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(PixelGardenMessageNotifier.getInstance());
         EasterEggManager.initialize();
         DeveloperDiagnostics.initialize();
+        AlphaPerformanceCore.getInstance().initialize();
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
         registerClientCommands();
@@ -246,6 +248,7 @@ public final class AlphaClient {
         syncBhopKeyBindingVisibility();
         persistMinimapKeyBindings();
         if (!fpsOptimizationInitialized) fpsOptimizationInitialized = FpsOptimization.applyOnce();
+        AlphaPerformanceCore.getInstance().onClientTick();
         if (partnerAutoConnectConsumed) return;
         String partnerServer = System.getProperty("alphaclient.partnerServer");
         if (partnerServer == null || partnerServer.trim().isEmpty()) return;
