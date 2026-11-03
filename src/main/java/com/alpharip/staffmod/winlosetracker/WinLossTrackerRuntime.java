@@ -82,11 +82,12 @@ public final class WinLossTrackerRuntime {
         if (!loaded) initialize();
         if (event == null || event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
 
+        updateCurrentAddress();
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.fontRendererObj == null || mc.gameSettings == null
                 || mc.gameSettings.showDebugInfo || mc.gameSettings.hideGUI) return;
 
-        WinLossServerProfile profile = TRACKER.findProfileByAddress(getCurrentAddress());
+        WinLossServerProfile profile = TRACKER.findProfileByAddress(currentAddress);
         if (profile == null) return;
 
         WinLossTrackerSettings settings = TRACKER.getSettings();
