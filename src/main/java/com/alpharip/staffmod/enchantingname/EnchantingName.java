@@ -4,19 +4,17 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.inventory.ContainerEnchantment;
 
 /**
- * Idea foundation for displaying the actual enchantment clue directly beside
- * each option in the Minecraft 1.8.9 enchanting table.
+ * Resolves the normal Minecraft enchantment text for each enchanting-table
+ * option, replacing the Standard Galactic Alphabet text shown by vanilla.
  *
- * <p>Minecraft 1.8.9 already calculates one real enchantment clue per option
- * on the server and synchronizes it to the client through
- * ContainerEnchantment.enchantmentIds. Each value packs the enchantment ID
- * into the low 8 bits and the enchantment level into the next 8 bits.</p>
+ * <p>Minecraft 1.8.9 synchronizes one enchantment clue per option through
+ * ContainerEnchantment.enchantmentIds. This class reads that clue and resolves
+ * its localized enchantment name and level, for example "Sharpness IV".</p>
  *
- * <p>This class reads that synchronized clue and resolves its localized name
- * through the registered Enchantment. It does not reproduce the random
- * enchantment algorithm, infer results from xpSeed, or claim to reveal every
- * enchantment that will be applied. The clue is the same single enchantment
- * vanilla displays when the player hovers over an option.</p>
+ * <p>The future GUI integration should draw this returned text where vanilla
+ * draws the obfuscated glyph text. No hover interaction is needed. This only
+ * replaces the displayed clue; it does not attempt to list every enchantment
+ * that may be applied by the selected option.</p>
  *
  * <p>Idea-only code in the mod-ideas branch. No GUI hook or runtime
  * registration is included.</p>
@@ -35,7 +33,7 @@ public class EnchantingName {
     }
 
     /**
-     * Gets the authoritative enchantment clue for one option.
+     * Gets the normal-language text for one enchanting-table option.
      *
      * @param container the active client-side enchanting container
      * @param optionIndex option index from 0 to 2
