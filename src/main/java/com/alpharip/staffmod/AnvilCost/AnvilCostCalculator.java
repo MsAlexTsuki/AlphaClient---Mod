@@ -10,6 +10,7 @@ import net.minecraft.init.Items;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -92,6 +93,13 @@ public final class AnvilCostCalculator {
                 // An unusual modded item must not break the item's normal tooltip.
             }
         }
+
+        Collections.sort(previews, new Comparator<Preview>() {
+            @Override
+            public int compare(Preview first, Preview second) {
+                return Integer.compare(first.getLevels(), second.getLevels());
+            }
+        });
 
         List<Preview> result = Collections.unmodifiableList(new ArrayList<Preview>(previews));
         synchronized (AnvilCostCalculator.class) {
