@@ -37,6 +37,7 @@ public final class RankCache {
     private static final String SUPABASE_URL = "https://lescvpixttmmbnaluidd.supabase.co";
     private static final String PUBLISHABLE_KEY = "sb_publishable_DEeIl6IL4mPXiEx6SaJ3EQ_OvNhEPP8";
     private static final long TTL_MS = 5L * 60L * 1000L;
+    private static final long MISS_TTL_MS = 30L * 1000L;
     private static final long RETRY_MS = 30L * 1000L;
     private static final int BATCH_SIZE = 100;
 
@@ -111,9 +112,10 @@ public final class RankCache {
         long now = System.currentTimeMillis();
         try {
             Map<UUID, AlphaRank> found = fetch(batch);
-            long expiresAt = now + TTL_MS;
             for (UUID uuid : batch) {
-                cache.put(uuid, new Entry(found.get(uuid), expiresAt));
+                AlphaRank rank = found.get(uuid);
+                long expiresAt = now + (rank == null ? MISS_TTL_MS : TTL_MS);
+                cache.put(uuid, new Entry(rank, expiresAt));
                 retryAfter.remove(uuid);
             }
         } catch (Exception exception) {
