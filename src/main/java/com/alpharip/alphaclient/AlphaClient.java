@@ -354,7 +354,7 @@ public final class AlphaClient {
     private void saveKeyBinding(String setting, KeyBinding binding) {
         if (binding == null) return;
         int currentKey = binding.getKeyCode();
-        int savedKey = MinimapSettings.getInt(setting, currentKey, -1, 65535);
+        int savedKey = MinimapSettings.getInt(setting, Keyboard.KEY_NONE, -1, 65535);
         if (savedKey != currentKey) MinimapSettings.setInt(setting, currentKey);
     }
 
