@@ -89,6 +89,7 @@ public final class WinLossTrackerRuntime {
         String address = getCurrentAddress();
         if (!address.equals(currentAddress)) {
             currentAddress = address;
+            TRACKER.setCurrentServerAddress(address);
             lastResultMessage = "";
             lastResultAt = 0L;
         }
