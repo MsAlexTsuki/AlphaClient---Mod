@@ -87,8 +87,16 @@ public final class EnchantingNameGuiText {
             }
 
             int textColor = getTextColor(disabled, hovered);
+            String costText = String.valueOf(requiredLevel);
+            int costWidth = minecraft.fontRendererObj.getStringWidth(costText);
+            int nameWidth = Math.max(1, TEXT_WIDTH - costWidth - 4);
+
             drawFittedText(minecraft, displayName, rowX + TEXT_X_OFFSET,
-                    rowY + 5, textColor);
+                    rowY + 2, nameWidth, textColor);
+
+            int costX = rowX + TEXT_X_OFFSET + TEXT_WIDTH - costWidth;
+            minecraft.fontRendererObj.drawStringWithShadow(
+                    costText, (float) costX, (float) (rowY + 9), 8453920);
         }
     }
 
@@ -115,10 +123,10 @@ public final class EnchantingNameGuiText {
     }
 
     private void drawFittedText(Minecraft minecraft, String text,
-                                int x, int y, int color) {
+                                int x, int y, int availableWidth, int color) {
         int textWidth = minecraft.fontRendererObj.getStringWidth(text);
-        float horizontalScale = textWidth > TEXT_WIDTH
-                ? (float) TEXT_WIDTH / (float) textWidth
+        float horizontalScale = textWidth > availableWidth
+                ? (float) availableWidth / (float) textWidth
                 : 1.0F;
 
         GlStateManager.pushMatrix();
