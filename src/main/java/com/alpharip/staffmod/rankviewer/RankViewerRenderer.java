@@ -17,10 +17,15 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
+import java.nio.FloatBuffer;
+
 /** Renders the rank's image badge immediately before the player's name. */
 public final class RankViewerRenderer {
     private static final int BADGE_SIZE = 12;
     private static final int BADGE_GAP = 3;
+    // Name rendering runs on Minecraft's render thread; reuse this direct buffer
+    // instead of allocating a new native buffer for every rendered nametag.
+    private static final FloatBuffer COLOR_BUFFER = org.lwjgl.BufferUtils.createFloatBuffer(16);
 
     @SubscribeEvent
     public void onRenderPlayerSpecials(RenderPlayerEvent.Specials.Pre event) {
@@ -85,7 +90,7 @@ public final class RankViewerRenderer {
         int nameWidth = minecraft.fontRendererObj.getStringWidth(name);
         int badgeWidth = rank == null ? 0 : BADGE_SIZE + BADGE_GAP;
         int totalWidth = nameWidth + badgeWidth;
-        int nameColor = getRelationshipNameColor(minecraft, name, rank);
+        int nameColor = getRelationshipNameColor(minecraft, player, rank);
         // Vanilla 1.8.9 makes sneaking name tags translucent. Apply the same fade
         // to the local F5 name and badge without changing their position.
         boolean sneaking = player != null && player.isSneaking();
@@ -107,12 +112,12 @@ public final class RankViewerRenderer {
         int blendSrcAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
         int blendDstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
         boolean depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
-        java.nio.FloatBuffer previousColor = org.lwjgl.BufferUtils.createFloatBuffer(16);
-        GL11.glGetFloat(GL11.GL_CURRENT_COLOR, previousColor);
-        float red = previousColor.get(0);
-        float green = previousColor.get(1);
-        float blue = previousColor.get(2);
-        float alpha = previousColor.get(3);
+        COLOR_BUFFER.clear();
+        GL11.glGetFloat(GL11.GL_CURRENT_COLOR, COLOR_BUFFER);
+        float red = COLOR_BUFFER.get(0);
+        float green = COLOR_BUFFER.get(1);
+        float blue = COLOR_BUFFER.get(2);
+        float alpha = COLOR_BUFFER.get(3);
 
         GlStateManager.pushMatrix();
         try {
@@ -192,22 +197,10 @@ public final class RankViewerRenderer {
      * cannot reliably distinguish faction allies from enemies unless the server
      * exposes that relationship separately.
      */
-    private int getRelationshipNameColor(Minecraft minecraft, String name, AlphaRank rank) {
-        if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null) {
+    private int getRelationshipNameColor(Minecraft minecraft, EntityPlayer target, AlphaRank rank) {
+        if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null || target == null) {
             return rank == null ? 0xFFFFFFFF : rank.color();
         }
-
-        EntityPlayer target = null;
-        for (Object object : minecraft.theWorld.playerEntities) {
-            if (object instanceof EntityPlayer) {
-                EntityPlayer candidate = (EntityPlayer) object;
-                if (candidate.getName().equalsIgnoreCase(name)) {
-                    target = candidate;
-                    break;
-                }
-            }
-        }
-        if (target == null) return rank == null ? 0xFFFFFFFF : rank.color();
 
         Team targetTeam = target.getTeam();
         Team ownTeam = minecraft.thePlayer.getTeam();
