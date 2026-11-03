@@ -355,8 +355,8 @@ public final class AlphaMinimap {
                     cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ, MathHelper.floor_double(mc.thePlayer.posY));
                 }
             }
+            rebuildTerrainDisplayList(sampleSize, sampleScale, round, radius);
         }
-        rebuildTerrainDisplayList(sampleSize, sampleScale, round, radius);
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
@@ -366,6 +366,7 @@ public final class AlphaMinimap {
             GL11.glCallList(terrainDisplayList);
             GL11.glPopMatrix();
         }
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableTexture2D();
         // Cardinal crosshair remains visible above the terrain layer.
         Gui.drawRect(cx - 1, cy - radius, cx + 1, cy + radius, 0x334B515D);
