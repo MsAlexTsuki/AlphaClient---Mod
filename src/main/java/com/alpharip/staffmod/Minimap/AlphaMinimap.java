@@ -168,8 +168,9 @@ public final class AlphaMinimap {
 
     private void drawRotatingCompass(int left, int top, int size, int cx, int cy, int rotation) {
         Minecraft mc = Minecraft.getMinecraft();
-        // Place compass labels against the map perimeter instead of over the terrain.
-        int radius = size / 2 - mc.fontRendererObj.FONT_HEIGHT / 2 - 1;
+        // Keep compass labels on the visible map perimeter as the map rotates.
+        int radius = size / 2 - mc.fontRendererObj.FONT_HEIGHT / 2 - 2;
+        boolean round = MinimapSettings.round();
         String[] labels = {"N", "E", "S", "W"};
         double[] xs = {0.0D, 1.0D, 0.0D, -1.0D};
         double[] ys = {-1.0D, 0.0D, 1.0D, 0.0D};
@@ -178,8 +179,13 @@ public final class AlphaMinimap {
         for (int i = 0; i < labels.length; i++) {
             double rx = xs[i] * cos - ys[i] * sin;
             double ry = xs[i] * sin + ys[i] * cos;
-            int x = cx + (int)Math.round(rx * radius) - mc.fontRendererObj.getStringWidth(labels[i]) / 2;
-            int y = cy + (int)Math.round(ry * radius) - mc.fontRendererObj.FONT_HEIGHT / 2;
+            double edgeScale = round ? radius
+                    : radius / Math.max(Math.abs(rx), Math.abs(ry));
+            int labelWidth = mc.fontRendererObj.getStringWidth(labels[i]);
+            int x = cx + (int)Math.round(rx * edgeScale) - labelWidth / 2;
+            int y = cy + (int)Math.round(ry * edgeScale) - mc.fontRendererObj.FONT_HEIGHT / 2;
+            x = Math.max(left + 2, Math.min(left + size - labelWidth - 2, x));
+            y = Math.max(top + 2, Math.min(top + size - mc.fontRendererObj.FONT_HEIGHT - 2, y));
             drawCompassLabel(labels[i], x, y, i == 0 ? 0xFFE8EAF0 : 0xFF9CA3AF);
         }
     }
