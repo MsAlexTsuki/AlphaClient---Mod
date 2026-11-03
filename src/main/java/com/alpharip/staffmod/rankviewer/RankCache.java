@@ -146,7 +146,7 @@ public final class RankCache {
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("apikey", PUBLISHABLE_KEY);
-        connection.setRequestProperty("Authorization", "Bearer " + PUBLISHABLE_KEY);
+        // Anonymous RPC: the publishable key belongs in apikey, not in a Bearer JWT header.
 
         try {
             byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
