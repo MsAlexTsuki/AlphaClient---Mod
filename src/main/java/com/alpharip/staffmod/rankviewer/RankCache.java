@@ -36,9 +36,10 @@ public final class RankCache {
 
     private static final String SUPABASE_URL = "https://lescvpixttmmbnaluidd.supabase.co";
     private static final String PUBLISHABLE_KEY = "sb_publishable_DEeIl6IL4mPXiEx6SaJ3EQ_OvNhEPP8";
-    private static final long TTL_MS = 5L * 60L * 1000L;
-    private static final long MISS_TTL_MS = 30L * 1000L;
-    private static final long RETRY_MS = 30L * 1000L;
+    // Keep public badge data short-lived so sign-outs and expired presence are reflected promptly.
+    private static final long TTL_MS = 30L * 1000L;
+    private static final long MISS_TTL_MS = 10L * 1000L;
+    private static final long RETRY_MS = 15L * 1000L;
     private static final int BATCH_SIZE = 100;
 
     private static final class Entry {
@@ -94,7 +95,8 @@ public final class RankCache {
                 pending.add(uuid);
             }
         }
-        return entry == null ? null : entry.rank;
+        // Never render an expired positive entry while a refresh is pending.
+        return entry == null || entry.expiresAt <= now ? null : entry.rank;
     }
 
     private void flush() {
