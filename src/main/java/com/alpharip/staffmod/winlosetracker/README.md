@@ -25,11 +25,11 @@ Overall statistics aggregate matches across all registered addresses. Current-ad
 
 ## Remaining integration and verification
 
-- The runtime listener must be registered from AlphaClient's existing initialization code. That central entrypoint has not been modified as part of this feature-only scope.
+- The runtime listener still requires registration by the actual mod integration layer. The `mod-ideas` feature branch does not assume that `AlphaClient.java` is the real entrypoint, and no integration class has been changed.
 - The three visibility settings need an in-game settings interface.
 - The result detector recognizes only a limited set of complete result announcements. It is not guaranteed to recognize every server's wording and must be validated against actual Practice result messages.
 - The duplicate guard suppresses an identical result message for ten seconds; this is a basic safeguard, not a universal match identifier.
-- Build and in-game verification have not been performed.
+- Build and in-game verification have not been performed. The feature remains a standalone foundation until it is integrated into the complete `development` mod.
 
 ## Detection limitation
 
