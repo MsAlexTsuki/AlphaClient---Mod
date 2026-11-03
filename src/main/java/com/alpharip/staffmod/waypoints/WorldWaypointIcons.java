@@ -222,8 +222,9 @@ public final class WorldWaypointIcons {
                 GlStateManager.depthMask(false);
 
                 double routeStartY = playerY + 0.25D;
-                GL11.glLineWidth(7.0F);
-                GL11.glColor4f(0.0F,0.55F,0.65F,0.38F);
+                // Bright blue outer glow for strong contrast against terrain.
+                GL11.glLineWidth(11.0F);
+                GL11.glColor4f(0.0F,0.55F,1.0F,0.95F);
                 GL11.glBegin(GL11.GL_LINE_STRIP);
                 GL11.glVertex3d(playerX-rm.viewerPosX,routeStartY-rm.viewerPosY,playerZ-rm.viewerPosZ);
                 for(Vec3 point:navigationPath)
@@ -231,8 +232,9 @@ public final class WorldWaypointIcons {
                             point.yCoord+0.25D-rm.viewerPosY,point.zCoord-rm.viewerPosZ);
                 GL11.glEnd();
 
-                GL11.glLineWidth(3.5F);
-                GL11.glColor4f(0.0F,0.90F,1.0F,1.0F);
+                // Solid electric-cyan core.
+                GL11.glLineWidth(5.5F);
+                GL11.glColor4f(0.0F,1.0F,1.0F,1.0F);
                 GL11.glBegin(GL11.GL_LINE_STRIP);
                 GL11.glVertex3d(playerX-rm.viewerPosX,routeStartY-rm.viewerPosY,playerZ-rm.viewerPosZ);
                 for(Vec3 point:navigationPath)
