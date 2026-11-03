@@ -8,7 +8,8 @@ import java.util.Locale;
 public enum AlphaRank {
     FOUNDER("founder", "Founder", 0xFFFFD866, "F"),
     OWNER("owner", "Owner", 0xFFFF414D, "O"),
-    MANAGEMENT("management", "Management", 0xFF9B4DFF, "M"),
+    MANAGER("manager", "Manager", 0xFF9B4DFF, "M"),
+    PLATFORM_ADMIN("plat_admin", "Platform Admin", 0xFF9B4DFF, "P"),
     SENIOR_ADMIN("senior_admin", "Senior Admin", 0xFF159BFF, "S"),
     ADMIN("admin", "Admin", 0xFF00D9D9, "A"),
     SENIOR_MODERATOR("senior_moderator", "Senior Moderator", 0xFFFF35B8, "S"),
@@ -64,10 +65,10 @@ public enum AlphaRank {
                 .replace(' ', '_');
         if ("user".equals(key) || "public".equals(key)) return MEMBER;
         if ("sr_admin".equals(key) || "senior_admin".equals(key)) return SENIOR_ADMIN;
-        if ("plat_admin".equals(key) || "platform_admin".equals(key)) return MANAGEMENT;
+        if ("plat_admin".equals(key) || "platform_admin".equals(key)) return PLATFORM_ADMIN;
         if ("sr_mod".equals(key) || "senior_mod".equals(key)) return SENIOR_MODERATOR;
         if ("trial_mod".equals(key) || "t_mod".equals(key)) return TRIAL_MODERATOR;
-        if ("management".equals(key) || "manager".equals(key)) return MANAGEMENT;
+        if ("management".equals(key) || "manager".equals(key)) return MANAGER;
         try {
             return valueOf(key.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ignored) {
