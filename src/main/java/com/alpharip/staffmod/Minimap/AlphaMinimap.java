@@ -359,7 +359,7 @@ public final class AlphaMinimap {
         // direct byte buffer on the legacy 1.8.9 renderer.
         final int maxQuadsPerBatch = 1024;
         int pendingQuads = 0;
-        renderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        boolean buildingBatch = false;
         for (int py = 0; py < sampleSize; py++) {
             for (int px = 0; px < sampleSize; px++) {
                 int color = cachedColors[py][px];
@@ -367,6 +367,10 @@ public final class AlphaMinimap {
                 double dx = (px + 0.5D - sampleSize / 2.0D) / sampleScale;
                 double dz = (py + 0.5D - sampleSize / 2.0D) / sampleScale;
                 if (round && dx * dx + dz * dz > radius * radius) continue;
+                if (!buildingBatch) {
+                    renderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+                    buildingBatch = true;
+                }
                 float red = ((color >> 16) & 255) / 255.0F;
                 float green = ((color >> 8) & 255) / 255.0F;
                 float blue = (color & 255) / 255.0F;
@@ -380,12 +384,12 @@ public final class AlphaMinimap {
                 renderer.pos(x1, y1, 0).color(red, green, blue, 1.0F).endVertex();
                 if (++pendingQuads >= maxQuadsPerBatch) {
                     tessellator.draw();
-                    renderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
                     pendingQuads = 0;
+                    buildingBatch = false;
                 }
             }
         }
-        if (pendingQuads > 0) {
+        if (buildingBatch) {
             tessellator.draw();
         }
         GlStateManager.enableTexture2D();
