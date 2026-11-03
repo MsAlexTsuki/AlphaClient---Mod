@@ -9,6 +9,7 @@ public final class WinLossTracker {
     private static final WinLossTracker INSTANCE = new WinLossTracker();
     private final Map<String, WinLossServerProfile> profiles = new LinkedHashMap<String, WinLossServerProfile>();
     private final WinLossTrackerSettings settings = new WinLossTrackerSettings();
+    private String currentServerAddress = "";
     private WinLossTracker() { }
     public static WinLossTracker getInstance() { return INSTANCE; }
     public synchronized boolean addServerProfile(WinLossServerProfile profile) {
@@ -36,6 +37,53 @@ public final class WinLossTracker {
         return Collections.unmodifiableList(new ArrayList<WinLossServerProfile>(profiles.values()));
     }
     public WinLossTrackerSettings getSettings() { return settings; }
+
+    /** Updates the exact hostname currently connected in Minecraft. */
+    public synchronized void setCurrentServerAddress(String address) {
+        currentServerAddress = WinLossServerProfile.normalizeAddress(address);
+        if (!currentServerAddress.isEmpty()) getOrCreateProfileForAddress(currentServerAddress);
+    }
+
+    public synchronized String getCurrentServerAddress() { return currentServerAddress; }
+
+    public synchronized WinLossServerProfile getCurrentServerProfile() {
+        return findProfileByAddress(currentServerAddress);
+    }
+
+    public synchronized WinLossStatistics getCurrentAddressStatistics() {
+        WinLossServerProfile profile = getCurrentServerProfile();
+        return profile == null ? new WinLossStatistics(0, 0) : profile.getAddressStatistics(currentServerAddress);
+    }
+
+    public synchronized WinLossStatistics getCurrentOverallStatistics() {
+        WinLossServerProfile profile = getCurrentServerProfile();
+        return profile == null ? new WinLossStatistics(0, 0) : profile.getOverallStatistics();
+    }
+
+    public synchronized boolean addAddressToProfile(String profileId, String address) {
+        WinLossServerProfile profile = getServerProfile(profileId);
+        if (profile == null) return false;
+        WinLossServerProfile owner = findProfileByAddress(address);
+        if (owner != null && owner != profile) return false;
+        return profile.addAddress(address);
+    }
+
+    /** Records one already-confirmed Practice result for the connected address. */
+    public synchronized boolean recordCurrentMatch(WinLossResult result, long timestamp) {
+        if (currentServerAddress.isEmpty() || result == null) return false;
+        return recordMatch(currentServerAddress, result, timestamp);
+    }
+
+    /** Replaces in-memory data with validated data loaded from local storage. */
+    synchronized void restoreProfile(WinLossServerProfile profile) {
+        if (profile != null) profiles.put(profile.getId(), profile);
+    }
+
+    synchronized void clearProfilesForRestore() { profiles.clear(); }
+
+    synchronized void restoreCurrentServerAddress(String address) {
+        currentServerAddress = WinLossServerProfile.normalizeAddress(address);
+    }
     public synchronized boolean recordMatch(String address, WinLossResult result, long timestamp) {
         if (result == null) return false;
         WinLossServerProfile profile = getOrCreateProfileForAddress(address);
