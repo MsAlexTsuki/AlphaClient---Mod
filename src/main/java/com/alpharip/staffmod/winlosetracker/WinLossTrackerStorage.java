@@ -172,8 +172,10 @@ public final class WinLossTrackerStorage {
     }
 
     private static int readCount(Properties data, String key) throws IOException {
+        String storedValue = data.getProperty(key);
+        if (storedValue == null) throw new IOException("Missing stored count: " + key);
         try {
-            int value = Integer.parseInt(data.getProperty(key, "0"));
+            int value = Integer.parseInt(storedValue);
             if (value < 0 || value > 1000000) throw new NumberFormatException("Out of range");
             return value;
         } catch (NumberFormatException exception) {
