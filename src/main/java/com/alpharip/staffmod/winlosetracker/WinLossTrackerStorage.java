@@ -6,9 +6,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 /** Local persistence for server profiles, aliases, match records, and settings. */
 public final class WinLossTrackerStorage {
@@ -69,16 +74,20 @@ public final class WinLossTrackerStorage {
         }
 
         File temporary = new File(file.getAbsolutePath() + ".tmp");
-        try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
-            data.store(output, "AlphaClient Practice Win/Loss Tracker");
-        }
-        if (file.exists() && !file.delete()) {
-            temporary.delete();
-            throw new IOException("Could not replace existing Win/Loss Tracker data.");
-        }
-        if (!temporary.renameTo(file)) {
-            temporary.delete();
-            throw new IOException("Could not finalize Win/Loss Tracker data.");
+        try {
+            try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
+                data.store(output, "AlphaClient Practice Win/Loss Tracker");
+            }
+            try {
+                Files.move(temporary.toPath(), file.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException exception) {
+                Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            if (temporary.exists() && !temporary.delete()) {
+                System.err.println("[AlphaClient] Could not remove temporary Win/Loss Tracker file.");
+            }
         }
     }
 
@@ -96,6 +105,8 @@ public final class WinLossTrackerStorage {
 
         int profileCount = readCount(data, "profiles.count");
         List<WinLossServerProfile> restored = new ArrayList<WinLossServerProfile>();
+        Set<String> profileIds = new HashSet<String>();
+        Set<String> registeredAddresses = new HashSet<String>();
         for (int i = 0; i < profileCount; i++) {
             String prefix = "profile." + i + ".";
             String id = data.getProperty(prefix + "id");
@@ -104,11 +115,15 @@ public final class WinLossTrackerStorage {
             WinLossServerProfile profile;
             try { profile = new WinLossServerProfile(id, name); }
             catch (IllegalArgumentException exception) { throw new IOException("Invalid stored server profile.", exception); }
+            if (!profileIds.add(profile.getId())) throw new IOException("Duplicate stored server profile ID.");
 
             int addressCount = readCount(data, prefix + "addresses.count");
             for (int a = 0; a < addressCount; a++) {
                 String address = data.getProperty(prefix + "address." + a);
-                if (address == null || !profile.addAddress(address)) throw new IOException("Invalid stored server address.");
+                String normalized = WinLossServerProfile.normalizeAddress(address);
+                if (normalized.isEmpty() || !registeredAddresses.add(normalized) || !profile.addAddress(normalized)) {
+                    throw new IOException("Invalid or duplicate stored server address.");
+                }
             }
 
             int recordCount = readCount(data, prefix + "records.count");
@@ -116,8 +131,11 @@ public final class WinLossTrackerStorage {
                 String rp = prefix + "record." + r + ".";
                 try {
                     String address = data.getProperty(rp + "address");
-                    WinLossResult result = WinLossResult.valueOf(data.getProperty(rp + "result"));
-                    long timestamp = Long.parseLong(data.getProperty(rp + "timestamp"));
+                    String resultValue = data.getProperty(rp + "result");
+                    String timestampValue = data.getProperty(rp + "timestamp");
+                    if (resultValue == null || timestampValue == null) throw new IllegalArgumentException("Missing record field.");
+                    WinLossResult result = WinLossResult.valueOf(resultValue);
+                    long timestamp = Long.parseLong(timestampValue);
                     if (!profile.restoreRecord(address, result, timestamp)) throw new IOException("Invalid stored match record.");
                 } catch (RuntimeException exception) {
                     throw new IOException("Invalid stored match record.", exception);
@@ -126,15 +144,27 @@ public final class WinLossTrackerStorage {
             restored.add(profile);
         }
 
-        // Do not partially replace live data if the file is malformed.
+        boolean showOverall = readBoolean(data, "settings.overall", true);
+        boolean showCurrent = readBoolean(data, "settings.current", true);
+        boolean showIndividual = readBoolean(data, "settings.individual", false);
+
+        // Replace live state only after the complete file has passed validation.
         tracker.clearProfilesForRestore();
         for (WinLossServerProfile profile : restored) tracker.restoreProfile(profile);
         WinLossTrackerSettings settings = tracker.getSettings();
-        settings.setShowOverallStatistics(Boolean.parseBoolean(data.getProperty("settings.overall", "true")));
-        settings.setShowCurrentAddressStatistics(Boolean.parseBoolean(data.getProperty("settings.current", "true")));
-        settings.setShowIndividualAddressStatistics(Boolean.parseBoolean(data.getProperty("settings.individual", "false")));
+        settings.setShowOverallStatistics(showOverall);
+        settings.setShowCurrentAddressStatistics(showCurrent);
+        settings.setShowIndividualAddressStatistics(showIndividual);
         tracker.restoreCurrentServerAddress(data.getProperty("current.address", ""));
         return true;
+    }
+
+    private static boolean readBoolean(Properties data, String key, boolean defaultValue) throws IOException {
+        String value = data.getProperty(key);
+        if (value == null) return defaultValue;
+        if ("true".equalsIgnoreCase(value)) return true;
+        if ("false".equalsIgnoreCase(value)) return false;
+        throw new IOException("Invalid stored setting: " + key);
     }
 
     private static int readCount(Properties data, String key) throws IOException {
