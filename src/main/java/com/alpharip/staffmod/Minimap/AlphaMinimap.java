@@ -46,6 +46,7 @@ public final class AlphaMinimap {
     private int cachedRotation = Integer.MIN_VALUE;
     private boolean cachedUnderground;
     private boolean cachedUndergroundInitialized;
+    private int cachedUndergroundY = Integer.MIN_VALUE;
 
     private AlphaMinimap() { }
     public static AlphaMinimap getInstance() { return INSTANCE; }
@@ -346,9 +347,13 @@ public final class AlphaMinimap {
                 && playerY <= 50 && !mc.theWorld.canSeeSky(playerEyeColumn);
         boolean undergroundModeChanged = !cachedUndergroundInitialized
                 || cachedUnderground != playerIsUnderground;
+        boolean undergroundHeightChanged = playerIsUnderground
+                && (cachedUndergroundY == Integer.MIN_VALUE
+                || Math.abs(playerY - cachedUndergroundY) >= 5);
         boolean moved = Double.isNaN(cachedCenterX) || Math.abs(playerX - cachedCenterX) >= 2.0D
                 || Math.abs(playerZ - cachedCenterZ) >= 2.0D;
-        if (++refreshTicks >= 10 || moved || undergroundModeChanged
+        boolean periodicSurfaceRefresh = !playerIsUnderground && ++refreshTicks >= 10;
+        if (periodicSurfaceRefresh || moved || undergroundModeChanged || undergroundHeightChanged
                 || cachedDimension != mc.thePlayer.dimension || cachedColors.length != sampleSize
                 || cachedRange != range || cachedRound != round || cachedRotation != rotation) {
             refreshTicks = 0;
@@ -359,6 +364,7 @@ public final class AlphaMinimap {
             cachedRotation = rotation;
             cachedUnderground = playerIsUnderground;
             cachedUndergroundInitialized = true;
+            cachedUndergroundY = playerY;
             cachedColors = new int[sampleSize][sampleSize];
 
             // Resolve each loaded chunk at most once during this terrain refresh.
