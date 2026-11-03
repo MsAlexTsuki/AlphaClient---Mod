@@ -14,6 +14,9 @@ public final class WinLossTracker {
     public static WinLossTracker getInstance() { return INSTANCE; }
     public synchronized boolean addServerProfile(WinLossServerProfile profile) {
         if (profile == null || profiles.containsKey(profile.getId())) return false;
+        for (String address : profile.getAddresses()) {
+            if (findProfileByAddress(address) != null) return false;
+        }
         profiles.put(profile.getId(), profile);
         return true;
     }
@@ -62,10 +65,11 @@ public final class WinLossTracker {
 
     public synchronized boolean addAddressToProfile(String profileId, String address) {
         WinLossServerProfile profile = getServerProfile(profileId);
-        if (profile == null) return false;
-        WinLossServerProfile owner = findProfileByAddress(address);
+        String normalized = WinLossServerProfile.normalizeAddress(address);
+        if (profile == null || normalized.isEmpty()) return false;
+        WinLossServerProfile owner = findProfileByAddress(normalized);
         if (owner != null && owner != profile) return false;
-        return profile.addAddress(address);
+        return profile.addAddress(normalized);
     }
 
     /** Records one already-confirmed Practice result for the connected address. */
@@ -74,9 +78,17 @@ public final class WinLossTracker {
         return recordMatch(currentServerAddress, result, timestamp);
     }
 
-    /** Replaces in-memory data with validated data loaded from local storage. */
+    /** Restores a profile only when its ID and addresses do not conflict. */
     synchronized void restoreProfile(WinLossServerProfile profile) {
-        if (profile != null) profiles.put(profile.getId(), profile);
+        if (profile == null || profiles.containsKey(profile.getId())) {
+            throw new IllegalArgumentException("Duplicate or invalid stored server profile.");
+        }
+        for (String address : profile.getAddresses()) {
+            if (findProfileByAddress(address) != null) {
+                throw new IllegalArgumentException("Stored server address belongs to multiple profiles.");
+            }
+        }
+        profiles.put(profile.getId(), profile);
     }
 
     synchronized void clearProfilesForRestore() { profiles.clear(); }
