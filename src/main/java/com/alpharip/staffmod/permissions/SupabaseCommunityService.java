@@ -766,9 +766,9 @@ public final class SupabaseCommunityService {
             case PARTNER: return com.alpharip.staffmod.rankviewer.AlphaRank.PARTNER;
             case FAMOUS: return com.alpharip.staffmod.rankviewer.AlphaRank.FAMOUS;
             case MEDIA: return com.alpharip.staffmod.rankviewer.AlphaRank.MEDIA;
-            case MANAGER:
+            case MANAGER: return com.alpharip.staffmod.rankviewer.AlphaRank.MANAGER;
             case PLAT_ADMIN:
-            case MANAGEMENT: return com.alpharip.staffmod.rankviewer.AlphaRank.MANAGEMENT;
+            case MANAGEMENT: return com.alpharip.staffmod.rankviewer.AlphaRank.PLATFORM_ADMIN;
             case SR_ADMIN: return com.alpharip.staffmod.rankviewer.AlphaRank.SENIOR_ADMIN;
             case ADMIN: return com.alpharip.staffmod.rankviewer.AlphaRank.ADMIN;
             case SR_MOD: return com.alpharip.staffmod.rankviewer.AlphaRank.SENIOR_MODERATOR;
