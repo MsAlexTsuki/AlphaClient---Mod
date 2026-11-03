@@ -255,8 +255,11 @@ public final class WorldWaypointIcons {
                     if(!ServerWaypointIntegration.belongsToCurrentWorld(point,mc)){sameWorld=false;break;}
                 if(sameWorld) {
                     GlStateManager.disableTexture2D();
-                    GL11.glColor4f(1.0F,0.78F,0.24F,0.85F);
-                    GL11.glLineWidth(2.0F);
+                    // Keep the route blue while allowing terrain and blocks to occlude it.
+                    GlStateManager.enableDepth();
+                    GlStateManager.depthMask(false);
+                    GL11.glColor4f(0.0F,0.45F,1.0F,1.0F);
+                    GL11.glLineWidth(3.0F);
                     GL11.glBegin(GL11.GL_LINES);
                     for(int i=1;i<routePoints.size();i++) {
                         StaffWaypoint start=routePoints.get(i-1),end=routePoints.get(i);
@@ -264,6 +267,9 @@ public final class WorldWaypointIcons {
                         GL11.glVertex3d(end.getX()+0.5D-rm.viewerPosX,end.getY()+0.5D-rm.viewerPosY,end.getZ()+0.5D-rm.viewerPosZ);
                     }
                     GL11.glEnd();
+                    GL11.glLineWidth(1.0F);
+                    GlStateManager.depthMask(true);
+                    GlStateManager.color(1.0F,1.0F,1.0F,1.0F);
                     GlStateManager.enableTexture2D();
                 }
             }
