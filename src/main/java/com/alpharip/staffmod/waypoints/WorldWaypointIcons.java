@@ -215,25 +215,34 @@ public final class WorldWaypointIcons {
 
                 GlStateManager.disableTexture2D();
                 GlStateManager.enableBlend();
-                GlStateManager.enableDepth();
+
+                // The navigation route must remain visible when its path crosses
+                // hills, terrain or other solid blocks.
+                GlStateManager.disableDepth();
+                GlStateManager.depthMask(false);
+
+                double routeStartY = playerY + 0.25D;
                 GL11.glLineWidth(7.0F);
                 GL11.glColor4f(0.0F,0.55F,0.65F,0.38F);
                 GL11.glBegin(GL11.GL_LINE_STRIP);
-                GL11.glVertex3d(playerX-rm.viewerPosX,playerY-rm.viewerPosY,playerZ-rm.viewerPosZ);
+                GL11.glVertex3d(playerX-rm.viewerPosX,routeStartY-rm.viewerPosY,playerZ-rm.viewerPosZ);
                 for(Vec3 point:navigationPath)
                     GL11.glVertex3d(point.xCoord-rm.viewerPosX,
-                            point.yCoord-rm.viewerPosY,point.zCoord-rm.viewerPosZ);
+                            point.yCoord+0.25D-rm.viewerPosY,point.zCoord-rm.viewerPosZ);
                 GL11.glEnd();
 
                 GL11.glLineWidth(3.5F);
                 GL11.glColor4f(0.0F,0.90F,1.0F,1.0F);
                 GL11.glBegin(GL11.GL_LINE_STRIP);
-                GL11.glVertex3d(playerX-rm.viewerPosX,playerY-rm.viewerPosY,playerZ-rm.viewerPosZ);
+                GL11.glVertex3d(playerX-rm.viewerPosX,routeStartY-rm.viewerPosY,playerZ-rm.viewerPosZ);
                 for(Vec3 point:navigationPath)
                     GL11.glVertex3d(point.xCoord-rm.viewerPosX,
-                            point.yCoord-rm.viewerPosY,point.zCoord-rm.viewerPosZ);
+                            point.yCoord+0.25D-rm.viewerPosY,point.zCoord-rm.viewerPosZ);
                 GL11.glEnd();
+
                 GL11.glLineWidth(1.0F);
+                GlStateManager.depthMask(true);
+                GlStateManager.enableDepth();
                 GlStateManager.color(1.0F,1.0F,1.0F,1.0F);
                 GlStateManager.enableTexture2D();
             }
