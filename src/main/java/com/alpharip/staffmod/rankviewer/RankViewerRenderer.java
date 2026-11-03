@@ -71,13 +71,10 @@ public final class RankViewerRenderer {
         y -= renderManager.viewerPosY;
         z -= renderManager.viewerPosZ;
 
-        // The local badge follows the currently signed-in Alpha account, not an arbitrary
-        // Minecraft-UUID association (one UUID may be linked to multiple Alpha accounts).
+        // The local badge is controlled exclusively by the active Alpha account login.
+        // Do not fall back to a Minecraft UUID cache or show a placeholder rank after logout.
         AlphaRank rank = SupabaseCommunityService.getSignedInDisplayRank();
-        if (rank == null) rank = RankCache.INSTANCE.get(player.getUniqueID());
-        // Keep the badge slot visible while account rank data is unavailable; a valid
-        // signed-in rank or cached Minecraft UUID rank always takes precedence.
-        if (rank == null) rank = AlphaRank.MEMBER;
+        if (rank == null) return;
         // Name Viewer displays the player's name together with their rank badge.
         drawNameWithBadge(minecraft, player, rank, player.getName(), x,
                 y + player.height + 0.5D - (player.isSneaking() ? 0.25D : 0.0D), z,
