@@ -43,9 +43,11 @@ Open it with `/waypoint open`. The screen does not pause the game.
 
 ### Navigation and route
 
-Selecting a waypoint highlights it as the current target. The radar shows its name and distance.
+Selecting a waypoint highlights it as the current target. The radar shows its name and distance. The navigation overlay calculates a terrain-aware walking path using Minecraft 1.8.9's walk node processor, accounting for player clearance, walkable ground, one-block step/jump transitions and water navigation. It recalculates as the player moves and works against the loaded terrain in the current dimension, including the Nether. It does not connect separate dimensions or calculate portal transfers. The route is rendered in a fixed bright cyan-blue color, independent of waypoint category and chroma colors.
 
-A route can connect two or more saved waypoints in the same server and dimension. The world renderer draws each route segment. The command reports both direct endpoint distance and the sum of distances between consecutive stops; it does not calculate a path around terrain or obstacles. The selected destination and route are currently session-only and must be selected again after restarting Minecraft.
+When the player comes within 10 blocks of the selected waypoint, navigation is cleared, the waypoint is marked visited and chat displays: `You have arrived at <waypoint name>`. This navigation-arrival behavior is independent of the optional general arrival-detection setting.
+
+A separate manual route can connect two or more saved waypoints in the same server and dimension. The `/waypoint route` command still draws direct segments between those manually selected stops and reports direct endpoint distance plus the sum of segment distances; it does not pathfind each manual segment. The selected destination and route are session-only and must be selected again after restarting Minecraft.
 
 ```text
 /waypoint route "Home Base" "Village" Outpost
