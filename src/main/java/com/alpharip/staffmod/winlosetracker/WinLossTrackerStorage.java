@@ -1,61 +1,35 @@
 package com.alpharip.staffmod.winlosetracker;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
-/** Persists server profiles, addresses, match records, and display preferences. */
+
+/** Local persistence for server profiles, aliases, match records, and settings. */
 public final class WinLossTrackerStorage {
+    private static final String FORMAT_VERSION = "1";
     private WinLossTrackerStorage() { }
-    public static void load(WinLossTracker tracker, File file) {
-        if (tracker == null || file == null || !file.isFile()) return;
-        Properties data = new Properties();
-        try (FileInputStream input = new FileInputStream(file)) { data.load(input); }
-        catch (IOException e) {
-            System.err.println("[AlphaClient] Could not load Win/Loss Tracker data: " + e.getMessage());
-            return;
-        }
-        WinLossTrackerSettings settings = tracker.getSettings();
-        settings.setShowOverallStatistics(Boolean.parseBoolean(data.getProperty("settings.overall", "true")));
-        settings.setShowCurrentAddressStatistics(Boolean.parseBoolean(data.getProperty("settings.current", "true")));
-        settings.setShowIndividualAddressStatistics(Boolean.parseBoolean(data.getProperty("settings.individual", "false")));
-        int count = readCount(data, "profiles.count");
-        for (int i = 0; i < count; i++) {
-            String prefix = "profile." + i + ".";
-            String id = data.getProperty(prefix + "id", "").trim();
-            String name = data.getProperty(prefix + "name", "").trim();
-            if (id.isEmpty() || name.isEmpty()) continue;
-            WinLossServerProfile profile;
-            try { profile = new WinLossServerProfile(id, name); }
-            catch (IllegalArgumentException ignored) { continue; }
-            int addressCount = readCount(data, prefix + "addresses.count");
-            for (int j = 0; j < addressCount; j++) profile.addAddress(data.getProperty(prefix + "address." + j, ""));
-            if (!tracker.addServerProfile(profile)) continue;
-            int recordCount = readCount(data, prefix + "records.count");
-            for (int j = 0; j < recordCount; j++) {
-                String rp = prefix + "record." + j + ".";
-                String address = data.getProperty(rp + "address", "");
-                try {
-                    WinLossResult result = WinLossResult.valueOf(data.getProperty(rp + "result", ""));
-                    if (profile.containsAddress(address)) profile.record(address, result, readLong(data, rp + "timestamp", 0L));
-                } catch (IllegalArgumentException ignored) { }
-            }
-        }
-    }
-    public static void save(WinLossTracker tracker, File file) {
-        if (tracker == null || file == null) return;
+
+    public static void save(WinLossTracker tracker, File file) throws IOException {
+        if (tracker == null || file == null) throw new IllegalArgumentException("Tracker and file are required.");
         File parent = file.getParentFile();
-        if (parent != null && !parent.exists() && !parent.mkdirs()) {
-            System.err.println("[AlphaClient] Could not create Win/Loss Tracker data directory.");
-            return;
+        if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.isDirectory()) {
+            throw new IOException("Could not create Win/Loss Tracker directory.");
         }
+
         Properties data = new Properties();
+        data.setProperty("format.version", FORMAT_VERSION);
+        data.setProperty("current.address", tracker.getCurrentServerAddress());
         WinLossTrackerSettings settings = tracker.getSettings();
         data.setProperty("settings.overall", Boolean.toString(settings.isShowOverallStatistics()));
         data.setProperty("settings.current", Boolean.toString(settings.isShowCurrentAddressStatistics()));
         data.setProperty("settings.individual", Boolean.toString(settings.isShowIndividualAddressStatistics()));
+
         List<WinLossServerProfile> profiles = tracker.getServerProfiles();
         data.setProperty("profiles.count", Integer.toString(profiles.size()));
         for (int i = 0; i < profiles.size(); i++) {
@@ -63,32 +37,97 @@ public final class WinLossTrackerStorage {
             String prefix = "profile." + i + ".";
             data.setProperty(prefix + "id", profile.getId());
             data.setProperty(prefix + "name", profile.getDisplayName());
-            Set<String> addresses = profile.getAddresses();
+            List<String> addresses = new ArrayList<String>(profile.getAddresses());
             data.setProperty(prefix + "addresses.count", Integer.toString(addresses.size()));
-            int a = 0;
-            for (String address : addresses) data.setProperty(prefix + "address." + a++, address);
+            for (int a = 0; a < addresses.size(); a++) data.setProperty(prefix + "address." + a, addresses.get(a));
+
             List<WinLossRecord> records = profile.getRecords();
             data.setProperty(prefix + "records.count", Integer.toString(records.size()));
-            for (int j = 0; j < records.size(); j++) {
-                WinLossRecord record = records.get(j);
-                String rp = prefix + "record." + j + ".";
+            for (int r = 0; r < records.size(); r++) {
+                WinLossRecord record = records.get(r);
+                String rp = prefix + "record." + r + ".";
                 data.setProperty(rp + "address", record.getServerAddress());
                 data.setProperty(rp + "result", record.getResult().name());
                 data.setProperty(rp + "timestamp", Long.toString(record.getTimestamp()));
             }
         }
-        try (FileOutputStream output = new FileOutputStream(file)) {
+
+        File temporary = new File(file.getAbsolutePath() + ".tmp");
+        try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
             data.store(output, "AlphaClient Practice Win/Loss Tracker");
-        } catch (IOException e) {
-            System.err.println("[AlphaClient] Could not save Win/Loss Tracker data: " + e.getMessage());
+        }
+        if (file.exists() && !file.delete()) {
+            temporary.delete();
+            throw new IOException("Could not replace existing Win/Loss Tracker data.");
+        }
+        if (!temporary.renameTo(file)) {
+            temporary.delete();
+            throw new IOException("Could not finalize Win/Loss Tracker data.");
         }
     }
-    private static int readCount(Properties data, String key) {
-        try { return Math.max(0, Math.min(100000, Integer.parseInt(data.getProperty(key, "0")))); }
-        catch (NumberFormatException ignored) { return 0; }
+
+    public static boolean load(File file, WinLossTracker tracker) throws IOException {
+        if (tracker == null || file == null) throw new IllegalArgumentException("Tracker and file are required.");
+        if (!file.isFile()) return false;
+
+        Properties data = new Properties();
+        try (BufferedInputStream input = new BufferedInputStream(new FileInputStream(file))) {
+            data.load(input);
+        }
+        if (!FORMAT_VERSION.equals(data.getProperty("format.version"))) {
+            throw new IOException("Unsupported Win/Loss Tracker storage format.");
+        }
+
+        int profileCount = readCount(data, "profiles.count");
+        List<WinLossServerProfile> restored = new ArrayList<WinLossServerProfile>();
+        for (int i = 0; i < profileCount; i++) {
+            String prefix = "profile." + i + ".";
+            String id = data.getProperty(prefix + "id");
+            String name = data.getProperty(prefix + "name");
+            if (id == null || name == null) throw new IOException("Invalid stored server profile.");
+            WinLossServerProfile profile;
+            try { profile = new WinLossServerProfile(id, name); }
+            catch (IllegalArgumentException exception) { throw new IOException("Invalid stored server profile.", exception); }
+
+            int addressCount = readCount(data, prefix + "addresses.count");
+            for (int a = 0; a < addressCount; a++) {
+                String address = data.getProperty(prefix + "address." + a);
+                if (address == null || !profile.addAddress(address)) throw new IOException("Invalid stored server address.");
+            }
+
+            int recordCount = readCount(data, prefix + "records.count");
+            for (int r = 0; r < recordCount; r++) {
+                String rp = prefix + "record." + r + ".";
+                try {
+                    String address = data.getProperty(rp + "address");
+                    WinLossResult result = WinLossResult.valueOf(data.getProperty(rp + "result"));
+                    long timestamp = Long.parseLong(data.getProperty(rp + "timestamp"));
+                    if (!profile.restoreRecord(address, result, timestamp)) throw new IOException("Invalid stored match record.");
+                } catch (RuntimeException exception) {
+                    throw new IOException("Invalid stored match record.", exception);
+                }
+            }
+            restored.add(profile);
+        }
+
+        // Do not partially replace live data if the file is malformed.
+        tracker.clearProfilesForRestore();
+        for (WinLossServerProfile profile : restored) tracker.restoreProfile(profile);
+        WinLossTrackerSettings settings = tracker.getSettings();
+        settings.setShowOverallStatistics(Boolean.parseBoolean(data.getProperty("settings.overall", "true")));
+        settings.setShowCurrentAddressStatistics(Boolean.parseBoolean(data.getProperty("settings.current", "true")));
+        settings.setShowIndividualAddressStatistics(Boolean.parseBoolean(data.getProperty("settings.individual", "false")));
+        tracker.restoreCurrentServerAddress(data.getProperty("current.address", ""));
+        return true;
     }
-    private static long readLong(Properties data, String key, long fallback) {
-        try { return Long.parseLong(data.getProperty(key, Long.toString(fallback))); }
-        catch (NumberFormatException ignored) { return fallback; }
+
+    private static int readCount(Properties data, String key) throws IOException {
+        try {
+            int value = Integer.parseInt(data.getProperty(key, "0"));
+            if (value < 0 || value > 1000000) throw new NumberFormatException("Out of range");
+            return value;
+        } catch (NumberFormatException exception) {
+            throw new IOException("Invalid stored count: " + key, exception);
+        }
     }
 }
