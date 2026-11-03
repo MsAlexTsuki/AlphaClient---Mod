@@ -15,7 +15,23 @@ public final class WinLossTrackerStorage {
     private static final String FORMAT_VERSION = "1";
     private WinLossTrackerStorage() { }
 
-    public static void save(WinLossTracker tracker, File file) throws IOException {
+    /** Backwards-compatible convenience overload used by the Forge runtime. */
+    public static void save(WinLossTracker tracker, File file) {
+        try { save(file, tracker); }
+        catch (IOException exception) {
+            System.err.println("[AlphaClient] Could not save Win/Loss Tracker data: " + exception.getMessage());
+        }
+    }
+
+    /** Backwards-compatible convenience overload used by the Forge runtime. */
+    public static void load(WinLossTracker tracker, File file) {
+        try { load(file, tracker); }
+        catch (IOException exception) {
+            System.err.println("[AlphaClient] Could not load Win/Loss Tracker data: " + exception.getMessage());
+        }
+    }
+
+    public static void save(File file, WinLossTracker tracker) throws IOException {
         if (tracker == null || file == null) throw new IllegalArgumentException("Tracker and file are required.");
         File parent = file.getParentFile();
         if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.isDirectory()) {
