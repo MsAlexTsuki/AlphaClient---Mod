@@ -3,6 +3,7 @@ package com.alpharip.staffmod.developer;
 
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.optimization.PerformanceDiagnostics;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
@@ -243,6 +244,7 @@ public final class DeveloperDiagnostics {
         try {
             writer.write("Alpha Client Diagnostic Bundle\nGenerated: " + new Date() + "\n\n");
             writer.write("PROFILER\n" + profilerReport() + "\n\n");
+            writer.write("ALPHA PERFORMANCE CORE\n" + PerformanceDiagnostics.createReport() + "\n\n");
             writer.write("MODS\n" + modReport() + "\n\n");
             writer.write("MODULES\n" + moduleReport() + "\n\n");
             writer.write("DEPENDENCIES\n" + dependencyReport() + "\n\n");
