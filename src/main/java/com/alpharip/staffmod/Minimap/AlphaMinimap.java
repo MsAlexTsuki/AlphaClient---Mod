@@ -352,10 +352,12 @@ public final class AlphaMinimap {
             boolean playerIsUnderground = !mc.theWorld.canSeeSky(playerEyeColumn);
 
             // Resolve each loaded chunk at most once during this terrain refresh.
-            int minChunkX = (MathHelper.floor_double(playerX - range) - 1) >> 4;
-            int maxChunkX = (MathHelper.floor_double(playerX + range) + 1) >> 4;
-            int minChunkZ = (MathHelper.floor_double(playerZ - range) - 1) >> 4;
-            int maxChunkZ = (MathHelper.floor_double(playerZ + range) + 1) >> 4;
+            // A rotated square map can reach farther than 'range' on either world axis.
+            int chunkPadding = range * 2 + 2;
+            int minChunkX = (MathHelper.floor_double(playerX - chunkPadding)) >> 4;
+            int maxChunkX = (MathHelper.floor_double(playerX + chunkPadding)) >> 4;
+            int minChunkZ = (MathHelper.floor_double(playerZ - chunkPadding)) >> 4;
+            int maxChunkZ = (MathHelper.floor_double(playerZ + chunkPadding)) >> 4;
             Chunk[][] chunkCache = new Chunk[maxChunkZ - minChunkZ + 1][maxChunkX - minChunkX + 1];
             boolean[][] chunkChecked = new boolean[chunkCache.length][chunkCache[0].length];
 
