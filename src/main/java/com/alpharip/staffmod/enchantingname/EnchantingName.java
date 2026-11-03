@@ -1,35 +1,30 @@
 package com.alpharip.staffmod.enchantingname;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.inventory.ContainerEnchantment;
 
 /**
- * Idea foundation for showing enchantment names directly in the Minecraft
- * 1.8.9 enchanting table, without requiring the player to hover over an option.
+ * Idea foundation for displaying the actual enchantment clue directly beside
+ * each option in the Minecraft 1.8.9 enchanting table.
  *
- * <p>This class stores names that have already been resolved for each of the
- * three enchanting-table options. It deliberately does not calculate or guess
- * enchantment results. A future runtime implementation must obtain the actual
- * result from an authoritative preview source before passing names to this
- * class.</p>
+ * <p>Minecraft 1.8.9 already calculates one real enchantment clue per option
+ * on the server and synchronizes it to the client through
+ * ContainerEnchantment.enchantmentIds. Each value packs the enchantment ID
+ * into the low 8 bits and the enchantment level into the next 8 bits.</p>
  *
- * <p>This is idea-only code in the mod-ideas branch. It is not registered,
- * connected to the enchanting GUI, or active in AlphaClient.</p>
+ * <p>This class reads that synchronized clue and resolves its localized name
+ * through the registered Enchantment. It does not reproduce the random
+ * enchantment algorithm, infer results from xpSeed, or claim to reveal every
+ * enchantment that will be applied. The clue is the same single enchantment
+ * vanilla displays when the player hovers over an option.</p>
+ *
+ * <p>Idea-only code in the mod-ideas branch. No GUI hook or runtime
+ * registration is included.</p>
  */
 public class EnchantingName {
 
     private static final int OPTION_COUNT = 3;
-
     private boolean enabled = true;
-
-    /*
-     * The key is the enchanting-table option index (0, 1, or 2).
-     * A list is used because one option can result in more than one enchantment.
-     */
-    private final Map<Integer, List<String>> optionNames = new HashMap<Integer, List<String>>();
 
     public boolean isEnabled() {
         return enabled;
@@ -40,67 +35,50 @@ public class EnchantingName {
     }
 
     /**
-     * Stores the resolved enchantment names for one enchanting-table option.
+     * Gets the authoritative enchantment clue for one option.
      *
+     * @param container the active client-side enchanting container
      * @param optionIndex option index from 0 to 2
-     * @param resolvedNames actual, already-resolved enchantment display names
+     * @return the localized enchantment name and level, or null when no clue
+     *         is available for this option
      */
-    public void setOptionNames(int optionIndex, List<String> resolvedNames) {
+    public String getOptionDisplayName(ContainerEnchantment container, int optionIndex) {
         validateOptionIndex(optionIndex);
 
-        if (resolvedNames == null || resolvedNames.isEmpty()) {
-            optionNames.remove(optionIndex);
-            return;
+        if (!enabled || container == null
+                || container.enchantmentIds == null
+                || container.enchantmentIds.length <= optionIndex) {
+            return null;
         }
 
-        List<String> cleanNames = new ArrayList<String>();
-        for (String name : resolvedNames) {
-            if (name != null && !name.trim().isEmpty()) {
-                cleanNames.add(name.trim());
-            }
+        int encodedClue = container.enchantmentIds[optionIndex];
+        if (encodedClue < 0) {
+            return null;
         }
 
-        if (cleanNames.isEmpty()) {
-            optionNames.remove(optionIndex);
-        } else {
-            optionNames.put(optionIndex, cleanNames);
+        int enchantmentId = encodedClue & 255;
+        int enchantmentLevel = (encodedClue >> 8) & 255;
+
+        if (enchantmentLevel <= 0) {
+            return null;
         }
+
+        Enchantment enchantment = Enchantment.getEnchantmentById(enchantmentId);
+        if (enchantment == null) {
+            return null;
+        }
+
+        return enchantment.getTranslatedName(enchantmentLevel);
     }
 
-    /**
-     * Returns the resolved names for an option.
-     *
-     * @param optionIndex option index from 0 to 2
-     * @return an immutable list; empty when no names have been resolved
-     */
-    public List<String> getOptionNames(int optionIndex) {
-        validateOptionIndex(optionIndex);
-
-        List<String> names = optionNames.get(optionIndex);
-        if (names == null) {
-            return Collections.emptyList();
-        }
-
-        return Collections.unmodifiableList(names);
-    }
-
-    /**
-     * Indicates whether a name should currently be shown for an option.
-     */
-    public boolean shouldDisplayOption(int optionIndex) {
-        return enabled && !getOptionNames(optionIndex).isEmpty();
-    }
-
-    /**
-     * Clears names when the item, enchantment seed, or available options change.
-     */
-    public void clearOptions() {
-        optionNames.clear();
+    public boolean shouldDisplayOption(ContainerEnchantment container, int optionIndex) {
+        return getOptionDisplayName(container, optionIndex) != null;
     }
 
     private void validateOptionIndex(int optionIndex) {
         if (optionIndex < 0 || optionIndex >= OPTION_COUNT) {
-            throw new IllegalArgumentException("Enchanting option index must be between 0 and 2.");
+            throw new IllegalArgumentException(
+                    "Enchanting option index must be between 0 and 2.");
         }
     }
 }
