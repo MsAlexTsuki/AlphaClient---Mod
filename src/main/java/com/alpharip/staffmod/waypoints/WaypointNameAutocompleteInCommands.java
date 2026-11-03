@@ -1,7 +1,6 @@
 package com.alpharip.staffmod.waypoints;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /** Provides case-insensitive name completions for waypoint commands. */
@@ -13,6 +12,6 @@ public final class WaypointNameAutocompleteInCommands {
             if (point != null && point.getLabel().toLowerCase(java.util.Locale.ROOT).startsWith(q))
                 result.add(point.getLabel());
         }
-        return Collections.unmodifiableList(result);
+        return result;
     }
 }
