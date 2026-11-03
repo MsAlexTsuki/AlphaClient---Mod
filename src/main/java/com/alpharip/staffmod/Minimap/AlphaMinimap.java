@@ -44,6 +44,8 @@ public final class AlphaMinimap {
     private int cachedRange = -1;
     private boolean cachedRound;
     private int cachedRotation = Integer.MIN_VALUE;
+    private boolean cachedUnderground;
+    private boolean cachedUndergroundInitialized;
 
     private AlphaMinimap() { }
     public static AlphaMinimap getInstance() { return INSTANCE; }
@@ -334,9 +336,20 @@ public final class AlphaMinimap {
         // Rebuild after meaningful movement or every ten render frames.
         final int sampleScale = 1;
         final int sampleSize = size * sampleScale;
+        int playerY = MathHelper.floor_double(mc.thePlayer.posY);
+        BlockPos playerEyeColumn = new BlockPos(
+                MathHelper.floor_double(mc.thePlayer.posX), playerY + 1,
+                MathHelper.floor_double(mc.thePlayer.posZ));
+        // Cave-level terrain is shown only below Y=50 while actually underground.
+        // Creative flight must keep the normal surface map regardless of altitude.
+        boolean playerIsUnderground = !mc.thePlayer.capabilities.isFlying
+                && playerY <= 50 && !mc.theWorld.canSeeSky(playerEyeColumn);
+        boolean undergroundModeChanged = !cachedUndergroundInitialized
+                || cachedUnderground != playerIsUnderground;
         boolean moved = Double.isNaN(cachedCenterX) || Math.abs(playerX - cachedCenterX) >= 2.0D
                 || Math.abs(playerZ - cachedCenterZ) >= 2.0D;
-        if (++refreshTicks >= 10 || moved || cachedDimension != mc.thePlayer.dimension || cachedColors.length != sampleSize
+        if (++refreshTicks >= 10 || moved || undergroundModeChanged
+                || cachedDimension != mc.thePlayer.dimension || cachedColors.length != sampleSize
                 || cachedRange != range || cachedRound != round || cachedRotation != rotation) {
             refreshTicks = 0;
             cachedCenterX = playerX; cachedCenterZ = playerZ;
@@ -344,12 +357,9 @@ public final class AlphaMinimap {
             cachedRange = range;
             cachedRound = round;
             cachedRotation = rotation;
+            cachedUnderground = playerIsUnderground;
+            cachedUndergroundInitialized = true;
             cachedColors = new int[sampleSize][sampleSize];
-            int playerY = MathHelper.floor_double(mc.thePlayer.posY);
-            BlockPos playerEyeColumn = new BlockPos(
-                    MathHelper.floor_double(mc.thePlayer.posX), playerY + 1,
-                    MathHelper.floor_double(mc.thePlayer.posZ));
-            boolean playerIsUnderground = !mc.theWorld.canSeeSky(playerEyeColumn);
 
             // Resolve each loaded chunk at most once during this terrain refresh.
             // A rotated square map can reach farther than 'range' on either world axis.
