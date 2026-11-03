@@ -12,8 +12,8 @@ import java.io.File;
 import java.util.Locale;
 
 /**
- * Forge event adapter. AlphaClient must initialize and register this listener
- * from its existing central initialization method.
+ * Forge event adapter. Registration is intentionally left to the actual mod
+ * integration layer; this feature module does not assume an entrypoint class.
  */
 public final class WinLossTrackerRuntime {
     private static final WinLossTracker TRACKER = WinLossTracker.getInstance();
@@ -22,6 +22,7 @@ public final class WinLossTrackerRuntime {
     private String lastResultMessage = "";
     private long lastResultAt;
     private boolean loaded;
+    private boolean persistenceReady;
 
     private static File createDataFile() {
         Minecraft mc = Minecraft.getMinecraft();
@@ -29,10 +30,17 @@ public final class WinLossTrackerRuntime {
         return new File(new File(new File(base, "config"), "alphaclient"), "winlosetracker.properties");
     }
 
-    /** Call once during AlphaClient initialization before registering this listener. */
+    /** Call once from the real mod integration layer before event handling begins. */
     public void initialize() {
         if (loaded) return;
-        WinLossTrackerStorage.load(TRACKER, DATA_FILE);
+        try {
+            WinLossTrackerStorage.load(DATA_FILE, TRACKER);
+            persistenceReady = true;
+        } catch (java.io.IOException exception) {
+            // Keep the in-memory tracker usable, but never overwrite unreadable saved data.
+            persistenceReady = false;
+            System.err.println("[AlphaClient] Win/Loss Tracker storage was not loaded: " + exception.getMessage());
+        }
         loaded = true;
         updateCurrentAddress();
     }
@@ -63,7 +71,7 @@ public final class WinLossTrackerRuntime {
         if (TRACKER.recordMatch(address, result, now)) {
             lastResultMessage = normalized;
             lastResultAt = now;
-            WinLossTrackerStorage.save(TRACKER, DATA_FILE);
+            if (persistenceReady) WinLossTrackerStorage.save(TRACKER, DATA_FILE);
         }
     }
 
@@ -124,7 +132,7 @@ public final class WinLossTrackerRuntime {
             lastResultAt = 0L;
             // Persist newly discovered profiles and the last connected address
             // even if the player leaves before completing a match.
-            WinLossTrackerStorage.save(TRACKER, DATA_FILE);
+            if (persistenceReady) WinLossTrackerStorage.save(TRACKER, DATA_FILE);
         }
     }
 
