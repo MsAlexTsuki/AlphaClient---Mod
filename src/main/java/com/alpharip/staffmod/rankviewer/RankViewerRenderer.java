@@ -11,7 +11,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
@@ -28,12 +28,12 @@ public final class RankViewerRenderer {
     private static final FloatBuffer COLOR_BUFFER = org.lwjgl.BufferUtils.createFloatBuffer(16);
 
     @SubscribeEvent
-    public void onRenderPlayerSpecials(RenderPlayerEvent.Specials.Pre event) {
+    public void onRenderPlayerSpecials(RenderLivingEvent.Specials.Pre event) {
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || event.entityPlayer == null || minecraft.theWorld == null
-                || minecraft.fontRendererObj == null) return;
+        if (minecraft == null || event.entity == null || minecraft.theWorld == null
+                || minecraft.fontRendererObj == null || !(event.entity instanceof EntityPlayer)) return;
 
-        EntityPlayer player = event.entityPlayer;
+        EntityPlayer player = (EntityPlayer) event.entity;
         boolean renderingLocalPlayer = minecraft.thePlayer != null
                 && minecraft.thePlayer.getUniqueID().equals(player.getUniqueID());
         // The local player's name is rendered by the Name Viewer below.
@@ -42,12 +42,14 @@ public final class RankViewerRenderer {
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
         if (rank == null) return;
 
-        // RenderPlayerEvent.Specials.Pre already runs with the entity transform applied.
-        // Use local entity coordinates here; event.x/y/z would apply the position twice.
-        drawNameWithBadge(minecraft, player, rank, player.getName(), 0.0D,
-                player.height + 0.72D, 0.0D,
+        // Replace the vanilla player nametag only when this player has an active Alpha rank.
+        event.setCanceled(true);
+        // Forge fires this event before vanilla applies the nametag translation,
+        // so use the camera-relative render coordinates supplied by the event.
+        drawNameWithBadge(minecraft, player, rank, player.getName(), event.x,
+                event.y + player.height + 0.5D, event.z,
                 minecraft.getRenderManager().playerViewY,
-                minecraft.getRenderManager().playerViewX, 0.02F);
+                minecraft.getRenderManager().playerViewX, 0.026666668F);
     }
 
     @SubscribeEvent
