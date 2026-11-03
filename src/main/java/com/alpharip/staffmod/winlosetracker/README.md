@@ -1,37 +1,43 @@
-# Practice Win/Loss Tracker
+# AlphaClient Practice Win/Loss Tracker
 
-The tracker is intended for Minecraft Practice matches. It does not require
-separate configuration for Boxing, NoDebuff, Sumo, BuildUHC, or other Practice
-modes. A recognized win announcement records one win; a recognized defeat/loss
-announcement records one loss.
+A server-bound Practice win/loss tracker foundation.
 
-## Included in this feature folder
+## Current implementation
 
-- Server profiles can group multiple addresses.
-- Previously unseen server addresses can receive a basic profile automatically.
-- Overall statistics aggregate records in a server profile.
-- Current-address statistics remain separate from other addresses in that profile.
-- Match records include the result and timestamp.
-- Properties-based persistence stores profiles, addresses, records, and display preferences.
-- A result detector recognizes a limited set of common explicit victory/defeat phrases.
-- A Forge event adapter can read result chat messages, save results, and render a basic statistics overlay.
+- Server profiles can group multiple explicitly registered hostnames.
+- Unknown connected hostnames can receive their own basic profile through `getOrCreateProfileForAddress`.
+- One profile can aggregate matches across its registered hostnames.
+- Current-address statistics remain isolated to the exact connected hostname.
+- Individual address statistics can be retrieved separately.
+- A hostname can be linked to an existing profile through `addAddressToProfile`.
+- Confirmed match results can be recorded against the current connected hostname.
+- Overall, current-address, and individual-address visibility preferences are represented by `WinLossTrackerSettings`.
+- `WinLossTrackerStorage` saves and restores profiles, aliases, match records, timestamps, current address, and settings to a caller-supplied local file.
 
-## Integration requirement
+## Example: Minemen Club
 
-WinLossTrackerRuntime must be initialized and registered on MinecraftForge.EVENT_BUS
-from the existing AlphaClient initialization method. That file is outside this feature
-folder and has intentionally not been changed.
+A Minemen Club profile may explicitly register:
+- `minemen.club`
+- `eu.minemen.club`
+- `na.minemen.club`
+- `as.minemen.club`
+
+Overall statistics aggregate matches across all registered addresses. Current-address statistics only include matches from the exact hostname currently connected.
+
+## Integration still required
+
+- Registering the tracker with the Minecraft 1.8.9 / Forge client lifecycle.
+- Reading the connected server hostname from the active Minecraft connection.
+- Calling storage load/save from the appropriate client lifecycle and shutdown points.
+- Connecting the three display preferences to an in-game settings screen.
+- Rendering the selected statistics in a HUD or tracker screen.
+- Detecting completed Practice matches from reliable server result messages.
+- Preventing duplicate result registration when a server emits repeated messages.
 
 ## Detection limitation
 
-Forge does not expose one universal Practice match-result event. Servers use
-different result messages. The detector recognizes common explicit phrases only;
-additional real server messages may need matching rules. Identical result text is
-suppressed for ten seconds, but this is not a universal match identifier and cannot
-guarantee duplicate prevention for every server.
+There is no universal Practice result packet or chat format shared by every Minecraft server. The current code records a result only when another component confirms `WIN` or `LOSS`. Automatic result detection must be connected to verified result signals; generic chat keyword matching must not count arbitrary messages as matches.
 
-## Not implemented
+## Verification
 
-- A settings screen to toggle the statistics display.
-- A server-profile/alias management screen.
-- Build and in-game verification.
+This change has not been built or tested in Minecraft.
