@@ -86,8 +86,7 @@ public final class AnvilCostCalculator {
                         describeOperation(target, candidate),
                         candidate.getDisplayName(),
                         levels,
-                        materials,
-                        candidate.getItem() == Items.enchanted_book
+                        materials
                 ));
             } catch (RuntimeException exception) {
                 // An unusual modded item must not break the item's normal tooltip.
@@ -159,15 +158,13 @@ public final class AnvilCostCalculator {
         private final String materialName;
         private final int levels;
         private final int materialCount;
-        private final boolean enchantedBook;
 
         private Preview(String operation, String materialName, int levels,
-                        int materialCount, boolean enchantedBook) {
+                        int materialCount) {
             this.operation = operation;
             this.materialName = materialName;
             this.levels = levels;
             this.materialCount = materialCount;
-            this.enchantedBook = enchantedBook;
         }
 
         public String getOperation() {
@@ -184,10 +181,6 @@ public final class AnvilCostCalculator {
 
         public int getMaterialCount() {
             return materialCount;
-        }
-
-        public boolean isEnchantedBook() {
-            return enchantedBook;
         }
     }
 }
