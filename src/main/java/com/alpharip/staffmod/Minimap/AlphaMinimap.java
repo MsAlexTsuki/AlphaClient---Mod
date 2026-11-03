@@ -356,17 +356,30 @@ public final class AlphaMinimap {
                 }
             }
         }
+        rebuildTerrainDisplayList(sampleSize, sampleScale, round, radius);
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        Tessellator tessellator = Tessellator.getInstance();
-        WorldRenderer renderer = tessellator.getWorldRenderer();
-        // Keep each upload small. A fullscreen map can contain over 100,000
-        // terrain quads; building them in one BufferBuilder can overflow its
-        // direct byte buffer on the legacy 1.8.9 renderer.
-        final int maxQuadsPerBatch = 1024;
-        int pendingQuads = 0;
-        boolean buildingBatch = false;
+        if (terrainDisplayListReady) {
+            GL11.glPushMatrix();
+            GL11.glTranslated(left, top, 0.0D);
+            GL11.glCallList(terrainDisplayList);
+            GL11.glPopMatrix();
+        }
+        GlStateManager.enableTexture2D();
+        // Cardinal crosshair remains visible above the terrain layer.
+        Gui.drawRect(cx - 1, cy - radius, cx + 1, cy + radius, 0x334B515D);
+        Gui.drawRect(cx - radius, cy - 1, cx + radius, cy + 1, 0x334B515D);
+    }
+
+    private void rebuildTerrainDisplayList(int sampleSize, int sampleScale, boolean round, int radius) {
+        if (terrainDisplayList == 0) terrainDisplayList = GL11.glGenLists(1);
+        if (terrainDisplayList == 0) {
+            terrainDisplayListReady = false;
+            return;
+        }
+        GL11.glNewList(terrainDisplayList, GL11.GL_COMPILE);
+        GL11.glBegin(GL11.GL_QUADS);
         for (int py = 0; py < sampleSize; py++) {
             for (int px = 0; px < sampleSize; px++) {
                 int color = cachedColors[py][px];
@@ -374,35 +387,23 @@ public final class AlphaMinimap {
                 double dx = (px + 0.5D - sampleSize / 2.0D) / sampleScale;
                 double dz = (py + 0.5D - sampleSize / 2.0D) / sampleScale;
                 if (round && dx * dx + dz * dz > radius * radius) continue;
-                if (!buildingBatch) {
-                    renderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-                    buildingBatch = true;
-                }
                 float red = ((color >> 16) & 255) / 255.0F;
                 float green = ((color >> 8) & 255) / 255.0F;
                 float blue = (color & 255) / 255.0F;
-                double x1 = left + px / (double) sampleScale;
-                double y1 = top + py / (double) sampleScale;
+                double x1 = px / (double) sampleScale;
+                double y1 = py / (double) sampleScale;
                 double x2 = x1 + 1.0D / sampleScale;
                 double y2 = y1 + 1.0D / sampleScale;
-                renderer.pos(x1, y2, 0).color(red, green, blue, 1.0F).endVertex();
-                renderer.pos(x2, y2, 0).color(red, green, blue, 1.0F).endVertex();
-                renderer.pos(x2, y1, 0).color(red, green, blue, 1.0F).endVertex();
-                renderer.pos(x1, y1, 0).color(red, green, blue, 1.0F).endVertex();
-                if (++pendingQuads >= maxQuadsPerBatch) {
-                    tessellator.draw();
-                    pendingQuads = 0;
-                    buildingBatch = false;
-                }
+                GL11.glColor4f(red, green, blue, 1.0F);
+                GL11.glVertex2d(x1, y2);
+                GL11.glVertex2d(x2, y2);
+                GL11.glVertex2d(x2, y1);
+                GL11.glVertex2d(x1, y1);
             }
         }
-        if (buildingBatch) {
-            tessellator.draw();
-        }
-        GlStateManager.enableTexture2D();
-        // Cardinal crosshair remains visible above the terrain layer.
-        Gui.drawRect(cx - 1, cy - radius, cx + 1, cy + radius, 0x334B515D);
-        Gui.drawRect(cx - radius, cy - 1, cx + radius, cy + 1, 0x334B515D);
+        GL11.glEnd();
+        GL11.glEndList();
+        terrainDisplayListReady = true;
     }
 
     private int sampleLoadedSurface(Minecraft mc, int x, int z, int playerY) {
@@ -482,14 +483,21 @@ public final class AlphaMinimap {
     private void drawEntities(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ,
             int range, int rotation) {
         int radius = size / 2 - 5;
-        for (Object object : mc.theWorld.loadedEntityList) {
-            if (!(object instanceof Entity) || object == mc.thePlayer) continue;
-            Entity entity = (Entity) object;
-            if (!(entity instanceof EntityLivingBase) || entity.isDead) continue;
+        if (++entityRefreshTicks >= 5 || cachedEntities.isEmpty()) {
+            entityRefreshTicks = 0;
+            cachedEntities.clear();
+            for (Object object : mc.theWorld.loadedEntityList) {
+                if (object instanceof EntityLivingBase && object != mc.thePlayer && !((Entity) object).isDead) {
+                    cachedEntities.add((Entity) object);
+                }
+            }
+        }
+        for (Entity entity : cachedEntities) {
+            if (entity.isDead) continue;
             double dx = entity.posX - mapCenterX;
             double dz = entity.posZ - mapCenterZ;
-            double distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > range) continue;
+            double distanceSquared = dx * dx + dz * dz;
+            if (distanceSquared > (double) range * range) continue;
             int[] position = mapPosition(dx, dz, cx, cy, radius, range, rotation);
             int px = position[0];
             int py = position[1];
