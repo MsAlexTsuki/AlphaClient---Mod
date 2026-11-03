@@ -41,6 +41,7 @@ import com.alpharip.staffmod.inventorysearch.InventorySearchCommand;
 import com.alpharip.staffmod.waypoints.DeathWaypointMod;
 import com.alpharip.staffmod.waypoints.EventCountdownHub;
 import com.alpharip.staffmod.waypoints.WaypointCommand;
+import com.alpharip.staffmod.waypoints.CreateWaypointGui;
 import com.alpharip.staffmod.waypoints.WaypointFromClickableCoordinates;
 import com.alpharip.staffmod.waypoints.WaypointManager;
 import com.alpharip.staffmod.waypoints.WaypointTracker;
@@ -177,7 +178,7 @@ public final class AlphaClient {
                 MinimapSettings.getInt("keyOpenMinimapSettings", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
         openFullscreenMinimapKey = new KeyBinding("AlphaClient: Open Fullscreen Minimap",
                 MinimapSettings.getInt("keyOpenFullscreenMinimap", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
-        createQuickWaypointKey = new KeyBinding("AlphaClient: Create Quick Waypoint",
+        createQuickWaypointKey = new KeyBinding("AlphaClient: Create Waypoint",
                 MinimapSettings.getInt("keyCreateQuickWaypoint", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
         ClientRegistry.registerKeyBinding(toggleMinimapKey);
         ClientRegistry.registerKeyBinding(openMinimapSettingsKey);
@@ -338,9 +339,7 @@ public final class AlphaClient {
         }
         if (createQuickWaypointKey != null && createQuickWaypointKey.isPressed()
                 && minecraft.currentScreen == null && minecraft.theWorld != null && minecraft.thePlayer != null) {
-            WaypointManager manager = WaypointManager.getInstance();
-            String name = "Quick Waypoint " + (manager.getForCurrentServer().size() + 1);
-            manager.add(name, minecraft.thePlayer.posX, minecraft.thePlayer.posY, minecraft.thePlayer.posZ);
+            minecraft.displayGuiScreen(new CreateWaypointGui(null));
         }
     }
 
