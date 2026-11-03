@@ -112,7 +112,9 @@ public final class WorldWaypointIcons {
             GlStateManager.rotate(-rm.playerViewY,0.0F,1.0F,0.0F);
             GlStateManager.rotate(rm.playerViewX,1.0F,0.0F,0.0F);
             float baseScale=0.035F*(WaypointSettings.getInt("labelSize",100,50,200)/100.0F);
-            float distanceScale=1.0F+0.8F*(float)(Math.min(distance,300.0D)/300.0D);
+            // Compensate for perspective so the label stays approximately the same screen size.
+            // The scale at 10 blocks is the reference size; it grows linearly beyond that distance.
+            float distanceScale=(float)Math.max(1.0D,distance/10.0D);
             float labelScale=baseScale*distanceScale;
             GlStateManager.scale(-labelScale,-labelScale,labelScale);
             GlStateManager.disableLighting();
