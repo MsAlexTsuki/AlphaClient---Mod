@@ -1,17 +1,36 @@
 package com.alpharip.staffmod.winlosetracker;
+
 import java.util.Locale;
 import java.util.regex.Pattern;
-/** Recognizes common explicit Practice win/loss announcements. */
+
+/**
+ * Recognizes explicit, complete Practice result announcements.
+ *
+ * This intentionally avoids matching a result word embedded in unrelated
+ * chat (for example, a player discussing a victory streak).
+ */
 public final class WinLossResultDetector {
     private static final Pattern SPACE = Pattern.compile("\\s+");
-    private static final Pattern WIN = Pattern.compile(".*(?:\\byou (?:have )?won\\b|\\byou win\\b|\\byou are the winner\\b|\\bvictory!?\\b|\\bwon the (?:match|game|round|duel)\\b).*");
-    private static final Pattern LOSS = Pattern.compile(".*(?:\\byou (?:have )?lost\\b|\\byou lose\\b|\\byou were defeated\\b|\\byou have been defeated\\b|\\bdefeat!?\\b|\\byou have been eliminated\\b).*");
+    private static final Pattern FORMATTING = Pattern.compile("(?i)\\u00a7[0-9A-FK-OR]");
+    private static final Pattern WIN = Pattern.compile(
+            "^(?:(?:match|game|round|duel) result:\\s*)?"
+            + "(?:victory!?|you (?:have )?won(?: the (?:match|game|round|duel))!?|"
+            + "you win!?|you are the winner!?)$");
+    private static final Pattern LOSS = Pattern.compile(
+            "^(?:(?:match|game|round|duel) result:\\s*)?"
+            + "(?:defeat!?|you (?:have )?lost(?: the (?:match|game|round|duel))!?|"
+            + "you lose!?|you were defeated!?|you have been defeated!?|"
+            + "you have been eliminated!?)$");
+
     private WinLossResultDetector() { }
-    /** Returns null for neutral or ambiguous chat. */
+
+    /** Returns null unless the complete normalized message is an explicit result. */
     public static WinLossResult detect(String message) {
         if (message == null) return null;
-        String value = SPACE.matcher(message.toLowerCase(Locale.ROOT)).replaceAll(" ").trim();
+        String value = FORMATTING.matcher(message).replaceAll("");
+        value = SPACE.matcher(value.toLowerCase(Locale.ROOT)).replaceAll(" ").trim();
         if (value.isEmpty()) return null;
+
         boolean win = WIN.matcher(value).matches();
         boolean loss = LOSS.matcher(value).matches();
         if (win == loss) return null;
