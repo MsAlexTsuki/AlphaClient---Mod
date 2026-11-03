@@ -54,6 +54,14 @@ public final class WinLossServerProfile {
         records.add(new WinLossRecord(normalized, result, timestamp));
     }
 
+    /** Restores a previously persisted record after validating its address. */
+    public synchronized boolean restoreRecord(String address, WinLossResult result, long timestamp) {
+        String normalized = normalizeAddress(address);
+        if (normalized.isEmpty() || !addresses.contains(normalized) || result == null) return false;
+        records.add(new WinLossRecord(normalized, result, timestamp));
+        return true;
+    }
+
     public synchronized List<WinLossRecord> getRecords() {
         return Collections.unmodifiableList(new ArrayList<WinLossRecord>(records));
     }
