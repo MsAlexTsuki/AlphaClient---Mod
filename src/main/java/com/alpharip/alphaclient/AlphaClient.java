@@ -45,6 +45,7 @@ import com.alpharip.staffmod.waypoints.CreateWaypointGui;
 import com.alpharip.staffmod.waypoints.WaypointFromClickableCoordinates;
 import com.alpharip.staffmod.waypoints.WaypointManager;
 import com.alpharip.staffmod.waypoints.WaypointTracker;
+import com.alpharip.staffmod.waypoints.WaypointPathfinder;
 import com.alpharip.staffmod.Minimap.AlphaMinimap;
 import com.alpharip.staffmod.Minimap.MinimapSettingsGui;
 import com.alpharip.staffmod.Minimap.FullscreenMinimapGui;
@@ -129,6 +130,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new InventorySearchMod());
         MinecraftForge.EVENT_BUS.register(DeathWaypointMod.getInstance());
         MinecraftForge.EVENT_BUS.register(WaypointTracker.getInstance());
+        MinecraftForge.EVENT_BUS.register(WaypointPathfinder.getInstance());
         MinecraftForge.EVENT_BUS.register(WaypointFromClickableCoordinates.getInstance());
         MinecraftForge.EVENT_BUS.register(EventCountdownHub.getInstance());
         // AlphaMinimap now owns terrain, entity and waypoint rendering.
