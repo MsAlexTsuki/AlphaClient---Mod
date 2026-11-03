@@ -325,15 +325,17 @@ public final class SupabaseCommunityService {
         if (PermissionService.isOfflineTestSession()) return;
         try {
             Minecraft minecraft = Minecraft.getMinecraft();
-            if (minecraft == null || minecraft.getSession() == null
-                    || minecraft.getSession().getProfile() == null) return;
-            UUID uuid = minecraft.getSession().getProfile().getId();
+            // The active player entity carries the UUID assigned by the connected server.
+            // This is the UUID other clients see and use for nametag rank lookups; the
+            // Microsoft session UUID can differ on offline-mode servers.
+            if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null) return;
+            UUID uuid = minecraft.thePlayer.getUniqueID();
             if (uuid == null) return;
             JsonObject payload = new JsonObject();
             payload.addProperty("target_uuid", uuid.toString());
             requestJson("POST", "/rest/v1/rpc/link_minecraft_uuid", token, payload.toString());
         } catch (Exception exception) {
-            System.err.println("[AlphaClient] Could not link Minecraft UUID for public rank display: "
+            System.err.println("[AlphaClient] Could not link active server Minecraft UUID for public rank display: "
                     + exception.getMessage());
         }
     }
