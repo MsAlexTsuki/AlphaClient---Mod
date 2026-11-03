@@ -78,7 +78,7 @@ public final class PerformanceScheduler {
                 synchronized (this) {
                     executedTasks++;
                 }
-            } catch (Throwable error) {
+            } catch (Exception error) {
                 synchronized (this) {
                     failedTasks++;
                 }
