@@ -23,6 +23,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,7 +33,11 @@ import java.util.List;
 public final class AlphaMinimap {
     private static final AlphaMinimap INSTANCE = new AlphaMinimap();
     private int refreshTicks;
+    private int terrainDisplayList;
+    private boolean terrainDisplayListReady;
     private int[][] cachedColors = new int[0][0];
+    private int entityRefreshTicks;
+    private final List<Entity> cachedEntities = new ArrayList<Entity>();
     private double cachedCenterX = Double.NaN;
     private double cachedCenterZ = Double.NaN;
     private int cachedDimension = Integer.MIN_VALUE;
@@ -319,11 +324,13 @@ public final class AlphaMinimap {
             double playerX, double playerZ, int range, int rotation) {
         int radius = size / 2 - 3;
         boolean round = MinimapSettings.round();
-        // Sample at twice the display resolution so terrain transitions are less blocky.
-        // Refresh every four render frames to keep the extra sampling cost bounded.
-        final int sampleScale = 2;
+        // Sample at display resolution; 2x sampling multiplied terrain work by four.
+        // Rebuild after meaningful movement or every ten render frames.
+        final int sampleScale = 1;
         final int sampleSize = size * sampleScale;
-        if (++refreshTicks >= 4 || cachedDimension != mc.thePlayer.dimension || cachedColors.length != sampleSize
+        boolean moved = Double.isNaN(cachedCenterX) || Math.abs(playerX - cachedCenterX) >= 2.0D
+                || Math.abs(playerZ - cachedCenterZ) >= 2.0D;
+        if (++refreshTicks >= 10 || moved || cachedDimension != mc.thePlayer.dimension || cachedColors.length != sampleSize
                 || cachedRange != range || cachedRound != round || cachedRotation != rotation) {
             refreshTicks = 0;
             cachedCenterX = playerX; cachedCenterZ = playerZ;
