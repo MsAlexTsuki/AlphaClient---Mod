@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -81,8 +80,13 @@ public final class WinLossTrackerStorage {
             try {
                 Files.move(temporary.toPath(), file.toPath(),
                         StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException exception) {
-                Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException atomicFailure) {
+                try {
+                    Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException replacementFailure) {
+                    replacementFailure.addSuppressed(atomicFailure);
+                    throw replacementFailure;
+                }
             }
         } finally {
             if (temporary.exists() && !temporary.delete()) {
