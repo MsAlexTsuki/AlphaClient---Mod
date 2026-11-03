@@ -57,7 +57,9 @@ public final class WinLossTrackerRuntime {
         if (!loaded) initialize();
         if (event == null || event.message == null || event.type == 2) return;
 
-        String address = getCurrentAddress();
+        // Synchronize the active address before applying duplicate-result protection.
+        updateCurrentAddress();
+        String address = currentAddress;
         if (address.isEmpty()) return;
 
         String message = event.message.getUnformattedText();
@@ -65,7 +67,7 @@ public final class WinLossTrackerRuntime {
         if (result == null) return;
 
         long now = System.currentTimeMillis();
-        String normalized = message.trim().toLowerCase(Locale.ROOT);
+        String normalized = address + "\n" + message.trim().toLowerCase(Locale.ROOT);
         if (normalized.equals(lastResultMessage) && now - lastResultAt < 10000L) return;
 
         if (TRACKER.recordMatch(address, result, now)) {
