@@ -10,6 +10,7 @@ import net.minecraft.init.Items;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,9 @@ import java.util.TreeMap;
  * used as an input or modified by the simulation.
  */
 public final class AnvilCostCalculator {
+    private static int cachedTick = -1;
+    private static final Map<String, List<Preview>> CACHE = new HashMap<String, List<Preview>>();
+
     private AnvilCostCalculator() {
     }
 
@@ -30,13 +34,25 @@ public final class AnvilCostCalculator {
             return Collections.emptyList();
         }
 
+        ItemStack[] inventory = player.inventory.mainInventory;
+        if (inventory == null) {
+            return Collections.emptyList();
+        }
+
+        String cacheKey = createInputKey(target) + "|" + createInventoryKey(inventory);
+        synchronized (AnvilCostCalculator.class) {
+            if (cachedTick != player.ticksExisted) {
+                CACHE.clear();
+                cachedTick = player.ticksExisted;
+            }
+            List<Preview> cached = CACHE.get(cacheKey);
+            if (cached != null) {
+                return cached;
+            }
+        }
+
         List<Preview> previews = new ArrayList<Preview>();
         Set<String> seenInputs = new HashSet<String>();
-        ItemStack[] inventory = player.inventory.mainInventory;
-
-        if (inventory == null) {
-            return previews;
-        }
 
         for (ItemStack candidate : inventory) {
             if (candidate == null || candidate.stackSize <= 0 || candidate == target) {
@@ -78,7 +94,19 @@ public final class AnvilCostCalculator {
             }
         }
 
-        return previews;
+        List<Preview> result = Collections.unmodifiableList(new ArrayList<Preview>(previews));
+        synchronized (AnvilCostCalculator.class) {
+            CACHE.put(cacheKey, result);
+        }
+        return result;
+    }
+
+    private static String createInventoryKey(ItemStack[] inventory) {
+        StringBuilder key = new StringBuilder();
+        for (ItemStack stack : inventory) {
+            key.append(stack == null ? "empty" : createInputKey(stack)).append('|');
+        }
+        return key.toString();
     }
 
     private static String createInputKey(ItemStack stack) {
