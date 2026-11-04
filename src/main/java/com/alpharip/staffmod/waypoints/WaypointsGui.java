@@ -39,9 +39,7 @@ public final class WaypointsGui extends AlphaGuiScreen {
         int toggleY=top+41;
         buttonList.add(new AlphaButton(8,left+14,toggleY,104,18,
                 "Hide: "+onOff(WaypointSettings.isTemporarilyHidden())));
-        buttonList.add(new AlphaButton(9,left+123,toggleY,104,18,
-                "Show Route: "+onOff(WaypointSettings.getBoolean("showRoute",true))));
-        buttonList.add(new AlphaButton(10,left+232,toggleY,Math.max(70,listWidth-92),18,
+        buttonList.add(new AlphaButton(10,left+123,toggleY,Math.max(104,listWidth-92),18,
                 "Sort: "+sortName()));
 
         int closeWidth=52;
@@ -50,7 +48,10 @@ public final class WaypointsGui extends AlphaGuiScreen {
         int buttonY=top+panelHeight-31;
         int gap=5;
         int buttonWidth=(panelWidth-28-gap*5)/6;
-        String[] labels={"Create","Navigate","Delete","Export","Import","Options"};
+        String activeTargetId=WaypointManager.getInstance().getSelectedId();
+        boolean navigating=!activeTargetId.isEmpty()
+                &&(selectedId.isEmpty()||activeTargetId.equals(selectedId));
+        String[] labels={"Create",navigating?"Stop":"Navigate","Delete","Export","Import","Options"};
         for(int i=0;i<labels.length;i++)
             buttonList.add(new AlphaButton(i==5?6:i+1,left+14+i*(buttonWidth+gap),buttonY,buttonWidth,20,labels[i]));
 
@@ -116,8 +117,13 @@ public final class WaypointsGui extends AlphaGuiScreen {
             if(button.id==2) {
                 StaffWaypoint point=findCurrent(selectedId);
                 if(point==null){status="Select a waypoint first.";return;}
-                manager.select(point.getId());
-                status="Navigation target: "+point.getLabel();
+                if(point.getId().equals(manager.getSelectedId())) {
+                    manager.select("");
+                    status="Navigation stopped.";
+                } else {
+                    manager.select(point.getId());
+                    status="Navigation target: "+point.getLabel();
+                }
             } else if(button.id==3) {
                 if(manager.remove(selectedId)){selectedId="";status="Waypoint deleted.";}
                 else status="Select a waypoint first.";
@@ -134,8 +140,6 @@ public final class WaypointsGui extends AlphaGuiScreen {
                 mc.displayGuiScreen(parent);return;
             } else if(button.id==8) {
                 WaypointSettings.setTemporarilyHidden(!WaypointSettings.isTemporarilyHidden());
-            } else if(button.id==9) {
-                WaypointSettings.setBoolean("showRoute",!WaypointSettings.getBoolean("showRoute",true));
             } else if(button.id==10) {
                 WaypointSettings.setString("sortMode",nextSort(WaypointSettings.getString("sortMode","distance")));
                 scroll=0;
@@ -193,7 +197,6 @@ public final class WaypointsGui extends AlphaGuiScreen {
             StaffWaypoint point=points.get(row+scroll);
             selectedId=point.getId();
             selectedColor=point.getColor();
-            WaypointManager.getInstance().select(point.getId());
             status="Selected "+point.getLabel()+".";
             initGui();
         }
