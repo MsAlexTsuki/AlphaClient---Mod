@@ -490,6 +490,9 @@ public final class AlphaMinimap {
                     IBlockState state = chunk.getBlockState(new BlockPos(baseX + x, sampleY, baseZ + z));
                     hash = (hash ^ net.minecraft.block.Block.getIdFromBlock(state.getBlock())) * 0x100000001B3L;
                     hash = (hash ^ state.getBlock().getMetaFromState(state)) * 0x100000001B3L;
+                    IBlockState fluidSurface = chunk.getBlockState(new BlockPos(baseX + x, height, baseZ + z));
+                    hash = (hash ^ net.minecraft.block.Block.getIdFromBlock(fluidSurface.getBlock())) * 0x100000001B3L;
+                    hash = (hash ^ fluidSurface.getBlock().getMetaFromState(fluidSurface)) * 0x100000001B3L;
                 }
             }
         }
