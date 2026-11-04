@@ -34,6 +34,10 @@ public final class EnchantingNameGuiText {
 
     @SubscribeEvent
     public void onEnchantingTableDraw(GuiScreenEvent.DrawScreenEvent.Post event) {
+        if (!EnchantingNameMod.isEnabled()) {
+            return;
+        }
+
         if (event == null || !(event.gui instanceof GuiEnchantment)) {
             return;
         }
