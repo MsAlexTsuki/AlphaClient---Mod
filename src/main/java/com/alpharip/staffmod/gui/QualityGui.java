@@ -7,6 +7,7 @@ import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.quality.anvilcost.AnvilCostMod;
+import com.alpharip.staffmod.quality.enchantingname.EnchantingNameMod;
 import com.alpharip.staffmod.founderfun.eastereggs.EasterEggSettingsGui;
 import com.alpharip.staffmod.inventorysearch.InventorySearchGui;
 import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
@@ -28,18 +29,20 @@ public final class QualityGui extends AlphaGuiScreen {
     private static final int EASTER_EGGS = 8;
     private static final int SEARCH_INV = 9;
     private static final int ANVIL_COST = 10;
+    private static final int ENCHANTING_NAMES = 11;
     private static final int AFK_TIMER_INDEX = 7;
     private static final int SESSION_TIMER_INDEX = 8;
     private static final int PLAYTIME_TRACKER_INDEX = 9;
     private static final int AUTO_RECONNECT_INDEX = 11;
     private static final int FULLBRIGHT_INDEX = 0;
     private static final int ANVIL_COST_INDEX = 20;
+    private static final int ENCHANTING_NAMES_INDEX = 21;
     private static final int ACCENT = 0xFFFFD866;
     private static final String[] FEATURES = {
             "Fullbright", "Alpha Module Manager", "Mod Profiles", "Auto GG", "Keybind Profiles",
             "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Session Timer", "Playtime Tracker",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
-            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Deathscreens", "Search Inv", "Anvil Cost"
+            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Deathscreens", "Search Inv", "Anvil Cost", "Enchanting Names"
     };
 
     private final GuiScreen parent;
@@ -97,6 +100,11 @@ public final class QualityGui extends AlphaGuiScreen {
             } else if (i == ANVIL_COST_INDEX) {
                 buttonList.add(new AlphaButton(ANVIL_COST, x, y, tileWidth, tileHeight,
                         "Anvil Cost: " + (AnvilCostMod.isEnabled() ? "ON" : "OFF"), true));
+            } else if (i == ENCHANTING_NAMES_INDEX) {
+                boolean enchantingNamesEnabled = EnchantingNameMod.isEnabled();
+                buttonList.add(new AlphaButton(ENCHANTING_NAMES, x, y, tileWidth, tileHeight,
+                        "Enchanting Names: " + (enchantingNamesEnabled ? "ON" : "OFF"),
+                        enchantingNamesEnabled));
             } else if (i == AFK_TIMER_INDEX) {
                 buttonList.add(new AlphaButton(AFK_TIMER, x, y, tileWidth, tileHeight, "AFK Timer", true));
             } else if (i == SESSION_TIMER_INDEX) {
@@ -153,6 +161,9 @@ public final class QualityGui extends AlphaGuiScreen {
             mc.displayGuiScreen(new InventorySearchGui(this));
         } else if (button.id == ANVIL_COST) {
             mc.displayGuiScreen(new AnvilCostSettingsGui(this));
+        } else if (button.id == ENCHANTING_NAMES) {
+            EnchantingNameMod.setEnabled(!EnchantingNameMod.isEnabled());
+            initGui();
         }
     }
 
