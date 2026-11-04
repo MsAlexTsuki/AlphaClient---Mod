@@ -95,9 +95,8 @@ public final class QualityGui extends AlphaGuiScreen {
                 buttonList.add(new AlphaButton(SEARCH_INV, x, y, tileWidth, tileHeight,
                         "Search Inv: " + (searchInvEnabled ? "ON" : "OFF"), searchInvEnabled));
             } else if (i == ANVIL_COST_INDEX) {
-                boolean anvilCostEnabled = AnvilCostMod.isEnabled();
                 buttonList.add(new AlphaButton(ANVIL_COST, x, y, tileWidth, tileHeight,
-                        "Anvil Cost: " + (anvilCostEnabled ? "ON" : "OFF"), anvilCostEnabled));
+                        "Anvil Cost: " + (AnvilCostMod.isEnabled() ? "ON" : "OFF"), true));
             } else if (i == AFK_TIMER_INDEX) {
                 buttonList.add(new AlphaButton(AFK_TIMER, x, y, tileWidth, tileHeight, "AFK Timer", true));
             } else if (i == SESSION_TIMER_INDEX) {
@@ -153,8 +152,7 @@ public final class QualityGui extends AlphaGuiScreen {
         } else if (button.id == SEARCH_INV) {
             mc.displayGuiScreen(new InventorySearchGui(this));
         } else if (button.id == ANVIL_COST) {
-            AnvilCostMod.setEnabled(!AnvilCostMod.isEnabled());
-            initGui();
+            mc.displayGuiScreen(new AnvilCostSettingsGui(this));
         }
     }
 
