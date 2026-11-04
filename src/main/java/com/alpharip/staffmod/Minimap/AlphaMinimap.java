@@ -52,6 +52,8 @@ public final class AlphaMinimap {
     private int cachedUndergroundY = Integer.MIN_VALUE;
     private PersistentTerrainCache terrainCache;
     private String terrainCacheIdentity;
+    private net.minecraft.world.World cachedWorld;
+    private String cachedServerKey;
 
     private AlphaMinimap() { }
     public static AlphaMinimap getInstance() { return INSTANCE; }
@@ -357,11 +359,24 @@ public final class AlphaMinimap {
                 || Math.abs(playerY - cachedUndergroundY) >= 5);
         boolean moved = Double.isNaN(cachedCenterX) || Math.abs(playerX - cachedCenterX) >= 2.0D
                 || Math.abs(playerZ - cachedCenterZ) >= 2.0D;
+        String currentServerKey = ServerWaypointIntegration.currentServerKey(mc);
+        boolean worldOrServerChanged = cachedWorld != mc.theWorld
+                || !currentServerKey.equals(cachedServerKey);
+        String cacheIdentity = currentServerKey
+                + "|dimension=" + mc.thePlayer.dimension
+                + (playerIsUnderground ? "|cave=" + Math.floorDiv(playerY, 5) : "|surface");
         boolean periodicSurfaceRefresh = !playerIsUnderground && ++refreshTicks >= 10;
-        if (periodicSurfaceRefresh || moved || undergroundModeChanged || undergroundHeightChanged
+        if (worldOrServerChanged || periodicSurfaceRefresh || moved || undergroundModeChanged || undergroundHeightChanged
                 || cachedDimension != mc.thePlayer.dimension || cachedColors.length != sampleSize
                 || cachedRange != range || cachedRound != round || cachedRotation != rotation) {
             refreshTicks = 0;
+            if (worldOrServerChanged) {
+                // Never carry entity references or rendered terrain across server/world sessions.
+                cachedEntities.clear();
+                entityRefreshTicks = 0;
+            }
+            cachedWorld = mc.theWorld;
+            cachedServerKey = currentServerKey;
             cachedCenterX = playerX; cachedCenterZ = playerZ;
             cachedDimension = mc.thePlayer.dimension;
             cachedRange = range;
@@ -382,9 +397,6 @@ public final class AlphaMinimap {
             Chunk[][] chunkCache = new Chunk[maxChunkZ - minChunkZ + 1][maxChunkX - minChunkX + 1];
             boolean[][] chunkChecked = new boolean[chunkCache.length][chunkCache[0].length];
 
-            String cacheIdentity = ServerWaypointIntegration.currentServerKey(mc)
-                    + "|dimension=" + mc.thePlayer.dimension
-                    + (playerIsUnderground ? "|cave=" + Math.floorDiv(playerY, 5) : "|surface");
             if (terrainCache == null || !cacheIdentity.equals(terrainCacheIdentity)) {
                 terrainCache = new PersistentTerrainCache(mc.mcDataDir, cacheIdentity);
                 terrainCacheIdentity = cacheIdentity;
