@@ -15,6 +15,9 @@ public final class StaffWaypoint {
     private double z;
     private String category = "General";
     private int color = 0xFFC83D;
+    // Zero means "follow the waypoint marker color" for older waypoint records.
+    private int beamColor;
+    private int nameColor;
     private String iconId = "pin";
     private String profileId = "default";
     private boolean deathWaypoint;
@@ -50,6 +53,8 @@ public final class StaffWaypoint {
     public double getZ() { return z; }
     public String getCategory() { return category; }
     public int getColor() { return color; }
+    public int getBeamColor() { return beamColor == 0 ? color : beamColor; }
+    public int getNameColor() { return nameColor == 0 ? color : nameColor; }
     public String getIconId() { return iconId; }
     public String getProfileId() { return profileId; }
     public boolean isDeathWaypoint() { return deathWaypoint; }
@@ -89,6 +94,8 @@ public final class StaffWaypoint {
     }
     public void setCategory(String value) { category = clean(value, "General"); touch(); }
     public void setColor(int value) { color = 0xFF000000 | (value & 0xFFFFFF); touch(); }
+    public void setBeamColor(int value) { beamColor = 0xFF000000 | (value & 0xFFFFFF); touch(); }
+    public void setNameColor(int value) { nameColor = 0xFF000000 | (value & 0xFFFFFF); touch(); }
     public void setIconId(String value) { iconId = clean(value, "pin"); touch(); }
     public void setProfileId(String value) { profileId = clean(value, "default"); touch(); }
     public void setDeathWaypoint(boolean value) { deathWaypoint = value; touch(); }
