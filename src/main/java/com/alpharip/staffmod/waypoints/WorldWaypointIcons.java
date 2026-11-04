@@ -244,7 +244,7 @@ public final class WorldWaypointIcons {
                 float markerRed=((displayColor>>16)&255)/255.0F;
                 float markerGreen=((displayColor>>8)&255)/255.0F;
                 float markerBlue=(displayColor&255)/255.0F;
-                int beamColor=point.getBeamColor();
+                int beamColor=point.isChromaEnabled()?displayColor:point.getBeamColor();
                 float beamRed=((beamColor>>16)&255)/255.0F;
                 float beamGreen=((beamColor>>8)&255)/255.0F;
                 float beamBlue=(beamColor&255)/255.0F;
