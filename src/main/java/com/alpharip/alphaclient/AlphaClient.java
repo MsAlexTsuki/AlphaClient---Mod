@@ -33,6 +33,8 @@ import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
+import com.alpharip.staffmod.quality.anvilcost.AnvilCostMod;
+import com.alpharip.staffmod.quality.anvilcost.AnvilCostTooltipHandler;
 import com.alpharip.staffmod.serverhistory.ServerHistoryManager;
 import com.alpharip.staffmod.fighthistory.FightHistoryManager;
 import com.alpharip.staffmod.founderfun.PixelGardenMessageNotifier;
@@ -149,6 +151,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new FullbrightMod());
         MinecraftForge.EVENT_BUS.register(new AutoGGMod());
         MinecraftForge.EVENT_BUS.register(new AutoReconnectMod());
+        MinecraftForge.EVENT_BUS.register(new AnvilCostTooltipHandler());
         ServerHistoryManager.loadSettings();
         MinecraftForge.EVENT_BUS.register(ServerHistoryManager.getInstance());
         FightHistoryManager.loadHistory();
@@ -159,6 +162,7 @@ public final class AlphaClient {
         AlphaClientConfig.load();
         AutoGGMod.loadSettings();
         AutoReconnectMod.loadSettings();
+        AnvilCostMod.loadSettings();
         BhopHud.loadHudPosition();
         CpsMod.load();
         PingMod.load();
