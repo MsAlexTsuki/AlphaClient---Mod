@@ -10,7 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-/** Compact waypoint manager with an integrated editor for the selected waypoint. */
+/** Compact waypoint manager; the editor is shown only after selecting a list entry. */
 public final class WaypointsGui extends AlphaGuiScreen {
     private static final int GOLD=0xFFFFD866;
     private static final int[] COLORS={
@@ -19,9 +19,9 @@ public final class WaypointsGui extends AlphaGuiScreen {
     };
     private final GuiScreen parent;
     private String selectedId="";
-    private String status="Select a waypoint to edit it.";
+    private String status="";
     private int left,top,panelWidth,panelHeight,listWidth,listTop,listBottom;
-    private int scroll,selectedColor=GOLD;
+    private int scroll,selectedMarkerColor=GOLD,selectedBeamColor=GOLD,selectedNameColor=GOLD;
     private GuiTextField nameField;
 
     public WaypointsGui(GuiScreen parent){this.parent=parent;}
@@ -49,34 +49,27 @@ public final class WaypointsGui extends AlphaGuiScreen {
         int gap=5;
         int buttonWidth=(panelWidth-28-gap*5)/6;
         String activeTargetId=WaypointManager.getInstance().getSelectedId();
-        boolean navigating=!activeTargetId.isEmpty()
-                &&(selectedId.isEmpty()||activeTargetId.equals(selectedId));
+        boolean navigating=!activeTargetId.isEmpty()&&activeTargetId.equals(selectedId);
         String[] labels={"Create",navigating?"Stop":"Navigate","Delete","Export","Import","Options"};
         for(int i=0;i<labels.length;i++)
             buttonList.add(new AlphaButton(i==5?6:i+1,left+14+i*(buttonWidth+gap),buttonY,buttonWidth,20,labels[i]));
 
         StaffWaypoint selected=findCurrent(selectedId);
         if(selected==null) {
-            StaffWaypoint managerSelected=WaypointManager.getInstance().getSelected();
-            if(managerSelected!=null) selected=findCurrent(managerSelected.getId());
-        }
-        if(selected!=null) {
-            selectedId=selected.getId();
-            selectedColor=selected.getColor();
-        } else {
             selectedId="";
-            selectedColor=GOLD;
-        }
+            nameField=null;
+        } else {
+            selectedMarkerColor=selected.getColor();
+            selectedBeamColor=selected.getBeamColor();
+            selectedNameColor=selected.getNameColor();
 
-        int editorX=left+listWidth+25;
-        int editorWidth=panelWidth-listWidth-39;
-        nameField=new GuiTextField(30,fontRendererObj,editorX+12,top+105,editorWidth-24,20);
-        nameField.setMaxStringLength(40);
-        nameField.setText(selected==null?"":selected.getLabel());
-        nameField.setEnabled(selected!=null);
-        nameField.setFocused(false);
+            int editorX=left+listWidth+25;
+            int editorWidth=panelWidth-listWidth-39;
+            nameField=new GuiTextField(30,fontRendererObj,editorX+12,top+105,editorWidth-24,20);
+            nameField.setMaxStringLength(40);
+            nameField.setText(selected.getLabel());
+            nameField.setFocused(false);
 
-        if(selected!=null) {
             buttonList.add(new AlphaButton(11,editorX+12,top+panelHeight-99,editorWidth-24,19,"Save Changes",true));
             buttonList.add(new AlphaButton(12,editorX+12,top+panelHeight-75,(editorWidth-29)/2,18,
                     "Favorite: "+onOff(selected.isFavorite())));
@@ -162,7 +155,9 @@ public final class WaypointsGui extends AlphaGuiScreen {
         String label=nameField.getText().trim();
         if(label.isEmpty()){status="Waypoint name cannot be empty.";return;}
         point.setLabel(label);
-        point.setColor(selectedColor);
+        point.setColor(selectedMarkerColor);
+        point.setBeamColor(selectedBeamColor);
+        point.setNameColor(selectedNameColor);
         WaypointManager.getInstance().saveChanges();
         status="Waypoint updated.";
     }
@@ -177,15 +172,22 @@ public final class WaypointsGui extends AlphaGuiScreen {
         super.mouseClicked(mouseX,mouseY,mouseButton);
         if(nameField!=null)nameField.mouseClicked(mouseX,mouseY,mouseButton);
 
-        int editorX=left+listWidth+25;
-        int paletteY=top+157;
-        for(int i=0;i<COLORS.length;i++) {
-            int x=editorX+14+(i%5)*25;
-            int y=paletteY+(i/5)*25;
-            if(mouseX>=x&&mouseX<x+17&&mouseY>=y&&mouseY<y+17) {
-                selectedColor=COLORS[i];
-                status="Color selected. Click Save Changes to apply it.";
-                return;
+        StaffWaypoint selected=findCurrent(selectedId);
+        if(selected!=null) {
+            int editorX=left+listWidth+25;
+            int[] paletteRows={top+145,top+177,top+209};
+            for(int row=0;row<paletteRows.length;row++) {
+                for(int i=0;i<COLORS.length;i++) {
+                    int x=editorX+14+i*25;
+                    int y=paletteRows[row];
+                    if(mouseX>=x&&mouseX<x+17&&mouseY>=y&&mouseY<y+17) {
+                        if(row==0)selectedMarkerColor=COLORS[i];
+                        else if(row==1)selectedBeamColor=COLORS[i];
+                        else selectedNameColor=COLORS[i];
+                        status="Color selected. Click Save Changes to apply it.";
+                        return;
+                    }
+                }
             }
         }
 
@@ -196,7 +198,6 @@ public final class WaypointsGui extends AlphaGuiScreen {
                 &&mouseY>=listTop&&mouseY<listBottom&&row>=0&&row<visible&&row+scroll<points.size()) {
             StaffWaypoint point=points.get(row+scroll);
             selectedId=point.getId();
-            selectedColor=point.getColor();
             status="Selected "+point.getLabel()+".";
             initGui();
         }
@@ -209,6 +210,14 @@ public final class WaypointsGui extends AlphaGuiScreen {
             int visible=Math.max(0,(listBottom-listTop)/17);
             int max=Math.max(0,WaypointManager.getInstance().getSortedCurrentWorld().size()-visible);
             scroll=Math.max(0,Math.min(max,scroll+(wheel>0?-1:1)));
+        }
+    }
+
+    private void drawPaletteRow(int editorX,int y,int color,int row) {
+        for(int i=0;i<COLORS.length;i++) {
+            int x=editorX+14+i*25;
+            if(COLORS[i]==color)drawRect(x-2,y-2,x+19,y+19,0xFFFFFFFF);
+            drawRect(x,y,x+17,y+17,COLORS[i]);
         }
     }
 
@@ -237,26 +246,23 @@ public final class WaypointsGui extends AlphaGuiScreen {
             fontRendererObj.drawStringWithShadow(line,left+29,y+3,0xFFE6E8ED);
         }
 
-        int editorX=left+listWidth+25;
-        int editorWidth=panelWidth-listWidth-39;
-        drawRect(editorX,top+78,left+panelWidth-13,listBottom,0x44212630);
-        drawString(fontRendererObj,"EDIT WAYPOINT",editorX+12,top+86,0xFFF0F1F4);
         StaffWaypoint selected=findCurrent(selectedId);
-        if(selected==null) {
-            drawString(fontRendererObj,"Select a waypoint on the left.",editorX+12,top+112,0xFFB8BDC8);
-        } else {
+        if(selected!=null) {
+            int editorX=left+listWidth+25;
+            drawRect(editorX,top+78,left+panelWidth-13,listBottom,0x44212630);
+            drawString(fontRendererObj,"EDIT WAYPOINT",editorX+12,top+86,0xFFF0F1F4);
             drawString(fontRendererObj,"Name",editorX+12,top+94,0xFFB8BDC8);
-            nameField.drawTextBox();
-            drawString(fontRendererObj,"Color",editorX+12,top+137,0xFFB8BDC8);
-            for(int i=0;i<COLORS.length;i++) {
-                int x=editorX+14+(i%5)*25;
-                int y=top+157+(i/5)*25;
-                if(COLORS[i]==selectedColor)drawRect(x-2,y-2,x+19,y+19,0xFFFFFFFF);
-                drawRect(x,y,x+17,y+17,COLORS[i]);
-            }
-            drawString(fontRendererObj,"Favorite and Chroma are saved immediately.",editorX+12,top+211,0xFF9CA3AF);
+            if(nameField!=null)nameField.drawTextBox();
+            drawString(fontRendererObj,"Marker Color",editorX+12,top+133,0xFFB8BDC8);
+            drawPaletteRow(editorX,top+145,selectedMarkerColor,0);
+            drawString(fontRendererObj,"Beam Color",editorX+12,top+165,0xFFB8BDC8);
+            drawPaletteRow(editorX,top+177,selectedBeamColor,1);
+            drawString(fontRendererObj,"Name Color",editorX+12,top+197,0xFFB8BDC8);
+            drawPaletteRow(editorX,top+209,selectedNameColor,2);
         }
-        drawString(fontRendererObj,status,left+14,top+panelHeight-45,0xFFB8BDC8);
+
+        if(!status.isEmpty())
+            drawString(fontRendererObj,status,left+14,top+panelHeight-45,0xFFB8BDC8);
         super.drawScreen(mouseX,mouseY,partialTicks);
     }
 
