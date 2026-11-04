@@ -2,7 +2,6 @@
 package com.alpharip.staffmod.quality.enchantingname;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiEnchantment;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.ContainerEnchantment;
@@ -29,7 +28,6 @@ public final class EnchantingNameGuiText {
     private static final int TEXT_X_OFFSET = 20;
     private static final int TEXT_WIDTH = OPTION_ROW_WIDTH - TEXT_X_OFFSET - 4;
     private static final int TEXT_COLOR = 0xFFFFFF;
-    private static final int EMPTY_ROW_COLOR = 0xFF252525;
 
     private final EnchantingName enchantingName = new EnchantingName();
 
@@ -74,18 +72,9 @@ public final class EnchantingNameGuiText {
                     && event.mouseY >= rowY
                     && event.mouseY < rowY + OPTION_ROW_HEIGHT;
 
+            // Redraw the original textured option row instead of painting
+            // an opaque black rectangle over its text area.
             redrawOptionRow(rowX, rowY, option, disabled, hovered);
-
-            // Cover the complete vanilla text area on every row, including
-            // unavailable options. This removes both the Standard Galactic
-            // clue and vanilla's green level/cost text.
-            Gui.drawRect(
-                    rowX + TEXT_X_OFFSET,
-                    rowY,
-                    rowX + OPTION_ROW_WIDTH,
-                    rowY + OPTION_ROW_HEIGHT,
-                    EMPTY_ROW_COLOR
-            );
 
             if (unavailable) {
                 continue;
