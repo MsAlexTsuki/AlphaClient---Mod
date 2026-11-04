@@ -25,7 +25,7 @@ public final class PixelGardenModuleSettings {
         ensureLoaded();
         AlphaModule module = AlphaModuleRegistry.find("pixelgarden");
         // Keep the global kill switch authoritative while also respecting the selected profile.
-        return enabled && module != null && module.isEnabled();
+        return enabled && module != null && module.isConfiguredEnabled();
     }
 
     public synchronized void setEnabled(boolean value) {
