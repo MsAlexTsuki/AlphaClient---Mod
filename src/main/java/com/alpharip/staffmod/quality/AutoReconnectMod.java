@@ -156,7 +156,7 @@ public final class AutoReconnectMod {
             return;
         }
 
-        if (!enabled || !(mc.currentScreen instanceof GuiDisconnected)) {
+        if (!isEnabled() || !(mc.currentScreen instanceof GuiDisconnected)) {
             if (!(mc.currentScreen instanceof GuiConnecting)) resetPending();
             return;
         }
