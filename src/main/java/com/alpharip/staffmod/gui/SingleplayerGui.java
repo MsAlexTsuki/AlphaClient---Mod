@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.gui;
 
 import com.alpharip.staffmod.singleplayer.worldedit.WorldEditGui;
+import com.alpharip.staffmod.singleplayer.autotool.AutoToolGui;
+import com.alpharip.staffmod.singleplayer.autotool.AutoToolSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -9,6 +11,7 @@ import net.minecraft.client.gui.GuiScreen;
 public final class SingleplayerGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int WORLD_EDIT = 2;
+    private static final int AUTO_TOOL = 3;
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
@@ -39,6 +42,9 @@ public final class SingleplayerGui extends AlphaGuiScreen {
 
         buttonList.add(new AlphaButton(WORLD_EDIT, panelLeft + 14, panelTop + 78,
                 panelRight - panelLeft - 28, 42, "World Edit", true));
+        buttonList.add(new AlphaButton(AUTO_TOOL, panelLeft + 14, panelTop + 128,
+                panelRight - panelLeft - 28, 42,
+                "AutoTool: " + (AutoToolSettings.isEnabled() ? "ON" : "OFF"), AutoToolSettings.isEnabled()));
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
     }
 
@@ -59,6 +65,10 @@ public final class SingleplayerGui extends AlphaGuiScreen {
             if (hasActiveSingleplayerWorld()) {
                 mc.displayGuiScreen(new WorldEditGui(this));
             }
+        } else if (button.id == AUTO_TOOL) {
+            if (hasActiveSingleplayerWorld()) {
+                mc.displayGuiScreen(new AutoToolGui(this));
+            }
         }
     }
 
@@ -76,6 +86,9 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         drawString(fontRendererObj, "WorldEdit", panelLeft + 25, panelTop + 92, 0xFFF3F4F6);
         drawString(fontRendererObj, "Select regions and edit blocks in your local world.",
                 panelLeft + 25, panelTop + 106, 0xFFB8BDC8);
+        drawString(fontRendererObj, "AutoTool", panelLeft + 25, panelTop + 142, 0xFFF3F4F6);
+        drawString(fontRendererObj, "Automatically selects a suitable hotbar tool for the targeted block.",
+                panelLeft + 25, panelTop + 156, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
