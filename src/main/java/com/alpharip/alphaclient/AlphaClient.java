@@ -33,6 +33,7 @@ import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
+import com.alpharip.staffmod.quality.enchantingname.EnchantingNameGuiText;
 import com.alpharip.staffmod.quality.anvilcost.AnvilCostMod;
 import com.alpharip.staffmod.quality.anvilcost.AnvilCostTooltipHandler;
 import com.alpharip.staffmod.serverhistory.ServerHistoryManager;
@@ -151,6 +152,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new FullbrightMod());
         MinecraftForge.EVENT_BUS.register(new AutoGGMod());
         MinecraftForge.EVENT_BUS.register(new AutoReconnectMod());
+        MinecraftForge.EVENT_BUS.register(new EnchantingNameGuiText());
         MinecraftForge.EVENT_BUS.register(new AnvilCostTooltipHandler());
         ServerHistoryManager.loadSettings();
         MinecraftForge.EVENT_BUS.register(ServerHistoryManager.getInstance());
