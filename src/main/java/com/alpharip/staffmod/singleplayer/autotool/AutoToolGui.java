@@ -1,5 +1,6 @@
 package com.alpharip.staffmod.singleplayer.autotool;
 
+import com.alpharip.staffmod.gui.AlphaButton;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.Item;
@@ -49,26 +50,26 @@ public final class AutoToolGui extends GuiScreen {
                 String action = excluded ? "Include" : "Exclude";
                 String itemName = truncate(stack.getDisplayName(), 24);
                 String label = "Slot " + (slot + 1) + ": " + itemName + " - " + action;
-                buttonList.add(new GuiButton(100 + slot, left + 16, top + 58 + row * 22,
+                buttonList.add(new AlphaButton(100 + slot, left + 16, top + 58 + row * 22,
                         buttonWidth, 20, label));
                 row++;
             }
         } else {
             String[] options = optionsForPage();
             for (int index = 0; index < options.length; index++) {
-                buttonList.add(new GuiButton(index + 1, left + 16, top + 43 + index * 24,
+                buttonList.add(new AlphaButton(index + 1, left + 16, top + 43 + index * 24,
                         buttonWidth, 20, labelFor(options[index])));
             }
         }
         int footerY = top + panelHeight - 25;
         if (page > 0) {
-            buttonList.add(new GuiButton(91, left + 16, footerY, 68, 18, "Back"));
-            buttonList.add(new GuiButton(92, left + 90, footerY, 68, 18, "Menu"));
+            buttonList.add(new AlphaButton(91, left + 16, footerY, 68, 18, "Back"));
+            buttonList.add(new AlphaButton(92, left + 90, footerY, 68, 18, "Menu"));
         } else {
-            buttonList.add(new GuiButton(92, left + 16, footerY, 76, 18, "Menu"));
+            buttonList.add(new AlphaButton(92, left + 16, footerY, 76, 18, "Menu"));
         }
-        if (page < 3) buttonList.add(new GuiButton(90, left + panelWidth - 92, footerY, 76, 18, "More"));
-        else buttonList.add(new GuiButton(90, left + panelWidth - 92, footerY, 76, 18, "Done"));
+        if (page < 3) buttonList.add(new AlphaButton(90, left + panelWidth - 92, footerY, 76, 18, "More"));
+        else buttonList.add(new AlphaButton(90, left + panelWidth - 92, footerY, 76, 18, "Done"));
     }
 
     @Override
