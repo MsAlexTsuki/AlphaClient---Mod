@@ -29,7 +29,7 @@ public final class AutoToolGui extends GuiScreen {
     public void initGui() {
         buttonList.clear();
         panelWidth = Math.max(1, Math.min(360, width - 16));
-        panelHeight = page == 3 ? 244 : 204;
+        panelHeight = page == 3 ? 260 : 204;
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
         int buttonWidth = Math.max(1, panelWidth - 32);
