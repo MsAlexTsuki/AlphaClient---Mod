@@ -16,6 +16,7 @@ import java.awt.Color;
 /** Draws and manages local waypoint pins and labels in the world. */
 public final class WorldWaypointIcons {
     private static final WorldWaypointIcons INSTANCE=new WorldWaypointIcons();
+    private static final FloatBuffer PROJECTION_BUFFER=BufferUtils.createFloatBuffer(16);
     public static WorldWaypointIcons getInstance(){return INSTANCE;}
 
     private boolean enabled=WaypointSettings.getBoolean("markersEnabled",true);
@@ -107,29 +108,43 @@ public final class WorldWaypointIcons {
         GlStateManager.enableTexture2D();
     }
 
+    /**
+     * Extends the waypoint-label far plane once per render pass, rather than once
+     * for every waypoint. Returns the previous matrix mode, or -1 when unchanged.
+     */
+    private static int beginExtendedProjection() {
+        int previousMatrixMode=GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+        PROJECTION_BUFFER.clear();
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX,PROJECTION_BUFFER);
+        float projectionA=PROJECTION_BUFFER.get(10);
+        float projectionB=PROJECTION_BUFFER.get(14);
+        float nearPlane=projectionB/(projectionA-1.0F);
+        if(nearPlane<=0.0F || nearPlane>=4096.0F) {
+            GL11.glMatrixMode(previousMatrixMode);
+            return -1;
+        }
+
+        float farPlane=4096.0F;
+        PROJECTION_BUFFER.put(10,-(farPlane+nearPlane)/(farPlane-nearPlane));
+        PROJECTION_BUFFER.put(14,-(2.0F*farPlane*nearPlane)/(farPlane-nearPlane));
+        PROJECTION_BUFFER.rewind();
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadMatrix(PROJECTION_BUFFER);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        return previousMatrixMode;
+    }
+
+    private static void endExtendedProjection(int previousMatrixMode) {
+        if(previousMatrixMode<0) return;
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPopMatrix();
+        GL11.glMatrixMode(previousMatrixMode);
+    }
+
     private static void drawWaypointLabel(Minecraft mc,StaffWaypoint point,RenderManager rm,
                                           double dx,double dy,double dz,
                                           double distance,int displayColor) {
-        // Minecraft's normal world projection uses the configured render distance as
-        // its far clipping plane. Waypoint labels need a longer projection so they remain
-        // visible even when their waypoint is beyond the terrain render distance.
-        int previousMatrixMode=GL11.glGetInteger(GL11.GL_MATRIX_MODE);
-        FloatBuffer projection=BufferUtils.createFloatBuffer(16);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX,projection);
-        float projectionA=projection.get(10);
-        float projectionB=projection.get(14);
-        float nearPlane=projectionB/(projectionA-1.0F);
-        boolean extendedProjection=nearPlane>0.0F && nearPlane<4096.0F;
-        if(extendedProjection) {
-            float farPlane=4096.0F;
-            projection.put(10,-(farPlane+nearPlane)/(farPlane-nearPlane));
-            projection.put(14,-(2.0F*farPlane*nearPlane)/(farPlane-nearPlane));
-            GL11.glMatrixMode(GL11.GL_PROJECTION);
-            GL11.glPushMatrix();
-            GL11.glLoadMatrix(projection);
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        }
-
         GlStateManager.pushMatrix();
         try {
             // Keep the nameplate close to the waypoint itself.
@@ -181,11 +196,6 @@ public final class WorldWaypointIcons {
             GlStateManager.enableLighting();
             GlStateManager.enableTexture2D();
             GlStateManager.popMatrix();
-            if(extendedProjection) {
-                GL11.glMatrixMode(GL11.GL_PROJECTION);
-                GL11.glPopMatrix();
-            }
-            GL11.glMatrixMode(previousMatrixMode);
         }
     }
 
@@ -222,6 +232,8 @@ public final class WorldWaypointIcons {
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770,771,1,0);
             if(!WaypointSettings.isTemporarilyHidden()) {
+            int previousProjectionMatrixMode=beginExtendedProjection();
+            try {
             for(StaffWaypoint point:points) {
                 // Use the center of the waypoint's block for every marker element.
                 // This keeps the beam, ground circle and nametag on one shared vertical axis.
@@ -255,6 +267,9 @@ public final class WorldWaypointIcons {
                 if(WaypointSettings.getBoolean("blockHighlightEnabled",true))
                     drawGroundCircle(dx,dy,dz,markerRed,markerGreen,markerBlue);
                 drawWaypointLabel(mc,point,rm,dx,dy,dz,distance,displayColor);
+            }
+            } finally {
+                endExtendedProjection(previousProjectionMatrixMode);
             }
             }
             StaffWaypoint navigationTarget=WaypointManager.getInstance().getSelected();
