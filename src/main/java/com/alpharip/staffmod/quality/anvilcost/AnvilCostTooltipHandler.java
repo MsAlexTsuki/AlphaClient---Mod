@@ -14,7 +14,7 @@ import java.util.List;
 public final class AnvilCostTooltipHandler {
     @SubscribeEvent
     public void onItemTooltip(ItemTooltipEvent event) {
-        if (event == null || event.getItemStack() == null) {
+        if (!AnvilCostMod.isEnabled() || event == null || event.getItemStack() == null) {
             return;
         }
 
