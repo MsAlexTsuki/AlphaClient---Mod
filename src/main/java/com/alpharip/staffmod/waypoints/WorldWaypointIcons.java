@@ -7,6 +7,8 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.BufferUtils;
+import java.nio.FloatBuffer;
 import java.util.List;
 import java.awt.Color;
 
@@ -167,6 +169,26 @@ public final class WorldWaypointIcons {
         List<StaffWaypoint> points=WaypointManager.getInstance().getForCurrentWorld();
         if(points.isEmpty()) return;
         RenderManager rm=mc.getRenderManager();
+
+        // Preserve the OpenGL state owned by Minecraft and other render hooks.
+        boolean blendEnabled=GL11.glIsEnabled(GL11.GL_BLEND);
+        boolean depthEnabled=GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+        boolean lightingEnabled=GL11.glIsEnabled(GL11.GL_LIGHTING);
+        boolean textureEnabled=GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
+        boolean cullingEnabled=GL11.glIsEnabled(GL11.GL_CULL_FACE);
+        boolean depthMask=GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+        int blendSrcRgb=GL11.glGetInteger(GL11.GL_BLEND_SRC_RGB);
+        int blendDstRgb=GL11.glGetInteger(GL11.GL_BLEND_DST_RGB);
+        int blendSrcAlpha=GL11.glGetInteger(GL11.GL_BLEND_SRC_ALPHA);
+        int blendDstAlpha=GL11.glGetInteger(GL11.GL_BLEND_DST_ALPHA);
+        FloatBuffer previousColor=BufferUtils.createFloatBuffer(4);
+        GL11.glGetFloat(GL11.GL_CURRENT_COLOR,previousColor);
+        float red=previousColor.get(0),green=previousColor.get(1);
+        float blue=previousColor.get(2),alpha=previousColor.get(3);
+        FloatBuffer previousLineWidth=BufferUtils.createFloatBuffer(1);
+        GL11.glGetFloat(GL11.GL_LINE_WIDTH,previousLineWidth);
+        float lineWidth=previousLineWidth.get(0);
+
         GlStateManager.pushMatrix();
         try {
             GlStateManager.disableLighting();
@@ -276,12 +298,18 @@ public final class WorldWaypointIcons {
                 }
             }
         } finally {
-            GlStateManager.enableTexture2D();
-            GlStateManager.enableDepth();
-            GlStateManager.enableLighting();
-            GlStateManager.disableBlend();
-            GlStateManager.color(1,1,1,1);
             GlStateManager.popMatrix();
+
+            // Restore the exact state that was active before waypoint rendering.
+            GlStateManager.depthMask(depthMask);
+            if(depthEnabled) GlStateManager.enableDepth(); else GlStateManager.disableDepth();
+            if(lightingEnabled) GlStateManager.enableLighting(); else GlStateManager.disableLighting();
+            if(textureEnabled) GlStateManager.enableTexture2D(); else GlStateManager.disableTexture2D();
+            if(blendEnabled) GlStateManager.enableBlend(); else GlStateManager.disableBlend();
+            GlStateManager.tryBlendFuncSeparate(blendSrcRgb,blendDstRgb,blendSrcAlpha,blendDstAlpha);
+            if(cullingEnabled) GL11.glEnable(GL11.GL_CULL_FACE); else GL11.glDisable(GL11.GL_CULL_FACE);
+            GL11.glLineWidth(lineWidth);
+            GlStateManager.color(red,green,blue,alpha);
         }
     }
 }
