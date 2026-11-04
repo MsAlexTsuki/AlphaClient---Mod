@@ -11,11 +11,9 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**
- * Replaces the obfuscated clue text in the three vanilla 1.8.9
- * enchanting-table options with their localized enchantment names.
- *
- * The vanilla screen, book, slots, buttons and option interactions are
- * retained. Only the option rows are redrawn after the vanilla GUI.
+ * Replaces the vanilla obfuscated enchanting-table option text with
+ * localized enchantment names. The vanilla screen and option interactions
+ * remain intact; only the three option rows are redrawn.
  */
 public final class EnchantingNameGuiText {
     private static final ResourceLocation ENCHANTING_TEXTURE =
@@ -27,18 +25,19 @@ public final class EnchantingNameGuiText {
     private static final int OPTION_Y_OFFSET = 14;
     private static final int OPTION_ROW_WIDTH = 108;
     private static final int OPTION_ROW_HEIGHT = 19;
+    private static final int ICON_WIDTH = 16;
     private static final int TEXT_X_OFFSET = 20;
-    private static final int TEXT_WIDTH = 86;
+    private static final int TEXT_WIDTH = OPTION_ROW_WIDTH - TEXT_X_OFFSET - 4;
+    private static final int TEXT_COLOR = 0xFFFFFF;
+    private static final int EMPTY_ROW_COLOR = 0xFF252525;
 
     private final EnchantingName enchantingName = new EnchantingName();
 
     @SubscribeEvent
     public void onEnchantingTableDraw(GuiScreenEvent.DrawScreenEvent.Post event) {
-        if (!EnchantingNameMod.isEnabled()) {
-            return;
-        }
-
-        if (event == null || !(event.gui instanceof GuiEnchantment)) {
+        if (!EnchantingNameMod.isEnabled()
+                || event == null
+                || !(event.gui instanceof GuiEnchantment)) {
             return;
         }
 
@@ -60,16 +59,14 @@ public final class EnchantingNameGuiText {
 
         for (int option = 0; option < 3; option++) {
             int requiredLevel = container.enchantLevels[option];
-            if (requiredLevel <= 0) {
-                continue;
-            }
-
             int rowX = guiLeft + OPTION_X_OFFSET;
             int rowY = guiTop + OPTION_Y_OFFSET + OPTION_ROW_HEIGHT * option;
 
-            boolean disabled = !minecraft.thePlayer.capabilities.isCreativeMode
+            boolean unavailable = requiredLevel <= 0;
+            boolean disabled = unavailable
+                    || (!minecraft.thePlayer.capabilities.isCreativeMode
                     && (lapisAmount < option + 1
-                    || minecraft.thePlayer.experienceLevel < requiredLevel);
+                    || minecraft.thePlayer.experienceLevel < requiredLevel));
 
             boolean hovered = !disabled
                     && event.mouseX >= rowX
@@ -79,34 +76,31 @@ public final class EnchantingNameGuiText {
 
             redrawOptionRow(rowX, rowY, option, disabled, hovered);
 
-            // Fully cover the vanilla Standard Galactic clue before drawing
-            // the localized name. The vanilla row texture can leave its glyphs
-            // visible through the option area on some render states.
+            // Cover the complete vanilla text area on every row, including
+            // unavailable options. This removes both the Standard Galactic
+            // clue and vanilla's green level/cost text.
             Gui.drawRect(
-                    rowX + TEXT_X_OFFSET - 1,
-                    rowY + 1,
-                    rowX + TEXT_X_OFFSET + TEXT_WIDTH + 1,
-                    rowY + OPTION_ROW_HEIGHT - 1,
-                    0xFF252525
+                    rowX + TEXT_X_OFFSET,
+                    rowY,
+                    rowX + OPTION_ROW_WIDTH,
+                    rowY + OPTION_ROW_HEIGHT,
+                    EMPTY_ROW_COLOR
             );
+
+            if (unavailable) {
+                continue;
+            }
 
             String displayName = enchantingName.getOptionDisplayName(container, option);
             if (displayName == null || displayName.trim().isEmpty()) {
-                displayName = "Unknown";
+                continue;
             }
 
-            int textColor = getTextColor(disabled, hovered);
-            String costText = String.valueOf(requiredLevel);
-            int costWidth = minecraft.fontRendererObj.getStringWidth(costText);
-            int nameWidth = Math.max(1, TEXT_WIDTH - costWidth - 4);
-
-            drawFittedText(minecraft, displayName, rowX + TEXT_X_OFFSET,
-                    rowY + 2, nameWidth, textColor);
-
-            int costX = rowX + TEXT_X_OFFSET + TEXT_WIDTH - costWidth;
-            minecraft.fontRendererObj.drawStringWithShadow(
-                    costText, (float) costX, (float) (rowY + 9), textColor);
+            drawFittedText(minecraft, displayName,
+                    rowX + TEXT_X_OFFSET + 2, rowY + 5, TEXT_WIDTH, TEXT_COLOR);
         }
+
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     private void redrawOptionRow(int x, int y, int option,
@@ -120,15 +114,7 @@ public final class EnchantingNameGuiText {
 
         Gui.drawModalRectWithCustomSizedTexture(
                 x + 1, y + 1, (float) (16 * option), (float) iconV,
-                16, 16, 256.0F, 256.0F);
-    }
-
-    private int getTextColor(boolean disabled, boolean hovered) {
-        int color = 6839882;
-        if (disabled) {
-            return (color & 16711422) >> 1;
-        }
-        return hovered ? 16777088 : color;
+                ICON_WIDTH, ICON_WIDTH, 256.0F, 256.0F);
     }
 
     private void drawFittedText(Minecraft minecraft, String text,
@@ -141,7 +127,7 @@ public final class EnchantingNameGuiText {
         GlStateManager.pushMatrix();
         GlStateManager.translate((float) x, (float) y, 0.0F);
         GlStateManager.scale(horizontalScale, 1.0F, 1.0F);
-        minecraft.fontRendererObj.drawStringWithShadow(text, 0.0F, 0.0F, color);
+        minecraft.fontRendererObj.drawString(text, 0.0F, 0.0F, color);
         GlStateManager.popMatrix();
     }
 }
