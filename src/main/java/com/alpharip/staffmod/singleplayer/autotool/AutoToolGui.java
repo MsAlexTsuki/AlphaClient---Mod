@@ -1,7 +1,5 @@
 package com.alpharip.staffmod.singleplayer.autotool;
 
-import com.alpharip.staffmod.singleplayer.autotool.AutoToolAccess;
-
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 

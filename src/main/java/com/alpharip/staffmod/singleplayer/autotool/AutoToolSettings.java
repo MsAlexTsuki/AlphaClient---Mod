@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
-/** Local global defaults and per-server/world AutoTool overrides. */
+/** Local global defaults and per-world AutoTool overrides. */
 public final class AutoToolSettings {
     private static final Properties GLOBAL = new Properties();
     private static Properties PROFILE = new Properties();
@@ -72,7 +72,7 @@ public final class AutoToolSettings {
 
     public static synchronized String getProfileDescription() {
         ensureLoaded();
-        return loadedProfileKey == null ? "Global defaults" : "Local profile for this server/world";
+        return loadedProfileKey == null ? "Global defaults" : "Local profile for this singleplayer world";
     }
 
     public static synchronized void setEnabled(boolean value) { set("enabled", String.valueOf(value)); }

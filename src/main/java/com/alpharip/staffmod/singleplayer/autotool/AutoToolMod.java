@@ -1,7 +1,5 @@
 package com.alpharip.staffmod.singleplayer.autotool;
 
-import com.alpharip.staffmod.singleplayer.autotool.AutoToolAccess;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
