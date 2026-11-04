@@ -132,6 +132,8 @@ public final class WaypointManager {
         point.setWorldKey(worldKey);
         point.setCategory(incoming.getCategory());
         point.setColor(incoming.getColor());
+        point.setBeamColor(incoming.getBeamColor());
+        point.setNameColor(incoming.getNameColor());
         point.setIconId(incoming.getIconId());
         point.setDeathWaypoint(incoming.isDeathWaypoint());
         point.setFavorite(incoming.isFavorite());
