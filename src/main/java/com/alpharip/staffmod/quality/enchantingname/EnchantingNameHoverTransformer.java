@@ -125,16 +125,11 @@ public final class EnchantingNameHoverTransformer implements IClassTransformer {
     }
 
     private boolean isSplitStringCall(MethodInsnNode call) {
-        return "(Ljava/lang/String;IIII)V".equals(call.desc)
-                && call.owner != null
-                && call.owner.endsWith("/FontRenderer");
+        return "(Ljava/lang/String;IIII)V".equals(call.desc);
     }
 
     private boolean isOptionTextureCall(MethodInsnNode call) {
-        return "(IIIIII)V".equals(call.desc)
-                && ("drawTexturedModalRect".equals(call.name)
-                || "func_73729_b".equals(call.name)
-                || "b".equals(call.name));
+        return "(IIIIII)V".equals(call.desc);
     }
 
     private boolean isDrawScreenMethod(MethodNode method) {
