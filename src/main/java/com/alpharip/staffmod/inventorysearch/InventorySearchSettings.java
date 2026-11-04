@@ -1,6 +1,8 @@
 package com.alpharip.staffmod.inventorysearch;
 
 import net.minecraft.client.Minecraft;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,9 +45,14 @@ public final class InventorySearchSettings {
     private InventorySearchSettings() {
     }
 
+    private static AlphaModuleFeature profileFeature() {
+        return AlphaModuleRegistry.findFeature("inventory-search");
+    }
+
     public static boolean isEnabled() {
         load();
-        return enabled;
+        AlphaModuleFeature feature = profileFeature();
+        return feature != null ? feature.isEnabled() : enabled;
     }
 
     public static Mode getMode() {
@@ -89,6 +96,8 @@ public final class InventorySearchSettings {
 
     public static void setEnabled(boolean value) {
         load();
+        AlphaModuleFeature feature = profileFeature();
+        if (feature != null) feature.setEnabled(value);
         enabled = value;
         save();
     }

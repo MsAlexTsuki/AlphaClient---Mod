@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.hud;
 
 import com.alpharip.staffmod.profile.ModuleProfileManager;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.config.HudScaleConfig;
 import net.minecraft.client.renderer.GlStateManager;
 import com.google.gson.JsonObject;
@@ -130,10 +132,14 @@ public final class AfkTimerHud {
     }
 
     public static boolean isEnabled() {
-        return getSettings().has("enabled") && getSettings().get("enabled").getAsBoolean();
+        AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("afk-timer");
+        return feature != null ? feature.isEnabled()
+                : getSettings().has("enabled") && getSettings().get("enabled").getAsBoolean();
     }
 
     public static void setEnabled(boolean enabled) {
+        AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("afk-timer");
+        if (feature != null) feature.setEnabled(enabled);
         JsonObject settings = getSettings();
         settings.addProperty("enabled", enabled);
         saveSettings();

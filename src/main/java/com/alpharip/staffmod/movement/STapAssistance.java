@@ -3,13 +3,15 @@ package com.alpharip.staffmod.movement;
 
 import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 
 /**
  * S-Tap configuration. S-Tap deliberately uses the W key; WTapAssistance owns
  * the shared input handler so W-Tap and S-Tap cannot fight over key state.
  */
 public final class STapAssistance {
-    private static boolean enabled;
     private static boolean requireW = true;
     private static int delay = 2;
     private static int cooldown = 4;
@@ -26,13 +28,21 @@ public final class STapAssistance {
                 || PermissionService.hasCommandPermission("command.wtap", false);
     }
 
+    private static boolean isConfiguredEnabled() {
+        AlphaModule module = AlphaModuleRegistry.find("s-tap-assistance");
+        return module != null && module.isConfiguredEnabled();
+    }
+
     public static boolean isEnabled() {
-        return enabled && hasFounderAccess();
+        return isConfiguredEnabled() && hasFounderAccess();
     }
 
     public static void setEnabled(boolean value) {
-        if (hasFounderAccess()) enabled = value;
-        else enabled = false;
+        if (!hasFounderAccess()) return;
+        AlphaModule module = AlphaModuleRegistry.find("s-tap-assistance");
+        if (module == null) return;
+        module.restoreEnabledState(value);
+        ModuleProfileManager.setSelectedModuleEnabled(module.getId(), value);
     }
 
     public static boolean isRequireW() { return requireW; }

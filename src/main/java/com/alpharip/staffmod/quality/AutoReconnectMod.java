@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiButton;
@@ -32,7 +34,14 @@ public final class AutoReconnectMod {
 
     private static final int MANUAL_RECONNECT_BUTTON_ID = 19841;
 
-    public static boolean isEnabled() { return enabled; }
+    private static AlphaModuleFeature profileFeature() {
+        return AlphaModuleRegistry.findFeature("auto-reconnect");
+    }
+
+    public static boolean isEnabled() {
+        AlphaModuleFeature feature = profileFeature();
+        return feature != null ? feature.isEnabled() : enabled;
+    }
 
     /** Adds a manual reconnect action to vanilla disconnect/error screens. */
     @SubscribeEvent
@@ -74,9 +83,11 @@ public final class AutoReconnectMod {
     }
 
     public static void setEnabled(boolean value) {
+        AlphaModuleFeature feature = profileFeature();
+        if (feature != null) feature.setEnabled(value);
         enabled = value;
         saveSettings();
-        if (!enabled) resetPending();
+        if (!value) resetPending();
     }
 
     public static double getDelaySeconds() { return delayTicks / 20.0D; }

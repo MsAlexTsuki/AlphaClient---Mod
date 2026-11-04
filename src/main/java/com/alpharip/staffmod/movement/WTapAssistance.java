@@ -2,6 +2,9 @@
 package com.alpharip.staffmod.movement;
 
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
@@ -17,7 +20,6 @@ import java.util.concurrent.ThreadLocalRandom;
  * W and presses S on its own, then releases S and restores the physical W state.
  */
 public final class WTapAssistance {
-    private static boolean enabled;
     private static boolean requireW = true;
     private static int delay = 2;
     private static int cooldown = 4;
@@ -44,7 +46,12 @@ public final class WTapAssistance {
     private int ticksSinceFightAttack;
     private static final int FIGHT_RESET_TICKS = 40;
 
-    public static boolean isEnabled() { return enabled; }
+    private static boolean isConfiguredEnabled() {
+        AlphaModule module = AlphaModuleRegistry.find("w-tap-assistance");
+        return module != null && module.isConfiguredEnabled();
+    }
+
+    public static boolean isEnabled() { return isConfiguredEnabled() && hasFounderAccess(); }
 
     private static boolean hasFounderAccess() {
         return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
@@ -53,7 +60,7 @@ public final class WTapAssistance {
     }
 
     private static boolean isWTapAvailable() {
-        return enabled && hasFounderAccess() && mode != 3;
+        return isEnabled() && mode != 3;
     }
 
     private static boolean isSTapAvailable() {
@@ -65,7 +72,11 @@ public final class WTapAssistance {
     }
 
     public static void setEnabled(boolean value) {
-        if (hasFounderAccess()) enabled = value;
+        if (!hasFounderAccess()) return;
+        AlphaModule module = AlphaModuleRegistry.find("w-tap-assistance");
+        if (module == null) return;
+        module.restoreEnabledState(value);
+        ModuleProfileManager.setSelectedModuleEnabled(module.getId(), value);
     }
     public static boolean isRequireW() { return requireW; }
     public static void setRequireW(boolean value) {

@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.founderfun;
 
 import net.minecraft.client.Minecraft;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -21,7 +23,9 @@ public final class PixelGardenModuleSettings {
 
     public synchronized boolean isEnabled() {
         ensureLoaded();
-        return enabled;
+        AlphaModule module = AlphaModuleRegistry.find("pixelgarden");
+        // Keep the global kill switch authoritative while also respecting the selected profile.
+        return enabled && module != null && module.isEnabled();
     }
 
     public synchronized void setEnabled(boolean value) {

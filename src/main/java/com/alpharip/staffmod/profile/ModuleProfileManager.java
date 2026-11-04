@@ -3,6 +3,7 @@ package com.alpharip.staffmod.profile;
 
 import com.alpharip.alphaclient.AlphaClient;
 import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.quality.FullbrightMod;
@@ -1370,6 +1371,9 @@ public class ModuleProfileManager {
         if (profile == null) return;
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             profile.getModule(module.getId()).addProperty("enabled", false);
+            for (AlphaModuleFeature feature : module.getFeatures()) {
+                profile.getModule(feature.getId()).addProperty("enabled", false);
+            }
         }
         JsonObject fullbright = profile.getModule("fullbright");
         fullbright.addProperty("enabled", false);
@@ -1399,6 +1403,9 @@ public class ModuleProfileManager {
 
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             profile.getModule(module.getId()).addProperty("enabled", module.isConfiguredEnabled());
+            for (AlphaModuleFeature feature : module.getFeatures()) {
+                profile.getModule(feature.getId()).addProperty("enabled", feature.isConfiguredEnabled());
+            }
         }
         JsonObject fullbright = profile.getModule("fullbright");
         fullbright.addProperty("enabled", FullbrightMod.isEnabled());
@@ -1425,6 +1432,18 @@ public class ModuleProfileManager {
         if (profile == null) return;
         profile.getModule("fullbright").addProperty("keyCode", keyCode);
         save();
+    }
+
+    /** Read a module or feature toggle from the selected profile. */
+    public static boolean getSelectedModuleEnabled(String moduleId, boolean fallback) {
+        if (moduleId == null || moduleId.trim().isEmpty()) return fallback;
+        load();
+        BhopProfile profile = findProfile(selectedProfile);
+        if (profile == null) return fallback;
+        JsonElement value = profile.getModule(moduleId).get("enabled");
+        if (value == null || !value.isJsonPrimitive()
+                || !value.getAsJsonPrimitive().isBoolean()) return fallback;
+        return value.getAsBoolean();
     }
 
     /** Store an explicit module toggle in the selected profile. */
@@ -1472,6 +1491,18 @@ public class ModuleProfileManager {
                 settings.addProperty("enabled", enabled);
                 if (defaultProfile) {
                     module.restoreEnabledState(false);
+                }
+            }
+            // Every registered feature has its own profile toggle, independent of its parent module.
+            // Missing feature entries are initialized OFF in every profile; saved choices are preserved.
+            for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+                for (AlphaModuleFeature feature : module.getFeatures()) {
+                    JsonObject featureSettings = profile.getModule(feature.getId());
+                    JsonElement savedFeatureEnabled = featureSettings.get("enabled");
+                    if (savedFeatureEnabled == null || !savedFeatureEnabled.isJsonPrimitive()
+                            || !savedFeatureEnabled.getAsJsonPrimitive().isBoolean()) {
+                        featureSettings.addProperty("enabled", false);
+                    }
                 }
             }
             JsonObject fullbrightSettings = profile.getModule("fullbright");

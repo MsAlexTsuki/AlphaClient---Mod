@@ -2,6 +2,7 @@
 package com.alpharip.staffmod.modules;
 
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.profile.ModuleProfileManager;
 
 /** Permission tier for a feature inside a module, independent of module visibility. */
 public final class AlphaModuleFeature {
@@ -25,6 +26,19 @@ public final class AlphaModuleFeature {
     public String getDescription() { return description; }
     public PermissionService.Rank getRequiredRank() { return requiredRank; }
     public boolean isImplemented() { return implemented; }
+    /** Saved preference in the currently selected AlphaClient profile. */
+    public boolean isConfiguredEnabled() {
+        return ModuleProfileManager.getSelectedModuleEnabled(id, false);
+    }
+    /** Effective state also respects this feature's existing rank requirement. */
+    public boolean isEnabled() {
+        return implemented && isAvailable() && isConfiguredEnabled();
+    }
+    /** Store this feature toggle in the currently selected profile. */
+    public void setEnabled(boolean enabled) {
+        if (!implemented || (enabled && !isAvailable())) return;
+        ModuleProfileManager.setSelectedModuleEnabled(id, enabled);
+    }
     public boolean isAvailable() {
         return implemented && PermissionService.hasAccess(requiredRank);
     }

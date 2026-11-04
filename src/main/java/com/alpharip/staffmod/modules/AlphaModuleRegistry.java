@@ -26,6 +26,7 @@ public final class AlphaModuleRegistry {
                 true,
                 DEFAULT_MODULE_ENABLED
         );
+        singleplayer.addFeature(new AlphaModuleFeature("autotool", "AutoTool", "Automatically select the best hotbar tool for the targeted block in singleplayer.", PermissionService.Rank.PUBLIC, true));
         MODULES.add(singleplayer);
 
         AlphaModule worldEdit = new AlphaModule(
@@ -67,6 +68,9 @@ public final class AlphaModuleRegistry {
         quality.addFeature(new AlphaModuleFeature("config-manager", "Config Manager", "Manage AlphaClient configuration files.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("auto-reconnect", "Auto Reconnect", "Reconnect after an unexpected disconnect.", PermissionService.Rank.PUBLIC, true));
         quality.addFeature(new AlphaModuleFeature("anvil-cost", "Anvil Cost", "Preview possible anvil operations and their experience costs in item tooltips.", PermissionService.Rank.PUBLIC, true));
+        quality.addFeature(new AlphaModuleFeature("enchanting-names", "Enchanting Names", "Show localized enchantment names in the enchanting table.", PermissionService.Rank.PUBLIC, true));
+        quality.addFeature(new AlphaModuleFeature("inventory-search", "Inventory Search", "Search player inventories, chests, and ender chests.", PermissionService.Rank.PUBLIC, true));
+        quality.addFeature(new AlphaModuleFeature("afk-timer", "AFK Timer", "Display the AFK timer HUD.", PermissionService.Rank.PUBLIC, true));
         quality.addFeature(new AlphaModuleFeature("system-monitor", "Alpha System Monitor", "Show client and system diagnostics.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("crash-reporter", "Alpha Crash Reporter", "Collect crash diagnostics.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("update-checker", "Alpha Update Checker", "Check AlphaClient updates.", PermissionService.Rank.PUBLIC, false));
@@ -230,6 +234,16 @@ public final class AlphaModuleRegistry {
             if (module.getId().equals(id)) {
                 return module;
             }
+        }
+        return null;
+    }
+
+    /** Finds a registered feature by its stable profile ID. */
+    public static AlphaModuleFeature findFeature(String id) {
+        if (id == null) return null;
+        for (AlphaModule module : MODULES) {
+            AlphaModuleFeature feature = module.getFeature(id);
+            if (feature != null) return feature;
         }
         return null;
     }

@@ -4,6 +4,8 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,7 +31,14 @@ public final class AutoToolSettings {
 
     private AutoToolSettings() { }
 
-    public static synchronized boolean isEnabled() { return getBoolean("enabled", false); }
+    private static AlphaModuleFeature profileFeature() {
+        return AlphaModuleRegistry.findFeature("autotool");
+    }
+
+    public static synchronized boolean isEnabled() {
+        AlphaModuleFeature feature = profileFeature();
+        return feature != null ? feature.isEnabled() : getBoolean("enabled", false);
+    }
 
     public static synchronized String getSwapBackMode() {
         String mode = get("swapBackMode", null);
@@ -93,7 +102,11 @@ public final class AutoToolSettings {
         return loadedProfileKey == null ? "Global defaults" : "Local profile for this singleplayer world";
     }
 
-    public static synchronized void setEnabled(boolean value) { set("enabled", String.valueOf(value)); }
+    public static synchronized void setEnabled(boolean value) {
+        set("enabled", String.valueOf(value)); // Retain the legacy per-world value for compatibility.
+        AlphaModuleFeature feature = profileFeature();
+        if (feature != null) feature.setEnabled(value);
+    }
     public static synchronized void setSwapBackMode(String value) {
         String mode = value == null ? "NEVER" : value.toUpperCase(Locale.ROOT);
         if (!"NEVER".equals(mode) && !"RELEASE".equals(mode) && !"BROKEN".equals(mode)) mode = "NEVER";

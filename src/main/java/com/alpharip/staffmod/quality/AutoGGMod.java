@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -32,14 +34,22 @@ public final class AutoGGMod {
     private int cooldownTicks;
     private boolean pending;
 
+    private static AlphaModuleFeature profileFeature() {
+        return AlphaModuleRegistry.findFeature("auto-gg");
+    }
+
     public static boolean isEnabled() {
-        return enabled;
+        AlphaModuleFeature feature = profileFeature();
+        return feature != null ? feature.isEnabled() : enabled;
     }
 
     public static void setEnabled(boolean shouldEnable) {
-        if (enabled == shouldEnable) return;
-        enabled = shouldEnable;
-        saveSettings();
+        AlphaModuleFeature feature = profileFeature();
+        if (feature != null) feature.setEnabled(shouldEnable);
+        if (enabled != shouldEnable) {
+            enabled = shouldEnable;
+            saveSettings();
+        }
     }
 
     public static double getDelaySeconds() {

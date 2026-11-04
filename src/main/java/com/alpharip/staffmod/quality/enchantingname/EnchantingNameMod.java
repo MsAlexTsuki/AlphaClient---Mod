@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.quality.enchantingname;
 
 import net.minecraft.client.Minecraft;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 
 import java.io.File;
 import java.io.FileReader;
@@ -14,11 +16,18 @@ public final class EnchantingNameMod {
     private EnchantingNameMod() {
     }
 
+    private static AlphaModuleFeature profileFeature() {
+        return AlphaModuleRegistry.findFeature("enchanting-names");
+    }
+
     public static boolean isEnabled() {
-        return enabled;
+        AlphaModuleFeature feature = profileFeature();
+        return feature != null ? feature.isEnabled() : enabled;
     }
 
     public static void setEnabled(boolean shouldEnable) {
+        AlphaModuleFeature feature = profileFeature();
+        if (feature != null) feature.setEnabled(shouldEnable);
         if (enabled == shouldEnable) return;
         enabled = shouldEnable;
         saveSettings();
