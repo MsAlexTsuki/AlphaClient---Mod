@@ -12,8 +12,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -43,18 +45,21 @@ public final class AutoToolMod {
     }
 
     @SubscribeEvent
-    public void onBlockClick(net.minecraftforge.event.entity.player.PlayerInteractEvent event) {
+    public void onMouseInput(MouseEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
         if (event == null || event.isCanceled()
-                || event.action != net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.LEFT_CLICK_BLOCK
+                || event.button != 0 || !event.buttonstate
                 || !AutoToolAccess.isAvailable(mc)
                 || !AutoToolSettings.isEnabled()
-                || mc == null || mc.thePlayer == null
-                || event.entityPlayer != mc.thePlayer
-                || mc.theWorld == null || event.world != mc.theWorld
-                || event.pos == null || isPaused(mc, mc.thePlayer)) return;
+                || mc == null || mc.currentScreen != null || mc.thePlayer == null
+                || mc.theWorld == null || mc.objectMouseOver == null
+                || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
+                || isPaused(mc, mc.thePlayer)) return;
 
-        IBlockState state = event.world.getBlockState(event.pos);
+        BlockPos pos = mc.objectMouseOver.getBlockPos();
+        if (pos == null) return;
+        World world = mc.theWorld;
+        IBlockState state = world.getBlockState(pos);
         if (state == null || state.getBlock() == null) return;
 
         EntityPlayer player = mc.thePlayer;
@@ -87,11 +92,11 @@ public final class AutoToolMod {
         }
         if (best == null) return;
 
-        boolean hadSession = sessionPlayer == player && sessionWorld == event.world
+        boolean hadSession = sessionPlayer == player && sessionWorld == world
                 && player.inventory.currentItem == autoSelectedSlot;
         if (best.slot == currentSlot) {
             if (hadSession) {
-                sessionPos = event.pos;
+                sessionPos = pos;
                 sessionBlock = block;
                 releaseTicks = 0;
                 ticksSinceSwitch = 0;
@@ -103,8 +108,8 @@ public final class AutoToolMod {
         player.inventory.currentItem = best.slot;
         autoSelectedSlot = best.slot;
         sessionPlayer = player;
-        sessionWorld = event.world;
-        sessionPos = event.pos;
+        sessionWorld = world;
+        sessionPos = pos;
         sessionBlock = block;
         ticksSinceSwitch = 0;
         releaseTicks = 0;
