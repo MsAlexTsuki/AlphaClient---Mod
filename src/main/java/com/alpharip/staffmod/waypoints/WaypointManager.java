@@ -20,6 +20,7 @@ public final class WaypointManager {
     private boolean loaded;
     private boolean loadFailed;
     private RouteBetweenWaypoints route = new RouteBetweenWaypoints();
+    private String activeWorldKey = "";
 
     private WaypointManager() { }
     public static WaypointManager getInstance() { return INSTANCE; }
@@ -73,6 +74,15 @@ public final class WaypointManager {
     }
 
     private String currentProfile() { return WaypointSettings.getString("activeProfile","default"); }
+
+    private void ensureCurrentWorldContext() {
+        String current = ServerWaypointIntegration.currentWorldKey(Minecraft.getMinecraft());
+        if (!current.equals(activeWorldKey)) {
+            activeWorldKey = current;
+            selectedId = "";
+            route.clear();
+        }
+    }
 
     public synchronized StaffWaypoint add(String name, double x, double y, double z) {
         if (!finite(x) || !finite(y) || !finite(z))
@@ -171,6 +181,7 @@ public final class WaypointManager {
 
     public synchronized List<StaffWaypoint> getForCurrentWorld() {
         load();
+        ensureCurrentWorldContext();
         Minecraft mc = Minecraft.getMinecraft();
         List<StaffWaypoint> result = new ArrayList<StaffWaypoint>();
         if (mc == null || mc.thePlayer == null) return Collections.unmodifiableList(result);
@@ -184,6 +195,7 @@ public final class WaypointManager {
     }
 
     public synchronized StaffWaypoint find(String key) {
+        ensureCurrentWorldContext();
         if (key == null) return null;
         load();
         String normalized = key.trim();
@@ -215,6 +227,7 @@ public final class WaypointManager {
 
     public synchronized void clearCurrentServer() {
         load();
+        ensureCurrentWorldContext();
         String server = ServerWaypointIntegration.currentServerKey(Minecraft.getMinecraft());
         String profile = currentProfile();
         Minecraft mc=Minecraft.getMinecraft();

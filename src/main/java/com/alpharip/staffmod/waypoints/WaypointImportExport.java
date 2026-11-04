@@ -35,29 +35,31 @@ public final class WaypointImportExport {
         for (int i=first; i<lines.length; i++) {
             if (lines[i].trim().isEmpty()) continue;
             String[] p=lines[i].split("\\t",-1);
-            if (p.length != 9 && p.length != 10 && p.length != 12) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
+            if (p.length != 9 && p.length != 10 && p.length != 12 && p.length != 13) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
             try {
-                double x = Double.parseDouble(p[3]);
-                double y = Double.parseDouble(p[4]);
-                double z = Double.parseDouble(p[5]);
+                int offset=newFormat?1:0;
+                double x = Double.parseDouble(p[3+offset]);
+                double y = Double.parseDouble(p[4+offset]);
+                double z = Double.parseDouble(p[5+offset]);
                 if (Double.isNaN(x) || Double.isInfinite(x)
                         || Double.isNaN(y) || Double.isInfinite(y)
                         || Double.isNaN(z) || Double.isInfinite(z)) {
                     throw new IllegalArgumentException("Coordinates must be finite");
                 }
                 StaffWaypoint point = new StaffWaypoint(dec(p[0]), dec(p[1]), Integer.parseInt(p[2]), x, y, z);
-                point.setCategory(dec(p[6]));
-                point.setColor((int)Long.parseLong(p[7],16));
-                point.setIconId(dec(p[8]));
-                if (p.length >= 10) {
-                    if (!validBoolean(p[9])) throw new IllegalArgumentException("Invalid death waypoint flag");
-                    point.setDeathWaypoint(Boolean.parseBoolean(p[9]));
+                if(newFormat) point.setWorldKey(dec(p[3]));
+                point.setCategory(dec(p[6+offset]));
+                point.setColor((int)Long.parseLong(p[7+offset],16));
+                point.setIconId(dec(p[8+offset]));
+                if (p.length >= 10+offset) {
+                    if (!validBoolean(p[9+offset])) throw new IllegalArgumentException("Invalid death waypoint flag");
+                    point.setDeathWaypoint(Boolean.parseBoolean(p[9+offset]));
                 }
-                if(p.length==12) {
-                    if(!validBoolean(p[10])||!validBoolean(p[11]))
+                if(p.length==12+offset) {
+                    if(!validBoolean(p[10+offset])||!validBoolean(p[11+offset]))
                         throw new IllegalArgumentException("Invalid waypoint state flag");
-                    point.setFavorite(Boolean.parseBoolean(p[10]));
-                    point.setVisited(Boolean.parseBoolean(p[11]));
+                    point.setFavorite(Boolean.parseBoolean(p[10+offset]));
+                    point.setVisited(Boolean.parseBoolean(p[11+offset]));
                 }
                 out.add(point);
             } catch (RuntimeException e) {
