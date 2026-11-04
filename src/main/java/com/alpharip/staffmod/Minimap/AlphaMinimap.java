@@ -4,6 +4,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.waypoints.StaffWaypoint;
 import com.alpharip.staffmod.waypoints.WaypointManager;
+import com.alpharip.staffmod.waypoints.ServerWaypointIntegration;
 import com.alpharip.staffmod.waypoints.WorldWaypointIcons;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -47,6 +48,8 @@ public final class AlphaMinimap {
     private boolean cachedUnderground;
     private boolean cachedUndergroundInitialized;
     private int cachedUndergroundY = Integer.MIN_VALUE;
+    private PersistentTerrainCache terrainCache;
+    private String terrainCacheIdentity;
 
     private AlphaMinimap() { }
     public static AlphaMinimap getInstance() { return INSTANCE; }
@@ -377,6 +380,44 @@ public final class AlphaMinimap {
             Chunk[][] chunkCache = new Chunk[maxChunkZ - minChunkZ + 1][maxChunkX - minChunkX + 1];
             boolean[][] chunkChecked = new boolean[chunkCache.length][chunkCache[0].length];
 
+            String cacheIdentity = ServerWaypointIntegration.currentServerKey(mc)
+                    + "|dimension=" + mc.thePlayer.dimension
+                    + (playerIsUnderground ? "|cave=" + Math.floorDiv(playerY, 5) : "|surface");
+            if (terrainCache == null || !cacheIdentity.equals(terrainCacheIdentity)) {
+                terrainCache = new PersistentTerrainCache(mc.mcDataDir, cacheIdentity);
+                terrainCacheIdentity = cacheIdentity;
+            }
+
+            // Refresh only loaded chunks whose visible terrain fingerprint changed.
+            // Previously explored chunks remain available from disk even after unloading.
+            boolean cacheChanged = false;
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+                    int blockX = chunkX << 4;
+                    int blockZ = chunkZ << 4;
+                    Chunk loaded = getCachedLoadedChunk(mc, blockX, blockZ,
+                            chunkCache, chunkChecked, minChunkX, minChunkZ);
+                    if (loaded == null) continue;
+
+                    long fingerprint = fingerprintChunk(loaded, playerY, playerIsUnderground);
+                    if (!terrainCache.hasChunk(chunkX, chunkZ)
+                            || terrainCache.getFingerprint(chunkX, chunkZ) != fingerprint) {
+                        int[] colors = new int[256];
+                        for (int localZ = 0; localZ < 16; localZ++) {
+                            for (int localX = 0; localX < 16; localX++) {
+                                int worldX = blockX + localX;
+                                int worldZ = blockZ + localZ;
+                                colors[localZ * 16 + localX] = sampleLoadedSurface(mc, worldX, worldZ,
+                                        playerY, playerIsUnderground, chunkCache, chunkChecked,
+                                        minChunkX, minChunkZ);
+                            }
+                        }
+                        terrainCache.putChunk(chunkX, chunkZ, fingerprint, colors);
+                        cacheChanged = true;
+                    }
+                }
+            }
+
             double angle = Math.toRadians(rotation);
             double cos = Math.cos(angle), sin = Math.sin(angle);
             for (int py = 0; py < sampleSize; py++) {
@@ -390,10 +431,11 @@ public final class AlphaMinimap {
                     double worldDz = -screenX * sin + screenZ * cos;
                     int worldX = MathHelper.floor_double(playerX + worldDx);
                     int worldZ = MathHelper.floor_double(playerZ + worldDz);
-                    cachedColors[py][px] = sampleLoadedSurface(mc, worldX, worldZ, playerY,
-                            playerIsUnderground, chunkCache, chunkChecked, minChunkX, minChunkZ);
+                    cachedColors[py][px] = terrainCache.getColor(worldX >> 4, worldZ >> 4,
+                            worldX & 15, worldZ & 15);
                 }
             }
+            if (cacheChanged) terrainCache.save();
             rebuildTerrainDisplayList(sampleSize, sampleScale, round, radius);
         }
         GlStateManager.disableTexture2D();
@@ -410,6 +452,32 @@ public final class AlphaMinimap {
         // Cardinal crosshair remains visible above the terrain layer.
         Gui.drawRect(cx - 1, cy - radius, cx + 1, cy + radius, 0x334B515D);
         Gui.drawRect(cx - radius, cy - 1, cx + radius, cy + 1, 0x334B515D);
+    }
+
+    private long fingerprintChunk(Chunk chunk, int playerY, boolean underground) {
+        long hash = 0xCBF29CE484222325L;
+        int baseX = chunk.xPosition << 4;
+        int baseZ = chunk.zPosition << 4;
+        for (int z = 0; z < 16; z++) {
+            for (int x = 0; x < 16; x++) {
+                int height = chunk.getHeightValue(x, z);
+                hash = (hash ^ height) * 0x100000001B3L;
+                if (underground) {
+                    int minY = Math.max(1, playerY - 8);
+                    for (int y = minY; y <= Math.min(255, playerY); y++) {
+                        IBlockState state = chunk.getBlockState(new BlockPos(baseX + x, y, baseZ + z));
+                        hash = (hash ^ net.minecraft.block.Block.getIdFromBlock(state.getBlock())) * 0x100000001B3L;
+                        hash = (hash ^ state.getBlock().getMetaFromState(state)) * 0x100000001B3L;
+                    }
+                } else if (height > 0) {
+                    int sampleY = Math.min(255, height - 1);
+                    IBlockState state = chunk.getBlockState(new BlockPos(baseX + x, sampleY, baseZ + z));
+                    hash = (hash ^ net.minecraft.block.Block.getIdFromBlock(state.getBlock())) * 0x100000001B3L;
+                    hash = (hash ^ state.getBlock().getMetaFromState(state)) * 0x100000001B3L;
+                }
+            }
+        }
+        return hash;
     }
 
     private void rebuildTerrainDisplayList(int sampleSize, int sampleScale, boolean round, int radius) {
