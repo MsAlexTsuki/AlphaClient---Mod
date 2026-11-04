@@ -94,7 +94,7 @@ public final class EnchantingNameGuiText {
 
             int costX = rowX + TEXT_X_OFFSET + TEXT_WIDTH - costWidth;
             minecraft.fontRendererObj.drawStringWithShadow(
-                    costText, (float) costX, (float) (rowY + 9), 8453920);
+                    costText, (float) costX, (float) (rowY + 9), textColor);
         }
     }
 
