@@ -34,6 +34,7 @@ import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.quality.enchantingname.EnchantingNameGuiText;
+import com.alpharip.staffmod.quality.enchantingname.EnchantingNameMod;
 import com.alpharip.staffmod.quality.anvilcost.AnvilCostMod;
 import com.alpharip.staffmod.quality.anvilcost.AnvilCostTooltipHandler;
 import com.alpharip.staffmod.serverhistory.ServerHistoryManager;
@@ -165,6 +166,7 @@ public final class AlphaClient {
         AutoGGMod.loadSettings();
         AutoReconnectMod.loadSettings();
         AnvilCostMod.loadSettings();
+        EnchantingNameMod.loadSettings();
         BhopHud.loadHudPosition();
         CpsMod.load();
         PingMod.load();
