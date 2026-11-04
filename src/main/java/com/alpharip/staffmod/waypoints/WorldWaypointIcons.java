@@ -108,11 +108,13 @@ public final class WorldWaypointIcons {
     }
 
     private static void drawWaypointLabel(Minecraft mc,StaffWaypoint point,RenderManager rm,
-                                          double dx,double dy,double dz,double beamHeight,
+                                          double dx,double dy,double dz,
                                           double distance,int displayColor) {
         GlStateManager.pushMatrix();
         try {
-            GlStateManager.translate(dx,dy+Math.max(2.0D,beamHeight+0.35D),dz);
+            // Keep the label anchored near the waypoint; beam height must not move it
+            // out of the player's view at long distances.
+            GlStateManager.translate(dx,dy+2.0D,dz);
             GlStateManager.rotate(-rm.playerViewY,0.0F,1.0F,0.0F);
             GlStateManager.rotate(rm.playerViewX,1.0F,0.0F,0.0F);
             float baseScale=0.035F*(WaypointSettings.getInt("labelSize",100,50,200)/100.0F);
@@ -222,7 +224,7 @@ public final class WorldWaypointIcons {
                 if(beamHeight>0.0D) drawBeam(dx,dy,dz,beamHeight,red,green,blue);
                 if(WaypointSettings.getBoolean("blockHighlightEnabled",true))
                     drawGroundCircle(dx,dy,dz,red,green,blue);
-                drawWaypointLabel(mc,point,rm,dx,dy,dz,beamHeight,distance,displayColor);
+                drawWaypointLabel(mc,point,rm,dx,dy,dz,distance,displayColor);
             }
             }
             StaffWaypoint navigationTarget=WaypointManager.getInstance().getSelected();
