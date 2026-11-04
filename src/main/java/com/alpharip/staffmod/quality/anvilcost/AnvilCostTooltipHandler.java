@@ -14,7 +14,7 @@ import java.util.List;
 public final class AnvilCostTooltipHandler {
     @SubscribeEvent
     public void onItemTooltip(ItemTooltipEvent event) {
-        if (!AnvilCostMod.isEnabled() || event == null || event.getItemStack() == null) {
+        if (!AnvilCostMod.isEnabled() || event == null || event.itemStack == null) {
             return;
         }
 
@@ -25,7 +25,7 @@ public final class AnvilCostTooltipHandler {
         }
 
         EntityPlayer player = minecraft.thePlayer;
-        ItemStack hoveredStack = event.getItemStack();
+        ItemStack hoveredStack = event.itemStack;
         List<AnvilCostCalculator.Preview> previews =
                 AnvilCostCalculator.calculate(hoveredStack, player);
 
@@ -33,7 +33,7 @@ public final class AnvilCostTooltipHandler {
             return;
         }
 
-        List<String> tooltip = event.getToolTip();
+        List<String> tooltip = event.toolTip;
         tooltip.add("");
         tooltip.add(EnumChatFormatting.GOLD + "Anvil Cost");
 
