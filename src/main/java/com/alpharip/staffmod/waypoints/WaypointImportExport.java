@@ -9,7 +9,7 @@ import java.util.List;
 
 /** UTF-8 TSV import/export for moving local waypoints between friends or servers. */
 public final class WaypointImportExport {
-    private static final String HEADER = "name\tserver\tdimension\tx\ty\tz\tcategory\tcolor\ticon\tdeath\tfavorite\tvisited\n";
+    private static final String HEADER = "name\tserver\tdimension\tworldKey\tx\ty\tz\tcategory\tcolor\ticon\tdeath\tfavorite\tvisited\n";
 
     public String exportWaypoints(List<StaffWaypoint> list) {
         StringBuilder out = new StringBuilder(HEADER);
@@ -17,8 +17,8 @@ public final class WaypointImportExport {
         for (StaffWaypoint p : list) {
             if (p == null) continue;
             out.append(enc(p.getLabel())).append('\t').append(enc(p.getServerKey())).append('\t')
-                .append(p.getDimensionId()).append('\t').append(p.getX()).append('\t')
-                .append(p.getY()).append('\t').append(p.getZ()).append('\t')
+                .append(p.getDimensionId()).append('\t').append(enc(p.getWorldKey())).append('\t')
+                .append(p.getX()).append('\t').append(p.getY()).append('\t').append(p.getZ()).append('\t')
                 .append(enc(p.getCategory())).append('\t').append(Integer.toHexString(p.getColor()))
                 .append('\t').append(enc(p.getIconId())).append('\t').append(p.isDeathWaypoint())
                 .append('\t').append(p.isFavorite()).append('\t').append(p.isVisited()).append('\n');
@@ -31,6 +31,7 @@ public final class WaypointImportExport {
         if (text == null || text.trim().isEmpty()) return Collections.unmodifiableList(out);
         String[] lines = text.split("\\r?\\n");
         String firstLine=lines.length==0?"":lines[0].replace("\uFEFF","");
+        boolean newFormat=firstLine.startsWith("name\tserver\tdimension\tworldKey\t");
         int first=firstLine.startsWith("name\tserver\tdimension\t")?1:0;
         for (int i=first; i<lines.length; i++) {
             if (lines[i].trim().isEmpty()) continue;
