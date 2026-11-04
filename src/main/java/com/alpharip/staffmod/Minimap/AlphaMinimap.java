@@ -25,7 +25,9 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Client-side terrain minimap. It samples only already-loaded client chunks;
@@ -390,36 +392,50 @@ public final class AlphaMinimap {
 
             // Refresh only loaded chunks whose visible terrain fingerprint changed.
             // Previously explored chunks remain available from disk even after unloading.
-            boolean cacheChanged = false;
-            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
-                for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-                    int blockX = chunkX << 4;
-                    int blockZ = chunkZ << 4;
-                    Chunk loaded = getCachedLoadedChunk(mc, blockX, blockZ,
-                            chunkCache, chunkChecked, minChunkX, minChunkZ);
-                    if (loaded == null) continue;
-
-                    long fingerprint = fingerprintChunk(loaded, playerY, playerIsUnderground);
-                    if (!terrainCache.hasChunk(chunkX, chunkZ)
-                            || terrainCache.getFingerprint(chunkX, chunkZ) != fingerprint) {
-                        int[] colors = new int[256];
-                        for (int localZ = 0; localZ < 16; localZ++) {
-                            for (int localX = 0; localX < 16; localX++) {
-                                int worldX = blockX + localX;
-                                int worldZ = blockZ + localZ;
-                                colors[localZ * 16 + localX] = sampleLoadedSurface(mc, worldX, worldZ,
-                                        playerY, playerIsUnderground, chunkCache, chunkChecked,
-                                        minChunkX, minChunkZ);
-                            }
-                        }
-                        terrainCache.putChunk(chunkX, chunkZ, fingerprint, colors);
-                        cacheChanged = true;
-                    }
+            double angle = Math.toRadians(rotation);
+            double cos = Math.cos(angle), sin = Math.sin(angle);
+            Set<Long> visibleChunks = new HashSet<Long>();
+            for (int py = 0; py < sampleSize; py++) {
+                for (int px = 0; px < sampleSize; px++) {
+                    double dx = (px + 0.5D - sampleSize / 2.0D) / sampleScale;
+                    double dz = (py + 0.5D - sampleSize / 2.0D) / sampleScale;
+                    if (round && dx * dx + dz * dz > radius * radius) continue;
+                    double screenX = dx * range / radius;
+                    double screenZ = dz * range / radius;
+                    int worldX = MathHelper.floor_double(playerX + screenX * cos + screenZ * sin);
+                    int worldZ = MathHelper.floor_double(playerZ - screenX * sin + screenZ * cos);
+                    visibleChunks.add(Long.valueOf(((long) (worldX >> 4) << 32) | ((worldZ >> 4) & 0xFFFFFFFFL)));
                 }
             }
 
-            double angle = Math.toRadians(rotation);
-            double cos = Math.cos(angle), sin = Math.sin(angle);
+            boolean cacheChanged = false;
+            for (Long chunkKey : visibleChunks) {
+                int chunkX = (int) (chunkKey.longValue() >> 32);
+                int chunkZ = (int) chunkKey.longValue();
+                int blockX = chunkX << 4;
+                int blockZ = chunkZ << 4;
+                Chunk loaded = getCachedLoadedChunk(mc, blockX, blockZ,
+                        chunkCache, chunkChecked, minChunkX, minChunkZ);
+                if (loaded == null) continue;
+
+                long fingerprint = fingerprintChunk(loaded, playerY, playerIsUnderground);
+                if (!terrainCache.hasChunk(chunkX, chunkZ)
+                        || terrainCache.getFingerprint(chunkX, chunkZ) != fingerprint) {
+                    int[] colors = new int[256];
+                    for (int localZ = 0; localZ < 16; localZ++) {
+                        for (int localX = 0; localX < 16; localX++) {
+                            int worldX = blockX + localX;
+                            int worldZ = blockZ + localZ;
+                            colors[localZ * 16 + localX] = sampleLoadedSurface(mc, worldX, worldZ,
+                                    playerY, playerIsUnderground, chunkCache, chunkChecked,
+                                    minChunkX, minChunkZ);
+                        }
+                    }
+                    terrainCache.putChunk(chunkX, chunkZ, fingerprint, colors);
+                    cacheChanged = true;
+                }
+            }
+
             for (int py = 0; py < sampleSize; py++) {
                 for (int px = 0; px < sampleSize; px++) {
                     double dx = (px + 0.5D - sampleSize / 2.0D) / sampleScale;
