@@ -64,6 +64,7 @@ public final class WaypointSettings {
         VALUES.remove("defaultIcon");
         VALUES.remove("blockHighlightEnabled");
         VALUES.remove("arrivalDetectionEnabled");
+        VALUES.remove("maxWaypointRenderDistance");
         // Remove obsolete global controls; beam height is now distance-driven
         // and chroma is stored on each waypoint.
         VALUES.remove("beamHeight");
