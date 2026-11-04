@@ -36,7 +36,7 @@ public final class WaypointsGui extends AlphaGuiScreen {
         listTop=top+82;
         listBottom=top+panelHeight-54;
 
-        int toggleY=top+49;
+        int toggleY=top+41;
         buttonList.add(new AlphaButton(8,left+14,toggleY,104,18,
                 "Hide: "+onOff(WaypointSettings.isTemporarilyHidden())));
         buttonList.add(new AlphaButton(9,left+123,toggleY,104,18,
