@@ -1,14 +1,13 @@
 package com.alpharip.staffmod.singleplayer.autotool;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
-import java.io.IOException;
-import java.util.Locale;
+import java.util.HashSet;
+import java.util.Set;
 
 /** Multi-page local settings and item-management screen for AutoTool. */
 public final class AutoToolGui extends GuiScreen {
@@ -18,10 +17,6 @@ public final class AutoToolGui extends GuiScreen {
     private int top;
     private int panelWidth;
     private int panelHeight;
-    private GuiTextField blockIdField;
-    private GuiTextField preferredItemField;
-    private GuiTextField ignoredItemField;
-    private String itemManagementStatus = "";
 
     public AutoToolGui(GuiScreen parent) { this(parent, 0); }
 
@@ -40,19 +35,24 @@ public final class AutoToolGui extends GuiScreen {
         int buttonWidth = Math.max(1, panelWidth - 32);
 
         if (page == 3) {
-            int fieldWidth = Math.max(1, panelWidth - 32);
-            blockIdField = new GuiTextField(101, fontRendererObj, left + 16, top + 53, fieldWidth, 18);
-            preferredItemField = new GuiTextField(102, fontRendererObj, left + 16, top + 94, fieldWidth, 18);
-            ignoredItemField = new GuiTextField(103, fontRendererObj, left + 16, top + 146, fieldWidth, 18);
-            blockIdField.setMaxStringLength(128);
-            preferredItemField.setMaxStringLength(128);
-            ignoredItemField.setMaxStringLength(128);
-            blockIdField.setFocused(true);
-            buttonList.add(new GuiButton(70, left + 16, top + 177, 150, 20, "Save preference"));
-            buttonList.add(new GuiButton(71, left + 174, top + 177, 150, 20, "Clear preference"));
-            buttonList.add(new GuiButton(72, left + 16, top + 201, buttonWidth, 20, "Toggle ignored item"));
-            buttonList.add(new GuiButton(73, left + 16, top + 225, 150, 20, "Copy overrides to global"));
-            buttonList.add(new GuiButton(74, left + 174, top + 225, 150, 20, "Reset world overrides"));
+            Set<String> shownItems = new HashSet<String>();
+            int row = 0;
+            for (int slot = 0; slot < 9; slot++) {
+                ItemStack stack = mc.thePlayer.inventory.getStackInSlot(slot);
+                if (stack == null || stack.getItem() == null) continue;
+                ResourceLocation itemLocation = (ResourceLocation) Item.itemRegistry.getNameForObject(stack.getItem());
+                if (itemLocation == null) continue;
+                String itemId = itemLocation.toString();
+                if (!shownItems.add(itemId)) continue;
+
+                boolean excluded = AutoToolSettings.isItemIgnored(itemId);
+                String action = excluded ? "Include" : "Exclude";
+                String itemName = truncate(stack.getDisplayName(), 24);
+                String label = "Slot " + (slot + 1) + ": " + itemName + " - " + action;
+                buttonList.add(new GuiButton(100 + slot, left + 16, top + 58 + row * 22,
+                        buttonWidth, 20, label));
+                row++;
+            }
         } else {
             String[] options = optionsForPage();
             for (int index = 0; index < options.length; index++) {
@@ -88,16 +88,18 @@ public final class AutoToolGui extends GuiScreen {
         } else if (button.id == 92) {
             closeToParent();
             return;
-        } else if (page == 3 && button.id >= 70 && button.id <= 72) {
-            manageItems(button.id);
-        } else if (page == 3 && button.id == 73) {
-            itemManagementStatus = AutoToolSettings.copyWorldOverridesToGlobalDefaults()
-                    ? "World overrides copied to global defaults."
-                    : "No editable world profile, or settings could not be read.";
-        } else if (page == 3 && button.id == 74) {
-            itemManagementStatus = AutoToolSettings.resetCurrentWorldOverrides()
-                    ? "World overrides reset to global defaults."
-                    : "World profile could not be reset safely.";
+        } else if (page == 3 && button.id >= 100 && button.id <= 108) {
+            int slot = button.id - 100;
+            ItemStack stack = mc.thePlayer.inventory.getStackInSlot(slot);
+            if (stack != null && stack.getItem() != null) {
+                ResourceLocation itemLocation = (ResourceLocation) Item.itemRegistry.getNameForObject(stack.getItem());
+                if (itemLocation != null) {
+                    String itemId = itemLocation.toString();
+                    AutoToolSettings.setItemIgnored(itemId, !AutoToolSettings.isItemIgnored(itemId));
+                }
+            }
+            mc.displayGuiScreen(new AutoToolGui(parent, page));
+            return;
         } else if (button.id >= 1 && button.id <= 5) {
             String[] options = optionsForPage();
             int index = button.id - 1;
@@ -150,41 +152,10 @@ public final class AutoToolGui extends GuiScreen {
         else if ("pauseAdventure".equals(option)) AutoToolSettings.setPauseInAdventure(!AutoToolSettings.isPauseInAdventure());
     }
 
-    private void manageItems(int action) {
-        if (action == 70 || action == 71) {
-            ResourceLocation blockId = parseId(blockIdField.getText());
-            if (blockId == null || !(Block.blockRegistry.getObject(blockId) instanceof Block)) {
-                itemManagementStatus = "Enter a valid block registry ID.";
-                return;
-            }
-            if (action == 71) {
-                AutoToolSettings.setPreferredItem(blockId.toString(), null);
-                itemManagementStatus = "Preference cleared for " + blockId + ".";
-                return;
-            }
-            ResourceLocation itemId = parseId(preferredItemField.getText());
-            if (itemId == null || !(Item.itemRegistry.getObject(itemId) instanceof Item)) {
-                itemManagementStatus = "Enter a valid item registry ID.";
-                return;
-            }
-            AutoToolSettings.setPreferredItem(blockId.toString(), itemId.toString());
-            itemManagementStatus = "Preference saved for " + blockId + ".";
-        } else {
-            ResourceLocation itemId = parseId(ignoredItemField.getText());
-            if (itemId == null || !(Item.itemRegistry.getObject(itemId) instanceof Item)) {
-                itemManagementStatus = "Enter a valid item registry ID.";
-                return;
-            }
-            boolean ignored = !AutoToolSettings.isItemIgnored(itemId.toString());
-            AutoToolSettings.setItemIgnored(itemId.toString(), ignored);
-            itemManagementStatus = ignored ? itemId + " added to ignore list." : itemId + " removed from ignore list.";
-        }
-    }
-
-    private static ResourceLocation parseId(String value) {
-        if (value == null || value.trim().isEmpty()) return null;
-        try { return new ResourceLocation(value.trim().toLowerCase(Locale.ROOT)); }
-        catch (RuntimeException invalid) { return null; }
+    private static String truncate(String value, int maxLength) {
+        if (value == null) return "Unknown item";
+        if (value.length() <= maxLength) return value;
+        return value.substring(0, Math.max(0, maxLength - 3)) + "...";
     }
 
     @Override
@@ -196,42 +167,23 @@ public final class AutoToolGui extends GuiScreen {
         drawString(fontRendererObj, "AUTOTOOL  •  " + (page + 1) + "/4", left + 16, top + 12, 0xFFF2F3F5);
         drawString(fontRendererObj, AutoToolSettings.getProfileDescription(), left + 16, top + 27, 0xFFB8BDC8);
         if (page == 2) {
-            drawString(fontRendererObj, "Item preferences and ignore list: use page 4.", left + 16, top + 126, 0xFFB8BDC8);
-            drawString(fontRendererObj, "/autotool prefer <block> <item|clear>", left + 16, top + 140, 0xFFB8BDC8);
-            drawString(fontRendererObj, "/autotool ignore <add|remove> <item>", left + 16, top + 153, 0xFFB8BDC8);
+            drawString(fontRendererObj, "AutoTool automatically selects the best tool for each block.",
+                    left + 16, top + 126, 0xFFB8BDC8);
+            drawString(fontRendererObj, "Advanced command: /autotool prefer <block> <item|clear>",
+                    left + 16, top + 140, 0xFFB8BDC8);
         } else if (page == 3) {
-            drawString(fontRendererObj, "Block registry ID", left + 16, top + 42, 0xFFB8BDC8);
-            drawString(fontRendererObj, "Preferred item registry ID", left + 16, top + 83, 0xFFB8BDC8);
-            drawString(fontRendererObj, "Item to add/remove from ignore list", left + 16, top + 135, 0xFFB8BDC8);
-            blockIdField.drawTextBox();
-            preferredItemField.drawTextBox();
-            ignoredItemField.drawTextBox();
-            if (!itemManagementStatus.isEmpty()) {
-                drawString(fontRendererObj, itemManagementStatus, left + 16, top + 165, 0xFFFFC83D);
+            drawString(fontRendererObj, "Select an item from your hotbar to exclude or include it.",
+                    left + 16, top + 42, 0xFFB8BDC8);
+            boolean hasItems = false;
+            for (int slot = 0; slot < 9; slot++) {
+                ItemStack stack = mc.thePlayer.inventory.getStackInSlot(slot);
+                if (stack != null && stack.getItem() != null) { hasItems = true; break; }
+            }
+            if (!hasItems) {
+                drawString(fontRendererObj, "Your hotbar is empty.", left + 16, top + 65, 0xFFB8BDC8);
             }
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
-    }
-
-    @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        super.mouseClicked(mouseX, mouseY, mouseButton);
-        if (page == 3) {
-            blockIdField.mouseClicked(mouseX, mouseY, mouseButton);
-            preferredItemField.mouseClicked(mouseX, mouseY, mouseButton);
-            ignoredItemField.mouseClicked(mouseX, mouseY, mouseButton);
-        }
-    }
-
-    @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (keyCode == 1) { closeToParent(); return; }
-        if (page == 3) {
-            blockIdField.textboxKeyTyped(typedChar, keyCode);
-            preferredItemField.textboxKeyTyped(typedChar, keyCode);
-            ignoredItemField.textboxKeyTyped(typedChar, keyCode);
-        }
-        super.keyTyped(typedChar, keyCode);
     }
 
     private void closeToParent() {
