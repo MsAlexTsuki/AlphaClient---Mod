@@ -1,8 +1,9 @@
 package com.alpharip.staffmod.waypoints;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.block.Block;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.storage.WorldInfo;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -21,10 +22,23 @@ public final class ServerWaypointIntegration {
  public static String currentWorldKey(Minecraft mc) {
   if(mc==null||mc.theWorld==null||mc.thePlayer==null)return "";
   World w=mc.theWorld; WorldInfo info=w.getWorldInfo(); if(info==null)return "";
-  WorldBorder border=w.getWorldBorder();
+  int sx=info.getSpawnX(), sz=info.getSpawnZ();
   String s=currentServerKey(mc)+"|dim="+mc.thePlayer.dimension+"|name="+safe(info.getWorldName())
-   +"|spawn="+info.getSpawnX()+","+info.getSpawnY()+","+info.getSpawnZ();
-  if(border!=null)s+="|border="+border.getCenterX()+","+border.getCenterZ()+","+border.getDiameter();
+   +"|spawn="+sx+","+info.getSpawnY()+","+sz;
+  // A fixed terrain signature separates maps that reuse the same server, dimension and spawn metadata.
+  int[] offsets={-8,0,8};
+  for(int dx:offsets) for(int dz:offsets) {
+   BlockPos column=new BlockPos(sx+dx,0,sz+dz);
+   if(!w.isBlockLoaded(column))return "";
+   BlockPos top=w.getHeight(column);
+   BlockPos surface=new BlockPos(sx+dx,top.getY()-1,sz+dz);
+   BlockPos below=new BlockPos(sx+dx,top.getY()-2,sz+dz);
+   if(!w.isBlockLoaded(surface)||!w.isBlockLoaded(below))return "";
+   s+="|"+Block.getIdFromBlock(w.getBlockState(surface).getBlock())+":"
+      +w.getBlockState(surface).getBlock().getMetaFromState(w.getBlockState(surface))
+      +","+Block.getIdFromBlock(w.getBlockState(below).getBlock())+":"
+      +w.getBlockState(below).getBlock().getMetaFromState(w.getBlockState(below));
+  }
   try { byte[] bytes=MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
    StringBuilder out=new StringBuilder();for(byte v:bytes)out.append(String.format(Locale.ROOT,"%02x",v&255));return "world-v2:"+out;
   } catch(NoSuchAlgorithmException ex){throw new IllegalStateException(ex);}
