@@ -11,6 +11,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 /** Best-effort persistent identity; 1.8.9 exposes no universal remote world UUID. */
 public final class ServerWaypointIntegration {
+ private static World cachedWorld;
+ private static String cachedWorldKey = "";
  private ServerWaypointIntegration() {}
  public static String currentServerKey(Minecraft mc) {
   if(mc==null)return "singleplayer";
@@ -19,9 +21,11 @@ public final class ServerWaypointIntegration {
   if(mc.theWorld!=null&&mc.theWorld.getWorldInfo()!=null){String w=mc.theWorld.getWorldInfo().getWorldName();if(w!=null&&!w.trim().isEmpty())return "world:"+w.trim().toLowerCase(Locale.ROOT);}
   return "singleplayer";
  }
- public static String currentWorldKey(Minecraft mc) {
+ public static synchronized String currentWorldKey(Minecraft mc) {
   if(mc==null||mc.theWorld==null||mc.thePlayer==null)return "";
-  World w=mc.theWorld; WorldInfo info=w.getWorldInfo(); if(info==null)return "";
+  World w=mc.theWorld;
+  if(w==cachedWorld&&!cachedWorldKey.isEmpty())return cachedWorldKey;
+  WorldInfo info=w.getWorldInfo(); if(info==null)return "";
   int sx=info.getSpawnX(), sz=info.getSpawnZ();
   String s=currentServerKey(mc)+"|dim="+mc.thePlayer.dimension+"|name="+safe(info.getWorldName())
    +"|spawn="+sx+","+info.getSpawnY()+","+sz;
@@ -40,7 +44,8 @@ public final class ServerWaypointIntegration {
       +w.getBlockState(below).getBlock().getMetaFromState(w.getBlockState(below));
   }
   try { byte[] bytes=MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
-   StringBuilder out=new StringBuilder();for(byte v:bytes)out.append(String.format(Locale.ROOT,"%02x",v&255));return "world-v2:"+out;
+   StringBuilder out=new StringBuilder();for(byte v:bytes)out.append(String.format(Locale.ROOT,"%02x",v&255));
+   cachedWorld=w; cachedWorldKey="world-v2:"+out; return cachedWorldKey;
   } catch(NoSuchAlgorithmException ex){throw new IllegalStateException(ex);}
  }
  public static boolean belongsToCurrentWorld(StaffWaypoint p,Minecraft mc) {
