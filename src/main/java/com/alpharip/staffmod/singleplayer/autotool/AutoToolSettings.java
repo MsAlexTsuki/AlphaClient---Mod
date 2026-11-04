@@ -1,6 +1,5 @@
 package com.alpharip.staffmod.singleplayer.autotool;
 
-import com.alpharip.staffmod.waypoints.WaypointFileUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
@@ -9,6 +8,9 @@ import net.minecraft.util.ResourceLocation;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
@@ -191,11 +193,25 @@ public final class AutoToolSettings {
             properties.store(output, "AlphaClient AutoTool settings");
             output.close();
             output = null;
-            WaypointFileUtils.replaceAtomically(temporary, destination);
+            replaceAtomically(temporary, destination);
         } catch (Exception error) {
             System.err.println("[AlphaClient] Could not save AutoTool settings: " + error.getMessage());
         } finally {
             if (output != null) try { output.close(); } catch (Exception ignored) { }
+        }
+    }
+
+    private static void replaceAtomically(File temporary, File target) throws IOException {
+        try {
+            Files.move(temporary.toPath(), target.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException atomicFailure) {
+            try {
+                Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException fallbackFailure) {
+                fallbackFailure.addSuppressed(atomicFailure);
+                throw fallbackFailure;
+            }
         }
     }
 
