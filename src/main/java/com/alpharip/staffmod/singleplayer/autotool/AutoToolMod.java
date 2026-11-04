@@ -123,7 +123,6 @@ public final class AutoToolMod {
             pauseToggle = false;
             return;
         }
-        if (!AutoToolSettings.isEnabled()) pauseToggle = false;
         boolean toggleMode = AutoToolSettings.isPauseToggleMode();
         if (toggleMode != previousPauseToggleMode) {
             pauseToggle = false;
@@ -150,6 +149,7 @@ public final class AutoToolMod {
             previousPauseToggleMode = false;
             return;
         }
+        if (!AutoToolSettings.isEnabled()) pauseToggle = false;
         boolean toggleMode = AutoToolSettings.isPauseToggleMode();
         if (toggleMode != previousPauseToggleMode) {
             pauseToggle = false;
