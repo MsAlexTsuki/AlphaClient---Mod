@@ -110,10 +110,29 @@ public final class WorldWaypointIcons {
     private static void drawWaypointLabel(Minecraft mc,StaffWaypoint point,RenderManager rm,
                                           double dx,double dy,double dz,
                                           double distance,int displayColor) {
+        // Minecraft's normal world projection uses the configured render distance as
+        // its far clipping plane. Waypoint labels need a longer projection so they remain
+        // visible even when their waypoint is beyond the terrain render distance.
+        int previousMatrixMode=GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+        FloatBuffer projection=BufferUtils.createFloatBuffer(16);
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX,projection);
+        float projectionA=projection.get(10);
+        float projectionB=projection.get(14);
+        float nearPlane=projectionB/(projectionA-1.0F);
+        boolean extendedProjection=nearPlane>0.0F && nearPlane<4096.0F;
+        if(extendedProjection) {
+            float farPlane=4096.0F;
+            projection.put(10,-(farPlane+nearPlane)/(farPlane-nearPlane));
+            projection.put(14,-(2.0F*farPlane*nearPlane)/(farPlane-nearPlane));
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glPushMatrix();
+            GL11.glLoadMatrix(projection);
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        }
+
         GlStateManager.pushMatrix();
         try {
-            // Keep the label anchored near the waypoint; beam height must not move it
-            // out of the player's view at long distances.
+            // Keep the nameplate close to the waypoint itself.
             GlStateManager.translate(dx,dy+2.0D,dz);
             GlStateManager.rotate(-rm.playerViewY,0.0F,1.0F,0.0F);
             GlStateManager.rotate(rm.playerViewX,1.0F,0.0F,0.0F);
@@ -162,6 +181,11 @@ public final class WorldWaypointIcons {
             GlStateManager.enableLighting();
             GlStateManager.enableTexture2D();
             GlStateManager.popMatrix();
+            if(extendedProjection) {
+                GL11.glMatrixMode(GL11.GL_PROJECTION);
+                GL11.glPopMatrix();
+            }
+            GL11.glMatrixMode(previousMatrixMode);
         }
     }
 
