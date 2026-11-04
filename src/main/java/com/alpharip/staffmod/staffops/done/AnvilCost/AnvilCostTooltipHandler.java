@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.AnvilCost;
+package com.alpharip.staffmod.staffops.done.AnvilCost;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;

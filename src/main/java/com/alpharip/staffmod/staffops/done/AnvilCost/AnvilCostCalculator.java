@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.AnvilCost;
+package com.alpharip.staffmod.staffops.done.AnvilCost;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
