@@ -2,6 +2,7 @@
 package com.alpharip.staffmod.quality.enchantingname;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiEnchantment;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.ContainerEnchantment;
