@@ -8,7 +8,6 @@ import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
 import com.alpharip.staffmod.quality.anvilcost.AnvilCostMod;
 import com.alpharip.staffmod.quality.enchantingname.EnchantingNameMod;
-import com.alpharip.staffmod.founderfun.eastereggs.EasterEggSettingsGui;
 import com.alpharip.staffmod.inventorysearch.InventorySearchGui;
 import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
 import net.minecraft.client.gui.GuiButton;
@@ -26,23 +25,22 @@ public final class QualityGui extends AlphaGuiScreen {
     private static final int PLAYTIME_TRACKER = 5;
     private static final int AUTO_GG = 6;
     private static final int AUTO_RECONNECT = 7;
-    private static final int EASTER_EGGS = 8;
-    private static final int SEARCH_INV = 9;
-    private static final int ANVIL_COST = 10;
-    private static final int ENCHANTING_NAMES = 11;
+    private static final int SEARCH_INV = 8;
+    private static final int ANVIL_COST = 9;
+    private static final int ENCHANTING_NAMES = 10;
     private static final int AFK_TIMER_INDEX = 7;
     private static final int SESSION_TIMER_INDEX = 8;
     private static final int PLAYTIME_TRACKER_INDEX = 9;
     private static final int AUTO_RECONNECT_INDEX = 11;
     private static final int FULLBRIGHT_INDEX = 0;
-    private static final int ANVIL_COST_INDEX = 20;
-    private static final int ENCHANTING_NAMES_INDEX = 21;
+    private static final int ANVIL_COST_INDEX = 19;
+    private static final int ENCHANTING_NAMES_INDEX = 20;
     private static final int ACCENT = 0xFFFFD866;
     private static final String[] FEATURES = {
             "Fullbright", "Alpha Module Manager", "Mod Profiles", "Auto GG", "Keybind Profiles",
             "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Session Timer", "Playtime Tracker",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
-            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Deathscreens", "Search Inv", "Anvil Cost", "Enchanting Names"
+            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Search Inv", "Anvil Cost", "Enchanting Names"
     };
 
     private final GuiScreen parent;
@@ -92,14 +90,13 @@ public final class QualityGui extends AlphaGuiScreen {
                 buttonList.add(new AlphaButton(FULLBRIGHT, x, y, tileWidth, tileHeight,
                         "Fullbright: " + (FullbrightMod.isEnabled() ? "ON" : "OFF"), true));
             } else if (i == 18) {
-                buttonList.add(new AlphaButton(EASTER_EGGS, x, y, tileWidth, tileHeight, "Deathscreens", true));
-            } else if (i == 19) {
                 boolean searchInvEnabled = InventorySearchSettings.isEnabled();
                 buttonList.add(new AlphaButton(SEARCH_INV, x, y, tileWidth, tileHeight,
                         "Search Inv: " + (searchInvEnabled ? "ON" : "OFF"), searchInvEnabled));
             } else if (i == ANVIL_COST_INDEX) {
+                boolean anvilCostEnabled = AnvilCostMod.isEnabled();
                 buttonList.add(new AlphaButton(ANVIL_COST, x, y, tileWidth, tileHeight,
-                        "Anvil Cost: " + (AnvilCostMod.isEnabled() ? "ON" : "OFF"), true));
+                        "Anvil Cost: " + (anvilCostEnabled ? "ON" : "OFF"), anvilCostEnabled));
             } else if (i == ENCHANTING_NAMES_INDEX) {
                 buttonList.add(new AlphaButton(ENCHANTING_NAMES, x, y, tileWidth, tileHeight,
                         "Enchanting Names", EnchantingNameMod.isEnabled()));
@@ -153,8 +150,6 @@ public final class QualityGui extends AlphaGuiScreen {
         } else if (button.id == FULLBRIGHT) {
             FullbrightMod.setEnabled(!FullbrightMod.isEnabled());
             initGui();
-        } else if (button.id == EASTER_EGGS) {
-            mc.displayGuiScreen(new EasterEggSettingsGui(this));
         } else if (button.id == SEARCH_INV) {
             mc.displayGuiScreen(new InventorySearchGui(this));
         } else if (button.id == ANVIL_COST) {
