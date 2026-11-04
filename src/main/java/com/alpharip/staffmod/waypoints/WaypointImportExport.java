@@ -9,7 +9,7 @@ import java.util.List;
 
 /** UTF-8 TSV import/export for moving local waypoints between friends or servers. */
 public final class WaypointImportExport {
-    private static final String HEADER = "name\tserver\tdimension\tx\ty\tz\tcategory\tcolor\ticon\tdeath\tfavorite\tvisited\n";
+    private static final String HEADER = "name\tserver\tdimension\tworldKey\tx\ty\tz\tcategory\tcolor\ticon\tdeath\tfavorite\tvisited\n";
 
     public String exportWaypoints(List<StaffWaypoint> list) {
         StringBuilder out = new StringBuilder(HEADER);
@@ -17,8 +17,8 @@ public final class WaypointImportExport {
         for (StaffWaypoint p : list) {
             if (p == null) continue;
             out.append(enc(p.getLabel())).append('\t').append(enc(p.getServerKey())).append('\t')
-                .append(p.getDimensionId()).append('\t').append(p.getX()).append('\t')
-                .append(p.getY()).append('\t').append(p.getZ()).append('\t')
+                .append(p.getDimensionId()).append('\t').append(enc(p.getWorldKey())).append('\t')
+                .append(p.getX()).append('\t').append(p.getY()).append('\t').append(p.getZ()).append('\t')
                 .append(enc(p.getCategory())).append('\t').append(Integer.toHexString(p.getColor()))
                 .append('\t').append(enc(p.getIconId())).append('\t').append(p.isDeathWaypoint())
                 .append('\t').append(p.isFavorite()).append('\t').append(p.isVisited()).append('\n');
@@ -31,33 +31,36 @@ public final class WaypointImportExport {
         if (text == null || text.trim().isEmpty()) return Collections.unmodifiableList(out);
         String[] lines = text.split("\\r?\\n");
         String firstLine=lines.length==0?"":lines[0].replace("\uFEFF","");
+        boolean newFormat=firstLine.startsWith("name\tserver\tdimension\tworldKey\t");
         int first=firstLine.startsWith("name\tserver\tdimension\t")?1:0;
         for (int i=first; i<lines.length; i++) {
             if (lines[i].trim().isEmpty()) continue;
             String[] p=lines[i].split("\\t",-1);
-            if (p.length != 9 && p.length != 10 && p.length != 12) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
+            if (p.length != 9 && p.length != 10 && p.length != 12 && p.length != 13) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
             try {
-                double x = Double.parseDouble(p[3]);
-                double y = Double.parseDouble(p[4]);
-                double z = Double.parseDouble(p[5]);
+                int offset=newFormat?1:0;
+                double x = Double.parseDouble(p[3+offset]);
+                double y = Double.parseDouble(p[4+offset]);
+                double z = Double.parseDouble(p[5+offset]);
                 if (Double.isNaN(x) || Double.isInfinite(x)
                         || Double.isNaN(y) || Double.isInfinite(y)
                         || Double.isNaN(z) || Double.isInfinite(z)) {
                     throw new IllegalArgumentException("Coordinates must be finite");
                 }
                 StaffWaypoint point = new StaffWaypoint(dec(p[0]), dec(p[1]), Integer.parseInt(p[2]), x, y, z);
-                point.setCategory(dec(p[6]));
-                point.setColor((int)Long.parseLong(p[7],16));
-                point.setIconId(dec(p[8]));
-                if (p.length >= 10) {
-                    if (!validBoolean(p[9])) throw new IllegalArgumentException("Invalid death waypoint flag");
-                    point.setDeathWaypoint(Boolean.parseBoolean(p[9]));
+                if(newFormat) point.setWorldKey(dec(p[3]));
+                point.setCategory(dec(p[6+offset]));
+                point.setColor((int)Long.parseLong(p[7+offset],16));
+                point.setIconId(dec(p[8+offset]));
+                if (p.length >= 10+offset) {
+                    if (!validBoolean(p[9+offset])) throw new IllegalArgumentException("Invalid death waypoint flag");
+                    point.setDeathWaypoint(Boolean.parseBoolean(p[9+offset]));
                 }
-                if(p.length==12) {
-                    if(!validBoolean(p[10])||!validBoolean(p[11]))
+                if(p.length==12+offset) {
+                    if(!validBoolean(p[10+offset])||!validBoolean(p[11+offset]))
                         throw new IllegalArgumentException("Invalid waypoint state flag");
-                    point.setFavorite(Boolean.parseBoolean(p[10]));
-                    point.setVisited(Boolean.parseBoolean(p[11]));
+                    point.setFavorite(Boolean.parseBoolean(p[10+offset]));
+                    point.setVisited(Boolean.parseBoolean(p[11+offset]));
                 }
                 out.add(point);
             } catch (RuntimeException e) {

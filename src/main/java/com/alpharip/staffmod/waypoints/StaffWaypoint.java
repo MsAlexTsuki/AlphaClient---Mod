@@ -7,6 +7,7 @@ public final class StaffWaypoint {
     private String id = UUID.randomUUID().toString();
     private String label = "";
     private String serverKey = "singleplayer";
+    private String worldKey = "";
     private String dimension = "0";
     private int dimensionId;
     private double x;
@@ -27,6 +28,7 @@ public final class StaffWaypoint {
     public StaffWaypoint(String label, String serverKey, int dimensionId, double x, double y, double z) {
         this.label = clean(label, "Waypoint");
         this.serverKey = clean(serverKey, "singleplayer");
+        if (worldKey == null) worldKey = "";
         this.dimensionId = dimensionId;
         this.dimension = String.valueOf(dimensionId);
         this.x = x; this.y = y; this.z = z;
@@ -40,6 +42,7 @@ public final class StaffWaypoint {
     public String getLabel() { return label; }
     public String getName() { return label; }
     public String getServerKey() { return serverKey; }
+    public String getWorldKey() { return worldKey == null ? "" : worldKey; }
     public String getDimension() { return dimension; }
     public int getDimensionId() { return dimensionId; }
     public double getX() { return x; }
@@ -61,6 +64,7 @@ public final class StaffWaypoint {
         if (id == null || id.trim().isEmpty()) id = UUID.randomUUID().toString();
         label = clean(label, "Waypoint");
         serverKey = clean(serverKey, "singleplayer");
+        if (worldKey == null) worldKey = "";
         dimension = String.valueOf(dimensionId);
         category = clean(category, "General");
         iconId = clean(iconId, "pin");
@@ -77,6 +81,7 @@ public final class StaffWaypoint {
     }
     public void setId(String value) { if (value != null && !value.trim().isEmpty()) id = value.trim(); }
     public void setLabel(String value) { label = clean(value, "Waypoint"); touch(); }
+    public void setWorldKey(String value) { worldKey = value == null ? "" : value.trim(); touch(); }
     public void setContext(String server, int dimension) {
         serverKey = clean(server, "singleplayer");
         dimensionId = dimension;

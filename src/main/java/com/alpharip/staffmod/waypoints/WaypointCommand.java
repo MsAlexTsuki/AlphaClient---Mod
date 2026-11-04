@@ -131,11 +131,11 @@ public final class WaypointCommand extends CommandBase {
                 manager.clearRoute(); reply(sender,"Route cleared.");
             } else if("clear".equals(action)) {
                 if(args.length<2||!"confirm".equalsIgnoreCase(args[1])) {
-                    reply(sender,"This deletes waypoints in the active profile on this server. Confirm with /waypoint clear confirm."); return;
+                    reply(sender,"This deletes waypoints in the active profile in this world only. Confirm with /waypoint clear confirm."); return;
                 }
-                manager.clearCurrentServer(); reply(sender,"Waypoints for this profile and server were cleared.");
+                manager.clearCurrentServer(); reply(sender,"Waypoints for this profile and world were cleared.");
             } else if("export".equals(action)||"share".equals(action)) {
-                File file=sharing.exportForSharing(manager.getForCurrentServer());
+                File file=sharing.exportForSharing(manager.getForCurrentWorld());
                 reply(sender,"Local waypoint export saved to "+file.getAbsolutePath()+". Share this file with a friend.");
             } else if("import".equals(action)) {
                 File file=manager.getExportFile();
@@ -254,9 +254,9 @@ public final class WaypointCommand extends CommandBase {
             String prefix=args[0].toLowerCase(Locale.ROOT);
             for(String a:actions) if(a.startsWith(prefix)) result.add(a);
         } else if(args.length>=2&&("select".equalsIgnoreCase(args[0])||"remove".equalsIgnoreCase(args[0])||"delete".equalsIgnoreCase(args[0])||"goto".equalsIgnoreCase(args[0])||"route".equalsIgnoreCase(args[0])||"favorite".equalsIgnoreCase(args[0]))) {
-            return autocomplete.complete(args[args.length-1],WaypointManager.getInstance().getForCurrentServer());
+            return autocomplete.complete(args[args.length-1],WaypointManager.getInstance().getForCurrentWorld());
         } else if(args.length==2&&"icon".equalsIgnoreCase(args[0])) {
-            return autocomplete.complete(args[1],WaypointManager.getInstance().getForCurrentServer());
+            return autocomplete.complete(args[1],WaypointManager.getInstance().getForCurrentWorld());
         } else if(args.length==2&&"pattern".equalsIgnoreCase(args[0])) {
             if("add".startsWith(args[1].toLowerCase(Locale.ROOT)))result.add("add");
             if("remove".startsWith(args[1].toLowerCase(Locale.ROOT)))result.add("remove");
