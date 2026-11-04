@@ -38,16 +38,7 @@ public final class AnvilCostTooltipHandler {
         tooltip.add(EnumChatFormatting.GOLD + "Anvil Cost");
 
         for (AnvilCostCalculator.Preview preview : previews) {
-            String cost = EnumChatFormatting.YELLOW + String.valueOf(preview.getLevels())
-                    + " levels";
-            if (preview.getLevels() >= 40 && !player.capabilities.isCreativeMode) {
-                cost += EnumChatFormatting.RED + " (Too Expensive)";
-            }
-            if (preview.getLevels() > player.experienceLevel) {
-                int missingLevels = preview.getLevels() - player.experienceLevel;
-                cost += EnumChatFormatting.RED + " (Need " + missingLevels + " more)";
-            }
-
+            String cost = AnvilCostWarning.formatCost(preview, player);
             tooltip.add(EnumChatFormatting.GRAY + preview.getOperation()
                     + EnumChatFormatting.DARK_GRAY + ": " + cost
                     + EnumChatFormatting.DARK_GRAY + " - "
