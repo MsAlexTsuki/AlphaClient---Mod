@@ -25,6 +25,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -359,7 +360,7 @@ public final class AlphaMinimap {
                 || Math.abs(playerY - cachedUndergroundY) >= 5);
         boolean moved = Double.isNaN(cachedCenterX) || Math.abs(playerX - cachedCenterX) >= 2.0D
                 || Math.abs(playerZ - cachedCenterZ) >= 2.0D;
-        String currentServerKey = ServerWaypointIntegration.currentServerKey(mc);
+        String currentServerKey = currentMinimapIdentity(mc);
         boolean worldOrServerChanged = cachedWorld != mc.theWorld
                 || !currentServerKey.equals(cachedServerKey);
         String cacheIdentity = currentServerKey
@@ -480,6 +481,53 @@ public final class AlphaMinimap {
         // Cardinal crosshair remains visible above the terrain layer.
         Gui.drawRect(cx - 1, cy - radius, cx + 1, cy + radius, 0x334B515D);
         Gui.drawRect(cx - radius, cy - 1, cx + radius, cy + 1, 0x334B515D);
+    }
+
+    /**
+     * Builds a client-side minimap profile identity. Servers commonly keep
+     * multiple gamemodes behind one address, so the sidebar objective and its
+     * stable text entries are used as an additional discriminator.
+     *
+     * Numeric values are normalized because player counts, timers and stats
+     * can change without the player changing gamemodes.
+     */
+    private String currentMinimapIdentity(Minecraft mc) {
+        String serverKey = ServerWaypointIntegration.currentServerKey(mc);
+        if (mc == null || mc.theWorld == null) return serverKey + "|profile:unknown";
+
+        net.minecraft.scoreboard.Scoreboard scoreboard = mc.theWorld.getScoreboard();
+        net.minecraft.scoreboard.ScoreObjective sidebar =
+                scoreboard == null ? null : scoreboard.getObjectiveInDisplaySlot(1);
+        if (sidebar == null) {
+            return serverKey + "|profile:default";
+        }
+
+        StringBuilder identity = new StringBuilder(serverKey).append("|sidebar:");
+        String title = net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(
+                sidebar.getDisplayName());
+        identity.append(normalizeMinimapScoreboardText(title));
+
+        List<String> stableLines = new ArrayList<String>();
+        for (net.minecraft.scoreboard.Score score : scoreboard.getSortedScores(sidebar)) {
+            if (score == null || score.getPlayerName() == null) continue;
+            String line = net.minecraft.scoreboard.ScorePlayerTeam.formatPlayerName(
+                    scoreboard.getPlayersTeam(score.getPlayerName()), score.getPlayerName());
+            line = net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(line);
+            line = normalizeMinimapScoreboardText(line);
+            if (!line.isEmpty() && !"#".equals(line) && !stableLines.contains(line)) {
+                stableLines.add(line);
+            }
+        }
+        Collections.sort(stableLines);
+        for (String line : stableLines) {
+            identity.append('|').append(line);
+        }
+        return identity.toString();
+    }
+
+    private String normalizeMinimapScoreboardText(String text) {
+        if (text == null) return "";
+        return text.replaceAll("\\d+", "#").replaceAll("\\s+", " ").trim().toLowerCase(java.util.Locale.ROOT);
     }
 
     private long fingerprintChunk(Chunk chunk, int playerY, boolean underground) {
