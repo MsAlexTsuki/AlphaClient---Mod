@@ -4,6 +4,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.waypoints.StaffWaypoint;
 import com.alpharip.staffmod.waypoints.WaypointManager;
+import com.alpharip.staffmod.waypoints.WaypointSettings;
 import com.alpharip.staffmod.waypoints.ServerWaypointIntegration;
 import com.alpharip.staffmod.waypoints.WorldWaypointIcons;
 import net.minecraft.block.state.IBlockState;
@@ -737,6 +738,7 @@ public final class AlphaMinimap {
 
     private void drawWaypoints(Minecraft mc, int cx, int cy, int size, double mapCenterX, double mapCenterZ,
             int range, int rotation) {
+        if (WaypointSettings.isTemporarilyHidden()) return;
         int radius = size / 2 - 7;
         List<StaffWaypoint> points = WaypointManager.getInstance().getForCurrentWorld();
         for (StaffWaypoint point : points) {
