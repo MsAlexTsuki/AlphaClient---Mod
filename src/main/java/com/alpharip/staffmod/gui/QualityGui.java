@@ -101,10 +101,8 @@ public final class QualityGui extends AlphaGuiScreen {
                 buttonList.add(new AlphaButton(ANVIL_COST, x, y, tileWidth, tileHeight,
                         "Anvil Cost: " + (AnvilCostMod.isEnabled() ? "ON" : "OFF"), true));
             } else if (i == ENCHANTING_NAMES_INDEX) {
-                boolean enchantingNamesEnabled = EnchantingNameMod.isEnabled();
                 buttonList.add(new AlphaButton(ENCHANTING_NAMES, x, y, tileWidth, tileHeight,
-                        "Enchanting Names: " + (enchantingNamesEnabled ? "ON" : "OFF"),
-                        enchantingNamesEnabled));
+                        "Enchanting Names", EnchantingNameMod.isEnabled()));
             } else if (i == AFK_TIMER_INDEX) {
                 buttonList.add(new AlphaButton(AFK_TIMER, x, y, tileWidth, tileHeight, "AFK Timer", true));
             } else if (i == SESSION_TIMER_INDEX) {
@@ -162,8 +160,7 @@ public final class QualityGui extends AlphaGuiScreen {
         } else if (button.id == ANVIL_COST) {
             mc.displayGuiScreen(new AnvilCostSettingsGui(this));
         } else if (button.id == ENCHANTING_NAMES) {
-            EnchantingNameMod.setEnabled(!EnchantingNameMod.isEnabled());
-            initGui();
+            mc.displayGuiScreen(new EnchantingNameSettingsGui(this));
         }
     }
 
