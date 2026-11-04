@@ -23,7 +23,12 @@ public final class AutoToolGui extends GuiScreen {
     private GuiTextField ignoredItemField;
     private String itemManagementStatus = "";
 
-    public AutoToolGui(GuiScreen parent) { this.parent = parent; }
+    public AutoToolGui(GuiScreen parent) { this(parent, 0); }
+
+    private AutoToolGui(GuiScreen parent, int page) {
+        this.parent = parent;
+        this.page = Math.max(0, Math.min(3, page));
+    }
 
     @Override
     public void initGui() {
@@ -55,9 +60,15 @@ public final class AutoToolGui extends GuiScreen {
                         buttonWidth, 20, labelFor(options[index])));
             }
         }
-        if (page > 0) buttonList.add(new GuiButton(91, left + 16, top + panelHeight - 25, 76, 18, "Back"));
-        if (page < 3) buttonList.add(new GuiButton(90, left + panelWidth - 92, top + panelHeight - 25, 76, 18, "More"));
-        else buttonList.add(new GuiButton(90, left + panelWidth - 92, top + panelHeight - 25, 76, 18, "Done"));
+        int footerY = top + panelHeight - 25;
+        if (page > 0) {
+            buttonList.add(new GuiButton(91, left + 16, footerY, 68, 18, "Back"));
+            buttonList.add(new GuiButton(92, left + 90, footerY, 68, 18, "Menu"));
+        } else {
+            buttonList.add(new GuiButton(92, left + 16, footerY, 76, 18, "Menu"));
+        }
+        if (page < 3) buttonList.add(new GuiButton(90, left + panelWidth - 92, footerY, 76, 18, "More"));
+        else buttonList.add(new GuiButton(90, left + panelWidth - 92, footerY, 76, 18, "Done"));
     }
 
     @Override
@@ -65,10 +76,18 @@ public final class AutoToolGui extends GuiScreen {
         if (!AutoToolAccess.isAvailable(mc)) { closeToParent(); return; }
         if (button == null) return;
         if (button.id == 90) {
-            if (page < 3) page++;
-            else { closeToParent(); return; }
+            if (page < 3) {
+                mc.displayGuiScreen(new AutoToolGui(parent, page + 1));
+            } else {
+                closeToParent();
+            }
+            return;
         } else if (button.id == 91) {
-            page--;
+            mc.displayGuiScreen(new AutoToolGui(parent, page - 1));
+            return;
+        } else if (button.id == 92) {
+            closeToParent();
+            return;
         } else if (page == 3 && button.id >= 70 && button.id <= 72) {
             manageItems(button.id);
         } else if (page == 3 && button.id == 73) {
