@@ -79,6 +79,17 @@ public final class EnchantingNameGuiText {
 
             redrawOptionRow(rowX, rowY, option, disabled, hovered);
 
+            // Fully cover the vanilla Standard Galactic clue before drawing
+            // the localized name. The vanilla row texture can leave its glyphs
+            // visible through the option area on some render states.
+            Gui.drawRect(
+                    rowX + TEXT_X_OFFSET - 1,
+                    rowY + 1,
+                    rowX + TEXT_X_OFFSET + TEXT_WIDTH + 1,
+                    rowY + OPTION_ROW_HEIGHT - 1,
+                    0xFF252525
+            );
+
             String displayName = enchantingName.getOptionDisplayName(container, option);
             if (displayName == null || displayName.trim().isEmpty()) {
                 displayName = "Unknown";
