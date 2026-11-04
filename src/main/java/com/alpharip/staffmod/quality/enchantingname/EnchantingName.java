@@ -36,12 +36,12 @@ public final class EnchantingName {
         validateOptionIndex(optionIndex);
 
         if (!enabled || container == null
-                || container.enchantmentIds == null
-                || container.enchantmentIds.length <= optionIndex) {
+                || container.field_178151_h == null
+                || container.field_178151_h.length <= optionIndex) {
             return null;
         }
 
-        int encodedClue = container.enchantmentIds[optionIndex];
+        int encodedClue = container.field_178151_h[optionIndex];
         if (encodedClue < 0) {
             return null;
         }
