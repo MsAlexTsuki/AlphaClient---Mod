@@ -7,6 +7,8 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.JumpInsnNode;
 import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -14,14 +16,14 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 /**
- * Suppresses only the vanilla enchanting-option hover tooltip while
- * Enchanting Names is enabled. All other GuiEnchantment rendering remains
- * untouched.
+ * Replaces the vanilla Standard Galactic option text at its original draw
+ * call, removes the option icon while the feature is enabled, and suppresses
+ * the duplicate hover tooltip.
  */
 public final class EnchantingNameHoverTransformer implements IClassTransformer {
     private static final String GUI_ENCHANTMENT =
             "net.minecraft.client.gui.GuiEnchantment";
-    private static final String HOVER_HOOK =
+    private static final String HOOK =
             "com/alpharip/staffmod/quality/enchantingname/EnchantingNameHooks";
 
     @Override
@@ -33,70 +35,106 @@ public final class EnchantingNameHoverTransformer implements IClassTransformer {
         try {
             ClassNode classNode = new ClassNode();
             new ClassReader(basicClass).accept(classNode, 0);
-            boolean hooked = false;
+
+            boolean textHooked = false;
+            boolean textureHooked = false;
+            boolean hoverHooked = false;
 
             for (MethodNode method : classNode.methods) {
-                if (!isDrawScreenMethod(method)) {
-                    continue;
+                if ("(FII)V".equals(method.desc)) {
+                    for (AbstractInsnNode instruction = method.instructions.getFirst();
+                         instruction != null; ) {
+                        AbstractInsnNode next = instruction.getNext();
+                        if (instruction instanceof MethodInsnNode) {
+                            MethodInsnNode call = (MethodInsnNode) instruction;
+
+                            if (isSplitStringCall(call)) {
+                                method.instructions.set(call, new MethodInsnNode(
+                                        Opcodes.INVOKESTATIC, HOOK,
+                                        "drawEnchantingOptionText",
+                                        "(Lnet/minecraft/client/gui/FontRenderer;Ljava/lang/String;IIII)V",
+                                        false));
+                                textHooked = true;
+                            } else if (isOptionTextureCall(call)) {
+                                method.instructions.set(call, new MethodInsnNode(
+                                        Opcodes.INVOKESTATIC, HOOK,
+                                        "drawEnchantingOptionTexture",
+                                        "(Lnet/minecraft/client/gui/GuiEnchantment;IIIIII)V",
+                                        false));
+                                textureHooked = true;
+                            }
+                        }
+                        instruction = next;
+                    }
                 }
 
-                for (AbstractInsnNode instruction = method.instructions.getFirst();
-                     instruction != null; instruction = instruction.getNext()) {
-                    if (!(instruction instanceof MethodInsnNode)) {
-                        continue;
+                if (isDrawScreenMethod(method)) {
+                    for (AbstractInsnNode instruction = method.instructions.getFirst();
+                         instruction != null; instruction = instruction.getNext()) {
+                        if (!(instruction instanceof MethodInsnNode)) {
+                            continue;
+                        }
+
+                        MethodInsnNode call = (MethodInsnNode) instruction;
+                        if (!isHoverTextCall(call)) {
+                            continue;
+                        }
+
+                        LabelNode callVanilla = new LabelNode();
+                        LabelNode afterHover = new LabelNode();
+                        InsnList hook = new InsnList();
+
+                        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
+                                HOOK, "shouldSuppressHover",
+                                "(Ljava/lang/Object;)Z", false));
+                        hook.add(new JumpInsnNode(Opcodes.IFEQ, callVanilla));
+
+                        // Original stack: GuiScreen, List<String>, mouseX, mouseY.
+                        hook.add(new InsnNode(Opcodes.POP));
+                        hook.add(new InsnNode(Opcodes.POP));
+                        hook.add(new InsnNode(Opcodes.POP));
+                        hook.add(new InsnNode(Opcodes.POP));
+                        hook.add(new JumpInsnNode(Opcodes.GOTO, afterHover));
+                        hook.add(callVanilla);
+
+                        method.instructions.insertBefore(instruction, hook);
+                        method.instructions.insert(instruction, afterHover);
+                        hoverHooked = true;
+                        break;
                     }
-
-                    MethodInsnNode call = (MethodInsnNode) instruction;
-                    if (!isHoverTextCall(call)) {
-                        continue;
-                    }
-
-                    LabelNode callVanilla = new LabelNode();
-                    LabelNode afterHover = new LabelNode();
-                    org.objectweb.asm.tree.InsnList hook =
-                            new org.objectweb.asm.tree.InsnList();
-
-                    // Keep the original invocation stack intact unless the
-                    // feature is enabled for this enchanting screen.
-                    hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                    hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
-                            HOVER_HOOK, "shouldSuppressHover",
-                            "(Ljava/lang/Object;)Z", false));
-                    hook.add(new JumpInsnNode(Opcodes.IFEQ, callVanilla));
-
-                    // Original stack before drawHoveringText:
-                    // GuiScreen, List<String>, mouseX, mouseY.
-                    hook.add(new org.objectweb.asm.tree.InsnNode(Opcodes.POP));
-                    hook.add(new org.objectweb.asm.tree.InsnNode(Opcodes.POP));
-                    hook.add(new org.objectweb.asm.tree.InsnNode(Opcodes.POP));
-                    hook.add(new org.objectweb.asm.tree.InsnNode(Opcodes.POP));
-                    hook.add(new JumpInsnNode(Opcodes.GOTO, afterHover));
-                    hook.add(callVanilla);
-                    method.instructions.insertBefore(instruction, hook);
-                    method.instructions.insert(instruction, afterHover);
-                    hooked = true;
-                    break;
-                }
-
-                if (hooked) {
-                    break;
                 }
             }
 
-            if (!hooked) {
-                System.err.println("[AlphaClient] Enchanting Names hover hook could not find GuiEnchantment.drawHoveringText.");
+            if (!textHooked || !textureHooked || !hoverHooked) {
+                System.err.println("[AlphaClient] Enchanting Names transformer incomplete: text="
+                        + textHooked + ", icon=" + textureHooked + ", hover=" + hoverHooked);
                 return basicClass;
             }
 
-            ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+            ClassWriter writer = new ClassWriter(
+                    ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
             classNode.accept(writer);
-            System.out.println("[AlphaClient] Installed Enchanting Names hover suppression.");
+            System.out.println("[AlphaClient] Installed Enchanting Names text, icon and hover hooks.");
             return writer.toByteArray();
         } catch (Throwable error) {
-            System.err.println("[AlphaClient] Enchanting Names hover transformer failed; vanilla rendering remains unchanged.");
+            System.err.println("[AlphaClient] Enchanting Names transformer failed; vanilla rendering remains unchanged.");
             error.printStackTrace();
             return basicClass;
         }
+    }
+
+    private boolean isSplitStringCall(MethodInsnNode call) {
+        return "(Ljava/lang/String;IIII)V".equals(call.desc)
+                && call.owner != null
+                && call.owner.endsWith("/FontRenderer");
+    }
+
+    private boolean isOptionTextureCall(MethodInsnNode call) {
+        return "(IIIIII)V".equals(call.desc)
+                && ("drawTexturedModalRect".equals(call.name)
+                || "func_73729_b".equals(call.name)
+                || "b".equals(call.name));
     }
 
     private boolean isDrawScreenMethod(MethodNode method) {
