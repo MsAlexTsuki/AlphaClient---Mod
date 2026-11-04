@@ -127,7 +127,7 @@ public final class EnchantingNameGuiText {
         GlStateManager.pushMatrix();
         GlStateManager.translate((float) x, (float) y, 0.0F);
         GlStateManager.scale(horizontalScale, 1.0F, 1.0F);
-        minecraft.fontRendererObj.drawString(text, 0.0F, 0.0F, color);
+        minecraft.fontRendererObj.drawString(text, 0, 0, color);
         GlStateManager.popMatrix();
     }
 }
