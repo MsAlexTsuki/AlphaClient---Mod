@@ -16,7 +16,7 @@ public final class WaypointVisualSettingsGui extends AlphaGuiScreen {
     @Override public void initGui() {
         buttonList.clear();
         panelWidth=Math.min(330,width-24);
-        panelHeight=Math.min(220,height-24);
+        panelHeight=Math.min(244,height-24);
         left=(width-panelWidth)/2;
         top=(height-panelHeight)/2;
         int y=top+43;
@@ -24,8 +24,9 @@ public final class WaypointVisualSettingsGui extends AlphaGuiScreen {
         add(2,"Icon: "+iconName(),y);y+=24;
         add(3,"Ground Circle: "+onOff(WaypointSettings.getBoolean("blockHighlightEnabled",true)),y);y+=24;
         add(4,"Arrival Detection: "+onOff(WaypointSettings.getBoolean("arrivalDetectionEnabled",true)),y);y+=24;
-        add(5,"Reset Options",y);
-        buttonList.add(new AlphaButton(6,left+panelWidth-92,top+panelHeight-25,76,18,"Back"));
+        add(5,"Max Waypoint Render Distance: "+onOff(WaypointSettings.getBoolean("maxWaypointRenderDistance",false)),y);y+=24;
+        add(6,"Reset Options",y);
+        buttonList.add(new AlphaButton(7,left+panelWidth-92,top+panelHeight-25,76,18,"Back"));
     }
 
     private void add(int id,String label,int y) {
@@ -51,8 +52,11 @@ public final class WaypointVisualSettingsGui extends AlphaGuiScreen {
             WaypointSettings.setBoolean("arrivalDetectionEnabled",
                     !WaypointSettings.getBoolean("arrivalDetectionEnabled",true));
         } else if(button.id==5) {
-            WaypointSettings.resetOptions();
+            WaypointSettings.setBoolean("maxWaypointRenderDistance",
+                    !WaypointSettings.getBoolean("maxWaypointRenderDistance",false));
         } else if(button.id==6) {
+            WaypointSettings.resetOptions();
+        } else if(button.id==7) {
             mc.displayGuiScreen(parent);
             return;
         }
