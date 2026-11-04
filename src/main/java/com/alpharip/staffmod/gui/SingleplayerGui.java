@@ -4,6 +4,8 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.singleplayer.worldedit.WorldEditGui;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolGui;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolSettings;
+import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -51,8 +53,11 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         int firstTileX = panelLeft + 12;
 
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        AlphaModule worldEdit = AlphaModuleRegistry.find("world-edit");
+        boolean worldEditEnabled = worldEdit != null && worldEdit.isEnabled();
         buttonList.add(new AlphaButton(WORLD_EDIT, firstTileX, tileY,
-                tileWidth, tileHeight, "World Edit", true));
+                tileWidth, tileHeight,
+                "World Edit: " + (worldEditEnabled ? "ON" : "OFF"), worldEditEnabled));
         buttonList.add(new AlphaButton(AUTO_TOOL, firstTileX + tileWidth + gap, tileY,
                 tileWidth, tileHeight,
                 "AutoTool: " + (AutoToolSettings.isEnabled() ? "ON" : "OFF"),
