@@ -85,7 +85,7 @@ public final class MinimapSettings {
 
     public static int size() { return getInt("size", 112, 80, 180); }
     public static int offset() { return getInt("offset", 8, 0, 40); }
-    public static int range() { return getInt("range", 96, 32, 256); }
+    public static int range() { return getInt("range", 32, 32, 256); }
     public static boolean round() { return "round".equals(getString("shape", "square")); }
     public static String corner() { return getString("corner", TOP_RIGHT); }
     public static int coordinateColor() { return getInt("coordinateColor", 0xFFD866, 0, 0xFFFFFF); }
