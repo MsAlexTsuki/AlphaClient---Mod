@@ -7,6 +7,7 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
 import org.lwjgl.BufferUtils;
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -177,14 +178,14 @@ public final class WorldWaypointIcons {
         boolean textureEnabled=GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
         boolean cullingEnabled=GL11.glIsEnabled(GL11.GL_CULL_FACE);
         boolean depthMask=GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
-        int blendSrcRgb=GL11.glGetInteger(GL11.GL_BLEND_SRC_RGB);
-        int blendDstRgb=GL11.glGetInteger(GL11.GL_BLEND_DST_RGB);
-        int blendSrcAlpha=GL11.glGetInteger(GL11.GL_BLEND_SRC_ALPHA);
-        int blendDstAlpha=GL11.glGetInteger(GL11.GL_BLEND_DST_ALPHA);
+        int blendSrcRgb=GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB);
+        int blendDstRgb=GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
+        int blendSrcAlpha=GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
+        int blendDstAlpha=GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
         FloatBuffer previousColor=BufferUtils.createFloatBuffer(4);
         GL11.glGetFloat(GL11.GL_CURRENT_COLOR,previousColor);
-        float red=previousColor.get(0),green=previousColor.get(1);
-        float blue=previousColor.get(2),alpha=previousColor.get(3);
+        float previousRed=previousColor.get(0),previousGreen=previousColor.get(1);
+        float previousBlue=previousColor.get(2),previousAlpha=previousColor.get(3);
         FloatBuffer previousLineWidth=BufferUtils.createFloatBuffer(1);
         GL11.glGetFloat(GL11.GL_LINE_WIDTH,previousLineWidth);
         float lineWidth=previousLineWidth.get(0);
@@ -309,7 +310,7 @@ public final class WorldWaypointIcons {
             GlStateManager.tryBlendFuncSeparate(blendSrcRgb,blendDstRgb,blendSrcAlpha,blendDstAlpha);
             if(cullingEnabled) GL11.glEnable(GL11.GL_CULL_FACE); else GL11.glDisable(GL11.GL_CULL_FACE);
             GL11.glLineWidth(lineWidth);
-            GlStateManager.color(red,green,blue,alpha);
+            GlStateManager.color(previousRed,previousGreen,previousBlue,previousAlpha);
         }
     }
 }
