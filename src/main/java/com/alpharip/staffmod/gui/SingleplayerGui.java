@@ -16,6 +16,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
 
     private final GuiScreen parent;
     private int panelLeft, panelRight, panelTop, panelBottom;
+    private int tileWidth;
 
     public SingleplayerGui(GuiScreen parent) {
         this.parent = parent;
@@ -35,17 +36,27 @@ public final class SingleplayerGui extends AlphaGuiScreen {
             if (mc != null) mc.displayGuiScreen(parent);
             return;
         }
+
+        // Match QualityGui's compact three-column feature tile layout.
         panelLeft = Math.max(12, width / 2 - Math.min(230, width / 2 - 12));
         panelRight = Math.min(width - 12, panelLeft + 460);
         panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
         panelBottom = Math.min(height - 12, panelTop + 300);
 
-        buttonList.add(new AlphaButton(WORLD_EDIT, panelLeft + 14, panelTop + 78,
-                panelRight - panelLeft - 28, 42, "World Edit", true));
-        buttonList.add(new AlphaButton(AUTO_TOOL, panelLeft + 14, panelTop + 128,
-                panelRight - panelLeft - 28, 42,
-                "AutoTool: " + (AutoToolSettings.isEnabled() ? "ON" : "OFF"), AutoToolSettings.isEnabled()));
+        int gap = 8;
+        int columns = 3;
+        tileWidth = (panelRight - panelLeft - 24 - gap * (columns - 1)) / columns;
+        int tileHeight = 36;
+        int tileY = panelTop + 68;
+        int firstTileX = panelLeft + 12;
+
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        buttonList.add(new AlphaButton(WORLD_EDIT, firstTileX, tileY,
+                tileWidth, tileHeight, "World Edit", true));
+        buttonList.add(new AlphaButton(AUTO_TOOL, firstTileX + tileWidth + gap, tileY,
+                tileWidth, tileHeight,
+                "AutoTool: " + (AutoToolSettings.isEnabled() ? "ON" : "OFF"),
+                AutoToolSettings.isEnabled()));
     }
 
     @Override
@@ -82,13 +93,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         drawCenteredString(fontRendererObj, "SINGLEPLAYER MODS", width / 2,
                 panelTop + 30, ACCENT);
         drawString(fontRendererObj, "Singleplayer-only tools", panelLeft + 12,
-                panelTop + 52, 0xFFB8BDC8);
-        drawString(fontRendererObj, "WorldEdit", panelLeft + 25, panelTop + 92, 0xFFF3F4F6);
-        drawString(fontRendererObj, "Select regions and edit blocks in your local world.",
-                panelLeft + 25, panelTop + 106, 0xFFB8BDC8);
-        drawString(fontRendererObj, "AutoTool", panelLeft + 25, panelTop + 142, 0xFFF3F4F6);
-        drawString(fontRendererObj, "Automatically selects a suitable hotbar tool for the targeted block.",
-                panelLeft + 25, panelTop + 156, 0xFFB8BDC8);
+                panelTop + 49, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
