@@ -171,7 +171,7 @@ public final class WorldWaypointIcons {
             GL11.glEnd();
             GlStateManager.enableTexture2D();
             mc.fontRendererObj.drawStringWithShadow(label,
-                    -mc.fontRendererObj.getStringWidth(label)/2,0,0xFFFFFFFF);
+                    -mc.fontRendererObj.getStringWidth(label)/2,0,point.getNameColor());
             mc.fontRendererObj.drawStringWithShadow(distanceText,
                     -mc.fontRendererObj.getStringWidth(distanceText)/2,mc.fontRendererObj.FONT_HEIGHT+3,0xFFE1E5EC);
         } finally {
@@ -241,15 +241,19 @@ public final class WorldWaypointIcons {
                 if(distance>maxWaypointRenderDistance) continue;
 
                 int displayColor=getDisplayColor(point);
-                float red=((displayColor>>16)&255)/255.0F;
-                float green=((displayColor>>8)&255)/255.0F;
-                float blue=(displayColor&255)/255.0F;
+                float markerRed=((displayColor>>16)&255)/255.0F;
+                float markerGreen=((displayColor>>8)&255)/255.0F;
+                float markerBlue=(displayColor&255)/255.0F;
+                int beamColor=point.getBeamColor();
+                float beamRed=((beamColor>>16)&255)/255.0F;
+                float beamGreen=((beamColor>>8)&255)/255.0F;
+                float beamBlue=(beamColor&255)/255.0F;
 
                 // Grow the cylindrical beam linearly with distance, reaching 32 blocks at 300.
                 double beamHeight=Math.min(32.0D,distance*(32.0D/300.0D));
-                if(beamHeight>0.0D) drawBeam(dx,dy,dz,beamHeight,red,green,blue);
+                if(beamHeight>0.0D) drawBeam(dx,dy,dz,beamHeight,beamRed,beamGreen,beamBlue);
                 if(WaypointSettings.getBoolean("blockHighlightEnabled",true))
-                    drawGroundCircle(dx,dy,dz,red,green,blue);
+                    drawGroundCircle(dx,dy,dz,markerRed,markerGreen,markerBlue);
                 drawWaypointLabel(mc,point,rm,dx,dy,dz,distance,displayColor);
             }
             }
