@@ -163,7 +163,7 @@ public final class WorldWaypointIcons {
     @SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent event) {
         Minecraft mc=Minecraft.getMinecraft();
-        if(!enabled||WaypointSettings.isTemporarilyHidden()||mc==null||mc.thePlayer==null||mc.theWorld==null||mc.fontRendererObj==null||event==null) return;
+        if(!enabled||mc==null||mc.thePlayer==null||mc.theWorld==null||mc.fontRendererObj==null||event==null) return;
         List<StaffWaypoint> points=WaypointManager.getInstance().getForCurrentWorld();
         if(points.isEmpty()) return;
         RenderManager rm=mc.getRenderManager();
@@ -172,6 +172,7 @@ public final class WorldWaypointIcons {
             GlStateManager.disableLighting();
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770,771,1,0);
+            if(!WaypointSettings.isTemporarilyHidden()) {
             for(StaffWaypoint point:points) {
                 // Use the center of the waypoint's block for every marker element.
                 // This keeps the beam, ground circle and nametag on one shared vertical axis.
@@ -200,10 +201,10 @@ public final class WorldWaypointIcons {
                     drawGroundCircle(dx,dy,dz,red,green,blue);
                 drawWaypointLabel(mc,point,rm,dx,dy,dz,beamHeight,distance,displayColor);
             }
+            }
             StaffWaypoint navigationTarget=WaypointManager.getInstance().getSelected();
             List<Vec3> navigationPath=WaypointPathfinder.getInstance().getPathPoints();
-            if(WaypointSettings.getBoolean("showRoute",true)
-                    &&navigationTarget!=null
+            if(navigationTarget!=null
                     &&ServerWaypointIntegration.belongsToCurrentWorld(navigationTarget,mc)
                     &&navigationPath.size()>=2) {
                 double playerX=mc.thePlayer.lastTickPosX
@@ -250,7 +251,7 @@ public final class WorldWaypointIcons {
                 GlStateManager.enableTexture2D();
             }
             List<StaffWaypoint> routePoints=WaypointManager.getInstance().getRouteWaypoints();
-            if(WaypointSettings.getBoolean("showRoute",true)&&routePoints.size()>=2) {
+            if(routePoints.size()>=2) {
                 boolean sameWorld=true;
                 for(StaffWaypoint point:routePoints)
                     if(!ServerWaypointIntegration.belongsToCurrentWorld(point,mc)){sameWorld=false;break;}
