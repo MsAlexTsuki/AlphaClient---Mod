@@ -58,7 +58,7 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         );
         quality.addFeature(new AlphaModuleFeature("alpha-module-manager", "Alpha Module Manager", "Central module management.", PermissionService.Rank.PUBLIC, false));
-        quality.addFeature(new AlphaModuleFeature("playtime-tracker", "Playtime Tracker", "Track time spent playing.", PermissionService.Rank.PUBLIC, true));
+        quality.addFeature(new AlphaModuleFeature("playtime-tracker", "Playtime Tracker", "Track time spent playing.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("auto-gg", "Auto GG", "Automatically send GG after a detected kill or match end.", PermissionService.Rank.PUBLIC, true));
         quality.addFeature(new AlphaModuleFeature("keybind-profiles", "Keybind Profiles", "Save and switch keybind sets.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("auto-respawn", "Auto Respawn", "Automatically respawn after death.", PermissionService.Rank.PUBLIC, false));
@@ -70,7 +70,6 @@ public final class AlphaModuleRegistry {
         quality.addFeature(new AlphaModuleFeature("anvil-cost", "Anvil Cost", "Preview possible anvil operations and their experience costs in item tooltips.", PermissionService.Rank.PUBLIC, true));
         quality.addFeature(new AlphaModuleFeature("enchanting-names", "Enchanting Names", "Show localized enchantment names in the enchanting table.", PermissionService.Rank.PUBLIC, true));
         quality.addFeature(new AlphaModuleFeature("inventory-search", "Inventory Search", "Search player inventories, chests, and ender chests.", PermissionService.Rank.PUBLIC, true));
-        quality.addFeature(new AlphaModuleFeature("afk-timer", "AFK Timer", "Display the AFK timer HUD.", PermissionService.Rank.PUBLIC, true));
         quality.addFeature(new AlphaModuleFeature("system-monitor", "Alpha System Monitor", "Show client and system diagnostics.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("crash-reporter", "Alpha Crash Reporter", "Collect crash diagnostics.", PermissionService.Rank.PUBLIC, false));
         quality.addFeature(new AlphaModuleFeature("update-checker", "Alpha Update Checker", "Check AlphaClient updates.", PermissionService.Rank.PUBLIC, false));

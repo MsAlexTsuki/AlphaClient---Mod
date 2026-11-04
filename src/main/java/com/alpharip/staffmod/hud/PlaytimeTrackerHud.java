@@ -2,8 +2,6 @@
 package com.alpharip.staffmod.hud;
 
 import com.alpharip.staffmod.profile.ModuleProfileManager;
-import com.alpharip.staffmod.modules.AlphaModuleFeature;
-import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.config.HudScaleConfig;
 import net.minecraft.client.renderer.GlStateManager;
 import com.google.gson.JsonObject;
@@ -194,14 +192,11 @@ public final class PlaytimeTrackerHud {
     }
 
     public static boolean isEnabled() {
-        AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("playtime-tracker");
-        return feature != null ? feature.isEnabled()
-                : getSettings().has("enabled") && getSettings().get("enabled").getAsBoolean();
+        JsonObject settings = getSettings();
+        return settings.has("enabled") && settings.get("enabled").getAsBoolean();
     }
 
     public static void setEnabled(boolean enabled) {
-        AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("playtime-tracker");
-        if (feature != null) feature.setEnabled(enabled);
         getSettings().addProperty("enabled", enabled);
         ModuleProfileManager.save();
     }
