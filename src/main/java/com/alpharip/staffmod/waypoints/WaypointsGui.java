@@ -76,10 +76,10 @@ public final class WaypointsGui extends AlphaGuiScreen {
         nameField.setFocused(false);
 
         if(selected!=null) {
-            buttonList.add(new AlphaButton(11,editorX+12,top+panelHeight-77,editorWidth-24,19,"Save Changes",true));
-            buttonList.add(new AlphaButton(12,editorX+12,top+panelHeight-53,(editorWidth-29)/2,18,
+            buttonList.add(new AlphaButton(11,editorX+12,top+panelHeight-99,editorWidth-24,19,"Save Changes",true));
+            buttonList.add(new AlphaButton(12,editorX+12,top+panelHeight-75,(editorWidth-29)/2,18,
                     "Favorite: "+onOff(selected.isFavorite())));
-            buttonList.add(new AlphaButton(13,editorX+17+(editorWidth-29)/2,top+panelHeight-53,
+            buttonList.add(new AlphaButton(13,editorX+17+(editorWidth-29)/2,top+panelHeight-75,
                     (editorWidth-29)/2,18,"Chroma: "+onOff(selected.isChromaEnabled())));
         }
     }
