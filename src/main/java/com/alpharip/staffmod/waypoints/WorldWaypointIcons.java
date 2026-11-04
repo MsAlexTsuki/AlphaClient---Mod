@@ -182,11 +182,11 @@ public final class WorldWaypointIcons {
         int blendDstRgb=GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
         int blendSrcAlpha=GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
         int blendDstAlpha=GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
-        FloatBuffer previousColor=BufferUtils.createFloatBuffer(4);
+        FloatBuffer previousColor=BufferUtils.createFloatBuffer(16);
         GL11.glGetFloat(GL11.GL_CURRENT_COLOR,previousColor);
         float previousRed=previousColor.get(0),previousGreen=previousColor.get(1);
         float previousBlue=previousColor.get(2),previousAlpha=previousColor.get(3);
-        FloatBuffer previousLineWidth=BufferUtils.createFloatBuffer(1);
+        FloatBuffer previousLineWidth=BufferUtils.createFloatBuffer(16);
         GL11.glGetFloat(GL11.GL_LINE_WIDTH,previousLineWidth);
         float lineWidth=previousLineWidth.get(0);
 
