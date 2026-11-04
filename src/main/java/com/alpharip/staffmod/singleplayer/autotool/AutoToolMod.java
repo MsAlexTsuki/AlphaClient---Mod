@@ -27,6 +27,7 @@ import java.util.Locale;
 public final class AutoToolMod {
     private final KeyBinding pauseKey = new KeyBinding("AutoTool: Pause", Keyboard.KEY_P, "AlphaClient");
     private boolean pauseToggle;
+    private boolean previousPauseToggleMode;
     private int feedbackCooldown;
     private int originalSlot = -1;
     private int autoSelectedSlot = -1;
@@ -115,7 +116,13 @@ public final class AutoToolMod {
     public void onKeyInput(InputEvent.KeyInputEvent event) {
         if (!AutoToolAccess.isAvailable(Minecraft.getMinecraft())) {
             pauseToggle = false;
+            previousPauseToggleMode = false;
             return;
+        }
+        boolean toggleMode = AutoToolSettings.isPauseToggleMode();
+        if (toggleMode != previousPauseToggleMode) {
+            pauseToggle = false;
+            previousPauseToggleMode = toggleMode;
         }
         while (pauseKey.isPressed()) {
             if (!AutoToolSettings.isPauseToggleMode()) continue;
@@ -135,7 +142,13 @@ public final class AutoToolMod {
         if (!AutoToolAccess.isAvailable(mc)) {
             clearSession();
             pauseToggle = false;
+            previousPauseToggleMode = false;
             return;
+        }
+        boolean toggleMode = AutoToolSettings.isPauseToggleMode();
+        if (toggleMode != previousPauseToggleMode) {
+            pauseToggle = false;
+            previousPauseToggleMode = toggleMode;
         }
         if (feedbackCooldown > 0) feedbackCooldown--;
         if (sessionPlayer == null) return;
@@ -182,7 +195,8 @@ public final class AutoToolMod {
     public void renderPauseIndicator(RenderGameOverlayEvent.Post event) {
         if (event == null || event.type != RenderGameOverlayEvent.ElementType.ALL) return;
         Minecraft mc = Minecraft.getMinecraft();
-        if (!AutoToolAccess.isAvailable(mc) || !isPaused(mc, mc.thePlayer)) return;
+        if (!AutoToolAccess.isAvailable(mc) || !AutoToolSettings.isEnabled()
+                || !isPaused(mc, mc.thePlayer)) return;
         mc.fontRendererObj.drawStringWithShadow("AutoTool paused (" + Keyboard.getKeyName(pauseKey.getKeyCode()) + ")", 8, 8, 0xFFFFC83D);
     }
 

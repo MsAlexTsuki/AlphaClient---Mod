@@ -145,13 +145,7 @@ public final class AutoToolSettings {
         if (!globalLoaded) {
             globalLoaded = true;
             File file = globalFile();
-            if (!file.isFile()) {
-                // Keep the original AutoTool settings file as the global profile.
-                File legacy = legacyFile();
-                if (legacy.isFile()) loadInto(GLOBAL, legacy, true);
-            } else {
-                loadInto(GLOBAL, file, true);
-            }
+            if (file.isFile()) loadInto(GLOBAL, file, true);
         }
 
         String identity = profileIdentity();
@@ -240,7 +234,6 @@ public final class AutoToolSettings {
     }
 
     private static File globalFile() { return new File(configDirectory(), "autotool.properties"); }
-    private static File legacyFile() { return globalFile(); }
     private static File profileFile(String key) { return new File(new File(configDirectory(), "autotool-profiles"), key + ".properties"); }
 
     private static String normalizeId(String id) {
