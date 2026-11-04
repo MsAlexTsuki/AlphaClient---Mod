@@ -236,7 +236,9 @@ public final class WorldWaypointIcons {
 
                 // Hide the complete waypoint marker when the player is within five blocks.
                 if(distance<=5.0D) continue;
-                if(distance>3000.0D) continue;
+                double maxWaypointRenderDistance=WaypointSettings.getBoolean("maxWaypointRenderDistance",false)
+                        ?500.0D:3000.0D;
+                if(distance>maxWaypointRenderDistance) continue;
 
                 int displayColor=getDisplayColor(point);
                 float red=((displayColor>>16)&255)/255.0F;
