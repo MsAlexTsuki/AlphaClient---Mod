@@ -28,6 +28,7 @@ public final class WaypointTracker {
     private boolean historyLoadFailed;
     private String lastServer="";
     private int lastDimension=Integer.MIN_VALUE;
+    private String lastWorldKey="";
     private double lastX,lastY,lastZ;
     private long lastSampleAt;
 
@@ -77,22 +78,23 @@ public final class WaypointTracker {
 
     private void recordPosition(Minecraft mc) {
         String server=ServerWaypointIntegration.currentServerKey(mc);
+        String worldKey=ServerWaypointIntegration.currentWorldKey(mc);
         int dimension=mc.thePlayer.dimension;
         double x=Math.floor(mc.thePlayer.posX),y=Math.floor(mc.thePlayer.posY),z=Math.floor(mc.thePlayer.posZ);
         long now=System.currentTimeMillis();
         synchronized(this) {
             loadHistory();
-            boolean contextChanged=!server.equals(lastServer)||dimension!=lastDimension;
+            boolean contextChanged=!server.equals(lastServer)||dimension!=lastDimension||!worldKey.equals(lastWorldKey);
             double dx=x-lastX,dy=y-lastY,dz=z-lastZ;
             if(!contextChanged&&(now-lastSampleAt<10000L||dx*dx+dy*dy+dz*dz<1024.0D))return;
-            lastServer=server;lastDimension=dimension;lastX=x;lastY=y;lastZ=z;lastSampleAt=now;
+            lastServer=server;lastDimension=dimension;lastWorldKey=worldKey;lastX=x;lastY=y;lastZ=z;lastSampleAt=now;
             for(CoordinateEntry old:history) {
-                if(server.equals(old.serverKey)&&dimension==old.dimensionId) {
+                if(server.equals(old.serverKey)&&dimension==old.dimensionId&&worldKey.equals(old.worldKey)) {
                     double ox=old.x-x,oy=old.y-y,oz=old.z-z;
                     if(ox*ox+oy*oy+oz*oz<64.0D)return;
                 }
             }
-            history.add(0,new CoordinateEntry(server,dimension,x,y,z,now));
+            history.add(0,new CoordinateEntry(server,dimension,worldKey,x,y,z,now));
             while(history.size()>MAX_HISTORY)history.remove(history.size()-1);
             saveHistory();
         }
@@ -103,9 +105,10 @@ public final class WaypointTracker {
         Minecraft mc=Minecraft.getMinecraft();
         if(mc==null||mc.thePlayer==null)return Collections.emptyList();
         String server=ServerWaypointIntegration.currentServerKey(mc);
+        String worldKey=ServerWaypointIntegration.currentWorldKey(mc);
         List<CoordinateEntry> result=new ArrayList<CoordinateEntry>();
         for(CoordinateEntry entry:history)
-            if(entry!=null&&server.equals(entry.serverKey)&&entry.dimensionId==mc.thePlayer.dimension)result.add(entry);
+            if(entry!=null&&server.equals(entry.serverKey)&&entry.dimensionId==mc.thePlayer.dimension&&worldKey.equals(entry.worldKey))result.add(entry);
         return Collections.unmodifiableList(result);
     }
 
@@ -160,11 +163,12 @@ public final class WaypointTracker {
     public static final class CoordinateEntry {
         private String serverKey;
         private int dimensionId;
+        private String worldKey="";
         private double x,y,z;
         private long timestamp;
         public CoordinateEntry(){}
-        CoordinateEntry(String serverKey,int dimensionId,double x,double y,double z,long timestamp) {
-            this.serverKey=serverKey;this.dimensionId=dimensionId;this.x=x;this.y=y;this.z=z;this.timestamp=timestamp;
+        CoordinateEntry(String serverKey,int dimensionId,String worldKey,double x,double y,double z,long timestamp) {
+            this.serverKey=serverKey;this.dimensionId=dimensionId;this.worldKey=worldKey;this.x=x;this.y=y;this.z=z;this.timestamp=timestamp;
         }
         public double getX(){return x;}
         public double getY(){return y;}

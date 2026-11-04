@@ -19,12 +19,12 @@ public final class RouteBetweenWaypoints {
     public boolean setPath(List<StaffWaypoint> waypoints) {
         if (waypoints == null || waypoints.size() < 2) return false;
         String server=null;
-        Integer dimension=null;
+        Integer dimension=null; String worldKey=null;
         List<String> ids=new ArrayList<String>();
         for(StaffWaypoint point:waypoints) {
             if(point==null||blank(point.getId()))return false;
-            if(server==null){server=point.getServerKey();dimension=point.getDimensionId();}
-            else if(!server.equals(point.getServerKey())||dimension.intValue()!=point.getDimensionId())return false;
+            if(server==null){server=point.getServerKey();dimension=point.getDimensionId();worldKey=point.getWorldKey();}
+            else if(!server.equals(point.getServerKey())||dimension.intValue()!=point.getDimensionId()||!worldKey.equals(point.getWorldKey()))return false;
             ids.add(point.getId());
         }
         waypointIds.clear();
@@ -57,7 +57,7 @@ public final class RouteBetweenWaypoints {
 
     public static double segmentDistance(StaffWaypoint start, StaffWaypoint end) {
         if (start == null || end == null || start.getDimensionId() != end.getDimensionId()
-                || !start.getServerKey().equals(end.getServerKey())) return Double.NaN;
+                || !start.getServerKey().equals(end.getServerKey()) || !start.getWorldKey().equals(end.getWorldKey())) return Double.NaN;
         double dx=end.getX()-start.getX(), dy=end.getY()-start.getY(), dz=end.getZ()-start.getZ();
         return Math.sqrt(dx*dx+dy*dy+dz*dz);
     }

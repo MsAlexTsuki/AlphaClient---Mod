@@ -81,7 +81,10 @@ public final class WaypointManager {
         Minecraft mc = Minecraft.getMinecraft();
         String server = ServerWaypointIntegration.currentServerKey(mc);
         int dimension = mc != null && mc.thePlayer != null ? mc.thePlayer.dimension : 0;
+        String worldKey = ServerWaypointIntegration.currentWorldKey(mc);
+        if (worldKey.isEmpty()) throw new IllegalStateException("The current Minecraft world is not ready for waypoint storage.");
         StaffWaypoint point = new StaffWaypoint(name, server, dimension, x, y, z);
+        point.setWorldKey(worldKey);
         point.setColor(WaypointCategoriesColors.colorFor(point.getCategory()));
         point.setIconId(WaypointSettings.getString("defaultIcon","pin"));
         point.setProfileId(currentProfile());
@@ -103,8 +106,10 @@ public final class WaypointManager {
         Minecraft mc = Minecraft.getMinecraft();
         String server = ServerWaypointIntegration.currentServerKey(mc);
         String profile=currentProfile();
+        String worldKey=ServerWaypointIntegration.currentWorldKey(mc);
+        if(worldKey.isEmpty())return false;
         for (StaffWaypoint existing : points) {
-            if (server.equals(existing.getServerKey())
+            if (server.equals(existing.getServerKey()) && worldKey.equals(existing.getWorldKey())
                     && profile.equalsIgnoreCase(existing.getProfileId())
                     && existing.getDimensionId() == incoming.getDimensionId()
                     && existing.getLabel().equalsIgnoreCase(incoming.getLabel().trim())
@@ -114,6 +119,7 @@ public final class WaypointManager {
         }
         StaffWaypoint point = new StaffWaypoint(incoming.getLabel(), server, incoming.getDimensionId(),
                 incoming.getX(), incoming.getY(), incoming.getZ());
+        point.setWorldKey(worldKey);
         point.setCategory(incoming.getCategory());
         point.setColor(incoming.getColor());
         point.setIconId(incoming.getIconId());
@@ -171,8 +177,8 @@ public final class WaypointManager {
         String server = ServerWaypointIntegration.currentServerKey(mc);
         String profile = currentProfile();
         for (StaffWaypoint point : points) {
-            if (server.equals(point.getServerKey()) && profile.equalsIgnoreCase(point.getProfileId())
-                    && point.getDimensionId() == mc.thePlayer.dimension) result.add(point);
+            if (ServerWaypointIntegration.belongsToCurrentWorld(point, mc) && server.equals(point.getServerKey())
+                    && profile.equalsIgnoreCase(point.getProfileId()) && point.getDimensionId() == mc.thePlayer.dimension) result.add(point);
         }
         return Collections.unmodifiableList(result);
     }
@@ -184,12 +190,14 @@ public final class WaypointManager {
         if (normalized.isEmpty()) return null;
         String server = ServerWaypointIntegration.currentServerKey(Minecraft.getMinecraft());
         for (StaffWaypoint point : points) {
-            if (!server.equals(point.getServerKey()) || !currentProfile().equalsIgnoreCase(point.getProfileId())) continue;
+            if (!server.equals(point.getServerKey()) || !currentProfile().equalsIgnoreCase(point.getProfileId())
+                    || !ServerWaypointIntegration.belongsToCurrentWorld(point, Minecraft.getMinecraft())) continue;
             if (point.getId().equalsIgnoreCase(normalized)
                     || point.getLabel().equalsIgnoreCase(normalized)) return point;
         }
         for (StaffWaypoint point : points) {
             if (server.equals(point.getServerKey()) && currentProfile().equalsIgnoreCase(point.getProfileId())
+                    && ServerWaypointIntegration.belongsToCurrentWorld(point, Minecraft.getMinecraft())
                     && point.getId().regionMatches(true, 0, normalized, 0, normalized.length())) return point;
         }
         return null;
@@ -209,8 +217,10 @@ public final class WaypointManager {
         load();
         String server = ServerWaypointIntegration.currentServerKey(Minecraft.getMinecraft());
         String profile = currentProfile();
+        Minecraft mc=Minecraft.getMinecraft();
         for (int i=points.size()-1; i>=0; i--)
-            if (server.equals(points.get(i).getServerKey()) && profile.equalsIgnoreCase(points.get(i).getProfileId())) points.remove(i);
+            if (server.equals(points.get(i).getServerKey()) && profile.equalsIgnoreCase(points.get(i).getProfileId())
+                    && ServerWaypointIntegration.belongsToCurrentWorld(points.get(i),mc)) points.remove(i);
         selectedId = "";
         clearRoute();
         save();

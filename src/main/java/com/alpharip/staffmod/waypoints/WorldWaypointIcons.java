@@ -26,7 +26,7 @@ public final class WorldWaypointIcons {
         WaypointManager.getInstance().saveChanges();
     }
     public boolean removeWaypoint(String name) { return WaypointManager.getInstance().remove(name); }
-    public List<StaffWaypoint> getWaypoints() { return WaypointManager.getInstance().getForCurrentServer(); }
+    public List<StaffWaypoint> getWaypoints() { return WaypointManager.getInstance().getForCurrentWorld(); }
 
     public static int getDisplayColor(StaffWaypoint point) {
         if(point==null)return 0xFFFFC83D;
