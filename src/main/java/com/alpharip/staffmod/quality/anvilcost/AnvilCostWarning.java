@@ -1,36 +1,30 @@
 package com.alpharip.staffmod.quality.anvilcost;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumChatFormatting;
 
-/**
- * Foundation for Anvil Cost Warning.
- * Feature-specific Minecraft integration, persistence, permissions, and UI wiring remain to be implemented and tested.
- */
+/** Formats Anvil Cost warnings shown inside the normal item tooltip. */
 public final class AnvilCostWarning {
-    private boolean enabled;
-    private final List<String> records = new ArrayList<String>();
-
-    public boolean isEnabled() {
-        return enabled;
+    private AnvilCostWarning() {
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public void addRecord(String record) {
-        if (record != null && !record.trim().isEmpty()) {
-            records.add(record);
+    public static String formatCost(AnvilCostCalculator.Preview preview, EntityPlayer player) {
+        if (preview == null || player == null) {
+            return "";
         }
-    }
 
-    public List<String> getRecords() {
-        return Collections.unmodifiableList(records);
-    }
+        String cost = EnumChatFormatting.YELLOW + String.valueOf(preview.getLevels())
+                + " levels";
 
-    public void clearRecords() {
-        records.clear();
+        if (preview.getLevels() >= 40 && !player.capabilities.isCreativeMode) {
+            cost += EnumChatFormatting.RED + " (Too Expensive)";
+        }
+
+        if (preview.getLevels() > player.experienceLevel) {
+            int missingLevels = preview.getLevels() - player.experienceLevel;
+            cost += EnumChatFormatting.RED + " (Need " + missingLevels + " more)";
+        }
+
+        return cost;
     }
 }
