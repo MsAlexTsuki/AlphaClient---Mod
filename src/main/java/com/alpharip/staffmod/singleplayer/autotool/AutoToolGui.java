@@ -29,7 +29,7 @@ public final class AutoToolGui extends GuiScreen {
     public void initGui() {
         buttonList.clear();
         panelWidth = Math.max(1, Math.min(360, width - 16));
-        panelHeight = page == 3 ? 260 : 204;
+        panelHeight = page == 3 ? 292 : 204;
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
         int buttonWidth = Math.max(1, panelWidth - 32);
@@ -46,6 +46,8 @@ public final class AutoToolGui extends GuiScreen {
             buttonList.add(new GuiButton(70, left + 16, top + 177, 150, 20, "Save preference"));
             buttonList.add(new GuiButton(71, left + 174, top + 177, 150, 20, "Clear preference"));
             buttonList.add(new GuiButton(72, left + 16, top + 201, buttonWidth, 20, "Toggle ignored item"));
+            buttonList.add(new GuiButton(73, left + 16, top + 225, 150, 20, "Copy overrides to global"));
+            buttonList.add(new GuiButton(74, left + 174, top + 225, 150, 20, "Reset world overrides"));
         } else {
             String[] options = optionsForPage();
             for (int index = 0; index < options.length; index++) {
@@ -69,6 +71,14 @@ public final class AutoToolGui extends GuiScreen {
             page--;
         } else if (page == 3 && button.id >= 70 && button.id <= 72) {
             manageItems(button.id);
+        } else if (page == 3 && button.id == 73) {
+            itemManagementStatus = AutoToolSettings.copyWorldOverridesToGlobalDefaults()
+                    ? "World overrides copied to global defaults."
+                    : "No editable world profile, or settings could not be read.";
+        } else if (page == 3 && button.id == 74) {
+            itemManagementStatus = AutoToolSettings.resetCurrentWorldOverrides()
+                    ? "World overrides reset to global defaults."
+                    : "World profile could not be reset safely.";
         } else if (button.id >= 1 && button.id <= 5) {
             String[] options = optionsForPage();
             int index = button.id - 1;

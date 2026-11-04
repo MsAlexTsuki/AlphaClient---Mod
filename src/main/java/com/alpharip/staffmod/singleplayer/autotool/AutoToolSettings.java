@@ -72,6 +72,22 @@ public final class AutoToolSettings {
         set("ignoredItems", join(items));
     }
 
+    public static synchronized boolean copyWorldOverridesToGlobalDefaults() {
+        ensureLoaded();
+        if (loadedProfileKey == null || profileLoadFailed || globalLoadFailed) return false;
+        GLOBAL.putAll(PROFILE);
+        save(globalFile(), globalLoadFailed);
+        return true;
+    }
+
+    public static synchronized boolean resetCurrentWorldOverrides() {
+        ensureLoaded();
+        if (loadedProfileKey == null || profileLoadFailed) return false;
+        PROFILE.clear();
+        save(profileFile(loadedProfileKey), false);
+        return true;
+    }
+
     public static synchronized String getProfileDescription() {
         ensureLoaded();
         return loadedProfileKey == null ? "Global defaults" : "Local profile for this singleplayer world";
