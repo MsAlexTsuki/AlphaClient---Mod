@@ -59,6 +59,8 @@ import com.alpharip.staffmod.waypoints.WorldWaypointIcons;
 import com.alpharip.staffmod.inventorysearch.InventorySearchMod;
 import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
 import com.alpharip.staffmod.singleplayer.worldedit.AlphaWorldEditCommand;
+import com.alpharip.staffmod.singleplayer.autotool.AutoToolCommand;
+import com.alpharip.staffmod.singleplayer.autotool.AutoToolMod;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -130,6 +132,8 @@ public final class AlphaClient {
         AlphaWorldEditCommand worldEditCommand = new AlphaWorldEditCommand();
         ClientCommandHandler.instance.registerCommand(worldEditCommand);
         MinecraftForge.EVENT_BUS.register(worldEditCommand);
+        ClientCommandHandler.instance.registerCommand(new AutoToolCommand());
+        MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         ClientCommandHandler.instance.registerCommand(new InventorySearchCommand());
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
         MinecraftForge.EVENT_BUS.register(new InventorySearchMod());
