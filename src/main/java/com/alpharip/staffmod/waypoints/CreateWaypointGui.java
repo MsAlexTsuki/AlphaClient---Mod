@@ -76,8 +76,16 @@ public final class CreateWaypointGui extends AlphaGuiScreen {
             validationError = "Enter valid X, Y and Z coordinates.";
             return;
         }
+
         WaypointManager manager = WaypointManager.getInstance();
-        StaffWaypoint point = manager.add(name, x, y, z);
+        final StaffWaypoint point;
+        try {
+            point = manager.add(name, x, y, z);
+        } catch (IllegalStateException worldNotReady) {
+            validationError = "World data is not ready yet. Please try again.";
+            return;
+        }
+
         point.setColor(selectedColor);
         point.setIconId(WaypointSettings.getString("defaultIcon", "pin"));
         manager.select(point.getId());
