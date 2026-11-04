@@ -120,6 +120,7 @@ public final class WaypointManager {
         point.setDeathWaypoint(incoming.isDeathWaypoint());
         point.setFavorite(incoming.isFavorite());
         point.setVisited(incoming.isVisited());
+        point.setChromaEnabled(incoming.isChromaEnabled());
         point.setProfileId(profile);
         points.add(point);
         return true;

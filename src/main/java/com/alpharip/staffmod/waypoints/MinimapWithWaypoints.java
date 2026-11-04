@@ -49,7 +49,7 @@ public final class MinimapWithWaypoints {
             }
             RouteBetweenWaypoints route=WaypointManager.getInstance().getRoute();
             List<StaffWaypoint> routePoints=WaypointManager.getInstance().getRouteWaypoints();
-            if(route.isActive()&&routePoints.size()>=2) {
+            if(WaypointSettings.getBoolean("showRoute",true)&&route.isActive()&&routePoints.size()>=2) {
                 StaffWaypoint start=routePoints.get(0),end=routePoints.get(routePoints.size()-1);
                 double direct=route.getDistance(start,end);
                 double via=route.getTotalDistance(routePoints);

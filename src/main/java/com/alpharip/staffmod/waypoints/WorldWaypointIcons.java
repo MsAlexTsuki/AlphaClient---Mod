@@ -27,7 +27,7 @@ public final class WorldWaypointIcons {
 
     public static int getDisplayColor(StaffWaypoint point) {
         if(point==null)return 0xFFFFC83D;
-        if(!WaypointSettings.getBoolean("chromaEnabled",false))return point.getColor();
+        if(!point.isChromaEnabled())return point.getColor();
         long offset=point.getId()==null?0L:point.getId().hashCode();
         float hue=(float)(((System.currentTimeMillis()/12L+offset)%360L+360L)%360L)/360.0F;
         return Color.HSBtoRGB(hue,0.9F,1.0F);
@@ -202,7 +202,8 @@ public final class WorldWaypointIcons {
             }
             StaffWaypoint navigationTarget=WaypointManager.getInstance().getSelected();
             List<Vec3> navigationPath=WaypointPathfinder.getInstance().getPathPoints();
-            if(navigationTarget!=null
+            if(WaypointSettings.getBoolean("showRoute",true)
+                    &&navigationTarget!=null
                     &&ServerWaypointIntegration.belongsToCurrentWorld(navigationTarget,mc)
                     &&navigationPath.size()>=2) {
                 double playerX=mc.thePlayer.lastTickPosX
@@ -249,7 +250,7 @@ public final class WorldWaypointIcons {
                 GlStateManager.enableTexture2D();
             }
             List<StaffWaypoint> routePoints=WaypointManager.getInstance().getRouteWaypoints();
-            if(routePoints.size()>=2) {
+            if(WaypointSettings.getBoolean("showRoute",true)&&routePoints.size()>=2) {
                 boolean sameWorld=true;
                 for(StaffWaypoint point:routePoints)
                     if(!ServerWaypointIntegration.belongsToCurrentWorld(point,mc)){sameWorld=false;break;}

@@ -58,6 +58,19 @@ public final class WaypointSettings {
     public static synchronized void setInt(String key,int value) {
         load(); VALUES.setProperty(key,String.valueOf(value)); save();
     }
+    public static synchronized void resetOptions() {
+        load();
+        VALUES.remove("labelSize");
+        VALUES.remove("defaultIcon");
+        VALUES.remove("blockHighlightEnabled");
+        VALUES.remove("arrivalDetectionEnabled");
+        // Remove obsolete global controls; beam height is now distance-driven
+        // and chroma is stored on each waypoint.
+        VALUES.remove("beamHeight");
+        VALUES.remove("chromaEnabled");
+        save();
+    }
+
     public static synchronized void setString(String key,String value) {
         load();
         if(value==null) VALUES.remove(key); else VALUES.setProperty(key,value);
