@@ -121,13 +121,13 @@ public final class WaypointManager {
         for (StaffWaypoint existing : points) {
             if (server.equals(existing.getServerKey()) && worldKey.equals(existing.getWorldKey())
                     && profile.equalsIgnoreCase(existing.getProfileId())
-                    && existing.getDimensionId() == incoming.getDimensionId()
+                    && existing.getDimensionId() == (mc.thePlayer == null ? 0 : mc.thePlayer.dimension)
                     && existing.getLabel().equalsIgnoreCase(incoming.getLabel().trim())
                     && Math.abs(existing.getX() - incoming.getX()) < 0.001D
                     && Math.abs(existing.getY() - incoming.getY()) < 0.001D
                     && Math.abs(existing.getZ() - incoming.getZ()) < 0.001D) return false;
         }
-        StaffWaypoint point = new StaffWaypoint(incoming.getLabel(), server, incoming.getDimensionId(),
+        StaffWaypoint point = new StaffWaypoint(incoming.getLabel(), server, mc.thePlayer == null ? 0 : mc.thePlayer.dimension,
                 incoming.getX(), incoming.getY(), incoming.getZ());
         point.setWorldKey(worldKey);
         point.setCategory(incoming.getCategory());

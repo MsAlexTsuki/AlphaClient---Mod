@@ -256,7 +256,7 @@ public final class WaypointCommand extends CommandBase {
         } else if(args.length>=2&&("select".equalsIgnoreCase(args[0])||"remove".equalsIgnoreCase(args[0])||"delete".equalsIgnoreCase(args[0])||"goto".equalsIgnoreCase(args[0])||"route".equalsIgnoreCase(args[0])||"favorite".equalsIgnoreCase(args[0]))) {
             return autocomplete.complete(args[args.length-1],WaypointManager.getInstance().getForCurrentWorld());
         } else if(args.length==2&&"icon".equalsIgnoreCase(args[0])) {
-            return autocomplete.complete(args[1],WaypointManager.getInstance().getForCurrentServer());
+            return autocomplete.complete(args[1],WaypointManager.getInstance().getForCurrentWorld());
         } else if(args.length==2&&"pattern".equalsIgnoreCase(args[0])) {
             if("add".startsWith(args[1].toLowerCase(Locale.ROOT)))result.add("add");
             if("remove".startsWith(args[1].toLowerCase(Locale.ROOT)))result.add("remove");

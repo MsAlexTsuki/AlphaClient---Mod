@@ -64,6 +64,7 @@ public final class StaffWaypoint {
         if (id == null || id.trim().isEmpty()) id = UUID.randomUUID().toString();
         label = clean(label, "Waypoint");
         serverKey = clean(serverKey, "singleplayer");
+        if (worldKey == null) worldKey = "";
         dimension = String.valueOf(dimensionId);
         category = clean(category, "General");
         iconId = clean(iconId, "pin");
