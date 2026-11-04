@@ -9,7 +9,7 @@ import java.util.List;
 
 /** UTF-8 TSV import/export for moving local waypoints between friends or servers. */
 public final class WaypointImportExport {
-    private static final String HEADER = "name\tserver\tdimension\tworldKey\tx\ty\tz\tcategory\tcolor\ticon\tdeath\tfavorite\tvisited\n";
+    private static final String HEADER = "name\tserver\tdimension\tworldKey\tx\ty\tz\tcategory\tcolor\tbeamColor\tnameColor\ticon\tdeath\tfavorite\tvisited\n";
 
     public String exportWaypoints(List<StaffWaypoint> list) {
         StringBuilder out = new StringBuilder(HEADER);
@@ -20,6 +20,8 @@ public final class WaypointImportExport {
                 .append(p.getDimensionId()).append('\t').append(enc(p.getWorldKey())).append('\t')
                 .append(p.getX()).append('\t').append(p.getY()).append('\t').append(p.getZ()).append('\t')
                 .append(enc(p.getCategory())).append('\t').append(Integer.toHexString(p.getColor()))
+                .append('\t').append(Integer.toHexString(p.getBeamColor()))
+                .append('\t').append(Integer.toHexString(p.getNameColor()))
                 .append('\t').append(enc(p.getIconId())).append('\t').append(p.isDeathWaypoint())
                 .append('\t').append(p.isFavorite()).append('\t').append(p.isVisited()).append('\n');
         }
@@ -36,7 +38,7 @@ public final class WaypointImportExport {
         for (int i=first; i<lines.length; i++) {
             if (lines[i].trim().isEmpty()) continue;
             String[] p=lines[i].split("\\t",-1);
-            if (p.length != 9 && p.length != 10 && p.length != 12 && p.length != 13) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
+            if (p.length != 9 && p.length != 10 && p.length != 12 && p.length != 13 && p.length != 15) throw new IllegalArgumentException("Invalid waypoint line " + (i+1));
             try {
                 int offset=newFormat?1:0;
                 double x = Double.parseDouble(p[3+offset]);
@@ -51,16 +53,25 @@ public final class WaypointImportExport {
                 if(newFormat) point.setWorldKey(dec(p[3]));
                 point.setCategory(dec(p[6+offset]));
                 point.setColor((int)Long.parseLong(p[7+offset],16));
-                point.setIconId(dec(p[8+offset]));
-                if (p.length >= 10+offset) {
-                    if (!validBoolean(p[9+offset])) throw new IllegalArgumentException("Invalid death waypoint flag");
-                    point.setDeathWaypoint(Boolean.parseBoolean(p[9+offset]));
+                boolean hasSeparateColors=p.length==15;
+                if(hasSeparateColors) {
+                    point.setBeamColor((int)Long.parseLong(p[8+offset],16));
+                    point.setNameColor((int)Long.parseLong(p[9+offset],16));
                 }
-                if(p.length==12+offset) {
-                    if(!validBoolean(p[10+offset])||!validBoolean(p[11+offset]))
+                int iconIndex=hasSeparateColors?10+offset:8+offset;
+                int deathIndex=iconIndex+1;
+                point.setIconId(dec(p[iconIndex]));
+                if (p.length >= deathIndex+1) {
+                    if (!validBoolean(p[deathIndex])) throw new IllegalArgumentException("Invalid death waypoint flag");
+                    point.setDeathWaypoint(Boolean.parseBoolean(p[deathIndex]));
+                }
+                if(p.length==12+offset || p.length==15) {
+                    int favoriteIndex=deathIndex+1;
+                    int visitedIndex=deathIndex+2;
+                    if(!validBoolean(p[favoriteIndex])||!validBoolean(p[visitedIndex]))
                         throw new IllegalArgumentException("Invalid waypoint state flag");
-                    point.setFavorite(Boolean.parseBoolean(p[10+offset]));
-                    point.setVisited(Boolean.parseBoolean(p[11+offset]));
+                    point.setFavorite(Boolean.parseBoolean(p[favoriteIndex]));
+                    point.setVisited(Boolean.parseBoolean(p[visitedIndex]));
                 }
                 out.add(point);
             } catch (RuntimeException e) {
