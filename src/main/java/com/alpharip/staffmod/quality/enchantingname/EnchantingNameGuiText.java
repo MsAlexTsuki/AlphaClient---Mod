@@ -25,7 +25,6 @@ public final class EnchantingNameGuiText {
     private static final int OPTION_Y_OFFSET = 14;
     private static final int OPTION_ROW_WIDTH = 108;
     private static final int OPTION_ROW_HEIGHT = 19;
-    private static final int ICON_WIDTH = 16;
     private static final int TEXT_X_OFFSET = 20;
     private static final int TEXT_WIDTH = OPTION_ROW_WIDTH - TEXT_X_OFFSET - 4;
     private static final int TEXT_COLOR = 0xFFFFFF;
@@ -96,15 +95,10 @@ public final class EnchantingNameGuiText {
     private void redrawOptionRow(int x, int y, int option,
                                  boolean disabled, boolean hovered) {
         int backgroundV = disabled ? 185 : (hovered ? 204 : 166);
-        int iconV = disabled ? 239 : 223;
-
         Gui.drawModalRectWithCustomSizedTexture(
                 x, y, 0.0F, (float) backgroundV,
                 OPTION_ROW_WIDTH, OPTION_ROW_HEIGHT, 256.0F, 256.0F);
 
-        Gui.drawModalRectWithCustomSizedTexture(
-                x + 1, y + 1, (float) (16 * option), (float) iconV,
-                ICON_WIDTH, ICON_WIDTH, 256.0F, 256.0F);
     }
 
     private void drawFittedText(Minecraft minecraft, String text,
