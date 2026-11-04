@@ -31,6 +31,8 @@ import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
 import com.alpharip.staffmod.pvp.LegacyPvpSettings;
+import com.alpharip.staffmod.singleplayer.autotool.AutoToolAccess;
+import com.alpharip.staffmod.singleplayer.autotool.AutoToolSettings;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
@@ -68,6 +70,15 @@ public final class AlphaClientCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
+
+        if ("ac".equals(route)) {
+            if (args != null && args.length > 0 && "autotool".equalsIgnoreCase(args[0])) {
+                handleAutoToolMessages(sender, tail(args));
+            } else {
+                reply(sender, "Usage: /ac autotool msg <on|off>");
+            }
+            return;
+        }
 
         if ("aimassist".equals(route)) {
             handleAimAssistCommand(sender, args);
@@ -259,6 +270,8 @@ public final class AlphaClientCommand extends CommandBase {
             sendHelp(sender);
         } else if ("alphaclient:modules".equals(route)) {
             listModules(sender);
+        } else if ("alphaclient:autotool".equals(route)) {
+            handleAutoToolMessages(sender, args);
         } else if ("alphaclient:settings".equals(route)) {
             if (args.length != 1) {
                 reply(sender, "Usage: /alphaclient:settings <module>");
@@ -1388,6 +1401,21 @@ public final class AlphaClientCommand extends CommandBase {
         reply(sender, "Legacy PvP setting " + feature + " " + (value.booleanValue() ? "enabled." : "disabled."));
     }
 
+    private void handleAutoToolMessages(ICommandSender sender, String[] args) {
+        if (!AutoToolAccess.isAvailable(Minecraft.getMinecraft())) {
+            reply(sender, "AutoTool message settings are available only in a loaded singleplayer world.");
+            return;
+        }
+        if (args == null || args.length != 2 || !"msg".equalsIgnoreCase(args[0])
+                || (!"on".equalsIgnoreCase(args[1]) && !"off".equalsIgnoreCase(args[1]))) {
+            reply(sender, "Usage: /alphaclient:autotool msg <on|off>");
+            return;
+        }
+        boolean enabled = "on".equalsIgnoreCase(args[1]);
+        AutoToolSettings.setFeedbackEnabled(enabled);
+        reply(sender, "AutoTool switch messages " + (enabled ? "enabled." : "disabled."));
+    }
+
     private void handleAutoGG(ICommandSender sender, String[] args) {
         if (args == null || args.length == 0) {
             reply(sender, "Usage: /autogg on | off | delay <seconds>");
@@ -1828,6 +1856,14 @@ public final class AlphaClientCommand extends CommandBase {
                 String[] values = {"fps","cps","bhop","wtap","fullbright","playtime","sessiontimer","afktimer","nameviewer","legacypvp","quality"};
                 for (String value : values) if (isCompletionAllowed(moduleCommandPermission(value))) options.add(value);
             }
+        } else if (("alphaclient:autotool".equals(commandName) && args.length == 1)
+                || ("ac".equals(commandName) && args.length == 2 && "autotool".equalsIgnoreCase(args[0]))) {
+            options.add("msg");
+        } else if (("alphaclient:autotool".equals(commandName) && args.length == 2
+                && "msg".equalsIgnoreCase(args[0]))
+                || ("ac".equals(commandName) && args.length == 3 && "msg".equalsIgnoreCase(args[1]))) {
+            options.add("on");
+            options.add("off");
         } else if ("alphaclient:module".equals(commandName) && args.length == 2) {
             options.add("on"); options.add("off"); options.add("toggle");
         } else if ("alphaclient:settings".equals(commandName) && args.length == 1) {
