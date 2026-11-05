@@ -24,10 +24,13 @@ public final class WinLossResultDetector {
     /** Detects a match announcement that identifies the local player. */
     public static WinLossResult detect(String message, String playerName) {
         if (message != null && playerName != null && !playerName.trim().isEmpty()) {
-            String cleaned = FORMATTING.matcher(message).replaceAll("");
-            cleaned = WHITESPACE.matcher(cleaned.toLowerCase(Locale.ROOT)).replaceAll(" ").trim();
-            java.util.regex.Matcher match = MATCH_RESULT.matcher(cleaned);
-            if (match.matches()) {
+            String cleanedMessage = FORMATTING.matcher(message).replaceAll("");
+            String[] lines = cleanedMessage.split("\\r?\\n");
+            for (String line : lines) {
+                String cleanedLine = WHITESPACE.matcher(line.toLowerCase(Locale.ROOT)).replaceAll(" ").trim();
+                java.util.regex.Matcher match = MATCH_RESULT.matcher(cleanedLine);
+                if (!match.matches()) continue;
+
                 if (match.group(1).trim().equalsIgnoreCase(playerName.trim())) return WinLossResult.WIN;
                 if (match.group(2).trim().equalsIgnoreCase(playerName.trim())) return WinLossResult.LOSS;
                 return null;
