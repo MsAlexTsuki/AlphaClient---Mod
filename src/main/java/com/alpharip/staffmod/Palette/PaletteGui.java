@@ -202,6 +202,7 @@ public final class PaletteGui extends GuiScreen {
 
     private void buildActions() {
         actions.clear();
+        boolean founderSession = SupabaseCommunityService.isSignedInFounder();
 
         addScreen("home", "Open AlphaClient Home", "Open the live home overlay and HUD editor.", null);
         addScreen("general", "Open General", "Browse public General modules.", "/general");
@@ -217,7 +218,6 @@ public final class PaletteGui extends GuiScreen {
         addScreen("minimap-settings", "Open Minimap Settings", "Configure the current AlphaClient minimap.", "/minimap settings");
 
         addCommand("alpha-help", "AlphaClient Help Command", "Show the command help available to your account.", "/alphaclient help");
-        addCommand("module-list", "List Registered Modules", "Show current module states and locked entries.", "/alphaclient modules");
         addCommand("fps-settings", "FPS HUD Settings", "Open FPS counter settings.", "/fpshud settings");
         addCommand("cps-settings", "CPS HUD Settings", "Open CPS counter settings.", "/cpshud settings");
         addCommand("potion-hud-settings", "Potion HUD Settings", "Open Potion HUD settings.", "/pothud settings");
@@ -259,13 +259,16 @@ public final class PaletteGui extends GuiScreen {
                 continue;
             }
 
-            boolean founderSessionRequired = module.getCategory() == AlphaModule.Category.FOUNDER
-                    && !SupabaseCommunityService.isSignedInFounder();
+            // Founder modules and their child features must not create Palette entries
+            // for accounts without an authenticated Founder session.
+            if (module.getCategory() == AlphaModule.Category.FOUNDER && !founderSession) {
+                continue;
+            }
+
             String moduleDescription = "[" + module.getCategory().getTitle() + "] " + module.getDescription();
-            String moduleStatus = founderSessionRequired ? "FOUNDER SESSION REQUIRED" : module.getStatusLabel();
-            if (!module.isImplemented() || !module.isUnlocked() || founderSessionRequired) {
+            if (!module.isImplemented() || !module.isUnlocked()) {
                 addStatus("module-status:" + module.getId(), module.getName(),
-                        moduleDescription + " Status: " + moduleStatus + ".", "Modules");
+                        moduleDescription + " Status: " + module.getStatusLabel() + ".", "Modules");
             } else {
                 addModuleToggle(module);
                 addCommand("module-settings:" + module.getId(),
@@ -382,6 +385,9 @@ public final class PaletteGui extends GuiScreen {
         List<Action> result = new ArrayList<Action>();
 
         for (Action action : actions) {
+            if (isFounderOnlyAction(action) && !SupabaseCommunityService.isSignedInFounder()) {
+                continue;
+            }
             if (!"All".equals(category) && !"Recent".equals(category)
                     && !"Favorites".equals(category) && !category.equals(action.category)) {
                 continue;
@@ -430,6 +436,33 @@ public final class PaletteGui extends GuiScreen {
             }
         });
         return result;
+    }
+
+    private boolean isFounderOnlyAction(Action action) {
+        if (action.module != null && action.module.getCategory() == AlphaModule.Category.FOUNDER) {
+            return true;
+        }
+        if (action.id.startsWith("founder-") || "staff-founder".equals(action.id)) {
+            return true;
+        }
+
+        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            if (module == null || module.getCategory() != AlphaModule.Category.FOUNDER) {
+                continue;
+            }
+            String moduleId = module.getId();
+            if (action.id.equals("module-status:" + moduleId)
+                    || action.id.equals("module-settings:" + moduleId)) {
+                return true;
+            }
+            for (AlphaModuleFeature feature : module.getFeatures()) {
+                if (feature != null && (action.id.equals("feature-status:" + feature.getId())
+                        || action.id.equals("feature-toggle:" + feature.getId()))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private int score(Action action, String query) {
@@ -482,6 +515,10 @@ public final class PaletteGui extends GuiScreen {
         }
 
         Action action = visible.get(selected);
+        if (isFounderOnlyAction(action) && !SupabaseCommunityService.isSignedInFounder()) {
+            status = "This action requires the authenticated Founder account.";
+            return;
+        }
         if (action.statusOnly) {
             status = action.description;
             return;
