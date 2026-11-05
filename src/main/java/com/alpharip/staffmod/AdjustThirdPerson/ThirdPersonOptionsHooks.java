@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiScreen;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Prototype hook for placing a Third Person entry on Minecraft's Options screen.
@@ -31,7 +32,18 @@ public final class ThirdPersonOptionsHooks {
                 if (button.id == THIRD_PERSON_BUTTON_ID) return;
             }
 
-            int y = screen.height / 6 + 72;
+            int targetRow = -1;
+            for (GuiButton button : buttons) {
+                String label = button.displayString == null
+                        ? "" : button.displayString.toLowerCase(Locale.ROOT);
+                if (label.contains("fov") || label.contains("field of view")
+                        || label.contains("gezichtsveld")) {
+                    targetRow = Math.max(targetRow, button.yPosition);
+                }
+            }
+
+            if (targetRow < 0) targetRow = screen.height / 6 + 48;
+            int y = targetRow + 24;
             buttons.add(new GuiButton(THIRD_PERSON_BUTTON_ID,
                     screen.width / 2 - 100, y, 200, 20, "Third Person"));
         } catch (Exception error) {
