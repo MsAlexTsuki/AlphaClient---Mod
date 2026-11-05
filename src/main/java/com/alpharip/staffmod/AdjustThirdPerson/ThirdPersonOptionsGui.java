@@ -25,7 +25,7 @@ public final class ThirdPersonOptionsGui extends GuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
-        int panelBottom = height / 2 + 92;
+        int panelBottom = height / 2 + 72;
         buttonList.add(new GuiButton(DONE_BUTTON, width / 2 - 100, panelBottom, 200, 20, "Done"));
     }
 
