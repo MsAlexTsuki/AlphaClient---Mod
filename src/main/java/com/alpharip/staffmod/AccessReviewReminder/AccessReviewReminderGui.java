@@ -16,6 +16,7 @@ import java.util.Locale;
 /** Compact, scrollable Alpha-styled screen for managing staff access reviews. */
 public final class AccessReviewReminderGui extends GuiScreen {
     private static final int ADD = 1;
+    private static final int BACK = 2;
     private static final int ROW_BASE = 1000;
     private static final int ROW_HEIGHT = 38;
 
@@ -27,10 +28,11 @@ public final class AccessReviewReminderGui extends GuiScreen {
     private GuiTextField intervalField;
 
     private int panelLeft, panelRight, panelTop, panelBottom;
+    private int nameX, rankX, intervalX, fieldY;
+    private int nameWidth, rankWidth, intervalWidth;
     private int listTop, listBottom, visibleRows, scrollOffset;
     private String message = "";
     private int messageColor = 0xFFB8BDC8;
-    private List<AccessReviewEntry> visibleEntries;
 
     public AccessReviewReminderGui(GuiScreen parent) {
         this.parent = parent;
@@ -50,29 +52,38 @@ public final class AccessReviewReminderGui extends GuiScreen {
 
         int innerWidth = panelWidth - 24;
         int addWidth = 54;
-        int intervalWidth = 42;
-        int rankWidth = 82;
-        int nameWidth = Math.max(70, innerWidth - addWidth - intervalWidth - rankWidth - 18);
-        int fieldX = panelLeft + 12;
-        int fieldY = panelTop + 61;
+        intervalWidth = 42;
+        rankWidth = 82;
+        nameWidth = Math.max(50, innerWidth - addWidth - intervalWidth - rankWidth - 18);
+        nameX = panelLeft + 12;
+        rankX = nameX + nameWidth + 6;
+        intervalX = rankX + rankWidth + 6;
+        fieldY = panelTop + 61;
 
-        nameField = new GuiTextField(10, fontRendererObj, fieldX, fieldY, nameWidth, 18);
-        rankField = new GuiTextField(11, fontRendererObj, fieldX + nameWidth + 6,
-                fieldY, rankWidth, 18);
-        intervalField = new GuiTextField(12, fontRendererObj,
-                fieldX + nameWidth + rankWidth + 12, fieldY, intervalWidth, 18);
+        nameField = new GuiTextField(10, fontRendererObj, nameX, fieldY, nameWidth, 18);
+        rankField = new GuiTextField(11, fontRendererObj, rankX, fieldY, rankWidth, 18);
+        intervalField = new GuiTextField(12, fontRendererObj, intervalX, fieldY, intervalWidth, 18);
         nameField.setMaxStringLength(32);
         rankField.setMaxStringLength(24);
         intervalField.setMaxStringLength(4);
         intervalField.setText("30");
 
-        int addX = fieldX + nameWidth + rankWidth + intervalWidth + 18;
+        int addX = intervalX + intervalWidth + 6;
         buttonList.add(new AlphaActionButton(ADD, addX, fieldY - 1, addWidth, 20, "ADD"));
+        buttonList.add(new AlphaActionButton(BACK, panelLeft + 12,
+                panelBottom - 25, 60, 18, "BACK"));
 
         listTop = panelTop + 105;
         listBottom = panelBottom - 44;
         visibleRows = Math.max(1, (listBottom - listTop) / ROW_HEIGHT);
         rebuildRowButtons();
+    }
+
+    @Override
+    public void updateScreen() {
+        if (nameField != null) nameField.updateCursorCounter();
+        if (rankField != null) rankField.updateCursorCounter();
+        if (intervalField != null) intervalField.updateCursorCounter();
     }
 
     private void rebuildRowButtons() {
@@ -83,7 +94,6 @@ public final class AccessReviewReminderGui extends GuiScreen {
         if (scrollOffset > Math.max(0, entries.size() - visibleRows)) {
             scrollOffset = Math.max(0, entries.size() - visibleRows);
         }
-        visibleEntries = entries;
         int rowRight = panelRight - 12;
         int first = scrollOffset;
         int last = Math.min(entries.size(), first + visibleRows);
@@ -108,13 +118,13 @@ public final class AccessReviewReminderGui extends GuiScreen {
         drawCenteredString(fontRendererObj, "STAFF ACCESS OVERVIEW",
                 width / 2, panelTop + 29, 0xFFFFD866);
 
-        drawString(fontRendererObj, "STAFF NAME", nameField.xPosition, panelTop + 47, 0xFFB8BDC8);
-        drawString(fontRendererObj, "RANK", rankField.xPosition, panelTop + 47, 0xFFB8BDC8);
-        drawString(fontRendererObj, "DAYS", intervalField.xPosition, panelTop + 47, 0xFFB8BDC8);
+        drawString(fontRendererObj, "STAFF NAME", nameX, panelTop + 47, 0xFFB8BDC8);
+        drawString(fontRendererObj, "RANK", rankX, panelTop + 47, 0xFFB8BDC8);
+        drawString(fontRendererObj, "DAYS", intervalX, panelTop + 47, 0xFFB8BDC8);
 
-        drawField(nameField);
-        drawField(rankField);
-        drawField(intervalField);
+        drawField(nameField, nameX, fieldY, nameWidth, 18);
+        drawField(rankField, rankX, fieldY, rankWidth, 18);
+        drawField(intervalField, intervalX, fieldY, intervalWidth, 18);
 
         long now = System.currentTimeMillis();
         List<AccessReviewEntry> entries = manager.getEntries();
@@ -133,18 +143,19 @@ public final class AccessReviewReminderGui extends GuiScreen {
             drawCenteredString(fontRendererObj, "Add a name above to start tracking reviews",
                     width / 2, listTop + 39, 0xFF858D9B);
         } else {
-            drawRows(mouseX, mouseY, now, entries);
+            drawRows(entries, now);
             drawScrollbar(entries.size());
         }
 
-        drawString(fontRendererObj, message, panelLeft + 12,
-                panelBottom - 29, messageColor);
+        drawString(fontRendererObj, message,
+                panelLeft + 82, panelBottom - 29,
+                messageColor);
         drawString(fontRendererObj, "SCROLL TO VIEW MORE",
                 panelRight - 126, panelBottom - 29, 0xFF777F8D);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
-    private void drawRows(int mouseX, int mouseY, long now, List<AccessReviewEntry> entries) {
+    private void drawRows(List<AccessReviewEntry> entries, long now) {
         ScaledResolution resolution = new ScaledResolution(mc);
         int scale = resolution.getScaleFactor();
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
@@ -211,12 +222,10 @@ public final class AccessReviewReminderGui extends GuiScreen {
         drawRect(trackX - 1, thumbY, trackX + 3, thumbY + thumbHeight, 0xFFFFD866);
     }
 
-    private void drawField(GuiTextField field) {
-        drawRect(field.xPosition - 1, field.yPosition - 1,
-                field.xPosition + field.width + 1, field.yPosition + field.height + 1,
+    private void drawField(GuiTextField field, int x, int y, int fieldWidth, int fieldHeight) {
+        drawRect(x - 1, y - 1, x + fieldWidth + 1, y + fieldHeight + 1,
                 field.isFocused() ? 0xFFFFD866 : 0xFF454B56);
-        drawRect(field.xPosition, field.yPosition,
-                field.xPosition + field.width, field.yPosition + field.height, 0xFF11141B);
+        drawRect(x, y, x + fieldWidth, y + fieldHeight, 0xFF11141B);
         field.drawTextBox();
     }
 
@@ -231,6 +240,10 @@ public final class AccessReviewReminderGui extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
+        if (button.id == BACK) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
         if (button.id == ADD) {
             addStaff();
             return;
@@ -274,7 +287,7 @@ public final class AccessReviewReminderGui extends GuiScreen {
     }
 
     private void setMessage(String text, int color) {
-        message = fit(text, panelRight - panelLeft - 145);
+        message = fit(text, panelRight - panelLeft - 225);
         messageColor = color;
     }
 
