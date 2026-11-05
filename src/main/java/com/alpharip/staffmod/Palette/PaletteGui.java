@@ -311,25 +311,25 @@ public final class PaletteGui extends GuiScreen {
     }
 
     private void addRankCommands() {
-        if (PermissionService.hasAccess(PermissionService.Rank.BETA)) {
+        if (hasRankFolderAccess(PermissionService.Rank.BETA, "menu.beta")) {
             addCommand("rank-beta", "Open Beta Folder", "Open the Beta folder.", "/beta");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.DONATOR)) {
+        if (hasRankFolderAccess(PermissionService.Rank.DONATOR, "menu.donator")) {
             addCommand("rank-donator", "Open Donator Folder", "Open the Donator folder.", "/donator");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.SCOUT)) {
+        if (hasRankFolderAccess(PermissionService.Rank.SCOUT, "menu.scout")) {
             addCommand("rank-scout", "Open Scout Folder", "Open the Scout folder.", "/scout");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.ROGUE)) {
+        if (hasRankFolderAccess(PermissionService.Rank.ROGUE, "menu.rogue")) {
             addCommand("rank-rogue", "Open Rogue Folder", "Open the Rogue folder.", "/rogue");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.ELITE)) {
+        if (hasRankFolderAccess(PermissionService.Rank.ELITE, "menu.elite")) {
             addCommand("rank-elite", "Open Elite Folder", "Open the Elite folder.", "/elite");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.ALPHA)) {
+        if (hasRankFolderAccess(PermissionService.Rank.ALPHA, "menu.alpha")) {
             addCommand("rank-alpha", "Open Alpha Folder", "Open the Alpha folder.", "/alpha");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.ALPHA_PLUS)) {
+        if (hasRankFolderAccess(PermissionService.Rank.ALPHA_PLUS, "menu.alphaplus")) {
             addCommand("rank-alpha-plus", "Open Alpha+ Folder", "Open the Alpha+ folder.", "/alphaplus");
         }
 
@@ -337,38 +337,44 @@ public final class PaletteGui extends GuiScreen {
             return;
         }
 
-        addCommand("staff-tmod", "Open Trial Moderator Folder", "Open the T-Mod staff folder.", "/stafftmod");
-        if (PermissionService.hasAccess(PermissionService.Rank.MOD)) {
+        if (hasStaffFolderAccess("staff-tmod", "staffmods.tmod")) {
+            addCommand("staff-tmod", "Open Trial Moderator Folder", "Open the T-Mod staff folder.", "/stafftmod");
+        }
+        if (hasStaffFolderAccess("staff-mod", "staffmods.mod")) {
             addCommand("staff-mod", "Open Moderator Folder", "Open the Moderator staff folder.", "/staffmod");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.SR_MOD)) {
+        if (hasStaffFolderAccess("staff-srmod", "staffmods.srmod")) {
             addCommand("staff-srmod", "Open Sr Moderator Folder", "Open the Sr Moderator staff folder.", "/staffsrmod");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.ADMIN)) {
+        if (hasStaffFolderAccess("staff-admin", "staffmods.admin")) {
             addCommand("staff-admin", "Open Admin Folder", "Open the Admin staff folder.", "/staffadmin");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.SR_ADMIN)) {
+        if (hasStaffFolderAccess("staff-sradmin", "staffmods.sradmin")) {
             addCommand("staff-sradmin", "Open Sr Admin Folder", "Open the Sr Admin staff folder.", "/staffsradmin");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) {
+        if (hasStaffFolderAccess("staff-platform-admin", "staffmods.platformadmin")) {
             addCommand("staff-platform-admin", "Open Platform Admin Folder", "Open the Platform Admin staff folder.", "/staffplatformadmin");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
-                || PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+        if (hasStaffFolderAccess("staff-management", "staffmods.management")) {
             addCommand("staff-management", "Open Management Folder", "Open the shared Management folder.", "/staffmanagement");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
+        if (hasStaffFolderAccess("staff-manager", "staffmods.manager")) {
             addCommand("staff-manager", "Open Manager Folder", "Open the Manager staff folder.", "/staffmanager");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)) {
+        if (hasStaffFolderAccess("staff-developer", "staffmods.developer")) {
             addCommand("staff-developer", "Open Developer Folder", "Open the Developer staff folder.", "/staffmods developer");
         }
-        if (PermissionService.hasAccess(PermissionService.Rank.OWNER)) {
+        if (hasStaffFolderAccess("staff-owner", "staffmods.owner")) {
             addCommand("staff-owner", "Open Owner Folder", "Open the Owner staff folder. Founder access is not included.", "/staffowner");
         }
-        if (SupabaseCommunityService.isSignedInFounder()) {
+        if (hasStaffFolderAccess("staff-founder", "staffmods.founder")) {
             addCommand("staff-founder", "Open Founder Folder", "Open the Founder-only staff folder.", "/stafffounder");
         }
+    }
+
+    private boolean hasRankFolderAccess(PermissionService.Rank rank, String permissionKey) {
+        Boolean override = PermissionService.getCommandPermissionOverride(permissionKey);
+        return override != null ? override.booleanValue() : PermissionService.hasAccess(rank);
     }
 
     private void addScreen(String id, String name, String description, String command) {
@@ -468,8 +474,12 @@ public final class PaletteGui extends GuiScreen {
         if ("staff-operations".equals(action.id)) {
             return SupabaseCommunityService.hasStaffOperationsAccess();
         }
-        if ("staff-mods".equals(action.id) || "staff-general".equals(action.id)) {
+        if ("staff-mods".equals(action.id)) {
             return PermissionService.hasStaffModsAccess();
+        }
+        if ("staff-general".equals(action.id)) {
+            return PermissionService.hasStaffModsAccess()
+                    && !Boolean.FALSE.equals(PermissionService.getCommandPermissionOverride("staffmods.general"));
         }
 
         String staffFolderPermission = staffFolderPermissionForAction(action.id);
@@ -575,13 +585,13 @@ public final class PaletteGui extends GuiScreen {
         if ("rank-elite".equals(id)) return "menu.elite";
         if ("rank-alpha".equals(id)) return "menu.alpha";
         if ("rank-alpha-plus".equals(id)) return "menu.alphaplus";
+        if ("alpha-help".equals(id) || "help-screen".equals(id)) return "command.help";
+        if ("hud-editor".equals(id)) return "command.hudeditor";
+        if ("profiles-screen".equals(id)) return "command.profiles.list";
         if ("fps-settings".equals(id)) return "command.fpshud";
         if ("cps-settings".equals(id)) return "command.cpshud";
         if ("potion-hud-settings".equals(id)) return "hud.potion";
-        if ("module-settings:".equals(id)) return "command.settings";
         if (id.startsWith("module-settings:")) return "command.settings";
-        if ("staff-general".equals(id)) return "staffmods.general";
-        if ("autotool-command".equals(id)) return "command.autotool";
         return null;
     }
 
