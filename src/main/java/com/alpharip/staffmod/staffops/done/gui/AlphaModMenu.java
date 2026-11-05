@@ -1,5 +1,6 @@
 package com.alpharip.staffmod.gui;
 
+import com.alpharip.staffmod.ComboCounter.ComboCounterSettingsGui;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
@@ -527,6 +528,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     if ("cps".equals(clickedModule.getId())
                             && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         mc.displayGuiScreen(new CpsSettingsGui(this));
+                        return;
+                    }
+                    if ("combo-counter".equals(clickedModule.getId())
+                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                        mc.displayGuiScreen(new ComboCounterSettingsGui(this));
                         return;
                     }
                     if ("w-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new WTapSettingsGui(this)); return; }
