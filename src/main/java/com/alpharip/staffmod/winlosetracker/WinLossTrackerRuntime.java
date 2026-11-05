@@ -149,7 +149,7 @@ public final class WinLossTrackerRuntime {
     }
 
     public static int getHudWidth(Minecraft minecraft) {
-        return (int) Math.ceil(230 * HudScaleConfig.get("win-loss-tracker"));
+        return (int) Math.ceil(170 * HudScaleConfig.get("win-loss-tracker"));
     }
 
     public static int getHudHeight() {
@@ -163,7 +163,7 @@ public final class WinLossTrackerRuntime {
         }
         int rows = (settings.isShowCurrentAddressStatistics() ? 1 : 0)
                 + (settings.isShowOverallStatistics() ? 1 : 0) + extraRows;
-        int baseHeight = Math.max(42, 27 + rows * 11);
+        int baseHeight = Math.max(32, 22 + rows * 9);
         return (int) Math.ceil(baseHeight * HudScaleConfig.get("win-loss-tracker"));
     }
 
@@ -184,8 +184,8 @@ public final class WinLossTrackerRuntime {
             }
         }
         int rows = (showCurrent ? 1 : 0) + (showOverall ? 1 : 0) + extraRows;
-        int height = Math.max(42, 27 + rows * 11);
-        int width = 230;
+        int height = Math.max(32, 22 + rows * 9);
+        int width = 170;
         float scale = HudScaleConfig.get("win-loss-tracker");
 
         GlStateManager.pushMatrix();
@@ -194,22 +194,22 @@ public final class WinLossTrackerRuntime {
         Gui.drawRect(0, 0, width, height, 0xD9101219);
         Gui.drawRect(0, 0, width, 2, 0xFFFFD866);
         Gui.drawRect(0, 3, 1, height - 1, 0xAAFFD866);
-        minecraft.fontRendererObj.drawString("W&L TRACKER", 8, 7, 0xFFFFD866, false);
-        minecraft.fontRendererObj.drawString("LIVE", width - 30, 7, 0xFF8D929E, false);
-        int rowY = 21;
+        minecraft.fontRendererObj.drawString("W&L TRACKER", 6, 4, 0xFFFFD866, false);
+        minecraft.fontRendererObj.drawString("LIVE", width - 30, 4, 0xFF8D929E, false);
+        int rowY = 15;
         if (showCurrent) {
-            drawStatistics(minecraft, current, 8, rowY);
-            rowY += 11;
+            drawStatistics(minecraft, current, 6, rowY);
+            rowY += 9;
         }
         if (showOverall) {
             if (showCurrent) {
                 String summary = "ALL " + overall.getWins() + "/" + overall.getLosses()
                         + "  " + String.format(Locale.ROOT, "%.1f%%", overall.getWinRate());
-                minecraft.fontRendererObj.drawString(summary, 8, rowY, 0xFFB8BEC9, false);
+                minecraft.fontRendererObj.drawString(summary, 6, rowY, 0xFFB8BEC9, false);
             } else {
-                drawStatistics(minecraft, overall, 8, rowY);
+                drawStatistics(minecraft, overall, 6, rowY);
             }
-            rowY += 11;
+            rowY += 9;
         }
         if (showIndividual) {
             for (String address : profile.getAddresses()) {
@@ -217,8 +217,8 @@ public final class WinLossTrackerRuntime {
                 WinLossStatistics stats = profile.getAddressStatistics(address);
                 String line = address + "  W/L " + stats.getWins() + "/" + stats.getLosses()
                         + "  " + String.format(Locale.ROOT, "%.1f%%", stats.getWinRate());
-                line = minecraft.fontRendererObj.trimStringToWidth(line, width - 16);
-                minecraft.fontRendererObj.drawString(line, 8, rowY, 0xFF9CA3AF, false);
+                line = minecraft.fontRendererObj.trimStringToWidth(line, width - 12);
+                minecraft.fontRendererObj.drawString(line, 6, rowY, 0xFF9CA3AF, false);
                 rowY += 11;
             }
         }
@@ -227,8 +227,8 @@ public final class WinLossTrackerRuntime {
 
     private static void drawStatistics(Minecraft minecraft, WinLossStatistics statistics, int x, int y) {
         minecraft.fontRendererObj.drawString("W " + statistics.getWins(), x, y, 0xFF55E58A, false);
-        minecraft.fontRendererObj.drawString("L " + statistics.getLosses(), x + 48, y, 0xFFFF6868, false);
+        minecraft.fontRendererObj.drawString("L " + statistics.getLosses(), x + 34, y, 0xFFFF6868, false);
         minecraft.fontRendererObj.drawString(String.format(Locale.ROOT, "%.1f%%", statistics.getWinRate()),
-                x + 98, y, 0xFFFFFFFF, false);
+                x + 68, y, 0xFFFFFFFF, false);
     }
 }
