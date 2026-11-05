@@ -249,10 +249,18 @@ public final class PaletteGui extends GuiScreen {
                 continue;
             }
 
+            // Bhop is intentionally managed only from StaffMods -> General.
+            if ("staffmods".equals(module.getId())) {
+                continue;
+            }
+
+            boolean founderSessionRequired = module.getCategory() == AlphaModule.Category.FOUNDER
+                    && !SupabaseCommunityService.isSignedInFounder();
             String moduleDescription = "[" + module.getCategory().getTitle() + "] " + module.getDescription();
-            if (!module.isImplemented() || !module.isUnlocked()) {
+            String moduleStatus = founderSessionRequired ? "FOUNDER SESSION REQUIRED" : module.getStatusLabel();
+            if (!module.isImplemented() || !module.isUnlocked() || founderSessionRequired) {
                 addStatus("module-status:" + module.getId(), module.getName(),
-                        moduleDescription + " Status: " + module.getStatusLabel() + ".", "Modules");
+                        moduleDescription + " Status: " + moduleStatus + ".", "Modules");
             } else {
                 addModuleToggle(module);
                 addCommand("module-settings:" + module.getId(),
@@ -319,6 +327,9 @@ public final class PaletteGui extends GuiScreen {
         }
         if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)) {
             addCommand("staff-platform-admin", "Open Platform Admin Folder", "Open the Platform Admin staff folder.", "/staffplatformadmin");
+        }
+        if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
+                || PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
             addCommand("staff-management", "Open Management Folder", "Open the shared Management folder.", "/staffmanagement");
         }
         if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
@@ -518,7 +529,8 @@ public final class PaletteGui extends GuiScreen {
         }
 
         boolean wasFavorite = store.isFavorite(action.id);
-        boolean isFavorite = store.toggleFavorite(action.id);
+        store.toggleFavorite(action.id);
+        boolean isFavorite = store.isFavorite(action.id);
         if (wasFavorite == isFavorite) {
             status = "Could not save the favorite change.";
         } else {
