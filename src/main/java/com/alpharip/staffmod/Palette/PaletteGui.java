@@ -591,6 +591,10 @@ public final class PaletteGui extends GuiScreen {
         if ("fps-settings".equals(id)) return "command.fpshud";
         if ("cps-settings".equals(id)) return "command.cpshud";
         if ("potion-hud-settings".equals(id)) return "hud.potion";
+        if ("playtime-command".equals(id)) return "command.playtime";
+        if ("session-timer-command".equals(id)) return "command.sessiontimer";
+        if ("afk-timer-command".equals(id)) return "command.afktimer";
+        if ("fullbright-toggle".equals(id)) return "command.fullbright";
         if (id.startsWith("module-settings:")) return "command.settings";
         return null;
     }
