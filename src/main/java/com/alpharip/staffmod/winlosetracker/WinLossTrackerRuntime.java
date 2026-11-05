@@ -165,8 +165,9 @@ public final class WinLossTrackerRuntime {
         if (showCurrent) drawStatistics(minecraft, current, x + 8, y + 21);
         if (showOverall) {
             if (showCurrent) {
-                minecraft.fontRendererObj.drawString("OVERALL", x + 8, y + 34, 0xFF9CA3AF, false);
-                drawStatistics(minecraft, overall, x + 58, y + 34);
+                String summary = "ALL " + overall.getWins() + "/" + overall.getLosses()
+                        + "  " + String.format(Locale.ROOT, "%.1f%%", overall.getWinRate());
+                minecraft.fontRendererObj.drawString(summary, x + 8, y + 34, 0xFFB8BEC9, false);
             } else {
                 drawStatistics(minecraft, overall, x + 8, y + 21);
             }
