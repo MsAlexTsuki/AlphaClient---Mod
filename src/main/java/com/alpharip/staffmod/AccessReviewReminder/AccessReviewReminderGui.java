@@ -17,6 +17,7 @@ import java.util.Locale;
 public final class AccessReviewReminderGui extends GuiScreen {
     private static final int ADD = 1;
     private static final int BACK = 2;
+    private static final int CANCEL_EDIT = 3;
     private static final int ROW_BASE = 1000;
     private static final int ROW_HEIGHT = 38;
 
@@ -31,6 +32,7 @@ public final class AccessReviewReminderGui extends GuiScreen {
     private int nameX, rankX, intervalX, fieldY;
     private int nameWidth, rankWidth, intervalWidth;
     private int listTop, listBottom, visibleRows, scrollOffset;
+    private String editingId;
     private String message = "";
     private int messageColor = 0xFFB8BDC8;
 
@@ -63,6 +65,9 @@ public final class AccessReviewReminderGui extends GuiScreen {
         nameField = new GuiTextField(10, fontRendererObj, nameX, fieldY, nameWidth, 18);
         rankField = new GuiTextField(11, fontRendererObj, rankX, fieldY, rankWidth, 18);
         intervalField = new GuiTextField(12, fontRendererObj, intervalX, fieldY, intervalWidth, 18);
+        nameField.setEnableBackgroundDrawing(false);
+        rankField.setEnableBackgroundDrawing(false);
+        intervalField.setEnableBackgroundDrawing(false);
         nameField.setMaxStringLength(32);
         rankField.setMaxStringLength(24);
         intervalField.setMaxStringLength(4);
@@ -100,10 +105,12 @@ public final class AccessReviewReminderGui extends GuiScreen {
         for (int index = first; index < last; index++) {
             int row = index - first;
             int y = listTop + row * ROW_HEIGHT + 9;
-            buttonList.add(new AlphaActionButton(ROW_BASE + row * 2,
-                    rowRight - 112, y, 58, 19, "REVIEW"));
-            buttonList.add(new AlphaActionButton(ROW_BASE + row * 2 + 1,
-                    rowRight - 49, y, 49, 19, "REMOVE"));
+            buttonList.add(new AlphaActionButton(ROW_BASE + row * 3,
+                    rowRight - 154, y, 54, 19, "REVIEW"));
+            buttonList.add(new AlphaActionButton(ROW_BASE + row * 3 + 1,
+                    rowRight - 94, y, 42, 19, "EDIT"));
+            buttonList.add(new AlphaActionButton(ROW_BASE + row * 3 + 2,
+                    rowRight - 48, y, 48, 19, "REMOVE"));
         }
     }
 
@@ -248,10 +255,14 @@ public final class AccessReviewReminderGui extends GuiScreen {
             addStaff();
             return;
         }
+        if (button.id == CANCEL_EDIT) {
+            clearEdit();
+            return;
+        }
         if (button.id >= ROW_BASE) {
             int relative = button.id - ROW_BASE;
-            int row = relative / 2;
-            int action = relative % 2;
+            int row = relative / 3;
+            int action = relative % 3;
             int index = scrollOffset + row;
             List<AccessReviewEntry> entries = manager.getEntries();
             if (index < 0 || index >= entries.size()) return;
@@ -259,11 +270,14 @@ public final class AccessReviewReminderGui extends GuiScreen {
             if (action == 0) {
                 manager.markReviewed(selected.getId());
                 setMessage("Review saved for " + selected.getStaffName(), 0xFF9CE2AC);
+            } else if (action == 1) {
+                beginEdit(selected);
             } else {
                 manager.removeStaff(selected.getId());
+                if (selected.getId().equals(editingId)) clearEdit();
                 setMessage("Removed " + selected.getStaffName(), 0xFFB8BDC8);
+                rebuildRowButtons();
             }
-            rebuildRowButtons();
         }
     }
 
@@ -272,18 +286,59 @@ public final class AccessReviewReminderGui extends GuiScreen {
             String name = nameField.getText();
             String rank = rankField.getText();
             int days = Integer.parseInt(intervalField.getText().trim());
-            manager.addStaff(name, rank, days);
-            nameField.setText("");
-            rankField.setText("");
-            intervalField.setText("30");
+            if (editingId == null) {
+                manager.addStaff(name, rank, days);
+                setMessage("Staff member added", 0xFF9CE2AC);
+            } else {
+                manager.updateStaff(editingId, name, rank, days);
+                setMessage("Staff details updated", 0xFF9CE2AC);
+            }
+            clearEditFields();
             scrollOffset = Math.max(0, manager.getEntries().size() - visibleRows);
-            setMessage("Staff member added", 0xFF9CE2AC);
             rebuildRowButtons();
         } catch (NumberFormatException exception) {
             setMessage("Enter a valid interval in days", 0xFFFF8A80);
         } catch (IllegalArgumentException exception) {
             setMessage(exception.getMessage(), 0xFFFF8A80);
         }
+    }
+
+    private void beginEdit(AccessReviewEntry entry) {
+        editingId = entry.getId();
+        nameField.setText(entry.getStaffName());
+        rankField.setText(entry.getRank());
+        intervalField.setText(String.valueOf(entry.getIntervalDays()));
+        nameField.setFocused(true);
+        for (GuiButton item : buttonList) {
+            if (item.id == ADD) item.displayString = "SAVE";
+        }
+        boolean hasCancel = false;
+        for (GuiButton item : buttonList) {
+            if (item.id == CANCEL_EDIT) hasCancel = true;
+        }
+        if (!hasCancel) {
+            buttonList.add(new AlphaActionButton(CANCEL_EDIT, panelLeft + 78,
+                    panelBottom - 25, 66, 18, "CANCEL"));
+        }
+        setMessage("Editing " + entry.getStaffName(), 0xFFFFD866);
+    }
+
+    private void clearEdit() {
+        clearEditFields();
+        for (int i = buttonList.size() - 1; i >= 0; i--) {
+            if (buttonList.get(i).id == CANCEL_EDIT) buttonList.remove(i);
+            if (buttonList.get(i).id == ADD) buttonList.get(i).displayString = "ADD";
+        }
+    }
+
+    private void clearEditFields() {
+        editingId = null;
+        nameField.setText("");
+        rankField.setText("");
+        intervalField.setText("30");
+        nameField.setFocused(false);
+        rankField.setFocused(false);
+        intervalField.setFocused(false);
     }
 
     private void setMessage(String text, int color) {
