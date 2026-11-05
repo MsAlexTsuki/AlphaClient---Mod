@@ -5,6 +5,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import com.alpharip.staffmod.config.HudPositionConfig;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -69,7 +70,9 @@ public final class WinLossTrackerRuntime {
         if (currentAddress.isEmpty()) return;
 
         String message = event.message.getUnformattedText();
-        WinLossResult result = WinLossResultDetector.detect(message);
+        Minecraft minecraft = Minecraft.getMinecraft();
+        String playerName = minecraft == null || minecraft.thePlayer == null ? null : minecraft.thePlayer.getName();
+        WinLossResult result = WinLossResultDetector.detect(message, playerName);
         if (result == null) return;
 
         long now = System.currentTimeMillis();
@@ -95,32 +98,11 @@ public final class WinLossTrackerRuntime {
                 || minecraft.gameSettings.showDebugInfo || minecraft.gameSettings.hideGUI) return;
 
         WinLossServerProfile profile = TRACKER.findProfileByAddress(currentAddress);
-        if (profile == null) return;
-
-        WinLossTrackerSettings settings = TRACKER.getSettings();
-        int y = 6;
-        if (settings.isShowCurrentAddressStatistics()) {
-            WinLossStatistics statistics = profile.getAddressStatistics(currentAddress);
-            drawLine(minecraft, currentAddress + " W/L: " + statistics.getWins() + "/"
-                    + statistics.getLosses() + " (" + formatRate(statistics) + ")", 6, y);
-            y += 12;
-        }
-        if (settings.isShowOverallStatistics()) {
-            WinLossStatistics statistics = profile.getOverallStatistics();
-            drawLine(minecraft, profile.getDisplayName() + " Overall W/L: "
-                    + statistics.getWins() + "/" + statistics.getLosses()
-                    + " (" + formatRate(statistics) + ")", 6, y);
-            y += 12;
-        }
-        if (settings.isShowIndividualAddressStatistics()) {
-            for (String address : profile.getAddresses()) {
-                if (address.equals(currentAddress)) continue;
-                WinLossStatistics statistics = profile.getAddressStatistics(address);
-                drawLine(minecraft, address + " W/L: " + statistics.getWins() + "/"
-                        + statistics.getLosses() + " (" + formatRate(statistics) + ")", 6, y);
-                y += 12;
-            }
-        }
+        WinLossStatistics current = profile == null
+                ? new WinLossStatistics(0, 0) : profile.getAddressStatistics(currentAddress);
+        WinLossStatistics overall = profile == null
+                ? new WinLossStatistics(0, 0) : profile.getOverallStatistics();
+        drawHud(minecraft, current, overall, TRACKER.getSettings());
     }
 
     private boolean isModuleEnabled() {
@@ -156,14 +138,45 @@ public final class WinLossTrackerRuntime {
         }
     }
 
-    private static void drawLine(Minecraft minecraft, String text, int x, int y) {
-        int textWidth = minecraft.fontRendererObj.getStringWidth(text);
-        Gui.drawRect(x - 3, y - 2, x + textWidth + 3,
-                y + minecraft.fontRendererObj.FONT_HEIGHT + 2, 0x990A0C11);
-        minecraft.fontRendererObj.drawStringWithShadow(text, x, y, 0xFFFFFFFF);
+    public static void renderEditorPreview(int screenWidth, int screenHeight) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null || minecraft.fontRendererObj == null) return;
+        drawHud(minecraft, new WinLossStatistics(12, 4),
+                new WinLossStatistics(28, 12), TRACKER.getSettings());
     }
 
-    private static String formatRate(WinLossStatistics statistics) {
-        return String.format(Locale.ROOT, "%.1f%%", statistics.getWinRate());
+    public static int getHudWidth(Minecraft minecraft) { return 154; }
+    public static int getHudHeight() { return 52; }
+
+    private static void drawHud(Minecraft minecraft, WinLossStatistics current,
+                                WinLossStatistics overall, WinLossTrackerSettings settings) {
+        int x = HudPositionConfig.getWinLossX();
+        int y = HudPositionConfig.getWinLossY();
+        boolean showCurrent = settings.isShowCurrentAddressStatistics();
+        boolean showOverall = settings.isShowOverallStatistics();
+        if (!showCurrent && !showOverall) return;
+
+        int height = showCurrent && showOverall ? 52 : 42;
+        Gui.drawRect(x, y, x + 154, y + height, 0xD9101219);
+        Gui.drawRect(x, y, x + 154, y + 2, 0xFFFFD866);
+        Gui.drawRect(x, y + 3, x + 1, y + height - 1, 0xAAFFD866);
+        minecraft.fontRendererObj.drawString("W&L TRACKER", x + 8, y + 7, 0xFFFFD866, false);
+        minecraft.fontRendererObj.drawString("LIVE", x + 124, y + 7, 0xFF8D929E, false);
+        if (showCurrent) drawStatistics(minecraft, current, x + 8, y + 21);
+        if (showOverall) {
+            if (showCurrent) {
+                minecraft.fontRendererObj.drawString("OVERALL", x + 8, y + 34, 0xFF9CA3AF, false);
+                drawStatistics(minecraft, overall, x + 58, y + 34);
+            } else {
+                drawStatistics(minecraft, overall, x + 8, y + 21);
+            }
+        }
+    }
+
+    private static void drawStatistics(Minecraft minecraft, WinLossStatistics statistics, int x, int y) {
+        minecraft.fontRendererObj.drawString("W " + statistics.getWins(), x, y, 0xFF55E58A, false);
+        minecraft.fontRendererObj.drawString("L " + statistics.getLosses(), x + 48, y, 0xFFFF6868, false);
+        minecraft.fontRendererObj.drawString(String.format(Locale.ROOT, "%.1f%%", statistics.getWinRate()),
+                x + 98, y, 0xFFFFFFFF, false);
     }
 }
