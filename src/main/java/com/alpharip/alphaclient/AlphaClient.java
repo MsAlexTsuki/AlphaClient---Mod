@@ -22,6 +22,7 @@ import com.alpharip.staffmod.hud.CombatWarningsHud;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.cps.CpsMod;
+import com.alpharip.staffmod.ComboCounter.ComboCounter;
 import com.alpharip.staffmod.distance.DistanceTrackerMod;
 import com.alpharip.staffmod.healthbar.HealthbarMod;
 import com.alpharip.staffmod.combat.AimAssistMod;
@@ -162,6 +163,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new FpsMod());
         MinecraftForge.EVENT_BUS.register(new PingMod());
         MinecraftForge.EVENT_BUS.register(new CpsMod());
+        ComboCounter comboCounter = new ComboCounter();
+        MinecraftForge.EVENT_BUS.register(comboCounter);
         MinecraftForge.EVENT_BUS.register(new DistanceTrackerMod());
         MinecraftForge.EVENT_BUS.register(new HealthbarMod());
         MinecraftForge.EVENT_BUS.register(new TargetingMod());
@@ -235,6 +238,7 @@ public final class AlphaClient {
         AutoReconnectMod.loadSettings();
         BhopHud.loadHudPosition();
         CpsMod.load();
+        comboCounter.load();
         PingMod.load();
 
         MinecraftForge.EVENT_BUS.register(new BhopHud());
@@ -271,7 +275,7 @@ public final class AlphaClient {
         String[] commands = {
                 "alphaclient", "alphahelp", "alphaclient:help", "alphaclient:modules",
                 "alphaclient:settings", "alphaclient:module", "alphaclient:fps",
-                "alphaclient:cps", "alphaclient:bhop", "alphaclient:wtap",
+                "alphaclient:cps", "alphaclient:bhop", "alphaclient:wtap", "combocounter",
                 "alphaclient:fullbright", "alphaclient:legacypvp", "alphaclient:playtime",
                 "alphaclient:sessiontimer", "alphaclient:afktimer",
                 "fpshud", "cpshud", "pothud", "playtime", "sessiontimer", "afktimer",
