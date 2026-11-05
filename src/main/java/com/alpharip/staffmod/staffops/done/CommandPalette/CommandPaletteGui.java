@@ -57,20 +57,37 @@ public final class CommandPaletteGui extends GuiScreen {
         super.mouseClicked(x,y,button);searchField.mouseClicked(x,y,button);
         if(button!=0)return;
         if(pendingInput==null&&selectCategory(x,y))return;
-        if(pendingInput!=null||y<listTop||y>=listBottom)return;
-        int index=scroll+(y-listTop)/ROW_HEIGHT;
+        if(pendingInput!=null)return;
+
+        int rowLeft=left+12,rowRight=left+panelWidth-12;
+        if(x<rowLeft||x>=rowRight||y<listTop||y>=listBottom)return;
+
+        int row=(y-listTop)/ROW_HEIGHT;
+        int rowTop=listTop+row*ROW_HEIGHT;
+        int rowBottom=rowTop+ROW_HEIGHT-1;
+        if(y<rowTop||y>rowBottom||row>=visibleRows())return;
+
         List<Action> filtered=filtered();
+        int index=scroll+row;
         if(index<0||index>=filtered.size())return;
+
         selected=index;
-        if(x>=left+panelWidth-42)toggleFavorite(filtered.get(index));else executeSelected();
+        if(x>=left+panelWidth-42)toggleFavorite(filtered.get(index));
+        else executeSelected();
     }
 
     @Override public void handleMouseInput()throws IOException{
-        super.handleMouseInput();int wheel=Mouse.getDWheel();
-        if(wheel==0||pendingInput!=null)return;
-        int max=Math.max(0,filtered().size()-visibleRows());
-        scroll=Math.max(0,Math.min(max,scroll+(wheel>0?-1:1)));
-        selected=Math.max(scroll,Math.min(selected,scroll+visibleRows()-1));
+        int wheel=Mouse.getDWheel();
+        if(wheel!=0&&pendingInput==null&&mc!=null&&mc.displayWidth>0&&mc.displayHeight>0){
+            int mouseX=Mouse.getX()*width/mc.displayWidth;
+            int mouseY=height-Mouse.getY()*height/mc.displayHeight-1;
+            if(mouseX>=left+10&&mouseX<left+panelWidth-10&&mouseY>=listTop&&mouseY<listBottom){
+                int max=Math.max(0,filtered().size()-visibleRows());
+                scroll=Math.max(0,Math.min(max,scroll+(wheel>0?-1:1)));
+                selected=Math.max(scroll,Math.min(selected,scroll+visibleRows()-1));
+            }
+        }
+        super.handleMouseInput();
     }
 
     @Override public void drawScreen(int mx,int my,float partial){
