@@ -61,6 +61,7 @@ import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
 import com.alpharip.staffmod.singleplayer.worldedit.AlphaWorldEditCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolMod;
+import com.alpharip.staffmod.winlosetracker.WinLossTrackerRuntime;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -183,6 +184,10 @@ public final class AlphaClient {
         ModuleProfileManager.load();
         ModuleProfileManager.applySelectedModuleStates();
         syncBhopModuleState();
+
+        WinLossTrackerRuntime winLossTrackerRuntime = new WinLossTrackerRuntime();
+        winLossTrackerRuntime.initialize();
+        MinecraftForge.EVENT_BUS.register(winLossTrackerRuntime);
 
         openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu", Keyboard.KEY_RCONTROL, "AlphaClient");
         ClientRegistry.registerKeyBinding(openModMenuKey);

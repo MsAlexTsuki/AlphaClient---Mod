@@ -159,6 +159,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(cps);
 
+        AlphaModule winLossTracker = new AlphaModule(
+                "win-loss-tracker",
+                "W&L Tracker",
+                "Track Practice match wins, losses, and win rate for the connected server.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(winLossTracker);
+
         // Pixel Garden is a Donator feature shown inside the Scout subfolder.
         MODULES.add(new AlphaModule(
                 "pixelgarden",
