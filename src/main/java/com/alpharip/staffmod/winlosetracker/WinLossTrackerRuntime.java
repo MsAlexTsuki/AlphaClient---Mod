@@ -93,6 +93,7 @@ public final class WinLossTrackerRuntime {
                 || event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
 
         updateCurrentAddress();
+        if (currentAddress.isEmpty()) return;
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.fontRendererObj == null || minecraft.gameSettings == null
                 || minecraft.gameSettings.showDebugInfo || minecraft.gameSettings.hideGUI) return;
