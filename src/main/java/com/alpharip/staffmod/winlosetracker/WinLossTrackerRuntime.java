@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import com.alpharip.staffmod.config.HudPositionConfig;
+import com.alpharip.staffmod.config.HudScaleConfig;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
