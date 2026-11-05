@@ -136,8 +136,10 @@ public final class PaletteGui extends GuiScreen {
 
     @Override
     public void handleMouseInput() throws IOException {
+        // Capture the current event delta before GuiScreen processes the event.
+        // The superclass can consume/reset the wheel event in the 1.8.9 input path.
+        int wheel = Mouse.getEventDWheel();
         super.handleMouseInput();
-        int wheel = Mouse.getDWheel();
         if (wheel == 0) {
             return;
         }
@@ -189,7 +191,18 @@ public final class PaletteGui extends GuiScreen {
             }
         }
 
-        String help = "Up/Down: Navigate  Enter/Click: Run  +: Pin  Ctrl+F: Pin selected  Esc: Close";
+        if (visible.size() > visibleRows()) {
+            int trackTop = listTop;
+            int trackHeight = listBottom - listTop;
+            int thumbHeight = Math.max(18, trackHeight * visibleRows() / visible.size());
+            int maxScroll = Math.max(1, visible.size() - visibleRows());
+            int thumbTop = trackTop + (trackHeight - thumbHeight) * scroll / maxScroll;
+            drawRect(left + panelWidth - 7, trackTop, left + panelWidth - 4, listBottom, 0xFF303641);
+            drawRect(left + panelWidth - 7, thumbTop, left + panelWidth - 4,
+                    thumbTop + thumbHeight, ACCENT);
+        }
+
+        String help = "Mouse Wheel / Up/Down: Navigate  Enter/Click: Run  +: Pin  Ctrl+F: Pin selected  Esc: Close";
         drawString(trim(status + "   " + help, panelWidth - 28), left + 14,
                 top + panelHeight - 18, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -210,9 +223,13 @@ public final class PaletteGui extends GuiScreen {
         addScreen("hud-editor", "Open HUD Editor", "Move and configure supported HUD elements.", "/hudeditor");
         addScreen("help-screen", "Open AlphaClient Help", "Open the current AlphaClient help interface.", "/alphahelp open");
         addScreen("profiles-screen", "Open Profiles", "Manage saved AlphaClient profiles.", "/profiles");
-        addScreen("staff-operations", "Open Staff Operations", "Open Staff Operations when your account is authorized.", "/staffoperations");
-        addScreen("staff-mods", "Open StaffMods", "Open the StaffMods menu when your account is authorized.", "/staffmods");
-        addScreen("staff-general", "Open StaffMods General", "Open the StaffMods General folder when authorized.", "/staffgeneral");
+        if (SupabaseCommunityService.hasStaffOperationsAccess()) {
+            addScreen("staff-operations", "Open Staff Operations", "Open Staff Operations.", "/staffoperations");
+        }
+        if (PermissionService.hasStaffModsAccess()) {
+            addScreen("staff-mods", "Open StaffMods", "Open the StaffMods menu.", "/staffmods");
+            addScreen("staff-general", "Open StaffMods General", "Open StaffMods -> General.", "/staffgeneral");
+        }
         addScreen("waypoints-screen", "Open Waypoints", "Manage saved waypoints for the active profile.", "/waypoint");
         addScreen("waypoint-visuals", "Open Waypoint Display Settings", "Configure waypoint markers, beams, labels, and sorting.", "/waypoint visuals");
         addScreen("minimap-settings", "Open Minimap Settings", "Configure the current AlphaClient minimap.", "/minimap settings");
@@ -259,14 +276,14 @@ public final class PaletteGui extends GuiScreen {
                 continue;
             }
 
-            // Founder modules and their child features must not create Palette entries
-            // for accounts without an authenticated Founder session.
-            if (module.getCategory() == AlphaModule.Category.FOUNDER && !founderSession) {
+            // Keep the Palette aligned with the module registry's effective permission checks.
+            // Locked modules and unavailable features are omitted instead of exposing their names.
+            if (!module.isUnlocked()) {
                 continue;
             }
 
             String moduleDescription = "[" + module.getCategory().getTitle() + "] " + module.getDescription();
-            if (!module.isImplemented() || !module.isUnlocked()) {
+            if (!module.isImplemented()) {
                 addStatus("module-status:" + module.getId(), module.getName(),
                         moduleDescription + " Status: " + module.getStatusLabel() + ".", "Modules");
             } else {
@@ -278,12 +295,12 @@ public final class PaletteGui extends GuiScreen {
             }
 
             for (AlphaModuleFeature feature : module.getFeatures()) {
-                if (feature == null) {
+                if (feature == null || !feature.isAvailable()) {
                     continue;
                 }
                 String description = module.getName() + " feature: " + feature.getDescription()
                         + " Status: " + feature.getStatusLabel() + ".";
-                if (feature.isImplemented() && feature.isAvailable()) {
+                if (feature.isImplemented()) {
                     addFeatureToggle(module, feature, description);
                 } else {
                     addStatus("feature-status:" + feature.getId(), feature.getName(),
@@ -343,6 +360,9 @@ public final class PaletteGui extends GuiScreen {
         if (PermissionService.hasAccess(PermissionService.Rank.MANAGER)) {
             addCommand("staff-manager", "Open Manager Folder", "Open the Manager staff folder.", "/staffmanager");
         }
+        if (PermissionService.hasAccess(PermissionService.Rank.DEVELOPER)) {
+            addCommand("staff-developer", "Open Developer Folder", "Open the Developer staff folder.", "/staffmods developer");
+        }
         if (PermissionService.hasAccess(PermissionService.Rank.OWNER)) {
             addCommand("staff-owner", "Open Owner Folder", "Open the Owner staff folder. Founder access is not included.", "/staffowner");
         }
@@ -385,7 +405,7 @@ public final class PaletteGui extends GuiScreen {
         List<Action> result = new ArrayList<Action>();
 
         for (Action action : actions) {
-            if (isFounderOnlyAction(action) && !SupabaseCommunityService.isSignedInFounder()) {
+            if (!isActionAvailable(action)) {
                 continue;
             }
             if (!"All".equals(category) && !"Recent".equals(category)
@@ -436,6 +456,97 @@ public final class PaletteGui extends GuiScreen {
             }
         });
         return result;
+    }
+
+    private boolean isActionAvailable(Action action) {
+        if (action == null) return false;
+        if (isFounderOnlyAction(action) && !SupabaseCommunityService.isSignedInFounder()) return false;
+
+        if (action.module != null && !action.module.isUnlocked()) return false;
+        if (action.feature != null && !action.feature.isAvailable()) return false;
+
+        if ("staff-operations".equals(action.id)) {
+            return SupabaseCommunityService.hasStaffOperationsAccess();
+        }
+        if ("staff-mods".equals(action.id) || "staff-general".equals(action.id)) {
+            return PermissionService.hasStaffModsAccess();
+        }
+
+        PermissionService.Rank requiredRank = rankRequiredByAction(action.id);
+        if (requiredRank != null) {
+            if (requiredRank == PermissionService.Rank.FOUNDER) {
+                return SupabaseCommunityService.isSignedInFounder();
+            }
+            if (!PermissionService.hasStaffModsAccess()
+                    && isStaffRank(requiredRank)) return false;
+            if (!PermissionService.hasAccess(requiredRank)) return false;
+            if (action.id.equals("staff-management")) {
+                return PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
+                        || PermissionService.hasAccess(PermissionService.Rank.MANAGER);
+            }
+        }
+
+        if (action.id.startsWith("module-settings:")) {
+            String moduleId = action.id.substring("module-settings:".length());
+            AlphaModule module = AlphaModuleRegistry.find(moduleId);
+            if (module == null || !module.isUnlocked()) return false;
+        }
+
+        if ("pixel-garden".equals(action.id)) {
+            return PermissionService.hasCommandPermission("menu.pixelgarden", false);
+        }
+
+        String permissionKey = commandPermissionForAction(action.id);
+        if (permissionKey != null) {
+            Boolean override = PermissionService.getCommandPermissionOverride(permissionKey);
+            if (Boolean.FALSE.equals(override)) return false;
+        }
+        return true;
+    }
+
+    private PermissionService.Rank rankRequiredByAction(String id) {
+        if ("rank-beta".equals(id)) return PermissionService.Rank.BETA;
+        if ("rank-donator".equals(id)) return PermissionService.Rank.DONATOR;
+        if ("rank-scout".equals(id)) return PermissionService.Rank.SCOUT;
+        if ("rank-rogue".equals(id)) return PermissionService.Rank.ROGUE;
+        if ("rank-elite".equals(id)) return PermissionService.Rank.ELITE;
+        if ("rank-alpha".equals(id)) return PermissionService.Rank.ALPHA;
+        if ("rank-alpha-plus".equals(id)) return PermissionService.Rank.ALPHA_PLUS;
+        if ("staff-tmod".equals(id)) return PermissionService.Rank.T_MOD;
+        if ("staff-mod".equals(id)) return PermissionService.Rank.MOD;
+        if ("staff-srmod".equals(id)) return PermissionService.Rank.SR_MOD;
+        if ("staff-admin".equals(id)) return PermissionService.Rank.ADMIN;
+        if ("staff-sradmin".equals(id)) return PermissionService.Rank.SR_ADMIN;
+        if ("staff-platform-admin".equals(id)) return PermissionService.Rank.PLAT_ADMIN;
+        if ("staff-manager".equals(id)) return PermissionService.Rank.MANAGER;
+        if ("staff-developer".equals(id)) return PermissionService.Rank.DEVELOPER;
+        if ("staff-owner".equals(id)) return PermissionService.Rank.OWNER;
+        if ("staff-founder".equals(id)) return PermissionService.Rank.FOUNDER;
+        return null;
+    }
+
+    private boolean isStaffRank(PermissionService.Rank rank) {
+        return rank == PermissionService.Rank.T_MOD || rank == PermissionService.Rank.MOD
+                || rank == PermissionService.Rank.SR_MOD || rank == PermissionService.Rank.ADMIN
+                || rank == PermissionService.Rank.SR_ADMIN || rank == PermissionService.Rank.PLAT_ADMIN
+                || rank == PermissionService.Rank.MANAGER || rank == PermissionService.Rank.DEVELOPER
+                || rank == PermissionService.Rank.OWNER || rank == PermissionService.Rank.FOUNDER;
+    }
+
+    private String commandPermissionForAction(String id) {
+        if ("fps-settings".equals(id)) return "command.fpshud";
+        if ("cps-settings".equals(id)) return "command.cpshud";
+        if ("potion-hud-settings".equals(id)) return "hud.potion";
+        if ("autogg-command".equals(id)) return "command.autogg";
+        if ("autoreconnect-command".equals(id)) return "command.autoreconnect";
+        if ("playtime-command".equals(id)) return "command.playtime";
+        if ("session-timer-command".equals(id)) return "command.sessiontimer";
+        if ("afk-timer-command".equals(id)) return "command.afktimer";
+        if ("fullbright-toggle".equals(id)) return "command.fullbright";
+        if ("autotool-command".equals(id)) return "command.autotool";
+        if ("inventory-search-command".equals(id)) return "command.inventorysearch";
+        if ("minimap-toggle".equals(id)) return "command.minimap";
+        return null;
     }
 
     private boolean isFounderOnlyAction(Action action) {
@@ -515,8 +626,10 @@ public final class PaletteGui extends GuiScreen {
         }
 
         Action action = visible.get(selected);
-        if (isFounderOnlyAction(action) && !SupabaseCommunityService.isSignedInFounder()) {
-            status = "This action requires the authenticated Founder account.";
+        if (!isActionAvailable(action)) {
+            status = isFounderOnlyAction(action)
+                    ? "This action requires the authenticated Founder account."
+                    : "Your current AlphaClient permissions do not allow this action.";
             return;
         }
         if (action.statusOnly) {
