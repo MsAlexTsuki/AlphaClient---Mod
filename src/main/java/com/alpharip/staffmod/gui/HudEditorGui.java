@@ -133,21 +133,7 @@ public class HudEditorGui extends AlphaGuiScreen {
 
         if (isCpsModuleEnabled()) {
             String cps = CpsMod.getDisplayText();
-            AlphaModule winLossModule = AlphaModuleRegistry.find("win-loss-tracker");
-        int wlX = HudPositionConfig.getWinLossX(), wlY = HudPositionConfig.getWinLossY();
-        int wlW = WinLossTrackerRuntime.getHudWidth(mc), wlH = WinLossTrackerRuntime.getHudHeight();
-        if (winLossModule != null && winLossModule.isEnabled() && winLossModule.isUnlocked()
-                && mouseButton == 0 && mouseX >= wlX && mouseX <= wlX + wlW
-                && mouseY >= wlY && mouseY <= wlY + wlH) {
-            dragging = true;
-            winLossDragging = true;
-            dragX = mouseX - wlX;
-            dragY = mouseY - wlY;
-            selectedHud = "win-loss-tracker";
-            return;
-        }
-
-        int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
+            int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
             int cw = fontRendererObj.getStringWidth(cps) + 10;
             float scale = HudScaleConfig.get("cps");
             GlStateManager.pushMatrix(); GlStateManager.translate(cx, cy, 0.0F); GlStateManager.scale(scale, scale, 1.0F);
@@ -267,6 +253,20 @@ public class HudEditorGui extends AlphaGuiScreen {
             potionDragging = true;
             dragX = mouseX - phx;
             dragY = mouseY - phy;
+            return;
+        }
+
+        AlphaModule winLossModule = AlphaModuleRegistry.find("win-loss-tracker");
+        int wlX = HudPositionConfig.getWinLossX(), wlY = HudPositionConfig.getWinLossY();
+        int wlW = WinLossTrackerRuntime.getHudWidth(mc), wlH = WinLossTrackerRuntime.getHudHeight();
+        if (winLossModule != null && winLossModule.isEnabled() && winLossModule.isUnlocked()
+                && mouseButton == 0 && mouseX >= wlX && mouseX <= wlX + wlW
+                && mouseY >= wlY && mouseY <= wlY + wlH) {
+            dragging = true;
+            winLossDragging = true;
+            dragX = mouseX - wlX;
+            dragY = mouseY - wlY;
+            selectedHud = "win-loss-tracker";
             return;
         }
 
