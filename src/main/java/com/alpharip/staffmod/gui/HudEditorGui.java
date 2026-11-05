@@ -11,6 +11,7 @@ import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.hud.InfoHudModules;
+import com.alpharip.staffmod.winlosetracker.WinLossTrackerRuntime;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.gui.GuiButton;
@@ -33,6 +34,7 @@ public class HudEditorGui extends AlphaGuiScreen {
     private boolean playtimeTrackerDragging;
     private boolean armorDragging;
     private boolean potionDragging;
+    private boolean winLossDragging;
     private int dragX, dragY;
     private boolean scaleDragging;
     private String scaleTarget;
@@ -120,9 +122,32 @@ public class HudEditorGui extends AlphaGuiScreen {
 
         InfoHudModules.renderEditorPreviews();
 
+        AlphaModule winLossModule = AlphaModuleRegistry.find("win-loss-tracker");
+        if (winLossModule != null && winLossModule.isEnabled() && winLossModule.isUnlocked()) {
+            WinLossTrackerRuntime.renderEditorPreview(width, height);
+            if ("win-loss-tracker".equals(selectedHud)) {
+                drawScaleHandle(HudPositionConfig.getWinLossX(), HudPositionConfig.getWinLossY(),
+                        WinLossTrackerRuntime.getHudWidth(mc), WinLossTrackerRuntime.getHudHeight());
+            }
+        }
+
         if (isCpsModuleEnabled()) {
             String cps = CpsMod.getDisplayText();
-            int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
+            AlphaModule winLossModule = AlphaModuleRegistry.find("win-loss-tracker");
+        int wlX = HudPositionConfig.getWinLossX(), wlY = HudPositionConfig.getWinLossY();
+        int wlW = WinLossTrackerRuntime.getHudWidth(mc), wlH = WinLossTrackerRuntime.getHudHeight();
+        if (winLossModule != null && winLossModule.isEnabled() && winLossModule.isUnlocked()
+                && mouseButton == 0 && mouseX >= wlX && mouseX <= wlX + wlW
+                && mouseY >= wlY && mouseY <= wlY + wlH) {
+            dragging = true;
+            winLossDragging = true;
+            dragX = mouseX - wlX;
+            dragY = mouseY - wlY;
+            selectedHud = "win-loss-tracker";
+            return;
+        }
+
+        int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
             int cw = fontRendererObj.getStringWidth(cps) + 10;
             float scale = HudScaleConfig.get("cps");
             GlStateManager.pushMatrix(); GlStateManager.translate(cx, cy, 0.0F); GlStateManager.scale(scale, scale, 1.0F);
@@ -296,13 +321,19 @@ public class HudEditorGui extends AlphaGuiScreen {
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
         if (scaleDragging && button == 0) { HudScaleConfig.set(scaleTarget, scaleStartValue + (scaleStartY - mouseY) * 0.01F); return; }
         if (dragging && button == 0) {
-            if (!afkTimerDragging && !fpsDragging && !pingDragging && !cpsDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !hasBhopAccess()) {
+            if (!afkTimerDragging && !fpsDragging && !pingDragging && !cpsDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !winLossDragging && !hasBhopAccess()) {
                 dragging = false;
                 return;
             }
             int x = mouseX - dragX;
             int y = mouseY - dragY;
-            if (afkTimerDragging) {
+            if (winLossDragging) {
+                int itemWidth = WinLossTrackerRuntime.getHudWidth(mc);
+                int itemHeight = WinLossTrackerRuntime.getHudHeight();
+                x = Math.max(0, Math.min(width - itemWidth, x));
+                y = Math.max(0, Math.min(height - itemHeight, y));
+                HudPositionConfig.setWinLossPosition(x, y);
+            } else if (afkTimerDragging) {
                 int itemWidth = fontRendererObj.getStringWidth("AFK 00:00") + 10;
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
@@ -377,6 +408,7 @@ public class HudEditorGui extends AlphaGuiScreen {
         playtimeTrackerDragging = false;
         armorDragging = false;
         potionDragging = false;
+        winLossDragging = false;
         super.mouseReleased(mouseX, mouseY, state);
     }
 
