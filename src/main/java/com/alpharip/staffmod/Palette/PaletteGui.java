@@ -9,6 +9,7 @@ import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraftforge.client.ClientCommandHandler;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
@@ -715,7 +716,7 @@ public final class PaletteGui extends GuiScreen {
                 return;
             }
             mc.displayGuiScreen(null);
-            mc.thePlayer.sendChatMessage(action.command);
+            ClientCommandHandler.instance.executeCommand(mc.thePlayer, action.command);
         }
     }
 
