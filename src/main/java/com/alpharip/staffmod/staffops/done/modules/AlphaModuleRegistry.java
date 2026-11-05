@@ -536,6 +536,15 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(cps);
 
+        MODULES.add(new AlphaModule(
+                "combo-counter",
+                "Combo Counter",
+                "Shows consecutive confirmed player hits and resets when you are hit.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
+
         // Bhop is registered for access checks/settings only. The StaffMods menu
         // explicitly exposes it in General and filters it from every rank folder.
         MODULES.add(new AlphaModule(
