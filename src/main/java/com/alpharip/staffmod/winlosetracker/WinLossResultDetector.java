@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public final class WinLossResultDetector {
     private static final Pattern FORMATTING = Pattern.compile("(?i)\\u00a7[0-9A-FK-OR]");
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
-    private static final Pattern MATCH_RESULT = Pattern.compile("winner:\\s*([a-zA-Z0-9_]{1,16})\\s*\\|\\s*loser:\\s*([a-zA-Z0-9_]{1,16})", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MATCH_RESULT = Pattern.compile("winner:\\s*([a-zA-Z0-9_]{1,16})[^a-zA-Z0-9_\\r\\n]{1,16}loser:\\s*([a-zA-Z0-9_]{1,16})", Pattern.CASE_INSENSITIVE);
     private static final Pattern WIN = Pattern.compile(
             "^(?:(?:match|game|round|duel) result:\\s*)?"
             + "(?:victory!?|you (?:have )?won(?: the (?:match|game|round|duel))!?|"
