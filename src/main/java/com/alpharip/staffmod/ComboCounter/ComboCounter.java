@@ -22,6 +22,7 @@ import java.util.UUID;
 
 /** Counts confirmed consecutive hits and resets when the local player is damaged. */
 public final class ComboCounter {
+    private static ComboCounter instance;
     private static final long HIT_CONFIRMATION_TIMEOUT_MS = 1000L;
     private static final String[] COLOR_NAMES = {
             "White", "Red", "Orange", "Yellow", "Green",
@@ -42,7 +43,10 @@ public final class ComboCounter {
     private boolean loaded;
 
     public ComboCounter() {
+        instance = this;
     }
+
+    public static ComboCounter getInstance() { return instance; }
 
     public void load() {
         if (loaded) return;
