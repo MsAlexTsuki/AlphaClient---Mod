@@ -166,6 +166,17 @@ public final class ComboCounter {
         HudPositionConfig.setComboCounterPosition(hudX, hudY);
     }
 
+    public void resetHudSettings() {
+        load();
+        hudX = 5;
+        hudY = 44;
+        colorIndex = 0;
+        showBackground = true;
+        HudPositionConfig.setComboCounterPosition(hudX, hudY);
+        HudPositionConfig.setComboCounterColorIndex(colorIndex);
+        HudPositionConfig.setComboCounterShowBackground(showBackground);
+    }
+
     public boolean isShowBackground() { load(); return showBackground; }
 
     public void setShowBackground(boolean value) {
