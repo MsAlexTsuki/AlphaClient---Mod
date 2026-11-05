@@ -180,6 +180,15 @@ public class HudEditorGui extends AlphaGuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         if (mouseButton == 0) selectedHud = null;
         if (mouseButton == 0) {
+            AlphaModule winLossScaleModule = AlphaModuleRegistry.find("win-loss-tracker");
+            int winLossX = HudPositionConfig.getWinLossX(), winLossY = HudPositionConfig.getWinLossY();
+            if (winLossScaleModule != null && winLossScaleModule.isEnabled() && winLossScaleModule.isUnlocked()
+                    && scaleHandleHit(winLossX, winLossY, WinLossTrackerRuntime.getHudWidth(mc),
+                    WinLossTrackerRuntime.getHudHeight(), mouseX, mouseY)) {
+                selectedHud = "win-loss-tracker";
+                beginScale("win-loss-tracker", mouseY);
+                return;
+            }
             if (hasBhopAccess() && BhopHud.isEnabled() && scaleHandleHit(BhopHud.getHudX(), BhopHud.getHudY(), (int)(BhopHud.getHudWidth() * BhopHud.getVisualScale() * HudScaleConfig.get("bhop")), 20, mouseX, mouseY)) { selectedHud = "bhop"; beginScale("bhop", mouseY); return; }
             if (AfkTimerHud.isEnabled() && scaleHandleHit(AfkTimerHud.getHudX(), AfkTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("AFK 00:00") + 10) * HudScaleConfig.get("afkTimer")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "afkTimer"; beginScale("afkTimer", mouseY); return; }
             if (SessionTimerHud.isEnabled() && scaleHandleHit(SessionTimerHud.getHudX(), SessionTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("SESSION 00:00:00") + 10) * HudScaleConfig.get("sessionTimer")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "sessionTimer"; beginScale("sessionTimer", mouseY); return; }
