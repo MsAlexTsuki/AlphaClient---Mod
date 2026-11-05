@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public final class WinLossResultDetector {
     private static final Pattern FORMATTING = Pattern.compile("(?i)\\u00a7[0-9A-FK-OR]");
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
-    private static final Pattern MATCH_RESULT = Pattern.compile("^winner:\\s*(.+?)\\s*\\|\\s*loser:\\s*(.+?)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MATCH_RESULT = Pattern.compile("winner:\\s*([a-zA-Z0-9_]{1,16})\\s*\\|\\s*loser:\\s*([a-zA-Z0-9_]{1,16})", Pattern.CASE_INSENSITIVE);
     private static final Pattern WIN = Pattern.compile(
             "^(?:(?:match|game|round|duel) result:\\s*)?"
             + "(?:victory!?|you (?:have )?won(?: the (?:match|game|round|duel))!?|"
@@ -25,15 +25,13 @@ public final class WinLossResultDetector {
     public static WinLossResult detect(String message, String playerName) {
         if (message != null && playerName != null && !playerName.trim().isEmpty()) {
             String cleanedMessage = FORMATTING.matcher(message).replaceAll("");
-            String[] lines = cleanedMessage.split("\\r?\\n");
-            for (String line : lines) {
-                String cleanedLine = WHITESPACE.matcher(line.toLowerCase(Locale.ROOT)).replaceAll(" ").trim();
-                java.util.regex.Matcher match = MATCH_RESULT.matcher(cleanedLine);
-                if (!match.matches()) continue;
-
-                if (match.group(1).trim().equalsIgnoreCase(playerName.trim())) return WinLossResult.WIN;
-                if (match.group(2).trim().equalsIgnoreCase(playerName.trim())) return WinLossResult.LOSS;
-                return null;
+            cleanedMessage = cleanedMessage.replace('\u00a0', ' ');
+            java.util.regex.Matcher match = MATCH_RESULT.matcher(cleanedMessage);
+            while (match.find()) {
+                String winner = match.group(1).trim();
+                String loser = match.group(2).trim();
+                if (winner.equalsIgnoreCase(playerName.trim())) return WinLossResult.WIN;
+                if (loser.equalsIgnoreCase(playerName.trim())) return WinLossResult.LOSS;
             }
         }
         return detect(message);
