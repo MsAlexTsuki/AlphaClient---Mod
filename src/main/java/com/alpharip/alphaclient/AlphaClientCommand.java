@@ -1,6 +1,7 @@
 package com.alpharip.alphaclient;
 
 import com.alpharip.staffmod.cps.CpsMod;
+import com.alpharip.staffmod.ComboCounter.ComboCounterSettingsGui;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.gui.AlphaPermsGui;
 import com.alpharip.staffmod.gui.AlphaHelpGui;
@@ -64,6 +65,11 @@ public final class AlphaClientCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         String route = commandName.toLowerCase(Locale.ROOT);
+
+        if ("combocounter".equals(route)) {
+            openSettings(sender, "combo-counter");
+            return;
+        }
 
         if ("personal".equals(route)) {
             PersonalUtilityFeatures.handleCommand(sender, args);
@@ -1460,6 +1466,7 @@ public final class AlphaClientCommand extends CommandBase {
         GuiScreen target = null;
         if ("fps".equals(id)) target = new FpsSettingsGui(parent);
         else if ("cps".equals(id)) target = new CpsSettingsGui(parent);
+        else if ("combo-counter".equals(id)) target = new ComboCounterSettingsGui(parent);
         else if ("playtime".equals(id) || "playtime-tracker".equals(id)) target = new PlaytimeTrackerSettingsGui(parent);
         else if ("sessiontimer".equals(id) || "session-timer".equals(id)) target = new SessionTimerSettingsGui(parent);
         else if ("afktimer".equals(id) || "afk-timer".equals(id)) target = new AfkTimerSettingsGui(parent);
