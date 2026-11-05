@@ -145,7 +145,13 @@ public final class PaletteGui extends GuiScreen {
 
         selected = index;
         Action action = visible.get(index);
-        if (mouseX >= left + panelWidth - 43) {
+        // Match the favorite hitbox to the pin glyph itself, with a small
+        // padding on each side. The rest of the row remains an action click.
+        int pinX = left + panelWidth - 31;
+        int pinWidth = fontRendererObj.getStringWidth("*");
+        int pinLeft = pinX - 5;
+        int pinRight = pinX + pinWidth + 5;
+        if (mouseX >= pinLeft && mouseX < pinRight) {
             toggleFavorite(action);
         } else {
             executeSelected();
