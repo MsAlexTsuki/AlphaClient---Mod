@@ -64,7 +64,7 @@ public final class WinLossTrackerRuntime {
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event) {
         if (!initialized) initialize();
-        if (!isModuleEnabled() || event == null || event.message == null || event.type == 2) return;
+        if (event == null || event.message == null || event.type == 2) return;
 
         updateCurrentAddress();
         if (currentAddress.isEmpty()) return;
