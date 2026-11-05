@@ -197,16 +197,16 @@ public final class WinLossTrackerRuntime {
         minecraft.fontRendererObj.drawString("LIVE", width - 30, 7, 0xFF8D929E, false);
         int rowY = 21;
         if (showCurrent) {
-            drawStatistics(minecraft, current, x + 8, rowY);
+            drawStatistics(minecraft, current, 8, rowY);
             rowY += 11;
         }
         if (showOverall) {
             if (showCurrent) {
                 String summary = "ALL " + overall.getWins() + "/" + overall.getLosses()
                         + "  " + String.format(Locale.ROOT, "%.1f%%", overall.getWinRate());
-                minecraft.fontRendererObj.drawString(summary, x + 8, rowY, 0xFFB8BEC9, false);
+                minecraft.fontRendererObj.drawString(summary, 8, rowY, 0xFFB8BEC9, false);
             } else {
-                drawStatistics(minecraft, overall, x + 8, rowY);
+                drawStatistics(minecraft, overall, 8, rowY);
             }
             rowY += 11;
         }
@@ -217,7 +217,7 @@ public final class WinLossTrackerRuntime {
                 String line = address + "  W/L " + stats.getWins() + "/" + stats.getLosses()
                         + "  " + String.format(Locale.ROOT, "%.1f%%", stats.getWinRate());
                 line = minecraft.fontRendererObj.trimStringToWidth(line, width - 16);
-                minecraft.fontRendererObj.drawString(line, x + 8, rowY, 0xFF9CA3AF, false);
+                minecraft.fontRendererObj.drawString(line, 8, rowY, 0xFF9CA3AF, false);
                 rowY += 11;
             }
         }
