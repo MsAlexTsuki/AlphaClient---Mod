@@ -5,6 +5,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.GlStateManager;
 import com.alpharip.staffmod.config.HudPositionConfig;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
@@ -146,7 +147,9 @@ public final class WinLossTrackerRuntime {
                 new WinLossStatistics(28, 12), null, "", TRACKER.getSettings());
     }
 
-    public static int getHudWidth(Minecraft minecraft) { return 230; }
+    public static int getHudWidth(Minecraft minecraft) {
+        return (int) Math.ceil(230 * HudScaleConfig.get("win-loss-tracker"));
+    }
 
     public static int getHudHeight() {
         WinLossTrackerSettings settings = TRACKER.getSettings();
@@ -159,7 +162,8 @@ public final class WinLossTrackerRuntime {
         }
         int rows = (settings.isShowCurrentAddressStatistics() ? 1 : 0)
                 + (settings.isShowOverallStatistics() ? 1 : 0) + extraRows;
-        return Math.max(42, 27 + rows * 11);
+        int baseHeight = Math.max(42, 27 + rows * 11);
+        return (int) Math.ceil(baseHeight * HudScaleConfig.get("win-loss-tracker"));
     }
 
     private static void drawHud(Minecraft minecraft, WinLossStatistics current,
@@ -180,13 +184,18 @@ public final class WinLossTrackerRuntime {
         }
         int rows = (showCurrent ? 1 : 0) + (showOverall ? 1 : 0) + extraRows;
         int height = Math.max(42, 27 + rows * 11);
-        int width = getHudWidth(minecraft);
-        Gui.drawRect(x, y, x + width, y + height, 0xD9101219);
-        Gui.drawRect(x, y, x + width, y + 2, 0xFFFFD866);
-        Gui.drawRect(x, y + 3, x + 1, y + height - 1, 0xAAFFD866);
-        minecraft.fontRendererObj.drawString("W&L TRACKER", x + 8, y + 7, 0xFFFFD866, false);
-        minecraft.fontRendererObj.drawString("LIVE", x + width - 30, y + 7, 0xFF8D929E, false);
-        int rowY = y + 21;
+        int width = 230;
+        float scale = HudScaleConfig.get("win-loss-tracker");
+
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, 0.0F);
+        GlStateManager.scale(scale, scale, 1.0F);
+        Gui.drawRect(0, 0, width, height, 0xD9101219);
+        Gui.drawRect(0, 0, width, 2, 0xFFFFD866);
+        Gui.drawRect(0, 3, 1, height - 1, 0xAAFFD866);
+        minecraft.fontRendererObj.drawString("W&L TRACKER", 8, 7, 0xFFFFD866, false);
+        minecraft.fontRendererObj.drawString("LIVE", width - 30, 7, 0xFF8D929E, false);
+        int rowY = 21;
         if (showCurrent) {
             drawStatistics(minecraft, current, x + 8, rowY);
             rowY += 11;
@@ -212,6 +221,7 @@ public final class WinLossTrackerRuntime {
                 rowY += 11;
             }
         }
+        GlStateManager.popMatrix();
     }
 
     private static void drawStatistics(Minecraft minecraft, WinLossStatistics statistics, int x, int y) {
