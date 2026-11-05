@@ -86,6 +86,18 @@ public final class WinLossTracker {
         return profile == null ? new WinLossStatistics(0, 0) : profile.getOverallStatistics();
     }
 
+    /** Returns totals across every recorded server profile. */
+    public synchronized WinLossStatistics getGlobalStatistics() {
+        int wins = 0;
+        int losses = 0;
+        for (WinLossServerProfile profile : profiles.values()) {
+            WinLossStatistics statistics = profile.getOverallStatistics();
+            wins += statistics.getWins();
+            losses += statistics.getLosses();
+        }
+        return new WinLossStatistics(wins, losses);
+    }
+
     public synchronized boolean addAddressToProfile(String profileId, String address) {
         WinLossServerProfile profile = getServerProfile(profileId);
         String normalized = WinLossServerProfile.normalizeAddress(address);
