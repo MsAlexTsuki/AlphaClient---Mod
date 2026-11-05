@@ -34,6 +34,8 @@ public class HudPositionConfig {
     private static final int DEFAULT_FPS_Y = 6;
     private static final int DEFAULT_PING_X = 6;
     private static final int DEFAULT_PING_Y = 22;
+    private static final int DEFAULT_WINLOSS_X = 6;
+    private static final int DEFAULT_WINLOSS_Y = 50;
     private static final int DEFAULT_PING_COLOR_INDEX = 0;
     private static final boolean DEFAULT_PING_SHOW_BACKGROUND = true;
     private static final int DEFAULT_FPS_COLOR_INDEX = 0;
@@ -82,6 +84,8 @@ public class HudPositionConfig {
     private static boolean fpsShowBackground = DEFAULT_FPS_SHOW_BACKGROUND;
     private static int pingX = DEFAULT_PING_X;
     private static int pingY = DEFAULT_PING_Y;
+    private static int winLossX = DEFAULT_WINLOSS_X;
+    private static int winLossY = DEFAULT_WINLOSS_Y;
     private static int pingColorIndex = DEFAULT_PING_COLOR_INDEX;
     private static boolean pingShowBackground = DEFAULT_PING_SHOW_BACKGROUND;
     private static int cpsColorIndex = DEFAULT_CPS_COLOR_INDEX;
@@ -269,6 +273,8 @@ public class HudPositionConfig {
             fpsShowBackground = Boolean.parseBoolean(properties.getProperty("fpsShowBackground", String.valueOf(DEFAULT_FPS_SHOW_BACKGROUND)));
             pingX = getInt(properties, "pingX", DEFAULT_PING_X);
             pingY = getInt(properties, "pingY", DEFAULT_PING_Y);
+            winLossX = Math.max(0, getInt(properties, "winLossX", DEFAULT_WINLOSS_X));
+            winLossY = Math.max(0, getInt(properties, "winLossY", DEFAULT_WINLOSS_Y));
             pingColorIndex = getInt(properties, "pingColorIndex", DEFAULT_PING_COLOR_INDEX);
             if (pingColorIndex < 0 || pingColorIndex > 9) pingColorIndex = DEFAULT_PING_COLOR_INDEX;
             pingShowBackground = Boolean.parseBoolean(properties.getProperty("pingShowBackground", String.valueOf(DEFAULT_PING_SHOW_BACKGROUND)));
@@ -382,6 +388,8 @@ public class HudPositionConfig {
         properties.setProperty("fpsShowBackground", String.valueOf(fpsShowBackground));
         properties.setProperty("pingX", String.valueOf(pingX));
         properties.setProperty("pingY", String.valueOf(pingY));
+        properties.setProperty("winLossX", String.valueOf(winLossX));
+        properties.setProperty("winLossY", String.valueOf(winLossY));
         properties.setProperty("pingColorIndex", String.valueOf(pingColorIndex));
         properties.setProperty("pingShowBackground", String.valueOf(pingShowBackground));
 
@@ -733,6 +741,10 @@ public class HudPositionConfig {
     public static void setPingColorIndex(int index) { load(); pingColorIndex = Math.max(0, Math.min(9, index)); save(); }
     public static void setPingShowBackground(boolean value) { load(); pingShowBackground = value; save(); }
 
+    public static int getWinLossX() { load(); return winLossX; }
+    public static int getWinLossY() { load(); return winLossY; }
+    public static void setWinLossPosition(int x, int y) { load(); winLossX = Math.max(0, x); winLossY = Math.max(0, y); save(); }
+
     public static int getFpsX() {
         load();
         return fpsX;
@@ -775,6 +787,8 @@ public class HudPositionConfig {
         fpsY = DEFAULT_FPS_Y;
         pingX = DEFAULT_PING_X;
         pingY = DEFAULT_PING_Y;
+        winLossX = DEFAULT_WINLOSS_X;
+        winLossY = DEFAULT_WINLOSS_Y;
         pingColorIndex = DEFAULT_PING_COLOR_INDEX;
         pingShowBackground = DEFAULT_PING_SHOW_BACKGROUND;
         save();
