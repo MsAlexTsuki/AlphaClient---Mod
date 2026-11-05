@@ -103,8 +103,7 @@ public final class WinLossTrackerRuntime {
         WinLossServerProfile profile = TRACKER.findProfileByAddress(currentAddress);
         WinLossStatistics current = profile == null
                 ? new WinLossStatistics(0, 0) : profile.getAddressStatistics(currentAddress);
-        WinLossStatistics overall = profile == null
-                ? new WinLossStatistics(0, 0) : profile.getOverallStatistics();
+        WinLossStatistics overall = TRACKER.getGlobalStatistics();
         drawHud(minecraft, current, overall, profile, currentAddress, TRACKER.getSettings());
     }
 
