@@ -116,12 +116,29 @@ public final class PaletteGui extends GuiScreen {
         if (selectCategory(mouseX, mouseY)) {
             return;
         }
-        if (mouseY < listTop || mouseY >= listBottom) {
+
+        // Ignore clicks outside the actual action rows. Without the horizontal
+        // bounds, clicks elsewhere on the screen can activate a row by Y alone.
+        int rowLeft = left + 12;
+        int rowRight = left + panelWidth - 12;
+        if (mouseX < rowLeft || mouseX >= rowRight
+                || mouseY < listTop || mouseY >= listBottom) {
+            return;
+        }
+
+        int row = (mouseY - listTop) / ROW_HEIGHT;
+        if (row < 0 || row >= visibleRows()) {
+            return;
+        }
+
+        int rowTop = listTop + row * ROW_HEIGHT;
+        int rowBottom = Math.min(rowTop + ROW_HEIGHT, listBottom);
+        if (mouseY < rowTop || mouseY >= rowBottom) {
             return;
         }
 
         List<Action> visible = getFilteredActions();
-        int index = scroll + (mouseY - listTop) / ROW_HEIGHT;
+        int index = scroll + row;
         if (index < 0 || index >= visible.size()) {
             return;
         }
@@ -137,17 +154,28 @@ public final class PaletteGui extends GuiScreen {
 
     @Override
     public void handleMouseInput() throws IOException {
-        // Capture the current event delta before GuiScreen processes the event.
-        // The superclass can consume/reset the wheel event in the 1.8.9 input path.
-        int wheel = Mouse.getEventDWheel();
-        super.handleMouseInput();
-        if (wheel == 0) {
-            return;
+        // Use the accumulated wheel delta; getEventDWheel can be zero on the
+        // GUI callback that receives the input on some 1.8.9/LWJGL paths.
+        int wheel = Mouse.getDWheel();
+
+        int mouseX = Mouse.getX() * width / mc.displayWidth;
+        int mouseY = height - Mouse.getY() * height / mc.displayHeight - 1;
+
+        if (wheel != 0
+                && mouseX >= left + 10 && mouseX < left + panelWidth - 10
+                && mouseY >= listTop && mouseY < listBottom) {
+            int steps = Math.max(1, Math.abs(wheel) / 120);
+            int direction = wheel > 0 ? -1 : 1;
+            int maximum = Math.max(0, getFilteredActions().size() - visibleRows());
+            scroll = Math.max(0, Math.min(maximum, scroll + direction * steps));
+
+            // Keep the selected action inside the newly visible window.
+            // clampSelection() alone would pull scroll back to the old selection.
+            selected = Math.max(scroll,
+                    Math.min(selected, scroll + visibleRows() - 1));
         }
 
-        int maximum = Math.max(0, getFilteredActions().size() - visibleRows());
-        scroll = Math.max(0, Math.min(maximum, scroll + (wheel > 0 ? -1 : 1)));
-        clampSelection();
+        super.handleMouseInput();
     }
 
     @Override
