@@ -29,9 +29,9 @@ public final class ComboCounterSettingsGui extends AlphaGuiScreen {
         bottom = Math.min(height - 12, top + 160);
 
         buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 58, 260, 20,
-                "HUD BACKGROUND: " + (ComboCounterSettingsAccess.isShowBackground() ? "ON" : "OFF")));
+                "HUD BACKGROUND: " + (ComboCounter.getInstance().isShowBackground() ? "ON" : "OFF")));
         buttonList.add(new AlphaButton(COLOR, left + 20, top + 86, 260, 20,
-                "TEXT COLOR: " + ComboCounterSettingsAccess.getColorName()));
+                "TEXT COLOR: " + ComboCounter.getInstance().getColorName()));
         buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
@@ -53,9 +53,9 @@ public final class ComboCounterSettingsGui extends AlphaGuiScreen {
             return;
         }
         if (button.id == BACKGROUND) {
-            ComboCounterSettingsAccess.setShowBackground(!ComboCounterSettingsAccess.isShowBackground());
+            ComboCounter.getInstance().setShowBackground(!ComboCounter.getInstance().isShowBackground());
         } else if (button.id == COLOR) {
-            ComboCounterSettingsAccess.cycleColor();
+            ComboCounter.getInstance().cycleColor();
         } else {
             return;
         }
