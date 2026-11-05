@@ -828,6 +828,8 @@ public class HudPositionConfig {
         fpsShowBackground = DEFAULT_FPS_SHOW_BACKGROUND;
         pingX = DEFAULT_PING_X;
         pingY = DEFAULT_PING_Y;
+        winLossX = DEFAULT_WINLOSS_X;
+        winLossY = DEFAULT_WINLOSS_Y;
         pingColorIndex = DEFAULT_PING_COLOR_INDEX;
         pingShowBackground = DEFAULT_PING_SHOW_BACKGROUND;
         cpsColorIndex = DEFAULT_CPS_COLOR_INDEX;
