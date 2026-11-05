@@ -8,6 +8,7 @@ import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.config.HudScaleConfig;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
+import com.alpharip.staffmod.ComboCounter.ComboCounter;
 import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.hud.InfoHudModules;
 import com.alpharip.staffmod.modules.AlphaModule;
@@ -27,6 +28,7 @@ public class HudEditorGui extends AlphaGuiScreen {
     private boolean fpsDragging;
     private boolean pingDragging;
     private boolean cpsDragging;
+    private boolean comboDragging;
     private boolean afkTimerDragging;
     private boolean sessionTimerDragging;
     private boolean playtimeTrackerDragging;
@@ -55,6 +57,11 @@ public class HudEditorGui extends AlphaGuiScreen {
         return module != null && module.isEnabled() && module.isUnlocked();
     }
 
+    private static boolean isComboModuleEnabled() {
+        AlphaModule module = AlphaModuleRegistry.find("combo-counter");
+        return module != null && module.isEnabled() && module.isUnlocked() && ComboCounter.getInstance() != null;
+    }
+
     private static boolean isPingModuleEnabled() {
         AlphaModule module = AlphaModuleRegistry.find("ping");
         return module != null && module.isEnabled() && module.isUnlocked();
@@ -66,6 +73,7 @@ public class HudEditorGui extends AlphaGuiScreen {
         FpsMod.loadHudPosition();
         PingMod.load();
         CpsMod.load();
+        if (ComboCounter.getInstance() != null) ComboCounter.getInstance().load();
         InfoHudModules.load();
         buttonList.clear();
         int w = 132, gap = 10, x = (width - (w * 2 + gap)) / 2, y = height - 38;
@@ -128,6 +136,20 @@ public class HudEditorGui extends AlphaGuiScreen {
             fontRendererObj.drawStringWithShadow(cps, 0, 0, CpsMod.getTextColor());
             GlStateManager.popMatrix();
         }
+        if (isComboModuleEnabled()) {
+            ComboCounter combo = ComboCounter.getInstance();
+            String comboText = combo.getDisplayText();
+            int comboX = combo.getHudX(), comboY = combo.getHudY();
+            int comboWidth = fontRendererObj.getStringWidth(comboText) + 10;
+            float comboScale = HudScaleConfig.get("comboCounter");
+            GlStateManager.pushMatrix(); GlStateManager.translate(comboX, comboY, 0.0F); GlStateManager.scale(comboScale, comboScale, 1.0F);
+            if (combo.isShowBackground()) {
+                drawRect(-3, -3, comboWidth, fontRendererObj.FONT_HEIGHT + 3, 0x990A0C11);
+                drawRect(-3, -3, comboWidth, -2, 0xFFFFD866);
+            }
+            fontRendererObj.drawStringWithShadow(comboText, 0, 0, combo.getTextColor());
+            GlStateManager.popMatrix();
+        }
         if (hasBhopAccess() && BhopHud.isEnabled()) drawScaleHandle(BhopHud.getHudX(), BhopHud.getHudY(), (int)(BhopHud.getHudWidth() * BhopHud.getVisualScale() * HudScaleConfig.get("bhop")), 20);
         if (AfkTimerHud.isEnabled()) drawScaleHandle(AfkTimerHud.getHudX(), AfkTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("AFK 00:00") + 10) * HudScaleConfig.get("afkTimer")), fontRendererObj.FONT_HEIGHT + 6);
         if (SessionTimerHud.isEnabled()) drawScaleHandle(SessionTimerHud.getHudX(), SessionTimerHud.getHudY(), (int)((fontRendererObj.getStringWidth("SESSION 00:00:00") + 10) * HudScaleConfig.get("sessionTimer")), fontRendererObj.FONT_HEIGHT + 6);
@@ -135,6 +157,7 @@ public class HudEditorGui extends AlphaGuiScreen {
         if (isFpsModuleEnabled()) drawScaleHandle(FpsMod.getHudX(), FpsMod.getHudY(), (int)((fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10) * HudScaleConfig.get("fps")), fontRendererObj.FONT_HEIGHT + 6);
         if (isPingModuleEnabled()) drawScaleHandle(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6);
         if (isCpsModuleEnabled()) drawScaleHandle(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6);
+        if (isComboModuleEnabled()) drawScaleHandle(ComboCounter.getInstance().getHudX(), ComboCounter.getInstance().getHudY(), (int)((fontRendererObj.getStringWidth(ComboCounter.getInstance().getDisplayText()) + 10) * HudScaleConfig.get("comboCounter")), fontRendererObj.FONT_HEIGHT + 6);
         drawScaleHandle(InfoHudModules.getArmorX(), InfoHudModules.getArmorY(), (int)(InfoHudModules.getArmorEditorWidth() * HudScaleConfig.get("armor")), (int)(InfoHudModules.getArmorEditorHeight() * HudScaleConfig.get("armor")));
         drawScaleHandle(InfoHudModules.getPotionX(), InfoHudModules.getPotionY(), (int)(InfoHudModules.getPotionEditorWidth() * HudScaleConfig.get("potion")), (int)(InfoHudModules.getPotionEditorHeight() * HudScaleConfig.get("potion")));
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -168,6 +191,7 @@ public class HudEditorGui extends AlphaGuiScreen {
             if (isFpsModuleEnabled() && scaleHandleHit(FpsMod.getHudX(), FpsMod.getHudY(), (int)((fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10) * HudScaleConfig.get("fps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("fps", mouseY); return; }
             if (isPingModuleEnabled() && scaleHandleHit(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("ping", mouseY); return; }
             if (isCpsModuleEnabled() && scaleHandleHit(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("cps", mouseY); return; }
+            if (isComboModuleEnabled() && scaleHandleHit(ComboCounter.getInstance().getHudX(), ComboCounter.getInstance().getHudY(), (int)((fontRendererObj.getStringWidth(ComboCounter.getInstance().getDisplayText()) + 10) * HudScaleConfig.get("comboCounter")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { beginScale("comboCounter", mouseY); return; }
             if (true && scaleHandleHit(InfoHudModules.getArmorX(), InfoHudModules.getArmorY(), (int)(InfoHudModules.getArmorEditorWidth() * HudScaleConfig.get("armor")), (int)(InfoHudModules.getArmorEditorHeight() * HudScaleConfig.get("armor")), mouseX, mouseY)) { beginScale("armor", mouseY); return; }
             if (true && scaleHandleHit(InfoHudModules.getPotionX(), InfoHudModules.getPotionY(), (int)(InfoHudModules.getPotionEditorWidth() * HudScaleConfig.get("potion")), (int)(InfoHudModules.getPotionEditorHeight() * HudScaleConfig.get("potion")), mouseX, mouseY)) { beginScale("potion", mouseY); return; }
         }
@@ -237,6 +261,20 @@ public class HudEditorGui extends AlphaGuiScreen {
             return;
         }
 
+        ComboCounter comboCounter = ComboCounter.getInstance();
+        if (isComboModuleEnabled()) {
+            int comboX = comboCounter.getHudX(), comboY = comboCounter.getHudY();
+            int comboWidth = fontRendererObj.getStringWidth(comboCounter.getDisplayText()) + 10;
+            if (mouseButton == 0 && mouseX >= comboX - 3 && mouseX <= comboX + comboWidth
+                    && mouseY >= comboY - 3 && mouseY <= comboY + fontRendererObj.FONT_HEIGHT + 3) {
+                dragging = true;
+                dragX = mouseX - comboX;
+                dragY = mouseY - comboY;
+                comboDragging = true;
+                return;
+            }
+        }
+
         int pingX = PingMod.getHudX(), pingY = PingMod.getHudY();
         int pingWidth = fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10;
         if (isPingModuleEnabled() && mouseButton == 0 && mouseX >= pingX - 3 && mouseX <= pingX + pingWidth
@@ -273,7 +311,7 @@ public class HudEditorGui extends AlphaGuiScreen {
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
         if (scaleDragging && button == 0) { HudScaleConfig.set(scaleTarget, scaleStartValue + (scaleStartY - mouseY) * 0.01F); return; }
         if (dragging && button == 0) {
-            if (!afkTimerDragging && !fpsDragging && !pingDragging && !cpsDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !hasBhopAccess()) {
+            if (!afkTimerDragging && !fpsDragging && !pingDragging && !cpsDragging && !comboDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !hasBhopAccess()) {
                 dragging = false;
                 return;
             }
@@ -299,6 +337,11 @@ public class HudEditorGui extends AlphaGuiScreen {
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 CpsMod.setHudPosition(x, y);
+            } else if (comboDragging) {
+                int itemWidth = fontRendererObj.getStringWidth(ComboCounter.getInstance().getDisplayText()) + 10;
+                x = Math.max(3, Math.min(width - itemWidth - 3, x));
+                y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
+                ComboCounter.getInstance().setHudPosition(x, y);
             } else if (sessionTimerDragging) {
                 int itemWidth = fontRendererObj.getStringWidth("SESSION 00:00:00") + 10;
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
@@ -340,6 +383,7 @@ public class HudEditorGui extends AlphaGuiScreen {
         fpsDragging = false;
         pingDragging = false;
         cpsDragging = false;
+        comboDragging = false;
         afkTimerDragging = false;
         sessionTimerDragging = false;
         playtimeTrackerDragging = false;
@@ -360,6 +404,7 @@ public class HudEditorGui extends AlphaGuiScreen {
             FpsMod.setHudPosition(6, 6);
             PingMod.setHudPosition(6, 22);
             CpsMod.setHudPosition(5, 28);
+            if (ComboCounter.getInstance() != null) ComboCounter.getInstance().resetHudSettings();
             AfkTimerHud.setHudPosition(6, 6);
             SessionTimerHud.setHudPosition(6, 22);
             PlaytimeTrackerHud.setHudPosition(6, 38);
