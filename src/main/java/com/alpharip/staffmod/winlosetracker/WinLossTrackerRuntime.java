@@ -219,7 +219,7 @@ public final class WinLossTrackerRuntime {
                         + "  " + String.format(Locale.ROOT, "%.1f%%", stats.getWinRate());
                 line = minecraft.fontRendererObj.trimStringToWidth(line, width - 12);
                 minecraft.fontRendererObj.drawString(line, 6, rowY, 0xFF9CA3AF, false);
-                rowY += 11;
+                rowY += 9;
             }
         }
         GlStateManager.popMatrix();
