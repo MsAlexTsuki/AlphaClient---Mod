@@ -2,6 +2,8 @@
 package com.alpharip.alphaclient;
 
 import com.alpharip.staffmod.BuildInfo;
+import com.alpharip.staffmod.Palette.Palette;
+import com.alpharip.staffmod.Palette.PaletteCommand;
 import com.alpharip.staffmod.config.AlphaClientConfig;
 import com.alpharip.staffmod.developer.DeveloperDiagnostics;
 import com.alpharip.staffmod.developer.DeveloperDebugOverlay;
@@ -127,6 +129,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
         registerClientCommands();
+        ClientCommandHandler.instance.registerCommand(new PaletteCommand());
+        Palette.getInstance().register();
         WaypointManager.getInstance().load();
         ClientCommandHandler.instance.registerCommand(new WaypointCommand());
         ClientCommandHandler.instance.registerCommand(new MinimapCommand());
