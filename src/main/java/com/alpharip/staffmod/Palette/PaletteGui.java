@@ -472,18 +472,14 @@ public final class PaletteGui extends GuiScreen {
             return PermissionService.hasStaffModsAccess();
         }
 
+        String staffFolderPermission = staffFolderPermissionForAction(action.id);
+        if (staffFolderPermission != null) {
+            return hasStaffFolderAccess(action.id, staffFolderPermission);
+        }
+
         PermissionService.Rank requiredRank = rankRequiredByAction(action.id);
-        if (requiredRank != null) {
-            if (requiredRank == PermissionService.Rank.FOUNDER) {
-                return SupabaseCommunityService.isSignedInFounder();
-            }
-            if (!PermissionService.hasStaffModsAccess()
-                    && isStaffRank(requiredRank)) return false;
-            if (!PermissionService.hasAccess(requiredRank)) return false;
-            if (action.id.equals("staff-management")) {
-                return PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
-                        || PermissionService.hasAccess(PermissionService.Rank.MANAGER);
-            }
+        if (requiredRank != null && !PermissionService.hasAccess(requiredRank)) {
+            return false;
         }
 
         if (action.id.startsWith("module-settings:")) {
@@ -512,40 +508,80 @@ public final class PaletteGui extends GuiScreen {
         if ("rank-elite".equals(id)) return PermissionService.Rank.ELITE;
         if ("rank-alpha".equals(id)) return PermissionService.Rank.ALPHA;
         if ("rank-alpha-plus".equals(id)) return PermissionService.Rank.ALPHA_PLUS;
-        if ("staff-tmod".equals(id)) return PermissionService.Rank.T_MOD;
-        if ("staff-mod".equals(id)) return PermissionService.Rank.MOD;
-        if ("staff-srmod".equals(id)) return PermissionService.Rank.SR_MOD;
-        if ("staff-admin".equals(id)) return PermissionService.Rank.ADMIN;
-        if ("staff-sradmin".equals(id)) return PermissionService.Rank.SR_ADMIN;
-        if ("staff-platform-admin".equals(id)) return PermissionService.Rank.PLAT_ADMIN;
-        if ("staff-manager".equals(id)) return PermissionService.Rank.MANAGER;
-        if ("staff-developer".equals(id)) return PermissionService.Rank.DEVELOPER;
-        if ("staff-owner".equals(id)) return PermissionService.Rank.OWNER;
-        if ("staff-founder".equals(id)) return PermissionService.Rank.FOUNDER;
         return null;
     }
 
-    private boolean isStaffRank(PermissionService.Rank rank) {
-        return rank == PermissionService.Rank.T_MOD || rank == PermissionService.Rank.MOD
-                || rank == PermissionService.Rank.SR_MOD || rank == PermissionService.Rank.ADMIN
-                || rank == PermissionService.Rank.SR_ADMIN || rank == PermissionService.Rank.PLAT_ADMIN
-                || rank == PermissionService.Rank.MANAGER || rank == PermissionService.Rank.DEVELOPER
-                || rank == PermissionService.Rank.OWNER || rank == PermissionService.Rank.FOUNDER;
+    private String staffFolderPermissionForAction(String id) {
+        if ("staff-tmod".equals(id)) return "staffmods.tmod";
+        if ("staff-mod".equals(id)) return "staffmods.mod";
+        if ("staff-srmod".equals(id)) return "staffmods.srmod";
+        if ("staff-admin".equals(id)) return "staffmods.admin";
+        if ("staff-sradmin".equals(id)) return "staffmods.sradmin";
+        if ("staff-platform-admin".equals(id)) return "staffmods.platformadmin";
+        if ("staff-management".equals(id)) return "staffmods.management";
+        if ("staff-manager".equals(id)) return "staffmods.manager";
+        if ("staff-developer".equals(id)) return "staffmods.developer";
+        if ("staff-owner".equals(id)) return "staffmods.owner";
+        if ("staff-founder".equals(id)) return "staffmods.founder";
+        return null;
+    }
+
+    private boolean hasStaffFolderAccess(String actionId, String permissionKey) {
+        if (!PermissionService.hasStaffModsAccess()) return false;
+        if ("staff-founder".equals(actionId)) {
+            return SupabaseCommunityService.isSignedInFounder();
+        }
+
+        Boolean override = PermissionService.getCommandPermissionOverride(permissionKey);
+        if (Boolean.FALSE.equals(override)) return false;
+        if (Boolean.TRUE.equals(override)) return true;
+
+        if ("staff-management".equals(actionId)) {
+            if (PermissionService.hasAccess(PermissionService.Rank.PLAT_ADMIN)
+                    || PermissionService.hasAccess(PermissionService.Rank.MANAGER)) return true;
+            return hasExplicitModuleGrant(PermissionService.Rank.PLAT_ADMIN)
+                    || hasExplicitModuleGrant(PermissionService.Rank.MANAGER);
+        }
+
+        PermissionService.Rank required = PermissionService.Rank.T_MOD;
+        if ("staff-mod".equals(actionId)) required = PermissionService.Rank.MOD;
+        else if ("staff-srmod".equals(actionId)) required = PermissionService.Rank.SR_MOD;
+        else if ("staff-admin".equals(actionId)) required = PermissionService.Rank.ADMIN;
+        else if ("staff-sradmin".equals(actionId)) required = PermissionService.Rank.SR_ADMIN;
+        else if ("staff-platform-admin".equals(actionId)) required = PermissionService.Rank.PLAT_ADMIN;
+        else if ("staff-manager".equals(actionId)) required = PermissionService.Rank.MANAGER;
+        else if ("staff-developer".equals(actionId)) required = PermissionService.Rank.DEVELOPER;
+        else if ("staff-owner".equals(actionId)) required = PermissionService.Rank.OWNER;
+        return PermissionService.hasAccess(required) || hasExplicitModuleGrant(required);
+    }
+
+    private boolean hasExplicitModuleGrant(PermissionService.Rank required) {
+        for (AlphaModule module : AlphaModuleRegistry.getAll()) {
+            if (module == null || module.getCategory() == AlphaModule.Category.FOUNDER
+                    || "staffmods".equals(module.getId())) continue;
+            if (module.getCategory().getRequiredRank() == required && module.hasExplicitModAccess()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String commandPermissionForAction(String id) {
+        if ("general".equals(id)) return "menu.general";
+        if ("rank-beta".equals(id)) return "menu.beta";
+        if ("rank-donator".equals(id)) return "menu.donator";
+        if ("rank-scout".equals(id)) return "menu.scout";
+        if ("rank-rogue".equals(id)) return "menu.rogue";
+        if ("rank-elite".equals(id)) return "menu.elite";
+        if ("rank-alpha".equals(id)) return "menu.alpha";
+        if ("rank-alpha-plus".equals(id)) return "menu.alphaplus";
         if ("fps-settings".equals(id)) return "command.fpshud";
         if ("cps-settings".equals(id)) return "command.cpshud";
         if ("potion-hud-settings".equals(id)) return "hud.potion";
-        if ("autogg-command".equals(id)) return "command.autogg";
-        if ("autoreconnect-command".equals(id)) return "command.autoreconnect";
-        if ("playtime-command".equals(id)) return "command.playtime";
-        if ("session-timer-command".equals(id)) return "command.sessiontimer";
-        if ("afk-timer-command".equals(id)) return "command.afktimer";
-        if ("fullbright-toggle".equals(id)) return "command.fullbright";
+        if ("module-settings:".equals(id)) return "command.settings";
+        if (id.startsWith("module-settings:")) return "command.settings";
+        if ("staff-general".equals(id)) return "staffmods.general";
         if ("autotool-command".equals(id)) return "command.autotool";
-        if ("inventory-search-command".equals(id)) return "command.inventorysearch";
-        if ("minimap-toggle".equals(id)) return "command.minimap";
         return null;
     }
 
