@@ -226,6 +226,11 @@ public final class PaletteGui extends GuiScreen {
         addCommand("playtime-command", "Playtime Tracker", "Show or manage the Playtime Tracker.", "/playtime");
         addCommand("session-timer-command", "Session Timer", "Show or manage the Session Timer.", "/sessiontimer");
         addCommand("afk-timer-command", "AFK Timer", "Show or manage the AFK Timer.", "/afktimer");
+        addCommand("fullbright-toggle", "Toggle Fullbright", "Toggle the current Fullbright setting.", "/fullbright toggle");
+        addCommand("autotool-command", "Open AutoTool Command", "Open the current AutoTool command route.", "/autotool");
+        addCommand("inventory-search-command", "Open Inventory Search", "Open Inventory Search from the current development command.", "/inventorysearch");
+        addCommand("world-edit-help", "World Edit Command Help", "Show the current singleplayer World Edit command help.", "//acwe help");
+        addCommand("minimap-toggle", "Toggle Minimap", "Toggle the current Minimap module state.", "/minimap toggle");
         addCommand("waypoint-list", "List Current Waypoints", "List waypoints in the active world and profile.", "/waypoint list");
         addCommand("waypoint-history", "Show Coordinate History", "Show recently recorded coordinates.", "/waypoint history");
         addCommand("waypoint-export", "Export Waypoints", "Create a local waypoint share file.", "/waypoint export");
