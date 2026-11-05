@@ -17,17 +17,19 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /** Chooses and synchronizes a suitable hotbar tool for the targeted block. */
 public final class AutoToolMod {
-    private final KeyBinding pauseKey = new KeyBinding("AutoTool: Pause", Keyboard.KEY_P, "AlphaClient");
+    private final KeyBinding pauseKey = new KeyBinding("AutoTool: Pause (Singleplayer)", 0, "AlphaClient");
+    private boolean pauseKeyRegistered;
     private boolean pauseToggle;
     private boolean previousPauseToggleMode;
     private int feedbackCooldown;
@@ -41,7 +43,30 @@ public final class AutoToolMod {
     private World sessionWorld;
 
     public AutoToolMod() {
-        ClientRegistry.registerKeyBinding(pauseKey);
+        // The pause key is added to Controls only while a singleplayer world is active.
+    }
+
+    private void syncPauseKeyVisibility(Minecraft mc) {
+        if (mc == null || mc.gameSettings == null || mc.gameSettings.keyBindings == null) return;
+
+        boolean shouldBeVisible = AutoToolAccess.isAvailable(mc);
+        if (shouldBeVisible == pauseKeyRegistered) return;
+
+        KeyBinding[] current = mc.gameSettings.keyBindings;
+        List<KeyBinding> bindings = new ArrayList<KeyBinding>();
+        boolean found = false;
+        for (KeyBinding binding : current) {
+            if (binding == pauseKey) {
+                found = true;
+                if (!shouldBeVisible) continue;
+            }
+            bindings.add(binding);
+        }
+
+        if (shouldBeVisible && !found) bindings.add(pauseKey);
+        mc.gameSettings.keyBindings = bindings.toArray(new KeyBinding[bindings.size()]);
+        KeyBinding.resetKeyBindingArrayAndHash();
+        pauseKeyRegistered = shouldBeVisible;
     }
 
     @SubscribeEvent
@@ -148,6 +173,7 @@ public final class AutoToolMod {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event == null || event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getMinecraft();
+        syncPauseKeyVisibility(mc);
         if (!AutoToolAccess.isAvailable(mc)) {
             clearSession();
             pauseToggle = false;
