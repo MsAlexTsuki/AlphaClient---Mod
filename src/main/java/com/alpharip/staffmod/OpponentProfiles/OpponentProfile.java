@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.staffops.ideas;
+package com.alpharip.staffmod.OpponentProfiles;
 import java.util.*;
 /** Stores prior encounters and notes by opponent. */
 public class OpponentProfile {
