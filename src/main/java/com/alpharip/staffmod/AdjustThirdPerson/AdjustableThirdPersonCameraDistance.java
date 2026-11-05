@@ -25,7 +25,6 @@ public class AdjustableThirdPersonCameraDistance {
     private static float rearDistance = DEFAULT_DISTANCE;
     private static float frontDistance = DEFAULT_DISTANCE;
 
-    private AdjustableThirdPersonCameraDistance() { }
 
     private static synchronized void load() {
         if (loaded) return;
