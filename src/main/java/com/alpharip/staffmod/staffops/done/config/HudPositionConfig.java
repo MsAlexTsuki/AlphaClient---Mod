@@ -31,6 +31,10 @@ public class HudPositionConfig {
 
     private static final int DEFAULT_FPS_X = 6;
     private static final int DEFAULT_FPS_Y = 6;
+    private static final int DEFAULT_COMBO_COUNTER_X = 5;
+    private static final int DEFAULT_COMBO_COUNTER_Y = 44;
+    private static final int DEFAULT_COMBO_COUNTER_COLOR_INDEX = 0;
+    private static final boolean DEFAULT_COMBO_COUNTER_SHOW_BACKGROUND = true;
     private static final int DEFAULT_PING_X = 6;
     private static final int DEFAULT_PING_Y = 22;
     private static final int DEFAULT_PING_COLOR_INDEX = 0;
@@ -79,6 +83,10 @@ public class HudPositionConfig {
     private static int fpsY = DEFAULT_FPS_Y;
     private static int fpsColorIndex = DEFAULT_FPS_COLOR_INDEX;
     private static boolean fpsShowBackground = DEFAULT_FPS_SHOW_BACKGROUND;
+    private static int comboCounterX = DEFAULT_COMBO_COUNTER_X;
+    private static int comboCounterY = DEFAULT_COMBO_COUNTER_Y;
+    private static int comboCounterColorIndex = DEFAULT_COMBO_COUNTER_COLOR_INDEX;
+    private static boolean comboCounterShowBackground = DEFAULT_COMBO_COUNTER_SHOW_BACKGROUND;
     private static int pingX = DEFAULT_PING_X;
     private static int pingY = DEFAULT_PING_Y;
     private static int pingColorIndex = DEFAULT_PING_COLOR_INDEX;
@@ -266,6 +274,11 @@ public class HudPositionConfig {
             fpsColorIndex = getInt(properties, "fpsColorIndex", DEFAULT_FPS_COLOR_INDEX);
             if (fpsColorIndex < 0 || fpsColorIndex > 9) fpsColorIndex = DEFAULT_FPS_COLOR_INDEX;
             fpsShowBackground = Boolean.parseBoolean(properties.getProperty("fpsShowBackground", String.valueOf(DEFAULT_FPS_SHOW_BACKGROUND)));
+            comboCounterX = getInt(properties, "comboCounterX", DEFAULT_COMBO_COUNTER_X);
+            comboCounterY = getInt(properties, "comboCounterY", DEFAULT_COMBO_COUNTER_Y);
+            comboCounterColorIndex = getInt(properties, "comboCounterColorIndex", DEFAULT_COMBO_COUNTER_COLOR_INDEX);
+            if (comboCounterColorIndex < 0 || comboCounterColorIndex > 9) comboCounterColorIndex = DEFAULT_COMBO_COUNTER_COLOR_INDEX;
+            comboCounterShowBackground = Boolean.parseBoolean(properties.getProperty("comboCounterShowBackground", String.valueOf(DEFAULT_COMBO_COUNTER_SHOW_BACKGROUND)));
             pingX = getInt(properties, "pingX", DEFAULT_PING_X);
             pingY = getInt(properties, "pingY", DEFAULT_PING_Y);
             pingColorIndex = getInt(properties, "pingColorIndex", DEFAULT_PING_COLOR_INDEX);
@@ -379,6 +392,10 @@ public class HudPositionConfig {
         properties.setProperty("fpsY", String.valueOf(fpsY));
         properties.setProperty("fpsColorIndex", String.valueOf(fpsColorIndex));
         properties.setProperty("fpsShowBackground", String.valueOf(fpsShowBackground));
+        properties.setProperty("comboCounterX", String.valueOf(comboCounterX));
+        properties.setProperty("comboCounterY", String.valueOf(comboCounterY));
+        properties.setProperty("comboCounterColorIndex", String.valueOf(comboCounterColorIndex));
+        properties.setProperty("comboCounterShowBackground", String.valueOf(comboCounterShowBackground));
         properties.setProperty("pingX", String.valueOf(pingX));
         properties.setProperty("pingY", String.valueOf(pingY));
         properties.setProperty("pingColorIndex", String.valueOf(pingColorIndex));
@@ -760,6 +777,14 @@ public class HudPositionConfig {
         save();
     }
 
+    public static int getComboCounterX() { load(); return comboCounterX; }
+    public static int getComboCounterY() { load(); return comboCounterY; }
+    public static int getComboCounterColorIndex() { load(); return comboCounterColorIndex; }
+    public static boolean isComboCounterShowBackground() { load(); return comboCounterShowBackground; }
+    public static void setComboCounterPosition(int x, int y) { load(); comboCounterX = Math.max(0, x); comboCounterY = Math.max(0, y); save(); }
+    public static void setComboCounterColorIndex(int index) { load(); comboCounterColorIndex = Math.max(0, Math.min(9, index)); save(); }
+    public static void setComboCounterShowBackground(boolean value) { load(); comboCounterShowBackground = value; save(); }
+
 
     /*
      * =========================
@@ -772,6 +797,10 @@ public class HudPositionConfig {
         resetValues();
         fpsX = DEFAULT_FPS_X;
         fpsY = DEFAULT_FPS_Y;
+        comboCounterX = DEFAULT_COMBO_COUNTER_X;
+        comboCounterY = DEFAULT_COMBO_COUNTER_Y;
+        comboCounterColorIndex = DEFAULT_COMBO_COUNTER_COLOR_INDEX;
+        comboCounterShowBackground = DEFAULT_COMBO_COUNTER_SHOW_BACKGROUND;
         pingX = DEFAULT_PING_X;
         pingY = DEFAULT_PING_Y;
         pingColorIndex = DEFAULT_PING_COLOR_INDEX;
@@ -811,6 +840,10 @@ public class HudPositionConfig {
         fpsX = DEFAULT_FPS_X;
         fpsY = DEFAULT_FPS_Y;
         fpsShowBackground = DEFAULT_FPS_SHOW_BACKGROUND;
+        comboCounterX = DEFAULT_COMBO_COUNTER_X;
+        comboCounterY = DEFAULT_COMBO_COUNTER_Y;
+        comboCounterColorIndex = DEFAULT_COMBO_COUNTER_COLOR_INDEX;
+        comboCounterShowBackground = DEFAULT_COMBO_COUNTER_SHOW_BACKGROUND;
         pingX = DEFAULT_PING_X;
         pingY = DEFAULT_PING_Y;
         pingColorIndex = DEFAULT_PING_COLOR_INDEX;
