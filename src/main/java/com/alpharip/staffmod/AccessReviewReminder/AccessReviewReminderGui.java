@@ -182,13 +182,13 @@ public final class AccessReviewReminderGui extends GuiScreen {
 
             String title = entry.getStaffName();
             if (!entry.getRank().isEmpty()) title += "  [" + entry.getRank() + "]";
-            drawString(fontRendererObj, fit(title, rowRight - rowLeft - 126),
+            drawString(fontRendererObj, fit(title, rowRight - rowLeft - 166),
                     rowLeft + 7, y + 5, 0xFFF3F4F6);
 
             String lastReview = entry.getLastReviewedAt() <= 0L
                     ? "Last review: Never"
                     : "Last review: " + formatDate(entry.getLastReviewedAt());
-            drawString(fontRendererObj, fit(lastReview, rowRight - rowLeft - 126),
+            drawString(fontRendererObj, fit(lastReview, rowRight - rowLeft - 166),
                     rowLeft + 7, y + 20, 0xFFADB4C0);
 
             AccessReviewEntry.ReviewStatus status = entry.getStatus(now);
@@ -204,12 +204,12 @@ public final class AccessReviewReminderGui extends GuiScreen {
                 statusText = "CURRENT";
                 statusColor = 0xFF9CE2AC;
             }
-            drawString(fontRendererObj, statusText, rowRight - 111, y - 1, statusColor);
+            drawString(fontRendererObj, statusText, rowRight - 164, y + 1, statusColor);
 
             long nextReview = entry.getNextReviewAt();
             String nextText = nextReview < 0L ? "Review required"
                     : "Next: " + formatDate(nextReview);
-            drawString(fontRendererObj, fit(nextText, rowRight - rowLeft - 126),
+            drawString(fontRendererObj, fit(nextText, rowRight - rowLeft - 166),
                     rowLeft + 7, y + 30, 0xFF858D9B);
         }
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
@@ -293,7 +293,7 @@ public final class AccessReviewReminderGui extends GuiScreen {
                 manager.updateStaff(editingId, name, rank, days);
                 setMessage("Staff details updated", 0xFF9CE2AC);
             }
-            clearEditFields();
+            clearEdit();
             scrollOffset = Math.max(0, manager.getEntries().size() - visibleRows);
             rebuildRowButtons();
         } catch (NumberFormatException exception) {
@@ -326,8 +326,12 @@ public final class AccessReviewReminderGui extends GuiScreen {
     private void clearEdit() {
         clearEditFields();
         for (int i = buttonList.size() - 1; i >= 0; i--) {
-            if (buttonList.get(i).id == CANCEL_EDIT) buttonList.remove(i);
-            if (buttonList.get(i).id == ADD) buttonList.get(i).displayString = "ADD";
+            GuiButton item = buttonList.get(i);
+            if (item.id == CANCEL_EDIT) {
+                buttonList.remove(i);
+            } else if (item.id == ADD) {
+                item.displayString = "ADD";
+            }
         }
     }
 
