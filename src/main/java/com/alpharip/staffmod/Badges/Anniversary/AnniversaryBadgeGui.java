@@ -1,5 +1,7 @@
 package com.alpharip.staffmod.badges.anniversary;
 
+import com.alpharip.staffmod.badges.anniversary.birthday.BirthdayCelebrationGui;
+import com.alpharip.staffmod.badges.anniversary.birthday.BirthdayCelebrationSettings;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,21 +23,30 @@ public final class AnniversaryBadgeGui extends GuiScreen {
     private static final int SET_DATE_BUTTON = 2;
     private static final int CLEAR_DATE_BUTTON = 3;
     private static final int BACK_BUTTON = 4;
+    private static final int BIRTHDAY_BUTTON = 5;
     private static final String DATE_PATTERN = "yyyy-MM-dd";
 
     private final GuiScreen parent;
     private final AnniversaryBadgeSettings settings;
+    private final BirthdayCelebrationSettings birthdaySettings;
     private GuiTextField dateField;
     private String feedback = "";
 
     public AnniversaryBadgeGui(GuiScreen parent) {
-        this(parent, new AnniversaryBadgeSettings());
+        this(parent, new AnniversaryBadgeSettings(), new BirthdayCelebrationSettings());
     }
 
     public AnniversaryBadgeGui(GuiScreen parent, AnniversaryBadgeSettings settings) {
+        this(parent, settings, new BirthdayCelebrationSettings());
+    }
+
+    public AnniversaryBadgeGui(GuiScreen parent, AnniversaryBadgeSettings settings,
+                               BirthdayCelebrationSettings birthdaySettings) {
         if (settings == null) throw new IllegalArgumentException("Anniversary badge settings are required.");
+        if (birthdaySettings == null) throw new IllegalArgumentException("Birthday settings are required.");
         this.parent = parent;
         this.settings = settings;
+        this.birthdaySettings = birthdaySettings;
     }
 
     @Override
@@ -45,17 +56,20 @@ public final class AnniversaryBadgeGui extends GuiScreen {
         int panelWidth = Math.min(360, Math.max(280, width - 24));
         int left = (width - panelWidth) / 2;
         int fieldWidth = panelWidth - 32;
+        int halfWidth = fieldWidth / 2 - 3;
 
         dateField = new GuiTextField(0, fontRendererObj, left + 16, 91, fieldWidth, 18);
         dateField.setMaxStringLength(10);
         Date existing = settings.getAccountCreatedAt();
         if (existing != null) dateField.setText(formatDate(existing));
 
-        buttonList.add(new GuiButton(ENABLE_BUTTON, left + 16, 52, fieldWidth, 20,
-                "Anniversary Badges: " + (settings.isEnabled() ? "On" : "Off")));
-        buttonList.add(new GuiButton(SET_DATE_BUTTON, left + 16, 116, fieldWidth / 2 - 3, 20, "Set Account Date"));
+        buttonList.add(new GuiButton(ENABLE_BUTTON, left + 16, 52, halfWidth, 20,
+                "Anniversary: " + (settings.isEnabled() ? "On" : "Off")));
+        buttonList.add(new GuiButton(BIRTHDAY_BUTTON, left + 19 + fieldWidth / 2, 52,
+                halfWidth, 20, "Birthday Celebration"));
+        buttonList.add(new GuiButton(SET_DATE_BUTTON, left + 16, 116, halfWidth, 20, "Set Account Date"));
         buttonList.add(new GuiButton(CLEAR_DATE_BUTTON, left + 19 + fieldWidth / 2, 116,
-                fieldWidth / 2 - 3, 20, "Clear Date"));
+                halfWidth, 20, "Clear Date"));
         buttonList.add(new GuiButton(BACK_BUTTON, left + panelWidth - 92, height - 30, 76, 20, "Back"));
     }
 
@@ -64,8 +78,10 @@ public final class AnniversaryBadgeGui extends GuiScreen {
         if (button == null) return;
         if (button.id == ENABLE_BUTTON) {
             settings.setEnabled(!settings.isEnabled());
-            button.displayString = "Anniversary Badges: " + (settings.isEnabled() ? "On" : "Off");
+            button.displayString = "Anniversary: " + (settings.isEnabled() ? "On" : "Off");
             feedback = "Badge display state updated.";
+        } else if (button.id == BIRTHDAY_BUTTON) {
+            mc.displayGuiScreen(new BirthdayCelebrationGui(this, birthdaySettings));
         } else if (button.id == SET_DATE_BUTTON) {
             Date parsed = parseDate(dateField.getText());
             if (parsed == null) {
