@@ -1,10 +1,7 @@
 package com.alpharip.staffdashboardexpansion.presence;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -12,12 +9,9 @@ import net.minecraft.client.gui.GuiScreen;
 /** Standalone Minecraft 1.8.9 screen. The host must open this screen explicitly. */
 public final class StaffPresenceGui extends GuiScreen {
     private static final int ROW_HEIGHT = 22;
-    private static final int STALE_LABEL_AFTER_MINUTES = 5;
-
     private final StaffPresenceManager manager;
     private int scrollOffset;
     private String notice = "Presence data is supplied by the caller.";
-    private long lastRefreshMillis;
 
     public StaffPresenceGui(StaffPresenceManager manager) {
         if (manager == null) throw new IllegalArgumentException("manager cannot be null");
@@ -48,9 +42,8 @@ public final class StaffPresenceGui extends GuiScreen {
             manager.setSortMode(values[(manager.getSortMode().ordinal() + 1) % values.length]);
             button.displayString = "Sort: " + manager.getSortMode().name().replace("LAST_SEEN_", "");
         } else if (button.id == 2) {
-            lastRefreshMillis = System.currentTimeMillis();
             scrollOffset = 0;
-            notice = "Snapshot refreshed locally.";
+            notice = "View refreshed; no external presence source is connected.";
         } else if (button.id == 3) {
             mc.displayGuiScreen(null);
         }
