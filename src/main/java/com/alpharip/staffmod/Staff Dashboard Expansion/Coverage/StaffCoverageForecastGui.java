@@ -19,6 +19,7 @@ public final class StaffCoverageForecastGui extends GuiScreen {
     private GuiTextField dateField, nameField, startField, endField, minimumField;
     private LocalDate selectedDate = LocalDate.now();
     private int scrollOffset;
+    private int selectedIndex = -1;
     private String message = "Uses locally scheduled shifts only.";
 
     public StaffCoverageForecastGui(CoverageForecastManager manager) {
@@ -51,9 +52,9 @@ public final class StaffCoverageForecastGui extends GuiScreen {
         try {
             if (button.id == 0) {
                 selectedDate = LocalDate.parse(dateField.getText().trim(), DATE);
-                scrollOffset = 0;
+                scrollOffset = 0; selectedIndex = -1;
             } else if (button.id == 1) {
-                selectedDate = LocalDate.now(); dateField.setText(selectedDate.format(DATE)); scrollOffset = 0;
+                selectedDate = LocalDate.now(); dateField.setText(selectedDate.format(DATE)); scrollOffset = 0; selectedIndex = -1;
             } else if (button.id == 2) {
                 LocalDateTime from = LocalDateTime.of(selectedDate, LocalTime.parse(startField.getText().trim(), TIME));
                 LocalDateTime to = LocalDateTime.of(selectedDate, LocalTime.parse(endField.getText().trim(), TIME));
@@ -62,9 +63,13 @@ public final class StaffCoverageForecastGui extends GuiScreen {
                 manager.addRequirement(nameField.getText().trim(), from, to, minimum);
                 message = "Coverage target added.";
             } else if (button.id == 3) {
-                List<CoverageRequirement> all = manager.getRequirements();
-                if (all.isEmpty()) message = "No targets to remove.";
-                else { manager.removeRequirement(all.get(all.size() - 1).getId()); message = "Last target removed."; }
+                List<CoverageResult> visible = manager.getResults(selectedDate);
+                if (selectedIndex < 0 || selectedIndex >= visible.size()) message = "Select a target row first.";
+                else {
+                    manager.removeRequirement(visible.get(selectedIndex).getRequirement().getId());
+                    selectedIndex = -1;
+                    message = "Selected target removed.";
+                }
             } else if (button.id == 4) {
                 scrollOffset = 0; message = "Forecast view refreshed.";
             } else if (button.id == 5) mc.displayGuiScreen(null);
@@ -91,6 +96,11 @@ public final class StaffCoverageForecastGui extends GuiScreen {
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
         super.mouseClicked(x, y, button);
+        if (y >= 151 && y < height - 48) {
+            int row = (y - 151) / 24 + scrollOffset;
+            List<CoverageResult> visible = manager.getResults(selectedDate);
+            if (row >= 0 && row < visible.size()) selectedIndex = row;
+        }
         dateField.mouseClicked(x, y, button); nameField.mouseClicked(x, y, button);
         startField.mouseClicked(x, y, button); endField.mouseClicked(x, y, button);
         minimumField.mouseClicked(x, y, button);
@@ -122,6 +132,7 @@ public final class StaffCoverageForecastGui extends GuiScreen {
             CoverageResult r = results.get(i); CoverageRequirement q = r.getRequirement();
             int rowY = y + (i - scrollOffset) * rowHeight;
             int color = r.isUnderstaffed() ? 0xFF6666 : 0x66FF66;
+            if (i == selectedIndex) drawRect(width / 2 - 153, rowY - 2, width / 2 + 153, rowY + 18, 0x55333333);
             String line = q.getName() + " " + q.getStart().toLocalTime().format(TIME)
                     + "-" + q.getEnd().toLocalTime().format(TIME) + " "
                     + r.getScheduledStaff() + "/" + r.getMinimumStaff();
