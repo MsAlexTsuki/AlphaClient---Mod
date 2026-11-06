@@ -781,7 +781,7 @@ public final class PixelGardenGame {
         }
     }
 
-    /** Returns the XP reward for a quest, with reduced XP for the four tutorial quests. */
+    /** Returns XP based on quest type and its required Pixel Garden level. */
     public long getQuestExperience(String questId) {
         if ("pg_fresh_start".equals(questId)
                 || "pg_first_coins".equals(questId)
@@ -789,7 +789,8 @@ public final class PixelGardenGame {
                 || "pg_your_own_garden".equals(questId)) {
             return 5L;
         }
-        return 10L;
+        PixelGardenProgressionData.QuestDefinition definition = progressionData.getDefinition(questId);
+        return definition != null && definition.requiredLevel >= 30 ? 5L : 3L;
     }
 
     public synchronized void awardExperience(long amount) {
