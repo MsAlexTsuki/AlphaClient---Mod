@@ -62,7 +62,7 @@ public final class ShiftStartChecklistGui extends GuiScreen {
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
-        if (mouseButton != 0) {
+        if (mouseButton != 0 && mouseButton != 1) {
             return;
         }
 
@@ -91,7 +91,11 @@ public final class ShiftStartChecklistGui extends GuiScreen {
             if (mouseY >= rowY && mouseY < rowY + 28
                     && mouseX >= width / 2 - 190 && mouseX <= width / 2 + 190) {
                 ChecklistItem item = visibleItems.get(index);
-                checklist.setCompleted(item.getId(), !item.isCompleted());
+                if (mouseButton == 1) {
+                    checklist.remove(item.getId());
+                } else {
+                    checklist.setCompleted(item.getId(), !item.isCompleted());
+                }
                 refreshItems();
                 return;
             }
@@ -119,7 +123,8 @@ public final class ShiftStartChecklistGui extends GuiScreen {
             width / 2, 14, 0xFFFFFF);
 
         String progress = checklist.getCompletedCount() + " / "
-            + checklist.getTotalCount() + " completed";
+            + checklist.getTotalCount() + " completed  |  "
+            + checklist.getRemainingCount() + " remaining";
         drawCenteredString(fontRendererObj, progress, width / 2, 28, 0xFFCCCCCC);
 
         int categoryY = 42;
@@ -160,7 +165,7 @@ public final class ShiftStartChecklistGui extends GuiScreen {
                 width / 2, height / 2, 0xFFAAAAAA);
         }
 
-        String hint = "Click an item to toggle it  |  Up/Down to scroll";
+        String hint = "Left-click: toggle  |  Right-click: remove  |  Up/Down: scroll";
         drawCenteredString(fontRendererObj, hint, width / 2, height - 46, 0xFFAAAAAA);
         if (checklist.isComplete()) {
             drawCenteredString(fontRendererObj, "Shift checklist complete",
