@@ -532,3 +532,20 @@ Folder: `ActingRankAssignment/`
 - **ActingRankAssignmentGui.java** — Provides a Minecraft 1.8.9 preview for entering staff/current/acting rank details, duration, reason, reviewing records, and revoking a selected active assignment. It is not registered in an existing menu.
 
 **Prototype boundary:** Acting ranks are informational workflow records only. This prototype does not change a staff member's actual rank, grant or remove permissions, modify rank hierarchy, authenticate the assigning staff member, persist records, call Supabase, synchronize accounts, integrate with Forge events, or connect to AlphaClient Core. Rank names are free-form input and no production policy for who may assign which acting rank has been defined. Settings and records are in-memory only. GUI layout and interaction still require in-game verification. No compile or in-game test is claimed.
+
+
+## Active Device List and Global Sign-Out
+
+Folder: `ActiveDeviceListGlobalSignOut/`
+
+- **ActiveDeviceListGlobalSignOut.java** — Main facade exposing the local device registry, settings, and service.
+- **ActiveDeviceSession.java** — Immutable device-session snapshot containing a local ID, device name, platform, account label, creation/last-seen timestamps, current-device flag, and local sign-out state.
+- **ActiveDeviceStatus.java** — Defines the local states `ACTIVE`, `SIGN_OUT_REQUESTED`, and `SIGNED_OUT`. These are prototype states, not remote authentication claims.
+- **ActiveDeviceValidator.java** — Validates required device/platform labels, field lengths, and timestamp order. It does not verify device identity.
+- **ActiveDeviceSettings.java** — Holds session-local enablement, signed-out visibility, and the maximum retained device count.
+- **ActiveDeviceRegistry.java** — Maintains a bounded in-memory registry and exposes immutable list snapshots and lookup/replacement operations.
+- **ActiveDeviceSignOutResult.java** — Reports how many local sign-out requests were recorded or skipped, with an explicit non-confirmation message.
+- **ActiveDeviceService.java** — Registers caller-supplied device snapshots, requests individual sign-outs, records a global sign-out request for all other active devices, and accepts a separate confirmation that a remote sign-out was completed.
+- **ActiveDeviceListGlobalSignOutGui.java** — Provides a Minecraft 1.8.9 preview for reviewing device records, requesting an individual sign-out, and requesting sign-out for all other devices. It is not registered in an existing menu.
+
+**Prototype boundary:** Device records are supplied locally by the caller and remain in memory. A sign-out action only records local intent; it does not terminate a Microsoft, Alpha, or other remote session. The separate `confirmRemoteSignOut` method is an integration boundary and must only be called after a trusted backend confirms revocation. There is no account authentication, device fingerprinting, IP collection, credential/token storage, remote API, persistence, Supabase integration, Forge event integration, or AlphaClient Core integration. The current device is excluded from sign-out requests. The GUI requires in-game layout/interaction verification. No compile or in-game test is claimed.
