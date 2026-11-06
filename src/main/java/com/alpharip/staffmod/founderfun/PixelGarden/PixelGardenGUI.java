@@ -342,16 +342,16 @@ public final class PixelGardenGUI extends GuiScreen {
         net.minecraft.client.renderer.GlStateManager.disableBlend();
     }
 
-    /** Tiny blocky sprout emblem drawn at integer pixel scale for the 1.8.9 GUI. */
+    private static final ResourceLocation SPEED_TOKEN_TEXTURE =
+            new ResourceLocation("alphastaffmod", "textures/gui/speed_token.png");
+
+    /** Draws the supplied 16x16 Speed Token pixel-art texture. */
     private void drawSpeedTokenIcon(int x, int y) {
-        // Small gold hourglass token, drawn in the same pixel-art style as the garden UI.
-        pixel(x + 2, y, 12, 2, 0xFFFFD45A);
-        pixel(x + 4, y + 2, 8, 3, 0xFFFFD45A);
-        pixel(x + 6, y + 5, 4, 3, 0xFFFFF0B0);
-        pixel(x + 4, y + 8, 8, 3, 0xFFFFD45A);
-        pixel(x + 2, y + 11, 12, 2, 0xFFFFD45A);
-        pixel(x + 6, y + 3, 4, 2, 0xFFB77A22);
-        pixel(x + 6, y + 8, 4, 2, 0xFFB77A22);
+        mc.getTextureManager().bindTexture(SPEED_TOKEN_TEXTURE);
+        net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        net.minecraft.client.renderer.GlStateManager.enableBlend();
+        drawScaledCustomSizeModalRect(x, y, 0, 0, 16, 16, 22, 22, 16, 16);
+        net.minecraft.client.renderer.GlStateManager.disableBlend();
     }
 
     private void drawPixelSprout(int x, int y, int scale) {
