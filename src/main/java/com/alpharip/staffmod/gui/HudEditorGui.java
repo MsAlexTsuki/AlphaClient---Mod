@@ -366,13 +366,7 @@ public class HudEditorGui extends AlphaGuiScreen {
 
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
-        if (scaleDragging && button == 0) {
-            HudScaleConfig.set(scaleTarget, scaleStartValue + (scaleStartY - mouseY) * 0.01F);
-            if ("comboCounter".equals(scaleTarget) && ComboCounter.getInstance() != null) {
-                ComboCounter.getInstance().saveProfileSettings();
-            }
-            return;
-        }
+        if (scaleDragging && button == 0) { HudScaleConfig.set(scaleTarget, scaleStartValue + (scaleStartY - mouseY) * 0.01F); return; }
         if (dragging && button == 0) {
             if (!afkTimerDragging && !fpsDragging && !pingDragging && !cpsDragging && !comboCounterDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !winLossDragging && !hasBhopAccess()) {
                 dragging = false;
@@ -456,6 +450,9 @@ public class HudEditorGui extends AlphaGuiScreen {
 
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
+        if (scaleDragging && "comboCounter".equals(scaleTarget) && ComboCounter.getInstance() != null) {
+            ComboCounter.getInstance().saveProfileSettings();
+        }
         scaleDragging = false; scaleTarget = null;
         dragging = false;
         fpsDragging = false;
