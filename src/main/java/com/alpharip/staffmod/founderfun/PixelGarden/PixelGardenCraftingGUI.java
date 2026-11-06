@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.founderfun;
 
 import com.alpharip.staffmod.gui.AlphaButton;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
+import com.google.gson.JsonObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
@@ -15,7 +17,7 @@ import java.util.List;
 public final class PixelGardenCraftingGUI extends GuiScreen {
     private static final int CRAFT_BASE = 1000;
     private static final int SELL_BASE = 1100;
-    private static final int TAB_RECIPES = 1200, TAB_PRODUCTS = 1201, BACK = 1202;
+    private static final int TAB_RECIPES = 1200, TAB_PRODUCTS = 1201, BACK = 1202, COLLECT = 1203;
     private static final int CARD_HEIGHT = 68, CARD_GAP = 6;
     private final GuiScreen parent;
     private final PixelGardenGame game = PixelGardenGame.getInstance();
@@ -76,11 +78,15 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
             buttonList.add(new AlphaButton(id, x + 8, y + 48, cardWidth - 16, 16, label));
         }
         int navY = height - 32;
-        int navW = Math.min(130, (width - 64) / 3);
-        int navX = (width - (navW * 3 + 16)) / 2;
+        boolean hasReadyOrders = !game.getReadyCraftingOrders().isEmpty();
+        int navCount = hasReadyOrders ? 4 : 3;
+        int navW = Math.min(130, (width - 64 - (navCount - 1) * 8) / navCount);
+        int navX = (width - (navW * navCount + 8 * (navCount - 1))) / 2;
         buttonList.add(new AlphaButton(TAB_RECIPES, navX, navY, navW, 20, "Recipes"));
         buttonList.add(new AlphaButton(TAB_PRODUCTS, navX + navW + 8, navY, navW, 20, "Crafted Products"));
-        buttonList.add(new AlphaButton(BACK, navX + (navW + 8) * 2, navY, navW, 20, "Garden"));
+        if (hasReadyOrders) buttonList.add(new AlphaButton(COLLECT, navX + (navW + 8) * 2, navY, navW, 20,
+                "Collect (" + game.getReadyCraftingOrders().size() + ")"));
+        buttonList.add(new AlphaButton(BACK, navX + (navW + 8) * (navCount - 1), navY, navW, 20, "Garden"));
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
@@ -88,6 +94,14 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
         if (button.id == TAB_RECIPES || button.id == TAB_PRODUCTS) {
             productsPage = button.id == TAB_PRODUCTS;
             scrollRow = 0;
+            initGui();
+            return;
+        }
+        if (button.id == COLLECT) {
+            int collected = game.collectCompletedCraftingOrders();
+            notifyPlayer(collected == 0 ? "No completed orders are ready to collect."
+                    : "Collected " + collected + " completed crafting order(s).");
+            saveParent();
             initGui();
             return;
         }
@@ -126,7 +140,26 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
     }
 
     private void saveParent() {
-        if (parent instanceof PixelGardenGUI) ((PixelGardenGUI) parent).saveCloudAsync();
+        if (parent instanceof PixelGardenGUI) {
+            ((PixelGardenGUI) parent).saveCloudAsync();
+            return;
+        }
+        if (!SupabaseCommunityService.isSignedIn()) return;
+        final String account = SupabaseCommunityService.getSignedInEmail();
+        final JsonObject snapshot = game.toSaveData();
+        Thread thread = new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    if (SupabaseCommunityService.isSignedIn()
+                            && (account == null || account.equals(SupabaseCommunityService.getSignedInEmail())))
+                        SupabaseCommunityService.savePixelGardenSave(snapshot);
+                } catch (Exception exception) {
+                    System.err.println("[AlphaClient] Pixel Garden crafting save failed: " + exception.getMessage());
+                }
+            }
+        }, "AlphaClient-PixelGardenCraftingSave");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void drawPanel(int x, int y, int w, int h) {
@@ -180,7 +213,8 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
         List<PixelGardenGame.CraftingOrder> active = game.getActiveCraftingOrders();
         List<String> queued = game.getQueuedCraftingOrders();
         drawString(fontRendererObj, "Active: " + active.size() + "/" + activeCapacity
-                + "    Queue: " + queued.size() + "/" + queueCapacity, 34, 59, 0xFFFFD45A);
+                + "    Queue: " + queued.size() + "/" + queueCapacity
+                + "    Ready: " + game.getReadyCraftingOrders().size(), 34, 59, 0xFFFFD45A);
         StringBuilder detail = new StringBuilder("Running: ");
         long now = System.currentTimeMillis();
         for (int i = 0; i < active.size(); i++) {
@@ -221,13 +255,13 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
                         x + 40, y + 20, 0xFFB7C4D5);
                 drawString(fontRendererObj, "Makes: " + recipe.outputQuantity + " " + recipe.productName
                         + "  |  " + formatTime(recipe.durationMillis), x + 8, y + 35, 0xFFE3E7EE);
-                drawString(fontRendererObj, "Batch sale: " + recipe.sellingPrice + " coins",
+                drawString(fontRendererObj, "Batch sale: " + game.getCraftingBatchSaleValue(recipe) + " coins",
                         x + cardWidth - 126, y + 35, 0xFFFFD45A);
             } else {
                 int batches = game.getCraftedProductBatches(recipe.id);
                 drawString(fontRendererObj, "Stock: " + batches + " batches (" + (batches * recipe.outputQuantity) + " items)",
                         x + 40, y + 22, 0xFFB7C4D5);
-                drawString(fontRendererObj, "Batch sale: " + recipe.sellingPrice + " coins",
+                drawString(fontRendererObj, "Batch sale: " + game.getCraftingBatchSaleValue(recipe) + " coins",
                         x + 40, y + 36, 0xFFFFD45A);
             }
         }
