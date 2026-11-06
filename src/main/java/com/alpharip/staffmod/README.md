@@ -469,3 +469,19 @@ Folder: `achievements/suffix/`
 - **AchievementSuffixGui.java** — Provides a Minecraft 1.8.9 preview for browsing suffix definitions, showing locked/unlocked state, selecting an unlocked suffix, disabling it, and returning to the parent screen. Verify scrolling/layout with large catalogues and supported GUI scales.
 
 **Prototype boundary:** The suffix catalogue must be supplied by the caller; no default suffixes are invented. Unlock checks use the in-memory achievement checklist only. There is no chat/name rendering hook, persistent storage, Supabase integration, account synchronization, permission/rank change, or AlphaClient Core integration. No compile or in-game test is claimed.
+
+## Account — Account Linking
+
+Folder: `account/`
+
+- **AccountLink.java** — Immutable local account reference containing a generated local ID, provider label, account identifier, display name, creation timestamp, and local state. It stores no passwords, tokens, or other credentials; ownership and identity are not verified.
+- **AccountLinkStatus.java** — Distinguishes a locally registered entry from a locally disconnected entry. These states are UI/prototype states, not proof of an authenticated external connection.
+- **AccountLinkValidator.java** — Validates required provider, account identifier, and display-name lengths. Add provider-specific format rules only after the supported providers and identity requirements are defined.
+- **AccountLinkRegistry.java** — Maintains account references in insertion order, rejects duplicate provider/identifier pairs, updates local state, removes entries, and exposes immutable list snapshots. It is in-memory only.
+- **AccountLinkingSettings.java** — Holds the prototype enable flag and selected local entry ID. Settings are session-local and are not persisted.
+- **AccountLinking.java** — Main facade exposing the registry and settings and clearing local prototype data.
+- **AccountLinkingService.java** — Coordinates local entry creation, selection, disconnection, and removal. Creation records user-supplied labels only; it does not perform an OAuth flow, verify account ownership, or establish a real account link.
+- **AccountLinkingGui.java** — Provides a Minecraft 1.8.9 screen preview for adding local references, selecting entries, disconnecting/removing them, and toggling the prototype. The UI explicitly labels entries as local and unverified; complete scrolling, layout overflow handling, and parent-screen integration before production use.
+
+**Prototype boundary:** This is a local UI/data-model prototype only. It does not authenticate accounts, connect Microsoft/Minecraft identities, store credentials, persist entries, synchronize account data, call Supabase, or integrate with AlphaClient Core. A production implementation requires an explicitly approved identity provider and secure authentication/verification design. No compile or in-game test is claimed.
+
