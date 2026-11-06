@@ -946,6 +946,7 @@ public final class PixelGardenCommand extends CommandBase {
             if (name.equalsIgnoreCase(SupabaseCommunityService.getSignedInAlphaName())
                     && result.has("save_data") && result.get("save_data").isJsonObject()) {
                 game.loadSaveData(result.getAsJsonObject("save_data"));
+                saveCloudAsync(game);
             }
             if ("give".equals(action)) reply(sender, "Granted " + amount + " " + product + " batch(es) to " + name + ".");
             else if ("finish".equals(action)) reply(sender, "Moved " + ("all".equals(String.valueOf(amount)) || amount == 0 ? "all active" : "order #" + amount)
