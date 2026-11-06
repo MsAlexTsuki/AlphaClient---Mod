@@ -533,6 +533,13 @@ public final class PixelGardenProgressionData {
         return instanceId;
     }
 
+    private static boolean isTutorialQuest(String definitionId) {
+        return "pg_fresh_start".equals(definitionId)
+                || "pg_first_coins".equals(definitionId)
+                || "pg_growing_bigger".equals(definitionId)
+                || "pg_your_own_garden".equals(definitionId);
+    }
+
     /**
      * Picks and assigns one eligible quest for an NPC. weight is a relative
      * weight among quests unlocked by the supplied level and prestige, not a fixed
@@ -548,7 +555,8 @@ public final class PixelGardenProgressionData {
         List<QuestDefinition> candidates = new ArrayList<QuestDefinition>();
         long totalWeight = 0L;
         for (QuestDefinition definition : definitions.values()) {
-            if (!npcId.equals(definition.npc) || definition.weight <= 0
+            if (isTutorialQuest(definition.id)
+                    || !npcId.equals(definition.npc) || definition.weight <= 0
                     || !isDefinitionEligible(definition, playerLevel, playerPrestige)) continue;
             candidates.add(definition);
             totalWeight += definition.weight;
