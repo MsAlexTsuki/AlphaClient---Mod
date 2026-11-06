@@ -18,7 +18,7 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
     private static final int CRAFT_BASE = 1000;
     private static final int SELL_BASE = 1100;
     private static final int TAB_RECIPES = 1200, TAB_PRODUCTS = 1201, BACK = 1202;
-    private static final int CARD_HEIGHT = 68, CARD_GAP = 6;
+    private static final int CARD_HEIGHT = 78, CARD_GAP = 8;
     private final GuiScreen parent;
     private final PixelGardenGame game = PixelGardenGame.getInstance();
     private boolean productsPage;
@@ -41,7 +41,8 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
     }
 
     private int visibleRows() {
-        return Math.max(1, (height - 168) / (CARD_HEIGHT + CARD_GAP));
+        int panelHeight = height - 105;
+        return Math.max(1, (panelHeight - 48) / (CARD_HEIGHT + CARD_GAP));
     }
 
     private void clampScroll() {
@@ -62,9 +63,11 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
         buttonList.clear();
         game.processTime(System.currentTimeMillis());
         clampScroll();
-        int left = 24;
+        int panelLeft = Math.max(18, width / 2 - 250);
+        int panelWidth = Math.min(500, width - 36);
+        int left = panelLeft + 10;
         int gap = 8;
-        int cardWidth = Math.max(120, (width - 48 - gap) / 2);
+        int cardWidth = (panelWidth - 28 - gap) / 2;
         int first = scrollRow * 2;
         int count = productsPage ? visibleProducts().size() : PixelGardenGame.getCraftingRecipes().size();
         int last = Math.min(count, first + visibleRows() * 2);
@@ -75,7 +78,7 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
             int y = 99 + row * (CARD_HEIGHT + CARD_GAP);
             int id = productsPage ? SELL_BASE + index : CRAFT_BASE + index;
             String label = productsPage ? "Sell all" : "Craft / Queue";
-            buttonList.add(new AlphaButton(id, x + 8, y + 48, cardWidth - 16, 16, label));
+            buttonList.add(new AlphaButton(id, x + 8, y + 57, cardWidth - 16, 16, label));
         }
         int navY = height - 32;
         int navCount = 3;
@@ -225,7 +228,9 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
     }
 
     private void drawRecipeCards(int mouseX, int mouseY) {
-        int left = 24, gap = 8, cardWidth = Math.max(120, (width - 48 - gap) / 2);
+        int panelLeft = Math.max(18, width / 2 - 250);
+        int panelWidth = Math.min(500, width - 36);
+        int left = panelLeft + 10, gap = 8, cardWidth = (panelWidth - 28 - gap) / 2;
         int first = scrollRow * 2;
         List<PixelGardenGame.CraftingRecipe> recipes = productsPage
                 ? visibleProducts() : PixelGardenGame.getCraftingRecipes();
@@ -267,7 +272,9 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
         drawString(fontRendererObj, productsPage ? " / CRAFTED PRODUCTS" : " / CRAFTING",
                 130, 18, 0xFFE3E7EE);
         drawString(fontRendererObj, "Coins: " + game.getCoins(), width - 115, 18, 0xFFFFD45A);
-        drawPanel(18, 54, width - 36, height - 94);
+        int panelLeft = Math.max(18, width / 2 - 250);
+        int panelWidth = Math.min(500, width - 36);
+        drawPanel(panelLeft, 60, panelWidth, height - 105);
         if (!productsPage) {
             drawOrdersSummary();
             drawString(fontRendererObj, "Recipes  •  ingredients are consumed when an order starts",
