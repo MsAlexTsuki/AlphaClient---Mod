@@ -89,7 +89,8 @@ public final class StaffReviewCalendarGui extends GuiScreen {
         drawCenteredString(fontRendererObj, "Staff Review Calendar — " + calendar.getDisplayedYear(),
                 width / 2, 8, 0xFFFFFF);
         drawCenteredString(fontRendererObj, calendar.getManager().countForYear(calendar.getDisplayedYear())
-                + " reviews scheduled this year", width / 2, 21, 0xAAAAAA);
+                + " reviews this year  |  " + calendar.getManager().getReminders(LocalDate.now()).size()
+                + " active reminders", width / 2, 21, 0xAAAAAA);
         int monthWidth = (width - 24) / 4;
         int cellWidth = monthWidth / 7;
         String[] weekdays = {"M", "T", "W", "T", "F", "S", "S"};
