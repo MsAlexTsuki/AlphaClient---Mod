@@ -485,3 +485,18 @@ Folder: `account/`
 
 **Prototype boundary:** This is a local UI/data-model prototype only. It does not authenticate accounts, connect Microsoft/Minecraft identities, store credentials, persist entries, synchronize account data, call Supabase, or integrate with AlphaClient Core. A production implementation requires an explicitly approved identity provider and secure authentication/verification design. No compile or in-game test is claimed.
 
+
+
+## Achievement Wall — Profile Achievement Display
+
+Folder: `achievements/`
+
+- **AchievementWall.java** — Coordinates the profile-wall prototype and preserves the original idea class's unlock-record API. It can also read unlocked entries from the existing local `AchievementChecklist`; it does not change the checklist's definitions or progress rules.
+- **AchievementWallEntry.java** — Creates an immutable display snapshot for one achievement, including title, category, progress, unlock state, and unlock timestamp.
+- **AchievementWallSort.java** — Defines recent-first, oldest-first, title, and category ordering.
+- **AchievementWallSettings.java** — Holds session-local enablement, locked-entry visibility, sorting, and search-query settings.
+- **AchievementWallSnapshot.java** — Exposes an immutable filtered wall result and total/unlocked/locked counts with a completion percentage.
+- **AchievementWallService.java** — Builds the wall from the existing in-memory `AchievementChecklist`, applies text filtering and locked-entry visibility, and sorts the result deterministically.
+- **AchievementWallGui.java** — Provides a Minecraft 1.8.9 profile-wall preview with paged entries, completion summary, sorting, and a locked-entry visibility toggle. It is not registered in an existing menu.
+
+**Prototype boundary:** The wall reuses caller-supplied entries from the existing local `AchievementChecklist`. It does not invent an achievement catalogue, add gameplay event hooks, persist data, synchronize accounts, call Supabase, alter rank/permission behavior, or integrate with AlphaClient Core. Settings remain in-memory. The GUI requires an approved entry point and further layout verification. No compile or in-game test is claimed.
