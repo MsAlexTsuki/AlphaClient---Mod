@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Inventory at creation: **182 Java files** across the folders listed below.
+- Inventory at creation: **190 Java files** across the folders listed below.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -427,3 +427,19 @@ The inventory shows package declarations with different capitalization/naming co
 ## Current verification boundary
 
 This README was assembled from the `mod-ideas` branch tree and source-file declarations at the time of creation. It is an implementation checklist, not a compile report. The listed prototypes have **not** been collectively compiled or tested in-game as part of creating this document. A file being present does not prove that its imports, package path, API usage, UI, event registration, persistence, or runtime behavior are correct.
+
+
+## Wrapped — Annual Alpha Wrapped Summary
+
+Folder: `Wrapped/`
+
+- **AnnualAlphaWrappedSession.java** — Immutable local session sample containing start time, end time, and server identifier. Validate timestamps and define how open sessions are finalized before production use.
+- **AnnualAlphaWrappedPeriod.java** — Identifies the calendar-year reporting period. Extend only when additional reporting periods are explicitly required.
+- **AnnualAlphaWrappedSummary.java** — Immutable annual result containing year, total playtime, session count, visited-server count, and availability. Keep result values non-negative and define whether an empty year should be hidden or shown as an empty recap.
+- **AnnualAlphaWrappedSettings.java** — Holds local enablement/opt-in and selected-year state. Add local persistence and a settings UI only after defaults and opt-in behavior are confirmed; this prototype does not sync settings remotely.
+- **AnnualAlphaWrappedCalculator.java** — Calculates session overlap with the selected calendar year and counts distinct non-empty server identifiers. Verify timezone boundaries, daylight-saving transitions, open sessions, duplicate/unknown server identifiers, and large-duration overflow.
+- **AnnualAlphaWrappedService.java** — Coordinates calculation from caller-supplied session samples and respects the local enabled setting. Connect a real, approved yearly activity source only in a separately authorized implementation; do not infer annual history from a lifetime total.
+- **AnnualAlphaWrappedCard.java** — Draws reusable statistic cards for the Wrapped GUI. Verify rendering at supported GUI scales and restore/avoid changing shared render state.
+- **AnnualAlphaWrappedGui.java** — Displays the annual recap preview with playtime, sessions, servers visited, year, and a back action. Add year navigation, loading/error states, and a real menu entry only after the data source and UX are specified.
+
+**Prototype boundary:** This folder accepts supplied local session samples only. It does not retrieve account history, persist annual session records, call Supabase, or integrate with AlphaClient Core. The settings object is currently in-memory. No compile or in-game test is claimed for this prototype.
