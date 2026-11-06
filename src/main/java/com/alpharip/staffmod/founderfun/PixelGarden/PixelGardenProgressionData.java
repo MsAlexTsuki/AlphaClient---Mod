@@ -307,7 +307,9 @@ public final class PixelGardenProgressionData {
                     PixelGardenNPC.MACK, 1, 0, 0, "Beginner", objectives,
                     Collections.<String, Integer>emptyMap()));
         }
-        if (!hasInstanceForDefinition("pg_crafting_tutorial")) {
+        if (isTutorialQuestCompleted("pg_crafting_tutorial")) {
+            removeStaleCompletedTutorialInstances("pg_crafting_tutorial");
+        } else if (!hasInstanceForDefinition("pg_crafting_tutorial")) {
             assignQuest("pg_crafting_tutorial");
         }
 
@@ -430,6 +432,11 @@ public final class PixelGardenProgressionData {
             addDefinition(new QuestDefinition(id, name, description, npc, 1, 0, "Beginner",
                     objectives, Collections.<String, Integer>emptyMap()));
         }
+        // A completed tutorial must never be recreated after its old instance is pruned.
+        if (isTutorialQuestCompleted(id)) {
+            removeStaleCompletedTutorialInstances(id);
+            return;
+        }
         if (!hasInstanceForDefinition(id)) {
             String instanceId = assignQuest(id);
             if ("pg_fresh_start".equals(id)) acceptQuest(instanceId, level, 0);
@@ -441,6 +448,23 @@ public final class PixelGardenProgressionData {
                     acceptQuest(instance.instanceId, level, 0);
                     break;
                 }
+            }
+        }
+    }
+
+    /**
+     * Removes stale non-completed instances when the completion marker is still
+     * present in quest history. This prevents completed tutorial quests from
+     * reappearing after the 20-instance cleanup prunes their original instance.
+     */
+    private void removeStaleCompletedTutorialInstances(String definitionId) {
+        if (!isTutorialQuestCompleted(definitionId)) return;
+        java.util.Iterator<QuestInstance> iterator = instances.values().iterator();
+        while (iterator.hasNext()) {
+            QuestInstance instance = iterator.next();
+            if (definitionId.equals(instance.definitionId)
+                    && instance.status != QuestStatus.COMPLETED) {
+                iterator.remove();
             }
         }
     }
