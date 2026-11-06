@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Inventory at creation: **195 Java files** across the folders listed below.
+- Inventory at creation: **200 Java files** across the folders listed below.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -456,3 +456,16 @@ Folder: `achievements/`
 - **AchievementChecklistGui.java** — Provides a Minecraft 1.8.9 preview with selectable entries, progress states, explanation text, and navigation. Connect it to a real menu only after the catalogue and entry source are defined; finish layout/overflow handling for long text and larger lists.
 
 **Prototype boundary:** No predefined achievement list, gameplay event hooks, persistent storage, Supabase integration, account synchronization, or AlphaClient Core integration is included. The GUI requires caller-supplied entries. No compile or in-game test is claimed.
+
+
+### Achievements — Suffixes
+
+Folder: `achievements/suffix/`
+
+- **AchievementSuffixEntry.java** — Defines a suffix ID, the achievement ID required to unlock it, display text, and description. Confirm the final suffix catalogue and display-format rules before adding production definitions.
+- **AchievementSuffixRegistry.java** — Stores caller-supplied suffix definitions in insertion order and rejects duplicate IDs. Add validation/tests for catalogue consistency and define whether removal is permitted after a suffix has been selected.
+- **AchievementSuffixSettings.java** — Holds the session-local enabled state and selected suffix ID. Local persistence and a user-facing settings entry are not implemented.
+- **AchievementSuffixService.java** — Resolves whether a suffix is unlocked by checking its required entry in the existing local `AchievementChecklist`; allows selection only when that achievement is unlocked. It does not render suffixes in chat, tab list, nametags, or profiles.
+- **AchievementSuffixGui.java** — Provides a Minecraft 1.8.9 preview for browsing suffix definitions, showing locked/unlocked state, selecting an unlocked suffix, disabling it, and returning to the parent screen. Verify scrolling/layout with large catalogues and supported GUI scales.
+
+**Prototype boundary:** The suffix catalogue must be supplied by the caller; no default suffixes are invented. Unlock checks use the in-memory achievement checklist only. There is no chat/name rendering hook, persistent storage, Supabase integration, account synchronization, permission/rank change, or AlphaClient Core integration. No compile or in-game test is claimed.
