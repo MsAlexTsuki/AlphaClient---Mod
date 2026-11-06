@@ -47,6 +47,10 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private int selectedDeliveryCropIndex;
     private boolean cropControlsExpanded;
     private String actionMessage = "";
+    private List<PixelGardenProgressionData.QuestInstance> cachedVisibleQuests;
+    private PixelGardenProgressionData.QuestStatus cachedQuestStatus;
+    private volatile int cachedPrestige;
+    private volatile boolean prestigeLoaded;
 
     public PixelGardenQuestBookGUI(GuiScreen parent) {
         this(parent, PixelGardenProgressionData.QuestStatus.ACTIVE);
@@ -57,14 +61,77 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
         this.viewStatus = initialStatus == null
                 ? PixelGardenProgressionData.QuestStatus.ACTIVE : initialStatus;
         progression.ensureDefaultCatalog();
-        try { progression.mergeSharedDefinitions(SupabaseCommunityService.getSharedPixelGardenQuests()); }
-        catch (Exception exception) { System.err.println("[AlphaClient] Could not sync shared Pixel Garden quests: " + exception.getMessage()); }
-        int assigned = progression.assignAutomaticNpcQuests(
-                progression.getLevel(), playerPrestige(), new java.util.Random());
-        if (assigned > 0) saveProgressionAsync();
+        this.prestigeLoaded = !SupabaseCommunityService.isSignedIn();
+        loadSharedQuestDataAsync();
+    }
+
+    /**
+     * Network calls must not run on Minecraft's GUI thread. Apply returned quest
+     * definitions and automatic assignments on the client thread.
+     */
+    private void loadSharedQuestDataAsync() {
+        if (!SupabaseCommunityService.isSignedIn()) {
+            int assigned = progression.assignAutomaticNpcQuests(
+                    progression.getLevel(), 0, new java.util.Random());
+            if (assigned > 0) saveProgressionAsync();
+            return;
+        }
+        Thread thread = new Thread(new Runnable() {
+            @Override public void run() {
+                com.google.gson.JsonArray sharedDefinitions = null;
+                int prestige = 0;
+                boolean prestigeRequestSucceeded = false;
+                try {
+                    sharedDefinitions = SupabaseCommunityService.getSharedPixelGardenQuests();
+                } catch (Exception exception) {
+                    System.err.println("[AlphaClient] Could not sync shared Pixel Garden quests: "
+                            + exception.getMessage());
+                }
+                try {
+                    com.google.gson.JsonObject state = SupabaseCommunityService.getPixelGardenPrestigeState();
+                    prestige = state.has("prestige_count")
+                            ? Math.max(0, state.get("prestige_count").getAsInt()) : 0;
+                    prestigeRequestSucceeded = true;
+                } catch (Exception exception) {
+                    System.err.println("[AlphaClient] Could not load Pixel Garden prestige: "
+                            + exception.getMessage());
+                }
+                final com.google.gson.JsonArray definitions = sharedDefinitions;
+                final int loadedPrestige = prestige;
+                final boolean loadedPrestigeSuccessfully = prestigeRequestSucceeded;
+                Minecraft.getMinecraft().addScheduledTask(new Runnable() {
+                    @Override public void run() {
+                        if (definitions != null) {
+                            try { progression.mergeSharedDefinitions(definitions); }
+                            catch (Exception exception) {
+                                System.err.println("[AlphaClient] Could not apply shared Pixel Garden quests: "
+                                        + exception.getMessage());
+                            }
+                        }
+                        if (loadedPrestigeSuccessfully) {
+                            cachedPrestige = loadedPrestige;
+                            prestigeLoaded = true;
+                        }
+                        int assigned = progression.assignAutomaticNpcQuests(
+                                progression.getLevel(), cachedPrestige, new java.util.Random());
+                        invalidateQuestCache();
+                        initGui();
+                        if (assigned > 0 || definitions != null) saveProgressionAsync();
+                    }
+                });
+            }
+        }, "AlphaClient-QuestBookLoad");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void invalidateQuestCache() {
+        cachedVisibleQuests = null;
+        cachedQuestStatus = null;
     }
 
     private List<PixelGardenProgressionData.QuestInstance> questsForView() {
+        if (cachedVisibleQuests != null && cachedQuestStatus == viewStatus) return cachedVisibleQuests;
         List<PixelGardenProgressionData.QuestInstance> result =
                 new ArrayList<PixelGardenProgressionData.QuestInstance>();
         for (PixelGardenProgressionData.QuestInstance instance : progression.getInstances()) {
@@ -94,7 +161,9 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 }
             });
         }
-        return result;
+        cachedVisibleQuests = result;
+        cachedQuestStatus = viewStatus;
+        return cachedVisibleQuests;
     }
 
     private PixelGardenProgressionData.QuestInstance selectedQuest() {
@@ -211,13 +280,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
         return null;
     }
 
-    private int playerPrestige() {
-        if (!SupabaseCommunityService.isSignedIn()) return 0;
-        try {
-            com.google.gson.JsonObject state = SupabaseCommunityService.getPixelGardenPrestigeState();
-            return state.has("prestige_count") ? Math.max(0, state.get("prestige_count").getAsInt()) : 0;
-        } catch (Exception ignored) { return 0; }
-    }
+    private int playerPrestige() { return cachedPrestige; }
 
     private void saveProgressionAsync() {
         if (!SupabaseCommunityService.isSignedIn()) return;
@@ -306,6 +369,10 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             return;
         }
         if (button.id == ACCEPT) {
+            if (!prestigeLoaded) {
+                actionMessage("Loading your Prestige status. Please try again in a moment.");
+                return;
+            }
             PixelGardenProgressionData.QuestInstance selected = selectedQuest();
             if (selected == null) { actionMessage("Select a quest first."); return; }
             if (!progression.acceptQuest(selected.instanceId, progression.getLevel(), playerPrestige())) {
@@ -314,6 +381,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                         : "Quest requirements are not met yet.");
             } else {
                 viewStatus = PixelGardenProgressionData.QuestStatus.ACTIVE;
+                invalidateQuestCache();
                 saveProgressionAsync();
                 actionMessage("Quest accepted. Your progress is now being tracked.");
             }
@@ -361,6 +429,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 }
                 if (previousProgress + amount >= objective.requiredAmount) {
                     progression.completeQuest(selected.instanceId);
+                    invalidateQuestCache();
                     PixelGardenProgressionData.QuestInstance updated = progression.getInstance(selected.instanceId);
                     if (updated != null && updated.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED) {
                         viewStatus = PixelGardenProgressionData.QuestStatus.COMPLETED;
@@ -394,6 +463,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             // Complete only after the inventory transaction and objective update both succeed.
             if (previousProgress + amount >= objective.requiredAmount) {
                 progression.completeQuest(selected.instanceId);
+                invalidateQuestCache();
                 PixelGardenProgressionData.QuestInstance updated = progression.getInstance(selected.instanceId);
                 if (updated != null && updated.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED) {
                     viewStatus = PixelGardenProgressionData.QuestStatus.COMPLETED;
@@ -433,6 +503,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             viewStatus = button.id == TAB_ACTIVE ? PixelGardenProgressionData.QuestStatus.ACTIVE
                     : button.id == TAB_AVAILABLE ? PixelGardenProgressionData.QuestStatus.AVAILABLE
                     : PixelGardenProgressionData.QuestStatus.COMPLETED;
+            invalidateQuestCache();
             selectedInstanceId = null;
             scrollOffset = 0;
             initGui();
