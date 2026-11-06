@@ -15,6 +15,11 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.Set;
 import java.util.LinkedHashSet;
+import net.minecraft.client.Minecraft;
+import net.minecraft.event.ClickEvent;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
+import net.minecraft.util.EnumChatFormatting;
 
 /**
  * Persistent foundation for Pixel Garden progression and quests.
@@ -626,8 +631,27 @@ public final class PixelGardenProgressionData {
         instance.finishedAt = System.currentTimeMillis();
         history.add(new HistoryEntry(instance.instanceId, instance.definitionId,
                 QuestStatus.COMPLETED, instance.finishedAt));
+        notifyQuestCompleted();
         autoStartNextTutorialQuest(instance.definitionId);
         return true;
+    }
+
+    private void notifyQuestCompleted() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null || minecraft.thePlayer == null) return;
+
+        ChatComponentText message = new ChatComponentText(
+                "You have completed a quest! Quickly check it out ");
+        ChatComponentText link = new ChatComponentText("[here]");
+        ChatStyle linkStyle = new ChatStyle();
+        linkStyle.setColor(EnumChatFormatting.YELLOW);
+        linkStyle.setUnderlined(true);
+        linkStyle.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                "/pixelgarden quests completed"));
+        link.setChatStyle(linkStyle);
+        message.appendSibling(link);
+        message.appendText("!");
+        minecraft.thePlayer.addChatMessage(message);
     }
 
     private void autoStartNextTutorialQuest(String completedDefinitionId) {
