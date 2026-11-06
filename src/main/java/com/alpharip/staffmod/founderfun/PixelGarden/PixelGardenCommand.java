@@ -21,7 +21,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|priceinfo|craft <open|recipes|recipe|start|status|cancel|products|sell|upgrades|upgrade|admin>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|harvested|seeds|ids]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [give <seeds|crops|product> <alpha account> <item_id> <amount>|give resettoken <alpha account>|craft <...>|quests|shop|inventory|help]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override
@@ -123,7 +123,22 @@ public final class PixelGardenCommand extends CommandBase {
         if ("admin".equals(root) && args.length == 3 && "level".equalsIgnoreCase(args[1]))
             return getListOfStringsMatchingLastWord(args, new String[] {"create", "delete"});
         if ("give".equals(root) && args.length == 2)
-            return getListOfStringsMatchingLastWord(args, new String[] {"resettoken"});
+            return getListOfStringsMatchingLastWord(args, new String[] {"resettoken", "seeds", "crops", "product"});
+        if ("give".equals(root) && args.length == 4) {
+            if ("seeds".equalsIgnoreCase(args[1]))
+                return getListOfStringsMatchingLastWord(args, new String[] {
+                        "wheat", "potato", "carrot", "pumpkin", "melon", "cactus", "sugarcane", "berries"
+                });
+            if ("crops".equalsIgnoreCase(args[1]))
+                return getListOfStringsMatchingLastWord(args, new String[] {
+                        "wheat", "potato", "carrot", "pumpkin", "melon", "cactus", "sugarcane", "berries"
+                });
+            if ("product".equalsIgnoreCase(args[1]))
+                return getListOfStringsMatchingLastWord(args, new String[] {
+                        "bread", "chips", "potato_mush", "carrot_juice", "pumpkin_head", "melon_slices",
+                        "cactus_juice", "sugar", "basket_of_berries", "camberry_bread", "sugar_bread"
+                });
+        }
         if ("harvesttime".equals(root) && args.length == 2)
             return getListOfStringsMatchingLastWord(args, new String[] {"1", "2", "5", "10", "finish", "normal"});
         if ("upgrade".equals(root) && args.length == 2)
@@ -584,8 +599,34 @@ public final class PixelGardenCommand extends CommandBase {
             if (args.length >= 3 && "resettoken".equalsIgnoreCase(args[1])) {
                 if (!founderOnly(sender)) return;
                 runFounderAction(sender, "give_token", args[2], 0);
+            } else if (args.length >= 5 && ("seeds".equalsIgnoreCase(args[1])
+                    || "crops".equalsIgnoreCase(args[1]) || "product".equalsIgnoreCase(args[1]))) {
+                if (!founderOnly(sender)) return;
+                String itemType = args[1].toLowerCase(Locale.ROOT);
+                String target = args[2];
+                String itemId = args[3].toLowerCase(Locale.ROOT);
+                int amount = number(args[4]);
+                if (amount < 1 || amount > 1000000) {
+                    reply(sender, "Amount must be between 1 and 1,000,000.");
+                    return;
+                }
+                try {
+                    com.google.gson.JsonObject result = SupabaseCommunityService.givePixelGardenInventoryItem(
+                            target, itemType, itemId, amount);
+                    String name = result.has("target_alpha_name")
+                            ? result.get("target_alpha_name").getAsString() : target;
+                    if (name.equalsIgnoreCase(SupabaseCommunityService.getSignedInAlphaName())
+                            && result.has("save_data") && result.get("save_data").isJsonObject()) {
+                        game.loadSaveData(result.getAsJsonObject("save_data"));
+                    }
+                    String itemLabel = "product".equals(itemType) ? itemId.replace('_', ' ') : itemId.replace("seeds_", "");
+                    String unit = "seeds".equals(itemType) ? "seed(s)" : "crops".equals(itemType) ? "crop(s)" : "product item(s)";
+                    reply(sender, "Gave " + amount + " " + itemLabel + " " + unit + " to " + name + ".");
+                } catch (Exception exception) {
+                    reply(sender, "Pixel Garden inventory grant failed: " + safeMessage(exception));
+                }
             } else {
-                reply(sender, "Usage: /pixelgarden give resettoken <Alpha account>");
+                reply(sender, "Usage: /pixelgarden give <seeds|crops|product> <Alpha account> <item_id> <amount> | give resettoken <Alpha account>");
             }
         } else if ("coins".equals(action)) {
             String target = args.length >= 2 ? args[1] : null;
