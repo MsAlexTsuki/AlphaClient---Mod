@@ -349,7 +349,7 @@ public final class PixelGardenProgressionData {
                         else description = "Plant " + amount + " wheat in your garden.";
                     }
                 } else if (targetLevel >= 60) {
-                    String recipeId = npcIds[npcIndex].equals(PixelGardenNPC.JASMINE)
+                    String recipeId = targetLevel == 73 && slot == 0
                             ? "sugar_bread" : advancedRecipes[((targetLevel - 60) * 2 + slot) % advancedRecipes.length];
                     PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(recipeId);
                     String productName = recipe == null ? recipeId : recipe.productName;
