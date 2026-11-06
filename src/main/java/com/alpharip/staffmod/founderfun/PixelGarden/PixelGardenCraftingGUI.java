@@ -242,15 +242,19 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
             int y = 99 + row * (CARD_HEIGHT + CARD_GAP);
             drawPanel(x, y, cardWidth, CARD_HEIGHT);
             drawProductIcon(recipe, x + 8, y + 7);
-            drawString(fontRendererObj, recipe.productName, x + 40, y + 7, 0xFFF0F2F6);
             if (!productsPage) {
+                String saleText = "Batch sale: " + game.getCraftingBatchSaleValue(recipe) + " coins";
+                int saleX = x + cardWidth - 8 - fontRendererObj.getStringWidth(saleText);
+                int nameMaxWidth = Math.max(0, saleX - (x + 40) - 8);
+                drawString(fontRendererObj, fontRendererObj.trimStringToWidth(recipe.productName, nameMaxWidth),
+                        x + 40, y + 11, 0xFFF0F2F6);
+                drawString(fontRendererObj, saleText, saleX, y + 7, 0xFFFFD45A);
                 drawString(fontRendererObj, fontRendererObj.trimStringToWidth("Needs: " + ingredientText(recipe), cardWidth - 52),
                         x + 40, y + 20, 0xFFB7C4D5);
                 drawString(fontRendererObj, "Makes: " + recipe.outputQuantity + " " + recipe.productName
                         + "  |  " + formatTime(recipe.durationMillis), x + 8, y + 35, 0xFFE3E7EE);
-                drawString(fontRendererObj, "Batch sale: " + game.getCraftingBatchSaleValue(recipe) + " coins",
-                        x + cardWidth - 126, y + 35, 0xFFFFD45A);
             } else {
+                drawString(fontRendererObj, recipe.productName, x + 40, y + 7, 0xFFF0F2F6);
                 int batches = game.getCraftedProductBatches(recipe.id);
                 drawString(fontRendererObj, "Stock: " + batches + " batches (" + (batches * recipe.outputQuantity) + " items)",
                         x + 40, y + 22, 0xFFB7C4D5);
