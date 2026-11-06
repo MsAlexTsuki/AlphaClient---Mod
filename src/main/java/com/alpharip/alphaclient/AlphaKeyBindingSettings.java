@@ -15,6 +15,7 @@ public final class AlphaKeyBindingSettings {
     private static final Properties VALUES = new Properties();
     private static boolean loaded;
     private static boolean loadFailed;
+    private static boolean dirty;
 
     private AlphaKeyBindingSettings() { }
 
@@ -64,7 +65,8 @@ public final class AlphaKeyBindingSettings {
                 changed = true;
             }
         }
-        if (!changed) return;
+        if (changed) dirty = true;
+        if (!dirty) return;
 
         File destination = getFile();
         File parent = destination.getParentFile();
@@ -86,6 +88,7 @@ public final class AlphaKeyBindingSettings {
             } catch (Exception atomicFailure) {
                 Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
+            dirty = false;
         } catch (Exception error) {
             System.err.println("[AlphaClient] Could not save Alpha keybinds: " + error.getMessage());
         } finally {
