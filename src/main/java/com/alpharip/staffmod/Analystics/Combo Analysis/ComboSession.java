@@ -11,6 +11,7 @@ public final class ComboSession {
     private final ComboAnalysisAfterFight analysis = new ComboAnalysisAfterFight();
     private final long startedAtNanos;
     private boolean finished;
+    private boolean cancelled;
     private ComboResult result;
 
     public ComboSession(ComboConfig config) {
@@ -36,10 +37,14 @@ public final class ComboSession {
 
     /** Finishes the session and returns an immutable result. */
     public synchronized ComboResult finish() {
+        if (cancelled) {
+            throw new IllegalStateException("A cancelled combo analysis session cannot be finished.");
+        }
         if (result != null) {
             return result;
         }
 
+        ensureActive();
         long durationMillis = Math.max(0L, (System.nanoTime() - startedAtNanos) / 1000000L);
         result = new ComboResult(
                 durationMillis,
@@ -54,6 +59,7 @@ public final class ComboSession {
     public synchronized void cancel() {
         ensureActive();
         analysis.clear();
+        cancelled = true;
         finished = true;
     }
 
