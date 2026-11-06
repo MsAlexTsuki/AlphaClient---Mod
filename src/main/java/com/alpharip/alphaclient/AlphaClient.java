@@ -59,6 +59,8 @@ import com.alpharip.staffmod.Minimap.FullscreenMinimapGui;
 import com.alpharip.staffmod.Minimap.MinimapCommand;
 import com.alpharip.staffmod.Minimap.MinimapSettings;
 import com.alpharip.staffmod.waypoints.WorldWaypointIcons;
+import com.alpharip.staffmod.founderfun.PixelGardenGUI;
+import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import com.alpharip.staffmod.inventorysearch.InventorySearchMod;
 import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
 import com.alpharip.staffmod.singleplayer.worldedit.AlphaWorldEditCommand;
@@ -107,6 +109,7 @@ public final class AlphaClient {
     private KeyBinding openMinimapSettingsKey;
     private KeyBinding openFullscreenMinimapKey;
     private KeyBinding createQuickWaypointKey;
+    private KeyBinding openPixelGardenKey;
     private int partnerAutoConnectTicks = -1;
     private int presenceHeartbeatTicks = 0;
     private long lastStaffInputAt = System.currentTimeMillis();
@@ -211,6 +214,8 @@ public final class AlphaClient {
         ClientRegistry.registerKeyBinding(openMinimapSettingsKey);
         ClientRegistry.registerKeyBinding(openFullscreenMinimapKey);
         ClientRegistry.registerKeyBinding(createQuickWaypointKey);
+        openPixelGardenKey = new KeyBinding("AlphaClient: Open Pixel Garden", Keyboard.KEY_NONE, "AlphaClient");
+        ClientRegistry.registerKeyBinding(openPixelGardenKey);
         syncBhopKeyBindingVisibility();
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
     }
@@ -368,6 +373,12 @@ public final class AlphaClient {
         if (createQuickWaypointKey != null && createQuickWaypointKey.isPressed()
                 && minecraft.currentScreen == null && minecraft.theWorld != null && minecraft.thePlayer != null) {
             minecraft.displayGuiScreen(new CreateWaypointGui(null));
+        }
+        if (openPixelGardenKey != null && openPixelGardenKey.isPressed()
+                && minecraft.currentScreen == null
+                && PermissionService.hasPixelGardenRankAccess()
+                && PixelGardenModuleSettings.getInstance().isEnabled()) {
+            minecraft.displayGuiScreen(new PixelGardenGUI(null));
         }
     }
 
