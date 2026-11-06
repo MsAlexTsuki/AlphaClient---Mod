@@ -609,3 +609,19 @@ Folder: `AfkCamera/`
 - **AfkCameraGui.java** — Provides a standalone Minecraft 1.8.9 settings preview with enable, delay, preset cycling, reset, and Done/back controls. It is not registered in an existing menu.
 
 **Prototype boundary:** The 60-second default, 5–600-second range, and three preset labels are prototype choices because the source idea does not specify them. The prototype does not yet determine actual player activity from Minecraft input/events, move or rotate the camera, restore the camera on activity, persist settings, call Supabase, integrate with Forge events, or connect to AlphaClient Core. No compile or in-game test is claimed.
+
+## Aimassist Expansion
+
+Folder: `Aimassist Expansion/`
+
+- **AimAssistMod.java** — Standalone Forge client-tick prototype facade. It owns local settings and delegates updates to the controller; it is not registered with the existing AlphaModule system.
+- **AimAssistMode.java** — Defines Smooth, Snap, Dynamic, Predictive, Horizontal, Vertical, and Adaptive correction profiles. Verify each profile's feel and boundaries in controlled gameplay before production use.
+- **AimAssistSettings.java** — Holds enablement, mode, target priority, range, angle, speed, step, and prediction settings in memory only. Add approved persistence and migration only in a separately authorized integration.
+- **AimAssistController.java** — Coordinates target collection, priority selection, prediction offset, angle gating, and bounded rotation updates. Validate target switching and edge cases before integration.
+- **AimTarget.java** — Immutable target snapshot with position, per-tick displacement, and distance. Confirm displacement sampling and entity lifecycle handling against live Minecraft updates.
+- **AimTargetSelector.java** — Collects visible, alive player targets within range. The current priority enum is exposed; crosshair and lowest-angle currently share the angle score and require a dedicated crosshair ray comparison for exact distinction.
+- **AimRotationCalculator.java** — Calculates yaw/pitch deltas without mutating player rotation. Verify angle conventions and boundary cases in Minecraft 1.8.9.
+- **AimSmoothingController.java** — Applies bounded correction factors for the selected mode. Tune and validate mode behavior; Snap is immediate up to the configured maximum step, not an unrestricted instant rotation.
+- **AimAssistGui.java** — Standalone preview for enablement, mode, and priority selection. It is not registered in the existing AlphaClient menu and does not expose every setting yet.
+
+**Integration boundary:** This is an independent prototype folder beside `staffops/`. It does not modify the existing `development` AimAssist, AlphaClient Core, rank permissions, or Alpha Launcher. No Supabase, remote persistence, attacks, or packet sending are included. Compile and in-game behavior have not been verified.
