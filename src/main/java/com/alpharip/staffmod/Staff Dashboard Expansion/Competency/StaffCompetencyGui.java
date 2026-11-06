@@ -201,7 +201,8 @@ public final class StaffCompetencyGui extends GuiScreen {
         if (selected != null) {
             drawString(fontRendererObj, "Selected: " + selected.getName()
                 + "  |  Current level: "
-                + manager.getLevel(staffField.getText(), selected.getName()).getDisplayName(),
+                + (staffField.getText().trim().isEmpty() ? "Enter staff name"
+                    : manager.getLevel(staffField.getText(), selected.getName()).getDisplayName()),
                 left, 132, 0xFFDDDDDD);
         } else {
             drawString(fontRendererObj, "Select a competency below to assess it.",
