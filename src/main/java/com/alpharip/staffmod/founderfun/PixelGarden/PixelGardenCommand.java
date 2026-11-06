@@ -52,7 +52,7 @@ public final class PixelGardenCommand extends CommandBase {
                 return getListOfStringsMatchingLastWord(args, new String[] {"capacity", "queue"});
             if (args.length == 3 && "admin".equalsIgnoreCase(args[1]))
                 return getListOfStringsMatchingLastWord(args, new String[] {"give", "finish", "clear", "setcapacity", "setqueue", "reset", "reload"});
-            if (args.length == 4 && "sell".equalsIgnoreCase(args[1]))
+            if (args.length == 3 && "sell".equalsIgnoreCase(args[1]))
                 return getListOfStringsMatchingLastWord(args, new String[] {
                         "bread", "chips", "potato_mush", "carrot_juice", "pumpkin_head", "melon_slices",
                         "cactus_juice", "sugar", "basket_of_berries", "camberry_bread", "sugar_bread"
