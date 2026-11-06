@@ -566,3 +566,18 @@ Folder: `store/`
 - **Addons/AddonStoreGui.java** — Minecraft 1.8.9 preview for browsing supplied entries, searching, and changing local Installed/Disabled state. It is not registered in an existing menu.
 
 **Prototype boundary:** The central Store and Addons catalogue are local prototypes. Add-on entries must be supplied by a caller; no real catalogue service, downloads, external distribution, file installation, code loading/execution, persistence, account synchronization, Supabase integration, Forge event integration, or AlphaClient Core integration is included. The GUI is a preview only. No compile or in-game test is claimed.
+
+
+
+## Adjustable Rain and Snow Speed
+
+Folder: `AdjustableRainAndSnowSpeed/`
+
+- **AdjustableRainAndSnowSpeed.java** — Main facade exposing the local settings, controller, and standalone settings-screen factory. The original idea's `enabled` and `style` fields are retained for source-level continuity.
+- **WeatherType.java** — Identifies the two independently configurable weather channels: rain and snow.
+- **WeatherSpeedSettings.java** — Holds overall enablement, separate rain/snow toggles, and independent speed multipliers. Multipliers are clamped to 0.25x–3.0x; values are in-memory only.
+- **WeatherSpeedSnapshot.java** — Provides an immutable read snapshot of the current toggles and multipliers.
+- **WeatherSpeedController.java** — Applies channel toggles and multiplier changes and exposes effective values. Disabled channels or the overall module return the vanilla multiplier (1.0x).
+- **AdjustableRainAndSnowSpeedGui.java** — Provides a standalone Minecraft 1.8.9 settings preview with separate rain/snow sliders, channel toggles, overall enablement, reset, and Done controls. It is not registered in an existing menu.
+
+**Prototype boundary:** This prototype models separate rain and snow speed settings only. It does not hook Minecraft's weather renderer, change actual precipitation particle timing, distinguish biome-specific weather, persist settings, call Supabase, integrate with Forge events, or connect to AlphaClient Core. The GUI is a preview and is not wired into the client. No compile or in-game test is claimed.
