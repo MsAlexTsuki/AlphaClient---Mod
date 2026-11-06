@@ -45,8 +45,10 @@ public final class AccountInfoGui extends AlphaGuiScreen {
             AccountSwitchClient.SavedAccount account = accounts.get(i);
             String label = account.getName();
             if (isCurrentAccount(account)) label = label + "  [CURRENT]";
-            buttonList.add(new AlphaButton(ACCOUNT_BUTTON_START + i, buttonLeft,
-                    firstButtonY + i * rowHeight, buttonWidth, 23, label, !switching));
+            AlphaButton accountButton = new AlphaButton(ACCOUNT_BUTTON_START + i, buttonLeft,
+                    firstButtonY + i * rowHeight, buttonWidth, 23, label);
+            accountButton.enabled = !switching;
+            buttonList.add(accountButton);
         }
 
         buttonList.add(new AlphaButton(BACK, width / 2 - 72,
@@ -84,7 +86,7 @@ public final class AccountInfoGui extends AlphaGuiScreen {
 
         if (statusMessage != null) {
             drawCenteredString(fontRendererObj, statusMessage, width / 2,
-                    Math.min(height - 48, bottom - 17), switching ? 0xFFFFD866 : 0xFFE4E8EF);
+                    panelTop + 52, switching ? 0xFFFFD866 : 0xFFE4E8EF);
         }
 
         super.drawScreen(mouseX, mouseY, partialTicks);
