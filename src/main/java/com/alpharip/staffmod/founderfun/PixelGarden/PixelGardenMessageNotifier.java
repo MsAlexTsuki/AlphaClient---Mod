@@ -90,20 +90,37 @@ public final class PixelGardenMessageNotifier {
             notifiedReadyPlots = resized;
         }
         boolean changed = false;
-        boolean anyNewReadyCrop = false;
+        boolean anyReadyCrop = false;
+        boolean readyBatchAlreadyNotified = false;
         long now = System.currentTimeMillis();
         for (int i = 0; i < plots.size(); i++) {
             boolean ready = plots.get(i).getState(now) == PixelGardenGame.PlotState.READY;
+            anyReadyCrop |= ready;
+            readyBatchAlreadyNotified |= notifiedReadyPlots[i];
+
             if (ready && !notifiedReadyPlots[i]) {
                 notifiedReadyPlots[i] = true;
-                anyNewReadyCrop = true;
                 changed = true;
             } else if (!ready && notifiedReadyPlots[i]) {
                 notifiedReadyPlots[i] = false;
                 changed = true;
             }
         }
-        if (anyNewReadyCrop) send(minecraft, READY_MESSAGE);
+
+        // Send one reminder for the entire ready batch, not one per crop as plots mature.
+        if (anyReadyCrop && !readyBatchAlreadyNotified) {
+            send(minecraft, READY_MESSAGE);
+        }
+
+        // Allow the next reminder only after every crop in this batch has been harvested.
+        if (!anyReadyCrop) {
+            for (int i = 0; i < notifiedReadyPlots.length; i++) {
+                if (notifiedReadyPlots[i]) {
+                    notifiedReadyPlots[i] = false;
+                    changed = true;
+                }
+            }
+        }
         if (changed) save();
     }
 
