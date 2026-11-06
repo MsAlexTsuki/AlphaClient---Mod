@@ -28,7 +28,6 @@ public final class ComboCounter {
     private static ComboCounter instance;
     private static final long HIT_CONFIRMATION_TIMEOUT_MS = 1000L;
     private static final long COMBO_IDLE_TIMEOUT_MS = 20000L;
-    private static final long COMBO_IDLE_TIMEOUT_MS = 20000L;
     private static final String[] COLOR_NAMES = {
             "White", "Red", "Orange", "Yellow", "Green",
             "Cyan", "Blue", "Purple", "Pink", "Rainbow"
@@ -40,7 +39,6 @@ public final class ComboCounter {
 
     private final Map<UUID, PendingHit> pendingHits = new HashMap<UUID, PendingHit>();
     private int combo;
-    private long lastConfirmedHitAt;
     private long lastConfirmedHitAt;
     private int hudX = 5;
     private int hudY = 44;
