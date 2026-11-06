@@ -311,7 +311,10 @@ public final class PixelGardenGame {
     public synchronized int getCraftingCropIngredientValue(CraftingRecipe recipe) {
         if (recipe == null) return 0;
         long value = 0L;
-        for (Crop crop : Crop.values()) value += (long)recipe.getCropIngredient(crop) * crop.sellPrice;
+        for (Crop crop : Crop.values()) {
+            int amount = recipe.getCropIngredient(crop);
+            if (amount > 0) value += (long)Math.floor((double)crop.sellPrice * amount * getCoinMultiplier());
+        }
         return (int)Math.min(Integer.MAX_VALUE, value);
     }
     public synchronized int getCraftingProductIngredientValue(CraftingRecipe recipe) {
@@ -319,9 +322,14 @@ public final class PixelGardenGame {
         long value = 0L;
         for (java.util.Map.Entry<String, Integer> ingredient : recipe.getProductIngredients().entrySet()) {
             CraftingRecipe product = getCraftingRecipe(ingredient.getKey());
-            if (product != null) value += (long)product.sellingPrice * ingredient.getValue().intValue();
+            if (product != null) value += (long)Math.floor((double)product.sellingPrice
+                    * ingredient.getValue().intValue() * getCoinMultiplier());
         }
         return (int)Math.min(Integer.MAX_VALUE, value);
+    }
+    public synchronized int getCraftingBatchSaleValue(CraftingRecipe recipe) {
+        return recipe == null ? 0 : (int)Math.min(Integer.MAX_VALUE,
+                (long)Math.floor((double)recipe.sellingPrice * getCoinMultiplier()));
     }
 
     private boolean hasCraftingIngredients(CraftingRecipe recipe) {
