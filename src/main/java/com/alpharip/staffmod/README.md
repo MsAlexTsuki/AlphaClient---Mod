@@ -595,3 +595,17 @@ Folder: `AdjustableStarDensity/`
 - **AdjustableStarDensityGui.java** — Provides a standalone Minecraft 1.8.9 settings preview with a density slider, enable toggle, style cycling, reset, and Done/back navigation. It is not registered in an existing menu.
 
 **Prototype boundary:** This prototype models star-density settings and a standalone GUI preview only. It does not modify Minecraft's night-sky renderer, generate/remove stars, apply the selected visual styles, persist settings, call Supabase, integrate with Forge events, or connect to AlphaClient Core. The 0–200% range and three style labels are prototype defaults, not requirements stated in the original idea. No compile or in-game test is claimed.
+
+## AFK Camera
+
+Folder: `AfkCamera/`
+
+- **AfkCamera.java** — Main facade exposing local settings, the activity tracker, the state controller, and a standalone settings-screen factory.
+- **AfkCameraSettings.java** — Holds enablement, the inactivity delay (prototype default: 60 seconds; configurable from 5 to 600 seconds), and the selected camera preset. Settings remain in memory only.
+- **AfkCameraStyle.java** — Defines the proposed display presets Default, Slow Orbit, and Gentle Sweep. These are labels/state only; camera movement is not implemented.
+- **AfkActivityTracker.java** — Accepts activity timestamps from a future input/event adapter and calculates elapsed inactivity. It deliberately does not decide which player inputs count as activity.
+- **AfkCameraSnapshot.java** — Provides an immutable view of enablement, known activity, idle state, elapsed idle time, delay, and selected preset.
+- **AfkCameraController.java** — Evaluates whether the configured idle threshold has been reached and reports when a future camera adapter may activate the selected behavior.
+- **AfkCameraGui.java** — Provides a standalone Minecraft 1.8.9 settings preview with enable, delay, preset cycling, reset, and Done/back controls. It is not registered in an existing menu.
+
+**Prototype boundary:** The 60-second default, 5–600-second range, and three preset labels are prototype choices because the source idea does not specify them. The prototype does not yet determine actual player activity from Minecraft input/events, move or rotate the camera, restore the camera on activity, persist settings, call Supabase, integrate with Forge events, or connect to AlphaClient Core. No compile or in-game test is claimed.
