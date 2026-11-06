@@ -257,6 +257,10 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         if (parent instanceof PixelGardenGUI) ((PixelGardenGUI) parent).saveCloudAsync();
     }
 
+    @Override public void onGuiClosed() {
+        saveIfGardenParent();
+    }
+
     private void drawPanel(int x, int y, int w, int h) {
         drawRect(x, y, x + w, y + h, 0xF20B111A);
         drawRect(x, y, x + w, y + 3, 0xFFFFC83D);
