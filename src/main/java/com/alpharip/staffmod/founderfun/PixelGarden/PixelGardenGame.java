@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ChatComponentText;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -388,6 +390,17 @@ public final class PixelGardenGame {
                 craftedProductInventory.put(recipe.id, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, next)));
                 // Craft objectives advance only after the finished product has entered the shared inventory.
                 progressionData.recordActionProgress("CRAFT_PRODUCT", recipe.id, recipe.outputQuantity);
+                Minecraft minecraft = Minecraft.getMinecraft();
+                if (minecraft != null) {
+                    minecraft.addScheduledTask(new Runnable() {
+                        @Override public void run() {
+                            if (minecraft.thePlayer != null) {
+                                minecraft.thePlayer.addChatMessage(new ChatComponentText(
+                                        "The crafting of " + recipe.productName + " is done!"));
+                            }
+                        }
+                    });
+                }
             }
             startQueuedCraftingOrders(completedAt);
         }
