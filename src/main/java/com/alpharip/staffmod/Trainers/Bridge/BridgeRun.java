@@ -22,7 +22,7 @@ public final class BridgeRun {
         stats.recordPlacement(misplaced);
     }
 
-    public synchronized BridgeRunResult finish() {
+    synchronized BridgeRunResult finish() {
         if (result != null) {
             return result;
         }
