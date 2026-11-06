@@ -66,7 +66,7 @@ public final class PixelGardenCommand extends CommandBase {
         if ("quest".equals(root) || "quests".equals(root)) {
             if (args.length == 2) return getListOfStringsMatchingLastWord(args, new String[] {
                     "active", "open", "info", "list", "accept", "remove", "givequest", "complete",
-                    "history", "progress"
+                    "history", "progress", "completed"
             });
             if (args.length == 3 && ("accept".equalsIgnoreCase(args[1]) || "info".equalsIgnoreCase(args[1])
                     || "remove".equalsIgnoreCase(args[1]) || "complete".equalsIgnoreCase(args[1])
@@ -1040,8 +1040,11 @@ public final class PixelGardenCommand extends CommandBase {
             reply(sender, "Could not sync shared quests: " + safeMessage(exception));
             if (!"open".equals(sub)) return;
         }
-        if ("open".equals(sub)) {
-            open(new PixelGardenQuestBookGUI(null));
+        if ("open".equals(sub) || "completed".equals(sub)) {
+            PixelGardenProgressionData.QuestStatus initialStatus = "completed".equals(sub)
+                    ? PixelGardenProgressionData.QuestStatus.COMPLETED
+                    : PixelGardenProgressionData.QuestStatus.ACTIVE;
+            open(new PixelGardenQuestBookGUI(null, initialStatus));
             return;
         }
         List<PixelGardenProgressionData.QuestInstance> instances = new java.util.ArrayList<PixelGardenProgressionData.QuestInstance>(data.getInstances());
