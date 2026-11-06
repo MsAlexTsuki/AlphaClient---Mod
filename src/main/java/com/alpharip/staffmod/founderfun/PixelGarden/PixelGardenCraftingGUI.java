@@ -17,7 +17,7 @@ import java.util.List;
 public final class PixelGardenCraftingGUI extends GuiScreen {
     private static final int CRAFT_BASE = 1000;
     private static final int SELL_BASE = 1100;
-    private static final int TAB_RECIPES = 1200, TAB_PRODUCTS = 1201, BACK = 1202, COLLECT = 1203;
+    private static final int TAB_RECIPES = 1200, TAB_PRODUCTS = 1201, BACK = 1202;
     private static final int CARD_HEIGHT = 68, CARD_GAP = 6;
     private final GuiScreen parent;
     private final PixelGardenGame game = PixelGardenGame.getInstance();
@@ -78,15 +78,12 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
             buttonList.add(new AlphaButton(id, x + 8, y + 48, cardWidth - 16, 16, label));
         }
         int navY = height - 32;
-        boolean hasReadyOrders = !game.getReadyCraftingOrders().isEmpty();
-        int navCount = hasReadyOrders ? 4 : 3;
+        int navCount = 3;
         int navW = Math.min(130, (width - 64 - (navCount - 1) * 8) / navCount);
         int navX = (width - (navW * navCount + 8 * (navCount - 1))) / 2;
         buttonList.add(new AlphaButton(TAB_RECIPES, navX, navY, navW, 20, "Recipes"));
         buttonList.add(new AlphaButton(TAB_PRODUCTS, navX + navW + 8, navY, navW, 20, "Crafted Products"));
-        if (hasReadyOrders) buttonList.add(new AlphaButton(COLLECT, navX + (navW + 8) * 2, navY, navW, 20,
-                "Collect (" + game.getReadyCraftingOrders().size() + ")"));
-        buttonList.add(new AlphaButton(BACK, navX + (navW + 8) * (navCount - 1), navY, navW, 20, "Garden"));
+        buttonList.add(new AlphaButton(BACK, navX + (navW + 8) * 2, navY, navW, 20, "Garden"));
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
@@ -94,14 +91,6 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
         if (button.id == TAB_RECIPES || button.id == TAB_PRODUCTS) {
             productsPage = button.id == TAB_PRODUCTS;
             scrollRow = 0;
-            initGui();
-            return;
-        }
-        if (button.id == COLLECT) {
-            int collected = game.collectCompletedCraftingOrders();
-            notifyPlayer(collected == 0 ? "No completed orders are ready to collect."
-                    : "Collected " + collected + " completed crafting order(s).");
-            saveParent();
             initGui();
             return;
         }
@@ -214,7 +203,7 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
         List<String> queued = game.getQueuedCraftingOrders();
         drawString(fontRendererObj, "Active: " + active.size() + "/" + activeCapacity
                 + "    Queue: " + queued.size() + "/" + queueCapacity
-                + "    Ready: " + game.getReadyCraftingOrders().size(), 34, 59, 0xFFFFD45A);
+, 34, 59, 0xFFFFD45A);
         StringBuilder detail = new StringBuilder("Running: ");
         long now = System.currentTimeMillis();
         for (int i = 0; i < active.size(); i++) {
