@@ -153,7 +153,7 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
             int amount = recipe.getCropIngredient(crop);
             if (amount <= 0) continue;
             if (text.length() > 0) text.append(" + ");
-            text.append(amount).append(" ").append(crop.displayName);
+            text.append(amount).append(" ").append(crop == PixelGardenGame.Crop.BERRIES && amount == 1 ? "Berry" : crop.displayName);
         }
         for (java.util.Map.Entry<String, Integer> entry : recipe.getProductIngredients().entrySet()) {
             PixelGardenGame.CraftingRecipe ingredient = PixelGardenGame.getCraftingRecipe(entry.getKey());
@@ -191,6 +191,13 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
                     .append(" (").append(formatTime(order.completesAt - now)).append(")");
         }
         if (active.isEmpty()) detail.append("None");
+        detail.append("  |  Waiting: ");
+        for (int i = 0; i < queued.size(); i++) {
+            PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(queued.get(i));
+            if (i > 0) detail.append(", ");
+            detail.append(recipe == null ? queued.get(i) : recipe.productName);
+        }
+        if (queued.isEmpty()) detail.append("None");
         drawString(fontRendererObj, fontRendererObj.trimStringToWidth(detail.toString(), width - 68),
                 34, 73, 0xFFB7C4D5);
     }
@@ -212,8 +219,8 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
             if (!productsPage) {
                 drawString(fontRendererObj, fontRendererObj.trimStringToWidth("Needs: " + ingredientText(recipe), cardWidth - 52),
                         x + 40, y + 20, 0xFFB7C4D5);
-                drawString(fontRendererObj, "Makes: " + recipe.outputQuantity + "  |  Time: " + formatTime(recipe.durationMillis),
-                        x + 8, y + 35, 0xFFE3E7EE);
+                drawString(fontRendererObj, "Makes: " + recipe.outputQuantity + " " + recipe.productName
+                        + "  |  " + formatTime(recipe.durationMillis), x + 8, y + 35, 0xFFE3E7EE);
                 drawString(fontRendererObj, "Batch sale: " + recipe.sellingPrice + " coins",
                         x + cardWidth - 126, y + 35, 0xFFFFD45A);
             } else {
