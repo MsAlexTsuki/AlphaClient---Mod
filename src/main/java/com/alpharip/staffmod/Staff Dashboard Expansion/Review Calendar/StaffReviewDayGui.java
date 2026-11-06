@@ -34,9 +34,10 @@ public final class StaffReviewDayGui extends GuiScreen {
         int y = height - 28;
         buttonList.add(new GuiButton(0, width / 2 - 202, y, 78, 20, "Add"));
         buttonList.add(new GuiButton(1, width / 2 - 120, y, 78, 20, "Edit"));
-        buttonList.add(new GuiButton(2, width / 2 - 38, y, 78, 20, "Status"));
-        buttonList.add(new GuiButton(3, width / 2 + 44, y, 78, 20, "Delete"));
-        buttonList.add(new GuiButton(4, width / 2 + 126, y, 78, 20, "Back"));
+        buttonList.add(new GuiButton(2, width / 2 - 120, y, 78, 20, "Status"));
+        buttonList.add(new GuiButton(3, width / 2 - 38, y, 78, 20, "Ack Reminder"));
+        buttonList.add(new GuiButton(4, width / 2 + 44, y, 78, 20, "Delete"));
+        buttonList.add(new GuiButton(5, width / 2 + 126, y, 78, 20, "Back"));
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
@@ -96,7 +97,8 @@ public final class StaffReviewDayGui extends GuiScreen {
                 width / 2, height / 2, 0xAAAAAA);
         StaffReview current = selected();
         if (current != null) drawString(fontRendererObj, "Reminder: " + current.getReminderDaysBefore()
-                + " day(s) before | " + current.getNotes(), 8, height - 43, 0xFFCCCCCC);
+                + " day(s) before | " + (current.isReminderAcknowledged() ? "Acknowledged" : "Pending")
+                + " | " + current.getNotes(), 8, height - 43, 0xFFCCCCCC);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
