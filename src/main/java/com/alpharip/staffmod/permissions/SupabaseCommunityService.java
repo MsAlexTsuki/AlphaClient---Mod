@@ -645,6 +645,32 @@ public final class SupabaseCommunityService {
         return requestJson("POST", "/rest/v1/rpc/founder_pixel_garden_manage", accessToken, payload.toString());
     }
 
+    /** Founder-only crafting administration for another Alpha Account's saved Pixel Garden data. */
+    public static synchronized JsonObject managePixelGardenCrafting(String action, String targetAlphaName,
+            String productId, int amount) throws Exception {
+        if (!isSignedInFounder()) throw new SecurityException("Only Founder can manage another account's Pixel Garden crafting.");
+        if (action == null || !action.matches("give|finish|clear|setcapacity|setqueue|reset"))
+            throw new IllegalArgumentException("Unsupported crafting administration action.");
+        if (targetAlphaName == null || !targetAlphaName.trim().matches("[A-Za-z0-9_]{3,20}"))
+            throw new IllegalArgumentException("Enter a valid Alpha Account name.");
+        if ("give".equals(action)) {
+            if (productId == null || !productId.matches("bread|chips|potato_mush|carrot_juice|pumpkin_head|melon_slices|cactus_juice|sugar|basket_of_berries|camberry_bread|sugar_bread"))
+                throw new IllegalArgumentException("Choose a valid crafted product ID.");
+            if (amount < 1 || amount > 1000000) throw new IllegalArgumentException("Product amount must be between 1 and 1,000,000 batches.");
+        } else if ("finish".equals(action)) {
+            if (amount < 0) throw new IllegalArgumentException("Order number cannot be negative.");
+        } else if ("setcapacity".equals(action) || "setqueue".equals(action)) {
+            if (amount < 0 || amount > 4) throw new IllegalArgumentException("Crafting upgrade level must be between 0 and 4.");
+        }
+        JsonObject payload = new JsonObject();
+        payload.addProperty("p_action", action);
+        payload.addProperty("p_target_alpha_name", targetAlphaName.trim());
+        if (productId == null) payload.add("p_product", com.google.gson.JsonNull.INSTANCE);
+        else payload.addProperty("p_product", productId);
+        payload.addProperty("p_amount", amount);
+        return requestJson("POST", "/rest/v1/rpc/founder_pixel_garden_craft_manage", accessToken, payload.toString());
+    }
+
     /** Reads or manages saved Pixel Garden level data through a server-authorized RPC. */
     public static synchronized JsonObject managePixelGardenLevels(String action, String targetAlphaName,
             int levelValue, long xpValue, String textValue) throws Exception {
