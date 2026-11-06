@@ -48,15 +48,18 @@ public final class AlphaMainMenu extends AlphaGuiScreen {
 
         compactLayout = width < 900 || height < 540;
         buttonWidth = Math.min(compactLayout ? 280 : 320, Math.max(180, width - 48));
-        buttonHeight = height < 420 ? 26 : 32;
-        buttonGap = height < 420 ? 5 : 8;
+        buttonHeight = height < 360 ? 22 : height < 420 ? 26 : 32;
+        buttonGap = height < 360 ? 3 : height < 420 ? 5 : 8;
 
         int menuHeight = 5 * buttonHeight + 4 * buttonGap;
         int logoWidth = getLogoWidth();
         int logoHeight = logoWidth * 448 / 512;
         int logoBottom = Math.max(8, height / 22) + logoHeight;
-        int preferredTop = Math.max(logoBottom + 20, (height - menuHeight) / 2 + 76);
-        menuTop = Math.min(preferredTop, Math.max(12, height - menuHeight - 34));
+        int bottomMargin = height < 360 ? 18 : 34;
+        int logoGap = height < 360 ? 10 : 20;
+        int verticalBias = height < 360 ? 42 : 76;
+        int preferredTop = Math.max(logoBottom + logoGap, (height - menuHeight) / 2 + verticalBias);
+        menuTop = Math.min(preferredTop, Math.max(12, height - menuHeight - bottomMargin));
         menuLeft = (width - buttonWidth) / 2;
 
         buttonList.add(new AlphaButton(PLAY, menuLeft, menuTop, buttonWidth, buttonHeight, "Play", true));
@@ -86,7 +89,9 @@ public final class AlphaMainMenu extends AlphaGuiScreen {
     private int getLogoWidth() {
         int available = Math.max(72, width - 48);
         int preferred = compactLayout ? 142 : 188;
-        if (height < 420) {
+        if (height < 360) {
+            preferred = Math.min(84, Math.max(56, (height - 160) * 512 / 448));
+        } else if (height < 420) {
             preferred = 112;
         }
         return Math.min(preferred, available);
