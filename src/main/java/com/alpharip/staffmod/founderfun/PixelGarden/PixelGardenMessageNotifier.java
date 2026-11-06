@@ -96,7 +96,7 @@ public final class PixelGardenMessageNotifier {
         for (int i = 0; i < plots.size(); i++) {
             boolean ready = plots.get(i).getState(now) == PixelGardenGame.PlotState.READY;
             anyReadyCrop |= ready;
-            readyBatchAlreadyNotified |= notifiedReadyPlots[i];
+            readyBatchAlreadyNotified |= ready && notifiedReadyPlots[i];
 
             if (ready && !notifiedReadyPlots[i]) {
                 notifiedReadyPlots[i] = true;
