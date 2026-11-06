@@ -8,25 +8,17 @@ import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.Entity;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.awt.Color;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
 
 /** Counts confirmed consecutive hits and resets when the local player is damaged. */
 public final class ComboCounter {
     private static ComboCounter instance;
-    private static final long HIT_CONFIRMATION_TIMEOUT_MS = 1000L;
-    private static final long COMBO_IDLE_TIMEOUT_MS = 20000L;
     private static final String[] COLOR_NAMES = {
             "White", "Red", "Orange", "Yellow", "Green",
             "Cyan", "Blue", "Purple", "Pink", "Rainbow"
@@ -36,9 +28,7 @@ public final class ComboCounter {
             0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA
     };
 
-    private final Map<UUID, PendingHit> pendingHits = new HashMap<UUID, PendingHit>();
     private int combo;
-    private long lastConfirmedHitAt;
     private int hudX = 5;
     private int hudY = 44;
     private int colorIndex;
@@ -66,80 +56,26 @@ public final class ComboCounter {
     }
 
     @SubscribeEvent
-    public void onAttackEntity(AttackEntityEvent event) {
-        if (event == null || event.isCanceled() || !isAvailable()
-                || !(event.target instanceof EntityPlayer)) return;
-
-        Minecraft mc = Minecraft.getMinecraft();
-        EntityPlayer attacker = event.entityPlayer;
-        EntityPlayer target = (EntityPlayer) event.target;
-        if (mc == null || mc.thePlayer == null || mc.theWorld == null
-                || attacker != mc.thePlayer || target == attacker
-                || target.worldObj != mc.theWorld
-                || attacker.getUniqueID().equals(target.getUniqueID())) return;
-
-        // Count only after the target's hurt animation confirms accepted damage.
-        pendingHits.put(target.getUniqueID(),
-                new PendingHit(target, target.hurtTime, System.currentTimeMillis()));
-    }
-
-    @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
-        if (event == null || event.entityLiving == null) return;
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.thePlayer == null || event.entityLiving != mc.thePlayer) return;
+        if (event == null || event.entityLiving == null || !isAvailable()) return;
 
-        // Reset only when the damage source is another player.
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null || mc.theWorld == null) return;
+
+        EntityPlayer localPlayer = mc.thePlayer;
         Entity sourceEntity = event.source == null ? null : event.source.getEntity();
-        if (sourceEntity instanceof EntityPlayer && sourceEntity != mc.thePlayer) {
-            combo = 0;
-            pendingHits.clear();
-            lastConfirmedHitAt = 0L;
-        }
-    }
 
-    @SubscribeEvent
-    public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.thePlayer == null || mc.theWorld == null) {
-            pendingHits.clear();
-            combo = 0;
-            lastConfirmedHitAt = 0L;
+        // Taking a hit from another player breaks the current combo.
+        if (event.entityLiving == localPlayer) {
+            if (sourceEntity instanceof EntityPlayer && sourceEntity != localPlayer) {
+                combo = 0;
+            }
             return;
         }
 
-        if (!isAvailable()) {
-            pendingHits.clear();
-            combo = 0;
-            return;
-        }
-
-        long now = System.currentTimeMillis();
-        if (combo > 0 && lastConfirmedHitAt > 0L
-                && now - lastConfirmedHitAt >= COMBO_IDLE_TIMEOUT_MS) {
-            combo = 0;
-            pendingHits.clear();
-        }
-        Iterator<Map.Entry<UUID, PendingHit>> iterator = pendingHits.entrySet().iterator();
-        while (iterator.hasNext()) {
-            PendingHit pending = iterator.next().getValue();
-            Entity target = pending.target;
-            if (target == null || target.isDead || target.worldObj != mc.theWorld
-                    || now - pending.createdAt > HIT_CONFIRMATION_TIMEOUT_MS) {
-                iterator.remove();
-                continue;
-            }
-
-            int targetHurtTime = ((EntityPlayer) target).hurtTime;
-            if (targetHurtTime > pending.lastObservedHurtTime) {
-                combo++;
-                lastConfirmedHitAt = now;
-                iterator.remove();
-            } else {
-                pending.lastObservedHurtTime = targetHurtTime;
-            }
+        // Increase the combo only when this player actually damages another player.
+        if (event.entityLiving instanceof EntityPlayer && sourceEntity == localPlayer) {
+            combo++;
         }
     }
 
@@ -242,15 +178,4 @@ public final class ComboCounter {
         HudScaleConfig.set("comboCounter", scale);
     }
 
-    private static final class PendingHit {
-        private final EntityPlayer target;
-        private int lastObservedHurtTime;
-        private final long createdAt;
-
-        private PendingHit(EntityPlayer target, int hurtTime, long createdAt) {
-            this.target = target;
-            this.lastObservedHurtTime = hurtTime;
-            this.createdAt = createdAt;
-        }
-    }
 }
