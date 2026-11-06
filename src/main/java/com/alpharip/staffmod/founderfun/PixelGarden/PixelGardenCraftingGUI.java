@@ -30,7 +30,7 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
     private List<PixelGardenGame.CraftingRecipe> visibleProducts() {
         List<PixelGardenGame.CraftingRecipe> result = new ArrayList<PixelGardenGame.CraftingRecipe>();
         for (PixelGardenGame.CraftingRecipe recipe : PixelGardenGame.getCraftingRecipes()) {
-            if (game.getCraftedProductBatches(recipe.id) > 0) result.add(recipe);
+            if (game.getCraftedProductItems(recipe.id) > 0) result.add(recipe);
         }
         return result;
     }
@@ -77,7 +77,7 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
             int x = left + col * (cardWidth + gap);
             int y = 99 + row * (CARD_HEIGHT + CARD_GAP);
             int id = productsPage ? SELL_BASE + index : CRAFT_BASE + index;
-            String label = productsPage ? "Sell all" : "Craft / Queue";
+            String label = productsPage ? "Sell full batches" : "Craft / Queue";
             buttonList.add(new AlphaButton(id, x + 8, y + 57, cardWidth - 16, 16, label));
         }
         int navY = height - 32;
@@ -255,8 +255,8 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
                         + "  |  " + formatTime(recipe.durationMillis), x + 8, y + 35, 0xFFE3E7EE);
             } else {
                 drawString(fontRendererObj, recipe.productName, x + 40, y + 7, 0xFFF0F2F6);
-                int batches = game.getCraftedProductBatches(recipe.id);
-                drawString(fontRendererObj, "Stock: " + batches + " batches (" + (batches * recipe.outputQuantity) + " items)",
+                int items = game.getCraftedProductItems(recipe.id);
+                drawString(fontRendererObj, "Inventory: " + items + " items",
                         x + 40, y + 22, 0xFFB7C4D5);
                 drawString(fontRendererObj, "Batch sale: " + game.getCraftingBatchSaleValue(recipe) + " coins",
                         x + 40, y + 36, 0xFFFFD45A);

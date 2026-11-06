@@ -328,12 +328,10 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             if ("DELIVER_PRODUCT".equalsIgnoreCase(objective.type)) {
                 PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(objective.target);
                 if (recipe == null) { actionMessage("This quest uses an unsupported crafted product."); return; }
-                int amount = Math.min(selectedDeliveryAmount, remaining);
-                amount -= amount % recipe.outputQuantity;
                 int available = game.getCraftedProductItems(recipe.id);
-                amount = Math.min(amount, available - (available % recipe.outputQuantity));
-                if (amount < recipe.outputQuantity) {
-                    actionMessage("Not enough " + recipe.productName + " in Crafted Products.");
+                int amount = Math.min(selectedDeliveryAmount, Math.min(remaining, available));
+                if (amount < 1) {
+                    actionMessage("Not enough " + recipe.productName + " in your inventory.");
                     return;
                 }
                 if (!progression.setObjectiveProgress(selected.instanceId, objective.id, previousProgress + amount)) {
@@ -342,7 +340,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 }
                 if (!game.consumeCraftedProductItems(recipe.id, amount)) {
                     progression.setObjectiveProgress(selected.instanceId, objective.id, previousProgress);
-                    actionMessage("Crafted Products inventory changed. Please try again.");
+                    actionMessage("Inventory changed. Please try again.");
                     return;
                 }
                 if (previousProgress + amount >= objective.requiredAmount) {
@@ -602,7 +600,7 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                     if ("DELIVER_PRODUCT".equalsIgnoreCase(delivery.type)) {
                         PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(delivery.target);
                         inInventory = recipe == null ? 0 : game.getCraftedProductItems(recipe.id);
-                        inventoryLabel = "In Crafted Products ";
+                        inventoryLabel = "In inventory ";
                     } else {
                         PixelGardenGame.Crop crop = null;
                         try { crop = PixelGardenGame.Crop.valueOf(delivery.target.toUpperCase(java.util.Locale.ROOT)); }

@@ -328,7 +328,7 @@ public final class PixelGardenProgressionData {
                         objectives.add(new Objective(id + "_craft_objective", "CRAFT_PRODUCT", recipeId, amount));
                         name = npcNames[npcIndex] + "'s " + productName + " Order";
                         description = "Craft 1 " + productName
-                                + ". Wait until the crafting order finishes and the product appears in Crafted Products.";
+                                + ". Wait until the crafting order finishes and the product appears in your inventory.";
                     } else {
                         String crop = "wheat";
                         int amount = Math.min(5, 1 + (targetLevel - 1) / 5 + slot);
@@ -358,7 +358,7 @@ public final class PixelGardenProgressionData {
                     objectives.add(new Objective(id + "_deliver_objective", "DELIVER_PRODUCT", recipeId, amount));
                     name = npcNames[npcIndex] + "'s " + productName + " Contract";
                     description = "Craft " + amount + " " + productName + " and deliver all " + amount + " to "
-                            + npcNames[npcIndex] + ". Crafting only counts after each order is complete and the product is in Crafted Products.";
+                            + npcNames[npcIndex] + ". Crafting only counts after each order is complete and the product is in your inventory.";
                 } else {
                     String crop = crops[(targetLevel + slot * 2 - 1) % crops.length];
                     int typeIndex = (targetLevel + slot - 1) % objectiveTypes.length;

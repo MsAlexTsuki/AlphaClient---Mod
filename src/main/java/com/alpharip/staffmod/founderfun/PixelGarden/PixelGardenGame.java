@@ -175,7 +175,7 @@ public final class PixelGardenGame {
     private final List<CraftingOrder> activeCraftingOrders = new ArrayList<CraftingOrder>();
     private final List<String> queuedCraftingOrders = new ArrayList<String>();
     private final List<String> readyCraftingOrders = new ArrayList<String>();
-    private final java.util.Map<String, Integer> craftedProductBatches = new java.util.LinkedHashMap<String, Integer>();
+    private final java.util.Map<String, Integer> craftedProductInventory = new java.util.LinkedHashMap<String, Integer>();
     private int craftingCapacityLevel;
     private int craftingQueueLevel;
 
@@ -200,7 +200,7 @@ public final class PixelGardenGame {
         activeCraftingOrders.clear();
         queuedCraftingOrders.clear();
         readyCraftingOrders.clear();
-        craftedProductBatches.clear();
+        craftedProductInventory.clear();
         purchasedUpgradeSteps = 0;
         progressionData.reset();
         lastProcessedAt = System.currentTimeMillis();
@@ -252,29 +252,31 @@ public final class PixelGardenGame {
     public synchronized List<String> getReadyCraftingOrders() {
         return Collections.unmodifiableList(new ArrayList<String>(readyCraftingOrders));
     }
+    /** Returns complete output batches currently represented by the product item inventory. */
     public synchronized int getCraftedProductBatches(String recipeId) {
-        Integer value = craftedProductBatches.get(recipeId);
+        CraftingRecipe recipe = getCraftingRecipe(recipeId);
+        return recipe == null ? 0 : getCraftedProductItems(recipeId) / recipe.outputQuantity;
+    }
+    /** Returns the actual number of individual product items in the shared garden inventory. */
+    public synchronized int getCraftedProductItems(String recipeId) {
+        if (getCraftingRecipe(recipeId) == null) return 0;
+        Integer value = craftedProductInventory.get(recipeId);
         return value == null ? 0 : value.intValue();
     }
-    public synchronized int getCraftedProductItems(String recipeId) {
-        CraftingRecipe recipe = getCraftingRecipe(recipeId);
-        if (recipe == null) return 0;
-        return (int) Math.min(Integer.MAX_VALUE,
-                (long) getCraftedProductBatches(recipeId) * recipe.outputQuantity);
-    }
     public synchronized boolean consumeCraftedProductItems(String recipeId, int amount) {
-        CraftingRecipe recipe = getCraftingRecipe(recipeId);
-        if (recipe == null || amount <= 0 || amount % recipe.outputQuantity != 0) return false;
-        return consumeCraftedProductBatches(recipeId, amount / recipe.outputQuantity);
+        if (getCraftingRecipe(recipeId) == null || amount <= 0) return false;
+        int available = getCraftedProductItems(recipeId);
+        if (amount > available) return false;
+        int remaining = available - amount;
+        if (remaining == 0) craftedProductInventory.remove(recipeId);
+        else craftedProductInventory.put(recipeId, Integer.valueOf(remaining));
+        return true;
     }
     public synchronized boolean consumeCraftedProductBatches(String recipeId, int batches) {
-        if (getCraftingRecipe(recipeId) == null || batches <= 0) return false;
-        int available = getCraftedProductBatches(recipeId);
-        if (batches > available) return false;
-        int remaining = available - batches;
-        if (remaining == 0) craftedProductBatches.remove(recipeId);
-        else craftedProductBatches.put(recipeId, Integer.valueOf(remaining));
-        return true;
+        CraftingRecipe recipe = getCraftingRecipe(recipeId);
+        if (recipe == null || batches <= 0) return false;
+        long items = (long)batches * recipe.outputQuantity;
+        return items <= Integer.MAX_VALUE && consumeCraftedProductItems(recipeId, (int)items);
     }
     public synchronized boolean queueCraftingOrder(String recipeId, long now) {
         CraftingRecipe recipe = getCraftingRecipe(recipeId);
@@ -314,9 +316,9 @@ public final class PixelGardenGame {
                     (long)inventory[crop.ordinal()] + amount);
         }
         for (java.util.Map.Entry<String, Integer> ingredient : recipe.getProductIngredients().entrySet()) {
-            int current = getCraftedProductBatches(ingredient.getKey());
+            int current = getCraftedProductItems(ingredient.getKey());
             long next = (long)current + ingredient.getValue().intValue();
-            craftedProductBatches.put(ingredient.getKey(), Integer.valueOf((int)Math.min(Integer.MAX_VALUE, next)));
+            craftedProductInventory.put(ingredient.getKey(), Integer.valueOf((int)Math.min(Integer.MAX_VALUE, next)));
         }
     }
     public synchronized int getCraftingCropIngredientValue(CraftingRecipe recipe) {
@@ -346,16 +348,14 @@ public final class PixelGardenGame {
     private boolean hasCraftingIngredients(CraftingRecipe recipe) {
         for (Crop crop : Crop.values()) if (inventory[crop.ordinal()] < recipe.cropIngredients[crop.ordinal()]) return false;
         for (java.util.Map.Entry<String, Integer> ingredient : recipe.productIngredients.entrySet()) {
-            if (getCraftedProductBatches(ingredient.getKey()) < ingredient.getValue().intValue()) return false;
+            if (getCraftedProductItems(ingredient.getKey()) < ingredient.getValue().intValue()) return false;
         }
         return true;
     }
     private void consumeCraftingIngredients(CraftingRecipe recipe) {
         for (Crop crop : Crop.values()) inventory[crop.ordinal()] -= recipe.cropIngredients[crop.ordinal()];
         for (java.util.Map.Entry<String, Integer> ingredient : recipe.productIngredients.entrySet()) {
-            int remaining = getCraftedProductBatches(ingredient.getKey()) - ingredient.getValue().intValue();
-            if (remaining <= 0) craftedProductBatches.remove(ingredient.getKey());
-            else craftedProductBatches.put(ingredient.getKey(), Integer.valueOf(remaining));
+            consumeCraftedProductItems(ingredient.getKey(), ingredient.getValue().intValue());
         }
     }
     private void startQueuedCraftingOrders(long now) {
@@ -383,9 +383,10 @@ public final class PixelGardenGame {
             CraftingOrder completed = activeCraftingOrders.remove(completedIndex);
             CraftingRecipe recipe = getCraftingRecipe(completed.recipeId);
             if (recipe != null) {
-                int current = getCraftedProductBatches(recipe.id);
-                craftedProductBatches.put(recipe.id, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, (long)current + 1L)));
-                // Craft objectives advance only after the finished product has entered inventory.
+                int current = getCraftedProductItems(recipe.id);
+                long next = (long)current + recipe.outputQuantity;
+                craftedProductInventory.put(recipe.id, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, next)));
+                // Craft objectives advance only after the finished product has entered the shared inventory.
                 progressionData.recordActionProgress("CRAFT_PRODUCT", recipe.id, recipe.outputQuantity);
             }
             startQueuedCraftingOrders(completedAt);
@@ -398,9 +399,7 @@ public final class PixelGardenGame {
         if (recipe == null || batches <= 0 || batches > available) return false;
         long earned = (long)Math.floor((double)recipe.sellingPrice * batches * getCoinMultiplier());
         if (earned > Integer.MAX_VALUE - pixelGardenUpgradeCoins) return false;
-        int remaining = available - batches;
-        if (remaining == 0) craftedProductBatches.remove(recipeId);
-        else craftedProductBatches.put(recipeId, Integer.valueOf(remaining));
+        if (!consumeCraftedProductBatches(recipeId, batches)) return false;
         pixelGardenUpgradeCoins += (int)earned;
         return true;
     }
@@ -839,9 +838,9 @@ public final class PixelGardenGame {
         for (String recipeId : readyCraftingOrders) readyOrders.add(new JsonPrimitive(recipeId));
         root.add("crafting_ready_orders", readyOrders);
         JsonObject products = new JsonObject();
-        for (java.util.Map.Entry<String, Integer> entry : craftedProductBatches.entrySet())
+        for (java.util.Map.Entry<String, Integer> entry : craftedProductInventory.entrySet())
             products.addProperty(entry.getKey(), Math.max(0, entry.getValue().intValue()));
-        root.add("crafted_product_batches", products);
+        root.add("crafted_product_inventory", products);
         root.addProperty("reset_tokens", resetTokens);
         root.addProperty("purchased_upgrade_steps", purchasedUpgradeSteps);
         root.addProperty("unlocked_plots", getUnlockedPlots());
@@ -916,18 +915,35 @@ public final class PixelGardenGame {
                 if (getCraftingRecipe(id) != null) legacyReadyOrders.add(id);
             }
         }
-        craftedProductBatches.clear();
-        if (root.has("crafted_product_batches") && root.get("crafted_product_batches").isJsonObject()) {
-            for (java.util.Map.Entry<String, JsonElement> entry : root.getAsJsonObject("crafted_product_batches").entrySet()) {
+        craftedProductInventory.clear();
+        if (root.has("crafted_product_inventory") && root.get("crafted_product_inventory").isJsonObject()) {
+            for (java.util.Map.Entry<String, JsonElement> entry : root.getAsJsonObject("crafted_product_inventory").entrySet()) {
                 if (getCraftingRecipe(entry.getKey()) == null) continue;
-                try { int amount = Math.max(0, entry.getValue().getAsInt()); if (amount > 0) craftedProductBatches.put(entry.getKey(), Integer.valueOf(amount)); }
-                catch (RuntimeException ignored) { }
+                try {
+                    int amount = Math.max(0, entry.getValue().getAsInt());
+                    if (amount > 0) craftedProductInventory.put(entry.getKey(), Integer.valueOf(amount));
+                } catch (RuntimeException ignored) { }
+            }
+        } else if (root.has("crafted_product_batches") && root.get("crafted_product_batches").isJsonObject()) {
+            // Older saves stored output batches; migrate them into individual inventory item counts.
+            for (java.util.Map.Entry<String, JsonElement> entry : root.getAsJsonObject("crafted_product_batches").entrySet()) {
+                CraftingRecipe recipe = getCraftingRecipe(entry.getKey());
+                if (recipe == null) continue;
+                try {
+                    int batches = Math.max(0, entry.getValue().getAsInt());
+                    long items = (long)batches * recipe.outputQuantity;
+                    if (items > 0L) craftedProductInventory.put(entry.getKey(),
+                            Integer.valueOf((int)Math.min(Integer.MAX_VALUE, items)));
+                } catch (RuntimeException ignored) { }
             }
         }
-        // Migrate saves created before crafting completion automatically entered product inventory.
+        // Migrate legacy ready orders into their actual output item quantities.
         for (String recipeId : legacyReadyOrders) {
-            int current = getCraftedProductBatches(recipeId);
-            craftedProductBatches.put(recipeId, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, (long)current + 1L)));
+            CraftingRecipe recipe = getCraftingRecipe(recipeId);
+            if (recipe == null) continue;
+            int current = getCraftedProductItems(recipeId);
+            long next = (long)current + recipe.outputQuantity;
+            craftedProductInventory.put(recipeId, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, next)));
         }
         int savedResetTokens = root.has("reset_tokens") ? Math.max(0, root.get("reset_tokens").getAsInt()) : 0;
         int savedPurchasedSteps = root.has("purchased_upgrade_steps") ? Math.max(0, root.get("purchased_upgrade_steps").getAsInt()) : 0;

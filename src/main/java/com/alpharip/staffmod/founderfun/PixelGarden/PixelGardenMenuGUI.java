@@ -75,7 +75,8 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
     }
 
     private int cropRowCount() {
-        int itemCount = page == Page.SELL ? sellEntries().size() : PixelGardenGame.Crop.values().length;
+        int itemCount = page == Page.SELL || page == Page.INVENTORY
+                ? sellEntries().size() : PixelGardenGame.Crop.values().length;
         return (itemCount + 1) / 2;
     }
 
@@ -134,15 +135,14 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                                 "Sell x" + game.getCraftedProductBatches(entry.recipe.id)));
                     }
                 }
-            } else {
+            } else if (page == Page.SHOP) {
                 for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
                     int row = crop.ordinal() / 2;
                     if (row < firstRow || row >= lastRow) continue;
                     int col = crop.ordinal() % 2;
                     int x = left + 10 + col * (cardWidth + gap);
                     int y = top + (row - cropScrollRow) * (cardHeight + gap);
-                    String label = page == Page.SHOP ? "Buy seed (" + crop.seedPrice + ")"
-                            : "Seeds " + game.getSeeds(crop) + " / Harvest " + game.getInventory(crop);
+                    String label = "Buy seed (" + crop.seedPrice + ")";
                     buttonList.add(new AlphaButton(ACTION_BASE + crop.ordinal(), x + 8,
                             y + cardHeight - 25, cardWidth - 16, 18, label));
                 }
@@ -338,6 +338,31 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                         drawString(fontRendererObj, "Value: " + game.getCraftingBatchSaleValue(recipe) + " coins", x + 38, y + 38, 0xFFFFD45A);
                     }
                 }
+            } else if (page == Page.INVENTORY) {
+                List<SellEntry> entries = sellEntries();
+                for (int i = 0; i < entries.size(); i++) {
+                    int row = i / 2;
+                    if (row < firstRow || row >= lastRow) continue;
+                    SellEntry entry = entries.get(i);
+                    int col = i % 2;
+                    int x = left + 10 + col * (cardWidth + gap);
+                    int y = 88 + (row - cropScrollRow) * (cardHeight + gap);
+                    drawPanel(x, y, cardWidth, cardHeight);
+                    if (entry.crop != null) {
+                        PixelGardenGame.Crop crop = entry.crop;
+                        drawCropIcon(crop, x + 8, y + 7, 24);
+                        drawString(fontRendererObj, crop.displayName, x + 38, y + 10, 0xFFF0F2F6);
+                        drawString(fontRendererObj, "Seeds: " + game.getSeeds(crop), x + 38, y + 25, 0xFFB7C4D5);
+                        drawString(fontRendererObj, "Harvest: " + game.getInventory(crop), x + 38, y + 38, 0xFFB7C4D5);
+                    } else {
+                        PixelGardenGame.CraftingRecipe recipe = entry.recipe;
+                        drawProductIcon(recipe, x + 8, y + 7, 24);
+                        drawString(fontRendererObj, recipe.productName, x + 38, y + 10, 0xFFF0F2F6);
+                        drawString(fontRendererObj, "Quantity: " + game.getCraftedProductItems(recipe.id),
+                                x + 38, y + 25, 0xFFB7C4D5);
+                        drawString(fontRendererObj, "Crafted product", x + 38, y + 38, 0xFFFFD45A);
+                    }
+                }
             } else {
                 for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
                     int row = crop.ordinal() / 2;
@@ -348,19 +373,14 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                     drawPanel(x, y, cardWidth, cardHeight);
                     drawCropIcon(crop, x + 8, y + 7, 24);
                     drawString(fontRendererObj, crop.displayName, x + 38, y + 10, 0xFFF0F2F6);
-                    if (page == Page.SHOP) {
-                        drawString(fontRendererObj, "Seeds: " + game.getSeeds(crop), x + 38, y + 25, 0xFFB7C4D5);
-                        drawString(fontRendererObj, "Price: " + crop.seedPrice, x + 38, y + 38, 0xFFFFD45A);
-                    } else {
-                        drawString(fontRendererObj, "Seeds: " + game.getSeeds(crop), x + 38, y + 25, 0xFFB7C4D5);
-                        drawString(fontRendererObj, "Harvest: " + game.getInventory(crop), x + 38, y + 38, 0xFFB7C4D5);
-                    }
+                    drawString(fontRendererObj, "Seeds: " + game.getSeeds(crop), x + 38, y + 25, 0xFFB7C4D5);
+                    drawString(fontRendererObj, "Price: " + crop.seedPrice, x + 38, y + 38, 0xFFFFD45A);
                 }
             }
             int totalRows = cropRowCount();
             if (totalRows > visibleCropRows()) {
                 String scrollLabel = (cropScrollRow > 0 ? "▲ " : "")
-                        + (page == Page.SELL ? "Mouse wheel to scroll items" : "Mouse wheel to scroll crops")
+                        + (page == Page.SHOP ? "Mouse wheel to scroll crops" : "Mouse wheel to scroll inventory items")
                         + (cropScrollRow + visibleCropRows() < totalRows ? " ▼" : "");
                 drawCenteredString(fontRendererObj, scrollLabel, width / 2, height - 53, 0xFFB7C4D5);
             }
