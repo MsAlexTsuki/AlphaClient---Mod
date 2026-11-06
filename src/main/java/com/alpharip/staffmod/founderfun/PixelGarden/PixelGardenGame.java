@@ -171,6 +171,7 @@ public final class PixelGardenGame {
 
     private final List<CraftingOrder> activeCraftingOrders = new ArrayList<CraftingOrder>();
     private final List<String> queuedCraftingOrders = new ArrayList<String>();
+    private final List<String> readyCraftingOrders = new ArrayList<String>();
     private final java.util.Map<String, Integer> craftedProductBatches = new java.util.LinkedHashMap<String, Integer>();
     private int craftingCapacityLevel;
     private int craftingQueueLevel;
@@ -195,6 +196,7 @@ public final class PixelGardenGame {
         craftingQueueLevel = 0;
         activeCraftingOrders.clear();
         queuedCraftingOrders.clear();
+        readyCraftingOrders.clear();
         craftedProductBatches.clear();
         purchasedUpgradeSteps = 0;
         progressionData.reset();
@@ -244,6 +246,9 @@ public final class PixelGardenGame {
     public synchronized List<String> getQueuedCraftingOrders() {
         return Collections.unmodifiableList(new ArrayList<String>(queuedCraftingOrders));
     }
+    public synchronized List<String> getReadyCraftingOrders() {
+        return Collections.unmodifiableList(new ArrayList<String>(readyCraftingOrders));
+    }
     public synchronized int getCraftedProductBatches(String recipeId) {
         Integer value = craftedProductBatches.get(recipeId);
         return value == null ? 0 : value.intValue();
@@ -262,6 +267,63 @@ public final class PixelGardenGame {
         queuedCraftingOrders.add(recipe.id);
         return true;
     }
+    public synchronized boolean cancelCraftingOrder(int orderNumber, long now) {
+        if (orderNumber < 1) return false;
+        int index = orderNumber - 1;
+        if (index < activeCraftingOrders.size()) {
+            CraftingOrder order = activeCraftingOrders.remove(index);
+            CraftingRecipe recipe = getCraftingRecipe(order.recipeId);
+            if (recipe != null) refundCraftingIngredients(recipe);
+            startQueuedCraftingOrders(now);
+            return true;
+        }
+        index -= activeCraftingOrders.size();
+        if (index < queuedCraftingOrders.size()) {
+            queuedCraftingOrders.remove(index);
+            return true;
+        }
+        return false;
+    }
+    private void refundCraftingIngredients(CraftingRecipe recipe) {
+        for (Crop crop : Crop.values()) {
+            int amount = recipe.getCropIngredient(crop);
+            if (amount > 0) inventory[crop.ordinal()] = (int)Math.min(Integer.MAX_VALUE,
+                    (long)inventory[crop.ordinal()] + amount);
+        }
+        for (java.util.Map.Entry<String, Integer> ingredient : recipe.getProductIngredients().entrySet()) {
+            int current = getCraftedProductBatches(ingredient.getKey());
+            long next = (long)current + ingredient.getValue().intValue();
+            craftedProductBatches.put(ingredient.getKey(), Integer.valueOf((int)Math.min(Integer.MAX_VALUE, next)));
+        }
+    }
+    public synchronized int collectCompletedCraftingOrders() {
+        int collected = 0;
+        for (String recipeId : readyCraftingOrders) {
+            CraftingRecipe recipe = getCraftingRecipe(recipeId);
+            if (recipe == null) continue;
+            int current = getCraftedProductBatches(recipeId);
+            craftedProductBatches.put(recipeId, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, (long)current + 1L)));
+            collected++;
+        }
+        readyCraftingOrders.clear();
+        return collected;
+    }
+    public synchronized int getCraftingCropIngredientValue(CraftingRecipe recipe) {
+        if (recipe == null) return 0;
+        long value = 0L;
+        for (Crop crop : Crop.values()) value += (long)recipe.getCropIngredient(crop) * crop.sellPrice;
+        return (int)Math.min(Integer.MAX_VALUE, value);
+    }
+    public synchronized int getCraftingProductIngredientValue(CraftingRecipe recipe) {
+        if (recipe == null) return 0;
+        long value = 0L;
+        for (java.util.Map.Entry<String, Integer> ingredient : recipe.getProductIngredients().entrySet()) {
+            CraftingRecipe product = getCraftingRecipe(ingredient.getKey());
+            if (product != null) value += (long)product.sellingPrice * ingredient.getValue().intValue();
+        }
+        return (int)Math.min(Integer.MAX_VALUE, value);
+    }
+
     private boolean hasCraftingIngredients(CraftingRecipe recipe) {
         for (Crop crop : Crop.values()) if (inventory[crop.ordinal()] < recipe.cropIngredients[crop.ordinal()]) return false;
         for (java.util.Map.Entry<String, Integer> ingredient : recipe.productIngredients.entrySet()) {
@@ -302,8 +364,7 @@ public final class PixelGardenGame {
             CraftingOrder completed = activeCraftingOrders.remove(completedIndex);
             CraftingRecipe recipe = getCraftingRecipe(completed.recipeId);
             if (recipe != null) {
-                int current = getCraftedProductBatches(recipe.id);
-                craftedProductBatches.put(recipe.id, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, (long)current + 1L)));
+                readyCraftingOrders.add(recipe.id);
             }
             startQueuedCraftingOrders(completedAt);
         }
@@ -733,6 +794,9 @@ public final class PixelGardenGame {
         JsonArray queuedOrders = new JsonArray();
         for (String recipeId : queuedCraftingOrders) queuedOrders.add(new JsonPrimitive(recipeId));
         root.add("crafting_queued_orders", queuedOrders);
+        JsonArray readyOrders = new JsonArray();
+        for (String recipeId : readyCraftingOrders) readyOrders.add(new JsonPrimitive(recipeId));
+        root.add("crafting_ready_orders", readyOrders);
         JsonObject products = new JsonObject();
         for (java.util.Map.Entry<String, Integer> entry : craftedProductBatches.entrySet())
             products.addProperty(entry.getKey(), Math.max(0, entry.getValue().intValue()));
@@ -799,6 +863,15 @@ public final class PixelGardenGame {
                 String id = item.getAsString();
                 if (getCraftingRecipe(id) != null && queuedCraftingOrders.size() < 1 + craftingQueueLevel)
                     queuedCraftingOrders.add(id);
+            }
+        }
+        readyCraftingOrders.clear();
+        JsonArray savedReadyOrders = root.has("crafting_ready_orders") && root.get("crafting_ready_orders").isJsonArray()
+                ? root.getAsJsonArray("crafting_ready_orders") : new JsonArray();
+        for (JsonElement item : savedReadyOrders) {
+            if (item.isJsonPrimitive()) {
+                String id = item.getAsString();
+                if (getCraftingRecipe(id) != null) readyCraftingOrders.add(id);
             }
         }
         craftedProductBatches.clear();
