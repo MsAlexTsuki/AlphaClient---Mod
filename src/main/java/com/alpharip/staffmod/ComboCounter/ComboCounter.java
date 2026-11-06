@@ -13,12 +13,14 @@ import net.minecraft.entity.Entity;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.awt.Color;
 
 /** Counts confirmed consecutive hits and resets when the local player is damaged. */
 public final class ComboCounter {
     private static ComboCounter instance;
+    private static final long COMBO_IDLE_TIMEOUT_MS = 20000L;
     private static final String[] COLOR_NAMES = {
             "White", "Red", "Orange", "Yellow", "Green",
             "Cyan", "Blue", "Purple", "Pink", "Rainbow"
@@ -29,6 +31,7 @@ public final class ComboCounter {
     };
 
     private int combo;
+    private long lastConfirmedHitAt;
     private int hudX = 5;
     private int hudY = 44;
     private int colorIndex;
@@ -69,6 +72,7 @@ public final class ComboCounter {
         if (event.entityLiving == localPlayer) {
             if (sourceEntity instanceof EntityPlayer && sourceEntity != localPlayer) {
                 combo = 0;
+                lastConfirmedHitAt = 0L;
             }
             return;
         }
@@ -76,6 +80,25 @@ public final class ComboCounter {
         // Increase the combo only when this player actually damages another player.
         if (event.entityLiving instanceof EntityPlayer && sourceEntity == localPlayer) {
             combo++;
+            lastConfirmedHitAt = System.currentTimeMillis();
+        }
+    }
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null || mc.theWorld == null || !isAvailable()) {
+            combo = 0;
+            lastConfirmedHitAt = 0L;
+            return;
+        }
+
+        if (combo > 0 && lastConfirmedHitAt > 0L
+                && System.currentTimeMillis() - lastConfirmedHitAt >= COMBO_IDLE_TIMEOUT_MS) {
+            combo = 0;
+            lastConfirmedHitAt = 0L;
         }
     }
 
