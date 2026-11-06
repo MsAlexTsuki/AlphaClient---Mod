@@ -21,7 +21,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|priceinfo|craft <open|recipes|recipe|start|status|cancel|collect|products|sell|upgrades|upgrade|admin>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|harvested|seeds|ids]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|priceinfo|craft <open|recipes|recipe|start|status|cancel|products|sell|upgrades|upgrade|admin>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|harvested|seeds|ids]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override
@@ -41,7 +41,7 @@ public final class PixelGardenCommand extends CommandBase {
         String root = args[0].toLowerCase(Locale.ROOT);
         if ("craft".equals(root)) {
             if (args.length == 2) return getListOfStringsMatchingLastWord(args, new String[] {
-                    "open", "recipes", "recipe", "start", "status", "cancel", "collect", "products", "sell", "upgrades", "upgrade", "admin"
+                    "open", "recipes", "recipe", "start", "status", "cancel", "products", "sell", "upgrades", "upgrade", "admin"
             });
             if (args.length == 3 && ("recipe".equalsIgnoreCase(args[1]) || "start".equalsIgnoreCase(args[1])))
                 return getListOfStringsMatchingLastWord(args, new String[] {
@@ -860,10 +860,8 @@ public final class PixelGardenCommand extends CommandBase {
         } else if ("status".equals(sub)) {
             List<PixelGardenGame.CraftingOrder> active = game.getActiveCraftingOrders();
             List<String> queued = game.getQueuedCraftingOrders();
-            List<String> ready = game.getReadyCraftingOrders();
             reply(sender, "Crafting: active " + active.size() + "/" + game.getCraftingCapacity()
-                    + ", queued " + queued.size() + "/" + game.getCraftingQueueCapacity()
-                    + ", ready to collect " + ready.size() + ".");
+                    + ", queued " + queued.size() + "/" + game.getCraftingQueueCapacity() + ".");
             reply(sender, "Order numbers list active orders first, followed by queued orders. Founder finish order# uses active orders only.");
             int orderNumber = 1;
             for (PixelGardenGame.CraftingOrder order : active) {
@@ -875,10 +873,6 @@ public final class PixelGardenCommand extends CommandBase {
                 PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(id);
                 reply(sender, "#" + orderNumber++ + " QUEUED: " + (recipe == null ? id : recipe.productName) + ".");
             }
-            for (int i = 0; i < ready.size(); i++) {
-                PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(ready.get(i));
-                reply(sender, "READY: " + (recipe == null ? ready.get(i) : recipe.productName) + ".");
-            }
         } else if ("cancel".equals(sub)) {
             if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft cancel <order number>"); return; }
             int order = number(args[2]);
@@ -886,11 +880,6 @@ public final class PixelGardenCommand extends CommandBase {
             if (cancelled) saveCloudAsync(game);
             reply(sender, cancelled ? "Cancelled crafting order #" + order + "."
                     : "That active or queued crafting order does not exist.");
-        } else if ("collect".equals(sub)) {
-            int collected = game.collectCompletedCraftingOrders();
-            if (collected > 0) saveCloudAsync(game);
-            reply(sender, collected == 0 ? "No completed crafting orders are waiting to be collected."
-                    : "Collected " + collected + " completed crafting order(s).");
         } else if ("products".equals(sub)) {
             int found = 0;
             for (PixelGardenGame.CraftingRecipe recipe : PixelGardenGame.getCraftingRecipes()) {
@@ -901,7 +890,7 @@ public final class PixelGardenCommand extends CommandBase {
                         + ((long)batches * recipe.outputQuantity) + " item(s). Batch sale: "
                         + game.getCraftingBatchSaleValue(recipe) + " coins each.");
             }
-            if (found == 0) reply(sender, "You have no collected crafted products.");
+            if (found == 0) reply(sender, "Your crafted product inventory is empty.");
         } else if ("sell".equals(sub)) {
             if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft sell <product> [amount|all]"); return; }
             PixelGardenGame.CraftingRecipe recipe = findCraftingRecipe(args[2]);
@@ -960,7 +949,7 @@ public final class PixelGardenCommand extends CommandBase {
             }
             if ("give".equals(action)) reply(sender, "Granted " + amount + " " + product + " batch(es) to " + name + ".");
             else if ("finish".equals(action)) reply(sender, "Moved " + ("all".equals(String.valueOf(amount)) || amount == 0 ? "all active" : "order #" + amount)
-                    + " crafting order(s) for " + name + " to Ready to collect.");
+                    + " crafting order(s) for " + name + " directly to crafted product inventory.");
             else if ("clear".equals(action)) reply(sender, "Cleared active, queued and ready crafting orders for " + name + ".");
             else if ("setcapacity".equals(action)) reply(sender, "Set " + name + "'s Crafting Capacity upgrade level to " + amount + ".");
             else if ("setqueue".equals(action)) reply(sender, "Set " + name + "'s Crafting Queue upgrade level to " + amount + ".");
