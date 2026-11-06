@@ -296,18 +296,6 @@ public final class PixelGardenGame {
             craftedProductBatches.put(ingredient.getKey(), Integer.valueOf((int)Math.min(Integer.MAX_VALUE, next)));
         }
     }
-    public synchronized int collectCompletedCraftingOrders() {
-        int collected = 0;
-        for (String recipeId : readyCraftingOrders) {
-            CraftingRecipe recipe = getCraftingRecipe(recipeId);
-            if (recipe == null) continue;
-            int current = getCraftedProductBatches(recipeId);
-            craftedProductBatches.put(recipeId, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, (long)current + 1L)));
-            collected++;
-        }
-        readyCraftingOrders.clear();
-        return collected;
-    }
     public synchronized int getCraftingCropIngredientValue(CraftingRecipe recipe) {
         if (recipe == null) return 0;
         long value = 0L;
@@ -372,7 +360,8 @@ public final class PixelGardenGame {
             CraftingOrder completed = activeCraftingOrders.remove(completedIndex);
             CraftingRecipe recipe = getCraftingRecipe(completed.recipeId);
             if (recipe != null) {
-                readyCraftingOrders.add(recipe.id);
+                int current = getCraftedProductBatches(recipe.id);
+                craftedProductBatches.put(recipe.id, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, (long)current + 1L)));
             }
             startQueuedCraftingOrders(completedAt);
         }
@@ -874,12 +863,13 @@ public final class PixelGardenGame {
             }
         }
         readyCraftingOrders.clear();
+        List<String> legacyReadyOrders = new ArrayList<String>();
         JsonArray savedReadyOrders = root.has("crafting_ready_orders") && root.get("crafting_ready_orders").isJsonArray()
                 ? root.getAsJsonArray("crafting_ready_orders") : new JsonArray();
         for (JsonElement item : savedReadyOrders) {
             if (item.isJsonPrimitive()) {
                 String id = item.getAsString();
-                if (getCraftingRecipe(id) != null) readyCraftingOrders.add(id);
+                if (getCraftingRecipe(id) != null) legacyReadyOrders.add(id);
             }
         }
         craftedProductBatches.clear();
@@ -889,6 +879,11 @@ public final class PixelGardenGame {
                 try { int amount = Math.max(0, entry.getValue().getAsInt()); if (amount > 0) craftedProductBatches.put(entry.getKey(), Integer.valueOf(amount)); }
                 catch (RuntimeException ignored) { }
             }
+        }
+        // Migrate saves created before crafting completion automatically entered product inventory.
+        for (String recipeId : legacyReadyOrders) {
+            int current = getCraftedProductBatches(recipeId);
+            craftedProductBatches.put(recipeId, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, (long)current + 1L)));
         }
         int savedResetTokens = root.has("reset_tokens") ? Math.max(0, root.get("reset_tokens").getAsInt()) : 0;
         int savedPurchasedSteps = root.has("purchased_upgrade_steps") ? Math.max(0, root.get("purchased_upgrade_steps").getAsInt()) : 0;
