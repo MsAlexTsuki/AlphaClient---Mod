@@ -31,14 +31,38 @@ public final class PixelGardenCommand extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, new String[] {
                     "admin", "add", "addnpc", "buy", "coins", "coinsgive", "coinsreset", "completequest", "createquest", "createnpc",
-                    "crops", "editnpc", "give", "harvested",  "givequest", "guide", "harvest", "harvesttime", "help", "ids",
+                    "crops", "craft", "editnpc", "give", "harvested",  "givequest", "guide", "harvest", "harvesttime", "help", "ids",
                     "idlist", "info", "inv", "inventory", "multiplier", "msg", "open", "plant", "playtime",
                     "prestige", "prestigecoingive", "prestigecointake", "prestigecoinreset", "prestigereset",
-                    "quest", "quests", "removenpc", "resettoken", "resettokens", "resetleveltoken", "rewards", "sell", "seeds", "shop",
+                    "priceinfo", "quest", "quests", "removenpc", "resettoken", "resettokens", "resetleveltoken", "rewards", "sell", "seeds", "shop",
                     "level", "setlevel", "resetlevel", "xp", "editlevel", "editlevelmsg", "takecoins", "takequest", "time", "upgrade", "upgrades"
             });
         }
         String root = args[0].toLowerCase(Locale.ROOT);
+        if ("craft".equals(root)) {
+            if (args.length == 2) return getListOfStringsMatchingLastWord(args, new String[] {
+                    "open", "recipes", "recipe", "start", "status", "cancel", "collect", "products", "sell", "upgrades", "upgrade", "admin"
+            });
+            if (args.length == 3 && ("recipe".equalsIgnoreCase(args[1]) || "start".equalsIgnoreCase(args[1])))
+                return getListOfStringsMatchingLastWord(args, new String[] {
+                        "bread", "chips", "potato_mush", "carrot_juice", "pumpkin_head", "melon_slices",
+                        "cactus_juice", "sugar", "basket_of_berries", "camberry_bread", "sugar_bread"
+                });
+            if (args.length == 3 && "upgrade".equalsIgnoreCase(args[1]))
+                return getListOfStringsMatchingLastWord(args, new String[] {"capacity", "queue"});
+            if (args.length == 3 && "admin".equalsIgnoreCase(args[1]))
+                return getListOfStringsMatchingLastWord(args, new String[] {"give", "finish", "clear", "setcapacity", "setqueue", "reset", "reload"});
+            if (args.length == 4 && "sell".equalsIgnoreCase(args[1]))
+                return getListOfStringsMatchingLastWord(args, new String[] {
+                        "bread", "chips", "potato_mush", "carrot_juice", "pumpkin_head", "melon_slices",
+                        "cactus_juice", "sugar", "basket_of_berries", "camberry_bread", "sugar_bread"
+                });
+            if (args.length == 5 && "give".equalsIgnoreCase(args[1]) && "admin".equalsIgnoreCase(args[2]))
+                return getListOfStringsMatchingLastWord(args, new String[] {
+                        "bread", "chips", "potato_mush", "carrot_juice", "pumpkin_head", "melon_slices",
+                        "cactus_juice", "sugar", "basket_of_berries", "camberry_bread", "sugar_bread"
+                });
+        }
         if ("quest".equals(root) || "quests".equals(root)) {
             if (args.length == 2) return getListOfStringsMatchingLastWord(args, new String[] {
                     "active", "open", "info", "list", "accept", "remove", "givequest", "complete",
@@ -523,6 +547,10 @@ public final class PixelGardenCommand extends CommandBase {
                 payload.addProperty("amount", amount);
             }
             runQuestAdminRequest(sender, payload, (remove ? "Updated rewards for " : "Added rewards to ") + args[2] + ".");
+        } else if ("priceinfo".equals(action)) {
+            if (allowed(sender, "pixelgarden.shop")) open(new PixelGardenPriceInfoGUI(null));
+        } else if ("craft".equals(action)) {
+            handleCraftCommand(sender, args, game);
         } else if ("open".equals(action)) {
             open(new PixelGardenGUI(null));
         } else if ("inventory".equals(action)) {
@@ -754,6 +782,215 @@ public final class PixelGardenCommand extends CommandBase {
     private static String joinArgs(String[] args, int start, int end) {
         StringBuilder value = new StringBuilder();
         for (int i = start; i < end; i++) { if (value.length() > 0) value.append(' '); value.append(args[i]); }
+        return value.toString();
+    }
+
+    private void handleCraftCommand(ICommandSender sender, String[] args, PixelGardenGame game) {
+        if (args.length < 2) {
+            reply(sender, "Usage: /pixelgarden craft <open|recipes|recipe|start|status|cancel|collect|products|sell|upgrades|upgrade|admin>.");
+            return;
+        }
+        String sub = args[1].toLowerCase(Locale.ROOT);
+        if ("admin".equals(sub)) {
+            if (!founderOnly(sender)) return;
+            handleCraftAdminCommand(sender, args, game);
+            return;
+        }
+        if ("upgrade".equals(sub)) {
+            if (!allowed(sender, "pixelgarden.upgrades")) return;
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft upgrade <capacity|queue>"); return; }
+            String upgrade = "capacity".equalsIgnoreCase(args[2]) ? "crafting_capacity"
+                    : "queue".equalsIgnoreCase(args[2]) ? "crafting_queue" : null;
+            if (upgrade == null) { reply(sender, "Choose capacity or queue."); return; }
+            try {
+                com.google.gson.JsonObject result = SupabaseCommunityService.purchasePixelGardenUpgrade(upgrade);
+                if (result.has("save_data") && result.get("save_data").isJsonObject())
+                    game.loadSaveData(result.getAsJsonObject("save_data"));
+                saveCloudAsync(game);
+                reply(sender, "Purchased Crafting " + ("crafting_capacity".equals(upgrade) ? "Capacity" : "Queue")
+                        + ". Active slots: " + game.getCraftingCapacity() + ", queue slots: " + game.getCraftingQueueCapacity()
+                        + ". Coins: " + game.getCoins() + ".");
+            } catch (Exception exception) {
+                reply(sender, "Crafting upgrade purchase failed: " + safeMessage(exception));
+            }
+            return;
+        }
+        if (!allowed(sender, "pixelgarden.shop")) return;
+        long now = System.currentTimeMillis();
+        game.processTime(now);
+        if ("open".equals(sub)) {
+            open(new PixelGardenCraftingGUI(null));
+        } else if ("recipes".equals(sub)) {
+            reply(sender, "Crafting recipes:");
+            for (PixelGardenGame.CraftingRecipe recipe : PixelGardenGame.getCraftingRecipes())
+                reply(sender, recipe.id + " — " + recipe.productName);
+        } else if ("recipe".equals(sub)) {
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft recipe <recipe>"); return; }
+            PixelGardenGame.CraftingRecipe recipe = findCraftingRecipe(args[2]);
+            if (recipe == null) { reply(sender, "Unknown recipe ID."); return; }
+            reply(sender, recipe.productName + " (" + recipe.id + "): " + craftingIngredientText(recipe)
+                    + " -> " + recipe.outputQuantity + " " + recipe.productName + ".");
+            reply(sender, "Time: " + duration((recipe.durationMillis + 999L) / 1000L)
+                    + ". Crop direct-sale value: " + game.getCraftingCropIngredientValue(recipe)
+                    + " coins. Other crafted ingredients: " + game.getCraftingProductIngredientValue(recipe)
+                    + " coins. Crafted batch sale: " + recipe.sellingPrice + " coins.");
+        } else if ("start".equals(sub)) {
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft start <recipe> [amount]"); return; }
+            PixelGardenGame.CraftingRecipe recipe = findCraftingRecipe(args[2]);
+            int amount = args.length >= 4 ? number(args[3]) : 1;
+            if (recipe == null || amount < 1 || amount > 1000) {
+                reply(sender, "Choose a valid recipe and an amount between 1 and 1,000.");
+                return;
+            }
+            int added = 0;
+            for (int i = 0; i < amount; i++) {
+                if (!game.queueCraftingOrder(recipe.id, now)) break;
+                added++;
+            }
+            if (added > 0) saveCloudAsync(game);
+            reply(sender, added == 0 ? "No crafting orders were added: active slots and queue may be full."
+                    : "Added " + added + " " + recipe.productName + " crafting order(s).");
+        } else if ("status".equals(sub)) {
+            List<PixelGardenGame.CraftingOrder> active = game.getActiveCraftingOrders();
+            List<String> queued = game.getQueuedCraftingOrders();
+            List<String> ready = game.getReadyCraftingOrders();
+            reply(sender, "Crafting: active " + active.size() + "/" + game.getCraftingCapacity()
+                    + ", queued " + queued.size() + "/" + game.getCraftingQueueCapacity()
+                    + ", ready to collect " + ready.size() + ".");
+            int orderNumber = 1;
+            for (PixelGardenGame.CraftingOrder order : active) {
+                PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(order.recipeId);
+                reply(sender, "#" + orderNumber++ + " ACTIVE: " + (recipe == null ? order.recipeId : recipe.productName)
+                        + " — " + duration((Math.max(0L, order.completesAt - now) + 999L) / 1000L) + " remaining.");
+            }
+            for (String id : queued) {
+                PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(id);
+                reply(sender, "#" + orderNumber++ + " QUEUED: " + (recipe == null ? id : recipe.productName) + ".");
+            }
+            for (int i = 0; i < ready.size(); i++) {
+                PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(ready.get(i));
+                reply(sender, "READY: " + (recipe == null ? ready.get(i) : recipe.productName) + ".");
+            }
+        } else if ("cancel".equals(sub)) {
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft cancel <order number>"); return; }
+            int order = number(args[2]);
+            boolean cancelled = order > 0 && game.cancelCraftingOrder(order, now);
+            if (cancelled) saveCloudAsync(game);
+            reply(sender, cancelled ? "Cancelled crafting order #" + order + ". Ingredients from an active order were returned."
+                    : "That active or queued crafting order does not exist.");
+        } else if ("collect".equals(sub)) {
+            int collected = game.collectCompletedCraftingOrders();
+            if (collected > 0) saveCloudAsync(game);
+            reply(sender, collected == 0 ? "No completed crafting orders are waiting to be collected."
+                    : "Collected " + collected + " completed crafting order(s).");
+        } else if ("products".equals(sub)) {
+            int found = 0;
+            for (PixelGardenGame.CraftingRecipe recipe : PixelGardenGame.getCraftingRecipes()) {
+                int batches = game.getCraftedProductBatches(recipe.id);
+                if (batches <= 0) continue;
+                found++;
+                reply(sender, recipe.productName + ": " + batches + " batch(es), "
+                        + ((long)batches * recipe.outputQuantity) + " item(s). Batch sale: "
+                        + recipe.sellingPrice + " coins.");
+            }
+            if (found == 0) reply(sender, "You have no collected crafted products.");
+        } else if ("sell".equals(sub)) {
+            if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft sell <product> [amount|all]"); return; }
+            PixelGardenGame.CraftingRecipe recipe = findCraftingRecipe(args[2]);
+            if (recipe == null) { reply(sender, "Unknown crafted product ID."); return; }
+            int available = game.getCraftedProductBatches(recipe.id);
+            int amount = args.length < 4 || "all".equalsIgnoreCase(args[3]) ? available : number(args[3]);
+            boolean sold = amount > 0 && game.sellCraftedProductBatches(recipe.id, amount);
+            if (sold) saveCloudAsync(game);
+            reply(sender, sold ? "Sold " + amount + " " + recipe.productName + " batch(es). Coins: " + game.getCoins() + "."
+                    : "Nothing sold: check the available batches and amount.");
+        } else if ("upgrades".equals(sub)) {
+            int capacityLevel = game.getCraftingCapacityLevel();
+            int queueLevel = game.getCraftingQueueLevel();
+            reply(sender, "Crafting Capacity: level " + capacityLevel + "/4, " + game.getCraftingCapacity()
+                    + " active slot(s), next price: " + game.getUpgradeCost("crafting_capacity") + ".");
+            reply(sender, "Crafting Queue: level " + queueLevel + "/4, " + game.getCraftingQueueCapacity()
+                    + " queue slot(s), next price: " + game.getUpgradeCost("crafting_queue") + ".");
+        } else {
+            reply(sender, "Unknown crafting command. Use /pixelgarden craft for the command list.");
+        }
+    }
+
+    private void handleCraftAdminCommand(ICommandSender sender, String[] args, PixelGardenGame game) {
+        if (args.length < 3) {
+            reply(sender, "Usage: /pixelgarden craft admin <give|finish|clear|setcapacity|setqueue|reset|reload>.");
+            return;
+        }
+        String action = args[2].toLowerCase(Locale.ROOT);
+        if ("reload".equals(action)) {
+            try {
+                com.google.gson.JsonObject saved = SupabaseCommunityService.loadPixelGardenSave();
+                if (saved == null) { reply(sender, "No saved Pixel Garden data was found for the signed-in Founder account."); return; }
+                game.loadSaveData(saved);
+                reply(sender, "Reloaded your saved Pixel Garden crafting data from the cloud.");
+            } catch (Exception exception) { reply(sender, "Crafting reload failed: " + safeMessage(exception)); }
+            return;
+        }
+        String target;
+        String product = null;
+        int amount = 0;
+        if ("give".equals(action)) {
+            if (args.length < 6) { reply(sender, "Usage: /pixelgarden craft admin give <alpha account name> <product> <amount>"); return; }
+            target = args[3]; product = args[4]; amount = number(args[5]);
+        } else if ("finish".equals(action)) {
+            if (args.length < 4) { reply(sender, "Usage: /pixelgarden craft admin finish <alpha account name> [order#]"); return; }
+            target = args[3]; amount = args.length >= 5 ? number(args[4]) : 0;
+        } else if ("clear".equals(action) || "reset".equals(action)) {
+            if (args.length < 4) { reply(sender, "Usage: /pixelgarden craft admin " + action + " <alpha account name>"); return; }
+            target = args[3];
+        } else if ("setcapacity".equals(action) || "setqueue".equals(action)) {
+            if (args.length < 5) { reply(sender, "Usage: /pixelgarden craft admin " + action + " <alpha account name> <0-4>"); return; }
+            target = args[3]; amount = number(args[4]);
+        } else {
+            reply(sender, "Unknown crafting admin action.");
+            return;
+        }
+        try {
+            com.google.gson.JsonObject result = SupabaseCommunityService.managePixelGardenCrafting(action, target, product, amount);
+            String name = result.has("target_alpha_name") ? result.get("target_alpha_name").getAsString() : target;
+            if (name.equalsIgnoreCase(SupabaseCommunityService.getSignedInAlphaName())
+                    && result.has("save_data") && result.get("save_data").isJsonObject()) {
+                game.loadSaveData(result.getAsJsonObject("save_data"));
+            }
+            if ("give".equals(action)) reply(sender, "Granted " + amount + " " + product + " batch(es) to " + name + ".");
+            else if ("finish".equals(action)) reply(sender, "Moved " + ("all".equals(String.valueOf(amount)) || amount == 0 ? "all active" : "order #" + amount)
+                    + " crafting order(s) for " + name + " to Ready to collect.");
+            else if ("clear".equals(action)) reply(sender, "Cleared active, queued and ready crafting orders for " + name + ".");
+            else if ("setcapacity".equals(action)) reply(sender, "Set " + name + "'s Crafting Capacity upgrade level to " + amount + ".");
+            else if ("setqueue".equals(action)) reply(sender, "Set " + name + "'s Crafting Queue upgrade level to " + amount + ".");
+            else reply(sender, "Reset all crafting upgrades, orders and crafted products for " + name + ".");
+        } catch (Exception exception) {
+            reply(sender, "Crafting admin action failed: " + safeMessage(exception));
+        }
+    }
+
+    private static PixelGardenGame.CraftingRecipe findCraftingRecipe(String id) {
+        if (id == null) return null;
+        for (PixelGardenGame.CraftingRecipe recipe : PixelGardenGame.getCraftingRecipes()) {
+            if (recipe.id.equalsIgnoreCase(id) || recipe.productName.equalsIgnoreCase(id.replace('_', ' '))) return recipe;
+        }
+        return null;
+    }
+
+    private static String craftingIngredientText(PixelGardenGame.CraftingRecipe recipe) {
+        StringBuilder value = new StringBuilder();
+        for (PixelGardenGame.Crop crop : PixelGardenGame.Crop.values()) {
+            int amount = recipe.getCropIngredient(crop);
+            if (amount <= 0) continue;
+            if (value.length() > 0) value.append(" + ");
+            value.append(amount).append(" ").append(crop == PixelGardenGame.Crop.BERRIES && amount == 1 ? "Berry" : crop.displayName);
+        }
+        for (java.util.Map.Entry<String, Integer> entry : recipe.getProductIngredients().entrySet()) {
+            PixelGardenGame.CraftingRecipe ingredient = PixelGardenGame.getCraftingRecipe(entry.getKey());
+            if (ingredient == null) continue;
+            if (value.length() > 0) value.append(" + ");
+            value.append(entry.getValue()).append(" ").append(ingredient.productName);
+        }
         return value.toString();
     }
 
