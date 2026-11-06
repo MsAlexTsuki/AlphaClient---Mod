@@ -864,6 +864,7 @@ public final class PixelGardenCommand extends CommandBase {
             reply(sender, "Crafting: active " + active.size() + "/" + game.getCraftingCapacity()
                     + ", queued " + queued.size() + "/" + game.getCraftingQueueCapacity()
                     + ", ready to collect " + ready.size() + ".");
+            reply(sender, "Order numbers list active orders first, followed by queued orders.");
             int orderNumber = 1;
             for (PixelGardenGame.CraftingOrder order : active) {
                 PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(order.recipeId);
@@ -883,7 +884,7 @@ public final class PixelGardenCommand extends CommandBase {
             int order = number(args[2]);
             boolean cancelled = order > 0 && game.cancelCraftingOrder(order, now);
             if (cancelled) saveCloudAsync(game);
-            reply(sender, cancelled ? "Cancelled crafting order #" + order + ". Ingredients from an active order were returned."
+            reply(sender, cancelled ? "Cancelled crafting order #" + order + "."
                     : "That active or queued crafting order does not exist.");
         } else if ("collect".equals(sub)) {
             int collected = game.collectCompletedCraftingOrders();
