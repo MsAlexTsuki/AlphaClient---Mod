@@ -297,7 +297,7 @@ public final class PaletteGui extends GuiScreen {
         }
 
         if (PermissionService.hasCommandPermission("menu.pixelgarden", false)) {
-            addCommand("pixel-garden", "Open Pixel Garden", "Open Pixel Garden when the account has its required permission.", "/pixelgarden");
+            addCommand("pixel-garden", "Open Pixel Garden", "Open Pixel Garden when the account has its required permission.", "/pixelgarden open");
         }
 
         Set<String> seenModules = new HashSet<String>();
