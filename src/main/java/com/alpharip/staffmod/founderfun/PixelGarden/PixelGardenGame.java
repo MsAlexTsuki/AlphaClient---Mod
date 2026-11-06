@@ -506,7 +506,6 @@ public final class PixelGardenGame {
         String cropId = crop.name().toLowerCase(java.util.Locale.ROOT);
         progressionData.recordActionProgress("PLANT_CROP", cropId, 1);
         progressionData.recordTutorialAction("PLANT_CROP", cropId);
-        awardExperience(1L);
         return true;
     }
     public synchronized boolean harvest(int plotIndex, long now) {
