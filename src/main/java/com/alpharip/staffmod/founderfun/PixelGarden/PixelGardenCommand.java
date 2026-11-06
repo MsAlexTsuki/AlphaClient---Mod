@@ -57,7 +57,7 @@ public final class PixelGardenCommand extends CommandBase {
                         "bread", "chips", "potato_mush", "carrot_juice", "pumpkin_head", "melon_slices",
                         "cactus_juice", "sugar", "basket_of_berries", "camberry_bread", "sugar_bread"
                 });
-            if (args.length == 5 && "give".equalsIgnoreCase(args[1]) && "admin".equalsIgnoreCase(args[2]))
+            if (args.length == 5 && "admin".equalsIgnoreCase(args[1]) && "give".equalsIgnoreCase(args[2]))
                 return getListOfStringsMatchingLastWord(args, new String[] {
                         "bread", "chips", "potato_mush", "carrot_juice", "pumpkin_head", "melon_slices",
                         "cactus_juice", "sugar", "basket_of_berries", "camberry_bread", "sugar_bread"
@@ -787,7 +787,7 @@ public final class PixelGardenCommand extends CommandBase {
 
     private void handleCraftCommand(ICommandSender sender, String[] args, PixelGardenGame game) {
         if (args.length < 2) {
-            reply(sender, "Usage: /pixelgarden craft <open|recipes|recipe|start|status|cancel|collect|products|sell|upgrades|upgrade|admin>.");
+            if (allowed(sender, "pixelgarden.shop")) open(new PixelGardenCraftingGUI(null));
             return;
         }
         String sub = args[1].toLowerCase(Locale.ROOT);
@@ -796,8 +796,15 @@ public final class PixelGardenCommand extends CommandBase {
             handleCraftAdminCommand(sender, args, game);
             return;
         }
-        if ("upgrade".equals(sub)) {
+        if ("upgrade".equals(sub) || "upgrades".equals(sub)) {
             if (!allowed(sender, "pixelgarden.upgrades")) return;
+            if ("upgrades".equals(sub)) {
+                reply(sender, "Crafting Capacity: level " + game.getCraftingCapacityLevel() + "/4, " + game.getCraftingCapacity()
+                        + " active slot(s), next price: " + game.getUpgradeCost("crafting_capacity") + ".");
+                reply(sender, "Crafting Queue: level " + game.getCraftingQueueLevel() + "/4, " + game.getCraftingQueueCapacity()
+                        + " queue slot(s), next price: " + game.getUpgradeCost("crafting_queue") + ".");
+                return;
+            }
             if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft upgrade <capacity|queue>"); return; }
             String upgrade = "capacity".equalsIgnoreCase(args[2]) ? "crafting_capacity"
                     : "queue".equalsIgnoreCase(args[2]) ? "crafting_queue" : null;
@@ -904,13 +911,6 @@ public final class PixelGardenCommand extends CommandBase {
             if (sold) saveCloudAsync(game);
             reply(sender, sold ? "Sold " + amount + " " + recipe.productName + " batch(es). Coins: " + game.getCoins() + "."
                     : "Nothing sold: check the available batches and amount.");
-        } else if ("upgrades".equals(sub)) {
-            int capacityLevel = game.getCraftingCapacityLevel();
-            int queueLevel = game.getCraftingQueueLevel();
-            reply(sender, "Crafting Capacity: level " + capacityLevel + "/4, " + game.getCraftingCapacity()
-                    + " active slot(s), next price: " + game.getUpgradeCost("crafting_capacity") + ".");
-            reply(sender, "Crafting Queue: level " + queueLevel + "/4, " + game.getCraftingQueueCapacity()
-                    + " queue slot(s), next price: " + game.getUpgradeCost("crafting_queue") + ".");
         } else {
             reply(sender, "Unknown crafting command. Use /pixelgarden craft for the command list.");
         }
