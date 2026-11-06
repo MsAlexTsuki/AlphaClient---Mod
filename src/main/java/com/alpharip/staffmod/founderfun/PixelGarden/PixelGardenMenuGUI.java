@@ -15,7 +15,7 @@ import org.lwjgl.input.Mouse;
 abstract class PixelGardenMenuGUI extends GuiScreen {
     enum Page { SHOP, INVENTORY, SELL, UPGRADES }
     private static final int ACTION_BASE = 20;
-    private static final int TAB_SHOP = 100, TAB_INVENTORY = 101, TAB_SELL = 102, TAB_UPGRADES = 103, BACK = 104;
+    private static final int TAB_SHOP = 100, TAB_INVENTORY = 101, TAB_SELL = 102, TAB_UPGRADES = 103, TAB_CRAFTING = 104, BACK = 105;
     protected final GuiScreen parent;
     protected final PixelGardenGame game = PixelGardenGame.getInstance();
     private final Page page;
@@ -87,7 +87,7 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             int gap = 8;
             int cardWidth = (panelWidth - 32 - gap * 2) / 3;
             int cardHeight = 82;
-            for (int i = 0; i < 9; i++) {
+            for (int i = 0; i < 11; i++) {
                 int x = left + 10 + (i % 3) * (cardWidth + gap);
                 int y = top + 10 + (i / 3) * (cardHeight + gap);
                 String key = upgradeKey(i);
@@ -102,13 +102,14 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             }
         }
         int navY = height - 35;
-        int navW = Math.min(90, (width - 45) / 5);
-        int navX = (width - (navW * 5 + 8 * 4)) / 2;
+        int navW = Math.min(82, (width - 50) / 6);
+        int navX = (width - (navW * 6 + 8 * 5)) / 2;
         buttonList.add(new AlphaButton(TAB_SHOP, navX, navY, navW, 20, "Shop"));
         buttonList.add(new AlphaButton(TAB_INVENTORY, navX + navW + 8, navY, navW, 20, "Inventory"));
         buttonList.add(new AlphaButton(TAB_SELL, navX + (navW + 8) * 2, navY, navW, 20, "Sell"));
         buttonList.add(new AlphaButton(TAB_UPGRADES, navX + (navW + 8) * 3, navY, navW, 20, "Upgrades"));
-        buttonList.add(new AlphaButton(BACK, navX + (navW + 8) * 4, navY, navW, 20, "Garden"));
+        buttonList.add(new AlphaButton(TAB_CRAFTING, navX + (navW + 8) * 4, navY, navW, 20, "Crafting"));
+        buttonList.add(new AlphaButton(BACK, navX + (navW + 8) * 5, navY, navW, 20, "Garden"));
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
@@ -118,15 +119,16 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             mc.displayGuiScreen(parent);
             return;
         }
-        if (button.id >= TAB_SHOP && button.id <= TAB_UPGRADES) {
+        if (button.id >= TAB_SHOP && button.id <= TAB_CRAFTING) {
             saveIfGardenParent();
             if (button.id == TAB_SHOP) mc.displayGuiScreen(new PixelGardenShopGUI(parent));
             else if (button.id == TAB_INVENTORY) mc.displayGuiScreen(new PixelGardenInventoryGUI(parent));
             else if (button.id == TAB_SELL) mc.displayGuiScreen(new PixelGardenSellGUI(parent));
-            else mc.displayGuiScreen(new PixelGardenUpgradeGUI(parent));
+            else if (button.id == TAB_UPGRADES) mc.displayGuiScreen(new PixelGardenUpgradeGUI(parent));
+            else mc.displayGuiScreen(new PixelGardenCraftingGUI(parent));
             return;
         }
-        if (page == Page.UPGRADES && button.id >= ACTION_BASE && button.id < ACTION_BASE + 9) {
+        if (page == Page.UPGRADES && button.id >= ACTION_BASE && button.id < ACTION_BASE + 11) {
             int upgrade = button.id - ACTION_BASE;
             String key = upgradeKey(upgrade);
             if ("prestige".equals(key)) { mc.displayGuiScreen(new PixelGardenPrestigeGUI(this)); return; }
@@ -162,7 +164,9 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             case 5: return "growth_boost";
             case 6: return "more_coins";
             case 7: return "more_crops";
-            default: return "prestige";
+            case 8: return "prestige";
+            case 9: return "crafting_capacity";
+            default: return "crafting_queue";
         }
     }
 
@@ -251,23 +255,25 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             }
         } else {
             int extensionNumber = Math.max(1, game.getUnlockedPlots() - PixelGardenGame.STARTING_PLOTS + 1);
-            String[] names = {"Garden Extension " + extensionNumber, "Auto Harvest", "Auto Plant", "Auto Sell", "Auto Quest", "Growth Boost", "More Coins", "More Crops", "Prestige"};
+            String[] names = {"Garden Extension " + extensionNumber, "Auto Harvest", "Auto Plant", "Auto Sell", "Auto Quest", "Growth Boost", "More Coins", "More Crops", "Prestige", "Crafting Capacity", "Crafting Queue"};
             String[] desc = {"Unlock the next plot", "Auto-collect ripe crops", "Plant available seeds automatically",
                     "Automatically sell harvested crops", "Deliver crops and claim quest rewards", "Faster growth",
-                    "Sell multiplier: " + game.getCoinMultiplier() + "x", "Harvest yield: " + game.getCropYield() + "x", "Full reset for 20,000 coins"};
+                    "Sell multiplier: " + game.getCoinMultiplier() + "x", "Harvest yield: " + game.getCropYield() + "x", "Full reset for 20,000 coins",
+                    "Active slots: " + game.getCraftingCapacity(), "Queued slots: " + game.getCraftingQueueCapacity()};
             int[] costs = {game.getUpgradeCost("expansion"), game.getUpgradeCost("auto_harvest"), game.getUpgradeCost("auto_plant"),
                     game.getUpgradeCost("auto_sell"), game.getUpgradeCost("auto_quest"), game.getUpgradeCost("growth_boost"),
-                    game.getUpgradeCost("more_coins"), game.getUpgradeCost("more_crops"), game.getUpgradeCost("prestige")};
-            int gap = 8, cardWidth = (panelWidth - 32 - gap * 2) / 3, cardHeight = 82;
-            for (int i = 0; i < 9; i++) {
-                int x = left + 10 + (i % 3) * (cardWidth + gap), y = 98 + (i / 3) * (cardHeight + gap);
+                    game.getUpgradeCost("more_coins"), game.getUpgradeCost("more_crops"), game.getUpgradeCost("prestige"),
+                    game.getUpgradeCost("crafting_capacity"), game.getUpgradeCost("crafting_queue")};
+            int gap = 6, cardWidth = (panelWidth - 32 - gap * 2) / 3, cardHeight = 68;
+            for (int i = 0; i < 11; i++) {
+                int x = left + 10 + (i % 3) * (cardWidth + gap), y = 86 + (i / 3) * (cardHeight + gap);
                 drawPanel(x, y, cardWidth, cardHeight);
                 drawString(fontRendererObj, names[i], x + 7, y + 8, 0xFFF0F2F6);
-                drawString(fontRendererObj, desc[i], x + 7, y + 25, 0xFFB7C4D5);
+                drawString(fontRendererObj, fontRendererObj.trimStringToWidth(desc[i], cardWidth - 14), x + 7, y + 25, 0xFFB7C4D5);
                 String status = i == 3 && game.hasAutoSell()
                         ? (game.isAutoSellEnabled() ? "Auto Sell: ON" : "Auto Sell: OFF")
                         : costs[i] < 0 ? "OWNED / MAX" : "Cost: " + costs[i];
-                drawString(fontRendererObj, status, x + 7, y + 42,
+                drawString(fontRendererObj, status, x + 7, y + 43,
                         (costs[i] < 0 || (i == 3 && game.hasAutoSell())) ? 0xFF83D79A : 0xFFFFD45A);
                 if (i < 5) drawUpgradeIcon(x + cardWidth - 30, y + 2, i);
             }
