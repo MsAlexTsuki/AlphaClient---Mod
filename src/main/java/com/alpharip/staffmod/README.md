@@ -581,3 +581,17 @@ Folder: `AdjustableRainAndSnowSpeed/`
 - **AdjustableRainAndSnowSpeedGui.java** — Provides a standalone Minecraft 1.8.9 settings preview with separate rain/snow sliders, channel toggles, overall enablement, reset, and Done controls. It is not registered in an existing menu.
 
 **Prototype boundary:** This prototype models separate rain and snow speed settings only. It does not hook Minecraft's weather renderer, change actual precipitation particle timing, distinguish biome-specific weather, persist settings, call Supabase, integrate with Forge events, or connect to AlphaClient Core. The GUI is a preview and is not wired into the client. No compile or in-game test is claimed.
+
+
+## Adjustable Star Density
+
+Folder: `AdjustableStarDensity/`
+
+- **AdjustableStarDensity.java** — Main facade exposing the local settings, controller, and standalone settings-screen factory. The original idea's `enabled` and `style` fields are retained for source-level continuity.
+- **StarDensitySettings.java** — Holds the enabled state, density percentage (0–200%, default 100%), and selected visual style. Settings are in-memory only; disabled mode reports the neutral 1.0x multiplier.
+- **StarDensityStyle.java** — Defines the prototype display styles: Default, Soft, and Bright. These are configuration labels only until a renderer is implemented.
+- **StarDensitySnapshot.java** — Exposes an immutable snapshot of enablement, density, style, and effective multiplier.
+- **StarDensityController.java** — Coordinates enablement, density changes, style cycling, reset, and snapshot creation.
+- **AdjustableStarDensityGui.java** — Provides a standalone Minecraft 1.8.9 settings preview with a density slider, enable toggle, style cycling, reset, and Done/back navigation. It is not registered in an existing menu.
+
+**Prototype boundary:** This prototype models star-density settings and a standalone GUI preview only. It does not modify Minecraft's night-sky renderer, generate/remove stars, apply the selected visual styles, persist settings, call Supabase, integrate with Forge events, or connect to AlphaClient Core. The 0–200% range and three style labels are prototype defaults, not requirements stated in the original idea. No compile or in-game test is claimed.
