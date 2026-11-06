@@ -30,6 +30,7 @@ import net.minecraft.util.EnumChatFormatting;
 public final class PixelGardenProgressionData {
     public static final int SAVE_VERSION = 1;
     public static final int MAX_ACTIVE_QUESTS = 5;
+    public static final int MAX_COMPLETED_QUESTS = 20;
 
     public enum QuestStatus { AVAILABLE, ACTIVE, COMPLETED, ABANDONED }
     public enum GoalType { MAIN, SIDE, DAILY }
@@ -586,6 +587,11 @@ public final class PixelGardenProgressionData {
             if (definitionId.equals(instance.definitionId)
                     && instance.status == QuestStatus.COMPLETED) return true;
         }
+        // Keep tutorial progression intact even when an old completed instance is pruned.
+        for (HistoryEntry entry : history) {
+            if (definitionId.equals(entry.definitionId)
+                    && entry.outcome == QuestStatus.COMPLETED) return true;
+        }
         return false;
     }
 
@@ -730,9 +736,44 @@ public final class PixelGardenProgressionData {
         instance.finishedAt = System.currentTimeMillis();
         history.add(new HistoryEntry(instance.instanceId, instance.definitionId,
                 QuestStatus.COMPLETED, instance.finishedAt));
+        pruneCompletedQuests();
         notifyQuestCompleted();
         autoStartNextTutorialQuest(instance.definitionId);
         return true;
+    }
+
+
+    /**
+     * Keeps only the 20 most recently completed quest instances.
+     * Compact tutorial completion markers remain in history so the tutorial sequence
+     * cannot restart when an old tutorial instance is pruned.
+     */
+    private void pruneCompletedQuests() {
+        List<QuestInstance> completed = new ArrayList<QuestInstance>();
+        for (QuestInstance instance : instances.values()) {
+            if (instance.status == QuestStatus.COMPLETED) completed.add(instance);
+        }
+        if (completed.size() <= MAX_COMPLETED_QUESTS) return;
+
+        Collections.sort(completed, new java.util.Comparator<QuestInstance>() {
+            @Override public int compare(QuestInstance left, QuestInstance right) {
+                return Long.compare(left.finishedAt, right.finishedAt);
+            }
+        });
+
+        int removeCount = completed.size() - MAX_COMPLETED_QUESTS;
+        for (int i = 0; i < removeCount; i++) {
+            QuestInstance oldest = completed.get(i);
+            instances.remove(oldest.instanceId);
+            if (!isTutorialQuest(oldest.definitionId)) {
+                java.util.Iterator<HistoryEntry> iterator = history.iterator();
+                while (iterator.hasNext()) {
+                    HistoryEntry entry = iterator.next();
+                    if (oldest.instanceId.equals(entry.instanceId)
+                            && entry.outcome == QuestStatus.COMPLETED) iterator.remove();
+                }
+            }
+        }
     }
 
     private void notifyQuestCompleted() {
@@ -1060,6 +1101,7 @@ public final class PixelGardenProgressionData {
             HistoryEntry entry = HistoryEntry.fromJson(item);
             if (entry != null) history.add(entry);
         }
+        pruneCompletedQuests();
 
         JsonArray rotationArray = arrayValue(root, "recent_rotation_ids");
         for (JsonElement item : rotationArray) {
