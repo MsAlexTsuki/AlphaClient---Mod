@@ -864,7 +864,7 @@ public final class PixelGardenCommand extends CommandBase {
             reply(sender, "Crafting: active " + active.size() + "/" + game.getCraftingCapacity()
                     + ", queued " + queued.size() + "/" + game.getCraftingQueueCapacity()
                     + ", ready to collect " + ready.size() + ".");
-            reply(sender, "Order numbers list active orders first, followed by queued orders.");
+            reply(sender, "Order numbers list active orders first, followed by queued orders. Founder finish order# uses active orders only.");
             int orderNumber = 1;
             for (PixelGardenGame.CraftingOrder order : active) {
                 PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(order.recipeId);
