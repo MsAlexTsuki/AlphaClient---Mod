@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -287,7 +286,7 @@ public final class CombatTimer {
         @Override
         public void drawScreen(int mouseX, int mouseY, float partialTicks) {
             drawDefaultBackground();
-            drawCenteredString(fontRendererObj, "Combat Timer Settings", width / 2,  twenty(), 0xFFFFFF);
+            drawCenteredString(fontRendererObj, "Combat Timer Settings", width / 2, 20, 0xFFFFFF);
             drawString(fontRendererObj, "Combat duration (seconds)", width / 2 - 100, 52, 0xCCCCCC);
             durationField.drawTextBox();
             drawString(fontRendererObj, "Chat trigger regex (comma-separated; blank = manual only)",
@@ -301,9 +300,6 @@ public final class CombatTimer {
             super.drawScreen(mouseX, mouseY, partialTicks);
         }
 
-        private int twenty() {
-            return 20;
-        }
     }
 
     // TODO(Supabase): Keep settings local in this prototype. If account-synced
