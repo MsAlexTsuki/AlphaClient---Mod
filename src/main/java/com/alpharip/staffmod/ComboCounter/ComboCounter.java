@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public final class ComboCounter {
     private static ComboCounter instance;
     private static final long HIT_CONFIRMATION_TIMEOUT_MS = 1000L;
-    private static final long COMBO_IDLE_TIMEOUT_MS = 20000L;
+    private static final long COMBO_IDLE_TIMEOUT_MS = 12000L;
     private static final String PACKET_HANDLER_NAME = "alphaclient_combo_counter";
     private static final String[] COLOR_NAMES = {
             "White", "Red", "Orange", "Yellow", "Green",
