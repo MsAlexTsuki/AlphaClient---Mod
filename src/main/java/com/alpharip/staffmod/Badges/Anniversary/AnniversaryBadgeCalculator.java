@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-/** Calculates earned account-age milestones using calendar months, not fixed day counts. */
+/** Calculates earned account-age milestones using calendar dates, not fixed day counts. */
 public final class AnniversaryBadgeCalculator {
     private AnniversaryBadgeCalculator() { }
 
@@ -19,7 +19,7 @@ public final class AnniversaryBadgeCalculator {
         for (AnniversaryBadgeTier tier : AnniversaryBadgeTier.values()) {
             Calendar milestone = Calendar.getInstance();
             milestone.setTime(accountCreatedAt);
-            milestone.add(Calendar.MONTH, tier.getMonthsRequired());
+            milestone.add(tier.getCalendarField(), tier.getAmount());
 
             Date earnedAt = milestone.getTime();
             boolean earned = !earnedAt.after(referenceDate);
