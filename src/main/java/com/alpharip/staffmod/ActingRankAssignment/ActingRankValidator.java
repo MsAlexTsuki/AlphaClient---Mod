@@ -12,6 +12,7 @@ public final class ActingRankValidator {
         if (currentRank.trim().length() > 32) return "Current rank must be 32 characters or fewer.";
         if (blank(actingRank)) return "Acting rank is required.";
         if (actingRank.trim().length() > 32) return "Acting rank must be 32 characters or fewer.";
+        if (currentRank.trim().equalsIgnoreCase(actingRank.trim())) return "Acting rank must differ from the current rank.";
         if (blank(assignedBy)) return "Assigning staff member is required.";
         if (assignedBy.trim().length() > 32) return "Assigning staff member must be 32 characters or fewer.";
         if (reason != null && reason.length() > 240) return "Reason must be 240 characters or fewer.";
