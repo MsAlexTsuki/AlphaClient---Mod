@@ -12,7 +12,7 @@ This is an extension of the existing `Badges/Anniversary` prototype, not a separ
 
 ## Integration still required
 
-- The client must provide the birthday date from an approved account-data source. This prototype stores the date locally and does not connect to Supabase or any network service.
+- The client must provide the birthday date from an approved account-data source. This prototype keeps the date in its in-memory settings object for the current GUI/session and does not connect to Supabase or any network service.
 - The client tick must call `BirthdayCelebrationService.tryCelebrate(...)` when the player and world are available.
 - A Minecraft 1.8.9 particle adapter must implement `BirthdayConfettiParticleSink` and render the supplied particle descriptions.
 - The Anniversary GUI opens the birthday settings screen; the settings object is retained while navigating between these screens.
