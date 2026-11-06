@@ -21,7 +21,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|harvested|seeds|ids]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|inventory|upgrades|shop|priceinfo|craft|buy|sell|harvest|time|crops|seeds]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override
@@ -800,9 +800,9 @@ public final class PixelGardenCommand extends CommandBase {
             if (!allowed(sender, "pixelgarden.upgrades")) return;
             if ("upgrades".equals(sub)) {
                 reply(sender, "Crafting Capacity: level " + game.getCraftingCapacityLevel() + "/4, " + game.getCraftingCapacity()
-                        + " active slot(s), next price: " + game.getUpgradeCost("crafting_capacity") + ".");
+                        + " active slot(s), next price: " + (game.getUpgradeCost("crafting_capacity") < 0 ? "MAX" : game.getUpgradeCost("crafting_capacity")) + ".");
                 reply(sender, "Crafting Queue: level " + game.getCraftingQueueLevel() + "/4, " + game.getCraftingQueueCapacity()
-                        + " queue slot(s), next price: " + game.getUpgradeCost("crafting_queue") + ".");
+                        + " queue slot(s), next price: " + (game.getUpgradeCost("crafting_queue") < 0 ? "MAX" : game.getUpgradeCost("crafting_queue")) + ".");
                 return;
             }
             if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft upgrade <capacity|queue>"); return; }
@@ -840,7 +840,7 @@ public final class PixelGardenCommand extends CommandBase {
             reply(sender, "Time: " + duration((recipe.durationMillis + 999L) / 1000L)
                     + ". Crop direct-sale value: " + game.getCraftingCropIngredientValue(recipe)
                     + " coins. Other crafted ingredients: " + game.getCraftingProductIngredientValue(recipe)
-                    + " coins. Crafted batch sale: " + recipe.sellingPrice + " coins.");
+                    + " coins. Crafted batch sale: " + game.getCraftingBatchSaleValue(recipe) + " coins.");
         } else if ("start".equals(sub)) {
             if (args.length < 3) { reply(sender, "Usage: /pixelgarden craft start <recipe> [amount]"); return; }
             PixelGardenGame.CraftingRecipe recipe = findCraftingRecipe(args[2]);
@@ -898,7 +898,7 @@ public final class PixelGardenCommand extends CommandBase {
                 found++;
                 reply(sender, recipe.productName + ": " + batches + " batch(es), "
                         + ((long)batches * recipe.outputQuantity) + " item(s). Batch sale: "
-                        + recipe.sellingPrice + " coins.");
+                        + game.getCraftingBatchSaleValue(recipe) + " coins each.");
             }
             if (found == 0) reply(sender, "You have no collected crafted products.");
         } else if ("sell".equals(sub)) {
