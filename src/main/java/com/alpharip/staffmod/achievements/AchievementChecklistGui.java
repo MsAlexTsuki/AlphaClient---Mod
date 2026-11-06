@@ -62,10 +62,11 @@ public final class AchievementChecklistGui extends GuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         int left = Math.max(12, width / 2 - 190);
-        int top = Math.max(34, height / 2 - 105);
+        int top = Math.max(24, height / 2 - 112);
         int rowTop = top + 48;
-        for (int i = 0; i < visibleEntries.size() && i < 6; i++) {
-            int y = rowTop + i * 18;
+        int firstVisible = (selectedIndex / 6) * 6;
+        for (int i = firstVisible; i < visibleEntries.size() && i < firstVisible + 6; i++) {
+            int y = rowTop + (i - firstVisible) * 18;
             if (mouseX >= left + 10 && mouseX <= width / 2 + 180 && mouseY >= y - 2 && mouseY <= y + 13) {
                 selectedIndex = i;
                 updateNavigation();
@@ -92,10 +93,11 @@ public final class AchievementChecklistGui extends GuiScreen {
         } else if (visibleEntries.isEmpty()) {
             drawCenteredString(fontRendererObj, "No achievements match this view.", width / 2, top + 82, 0xFF858D9B);
         } else {
-            int listBottom = Math.min(visibleEntries.size(), 6);
-            for (int i = 0; i < listBottom; i++) {
+            int firstVisible = (selectedIndex / 6) * 6;
+            int listBottom = Math.min(visibleEntries.size(), firstVisible + 6);
+            for (int i = firstVisible; i < listBottom; i++) {
                 AchievementEntry entry = visibleEntries.get(i);
-                int y = top + 48 + i * 18;
+                int y = top + 48 + (i - firstVisible) * 18;
                 if (i == selectedIndex) drawRect(left + 8, y - 3, right - 8, y + 13, 0x80343A45);
                 String state = entry.isUnlocked() ? "UNLOCKED" : entry.getProgressPercent() + "%";
                 drawString(fontRendererObj, entry.getTitle(), left + 13, y, 0xFFE0E3E8);
