@@ -16,7 +16,7 @@ import org.lwjgl.input.Mouse;
 public final class PixelGardenGUI extends GuiScreen {
     private static final int CROP_BASE = 10, BUY_BASE = 20, PLOT_BASE = 100, SELL_BASE = 200;
     private static final int AUTO = 300, GROWTH = 301, EXPAND = 302, BACK = 4;
-    private static final int SHOP = 400, INVENTORY = 401, SELL = 402, UPGRADES = 403, PRESTIGE = 404, HELP = 405, QUESTBOOK = 406, CRAFTING = 407;
+    private static final int SHOP = 400, INVENTORY = 401, SELL = 402, UPGRADES = 403, PRESTIGE = 404, HELP = 405, QUESTBOOK = 406, CRAFTING = 407, SPEED_TOKEN = 408;
     private static String loadedAccount;
     private static boolean loadInProgress;
     private final GuiScreen parent;
@@ -242,6 +242,9 @@ public final class PixelGardenGUI extends GuiScreen {
         }
         int backWidth = Math.min(112, Math.max(70, width / 8));
         buttonList.add(new AlphaButton(BACK, (width - backWidth) / 2, height - 48, backWidth, navButtonHeight, "Back"));
+        int levelCardY = Math.max(54, gy - 62);
+        int tokenX = gx - 12 - 8 - navButtonWidth + navButtonWidth + 4;
+        buttonList.add(new AlphaButton(SPEED_TOKEN, tokenX, levelCardY, 38, 48, ""));
     }
 
     private String plotButtonLabel(PixelGardenGame.Plot plot, long now, int index) {
@@ -259,6 +262,13 @@ public final class PixelGardenGUI extends GuiScreen {
         if (button == null || loadingCloud) return;
         long now = System.currentTimeMillis();
         game.processTime(now);
+        if (button.id == SPEED_TOKEN) {
+            if (game.useSpeedToken(now)) {
+                saveCloudAsync();
+                initGui();
+            }
+            return;
+        }
         if (button.id == BACK) {
             saveCloudAsync();
             mc.displayGuiScreen(parent);
@@ -333,6 +343,17 @@ public final class PixelGardenGUI extends GuiScreen {
     }
 
     /** Tiny blocky sprout emblem drawn at integer pixel scale for the 1.8.9 GUI. */
+    private void drawSpeedTokenIcon(int x, int y) {
+        // Small gold hourglass token, drawn in the same pixel-art style as the garden UI.
+        pixel(x + 2, y, 12, 2, 0xFFFFD45A);
+        pixel(x + 4, y + 2, 8, 3, 0xFFFFD45A);
+        pixel(x + 6, y + 5, 4, 3, 0xFFFFF0B0);
+        pixel(x + 4, y + 8, 8, 3, 0xFFFFD45A);
+        pixel(x + 2, y + 11, 12, 2, 0xFFFFD45A);
+        pixel(x + 6, y + 3, 4, 2, 0xFFB77A22);
+        pixel(x + 6, y + 8, 4, 2, 0xFFB77A22);
+    }
+
     private void drawPixelSprout(int x, int y, int scale) {
         pixel(x + 4 * scale, y + 7 * scale, 2 * scale, 0xFF9A5B27);
         pixel(x + 5 * scale, y + 5 * scale, scale, 0xFF3C9C39);
@@ -440,6 +461,11 @@ public final class PixelGardenGUI extends GuiScreen {
         drawString(fontRendererObj, "XP " + progression.getExperience() + "/" + progression.getXpRequiredForNextLevel(),
                 leftX + 6, levelCardY + 19, 0xFFE3E7EE);
         drawString(fontRendererObj, "Next: " + (progression.getLevel() + 1), leftX + 6, levelCardY + 32, 0xFFB7C4D5);
+        int tokenX = leftX + navButtonWidth + 4;
+        panel(tokenX, levelCardY, 38, 48);
+        drawSpeedTokenIcon(tokenX + 11, levelCardY + 5);
+        drawCenteredString(fontRendererObj, String.valueOf(game.getSpeedTokens()),
+                tokenX + 19, levelCardY + 30, 0xFFFFD45A);
         panel(gx - 12, gy - 60, gardenW + 24, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 86);
         drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 52, 0xFFFFD45A);
         drawString(fontRendererObj, "Select a crop above, then click an unlocked plot", gx + 2, gy - 39, 0xFFB7C4D5);
