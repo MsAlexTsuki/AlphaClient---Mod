@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.founderfun;
 
 import com.alpharip.staffmod.gui.AlphaButton;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
+import com.google.gson.JsonObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -136,7 +138,26 @@ public final class PixelGardenPriceInfoGUI extends GuiScreen {
     }
 
     @Override public void onGuiClosed() {
-        if (parent instanceof PixelGardenGUI) ((PixelGardenGUI) parent).saveCloudAsync();
+        if (parent instanceof PixelGardenGUI) {
+            ((PixelGardenGUI) parent).saveCloudAsync();
+            return;
+        }
+        if (!SupabaseCommunityService.isSignedIn()) return;
+        final String account = SupabaseCommunityService.getSignedInEmail();
+        final JsonObject snapshot = game.toSaveData();
+        Thread thread = new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    if (SupabaseCommunityService.isSignedIn()
+                            && (account == null || account.equals(SupabaseCommunityService.getSignedInEmail())))
+                        SupabaseCommunityService.savePixelGardenSave(snapshot);
+                } catch (Exception exception) {
+                    System.err.println("[AlphaClient] Pixel Garden price info save failed: " + exception.getMessage());
+                }
+            }
+        }, "AlphaClient-PixelGardenPriceInfoSave");
+        thread.setDaemon(true);
+        thread.start();
     }
     @Override public boolean doesGuiPauseGame() { return false; }
 }
