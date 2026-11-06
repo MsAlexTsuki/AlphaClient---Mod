@@ -295,8 +295,9 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                     for (int productIndex = 0; productIndex < products.size(); productIndex++) {
                         PixelGardenGame.CraftingRecipe recipe = products.get(productIndex);
                         int batches = game.getCraftedProductBatches(recipe.id);
-                        drawString(fontRendererObj, recipe.productName + ": " + batches + " batch(es)  •  "
-                                + game.getCraftingBatchSaleValue(recipe) + " coins",
+                        String productLine = recipe.productName + ": " + batches + " batch(es)  •  "
+                                + game.getCraftingBatchSaleValue(recipe) + " coins";
+                        drawString(fontRendererObj, fontRendererObj.trimStringToWidth(productLine, cardWidth - 98),
                                 x + 8, y + 52 + productIndex * 18, 0xFFB7C4D5);
                     }
                 } else {
