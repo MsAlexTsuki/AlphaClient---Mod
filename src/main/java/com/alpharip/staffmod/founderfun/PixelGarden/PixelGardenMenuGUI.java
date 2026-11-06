@@ -79,7 +79,7 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         return (itemCount + 1) / 2;
     }
 
-    private int cropCardHeight() { return page == Page.SELL ? 132 : CROP_CARD_HEIGHT; }
+    private int cropCardHeight() { return CROP_CARD_HEIGHT; }
 
     private int visibleCropRows() {
         int cardHeight = cropCardHeight();
@@ -268,6 +268,16 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
         net.minecraft.client.renderer.GlStateManager.disableBlend();
     }
 
+    private void drawProductIcon(PixelGardenGame.CraftingRecipe recipe, int x, int y, int size) {
+        ResourceLocation texture = new ResourceLocation("alphastaffmod",
+                "textures/gui/" + recipe.id + ".png");
+        mc.getTextureManager().bindTexture(texture);
+        net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        net.minecraft.client.renderer.GlStateManager.enableBlend();
+        drawScaledCustomSizeModalRect(x, y, 0, 0, 16, 16, size, size, 16, 16);
+        net.minecraft.client.renderer.GlStateManager.disableBlend();
+    }
+
     private void drawCropIcon(PixelGardenGame.Crop crop, int x, int y, int s) {
         if (crop == PixelGardenGame.Crop.MELON || crop == PixelGardenGame.Crop.CACTUS
                 || crop == PixelGardenGame.Crop.SUGARCANE
@@ -322,9 +332,10 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                     } else {
                         PixelGardenGame.CraftingRecipe recipe = entry.recipe;
                         int batches = game.getCraftedProductBatches(recipe.id);
-                        drawString(fontRendererObj, recipe.productName, x + 12, y + 12, 0xFFF0F2F6);
-                        drawString(fontRendererObj, "Stock: " + batches + " batch(es)", x + 12, y + 32, 0xFFB7C4D5);
-                        drawString(fontRendererObj, "Value: " + game.getCraftingBatchSaleValue(recipe) + " coins", x + 12, y + 50, 0xFFFFD45A);
+                        drawProductIcon(recipe, x + 8, y + 7, 24);
+                        drawString(fontRendererObj, recipe.productName, x + 38, y + 10, 0xFFF0F2F6);
+                        drawString(fontRendererObj, "Stock: " + batches + " batch(es)", x + 38, y + 25, 0xFFB7C4D5);
+                        drawString(fontRendererObj, "Value: " + game.getCraftingBatchSaleValue(recipe) + " coins", x + 38, y + 38, 0xFFFFD45A);
                     }
                 }
             } else {
