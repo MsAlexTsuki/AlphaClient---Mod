@@ -200,21 +200,28 @@ public final class AlphaClient {
         winLossTrackerRuntime.initialize();
         MinecraftForge.EVENT_BUS.register(winLossTrackerRuntime);
 
-        openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu", Keyboard.KEY_RCONTROL, "AlphaClient");
+        AlphaKeyBindingSettings.load();
+        openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu",
+                AlphaKeyBindingSettings.getKeyCode("openHomeMenu", Keyboard.KEY_RCONTROL), "AlphaClient");
         ClientRegistry.registerKeyBinding(openModMenuKey);
         toggleMinimapKey = new KeyBinding("AlphaClient: Toggle Minimap",
-                MinimapSettings.getInt("keyToggleMinimap", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
+                AlphaKeyBindingSettings.getKeyCode("toggleMinimap",
+                        MinimapSettings.getInt("keyToggleMinimap", Keyboard.KEY_NONE, -100, 65535)), "AlphaClient");
         openMinimapSettingsKey = new KeyBinding("AlphaClient: Open Minimap Settings",
-                MinimapSettings.getInt("keyOpenMinimapSettings", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
+                AlphaKeyBindingSettings.getKeyCode("openMinimapSettings",
+                        MinimapSettings.getInt("keyOpenMinimapSettings", Keyboard.KEY_NONE, -100, 65535)), "AlphaClient");
         openFullscreenMinimapKey = new KeyBinding("AlphaClient: Open Fullscreen Minimap",
-                MinimapSettings.getInt("keyOpenFullscreenMinimap", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
+                AlphaKeyBindingSettings.getKeyCode("openFullscreenMinimap",
+                        MinimapSettings.getInt("keyOpenFullscreenMinimap", Keyboard.KEY_NONE, -100, 65535)), "AlphaClient");
         createQuickWaypointKey = new KeyBinding("AlphaClient: Create Waypoint",
-                MinimapSettings.getInt("keyCreateQuickWaypoint", Keyboard.KEY_NONE, -1, 65535), "AlphaClient");
+                AlphaKeyBindingSettings.getKeyCode("createQuickWaypoint",
+                        MinimapSettings.getInt("keyCreateQuickWaypoint", Keyboard.KEY_NONE, -100, 65535)), "AlphaClient");
         ClientRegistry.registerKeyBinding(toggleMinimapKey);
         ClientRegistry.registerKeyBinding(openMinimapSettingsKey);
         ClientRegistry.registerKeyBinding(openFullscreenMinimapKey);
         ClientRegistry.registerKeyBinding(createQuickWaypointKey);
-        openPixelGardenKey = new KeyBinding("AlphaClient: Open Pixel Garden", Keyboard.KEY_NONE, "AlphaClient");
+        openPixelGardenKey = new KeyBinding("AlphaClient: Open Pixel Garden",
+                AlphaKeyBindingSettings.getKeyCode("openPixelGarden", Keyboard.KEY_NONE), "AlphaClient");
         ClientRegistry.registerKeyBinding(openPixelGardenKey);
         syncBhopKeyBindingVisibility();
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
@@ -274,7 +281,7 @@ public final class AlphaClient {
         }
         tickStaffPresence();
         syncBhopKeyBindingVisibility();
-        persistMinimapKeyBindings();
+        persistAlphaKeyBindings();
         if (!fpsOptimizationInitialized) fpsOptimizationInitialized = FpsOptimization.applyOnce();
         AlphaPerformanceCore.getInstance().onClientTick();
         if (partnerAutoConnectConsumed) return;
@@ -382,18 +389,27 @@ public final class AlphaClient {
         }
     }
 
-    private void persistMinimapKeyBindings() {
-        saveKeyBinding("keyToggleMinimap", toggleMinimapKey);
-        saveKeyBinding("keyOpenMinimapSettings", openMinimapSettingsKey);
-        saveKeyBinding("keyOpenFullscreenMinimap", openFullscreenMinimapKey);
-        saveKeyBinding("keyCreateQuickWaypoint", createQuickWaypointKey);
-    }
-
-    private void saveKeyBinding(String setting, KeyBinding binding) {
-        if (binding == null) return;
-        int currentKey = binding.getKeyCode();
-        int savedKey = MinimapSettings.getInt(setting, Keyboard.KEY_NONE, -1, 65535);
-        if (savedKey != currentKey) MinimapSettings.setInt(setting, currentKey);
+    private void persistAlphaKeyBindings() {
+        AlphaKeyBindingSettings.saveBindings(
+                new String[] {
+                        "openHomeMenu",
+                        "toggleBhop",
+                        "toggleMinimap",
+                        "openMinimapSettings",
+                        "openFullscreenMinimap",
+                        "createQuickWaypoint",
+                        "openPixelGarden"
+                },
+                new KeyBinding[] {
+                        openModMenuKey,
+                        toggleBhopKey,
+                        toggleMinimapKey,
+                        openMinimapSettingsKey,
+                        openFullscreenMinimapKey,
+                        createQuickWaypointKey,
+                        openPixelGardenKey
+                }
+        );
     }
 
     private void syncBhopKeyBindingVisibility() {
@@ -402,7 +418,8 @@ public final class AlphaClient {
         boolean shouldBeVisible = SupabaseCommunityService.isSignedIn()
                 && PermissionService.hasAccess(PermissionService.Rank.T_MOD);
         if (shouldBeVisible && toggleBhopKey == null) {
-            toggleBhopKey = new KeyBinding("AlphaClient: Toggle BHOP", Keyboard.KEY_B, "AlphaClient");
+            toggleBhopKey = new KeyBinding("AlphaClient: Toggle BHOP",
+                    AlphaKeyBindingSettings.getKeyCode("toggleBhop", Keyboard.KEY_B), "AlphaClient");
             ClientRegistry.registerKeyBinding(toggleBhopKey);
         }
         if (toggleBhopKey == null) return;
