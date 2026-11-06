@@ -84,12 +84,12 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                 buttonList.add(new AlphaButton(ACTION_BASE + crop.ordinal(), x + 8, y + cardHeight - 25, cardWidth - 16, 18, label));
             }
                 } else {
-            int gap = 8;
+            int gap = 6;
             int cardWidth = (panelWidth - 32 - gap * 2) / 3;
-            int cardHeight = 82;
+            int cardHeight = 68;
             for (int i = 0; i < 11; i++) {
                 int x = left + 10 + (i % 3) * (cardWidth + gap);
-                int y = top + 10 + (i / 3) * (cardHeight + gap);
+                int y = 86 + (i / 3) * (cardHeight + gap);
                 String key = upgradeKey(i);
                 String label;
                 if ("auto_harvest".equals(key)) label = game.hasAutoHarvest() ? "OWNED" : "Buy (" + game.getUpgradeCost(key) + ")";
