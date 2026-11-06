@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Inventory at creation: **190 Java files** across the folders listed below.
+- Inventory at creation: **195 Java files** across the folders listed below.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -443,3 +443,16 @@ Folder: `Wrapped/`
 - **AnnualAlphaWrappedGui.java** — Displays the annual recap preview with playtime, sessions, servers visited, year, and a back action. Add year navigation, loading/error states, and a real menu entry only after the data source and UX are specified.
 
 **Prototype boundary:** This folder accepts supplied local session samples only. It does not retrieve account history, persist annual session records, call Supabase, or integrate with AlphaClient Core. The settings object is currently in-memory. No compile or in-game test is claimed for this prototype.
+
+
+## Achievements — Achievement Checklist with Explanations
+
+Folder: `achievements/`
+
+- **AchievementEntry.java** — Holds one achievement's ID, title, description, explanation, category, target, progress, and unlock timestamp. Validate timestamp semantics and define how progress is populated by approved gameplay events.
+- **AchievementChecklist.java** — Provides an in-memory registry, progress updates, unlock operations, and completed-entry queries. Add persistence only after the local data format and lifecycle are specified.
+- **AchievementChecklistSearch.java** — Performs case-insensitive matching against title, description, explanation, and category. Add tests for empty queries, null input, and Unicode/case behavior.
+- **AchievementChecklistSettings.java** — Holds session-local enablement and search query. Persistence and a settings editor are not implemented.
+- **AchievementChecklistGui.java** — Provides a Minecraft 1.8.9 preview with selectable entries, progress states, explanation text, and navigation. Connect it to a real menu only after the catalogue and entry source are defined; finish layout/overflow handling for long text and larger lists.
+
+**Prototype boundary:** No predefined achievement list, gameplay event hooks, persistent storage, Supabase integration, account synchronization, or AlphaClient Core integration is included. The GUI requires caller-supplied entries. No compile or in-game test is claimed.
