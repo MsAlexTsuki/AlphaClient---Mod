@@ -516,3 +516,19 @@ Folder: `Trackers/Acknowledgement/`
 - **AcknowledgementGui.java** — Provides a Minecraft 1.8.9 preview for selecting records and acknowledging them. It is not connected to a menu and still needs layout/scrolling verification for large lists and supported GUI scales.
 
 **Prototype boundary:** Records exist only in memory. There is no Supabase integration, remote synchronization, persistence, identity verification, staff permission enforcement, Forge event integration, or AlphaClient Core integration. The original plain-string methods remain available as a compatibility layer. No compile or in-game test is claimed.
+
+
+## Acting Rank Assignment — Temporary Staff Rank Tracking
+
+Folder: `ActingRankAssignment/`
+
+- **ActingRankAssignment.java** — Main facade for the local prototype. Preserves the original `isEnabled`, `setEnabled`, `addRecord`, `getRecords`, and `clearRecords` methods while exposing the structured registry, settings, and service.
+- **ActingRankEntry.java** — Immutable assignment record containing the staff member, current rank, acting rank, assigning staff member, reason, assignment/expiry timestamps, lifecycle status, and optional revocation attribution.
+- **ActingRankStatus.java** — Defines the local lifecycle states `ACTIVE`, `EXPIRED`, and `REVOKED`.
+- **ActingRankValidator.java** — Validates required names/ranks, field lengths, distinct current and acting ranks, and timestamp order. Rank names remain caller-supplied; no rank hierarchy is hardcoded.
+- **ActingRankSettings.java** — Holds session-local enablement, expired-entry visibility, and the maximum number of retained records.
+- **ActingRankRegistry.java** — Stores records in insertion order, supports lookup and staff-name filtering, exposes immutable snapshots, counts active assignments, and applies a bounded in-memory record limit.
+- **ActingRankService.java** — Creates time-limited assignments, revokes active assignments, marks expired records, and searches assignment text. It uses caller-supplied staff identities and the local system clock.
+- **ActingRankAssignmentGui.java** — Provides a Minecraft 1.8.9 preview for entering staff/current/acting rank details, duration, reason, reviewing records, and revoking a selected active assignment. It is not registered in an existing menu.
+
+**Prototype boundary:** Acting ranks are informational workflow records only. This prototype does not change a staff member's actual rank, grant or remove permissions, modify rank hierarchy, authenticate the assigning staff member, persist records, call Supabase, synchronize accounts, integrate with Forge events, or connect to AlphaClient Core. Rank names are free-form input and no production policy for who may assign which acting rank has been defined. Settings and records are in-memory only. GUI layout and interaction still require in-game verification. No compile or in-game test is claimed.
