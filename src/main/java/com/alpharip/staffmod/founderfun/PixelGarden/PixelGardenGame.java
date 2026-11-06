@@ -256,6 +256,26 @@ public final class PixelGardenGame {
         Integer value = craftedProductBatches.get(recipeId);
         return value == null ? 0 : value.intValue();
     }
+    public synchronized int getCraftedProductItems(String recipeId) {
+        CraftingRecipe recipe = getCraftingRecipe(recipeId);
+        if (recipe == null) return 0;
+        return (int) Math.min(Integer.MAX_VALUE,
+                (long) getCraftedProductBatches(recipeId) * recipe.outputQuantity);
+    }
+    public synchronized boolean consumeCraftedProductItems(String recipeId, int amount) {
+        CraftingRecipe recipe = getCraftingRecipe(recipeId);
+        if (recipe == null || amount <= 0 || amount % recipe.outputQuantity != 0) return false;
+        return consumeCraftedProductBatches(recipeId, amount / recipe.outputQuantity);
+    }
+    public synchronized boolean consumeCraftedProductBatches(String recipeId, int batches) {
+        if (getCraftingRecipe(recipeId) == null || batches <= 0) return false;
+        int available = getCraftedProductBatches(recipeId);
+        if (batches > available) return false;
+        int remaining = available - batches;
+        if (remaining == 0) craftedProductBatches.remove(recipeId);
+        else craftedProductBatches.put(recipeId, Integer.valueOf(remaining));
+        return true;
+    }
     public synchronized boolean queueCraftingOrder(String recipeId, long now) {
         CraftingRecipe recipe = getCraftingRecipe(recipeId);
         if (recipe == null) return false;
@@ -365,6 +385,8 @@ public final class PixelGardenGame {
             if (recipe != null) {
                 int current = getCraftedProductBatches(recipe.id);
                 craftedProductBatches.put(recipe.id, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, (long)current + 1L)));
+                // Craft objectives advance only after the finished product has entered inventory.
+                progressionData.recordActionProgress("CRAFT_PRODUCT", recipe.id, recipe.outputQuantity);
             }
             startQueuedCraftingOrders(completedAt);
         }
@@ -664,7 +686,8 @@ public final class PixelGardenGame {
             if (definition == null) continue;
             for (PixelGardenProgressionData.Objective objective : definition.objectives) {
                 boolean deliverSeeds = "DELIVER_SEEDS".equalsIgnoreCase(objective.type);
-                if (!deliverSeeds && !"DELIVER_CROP".equalsIgnoreCase(objective.type)) continue;
+                boolean deliverProduct = "DELIVER_PRODUCT".equalsIgnoreCase(objective.type);
+                if (!deliverSeeds && !deliverProduct && !"DELIVER_CROP".equalsIgnoreCase(objective.type)) continue;
                 int remaining = objective.requiredAmount - instance.getObjectiveProgress(objective.id);
                 if (remaining <= 0) continue;
                 if (deliverSeeds) {
@@ -682,6 +705,24 @@ public final class PixelGardenGame {
                         }
                     }
                     continue;
+                }
+                if (deliverProduct) {
+                    CraftingRecipe product = getCraftingRecipe(objective.target);
+                    if (product == null) continue;
+                    int available = getCraftedProductItems(product.id);
+                    int amount = Math.min(remaining, available);
+                    amount -= amount % product.outputQuantity;
+                    if (amount > 0) {
+                        int previous = instance.getObjectiveProgress(objective.id);
+                        if (progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous + amount)) {
+                            if (consumeCraftedProductItems(product.id, amount)) {
+                                if (previous + amount >= objective.requiredAmount) progressionData.completeQuest(instance.instanceId);
+                            } else {
+                                progressionData.setObjectiveProgress(instance.instanceId, objective.id, previous);
+                            }
+                        }
+                    }
+                    break;
                 }
                 Crop target = null;
                 if (!"*".equals(objective.target)) {

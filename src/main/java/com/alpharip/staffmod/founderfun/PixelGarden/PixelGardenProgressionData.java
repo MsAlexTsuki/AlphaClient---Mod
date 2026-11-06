@@ -270,8 +270,8 @@ public final class PixelGardenProgressionData {
                 "Meet Hank, harvest wheat from your garden and build a steady routine.",
                 PixelGardenNPC.HANK, "HARVEST_CROP", "wheat", 3);
         addStarterQuest("pg_your_own_garden", "Your Own Garden",
-                "Meet Emily and plant and harvest a carrot crop as you expand your garden skills.",
-                PixelGardenNPC.EMILY, "HARVEST_CROP", "carrot", 1);
+                "Meet Emily and harvest an easy wheat crop as you expand your garden skills.",
+                PixelGardenNPC.EMILY, "HARVEST_CROP", "wheat", 1);
         addLevelQuestCatalog();
     }
 
@@ -293,6 +293,10 @@ public final class PixelGardenProgressionData {
             {"Supply Order", "Bulk Delivery", "Farm Contract", "Delivery Route", "Stock Request"},
             {"New Fields", "Planting Plan", "Garden Expansion", "Seedbed Challenge", "Field Preparation"}
         };
+        final String[] advancedRecipes = {
+            "potato_mush", "carrot_juice", "cactus_juice", "sugar",
+            "basket_of_berries", "camberry_bread", "sugar_bread", "pumpkin_head"
+        };
         for (int targetLevel = 1; targetLevel <= 100; targetLevel++) {
             String tier;
             int prestige;
@@ -309,22 +313,66 @@ public final class PixelGardenProgressionData {
 
             for (int slot = 0; slot < 2; slot++) {
                 int npcIndex = ((targetLevel - 1) * 2 + slot) % npcIds.length;
-                String crop = crops[(targetLevel + slot * 2 - 1) % crops.length];
-                int typeIndex = (targetLevel + slot - 1) % objectiveTypes.length;
-                String objectiveType = objectiveTypes[typeIndex];
-                int amount = targetLevel + (slot + 1) * 2;
                 String suffix = slot == 0 ? "a" : "b";
                 String id = "pg_level_" + String.format(java.util.Locale.ROOT, "%03d", targetLevel) + "_" + suffix;
-                String name = npcNames[npcIndex] + "'s " + questNames[typeIndex][(targetLevel + slot) % 5];
+                List<Objective> objectives = new ArrayList<Objective>();
+                String name;
                 String description;
-                if ("HARVEST_CROP".equals(objectiveType)) description = "Harvest " + amount + " " + crop + " from your garden.";
-                else if ("SELL_CROP".equals(objectiveType)) description = "Sell " + amount + " " + crop + " through the garden market.";
-                else if ("DELIVER_CROP".equals(objectiveType)) description = "Deliver " + amount + " " + crop + " to complete the supply order.";
-                else description = "Plant " + amount + " " + crop + " in your garden.";
+
+                if (targetLevel <= 20) {
+                    if (targetLevel % 5 == 0 && slot == 1) {
+                        String recipeId = "bread";
+                        int amount = 1;
+                        PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(recipeId);
+                        String productName = recipe == null ? "Bread" : recipe.productName;
+                        objectives.add(new Objective(id + "_craft_objective", "CRAFT_PRODUCT", recipeId, amount));
+                        name = npcNames[npcIndex] + "'s " + productName + " Order";
+                        description = "Craft 1 " + productName
+                                + ". Wait until the crafting order finishes and the product appears in Crafted Products.";
+                    } else {
+                        String crop = "wheat";
+                        int amount = Math.min(5, 1 + (targetLevel - 1) / 5 + slot);
+                        String objectiveType;
+                        if (slot == 0) objectiveType = "HARVEST_CROP";
+                        else if (targetLevel % 3 == 0) objectiveType = "SELL_CROP";
+                        else if (targetLevel % 3 == 1) objectiveType = "DELIVER_CROP";
+                        else objectiveType = "PLANT_CROP";
+                        objectives.add(new Objective(id + "_easy_objective", objectiveType, crop, amount));
+                        String actionName = "HARVEST_CROP".equals(objectiveType) ? "Wheat Harvest"
+                                : "SELL_CROP".equals(objectiveType) ? "Wheat Sale"
+                                : "DELIVER_CROP".equals(objectiveType) ? "Wheat Delivery" : "Wheat Planting";
+                        name = npcNames[npcIndex] + "'s " + actionName;
+                        if ("HARVEST_CROP".equals(objectiveType)) description = "Harvest " + amount + " wheat from your garden.";
+                        else if ("SELL_CROP".equals(objectiveType)) description = "Sell " + amount + " wheat through the garden market.";
+                        else if ("DELIVER_CROP".equals(objectiveType)) description = "Deliver " + amount + " wheat to "
+                                + npcNames[npcIndex] + " using the Quest Book.";
+                        else description = "Plant " + amount + " wheat in your garden.";
+                    }
+                } else if (targetLevel >= 60) {
+                    String recipeId = npcIds[npcIndex].equals(PixelGardenNPC.JASMINE)
+                            ? "sugar_bread" : advancedRecipes[((targetLevel - 60) * 2 + slot) % advancedRecipes.length];
+                    PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(recipeId);
+                    String productName = recipe == null ? recipeId : recipe.productName;
+                    int amount = 2 + (targetLevel - 60) / 10 + slot;
+                    objectives.add(new Objective(id + "_craft_objective", "CRAFT_PRODUCT", recipeId, amount));
+                    objectives.add(new Objective(id + "_deliver_objective", "DELIVER_PRODUCT", recipeId, amount));
+                    name = npcNames[npcIndex] + "'s " + productName + " Contract";
+                    description = "Craft " + amount + " " + productName + " and deliver all " + amount + " to "
+                            + npcNames[npcIndex] + ". Crafting only counts after each order is complete and the product is in Crafted Products.";
+                } else {
+                    String crop = crops[(targetLevel + slot * 2 - 1) % crops.length];
+                    int typeIndex = (targetLevel + slot - 1) % objectiveTypes.length;
+                    String objectiveType = objectiveTypes[typeIndex];
+                    int amount = targetLevel + (slot + 1) * 2;
+                    name = npcNames[npcIndex] + "'s " + questNames[typeIndex][(targetLevel + slot) % 5];
+                    if ("HARVEST_CROP".equals(objectiveType)) description = "Harvest " + amount + " " + crop + " from your garden.";
+                    else if ("SELL_CROP".equals(objectiveType)) description = "Sell " + amount + " " + crop + " through the garden market.";
+                    else if ("DELIVER_CROP".equals(objectiveType)) description = "Deliver " + amount + " " + crop + " to complete the supply order.";
+                    else description = "Plant " + amount + " " + crop + " in your garden.";
+                    objectives.add(new Objective(id + "_objective", objectiveType, crop, amount));
+                }
 
                 if (!definitions.containsKey(id)) {
-                    List<Objective> objectives = new ArrayList<Objective>();
-                    objectives.add(new Objective(id + "_objective", objectiveType, crop, amount));
                     Map<String, Integer> rewards = new LinkedHashMap<String, Integer>();
                     rewards.put("coins", Integer.valueOf(25 + targetLevel * 20 + slot * 10));
                     addDefinition(new QuestDefinition(id, name, description, npcIds[npcIndex],

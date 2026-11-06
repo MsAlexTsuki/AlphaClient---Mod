@@ -149,8 +149,10 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 && selected.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) {
             PixelGardenProgressionData.Objective delivery = firstDeliveryObjective(selectedDefinition);
             if (delivery != null && selected.getObjectiveProgress(delivery.id) < delivery.requiredAmount) {
+                String deliveryLabel = "DELIVER_PRODUCT".equalsIgnoreCase(delivery.type)
+                        ? "Deliver Products" : "Add Crops";
                 buttonList.add(new AlphaButton(ADD_CROPS, actionX, actionY - (cropControlsExpanded ? 22 : 0),
-                        actionWidth, 18, cropControlsExpanded ? "Hide Crop Submission" : "Add Crops"));
+                        actionWidth, 18, cropControlsExpanded ? "Hide Delivery" : deliveryLabel));
                 if (cropControlsExpanded) {
                     int controlsY = actionY;
                     int unit = Math.max(22, (actionWidth - 82) / 6);
@@ -187,7 +189,8 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             PixelGardenProgressionData.QuestDefinition definition) {
         if (definition == null) return null;
         for (PixelGardenProgressionData.Objective objective : definition.objectives) {
-            if ("DELIVER_CROP".equalsIgnoreCase(objective.type)) return objective;
+            if ("DELIVER_CROP".equalsIgnoreCase(objective.type)
+                    || "DELIVER_PRODUCT".equalsIgnoreCase(objective.type)) return objective;
         }
         return null;
     }
@@ -316,9 +319,45 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             PixelGardenProgressionData.Objective objective = firstDeliveryObjective(def);
             if (selected == null || def == null || objective == null
                     || selected.getStatus() != PixelGardenProgressionData.QuestStatus.ACTIVE) {
-                actionMessage("This quest has no active crop delivery.");
+                actionMessage("This quest has no active delivery.");
                 return;
             }
+            int remaining = objective.requiredAmount - selected.getObjectiveProgress(objective.id);
+            int previousProgress = selected.getObjectiveProgress(objective.id);
+
+            if ("DELIVER_PRODUCT".equalsIgnoreCase(objective.type)) {
+                PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(objective.target);
+                if (recipe == null) { actionMessage("This quest uses an unsupported crafted product."); return; }
+                int amount = Math.min(selectedDeliveryAmount, remaining);
+                amount -= amount % recipe.outputQuantity;
+                int available = game.getCraftedProductItems(recipe.id);
+                amount = Math.min(amount, available - (available % recipe.outputQuantity));
+                if (amount < recipe.outputQuantity) {
+                    actionMessage("Not enough " + recipe.productName + " in Crafted Products.");
+                    return;
+                }
+                if (!progression.setObjectiveProgress(selected.instanceId, objective.id, previousProgress + amount)) {
+                    actionMessage("Could not record delivery. Please try again.");
+                    return;
+                }
+                if (!game.consumeCraftedProductItems(recipe.id, amount)) {
+                    progression.setObjectiveProgress(selected.instanceId, objective.id, previousProgress);
+                    actionMessage("Crafted Products inventory changed. Please try again.");
+                    return;
+                }
+                if (previousProgress + amount >= objective.requiredAmount) {
+                    progression.completeQuest(selected.instanceId);
+                    PixelGardenProgressionData.QuestInstance updated = progression.getInstance(selected.instanceId);
+                    if (updated != null && updated.getStatus() == PixelGardenProgressionData.QuestStatus.COMPLETED) {
+                        viewStatus = PixelGardenProgressionData.QuestStatus.COMPLETED;
+                    }
+                }
+                saveProgressionAsync();
+                actionMessage("Delivered " + amount + " " + recipe.productName + " to "
+                        + PixelGardenNPC.displayName(def.npc) + ".");
+                return;
+            }
+
             PixelGardenGame.Crop crop;
             if ("*".equals(objective.target)) {
                 PixelGardenGame.Crop[] crops = PixelGardenGame.Crop.values();
@@ -327,10 +366,8 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 try { crop = PixelGardenGame.Crop.valueOf(objective.target.toUpperCase(java.util.Locale.ROOT)); }
                 catch (IllegalArgumentException exception) { actionMessage("This quest uses an unsupported crop."); return; }
             }
-            int remaining = objective.requiredAmount - selected.getObjectiveProgress(objective.id);
             int amount = Math.min(selectedDeliveryAmount, Math.min(remaining, game.getInventory(crop)));
             if (amount < 1) { actionMessage("Not enough " + crop.displayName + " in your harvested inventory."); return; }
-            int previousProgress = selected.getObjectiveProgress(objective.id);
             if (!progression.setObjectiveProgress(selected.instanceId, objective.id, previousProgress + amount)) {
                 actionMessage("Could not record submission. Please try again.");
                 return;
@@ -530,7 +567,17 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
                 for (PixelGardenProgressionData.Objective objective : def.objectives) {
                     if (shown >= 4 || y > top + h - 112) break;
                     int progress = selected.getObjectiveProgress(objective.id);
-                    drawString(fontRendererObj, ("*".equals(objective.target) ? "Any crop" : objective.target) + "  " + progress + "/" + objective.requiredAmount,
+                    String objectiveLabel;
+                    if ("CRAFT_PRODUCT".equalsIgnoreCase(objective.type)
+                            || "DELIVER_PRODUCT".equalsIgnoreCase(objective.type)) {
+                        PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(objective.target);
+                        String productName = recipe == null ? objective.target : recipe.productName;
+                        objectiveLabel = ("CRAFT_PRODUCT".equalsIgnoreCase(objective.type) ? "Craft " : "Deliver ") + productName;
+                    } else {
+                        objectiveLabel = "*".equals(objective.target) ? "Any crop" : objective.target;
+                    }
+                    drawString(fontRendererObj, fontRendererObj.trimStringToWidth(
+                            objectiveLabel + "  " + progress + "/" + objective.requiredAmount, detailW - 16),
                             detailX + 8, y, 0xFF493019);
                     int barW = Math.max(20, detailW - 20);
                     drawRect(detailX + 8, y + 10, detailX + 8 + barW, y + 14, 0xFFBCA77D);
@@ -549,13 +596,21 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
             if (selected.getStatus() == PixelGardenProgressionData.QuestStatus.ACTIVE) {
                 PixelGardenProgressionData.Objective delivery = firstDeliveryObjective(def);
                 if (delivery != null) {
-                    PixelGardenGame.Crop crop = null;
-                    try { crop = PixelGardenGame.Crop.valueOf(delivery.target.toUpperCase(java.util.Locale.ROOT)); }
-                    catch (IllegalArgumentException ignored) { }
                     int remaining = delivery.requiredAmount - selected.getObjectiveProgress(delivery.id);
-                    int inInventory = crop == null ? 0 : game.getInventory(crop);
+                    int inInventory = 0;
+                    String inventoryLabel = "In inventory ";
+                    if ("DELIVER_PRODUCT".equalsIgnoreCase(delivery.type)) {
+                        PixelGardenGame.CraftingRecipe recipe = PixelGardenGame.getCraftingRecipe(delivery.target);
+                        inInventory = recipe == null ? 0 : game.getCraftedProductItems(recipe.id);
+                        inventoryLabel = "In Crafted Products ";
+                    } else {
+                        PixelGardenGame.Crop crop = null;
+                        try { crop = PixelGardenGame.Crop.valueOf(delivery.target.toUpperCase(java.util.Locale.ROOT)); }
+                        catch (IllegalArgumentException ignored) { }
+                        inInventory = crop == null ? 0 : game.getInventory(crop);
+                    }
                     drawString(fontRendererObj, "Amount " + selectedDeliveryAmount
-                            + "  |  Remaining " + Math.max(0, remaining) + "  |  In inventory " + inInventory,
+                            + "  |  Remaining " + Math.max(0, remaining) + "  |  " + inventoryLabel + inInventory,
                             detailX + 8, top + h - 82, 0xFF493019);
                 }
             }
