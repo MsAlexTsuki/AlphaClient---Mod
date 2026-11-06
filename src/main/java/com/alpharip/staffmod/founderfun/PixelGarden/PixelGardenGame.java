@@ -786,7 +786,8 @@ public final class PixelGardenGame {
         if ("pg_fresh_start".equals(questId)
                 || "pg_first_coins".equals(questId)
                 || "pg_growing_bigger".equals(questId)
-                || "pg_your_own_garden".equals(questId)) {
+                || "pg_your_own_garden".equals(questId)
+                || "pg_crafting_tutorial".equals(questId)) {
             return 5L;
         }
         PixelGardenProgressionData.QuestDefinition definition = progressionData.getDefinition(questId);
