@@ -500,3 +500,19 @@ Folder: `achievements/`
 - **AchievementWallGui.java** — Provides a Minecraft 1.8.9 profile-wall preview with paged entries, completion summary, sorting, and a locked-entry visibility toggle. It is not registered in an existing menu.
 
 **Prototype boundary:** The wall reuses caller-supplied entries from the existing local `AchievementChecklist`. It does not invent an achievement catalogue, add gameplay event hooks, persist data, synchronize accounts, call Supabase, alter rank/permission behavior, or integrate with AlphaClient Core. Settings remain in-memory. The GUI requires an approved entry point and further layout verification. No compile or in-game test is claimed.
+
+
+## Trackers — Acknowledgement
+
+Folder: `Trackers/Acknowledgement/`
+
+- **AcknowledgementTracker.java** — Main facade for the local acknowledgement workflow. Retains the original `isEnabled`, `setEnabled`, `addRecord`, `getRecords`, and `clearRecords` methods while exposing structured acknowledgement operations. The legacy string-record view is local and in-memory.
+- **AcknowledgementEntry.java** — Stores one acknowledgement with a stable ID, creator, subject, details, creation timestamp, status, and acknowledgement attribution/timestamp. Verify timestamp and identity rules against the final workflow requirements.
+- **AcknowledgementStatus.java** — Defines the two prototype states: `PENDING` and `ACKNOWLEDGED`. Confirm whether additional states are required before production use.
+- **AcknowledgementValidator.java** — Validates creator, subject, and details lengths. Confirm the final field limits and whether additional content rules are needed.
+- **AcknowledgementRegistry.java** — Maintains bounded in-memory records, acknowledges pending entries, searches record text/attribution, and exposes list snapshots. Define retention/eviction and deletion policies before production use.
+- **AcknowledgementSettings.java** — Holds session-local enablement, acknowledged-entry visibility, and maximum record count. Settings are not persisted.
+- **AcknowledgementService.java** — Coordinates record creation, acknowledgement, filtering, and clearing. It uses the local system clock and caller-supplied staff identity; it does not verify identity or enforce staff permissions.
+- **AcknowledgementGui.java** — Provides a Minecraft 1.8.9 preview for selecting records and acknowledging them. It is not connected to a menu and still needs layout/scrolling verification for large lists and supported GUI scales.
+
+**Prototype boundary:** Records exist only in memory. There is no Supabase integration, remote synchronization, persistence, identity verification, staff permission enforcement, Forge event integration, or AlphaClient Core integration. The original plain-string methods remain available as a compatibility layer. No compile or in-game test is claimed.
