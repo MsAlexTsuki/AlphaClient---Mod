@@ -9,6 +9,7 @@ import com.alpharip.staffmod.gui.AfkTimerSettingsGui;
 import com.alpharip.staffmod.gui.AlphaModMenu;
 import com.alpharip.staffmod.gui.BhopSettingsGui;
 import com.alpharip.staffmod.gui.CpsSettingsGui;
+import com.alpharip.staffmod.ComboCounter.ComboCounterSettingsGui;
 import com.alpharip.staffmod.gui.FpsSettingsGui;
 import com.alpharip.staffmod.gui.HudEditorGui;
 import com.alpharip.staffmod.gui.ModuleSettingsGui;
@@ -1645,6 +1646,7 @@ public final class AlphaClientCommand extends CommandBase {
         GuiScreen target = null;
         if ("fps".equals(id)) target = new FpsSettingsGui(parent);
         else if ("cps".equals(id)) target = new CpsSettingsGui(parent);
+        else if ("combo-counter".equals(id)) target = new ComboCounterSettingsGui(parent);
         else if ("playtime".equals(id) || "playtime-tracker".equals(id)) target = new PlaytimeTrackerSettingsGui(parent);
         else if ("sessiontimer".equals(id) || "session-timer".equals(id)) target = new SessionTimerSettingsGui(parent);
         else if ("afktimer".equals(id) || "afk-timer".equals(id)) target = new AfkTimerSettingsGui(parent);

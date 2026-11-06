@@ -7,6 +7,7 @@ import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.quality.FullbrightMod;
+import com.alpharip.staffmod.ComboCounter.ComboCounter;
 import org.lwjgl.input.Keyboard;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -1410,6 +1411,8 @@ public class ModuleProfileManager {
         JsonObject fullbright = profile.getModule("fullbright");
         fullbright.addProperty("enabled", FullbrightMod.isEnabled());
         fullbright.addProperty("keyCode", FullbrightMod.getToggleKeyCode());
+        ComboCounter comboCounter = ComboCounter.getInstance();
+        if (comboCounter != null) comboCounter.saveProfileSettings();
         save();
     }
 
@@ -1518,6 +1521,8 @@ public class ModuleProfileManager {
             FullbrightMod.applyProfileSettings(shouldEnableFullbright, keyCode);
             fullbrightSettings.addProperty("enabled", shouldEnableFullbright);
             fullbrightSettings.addProperty("keyCode", keyCode);
+            ComboCounter comboCounter = ComboCounter.getInstance();
+            if (comboCounter != null) comboCounter.applyProfileSettings(profile.getModule("combo-counter"));
         } finally {
             applyingModuleStates = false;
         }

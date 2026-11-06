@@ -159,6 +159,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(cps);
 
+        AlphaModule comboCounter = new AlphaModule(
+                "combo-counter",
+                "Combo Counter",
+                "Count confirmed consecutive hits on players and reset when you take damage.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(comboCounter);
+
         AlphaModule winLossTracker = new AlphaModule(
                 "win-loss-tracker",
                 "W&L Tracker",

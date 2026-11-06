@@ -6,6 +6,7 @@ import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
+import com.alpharip.staffmod.ComboCounter.ComboCounterSettingsGui;
 import com.alpharip.staffmod.founderfun.PixelGardenGUI;
 import com.alpharip.staffmod.waypoints.WaypointsGui;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
@@ -594,6 +595,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     if ("cps".equals(clickedModule.getId())
                             && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         mc.displayGuiScreen(new CpsSettingsGui(this));
+                        return;
+                    }
+                    if ("combo-counter".equals(clickedModule.getId())
+                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
+                        mc.displayGuiScreen(new ComboCounterSettingsGui(this));
                         return;
                     }
                     if ("w-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new WTapSettingsGui(this)); return; }

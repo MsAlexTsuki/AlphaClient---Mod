@@ -19,6 +19,7 @@ import com.alpharip.staffmod.hud.InfoHudModules;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.cps.CpsMod;
+import com.alpharip.staffmod.ComboCounter.ComboCounter;
 import com.alpharip.staffmod.combat.AimAssist;
 import com.alpharip.staffmod.pvp.LegacyPvpMod;
 import com.alpharip.staffmod.optimization.FpsOptimization;
@@ -154,6 +155,8 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new FpsMod());
         MinecraftForge.EVENT_BUS.register(new PingMod());
         MinecraftForge.EVENT_BUS.register(new CpsMod());
+        ComboCounter comboCounter = new ComboCounter();
+        MinecraftForge.EVENT_BUS.register(comboCounter);
         MinecraftForge.EVENT_BUS.register(new InfoHudModules());
         MinecraftForge.EVENT_BUS.register(new LegacyPvpMod());
         MinecraftForge.EVENT_BUS.register(new WTapAssistance());
@@ -177,6 +180,7 @@ public final class AlphaClient {
         BhopHud.loadHudPosition();
         CpsMod.load();
         PingMod.load();
+        comboCounter.load();
 
         MinecraftForge.EVENT_BUS.register(new BhopHud());
         MinecraftForge.EVENT_BUS.register(new AfkTimerHud());
