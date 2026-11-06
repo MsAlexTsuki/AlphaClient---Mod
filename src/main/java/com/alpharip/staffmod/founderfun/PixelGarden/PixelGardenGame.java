@@ -319,8 +319,6 @@ public final class PixelGardenGame {
         if (remaining == 0) craftedProductBatches.remove(recipeId);
         else craftedProductBatches.put(recipeId, Integer.valueOf(remaining));
         pixelGardenUpgradeCoins += (int)earned;
-        progressionData.recordActionProgress("SELL_CRAFTED_PRODUCT", recipeId, batches);
-        progressionData.recordTutorialAction("SELL_CRAFTED_PRODUCT", recipeId);
         return true;
     }
     public synchronized boolean sellAllCraftedProductBatches(String recipeId) {
