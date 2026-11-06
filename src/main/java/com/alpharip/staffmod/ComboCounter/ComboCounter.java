@@ -40,6 +40,7 @@ public final class ComboCounter {
     private final Map<UUID, PendingHit> pendingHits = new HashMap<UUID, PendingHit>();
     private int combo;
     private long lastConfirmedHitAt;
+    private int lastObservedLocalHurtTime;
     private int hudX = 5;
     private int hudY = 44;
     private int colorIndex;
@@ -104,8 +105,18 @@ public final class ComboCounter {
             pendingHits.clear();
             combo = 0;
             lastConfirmedHitAt = 0L;
+            lastObservedLocalHurtTime = 0;
             return;
         }
+
+        // Detect incoming player damage from the local hurt animation on the client.
+        int currentHurtTime = mc.thePlayer.hurtTime;
+        if (currentHurtTime > lastObservedLocalHurtTime) {
+            combo = 0;
+            lastConfirmedHitAt = 0L;
+            pendingHits.clear();
+        }
+        lastObservedLocalHurtTime = currentHurtTime;
 
         long now = System.currentTimeMillis();
         if (combo > 0 && lastConfirmedHitAt > 0L
