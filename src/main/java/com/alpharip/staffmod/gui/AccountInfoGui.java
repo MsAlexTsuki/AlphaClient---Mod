@@ -51,9 +51,11 @@ public final class AccountInfoGui extends AlphaGuiScreen {
             buttonList.add(accountButton);
         }
 
-        buttonList.add(new AlphaButton(BACK, width / 2 - 72,
+        AlphaButton backButton = new AlphaButton(BACK, width / 2 - 72,
                 Math.min(height - 34, firstButtonY + Math.max(1, accounts.size()) * rowHeight + 8),
-                144, 22, "BACK", true));
+                144, 22, "BACK", true);
+        backButton.enabled = !switching;
+        buttonList.add(backButton);
     }
 
     private boolean isCurrentAccount(AccountSwitchClient.SavedAccount account) {
@@ -97,7 +99,7 @@ public final class AccountInfoGui extends AlphaGuiScreen {
         if (button == null) return;
 
         if (button.id == BACK) {
-            mc.displayGuiScreen(parent);
+            if (!switching) mc.displayGuiScreen(parent);
             return;
         }
 
