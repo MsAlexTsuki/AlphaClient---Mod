@@ -3,9 +3,9 @@ package com.alpharip.staffmod.combat;
 /** Applies the selected correction profile and bounds every rotation step. */
 public final class AimSmoothingController {
     public float[] apply(AimAssistSettings.Mode mode, float yawDelta, float pitchDelta,
-                         float speed, float maximumStep) {
-        float yawFactor = clamp(speed, 0.01F, 1.0F);
-        float pitchFactor = yawFactor;
+                         float yawSpeed, float pitchSpeed, float maximumStep) {
+        float yawFactor = clamp(yawSpeed, 0.01F, 1.0F);
+        float pitchFactor = clamp(pitchSpeed, 0.01F, 1.0F);
         switch (mode) {
             case SNAP:
                 yawFactor = pitchFactor = 1.0F;
