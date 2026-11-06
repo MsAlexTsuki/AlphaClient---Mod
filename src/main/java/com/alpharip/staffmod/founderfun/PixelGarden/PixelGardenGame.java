@@ -102,6 +102,8 @@ public final class PixelGardenGame {
     private boolean autoSell;
     private boolean autoSellEnabled;
     private boolean autoQuest;
+    private boolean autoCraft;
+    private boolean autoCraftEnabled;
     private int growthLevels;
     private int moreCoinsLevel;
     private int moreCropsLevel;
@@ -194,6 +196,8 @@ public final class PixelGardenGame {
         autoSell = false;
         autoSellEnabled = false;
         autoQuest = false;
+        autoCraft = false;
+        autoCraftEnabled = false;
         growthLevels = 0;
         moreCoinsLevel = 0;
         moreCropsLevel = 0;
@@ -231,7 +235,10 @@ public final class PixelGardenGame {
     public synchronized boolean hasAutoSell() { return autoSell; }
     public synchronized boolean isAutoSellEnabled() { return autoSell && autoSellEnabled; }
     public synchronized boolean hasAutoQuest() { return autoQuest; }
+    public synchronized boolean hasAutoCraft() { return autoCraft; }
+    public synchronized boolean isAutoCraftEnabled() { return autoCraft && autoCraftEnabled; }
     public synchronized void toggleAutoSell() { if (autoSell) autoSellEnabled = !autoSellEnabled; }
+    public synchronized void toggleAutoCraft() { if (autoCraft) autoCraftEnabled = !autoCraftEnabled; }
     public synchronized int getGrowthLevels() { return growthLevels; }
     public synchronized int getMoreCoinsLevel() { return moreCoinsLevel; }
     public synchronized int getMoreCropsLevel() { return moreCropsLevel; }
@@ -371,6 +378,55 @@ public final class PixelGardenGame {
             activeCraftingOrders.add(new CraftingOrder(recipe.id, now, now + recipe.durationMillis));
         }
     }
+    /** Automatically fills active and queued crafting slots without reserving ingredients twice. */
+    private void processAutoCrafting(long now) {
+        if (!autoCraft || !autoCraftEnabled) return;
+        startQueuedCraftingOrders(now);
+        int safety = 0;
+        while (safety++ < 128) {
+            boolean hasRoom = activeCraftingOrders.size() < getCraftingCapacity()
+                    || queuedCraftingOrders.size() < getCraftingQueueCapacity();
+            if (!hasRoom) break;
+            CraftingRecipe available = null;
+            for (CraftingRecipe recipe : CRAFTING_RECIPES) {
+                if (hasIngredientsAfterQueuedReservations(recipe)) {
+                    available = recipe;
+                    break;
+                }
+            }
+            if (available == null || !queueCraftingOrder(available.id, now)) break;
+        }
+    }
+
+    /** Queued orders have not consumed their ingredients yet, so reserve them during auto selection. */
+    private boolean hasIngredientsAfterQueuedReservations(CraftingRecipe candidate) {
+        int[] reservedCrops = new int[Crop.values().length];
+        java.util.Map<String, Integer> reservedProducts = new java.util.HashMap<String, Integer>();
+        for (String queuedId : queuedCraftingOrders) {
+            CraftingRecipe queued = getCraftingRecipe(queuedId);
+            if (queued == null) continue;
+            for (Crop crop : Crop.values()) {
+                reservedCrops[crop.ordinal()] += queued.getCropIngredient(crop);
+            }
+            for (java.util.Map.Entry<String, Integer> ingredient : queued.getProductIngredients().entrySet()) {
+                Integer old = reservedProducts.get(ingredient.getKey());
+                reservedProducts.put(ingredient.getKey(), Integer.valueOf(
+                        (old == null ? 0 : old.intValue()) + ingredient.getValue().intValue()));
+            }
+        }
+        for (Crop crop : Crop.values()) {
+            if ((long) inventory[crop.ordinal()] - reservedCrops[crop.ordinal()]
+                    < candidate.getCropIngredient(crop)) return false;
+        }
+        for (java.util.Map.Entry<String, Integer> ingredient : candidate.getProductIngredients().entrySet()) {
+            Integer reserved = reservedProducts.get(ingredient.getKey());
+            int reservedAmount = reserved == null ? 0 : reserved.intValue();
+            if ((long) getCraftedProductItems(ingredient.getKey()) - reservedAmount
+                    < ingredient.getValue().intValue()) return false;
+        }
+        return true;
+    }
+
     private void advanceCrafting(long now) {
         while (true) {
             int completedIndex = -1;
@@ -621,6 +677,7 @@ public final class PixelGardenGame {
         if ("auto_plant".equals(upgrade)) return autoPlant ? -1 : 2000;
         if ("auto_sell".equals(upgrade)) return autoSell ? -1 : 2000;
         if ("auto_quest".equals(upgrade)) return autoQuest ? -1 : 1000;
+        if ("auto_craft".equals(upgrade)) return autoCraft ? -1 : 3500;
         if ("growth_boost".equals(upgrade)) return growthLevels >= 3 ? -1 : GROWTH_BOOST_COST * (growthLevels + 1);
         if ("more_coins".equals(upgrade)) return moreCoinsLevel >= MORE_COINS_PRICES.length ? -1 : MORE_COINS_PRICES[moreCoinsLevel];
         if ("more_crops".equals(upgrade)) return moreCropsLevel >= MORE_CROPS_PRICES.length ? -1 : MORE_CROPS_PRICES[moreCropsLevel];
@@ -641,6 +698,7 @@ public final class PixelGardenGame {
     public synchronized void processTime(long now) {
         if (now <= lastProcessedAt) {
             advanceCrafting(now);
+            processAutoCrafting(now);
             refreshInventoryQuestProgress();
             return;
         }
@@ -676,6 +734,7 @@ public final class PixelGardenGame {
             }
         }
         startQueuedCraftingOrders(effectiveNow);
+        processAutoCrafting(effectiveNow);
         lastProcessedAt = now;
         refreshInventoryQuestProgress();
     }
@@ -832,6 +891,8 @@ public final class PixelGardenGame {
         root.addProperty("auto_sell", autoSell);
         root.addProperty("auto_sell_enabled", autoSellEnabled);
         root.addProperty("auto_quest", autoQuest);
+        root.addProperty("auto_craft", autoCraft);
+        root.addProperty("auto_craft_enabled", autoCraftEnabled);
         root.addProperty("growth_levels", growthLevels);
         root.addProperty("more_coins_level", moreCoinsLevel);
         root.addProperty("more_crops_level", moreCropsLevel);
@@ -967,6 +1028,9 @@ public final class PixelGardenGame {
         autoSell = root.has("auto_sell") && root.get("auto_sell").getAsBoolean();
         autoSellEnabled = autoSell && root.has("auto_sell_enabled") && root.get("auto_sell_enabled").getAsBoolean();
         autoQuest = root.has("auto_quest") && root.get("auto_quest").getAsBoolean();
+        autoCraft = root.has("auto_craft") && root.get("auto_craft").getAsBoolean();
+        autoCraftEnabled = autoCraft && root.has("auto_craft_enabled")
+                && root.get("auto_craft_enabled").getAsBoolean();
         int unlocked = root.has("unlocked_plots") ? root.get("unlocked_plots").getAsInt() : STARTING_PLOTS;
         long savedAt = root.has("last_processed_at") ? root.get("last_processed_at").getAsLong() : System.currentTimeMillis();
         int[] savedSeeds = readIntArray(root.get("seeds"), Crop.values().length);
