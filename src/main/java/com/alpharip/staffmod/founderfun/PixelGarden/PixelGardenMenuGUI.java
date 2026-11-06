@@ -348,7 +348,8 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
             }
             int totalRows = cropRowCount();
             if (totalRows > visibleCropRows()) {
-                String scrollLabel = (cropScrollRow > 0 ? "▲ " : "") + "Mouse wheel to scroll crops"
+                String scrollLabel = (cropScrollRow > 0 ? "▲ " : "")
+                        + (page == Page.SELL ? "Mouse wheel to scroll items" : "Mouse wheel to scroll crops")
                         + (cropScrollRow + visibleCropRows() < totalRows ? " ▼" : "");
                 drawCenteredString(fontRendererObj, scrollLabel, width / 2, height - 53, 0xFFB7C4D5);
             }
