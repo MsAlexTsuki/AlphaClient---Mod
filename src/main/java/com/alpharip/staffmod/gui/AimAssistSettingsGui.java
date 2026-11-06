@@ -6,16 +6,18 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
 
 import java.io.IOException;
 
-/** Founder-only settings screen for configurable smooth AimAssist. */
+/** Founder-only settings screen for AimAssist and its expansion profiles. */
 public final class AimAssistSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int ENABLED = 10;
     private static final int RESET = 11;
     private static final int AREA = 12;
+    private static final int MODE = 13;
+    private static final int PRIORITY = 14;
+    private static final int PREDICTION_DOWN = 30, PREDICTION_UP = 31;
 
     private static final int CORRECTION_DOWN = 20, CORRECTION_UP = 21;
     private static final int DELAY_DOWN = 22, DELAY_UP = 23;
@@ -23,10 +25,10 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
     private static final int HORIZONTAL_DOWN = 26, HORIZONTAL_UP = 27;
     private static final int VERTICAL_DOWN = 28, VERTICAL_UP = 29;
 
-    private final GuiScreen parent;
+    private final net.minecraft.client.gui.GuiScreen parent;
     private int left, top, panelWidth, panelHeight;
 
-    public AimAssistSettingsGui(GuiScreen parent) {
+    public AimAssistSettingsGui(net.minecraft.client.gui.GuiScreen parent) {
         this.parent = parent;
     }
 
@@ -52,7 +54,7 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
         }
 
         panelWidth = Math.min(430, width - 12);
-        panelHeight = Math.min(292, height - 12);
+        panelHeight = Math.min(350, height - 12);
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
 
@@ -64,8 +66,7 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
         boolean settingsEnabled = module.isConfiguredEnabled();
 
         buttonList.add(new AlphaButton(ENABLED, width / 2 - 100, y, 200, 20,
-                "AIMASSIST: " + (settingsEnabled ? "ON" : "OFF"),
-                settingsEnabled));
+                "AIMASSIST: " + (settingsEnabled ? "ON" : "OFF"), settingsEnabled));
 
         int rowY = top + 100;
         addStepper(CORRECTION_DOWN, CORRECTION_UP, leftCol, rowY, colWidth,
@@ -84,27 +85,42 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
         areaButton.enabled = settingsEnabled;
         buttonList.add(areaButton);
 
-        AlphaButton resetButton = new AlphaButton(RESET, left + 12, top + panelHeight - 31, 100, 18, "RESET DEFAULTS");
+        AlphaButton modeButton = new AlphaButton(MODE, left + 12, top + 210,
+                panelWidth - 24, 20, "MODE: " + AimAssistSettings.getMode().name(), settingsEnabled);
+        modeButton.enabled = settingsEnabled;
+        buttonList.add(modeButton);
+
+        AlphaButton priorityButton = new AlphaButton(PRIORITY, left + 12, top + 236,
+                panelWidth - 24, 20, "TARGET PRIORITY: " + AimAssistSettings.getTargetPriority().name(),
+                settingsEnabled);
+        priorityButton.enabled = settingsEnabled;
+        buttonList.add(priorityButton);
+
+        addStepper(PREDICTION_DOWN, PREDICTION_UP, left + 12, top + 262,
+                panelWidth - 24, "PREDICTION " + AimAssistSettings.getPredictionTicks() + " TICKS",
+                settingsEnabled);
+
+        AlphaButton resetButton = new AlphaButton(RESET, left + 12, top + panelHeight - 31,
+                100, 18, "RESET DEFAULTS");
         resetButton.enabled = settingsEnabled;
         buttonList.add(resetButton);
-        buttonList.add(new AlphaButton(BACK, left + panelWidth - 87, top + panelHeight - 31, 75, 18, "BACK"));
+        buttonList.add(new AlphaButton(BACK, left + panelWidth - 87,
+                top + panelHeight - 31, 75, 18, "BACK"));
     }
 
-    private void addStepper(int downId, int upId, int x, int y, int colWidth, String label,
-                            boolean settingsEnabled) {
+    private void addStepper(int downId, int upId, int x, int y, int colWidth,
+                            String label, boolean settingsEnabled) {
         int arrowWidth = 22;
         int valueWidth = colWidth - arrowWidth * 2 - 4;
-
         AlphaButton downButton = new AlphaButton(downId, x, y, arrowWidth, 20, "-");
         downButton.enabled = settingsEnabled;
         buttonList.add(downButton);
-
-        AlphaButton valueButton = new AlphaButton(1000 + downId, x + arrowWidth + 2, y, valueWidth, 20, label,
-                settingsEnabled);
+        AlphaButton valueButton = new AlphaButton(1000 + downId, x + arrowWidth + 2, y,
+                valueWidth, 20, label, settingsEnabled);
         valueButton.enabled = settingsEnabled;
         buttonList.add(valueButton);
-
-        AlphaButton upButton = new AlphaButton(upId, x + arrowWidth + valueWidth + 4, y, arrowWidth, 20, "+");
+        AlphaButton upButton = new AlphaButton(upId, x + arrowWidth + valueWidth + 4, y,
+                arrowWidth, 20, "+");
         upButton.enabled = settingsEnabled;
         buttonList.add(upButton);
     }
@@ -121,11 +137,7 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
             mc.displayGuiScreen(parent);
             return;
         }
-
-        // All configuration controls, including reset and target-area selection, are locked while OFF.
-        if (!module.isConfiguredEnabled() && button.id != ENABLED && button.id != BACK) {
-            return;
-        }
+        if (!module.isConfiguredEnabled() && button.id != ENABLED && button.id != BACK) return;
 
         switch (button.id) {
             case BACK:
@@ -139,6 +151,18 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
                 break;
             case AREA:
                 AimAssistSettings.cycleTargetArea();
+                break;
+            case MODE:
+                AimAssistSettings.cycleMode();
+                break;
+            case PRIORITY:
+                AimAssistSettings.cycleTargetPriority();
+                break;
+            case PREDICTION_DOWN:
+                AimAssistSettings.setPredictionTicks(AimAssistSettings.getPredictionTicks() - 0.5F);
+                break;
+            case PREDICTION_UP:
+                AimAssistSettings.setPredictionTicks(AimAssistSettings.getPredictionTicks() + 0.5F);
                 break;
             case CORRECTION_DOWN:
                 AimAssistSettings.setCorrectionSpeed(AimAssistSettings.getCorrectionSpeed() - 1);
@@ -182,12 +206,16 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
         drawRect(left, top, left + panelWidth, top + panelHeight, 0xE00A0C11);
         drawRect(left, top, left + panelWidth, top + 2, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "AIMASSIST", width / 2, top + 12, 0xFFFFD866);
-        drawCenteredString(fontRendererObj, "FOUNDER SETTINGS  /  SMOOTH MODE", width / 2, top + 27, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Range locked to 3.2 blocks  |  Full-body targeting", width / 2, top + 40, 0xFFF0F1F4);
+        drawCenteredString(fontRendererObj, "FOUNDER SETTINGS  /  EXPANSION PROFILES",
+                width / 2, top + 27, 0xFFB8BDC8);
+        drawCenteredString(fontRendererObj, "Range locked to 3.2 blocks  |  Existing body-area targeting retained",
+                width / 2, top + 40, 0xFFF0F1F4);
         drawString(fontRendererObj, "CORRECTION", left + 12, top + 88, 0xFFB8BDC8);
         drawString(fontRendererObj, "AXIS / TARGET", left + panelWidth / 2 + 4, top + 88, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "No target acquisition outside the selected angle", width / 2, top + 207, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Changes save automatically", width / 2, top + 220, 0xFFB8BDC8);
+        drawCenteredString(fontRendererObj, "Prediction applies only to Predictive mode",
+                width / 2, top + 292, 0xFFB8BDC8);
+        drawCenteredString(fontRendererObj, "Changes save automatically",
+                width / 2, top + 305, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
