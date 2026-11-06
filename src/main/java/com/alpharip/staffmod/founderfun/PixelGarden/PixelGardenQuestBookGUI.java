@@ -49,7 +49,13 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
     private String actionMessage = "";
 
     public PixelGardenQuestBookGUI(GuiScreen parent) {
+        this(parent, PixelGardenProgressionData.QuestStatus.ACTIVE);
+    }
+
+    public PixelGardenQuestBookGUI(GuiScreen parent, PixelGardenProgressionData.QuestStatus initialStatus) {
         this.parent = parent;
+        this.viewStatus = initialStatus == null
+                ? PixelGardenProgressionData.QuestStatus.ACTIVE : initialStatus;
         progression.ensureDefaultCatalog();
         try { progression.mergeSharedDefinitions(SupabaseCommunityService.getSharedPixelGardenQuests()); }
         catch (Exception exception) { System.err.println("[AlphaClient] Could not sync shared Pixel Garden quests: " + exception.getMessage()); }
@@ -64,20 +70,30 @@ public final class PixelGardenQuestBookGUI extends GuiScreen {
         for (PixelGardenProgressionData.QuestInstance instance : progression.getInstances()) {
             if (instance.getStatus() == viewStatus) result.add(instance);
         }
-        // Keep the tutorial sequence ahead of quests introduced through NPCs or other systems.
-        java.util.Collections.sort(result, new java.util.Comparator<PixelGardenProgressionData.QuestInstance>() {
-            private int tutorialOrder(PixelGardenProgressionData.QuestInstance instance) {
-                if ("pg_fresh_start".equals(instance.definitionId)) return 0;
-                if ("pg_first_coins".equals(instance.definitionId)) return 1;
-                if ("pg_growing_bigger".equals(instance.definitionId)) return 2;
-                if ("pg_your_own_garden".equals(instance.definitionId)) return 3;
-                return 100;
-            }
-            @Override public int compare(PixelGardenProgressionData.QuestInstance left,
-                    PixelGardenProgressionData.QuestInstance right) {
-                return Integer.compare(tutorialOrder(left), tutorialOrder(right));
-            }
-        });
+        if (viewStatus == PixelGardenProgressionData.QuestStatus.COMPLETED) {
+            // Show the most recently completed quest first.
+            java.util.Collections.sort(result, new java.util.Comparator<PixelGardenProgressionData.QuestInstance>() {
+                @Override public int compare(PixelGardenProgressionData.QuestInstance left,
+                        PixelGardenProgressionData.QuestInstance right) {
+                    return Long.compare(right.getFinishedAt(), left.getFinishedAt());
+                }
+            });
+        } else {
+            // Keep the tutorial sequence ahead of quests introduced through NPCs or other systems.
+            java.util.Collections.sort(result, new java.util.Comparator<PixelGardenProgressionData.QuestInstance>() {
+                private int tutorialOrder(PixelGardenProgressionData.QuestInstance instance) {
+                    if ("pg_fresh_start".equals(instance.definitionId)) return 0;
+                    if ("pg_first_coins".equals(instance.definitionId)) return 1;
+                    if ("pg_growing_bigger".equals(instance.definitionId)) return 2;
+                    if ("pg_your_own_garden".equals(instance.definitionId)) return 3;
+                    return 100;
+                }
+                @Override public int compare(PixelGardenProgressionData.QuestInstance left,
+                        PixelGardenProgressionData.QuestInstance right) {
+                    return Integer.compare(tutorialOrder(left), tutorialOrder(right));
+                }
+            });
+        }
         return result;
     }
 
