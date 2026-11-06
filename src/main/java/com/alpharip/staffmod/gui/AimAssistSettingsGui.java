@@ -208,7 +208,7 @@ public final class AimAssistSettingsGui extends AlphaGuiScreen {
         drawCenteredString(fontRendererObj, "AIMASSIST", width / 2, top + 12, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "FOUNDER SETTINGS  /  EXPANSION PROFILES",
                 width / 2, top + 27, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Range locked to 3.2 blocks  |  Existing body-area targeting retained",
+        drawCenteredString(fontRendererObj, "Range locked to 3.0 blocks  |  Existing body-area targeting retained",
                 width / 2, top + 40, 0xFFF0F1F4);
         drawString(fontRendererObj, "CORRECTION", left + 12, top + 88, 0xFFB8BDC8);
         drawString(fontRendererObj, "AXIS / TARGET", left + panelWidth / 2 + 4, top + 88, 0xFFB8BDC8);
