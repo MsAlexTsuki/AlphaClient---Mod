@@ -21,12 +21,14 @@ public final class PixelGardenMessageNotifier {
     private static final PixelGardenMessageNotifier INSTANCE = new PixelGardenMessageNotifier();
     private static final ZoneId NETHERLANDS_ZONE = ZoneId.of("Europe/Amsterdam");
     private static final String READY_MESSAGE = "Your crops are ready to harvest, give them some love!";
+    private static final long READY_REMINDER_INTERVAL_MS = 15_000L;
     private static final String DAILY_MESSAGE = "Pixel Garden needs some love <3";
     private static final String FIRST_JOIN_MESSAGE = "If you want to turn this off you can use /garden msg off";
 
     private boolean enabled = true;
     private boolean firstJoinTipShown;
     private String lastDailyDate = "";
+    private long lastReadyReminderAt;
     private boolean[] notifiedReadyPlots = new boolean[PixelGardenGame.MAX_PLOTS];
 
     private PixelGardenMessageNotifier() {
@@ -91,12 +93,10 @@ public final class PixelGardenMessageNotifier {
         }
         boolean changed = false;
         boolean anyReadyCrop = false;
-        boolean readyBatchAlreadyNotified = false;
         long now = System.currentTimeMillis();
         for (int i = 0; i < plots.size(); i++) {
             boolean ready = plots.get(i).getState(now) == PixelGardenGame.PlotState.READY;
             anyReadyCrop |= ready;
-            readyBatchAlreadyNotified |= ready && notifiedReadyPlots[i];
 
             if (ready && !notifiedReadyPlots[i]) {
                 notifiedReadyPlots[i] = true;
@@ -107,13 +107,20 @@ public final class PixelGardenMessageNotifier {
             }
         }
 
-        // Send one reminder for the entire ready batch, not one per crop as plots mature.
-        if (anyReadyCrop && !readyBatchAlreadyNotified) {
+        // Send one reminder for the ready batch, then repeat only after the cooldown if crops remain.
+        if (anyReadyCrop && (lastReadyReminderAt == 0L
+                || now - lastReadyReminderAt >= READY_REMINDER_INTERVAL_MS)) {
             send(minecraft, READY_MESSAGE);
+            lastReadyReminderAt = now;
+            changed = true;
         }
 
-        // Allow the next reminder only after every crop in this batch has been harvested.
+        // Reset the reminder timer after every ready crop has been harvested.
         if (!anyReadyCrop) {
+            if (lastReadyReminderAt != 0L) {
+                lastReadyReminderAt = 0L;
+                changed = true;
+            }
             for (int i = 0; i < notifiedReadyPlots.length; i++) {
                 if (notifiedReadyPlots[i]) {
                     notifiedReadyPlots[i] = false;
@@ -149,6 +156,7 @@ public final class PixelGardenMessageNotifier {
             if (root.has("enabled")) enabled = root.get("enabled").getAsBoolean();
             if (root.has("first_join_tip_shown")) firstJoinTipShown = root.get("first_join_tip_shown").getAsBoolean();
             if (root.has("last_daily_date")) lastDailyDate = root.get("last_daily_date").getAsString();
+            if (root.has("last_ready_reminder_at")) lastReadyReminderAt = root.get("last_ready_reminder_at").getAsLong();
             if (root.has("notified_ready_plots") && root.get("notified_ready_plots").isJsonArray()) {
                 com.google.gson.JsonArray array = root.getAsJsonArray("notified_ready_plots");
                 notifiedReadyPlots = new boolean[Math.max(PixelGardenGame.MAX_PLOTS, array.size())];
@@ -171,6 +179,7 @@ public final class PixelGardenMessageNotifier {
         root.addProperty("enabled", enabled);
         root.addProperty("first_join_tip_shown", firstJoinTipShown);
         root.addProperty("last_daily_date", lastDailyDate);
+        root.addProperty("last_ready_reminder_at", lastReadyReminderAt);
         com.google.gson.JsonArray ready = new com.google.gson.JsonArray();
         for (boolean value : notifiedReadyPlots) ready.add(new JsonPrimitive(value));
         root.add("notified_ready_plots", ready);
