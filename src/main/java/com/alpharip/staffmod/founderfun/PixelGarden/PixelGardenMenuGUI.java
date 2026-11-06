@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
+import java.util.List;
 import org.lwjgl.input.Mouse;
 
 /** Shared pixel-art menu frame for Pixel Garden's dedicated shop and management screens. */
