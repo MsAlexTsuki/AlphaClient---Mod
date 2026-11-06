@@ -16,7 +16,7 @@ import org.lwjgl.input.Mouse;
 public final class PixelGardenGUI extends GuiScreen {
     private static final int CROP_BASE = 10, BUY_BASE = 20, PLOT_BASE = 100, SELL_BASE = 200;
     private static final int AUTO = 300, GROWTH = 301, EXPAND = 302, BACK = 4;
-    private static final int SHOP = 400, INVENTORY = 401, SELL = 402, UPGRADES = 403, PRESTIGE = 404, HELP = 405, QUESTBOOK = 406;
+    private static final int SHOP = 400, INVENTORY = 401, SELL = 402, UPGRADES = 403, PRESTIGE = 404, HELP = 405, QUESTBOOK = 406, CRAFTING = 407;
     private static String loadedAccount;
     private static boolean loadInProgress;
     private final GuiScreen parent;
@@ -222,8 +222,8 @@ public final class PixelGardenGUI extends GuiScreen {
         int navButtonWidth = sideButtonWidth();
         int navButtonHeight = 22;
         int navRowGap = 6;
-        String[] sideLabels = {"Shop", "Inventory", "Sell", "Upgrades", "Prestige", "Quest Book", "Help"};
-        int[] sideIds = {SHOP, INVENTORY, SELL, UPGRADES, PRESTIGE, QUESTBOOK, HELP};
+        String[] sideLabels = {"Shop", "Inventory", "Sell", "Upgrades", "Crafting", "Prestige", "Quest Book", "Help"};
+        int[] sideIds = {SHOP, INVENTORY, SELL, UPGRADES, CRAFTING, PRESTIGE, QUESTBOOK, HELP};
         int sideColumnHeight = 4 * navButtonHeight + 3 * navRowGap;
         int sideStartY = gy + 8 + Math.max(0,
                 (tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) - sideColumnHeight) / 2);
@@ -278,12 +278,13 @@ public final class PixelGardenGUI extends GuiScreen {
             mc.displayGuiScreen(new PixelGardenPrestigeUpgradesGUI(this));
             return;
         }
-        if (button.id == SHOP || button.id == INVENTORY || button.id == SELL || button.id == UPGRADES) {
+        if (button.id == SHOP || button.id == INVENTORY || button.id == SELL || button.id == UPGRADES || button.id == CRAFTING) {
             saveCloudAsync();
             if (button.id == SHOP) mc.displayGuiScreen(new PixelGardenShopGUI(this));
             else if (button.id == INVENTORY) mc.displayGuiScreen(new PixelGardenInventoryGUI(this));
             else if (button.id == SELL) mc.displayGuiScreen(new PixelGardenSellGUI(this));
-            else mc.displayGuiScreen(new PixelGardenUpgradeGUI(this));
+            else if (button.id == UPGRADES) mc.displayGuiScreen(new PixelGardenUpgradeGUI(this));
+            else mc.displayGuiScreen(new PixelGardenCraftingGUI(this));
             return;
         }
         if (button.id >= CROP_BASE && button.id < CROP_BASE + PixelGardenGame.Crop.values().length) {
