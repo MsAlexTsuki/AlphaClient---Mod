@@ -224,16 +224,18 @@ public final class PixelGardenGUI extends GuiScreen {
         int navRowGap = 6;
         String[] sideLabels = {"Shop", "Inventory", "Sell", "Upgrades", "Crafting", "Prestige", "Quest Book", "Help"};
         int[] sideIds = {SHOP, INVENTORY, SELL, UPGRADES, CRAFTING, PRESTIGE, QUESTBOOK, HELP};
-        int sideColumnHeight = 4 * navButtonHeight + 3 * navRowGap;
+        int sideColumnHeight = 5 * navButtonHeight + 4 * navRowGap;
         int sideStartY = gy + 8 + Math.max(0,
                 (tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) - sideColumnHeight) / 2);
         int leftX = gx - 12 - navGap - navButtonWidth;
         int rightX = gx + gardenWidth() + 12 + navGap;
+        int rightColumnOffset = (sideColumnHeight - (3 * navButtonHeight + 2 * navRowGap)) / 2;
         for (int i = 0; i < sideIds.length; i++) {
-            int column = i / 4;
-            int row = i % 4;
+            int column = i < 5 ? 0 : 1;
+            int row = i < 5 ? i : i - 5;
             int x = column == 0 ? leftX : rightX;
-            int y = sideStartY + row * (navButtonHeight + navRowGap);
+            int y = sideStartY + (column == 0 ? 0 : rightColumnOffset)
+                    + row * (navButtonHeight + navRowGap);
             AlphaButton navButton = new AlphaButton(sideIds[i], x, y, navButtonWidth, navButtonHeight, sideLabels[i]);
             if (sideIds[i] == PRESTIGE) navButton.enabled = prestigeAccessChecked && prestigeAccessAllowed;
             buttonList.add(navButton);
