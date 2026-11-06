@@ -252,7 +252,8 @@ public final class PixelGardenGame {
         CraftingRecipe recipe = getCraftingRecipe(recipeId);
         if (recipe == null) return false;
         startQueuedCraftingOrders(now);
-        if (activeCraftingOrders.size() < getCraftingCapacity() && hasCraftingIngredients(recipe)) {
+        if (queuedCraftingOrders.isEmpty()
+                && activeCraftingOrders.size() < getCraftingCapacity() && hasCraftingIngredients(recipe)) {
             consumeCraftingIngredients(recipe);
             activeCraftingOrders.add(new CraftingOrder(recipe.id, now, now + recipe.durationMillis));
             return true;
