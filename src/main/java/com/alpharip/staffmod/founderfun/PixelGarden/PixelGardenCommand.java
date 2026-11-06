@@ -21,7 +21,7 @@ public final class PixelGardenCommand extends CommandBase {
     private final String commandName;
     public PixelGardenCommand(String commandName) { this.commandName = commandName; }
     @Override public String getCommandName() { return commandName; }
-    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [open|inventory|upgrades|shop|priceinfo|craft|buy|sell|harvest|time|crops|seeds]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pixelgarden [msg <on|off>|open|help|prestige|inventory|upgrades|upgrade <upgrade>|priceinfo|craft <open|recipes|recipe|start|status|cancel|collect|products|sell|upgrades|upgrade|admin>|harvesttime <multiplier|finish|normal>|shop|buy|sell|harvest|time|crops|harvested|seeds|ids]"; }
     @Override public int getRequiredPermissionLevel() { return 0; }
 
     @Override
