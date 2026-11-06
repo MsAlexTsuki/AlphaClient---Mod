@@ -625,3 +625,21 @@ Folder: `Aimassist Expansion/`
 - **AimAssistGui.java** — Standalone preview for enablement, mode, and priority selection. It is not registered in the existing AlphaClient menu and does not expose every setting yet.
 
 **Integration boundary:** This is an independent prototype folder beside `staffops/`. It does not modify the existing `development` AimAssist, AlphaClient Core, rank permissions, or Alpha Launcher. No Supabase, remote persistence, attacks, or packet sending are included. Compile and in-game behavior have not been verified.
+
+
+## Aim Pattern Library
+
+Folder: `Aim Pattern Library/`
+
+- **AimPatternLibrary.java** — Main facade exposing the local registry, settings, and service. Retains the original numeric observation API (`record`, `size`, `snapshot`, `mean`, and `reset`) for source-level continuity.
+- **AimPattern.java** — Immutable named pattern snapshot with category, creation timestamp, and numeric observations.
+- **AimPatternCategory.java** — Defines the prototype organization labels General, Horizontal, Vertical, Smoothing, Targeting, and Other. These are labels, not aim-assist modes.
+- **AimPatternStats.java** — Calculates count, mean, minimum, maximum, and population standard deviation for a pattern's observations.
+- **AimPatternValidator.java** — Validates pattern names and rejects non-finite numeric observations.
+- **AimPatternRegistry.java** — Maintains a bounded in-memory collection of patterns and supports creation, observation recording, renaming, categorization, removal, and immutable snapshots.
+- **AimPatternSettings.java** — Holds session-local selected-pattern, category-filter, and statistics-display settings.
+- **AimPatternService.java** — Coordinates pattern management, filtering, deletion, and statistics access.
+- **AimPatternLibraryGui.java** — Provides a standalone Minecraft 1.8.9 preview for creating, filtering, reviewing, and deleting local patterns. The GUI is not registered in an existing menu; pattern selection and richer editing controls still require completion.
+
+**Prototype boundary:** The source idea only supplied a numeric observation accumulator. Named patterns, categories, the 50-pattern default limit, statistics, and the GUI are prototype expansions. Observations are caller-supplied numeric values; no live aim data is collected, no aim behavior is changed, and no pattern recognition or automatic comparison is implemented. Data and settings remain in memory only. There is no persistence, Supabase integration, Forge event integration, or AlphaClient Core integration. No compile or in-game test is claimed.
+
