@@ -51,9 +51,8 @@ public final class AimAssistController {
         float baseSpeed = AimAssistSettings.getCorrectionSpeed() / 100.0F;
         float yawSpeed = baseSpeed * AimAssistSettings.getHorizontalSpeed() / 10.0F;
         float pitchSpeed = baseSpeed * AimAssistSettings.getVerticalSpeed() / 10.0F;
-        float[] step = smoothing.apply(AimAssistSettings.getMode(),
-                delta[0] * yawSpeed, delta[1] * pitchSpeed, 1.0F,
-                AimAssistSettings.getMaximumRotationStep());
+        float[] step = smoothing.apply(AimAssistSettings.getMode(), delta[0], delta[1],
+                yawSpeed, pitchSpeed, AimAssistSettings.getMaximumRotationStep());
         mc.thePlayer.rotationYaw += step[0];
         mc.thePlayer.rotationPitch = Math.max(-90.0F,
                 Math.min(90.0F, mc.thePlayer.rotationPitch + step[1]));
