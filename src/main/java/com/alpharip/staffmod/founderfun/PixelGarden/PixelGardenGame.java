@@ -224,6 +224,27 @@ public final class PixelGardenGame {
     }
     public static PixelGardenGame getInstance() { return INSTANCE; }
     public synchronized PixelGardenProgressionData getProgressionData() { return progressionData; }
+    public synchronized int getSpeedTokens() { return progressionData.getSpeedTokens(); }
+
+    /** Consumes one token and advances every active crop and crafting timer by 30 minutes. */
+    public synchronized boolean useSpeedToken(long now) {
+        processTime(now);
+        if (!progressionData.consumeSpeedToken()) return false;
+        final long boostMillis = 30L * 60L * 1000L;
+        for (Plot plot : plots) {
+            if (plot.crop != null && plot.plantedAt > 0L) plot.plantedAt -= boostMillis;
+        }
+        List<CraftingOrder> shiftedOrders = new ArrayList<CraftingOrder>();
+        for (CraftingOrder order : activeCraftingOrders) {
+            shiftedOrders.add(new CraftingOrder(order.recipeId,
+                    order.startedAt - boostMillis, order.completesAt - boostMillis));
+        }
+        activeCraftingOrders.clear();
+        activeCraftingOrders.addAll(shiftedOrders);
+        advanceCrafting(now);
+        processAutoCrafting(now);
+        return true;
+    }
     public synchronized int getCoins() { return pixelGardenUpgradeCoins; }
     public synchronized int getResetTokens() { return resetTokens; }
     public synchronized int getSeeds(Crop crop) { return seeds[crop.ordinal()]; }
