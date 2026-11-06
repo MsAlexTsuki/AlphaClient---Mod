@@ -32,12 +32,13 @@ public final class StaffReviewDayGui extends GuiScreen {
     @Override public void initGui() {
         buttonList.clear();
         int y = height - 28;
-        buttonList.add(new GuiButton(0, width / 2 - 202, y, 78, 20, "Add"));
-        buttonList.add(new GuiButton(1, width / 2 - 120, y, 78, 20, "Edit"));
-        buttonList.add(new GuiButton(2, width / 2 - 120, y, 78, 20, "Status"));
-        buttonList.add(new GuiButton(3, width / 2 - 38, y, 78, 20, "Ack Reminder"));
-        buttonList.add(new GuiButton(4, width / 2 + 44, y, 78, 20, "Delete"));
-        buttonList.add(new GuiButton(5, width / 2 + 126, y, 78, 20, "Back"));
+        int start = width / 2 - 226;
+        buttonList.add(new GuiButton(0, start, y, 72, 20, "Add"));
+        buttonList.add(new GuiButton(1, start + 76, y, 72, 20, "Edit"));
+        buttonList.add(new GuiButton(2, start + 152, y, 72, 20, "Status"));
+        buttonList.add(new GuiButton(3, start + 228, y, 72, 20, "Reminder"));
+        buttonList.add(new GuiButton(4, start + 304, y, 72, 20, "Delete"));
+        buttonList.add(new GuiButton(5, start + 380, y, 72, 20, "Back"));
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
@@ -45,11 +46,13 @@ public final class StaffReviewDayGui extends GuiScreen {
         if (button.id == 0) mc.displayGuiScreen(new StaffReviewEditorGui(this, calendar.getManager(), date, null));
         else if (button.id == 1 && item != null) mc.displayGuiScreen(new StaffReviewEditorGui(this, calendar.getManager(), date, item));
         else if (button.id == 2 && item != null) {
-            item.setStatus(item.getStatus().next());
+            calendar.getManager().setStatus(item.getId(), item.getStatus().next());
         } else if (button.id == 3 && item != null) {
+            calendar.getManager().acknowledgeReminder(item.getId());
+        } else if (button.id == 4 && item != null) {
             calendar.getManager().remove(item.getId());
             selectedIndex = Math.min(selectedIndex, reviews().size() - 1);
-        } else if (button.id == 4) mc.displayGuiScreen(parent);
+        } else if (button.id == 5) mc.displayGuiScreen(parent);
     }
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
