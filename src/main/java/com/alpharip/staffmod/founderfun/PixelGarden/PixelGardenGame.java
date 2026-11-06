@@ -145,6 +145,11 @@ public final class PixelGardenGame {
         result[crop.ordinal()] = amount;
         return result;
     }
+    private static int[] cropNeeds(Crop firstCrop, int firstAmount, Crop secondCrop, int secondAmount) {
+        int[] result = cropNeeds(firstCrop, firstAmount);
+        result[secondCrop.ordinal()] = secondAmount;
+        return result;
+    }
     private static java.util.Map<String, Integer> productNeeds(String id, int amount) {
         java.util.Map<String, Integer> result = new java.util.LinkedHashMap<String, Integer>();
         result.put(id, Integer.valueOf(amount));
@@ -162,10 +167,8 @@ public final class PixelGardenGame {
         recipes.add(new CraftingRecipe("cactus_juice", "Cactus Juice", 1, 10L * 60L * 1000L, 60, cropNeeds(Crop.CACTUS, 1), new java.util.LinkedHashMap<String, Integer>()));
         recipes.add(new CraftingRecipe("sugar", "Sugar", 1, 80L * 60L * 1000L, 250, cropNeeds(Crop.SUGARCANE, 3), new java.util.LinkedHashMap<String, Integer>()));
         recipes.add(new CraftingRecipe("basket_of_berries", "Basket of Berries", 1, 88L * 60L * 1000L, 300, cropNeeds(Crop.BERRIES, 4), new java.util.LinkedHashMap<String, Integer>()));
-        recipes.add(new CraftingRecipe("camberry_bread", "Camberry Bread", 1, 25L * 60L * 1000L, 130, cropNeeds(Crop.BERRIES, 1), productNeeds("bread", 4)));
-        recipes.add(new CraftingRecipe("sugar_bread", "Sugar Bread", 1, 45L * 60L * 1000L, 280, new int[Crop.values().length], productNeeds("sugar", 1)));
-        // Sugar Bread also requires three Bread; keep the complete recipe requirement explicit.
-        recipes.get(10).productIngredients.put("bread", Integer.valueOf(3));
+        recipes.add(new CraftingRecipe("camberry_bread", "Camberry Bread", 1, 25L * 60L * 1000L, 130, cropNeeds(Crop.WHEAT, 4, Crop.BERRIES, 1), new java.util.LinkedHashMap<String, Integer>()));
+        recipes.add(new CraftingRecipe("sugar_bread", "Sugar Bread", 1, 45L * 60L * 1000L, 280, cropNeeds(Crop.WHEAT, 3), productNeeds("sugar", 1)));
         CRAFTING_RECIPES = Collections.unmodifiableList(recipes);
     }
 
