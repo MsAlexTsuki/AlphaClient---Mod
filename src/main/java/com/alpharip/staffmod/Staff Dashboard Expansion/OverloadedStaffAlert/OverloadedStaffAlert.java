@@ -1,69 +1,117 @@
-package com.alpharip.staffmod.staffops.ideas;
+package com.alpharip.staffmod.staffdashboardexpansion.overloadedstaffalert;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Flags staff whose recorded workload reaches a configurable threshold.
+ * Local prototype for detecting overloaded staff members.
  *
- * Workload inputs must be supplied by a trusted source before operational use.
- * TODO(Supabase): derive workload from authorized active cases/incidents and
- * apply appropriate staff visibility rules.
+ * All data is kept in memory. This class has no network, database,
+ * Supabase, or persistence dependencies.
+ *
  * Compatible with Java 8.
  */
-public class OverloadedStaffAlert {
+public final class OverloadedStaffAlert {
     public static final class Alert {
         private final String staffId;
+        private final String staffName;
         private final int workload;
 
-        private Alert(String staffId, int workload) {
+        private Alert(String staffId, String staffName, int workload) {
             this.staffId = staffId;
+            this.staffName = staffName;
             this.workload = workload;
         }
 
-        public String getStaffId() { return staffId; }
-        public int getWorkload() { return workload; }
+        public String getStaffId() {
+            return staffId;
+        }
+
+        public String getStaffName() {
+            return staffName;
+        }
+
+        public int getWorkload() {
+            return workload;
+        }
     }
 
-    private final Map<String, Integer> workloadByStaff = new LinkedHashMap<String, Integer>();
-    private int threshold = 10;
+    private final WorkloadConfig config;
+    private final WorkloadManager manager;
 
-    public void setThreshold(int threshold) {
-        if (threshold < 1) {
-            throw new IllegalArgumentException("threshold must be at least 1.");
+    public OverloadedStaffAlert() {
+        this(new WorkloadConfig());
+    }
+
+    public OverloadedStaffAlert(WorkloadConfig config) {
+        if (config == null) {
+            throw new IllegalArgumentException("config must not be null.");
         }
-        this.threshold = threshold;
+        this.config = config;
+        this.manager = new WorkloadManager(config);
+    }
+
+    /**
+     * Keeps the original threshold API. The default overload threshold is 10.
+     */
+    public void setThreshold(int threshold) {
+        config.setOverloadedThreshold(threshold);
     }
 
     public int getThreshold() {
-        return threshold;
+        return config.getOverloadedThreshold();
+    }
+
+    public void registerStaff(String staffId, String staffName) {
+        manager.registerStaff(staffId, staffName);
     }
 
     public void setWorkload(String staffId, int workload) {
-        String id = requireText(staffId, "staffId");
-        if (workload < 0) {
-            throw new IllegalArgumentException("workload cannot be negative.");
-        }
-        workloadByStaff.put(id, workload);
+        manager.setWorkload(staffId, workload);
     }
 
+    public void addTask(String staffId) {
+        manager.addTask(staffId);
+    }
+
+    public void completeTask(String staffId) {
+        manager.completeTask(staffId);
+    }
+
+    /**
+     * Returns only staff members at or above the overload threshold.
+     */
     public List<Alert> getAlerts() {
         List<Alert> alerts = new ArrayList<Alert>();
-        for (Map.Entry<String, Integer> entry : workloadByStaff.entrySet()) {
-            if (entry.getValue() >= threshold) {
-                alerts.add(new Alert(entry.getKey(), entry.getValue()));
+        for (WorkloadAlert alert : manager.getAlerts()) {
+            if (alert.getLevel() == WorkloadLevel.OVERLOADED) {
+                alerts.add(new Alert(
+                    alert.getStaffId(),
+                    alert.getStaffName(),
+                    alert.getOpenTasks()
+                ));
             }
         }
         return Collections.unmodifiableList(alerts);
     }
 
-    private static String requireText(String value, String name) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException(name + " must not be blank.");
-        }
-        return value.trim();
+    /**
+     * Returns all staff workload warnings, including the moderate level.
+     */
+    public List<WorkloadAlert> getWarnings() {
+        return manager.getWarnings();
+    }
+
+    public StaffWorkload getStaffWorkload(String staffId) {
+        return manager.getStaffWorkload(staffId);
+    }
+
+    public List<StaffWorkload> getAllStaffWorkloads() {
+        return manager.getAllStaffWorkloads();
+    }
+
+    public WorkloadConfig getConfig() {
+        return config;
     }
 }
