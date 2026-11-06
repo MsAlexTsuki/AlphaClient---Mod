@@ -5,29 +5,33 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.google.gson.JsonObject;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.play.server.S19PacketEntityStatus;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-/** Counts confirmed consecutive hits and resets when the local player is damaged. */
+/** Counts server-confirmed consecutive hits and resets when the local player is damaged. */
 public final class ComboCounter {
     private static ComboCounter instance;
     private static final long HIT_CONFIRMATION_TIMEOUT_MS = 1000L;
     private static final long COMBO_IDLE_TIMEOUT_MS = 20000L;
+    private static final String PACKET_HANDLER_NAME = "alphaclient_combo_counter";
     private static final String[] COLOR_NAMES = {
             "White", "Red", "Orange", "Yellow", "Green",
             "Cyan", "Blue", "Purple", "Pink", "Rainbow"
@@ -37,10 +41,13 @@ public final class ComboCounter {
             0xFF55FFFF, 0xFF5555FF, 0xFFAA55FF, 0xFFFF55AA
     };
 
-    private final Map<UUID, PendingHit> pendingHits = new HashMap<UUID, PendingHit>();
+    private final Map<Integer, PendingHit> pendingHits = new HashMap<Integer, PendingHit>();
+    private final ConcurrentLinkedQueue<S19PacketEntityStatus> confirmedHurtPackets =
+            new ConcurrentLinkedQueue<S19PacketEntityStatus>();
     private int combo;
     private long lastConfirmedHitAt;
     private int lastObservedLocalHurtTime;
+    private Channel installedChannel;
     private int hudX = 5;
     private int hudY = 44;
     private int colorIndex;
@@ -79,9 +86,15 @@ public final class ComboCounter {
                 || attacker != mc.thePlayer || target == attacker
                 || target.worldObj != mc.theWorld) return;
 
-        // Wait for the target's hurt animation so missed swings do not count.
-        pendingHits.put(target.getUniqueID(),
-                new PendingHit(target, target.hurtTime, System.currentTimeMillis()));
+        int targetEntityId = target.getEntityId();
+        long now = System.currentTimeMillis();
+        PendingHit pending = pendingHits.get(targetEntityId);
+        if (pending == null || now - pending.lastAttackAt > HIT_CONFIRMATION_TIMEOUT_MS) {
+            pending = new PendingHit(now);
+            pendingHits.put(targetEntityId, pending);
+        }
+        pending.attackCount++;
+        pending.lastAttackAt = now;
     }
 
     @SubscribeEvent
@@ -90,10 +103,7 @@ public final class ComboCounter {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null || event.entityLiving != mc.thePlayer) return;
 
-        // Any damage to the local player breaks the current combo.
-        combo = 0;
-        lastConfirmedHitAt = 0L;
-        pendingHits.clear();
+        resetCombo();
     }
 
     @SubscribeEvent
@@ -103,46 +113,78 @@ public final class ComboCounter {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.thePlayer == null || mc.theWorld == null || !isAvailable()) {
             pendingHits.clear();
+            confirmedHurtPackets.clear();
             combo = 0;
             lastConfirmedHitAt = 0L;
             lastObservedLocalHurtTime = 0;
+            installedChannel = null;
             return;
         }
 
-        // Detect incoming player damage from the local hurt animation on the client.
-        int currentHurtTime = mc.thePlayer.hurtTime;
-        if (currentHurtTime > lastObservedLocalHurtTime) {
-            combo = 0;
-            lastConfirmedHitAt = 0L;
-            pendingHits.clear();
+        installPacketListener(mc);
+
+        // S19 status 2 is sent by the server when an entity actually takes damage.
+        // Unlike hurtTime polling, each packet can be counted even during an active hurt animation.
+        S19PacketEntityStatus packet;
+        long now = System.currentTimeMillis();
+        while ((packet = confirmedHurtPackets.poll()) != null) {
+            if (packet.getOpCode() != 2) continue;
+            Entity entity = packet.getEntity(mc.theWorld);
+            if (!(entity instanceof EntityPlayer) || entity == mc.thePlayer) continue;
+
+            PendingHit pending = pendingHits.get(entity.getEntityId());
+            if (pending == null || pending.attackCount <= 0
+                    || now - pending.lastAttackAt > HIT_CONFIRMATION_TIMEOUT_MS) continue;
+
+            combo++;
+            lastConfirmedHitAt = now;
+            pending.attackCount--;
+            if (pending.attackCount <= 0) pendingHits.remove(entity.getEntityId());
         }
+
+        // Detect incoming damage to the local player even if the Forge hurt event is not raised client-side.
+        int currentHurtTime = mc.thePlayer.hurtTime;
+        if (currentHurtTime > lastObservedLocalHurtTime) resetCombo();
         lastObservedLocalHurtTime = currentHurtTime;
 
-        long now = System.currentTimeMillis();
         if (combo > 0 && lastConfirmedHitAt > 0L
                 && now - lastConfirmedHitAt >= COMBO_IDLE_TIMEOUT_MS) {
-            combo = 0;
-            lastConfirmedHitAt = 0L;
+            resetCombo();
         }
 
-        Iterator<Map.Entry<UUID, PendingHit>> iterator = pendingHits.entrySet().iterator();
+        Iterator<Map.Entry<Integer, PendingHit>> iterator = pendingHits.entrySet().iterator();
         while (iterator.hasNext()) {
             PendingHit pending = iterator.next().getValue();
-            EntityPlayer target = pending.target;
-            if (target == null || target.isDead || target.worldObj != mc.theWorld
-                    || now - pending.createdAt > HIT_CONFIRMATION_TIMEOUT_MS) {
-                iterator.remove();
-                continue;
-            }
-
-            if (target.hurtTime > pending.lastObservedHurtTime) {
-                combo++;
-                lastConfirmedHitAt = now;
-                iterator.remove();
-            } else {
-                pending.lastObservedHurtTime = target.hurtTime;
-            }
+            if (now - pending.lastAttackAt > HIT_CONFIRMATION_TIMEOUT_MS) iterator.remove();
         }
+    }
+
+    private void installPacketListener(Minecraft mc) {
+        if (mc.getNetHandler() == null || mc.getNetHandler().getNetworkManager() == null) return;
+        Channel channel = mc.getNetHandler().getNetworkManager().channel();
+        if (channel == null || !channel.isOpen() || channel == installedChannel) return;
+
+        if (channel.pipeline().get(PACKET_HANDLER_NAME) == null
+                && channel.pipeline().get("packet_handler") != null) {
+            channel.pipeline().addBefore("packet_handler", PACKET_HANDLER_NAME, new ChannelDuplexHandler() {
+                @Override
+                public void channelRead(ChannelHandlerContext context, Object message) throws Exception {
+                    if (message instanceof S19PacketEntityStatus
+                            && ((S19PacketEntityStatus) message).getOpCode() == 2) {
+                        confirmedHurtPackets.add((S19PacketEntityStatus) message);
+                    }
+                    super.channelRead(context, message);
+                }
+            });
+        }
+        installedChannel = channel;
+    }
+
+    private void resetCombo() {
+        combo = 0;
+        lastConfirmedHitAt = 0L;
+        pendingHits.clear();
+        confirmedHurtPackets.clear();
     }
 
     @SubscribeEvent
@@ -244,17 +286,12 @@ public final class ComboCounter {
         HudScaleConfig.set("comboCounter", scale);
     }
 
-
     private static final class PendingHit {
-        private final EntityPlayer target;
-        private int lastObservedHurtTime;
-        private final long createdAt;
+        private int attackCount;
+        private long lastAttackAt;
 
-        private PendingHit(EntityPlayer target, int hurtTime, long createdAt) {
-            this.target = target;
-            this.lastObservedHurtTime = hurtTime;
-            this.createdAt = createdAt;
+        private PendingHit(long createdAt) {
+            this.lastAttackAt = createdAt;
         }
     }
-
 }
