@@ -232,7 +232,10 @@ public final class PixelGardenGame {
         if (!progressionData.consumeSpeedToken()) return false;
         final long boostMillis = 30L * 60L * 1000L;
         for (Plot plot : plots) {
-            if (plot.crop != null && plot.plantedAt > 0L) plot.plantedAt -= boostMillis;
+            if (plot.crop == null) continue;
+            if (plot.plantedAt > 0L) plot.plantedAt -= boostMillis;
+            if (plot.harvestTimeOverridden && plot.normalPlantedAt > 0L)
+                plot.normalPlantedAt -= boostMillis;
         }
         List<CraftingOrder> shiftedOrders = new ArrayList<CraftingOrder>();
         for (CraftingOrder order : activeCraftingOrders) {
