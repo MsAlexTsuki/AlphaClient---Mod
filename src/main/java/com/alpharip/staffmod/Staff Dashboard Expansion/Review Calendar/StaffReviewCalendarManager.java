@@ -36,7 +36,11 @@ public final class StaffReviewCalendarManager {
     public synchronized void setStatus(int id, StaffReviewStatus status) {
         StaffReview review = get(id);
         if (review == null) throw new IllegalArgumentException("Review not found.");
+        StaffReviewStatus previous = review.getStatus();
         review.setStatus(status);
+        if (status == StaffReviewStatus.SCHEDULED && previous != StaffReviewStatus.SCHEDULED) {
+            review.resetReminder();
+        }
     }
 
     public synchronized List<StaffReview> getAll() {
