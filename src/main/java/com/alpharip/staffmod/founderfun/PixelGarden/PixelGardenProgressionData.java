@@ -41,6 +41,7 @@ public final class PixelGardenProgressionData {
     private final Map<Integer, String> levelDescriptions = new LinkedHashMap<Integer, String>();
     private final Set<Integer> deletedLevels = new LinkedHashSet<Integer>();
     private int resetLevelTokens;
+    private int speedTokens;
     private String customLevelMessage = "";
     private String defaultLevelMessage = "";
     private int storylineChapter = 1;
@@ -54,6 +55,12 @@ public final class PixelGardenProgressionData {
 
     public synchronized int getLevel() { return level; }
     public synchronized long getExperience() { return experience; }
+    public synchronized int getSpeedTokens() { return speedTokens; }
+    public synchronized boolean consumeSpeedToken() {
+        if (speedTokens <= 0) return false;
+        speedTokens--;
+        return true;
+    }
     public synchronized int getStorylineChapter() { return storylineChapter; }
     public synchronized int getTutorialStep() { return tutorialStep; }
     public synchronized long getNextDailyResetAt() { return nextDailyResetAt; }
@@ -66,6 +73,7 @@ public final class PixelGardenProgressionData {
 
     public synchronized int addExperience(long amount) {
         if (amount <= 0L) return 0;
+        int previousLevel = level;
         experience = Math.min(Long.MAX_VALUE - amount, experience) + amount;
         int levelsGained = 0;
         while (experience >= getXpRequiredForNextLevel()) {
@@ -75,6 +83,8 @@ public final class PixelGardenProgressionData {
             levelsGained++;
             if (levelsGained >= 1000) break;
         }
+        int earnedMilestones = Math.max(0, level / 5 - previousLevel / 5);
+        speedTokens = (int) Math.min(Integer.MAX_VALUE, (long) speedTokens + earnedMilestones);
         return levelsGained;
     }
 
@@ -898,6 +908,7 @@ public final class PixelGardenProgressionData {
         level = 1;
         experience = 0L;
         resetLevelTokens = 0;
+        speedTokens = 0;
         customLevelMessage = "";
         defaultLevelMessage = "";
         levelXpRequirements.clear();
@@ -920,6 +931,7 @@ public final class PixelGardenProgressionData {
         root.addProperty("level", level);
         root.addProperty("experience", experience);
         root.addProperty("reset_level_tokens", resetLevelTokens);
+        root.addProperty("speed_tokens", speedTokens);
         root.addProperty("custom_level_message", customLevelMessage);
         root.addProperty("default_level_message", defaultLevelMessage);
         JsonObject levelConfig = new JsonObject();
@@ -970,6 +982,7 @@ public final class PixelGardenProgressionData {
         level = Math.max(1, intValue(root, "level", 1));
         experience = Math.max(0L, longValue(root, "experience", 0L));
         resetLevelTokens = Math.max(0, intValue(root, "reset_level_tokens", 0));
+        speedTokens = Math.max(0, intValue(root, "speed_tokens", 0));
         customLevelMessage = root.has("custom_level_message") && root.get("custom_level_message").isJsonPrimitive()
                 ? root.get("custom_level_message").getAsString() : "";
         defaultLevelMessage = root.has("default_level_message") && root.get("default_level_message").isJsonPrimitive()
