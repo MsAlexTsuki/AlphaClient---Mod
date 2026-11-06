@@ -243,7 +243,7 @@ public final class PixelGardenGUI extends GuiScreen {
         int backWidth = Math.min(112, Math.max(70, width / 8));
         buttonList.add(new AlphaButton(BACK, (width - backWidth) / 2, height - 48, backWidth, navButtonHeight, "Back"));
         int levelCardY = Math.max(54, gy - 62);
-        int tokenX = gx - 12 - 8 - navButtonWidth + navButtonWidth + 4;
+        int tokenX = Math.max(4, gx - 12 - 8 - navButtonWidth - 42);
         buttonList.add(new AlphaButton(SPEED_TOKEN, tokenX, levelCardY, 38, 48, ""));
     }
 
@@ -461,7 +461,7 @@ public final class PixelGardenGUI extends GuiScreen {
         drawString(fontRendererObj, "XP " + progression.getExperience() + "/" + progression.getXpRequiredForNextLevel(),
                 leftX + 6, levelCardY + 19, 0xFFE3E7EE);
         drawString(fontRendererObj, "Next: " + (progression.getLevel() + 1), leftX + 6, levelCardY + 32, 0xFFB7C4D5);
-        int tokenX = leftX + navButtonWidth + 4;
+        int tokenX = Math.max(4, leftX - 42);
         panel(tokenX, levelCardY, 38, 48);
         drawSpeedTokenIcon(tokenX + 11, levelCardY + 5);
         drawCenteredString(fontRendererObj, String.valueOf(game.getSpeedTokens()),
