@@ -202,8 +202,7 @@ public final class PixelGardenCraftingGUI extends GuiScreen {
         List<PixelGardenGame.CraftingOrder> active = game.getActiveCraftingOrders();
         List<String> queued = game.getQueuedCraftingOrders();
         drawString(fontRendererObj, "Active: " + active.size() + "/" + activeCapacity
-                + "    Queue: " + queued.size() + "/" + queueCapacity
-, 34, 59, 0xFFFFD45A);
+                + "    Queue: " + queued.size() + "/" + queueCapacity, 34, 59, 0xFFFFD45A);
         StringBuilder detail = new StringBuilder("Running: ");
         long now = System.currentTimeMillis();
         for (int i = 0; i < active.size(); i++) {
