@@ -39,10 +39,6 @@ public final class StaffQueueGui extends GuiScreen {
         refreshTasks();
     }
 
-    private int thirty() {
-        return 30;
-    }
-
     private void refreshTasks() {
         visibleTasks = queue.getTasks();
         if (selectedIndex >= visibleTasks.size()) {
