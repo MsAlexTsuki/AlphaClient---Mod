@@ -82,8 +82,8 @@ public final class ActingRankAssignmentGui extends GuiScreen {
         actingRankField.mouseClicked(mouseX, mouseY, mouseButton);
         durationField.mouseClicked(mouseX, mouseY, mouseButton);
         reasonField.mouseClicked(mouseX, mouseY, mouseButton);
-        if (mouseButton == 0 && mouseY >= 132 && mouseY < height - 36) {
-            int row = (mouseY - 132) / 32;
+        if (mouseButton == 0 && mouseY >= 142 && mouseY < height - 36) {
+            int row = (mouseY - 142) / 32;
             selectedIndex = scrollOffset + row;
         }
     }
@@ -140,7 +140,7 @@ public final class ActingRankAssignmentGui extends GuiScreen {
                 width / 2, 29, 0xFFFFD866);
         int left = Math.max(8, width / 2 - 190);
         drawString(fontRendererObj, "STAFF", left, 45, 0xFFB8BDC8);
-        drawString(fontRendererObj, "CURRENT RANK", left + staffField.getWidth() + 6, 45, 0xFFB8BDC8);
+        drawString(fontRendererObj, "CURRENT RANK", left + staffField.width + 6, 45, 0xFFB8BDC8);
         drawString(fontRendererObj, "ACTING RANK", left + (staffField.getWidth() + 6) * 2, 45, 0xFFB8BDC8);
         drawString(fontRendererObj, "HOURS", left + (staffField.getWidth() + 6) * 3, 45, 0xFFB8BDC8);
         drawField(staffField);
