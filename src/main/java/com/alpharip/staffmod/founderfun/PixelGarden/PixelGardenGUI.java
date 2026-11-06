@@ -461,11 +461,6 @@ public final class PixelGardenGUI extends GuiScreen {
         drawString(fontRendererObj, "XP " + progression.getExperience() + "/" + progression.getXpRequiredForNextLevel(),
                 leftX + 6, levelCardY + 19, 0xFFE3E7EE);
         drawString(fontRendererObj, "Next: " + (progression.getLevel() + 1), leftX + 6, levelCardY + 32, 0xFFB7C4D5);
-        int tokenX = Math.max(4, leftX - 42);
-        panel(tokenX, levelCardY, 38, 48);
-        drawSpeedTokenIcon(tokenX + 11, levelCardY + 5);
-        drawCenteredString(fontRendererObj, String.valueOf(game.getSpeedTokens()),
-                tokenX + 19, levelCardY + 30, 0xFFFFD45A);
         panel(gx - 12, gy - 60, gardenW + 24, tileHeight * visibleRows + gap * Math.max(0, visibleRows - 1) + 86);
         drawString(fontRendererObj, "MY GARDEN", gx + 2, gy - 52, 0xFFFFD45A);
         drawString(fontRendererObj, "Select a crop above, then click an unlocked plot", gx + 2, gy - 39, 0xFFB7C4D5);
@@ -523,6 +518,12 @@ public final class PixelGardenGUI extends GuiScreen {
                 cloudStatus.startsWith("Cloud save failed") ? 0xFFFF7777 : 0xFF9DA8B8);
         if (loadingCloud) drawCenteredString(fontRendererObj, "Loading account garden...", width / 2, 76, 0xFFFFD45A);
         super.drawScreen(mouseX, mouseY, partialTicks);
+        // Render the token badge over its clickable button so the icon and count stay visible.
+        int tokenX = Math.max(4, leftX - 42);
+        panel(tokenX, levelCardY, 38, 48);
+        drawSpeedTokenIcon(tokenX + 11, levelCardY + 5);
+        drawCenteredString(fontRendererObj, String.valueOf(game.getSpeedTokens()),
+                tokenX + 19, levelCardY + 30, 0xFFFFD45A);
     }
 
     private void drawCurrentQuestCard() {
