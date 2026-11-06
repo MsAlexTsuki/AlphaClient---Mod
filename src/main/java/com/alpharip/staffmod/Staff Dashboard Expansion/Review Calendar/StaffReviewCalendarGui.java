@@ -28,14 +28,16 @@ public final class StaffReviewCalendarGui extends GuiScreen {
     @Override public void initGui() {
         buttonList.clear();
         int y = height - 27;
-        int w = Math.max(62, (width - 28) / 6);
-        int start = (width - (w * 6 + 5 * 4)) / 2;
+        int gap = 4;
+        int w = Math.max(40, Math.min(112, (width - 24) / 7 - gap));
+        int start = (width - (w * 7 + gap * 6)) / 2;
         buttonList.add(new GuiButton(0, start, y, w, 20, "< Year"));
-        buttonList.add(new GuiButton(1, start + (w + 4), y, w, 20, "Year >"));
-        buttonList.add(new GuiButton(2, start + (w + 4) * 2, y, w, 20, "Today"));
-        buttonList.add(new GuiButton(3, start + (w + 4) * 3, y, w, 20, "Day details"));
-        buttonList.add(new GuiButton(4, start + (w + 4) * 4, y, w, 20, "Add review"));
-        buttonList.add(new GuiButton(5, start + (w + 4) * 5, y, w, 20, "Back"));
+        buttonList.add(new GuiButton(1, start + (w + gap), y, w, 20, "Year >"));
+        buttonList.add(new GuiButton(2, start + (w + gap) * 2, y, w, 20, "Today"));
+        buttonList.add(new GuiButton(3, start + (w + gap) * 3, y, w, 20, "Day details"));
+        buttonList.add(new GuiButton(4, start + (w + gap) * 4, y, w, 20, "Add review"));
+        buttonList.add(new GuiButton(5, start + (w + gap) * 5, y, w, 20, "Review Board"));
+        buttonList.add(new GuiButton(6, start + (w + gap) * 6, y, w, 20, "Back"));
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
@@ -53,6 +55,8 @@ public final class StaffReviewCalendarGui extends GuiScreen {
         } else if (button.id == 4) {
             mc.displayGuiScreen(new StaffReviewEditorGui(this, calendar.getManager(), selectedDate, null));
         } else if (button.id == 5) {
+            mc.displayGuiScreen(new StaffReviewBoardGui(this, calendar));
+        } else if (button.id == 6) {
             mc.displayGuiScreen(parent);
         }
     }
