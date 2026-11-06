@@ -81,9 +81,9 @@ public final class AccountInfoGui extends AlphaGuiScreen {
 
         if (accounts.isEmpty()) {
             drawCenteredString(fontRendererObj, "No saved accounts were provided by Alpha Launcher.",
-                    width / 2, panelTop + 83, 0xFFADB3C0);
+                    width / 2, panelTop + 78, 0xFFADB3C0);
             drawCenteredString(fontRendererObj, "Add an account in the Launcher, then restart the game.",
-                    width / 2, panelTop + 97, 0xFFADB3C0);
+                    width / 2, panelTop + 90, 0xFFADB3C0);
         }
 
         if (statusMessage != null) {
