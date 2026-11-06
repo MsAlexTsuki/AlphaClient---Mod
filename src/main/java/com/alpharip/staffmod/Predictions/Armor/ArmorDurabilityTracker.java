@@ -21,7 +21,7 @@ final class ArmorDurabilityTracker {
 
     void recordDamage(int amount) {
         if (amount <= 0) return;
-        accumulatedDamage = Math.min(maximumDurability, accumulatedDamage + amount);
+        accumulatedDamage = (int) Math.min((long) maximumDurability, (long) accumulatedDamage + amount);
         recentDamage.addLast(amount);
         while (recentDamage.size() > maxSamples) recentDamage.removeFirst();
     }
