@@ -67,7 +67,7 @@ public final class AfkCameraGui extends GuiScreen {
         int top = height / 2 - 105;
         int right = width / 2 + 170;
         drawRect(left, top, right, top + 2, 0xFFFFD866);
-        drawRect(left, top + 2, right, height / 2 - 16, 0xE6101218);
+        drawRect(left, top + 2, right, height / 2 + 106, 0xE6101218);
         drawCenteredString(fontRendererObj, "AFK CAMERA", width / 2, top + 15, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "Select behavior for periods of inactivity",
                 width / 2, top + 35, 0xFFB8BEC8);
