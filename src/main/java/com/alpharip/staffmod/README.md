@@ -549,3 +549,20 @@ Folder: `ActiveDeviceListGlobalSignOut/`
 - **ActiveDeviceListGlobalSignOutGui.java** — Provides a Minecraft 1.8.9 preview for reviewing device records, requesting an individual sign-out, and requesting sign-out for all other devices. It is not registered in an existing menu.
 
 **Prototype boundary:** Device records are supplied locally by the caller and remain in memory. A sign-out action only records local intent; it does not terminate a Microsoft, Alpha, or other remote session. The separate `confirmRemoteSignOut` method is an integration boundary and must only be called after a trusted backend confirms revocation. There is no account authentication, device fingerprinting, IP collection, credential/token storage, remote API, persistence, Supabase integration, Forge event integration, or AlphaClient Core integration. The current device is excluded from sign-out requests. The GUI requires in-game layout/interaction verification. No compile or in-game test is claimed.
+
+## Store — Central Store Core and Addons
+
+Folder: `store/`
+
+- **Store.java** — Central Store core. Maintains the enabled state, registers Store sections, tracks the selected section, and exposes the Addons section facade. It is the shared entry point for future Store sections.
+- **Addons/AddonStore.java** — Addons section facade. Coordinates the local catalogue, search/filter, settings, and state manager.
+- **Addons/AddonEntry.java** — Immutable add-on metadata record containing ID, name, description, version, author, and category.
+- **Addons/AddonCategory.java** — Initial category definitions: All, HUD, Cosmetic, Utility, Gameplay, Staff, and Other. Confirm the final catalogue taxonomy before production use.
+- **Addons/AddonRegistry.java** — Bounded in-memory catalogue with duplicate-ID rejection and local installation-state tracking.
+- **Addons/AddonSearch.java** — Case-insensitive local search across ID, name, description, and author, with category filtering.
+- **Addons/AddonInstallState.java** — Defines Available, Installed, Disabled, and Removed local catalogue states.
+- **Addons/AddonManager.java** — Applies local state transitions. Marking an entry Installed does not download files, modify the client, or execute add-on code.
+- **Addons/AddonStoreSettings.java** — Holds session-local enablement, selected category, search query, and display style. Settings are not persisted.
+- **Addons/AddonStoreGui.java** — Minecraft 1.8.9 preview for browsing supplied entries, searching, and changing local Installed/Disabled state. It is not registered in an existing menu.
+
+**Prototype boundary:** The central Store and Addons catalogue are local prototypes. Add-on entries must be supplied by a caller; no real catalogue service, downloads, external distribution, file installation, code loading/execution, persistence, account synchronization, Supabase integration, Forge event integration, or AlphaClient Core integration is included. The GUI is a preview only. No compile or in-game test is claimed.
