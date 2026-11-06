@@ -141,8 +141,8 @@ public final class ActingRankAssignmentGui extends GuiScreen {
         int left = Math.max(8, width / 2 - 190);
         drawString(fontRendererObj, "STAFF", left, 45, 0xFFB8BDC8);
         drawString(fontRendererObj, "CURRENT RANK", left + staffField.width + 6, 45, 0xFFB8BDC8);
-        drawString(fontRendererObj, "ACTING RANK", left + (staffField.getWidth() + 6) * 2, 45, 0xFFB8BDC8);
-        drawString(fontRendererObj, "HOURS", left + (staffField.getWidth() + 6) * 3, 45, 0xFFB8BDC8);
+        drawString(fontRendererObj, "ACTING RANK", left + (staffField.width + 6) * 2, 45, 0xFFB8BDC8);
+        drawString(fontRendererObj, "HOURS", left + (staffField.width + 6) * 3, 45, 0xFFB8BDC8);
         drawField(staffField);
         drawField(currentRankField);
         drawField(actingRankField);
