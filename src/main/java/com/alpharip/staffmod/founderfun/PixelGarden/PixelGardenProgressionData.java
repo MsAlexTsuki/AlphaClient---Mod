@@ -277,6 +277,30 @@ public final class PixelGardenProgressionData {
         addStarterQuest("pg_your_own_garden", "Your Own Garden",
                 "Meet Emily and harvest an easy wheat crop as you expand your garden skills.",
                 PixelGardenNPC.EMILY, "HARVEST_CROP", "wheat", 1);
+
+        QuestDefinition gardenQuest = definitions.get("pg_your_own_garden");
+        if (gardenQuest != null) {
+            Map<String, Integer> rewards = new LinkedHashMap<String, Integer>(gardenQuest.rewards);
+            rewards.put("seeds_wheat", Integer.valueOf(3));
+            replaceDefinition(new QuestDefinition(gardenQuest.id, gardenQuest.name, gardenQuest.description,
+                    gardenQuest.npc, gardenQuest.requiredLevel, gardenQuest.requiredPrestige,
+                    gardenQuest.weight, gardenQuest.tier, gardenQuest.difficulty,
+                    gardenQuest.objectives, rewards));
+        }
+
+        if (!definitions.containsKey("pg_crafting_tutorial")) {
+            List<Objective> objectives = new ArrayList<Objective>();
+            objectives.add(new Objective("pg_crafting_tutorial_craft_bread", "CRAFT_PRODUCT", "bread", 1));
+            addDefinition(new QuestDefinition("pg_crafting_tutorial", "Crafting Tutorial",
+                    "Meet Mack and learn how to use the crafting system by completing one Bread order.",
+                    PixelGardenNPC.MACK, 1, 0, 0, "Beginner", objectives,
+                    Collections.<String, Integer>emptyMap()));
+        }
+        if (!hasInstanceForDefinition("pg_crafting_tutorial")) {
+            assignQuest("pg_crafting_tutorial");
+        }
+
+        ensureTutorialSequenceStarted();
         addLevelQuestCatalog();
     }
 
@@ -522,6 +546,7 @@ public final class PixelGardenProgressionData {
     /** Assigns a definition to this player's save as an AVAILABLE quest instance. */
     public synchronized String assignQuest(String definitionId) {
         if (definitionId == null || !definitions.containsKey(definitionId)) return null;
+        if (!isTutorialQuest(definitionId) && !areAllTutorialQuestsCompleted()) return null;
         String instanceId = UUID.randomUUID().toString();
         QuestInstance instance = new QuestInstance(instanceId, definitionId, QuestStatus.AVAILABLE,
                 System.currentTimeMillis());
@@ -533,11 +558,67 @@ public final class PixelGardenProgressionData {
         return instanceId;
     }
 
+    private static final String[] TUTORIAL_QUEST_IDS = {
+        "pg_fresh_start", "pg_first_coins", "pg_growing_bigger",
+        "pg_your_own_garden", "pg_crafting_tutorial"
+    };
+
     private static boolean isTutorialQuest(String definitionId) {
-        return "pg_fresh_start".equals(definitionId)
-                || "pg_first_coins".equals(definitionId)
-                || "pg_growing_bigger".equals(definitionId)
-                || "pg_your_own_garden".equals(definitionId);
+        if (definitionId == null) return false;
+        for (String tutorialId : TUTORIAL_QUEST_IDS) {
+            if (tutorialId.equals(definitionId)) return true;
+        }
+        return false;
+    }
+
+    private boolean isTutorialQuestCompleted(String definitionId) {
+        for (QuestInstance instance : instances.values()) {
+            if (definitionId.equals(instance.definitionId)
+                    && instance.status == QuestStatus.COMPLETED) return true;
+        }
+        return false;
+    }
+
+    private boolean areAllTutorialQuestsCompleted() {
+        for (String tutorialId : TUTORIAL_QUEST_IDS) {
+            if (!isTutorialQuestCompleted(tutorialId)) return false;
+        }
+        return true;
+    }
+
+    private boolean canAcceptTutorialQuest(String definitionId) {
+        for (int i = 0; i < TUTORIAL_QUEST_IDS.length; i++) {
+            if (!TUTORIAL_QUEST_IDS[i].equals(definitionId)) continue;
+            return i == 0 || isTutorialQuestCompleted(TUTORIAL_QUEST_IDS[i - 1]);
+        }
+        return areAllTutorialQuestsCompleted();
+    }
+
+    /** Starts only the first tutorial that has not yet been completed. */
+    private void ensureTutorialSequenceStarted() {
+        for (int i = 0; i < TUTORIAL_QUEST_IDS.length; i++) {
+            String tutorialId = TUTORIAL_QUEST_IDS[i];
+            if (isTutorialQuestCompleted(tutorialId)) continue;
+            if (i > 0 && !isTutorialQuestCompleted(TUTORIAL_QUEST_IDS[i - 1])) return;
+
+            QuestInstance available = null;
+            boolean active = false;
+            boolean hasUsableInstance = false;
+            for (QuestInstance instance : instances.values()) {
+                if (!tutorialId.equals(instance.definitionId)) continue;
+                if (instance.status == QuestStatus.ACTIVE) active = true;
+                if (instance.status == QuestStatus.AVAILABLE) available = instance;
+                if (instance.status == QuestStatus.ACTIVE || instance.status == QuestStatus.AVAILABLE
+                        || instance.status == QuestStatus.COMPLETED) hasUsableInstance = true;
+            }
+            if (active) return;
+            if (!hasUsableInstance) {
+                String newInstanceId = assignQuest(tutorialId);
+                if (newInstanceId != null) available = instances.get(newInstanceId);
+            }
+            if (available != null) acceptQuest(available.instanceId, level, 0);
+            return;
+        }
     }
 
     /**
@@ -663,15 +744,8 @@ public final class PixelGardenProgressionData {
     }
 
     private void autoStartNextTutorialQuest(String completedDefinitionId) {
-        String nextId = "pg_fresh_start".equals(completedDefinitionId) ? "pg_first_coins"
-                : "pg_first_coins".equals(completedDefinitionId) ? "pg_growing_bigger"
-                : "pg_growing_bigger".equals(completedDefinitionId) ? "pg_your_own_garden" : null;
-        if (nextId == null || getActiveQuestCount() >= MAX_ACTIVE_QUESTS) return;
-        for (QuestInstance instance : instances.values()) {
-            if (nextId.equals(instance.definitionId) && instance.status == QuestStatus.AVAILABLE) {
-                acceptQuest(instance.instanceId, level, 0);
-                return;
-            }
+        if (isTutorialQuest(completedDefinitionId) && getActiveQuestCount() < MAX_ACTIVE_QUESTS) {
+            ensureTutorialSequenceStarted();
         }
     }
 
@@ -771,6 +845,11 @@ public final class PixelGardenProgressionData {
         if (instance == null || instance.status != QuestStatus.AVAILABLE
                 || getActiveQuestCount() >= MAX_ACTIVE_QUESTS
                 || !isEligible(instanceId, playerLevel, playerPrestige)) return false;
+        if (isTutorialQuest(instance.definitionId)) {
+            if (!canAcceptTutorialQuest(instance.definitionId)) return false;
+        } else if (!areAllTutorialQuestsCompleted()) {
+            return false;
+        }
         instance.status = QuestStatus.ACTIVE;
         instance.acceptedAt = System.currentTimeMillis();
         return true;
