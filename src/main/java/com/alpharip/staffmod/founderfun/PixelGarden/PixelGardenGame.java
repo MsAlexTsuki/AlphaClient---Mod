@@ -427,6 +427,24 @@ public final class PixelGardenGame {
         return true;
     }
 
+    private static int craftingExperienceValue(CraftingRecipe recipe) {
+        if (recipe == null) return 0;
+        switch (recipe.id) {
+            case "bread": return 1;
+            case "chips": return 2;
+            case "potato_mush": return 3;
+            case "carrot_juice": return 4;
+            case "pumpkin_head": return 5;
+            case "melon_slices": return 6;
+            case "cactus_juice": return 7;
+            case "sugar": return 8;
+            case "basket_of_berries": return 9;
+            case "camberry_bread": return 10;
+            case "sugar_bread": return 11;
+            default: return 0;
+        }
+    }
+
     private void advanceCrafting(long now) {
         while (true) {
             int completedIndex = -1;
@@ -446,6 +464,7 @@ public final class PixelGardenGame {
                 craftedProductInventory.put(recipe.id, Integer.valueOf((int)Math.min(Integer.MAX_VALUE, next)));
                 // Craft objectives advance only after the finished product has entered the shared inventory.
                 progressionData.recordActionProgress("CRAFT_PRODUCT", recipe.id, recipe.outputQuantity);
+                awardExperience(craftingExperienceValue(recipe));
                 Minecraft minecraft = Minecraft.getMinecraft();
                 if (minecraft != null) {
                     minecraft.addScheduledTask(new Runnable() {
