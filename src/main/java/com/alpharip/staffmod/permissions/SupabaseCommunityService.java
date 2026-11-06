@@ -671,6 +671,37 @@ public final class SupabaseCommunityService {
         return requestJson("POST", "/rest/v1/rpc/founder_pixel_garden_craft_manage", accessToken, payload.toString());
     }
 
+    /** Founder-only inventory grants for another Alpha Account's saved Pixel Garden data. */
+    public static synchronized JsonObject givePixelGardenInventoryItem(String targetAlphaName,
+            String itemType, String itemId, int amount) throws Exception {
+        if (!isSignedInFounder()) throw new SecurityException("Only Founder can grant Pixel Garden inventory items.");
+        if (targetAlphaName == null || !targetAlphaName.trim().matches("[A-Za-z0-9_]{3,20}"))
+            throw new IllegalArgumentException("Enter a valid Alpha Account name.");
+        if (itemType == null || !itemType.matches("seeds|crops|product"))
+            throw new IllegalArgumentException("Choose seeds, crops or product.");
+        if (amount < 1 || amount > 1000000)
+            throw new IllegalArgumentException("Amount must be between 1 and 1,000,000.");
+        String validCrops = "wheat|potato|carrot|pumpkin|melon|cactus|sugarcane|berries";
+        String validProducts = "bread|chips|potato_mush|carrot_juice|pumpkin_head|melon_slices|cactus_juice|sugar|basket_of_berries|camberry_bread|sugar_bread";
+        if ("seeds".equals(itemType)) {
+            if (itemId != null && itemId.startsWith("seeds_")) itemId = itemId.substring(6);
+            if (itemId == null || !itemId.matches(validCrops))
+                throw new IllegalArgumentException("Choose a valid seed ID.");
+        } else if ("crops".equals(itemType)) {
+            if (itemId == null || !itemId.matches(validCrops))
+                throw new IllegalArgumentException("Choose a valid crop ID.");
+        } else if (itemId == null || !itemId.matches(validProducts)) {
+            throw new IllegalArgumentException("Choose a valid crafted product ID.");
+        }
+        JsonObject payload = new JsonObject();
+        payload.addProperty("p_target_alpha_name", targetAlphaName.trim());
+        payload.addProperty("p_item_type", itemType);
+        payload.addProperty("p_item_id", itemId);
+        payload.addProperty("p_amount", amount);
+        return requestJson("POST", "/rest/v1/rpc/founder_pixel_garden_give_inventory_item",
+                accessToken, payload.toString());
+    }
+
     /** Reads or manages saved Pixel Garden level data through a server-authorized RPC. */
     public static synchronized JsonObject managePixelGardenLevels(String action, String targetAlphaName,
             int levelValue, long xpValue, String textValue) throws Exception {
