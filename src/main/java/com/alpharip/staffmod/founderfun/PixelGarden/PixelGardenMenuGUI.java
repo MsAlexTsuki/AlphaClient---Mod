@@ -98,7 +98,7 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                 else if ("auto_quest".equals(key)) label = game.hasAutoQuest() ? "OWNED" : "Buy (" + game.getUpgradeCost(key) + ")";
                 else if ("prestige".equals(key)) label = "Prestige (20000)";
                 else label = game.getUpgradeCost(key) < 0 ? "MAX" : ("expansion".equals(key) ? "Unlock (" : "Buy (") + game.getUpgradeCost(key) + ")";
-                buttonList.add(new AlphaButton(ACTION_BASE + i, x + 6, y + cardHeight - 23, cardWidth - 12, 18, label));
+                buttonList.add(new AlphaButton(ACTION_BASE + i, x + 6, y + cardHeight - 18, cardWidth - 12, 16, label));
             }
         }
         int navY = height - 35;
@@ -273,7 +273,7 @@ abstract class PixelGardenMenuGUI extends GuiScreen {
                 String status = i == 3 && game.hasAutoSell()
                         ? (game.isAutoSellEnabled() ? "Auto Sell: ON" : "Auto Sell: OFF")
                         : costs[i] < 0 ? "OWNED / MAX" : "Cost: " + costs[i];
-                drawString(fontRendererObj, status, x + 7, y + 43,
+                drawString(fontRendererObj, status, x + 7, y + 39,
                         (costs[i] < 0 || (i == 3 && game.hasAutoSell())) ? 0xFF83D79A : 0xFFFFD45A);
                 if (i < 5) drawUpgradeIcon(x + cardWidth - 30, y + 2, i);
             }
