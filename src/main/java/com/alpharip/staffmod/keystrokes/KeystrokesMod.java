@@ -6,7 +6,6 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -25,7 +24,6 @@ public final class KeystrokesMod {
     private static final int DARK = 0xE60A0C11;
     private static final int PRESSED = 0xF0FFC83D;
     private static final int WHITE = 0xFFF3F4F6;
-    private static final int MUTED = 0xFFB8BDC8;
     private static final String CONFIG_NAME = "alphaclient-keystrokes.properties";
 
     private static boolean loaded;
@@ -44,9 +42,9 @@ public final class KeystrokesMod {
     private static int hudY = 5;
     private static float scale = 1.0F;
 
-    private long wPressedAt, aPressedAt, sPressedAt, dPressedAt, spacePressedAt;
-    private long leftPressedAt, rightPressedAt;
-    private boolean previousLeft, previousRight;
+    private static long wPressedAt, aPressedAt, sPressedAt, dPressedAt, spacePressedAt;
+    private static long leftPressedAt, rightPressedAt;
+    private static boolean previousLeft, previousRight;
 
     public static void load() {
         if (loaded) return;
