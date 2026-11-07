@@ -338,6 +338,23 @@ public final class WaypointManager {
         return false;
     }
 
+    /** Removes one exact death waypoint from the central store, regardless of server/profile/world. */
+    public synchronized boolean removeDeathWaypointById(String id) {
+        if (id == null || id.trim().isEmpty()) return false;
+        load();
+        for (int index = 0; index < points.size(); index++) {
+            StaffWaypoint point = points.get(index);
+            if (id.equals(point.getId()) && point.isDeathWaypoint()) {
+                points.remove(index);
+                if (id.equals(selectedId)) selectedId = "";
+                if (route.contains(id)) clearRoute();
+                save();
+                return true;
+            }
+        }
+        return false;
+    }
+
     public synchronized void saveChanges() { save(); }
 
     public synchronized List<StaffWaypoint> getSortedCurrentWorld() {
