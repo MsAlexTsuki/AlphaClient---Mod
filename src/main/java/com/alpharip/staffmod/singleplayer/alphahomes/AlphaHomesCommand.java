@@ -6,11 +6,8 @@ import net.minecraft.client.gui.GuiChat;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 /** Singleplayer-only command entry points for AlphaHomes. */
@@ -97,27 +94,6 @@ public final class AlphaHomesCommand extends CommandBase {
             reply(sender, "AlphaHomes action failed: "
                     + (failure.getMessage() == null ? "unknown error" : failure.getMessage()));
         }
-    }
-
-    @Override
-    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
-        List<String> result = new ArrayList<String>();
-        if (!AlphaHomesManager.isAvailable(Minecraft.getMinecraft())) return result;
-
-        if (args.length == 1) {
-            String prefix = args[0].toLowerCase(Locale.ROOT);
-            String[] actions = {"sethome", "deletehome", "info", "list"};
-            for (String action : actions) if (action.startsWith(prefix)) result.add(action);
-            for (AlphaHome home : AlphaHomesManager.getInstance().getHomes()) {
-                if (home.getName().toLowerCase(Locale.ROOT).startsWith(prefix)) result.add(home.getName());
-            }
-        } else if (args.length >= 2 && "deletehome".equalsIgnoreCase(args[0])) {
-            String prefix = args[args.length - 1].toLowerCase(Locale.ROOT);
-            for (AlphaHome home : AlphaHomesManager.getInstance().getHomes()) {
-                if (home.getName().toLowerCase(Locale.ROOT).startsWith(prefix)) result.add(home.getName());
-            }
-        }
-        return result;
     }
 
     private static String join(String[] values, int start) {
