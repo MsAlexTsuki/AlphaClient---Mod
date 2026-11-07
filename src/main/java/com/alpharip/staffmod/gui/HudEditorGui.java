@@ -522,7 +522,7 @@ public class HudEditorGui extends AlphaGuiScreen {
             CpsMod.setHudPosition(5, 28);
             KeystrokesMod.setHudPosition(5, 5);
             KeystrokesMod.setScale(1.0F);
-            if (ComboCounter.getInstance() != null ComboCounter.getInstance().resetHudSettings();
+            if (ComboCounter.getInstance() != null) ComboCounter.getInstance().resetHudSettings();
             AfkTimerHud.setHudPosition(6, 6);
             SessionTimerHud.setHudPosition(6, 22);
             PlaytimeTrackerHud.setHudPosition(6, 38);
