@@ -29,7 +29,7 @@ public final class DeathWaypointsGui extends AlphaGuiScreen {
         top=(height-panelHeight)/2;
         listTop=top+66;
         listBottom=top+panelHeight-52;
-        buttonList.add(new AlphaButton(1,left+14,top+panelHeight-31,112,20,"Delete Selected",!selectedId.isEmpty()));
+        buttonList.add(new AlphaButton(1,left+14,top+panelHeight-31,112,20,"Delete Selected",false,!selectedId.isEmpty()));
         buttonList.add(new AlphaButton(2,left+panelWidth-66,top+10,52,18,"Back"));
     }
 
@@ -101,7 +101,7 @@ public final class DeathWaypointsGui extends AlphaGuiScreen {
             String label=fontRendererObj.trimStringToWidth(point.getLabel(),Math.max(40,panelWidth-250));
             drawString(fontRendererObj,label,left+30,y+2,0xFFE6E8ED);
             String context=point.getServerKey()+"  |  "+point.getWorldKey()+"  |  Dim "+point.getDimensionId();
-            drawString(fontRendererObj,fontRendererObj.trimStringToWidth(context,panelWidth-55),left+30,y+15,0xFFB8BDC8);
+            drawString(fontRendererObj,fontRendererObj.trimStringToWidth(context,Math.max(80,panelWidth-170)),left+30,y+15,0xFFB8BDC8);
             String coords=(int)Math.floor(point.getX())+", "+(int)Math.floor(point.getY())+", "+(int)Math.floor(point.getZ());
             int coordsWidth=fontRendererObj.getStringWidth(coords);
             drawString(fontRendererObj,coords,left+panelWidth-22-coordsWidth,y+7,0xFFFFD866);
