@@ -227,9 +227,10 @@ public final class KeystrokesMod {
         }
 
         if (showSpaceBar) {
-            int top = (showMovementKeys ? size * 2 + gap : 0)
-                    + (showClicks ? mouseHeight + gap : 0)
-                    + ((showMovementKeys || showClicks) ? gap : 0);
+            int top = 0;
+            if (showMovementKeys) top += size * 2 + gap;
+            if (showClicks) top += mouseHeight + (showMovementKeys ? gap : 0) + gap;
+            else if (showMovementKeys) top += gap;
             int height = Math.max(4, size / 2);
             drawKey(mc, 0, top, gridWidth, height, "SPACE",
                     pressedAlpha(mc.gameSettings.keyBindJump.isKeyDown(), spacePressedAt), -1);
@@ -282,8 +283,8 @@ public final class KeystrokesMod {
             Gui.drawRect(x + width - t, y, x + width, y + height, borderColor);
         }
         int color = active > 0.01F ? pressedTextColor : textColor;
-        drawScaledCentered(mc, label, x, y + 1, width, color, 0.78F);
-        if (cps >= 0) drawScaledCentered(mc, cps + " CPS", x, y + height - 6, width, color, 0.58F);
+        drawScaledCentered(mc, label, x, y + 1, width, color, 0.68F);
+        if (cps >= 0) drawScaledCentered(mc, cps + " CPS", x, y + height - 6, width, color, 0.42F);
     }
 
     private static void drawScaledCentered(Minecraft mc, String text, int x, int y,
