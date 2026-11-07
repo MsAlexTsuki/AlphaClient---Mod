@@ -14,7 +14,6 @@ import java.io.IOException;
 public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int ENABLED = 10;
-    private static final int DIRECTION = 11;
     private static final int RANGE_DOWN = 16, RANGE_UP = 17;
     private static final int RESET = 18;
 
@@ -43,7 +42,7 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
         }
 
         panelWidth = Math.min(360, width - 16);
-        panelHeight = Math.min(220, height - 16);
+        panelHeight = Math.min(200, height - 16);
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
 
@@ -51,16 +50,11 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(ENABLED, width / 2 - 90, top + 48, 180, 20,
                 "AUTOSTRAFE: " + (settingsEnabled ? "ON" : "OFF")));
 
-        AlphaButton directionButton = new AlphaButton(DIRECTION, left + 16, top + 82,
-                panelWidth - 32, 20, "STRAFE DIRECTION: " + AutoStrafeSettings.getDirection().name());
-        directionButton.enabled = settingsEnabled;
-        buttonList.add(directionButton);
-
         int center = width / 2;
-        AlphaButton rangeDown = new AlphaButton(RANGE_DOWN, center - 142, top + 112, 24, 20, "-");
-        AlphaButton rangeValue = new AlphaButton(1016, center - 114, top + 112, 228, 20,
+        AlphaButton rangeDown = new AlphaButton(RANGE_DOWN, center - 142, top + 84, 24, 20, "-");
+        AlphaButton rangeValue = new AlphaButton(1016, center - 114, top + 84, 228, 20,
                 "TARGET RANGE: " + format(AutoStrafeSettings.getTargetRange()) + " blocks");
-        AlphaButton rangeUp = new AlphaButton(RANGE_UP, center + 118, top + 112, 24, 20, "+");
+        AlphaButton rangeUp = new AlphaButton(RANGE_UP, center + 118, top + 84, 24, 20, "+");
         rangeDown.enabled = settingsEnabled;
         rangeValue.enabled = settingsEnabled;
         rangeUp.enabled = settingsEnabled;
@@ -102,9 +96,6 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
             case ENABLED:
                 module.setEnabled(!module.isConfiguredEnabled());
                 break;
-            case DIRECTION:
-                AutoStrafeSettings.cycleDirection();
-                break;
             case RANGE_DOWN:
                 AutoStrafeSettings.setTargetRange(AutoStrafeSettings.getTargetRange() - 0.5D);
                 break;
@@ -127,10 +118,10 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
         drawRect(left, top, left + panelWidth, top + 2, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "AUTOSTRAFE", width / 2, top + 12, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "FOUNDER SETTINGS", width / 2, top + 27, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Uses W + the selected A/D direction near a visible player.",
-                width / 2, top + 151, 0xFFF0F1F4);
+        drawCenteredString(fontRendererObj, "Keeps W active with short, alternating A/D bursts.",
+                width / 2, top + 125, 0xFFF0F1F4);
         drawCenteredString(fontRendererObj, "Pressing S manually always overrides AutoStrafe.",
-                width / 2, top + 164, 0xFFB8BDC8);
+                width / 2, top + 139, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
