@@ -25,21 +25,26 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
         right = left + 290;
         top = Math.max(8, height / 2 - 145);
         bottom = Math.min(height - 8, top + 290);
-        int x = left + 14, w = right - left - 28, y = top + 48;
-        buttonList.add(new AlphaButton(SHOW_CLICKS, x, y, w, 18, label("SHOW CLICKS", KeystrokesMod.isShowClicks()))); y += 21;
-        buttonList.add(new AlphaButton(SHOW_CPS, x, y, w, 18, label("SHOW LMB & RMB CPS", KeystrokesMod.isShowCps()))); y += 21;
-        buttonList.add(new AlphaButton(SHOW_SPACE, x, y, w, 18, label("SHOW SPACE BAR", KeystrokesMod.isShowSpaceBar()))); y += 21;
-        buttonList.add(new AlphaButton(SHOW_MOVEMENT, x, y, w, 18, label("SHOW MOVEMENT KEYS", KeystrokesMod.isShowMovementKeys()))); y += 21;
-        buttonList.add(new AlphaButton(ARROWS, x, y, w, 18, label("REPLACE NAMES WITH ARROWS", KeystrokesMod.isUseArrows()))); y += 21;
-        buttonList.add(new AlphaButton(BORDER, x, y, w, 18, label("OUTER BORDER", KeystrokesMod.isBorder()))); y += 21;
-        buttonList.add(new AlphaButton(INNER_BORDER, x, y, w, 18, label("INNER BORDER", KeystrokesMod.isInnerBorder()))); y += 21;
-        buttonList.add(new AlphaButton(SHADOW, x, y, w, 18, label("TEXT SHADOW", KeystrokesMod.isTextShadow()))); y += 24;
-        buttonList.add(new AlphaButton(FADE_DOWN, x, y, 30, 18, "-"));
-        buttonList.add(new AlphaButton(FADE_UP, right - 44, y, 30, 18, "+")); y += 22;
-        buttonList.add(new AlphaButton(SIZE_DOWN, x, y, 30, 18, "-"));
-        buttonList.add(new AlphaButton(SIZE_UP, right - 44, y, 30, 18, "+")); y += 22;
-        buttonList.add(new AlphaButton(BORDER_DOWN, x, y, 30, 18, "-"));
-        buttonList.add(new AlphaButton(BORDER_UP, right - 44, y, 30, 18, "+"));
+        int colW = (right - left - 38) / 2;
+        int x1 = left + 12, x2 = left + 26 + colW;
+        int[] ids = {SHOW_CLICKS, SHOW_CPS, SHOW_SPACE, SHOW_MOVEMENT, ARROWS, BORDER, INNER_BORDER, SHADOW};
+        String[] names = {"SHOW CLICKS", "SHOW LMB & RMB CPS", "SHOW SPACE BAR", "SHOW MOVEMENT KEYS",
+                "REPLACE NAMES WITH ARROWS", "OUTER BORDER", "INNER BORDER", "TEXT SHADOW"};
+        boolean[] states = {KeystrokesMod.isShowClicks(), KeystrokesMod.isShowCps(), KeystrokesMod.isShowSpaceBar(),
+                KeystrokesMod.isShowMovementKeys(), KeystrokesMod.isUseArrows(), KeystrokesMod.isBorder(),
+                KeystrokesMod.isInnerBorder(), KeystrokesMod.isTextShadow()};
+        for (int i = 0; i < ids.length; i++) {
+            int x = (i % 2 == 0) ? x1 : x2;
+            int y = top + 50 + (i / 2) * 23;
+            buttonList.add(new AlphaButton(ids[i], x, y, colW, 19, label(names[i], states[i])));
+        }
+        int y = top + 151;
+        buttonList.add(new AlphaButton(FADE_DOWN, x1, y, 30, 18, "-"));
+        buttonList.add(new AlphaButton(FADE_UP, right - 42, y, 30, 18, "+")); y += 28;
+        buttonList.add(new AlphaButton(SIZE_DOWN, x1, y, 30, 18, "-"));
+        buttonList.add(new AlphaButton(SIZE_UP, right - 42, y, 30, 18, "+")); y += 28;
+        buttonList.add(new AlphaButton(BORDER_DOWN, x1, y, 30, 18, "-"));
+        buttonList.add(new AlphaButton(BORDER_UP, right - 42, y, 30, 18, "+"));
         buttonList.add(new AlphaButton(BACK, left + 12, bottom - 25, 72, 18, "BACK"));
     }
 
@@ -52,10 +57,10 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
         drawRect(left, top, right, top + 2, 0xFFFFC83D);
         drawCenteredString(fontRendererObj, "KEYSTROKES SETTINGS", width / 2, top + 12, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "AlphaClient color palette", width / 2, top + 28, 0xFFB8BDC8);
-        int x = left + 50, y = top + 239;
-        drawString(fontRendererObj, "KEY FADE DELAY: " + KeystrokesMod.getFadeDelay() + " ms", x, y, 0xFFF3F4F6);
-        drawString(fontRendererObj, "BOX SIZE: " + KeystrokesMod.getBoxSize(), x, y + 22, 0xFFF3F4F6);
-        drawString(fontRendererObj, "BORDER THICKNESS: " + KeystrokesMod.getBorderThickness(), x, y + 44, 0xFFF3F4F6);
+        int x = left + 50, y = top + 155;
+        drawCenteredString(fontRendererObj, "KEY FADE DELAY: " + KeystrokesMod.getFadeDelay() + " ms", width / 2, y + 4, 0xFFF3F4F6);
+        drawCenteredString(fontRendererObj, "BOX SIZE: " + KeystrokesMod.getBoxSize(), width / 2, y + 32, 0xFFF3F4F6);
+        drawCenteredString(fontRendererObj, "BORDER THICKNESS: " + KeystrokesMod.getBorderThickness(), width / 2, y + 60, 0xFFF3F4F6);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
