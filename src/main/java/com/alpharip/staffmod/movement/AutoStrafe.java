@@ -15,8 +15,8 @@ import org.lwjgl.input.Mouse;
 /**
  * Founder-only movement assistance that strafes around the nearest visible player.
  *
- * Holding W activates the module. AutoStrafe keeps forward movement active and
- * adds exactly one configured lateral input (A or D). It never synthesizes S.
+ * Holding W activates the module. Forward movement remains active throughout;
+ * short A/D bursts alternate on a deterministic cycle. AutoStrafe never synthesizes S.
  * A physical S press immediately returns movement control to the player.
  *
  * Forge 1.8.9 has no InputUpdateEvent, so this uses the client PlayerTickEvent
@@ -24,8 +24,15 @@ import org.lwjgl.input.Mouse;
  * whenever AutoStrafe cannot take control.
  */
 public final class AutoStrafe {
+    // 8 forward-only ticks, 2 left-strafe ticks, 8 forward-only ticks, 2 right-strafe ticks.
+    // At 20 client ticks per second this keeps forward movement dominant.
+    private static final int FORWARD_TICKS = 8;
+    private static final int STRAFE_TICKS = 2;
+    private static final int CYCLE_TICKS = (FORWARD_TICKS + STRAFE_TICKS) * 2;
+
     private boolean controllingMovement;
     private boolean lastForward, lastBack, lastLeft, lastRight;
+    private int strafeCycleTick;
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -45,12 +52,14 @@ public final class AutoStrafe {
 
         // A manually pressed S always takes priority. AutoStrafe never presses it.
         if (physicalBack) {
+            resetStrafeCycle();
             restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
         }
 
         // Preserve intentional key changes made by other modules such as W-Tap.
         if (hasExternalMovementOverride(mc, physicalForward, physicalBack, physicalLeft, physicalRight)) {
+            resetStrafeCycle();
             controllingMovement = false;
             return;
         }
@@ -59,20 +68,24 @@ public final class AutoStrafe {
         if (mc.currentScreen != null || !SupabaseCommunityService.isSignedInFounder()
                 || module == null || !module.isImplemented()
                 || !module.isUnlocked() || !module.isEnabled() || !physicalForward) {
+            resetStrafeCycle();
             restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
         }
 
         EntityPlayer target = findTarget(mc);
         if (target == null) {
+            resetStrafeCycle();
             restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
         }
 
-        // Direction is explicit and stable: no random side selection or orbit-vector
-        // conversion that can unexpectedly turn the requested input into S.
-        boolean strafeLeft = AutoStrafeSettings.getDirection() == AutoStrafeSettings.Direction.LEFT;
-        applyMovementKeys(mc, strafeLeft);
+        int phase = strafeCycleTick % CYCLE_TICKS;
+        boolean strafeLeft = phase >= FORWARD_TICKS
+                && phase < FORWARD_TICKS + STRAFE_TICKS;
+        boolean strafeRight = phase >= FORWARD_TICKS * 2 + STRAFE_TICKS;
+        applyMovementKeys(mc, strafeLeft, strafeRight);
+        strafeCycleTick = (strafeCycleTick + 1) % CYCLE_TICKS;
     }
 
     private EntityPlayer findTarget(Minecraft mc) {
@@ -110,16 +123,16 @@ public final class AutoStrafe {
         return controllingMovement ? current != lastApplied && current != physical : current != physical;
     }
 
-    private void applyMovementKeys(Minecraft mc, boolean strafeLeft) {
+    private void applyMovementKeys(Minecraft mc, boolean strafeLeft, boolean strafeRight) {
         setKey(mc.gameSettings.keyBindForward, true);
         setKey(mc.gameSettings.keyBindBack, false);
         setKey(mc.gameSettings.keyBindLeft, strafeLeft);
-        setKey(mc.gameSettings.keyBindRight, !strafeLeft);
+        setKey(mc.gameSettings.keyBindRight, strafeRight);
 
         lastForward = true;
         lastBack = false;
         lastLeft = strafeLeft;
-        lastRight = !strafeLeft;
+        lastRight = strafeRight;
         controllingMovement = true;
     }
 
@@ -131,6 +144,10 @@ public final class AutoStrafe {
         setKey(mc.gameSettings.keyBindLeft, left);
         setKey(mc.gameSettings.keyBindRight, right);
         controllingMovement = false;
+    }
+
+    private void resetStrafeCycle() {
+        strafeCycleTick = 0;
     }
 
     private boolean isPhysicalKeyDown(KeyBinding binding) {
