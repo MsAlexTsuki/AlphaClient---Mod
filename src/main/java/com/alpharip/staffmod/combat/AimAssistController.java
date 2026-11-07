@@ -45,8 +45,6 @@ public final class AimAssistController {
         float[] delta = calculator.calculate(mc.thePlayer.posX,
                 mc.thePlayer.posY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ,
                 mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, targetX, targetY, targetZ);
-        if (Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1])
-                > AimAssistSettings.getMaximumAngleDegrees()) return;
 
         float baseSpeed = AimAssistSettings.getCorrectionSpeed() / 100.0F;
         float yawSpeed = baseSpeed * AimAssistSettings.getHorizontalSpeed() / 10.0F;
