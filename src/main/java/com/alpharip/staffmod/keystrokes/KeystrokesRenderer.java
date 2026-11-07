@@ -17,7 +17,6 @@ public final class KeystrokesRenderer {
         if (KeystrokesSettings.showMovement()) height += 42;
         if (KeystrokesSettings.showMouse()) height += 34;
         if (KeystrokesSettings.showSpace()) height += 20;
-        if (height > 0) height -= 2;
         return height;
     }
 
