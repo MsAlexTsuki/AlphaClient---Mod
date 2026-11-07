@@ -1,7 +1,7 @@
 package com.alpharip.staffmod.singleplayer.privatevault;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.inventory.GuiChest;
+import com.alpharip.alphaclient.AlphaClient;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -57,7 +57,7 @@ public final class AlphaPrivateVaultCommand extends CommandBase {
         try {
             final AlphaPrivateVaultManager manager = AlphaPrivateVaultManager.getInstance();
             final AlphaPrivateVaultInventory inventory = manager.loadVault(vaultNumber);
-            mc.displayGuiScreen(new AlphaPrivateVaultScreen(vaultNumber, inventory, null));
+            AlphaClient.openGuiFromCommand(new AlphaPrivateVaultScreen(vaultNumber, inventory, null));
         } catch (Exception failure) {
             reply(sender, "Could not open vault " + vaultNumber + ": "
                     + (failure.getMessage() == null ? "unknown storage error" : failure.getMessage()));
