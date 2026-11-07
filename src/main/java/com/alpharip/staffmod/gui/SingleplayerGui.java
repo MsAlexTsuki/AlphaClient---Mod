@@ -5,6 +5,7 @@ import com.alpharip.staffmod.singleplayer.worldedit.WorldEditGui;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolGui;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolSettings;
 import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesGui;
+import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultsGui;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
@@ -16,6 +17,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
     private static final int WORLD_EDIT = 2;
     private static final int AUTO_TOOL = 3;
     private static final int ALPHA_HOMES = 4;
+    private static final int PRIVATE_VAULTS = 5;
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
@@ -48,7 +50,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         panelBottom = Math.min(height - 12, panelTop + 300);
 
         int gap = 8;
-        int columns = 3;
+        int columns = 4;
         tileWidth = (panelRight - panelLeft - 24 - gap * (columns - 1)) / columns;
         int tileHeight = 36;
         int tileY = panelTop + 68;
@@ -66,6 +68,8 @@ public final class SingleplayerGui extends AlphaGuiScreen {
                 AutoToolSettings.isEnabled()));
         buttonList.add(new AlphaButton(ALPHA_HOMES, firstTileX + (tileWidth + gap) * 2, tileY,
                 tileWidth, tileHeight, "AlphaHomes"));
+        buttonList.add(new AlphaButton(PRIVATE_VAULTS, firstTileX + (tileWidth + gap) * 3, tileY,
+                tileWidth, tileHeight, "Private Vaults"));
     }
 
     @Override
@@ -92,6 +96,10 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         } else if (button.id == ALPHA_HOMES) {
             if (hasActiveSingleplayerWorld()) {
                 mc.displayGuiScreen(new AlphaHomesGui(this));
+            }
+        } else if (button.id == PRIVATE_VAULTS) {
+            if (hasActiveSingleplayerWorld()) {
+                mc.displayGuiScreen(new AlphaPrivateVaultsGui(this));
             }
         }
     }
