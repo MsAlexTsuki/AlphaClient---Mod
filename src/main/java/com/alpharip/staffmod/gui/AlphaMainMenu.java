@@ -49,14 +49,14 @@ public final class AlphaMainMenu extends AlphaGuiScreen {
         compactLayout = width < 900 || height < 540;
         buttonWidth = Math.min(compactLayout ? 280 : 320, Math.max(180, width - 48));
         buttonHeight = height < 360 ? 22 : height < 420 ? 26 : 32;
-        buttonGap = height < 360 ? 3 : height < 420 ? 5 : 8;
+        buttonGap = height < 360 ? 2 : height < 420 ? 3 : 5;
 
         int menuHeight = 5 * buttonHeight + 4 * buttonGap;
         int logoWidth = getLogoWidth();
         int logoHeight = logoWidth * 448 / 512;
         int logoBottom = Math.max(8, height / 22) + logoHeight;
         int bottomMargin = height < 360 ? 18 : 34;
-        int logoGap = height < 360 ? 10 : 20;
+        int logoGap = height < 360 ? 8 : 12;
         int verticalBias = height < 360 ? 42 : 60;
         int preferredTop = Math.max(logoBottom + logoGap, (height - menuHeight) / 2 + verticalBias);
         menuTop = Math.min(preferredTop, Math.max(12, height - menuHeight - bottomMargin));
