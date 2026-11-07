@@ -38,7 +38,13 @@ public final class AlphaPrivateVaultManager {
             throw new IllegalStateException("A loaded singleplayer world is required.");
         }
 
-        File file = getVaultFile(mc, vaultNumber);
+        File file;
+        try {
+            file = getVaultFile(mc, vaultNumber);
+        } catch (IOException failure) {
+            throw new IllegalStateException("Could not locate this world's private vault storage: "
+                    + failure.getMessage(), failure);
+        }
         AlphaPrivateVaultInventory inventory = new AlphaPrivateVaultInventory(vaultNumber);
         if (!file.isFile()) {
             return inventory;
