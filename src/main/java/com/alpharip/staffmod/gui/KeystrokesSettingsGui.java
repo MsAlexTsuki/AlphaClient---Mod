@@ -57,7 +57,7 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
         drawRect(left, top, right, top + 2, 0xFFFFC83D);
         drawCenteredString(fontRendererObj, "KEYSTROKES SETTINGS", width / 2, top + 12, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "AlphaClient color palette", width / 2, top + 28, 0xFFB8BDC8);
-        int x = left + 50, y = top + 155;
+        int y = top + 155;
         drawCenteredString(fontRendererObj, "KEY FADE DELAY: " + KeystrokesMod.getFadeDelay() + " ms", width / 2, y + 4, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "BOX SIZE: " + KeystrokesMod.getBoxSize(), width / 2, y + 32, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "BORDER THICKNESS: " + KeystrokesMod.getBorderThickness(), width / 2, y + 60, 0xFFF3F4F6);
