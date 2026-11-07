@@ -10,9 +10,12 @@ import java.util.Properties;
 /** Local persistent appearance and visibility settings for the public Keystrokes HUD. */
 public final class KeystrokesSettings {
     private static final Properties VALUES = new Properties();
+    private static final int[] PALETTE = {
+        0xFFFFD866, 0xFF55FF55, 0xFF55FFFF, 0xFFFF5555, 0xFFFFFFFF, 0xFFAA55FF
+    };
     private static boolean loaded;
     private static int x = 8, y = 80, backgroundAlpha = 150;
-    private static int activeColor = 0xFFFFD866, inactiveColor = 0xFF343943, textColor = 0xFFFFFFFF;
+    private static int activeColor = PALETTE[0], inactiveColor = 0xFF343943, textColor = 0xFFFFFFFF;
     private static boolean background = true, rounded = true;
     private static boolean showMovement = true, showSpace = true, showMouse = true, showCps = true;
 
@@ -68,18 +71,28 @@ public final class KeystrokesSettings {
         finally { if (out != null) try { out.close(); } catch (Exception ignored) { } }
     }
 
-    public static int getX() { load(); return x; } public static int getY() { load(); return y; }
+    public static int getX() { load(); return x; }
+    public static int getY() { load(); return y; }
     public static void setPosition(int nx, int ny) { load(); x = Math.max(0, nx); y = Math.max(0, ny); save(); }
-    public static boolean hasBackground() { load(); return background; } public static void toggleBackground() { load(); background = !background; save(); }
+    public static boolean hasBackground() { load(); return background; }
+    public static void toggleBackground() { load(); background = !background; save(); }
     public static int getBackgroundAlpha() { load(); return backgroundAlpha; }
     public static void adjustBackgroundAlpha(int delta) { load(); backgroundAlpha = clamp(backgroundAlpha + delta, 0, 255); save(); }
-    public static boolean isRounded() { load(); return rounded; } public static void toggleRounded() { load(); rounded = !rounded; save(); }
-    public static int getActiveColor() { load(); return activeColor; } public static int getInactiveColor() { load(); return inactiveColor; } public static int getTextColor() { load(); return textColor; }
-    public static void cycleActiveColor() { load(); activeColor = next(activeColor); save(); }
-    public static void cycleInactiveColor() { load(); inactiveColor = next(inactiveColor); save(); }
-    public static void cycleTextColor() { load(); textColor = next(textColor); save(); }
-    private static int next(int color) { int[] colors = {0xFFFFD866,0xFF55FF55,0xFF55FFFF,0xFFFF5555,0xFFFFFFFF,0xFFAA55FF}; for(int i=0;i<colors.length;i++) if(colors[i]==color) return colors[(i+1)%colors.length]; return colors[0]; }
-    public static boolean showMovement() { load(); return showMovement; } public static boolean showSpace() { load(); return showSpace; } public static boolean showMouse() { load(); return showMouse; } public static boolean showCps() { load(); return showCps; }
-    public static void toggleMovement() { load(); showMovement=!showMovement; save(); } public static void toggleSpace() { load(); showSpace=!showSpace; save(); }
-    public static void toggleMouse() { load(); showMouse=!showMouse; save(); } public static void toggleCps() { load(); showCps=!showCps; save(); }
+    public static boolean isRounded() { load(); return rounded; }
+    public static void toggleRounded() { load(); rounded = !rounded; save(); }
+    public static int getActiveColor() { load(); return activeColor; }
+    public static int getInactiveColor() { load(); return inactiveColor; }
+    public static int getTextColor() { load(); return textColor; }
+    public static void setActiveColor(int color) { load(); activeColor = color; save(); }
+    public static void setInactiveColor(int color) { load(); inactiveColor = color; save(); }
+    public static void setTextColor(int color) { load(); textColor = color; save(); }
+    public static int[] getPalette() { return PALETTE.clone(); }
+    public static boolean showMovement() { load(); return showMovement; }
+    public static boolean showSpace() { load(); return showSpace; }
+    public static boolean showMouse() { load(); return showMouse; }
+    public static boolean showCps() { load(); return showCps; }
+    public static void toggleMovement() { load(); showMovement = !showMovement; save(); }
+    public static void toggleSpace() { load(); showSpace = !showSpace; save(); }
+    public static void toggleMouse() { load(); showMouse = !showMouse; save(); }
+    public static void toggleCps() { load(); showCps = !showCps; save(); }
 }
