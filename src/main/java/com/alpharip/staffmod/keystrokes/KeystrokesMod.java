@@ -183,12 +183,9 @@ public final class KeystrokesMod {
         int size = boxSize;
         int gap = Math.max(1, size / 9);
         int gridWidth = size * 3 + gap * 2;
-        int mouseHeight = size + 8;
+        int mouseHeight = getMouseHeight(size);
         int movementTop = showClicks ? mouseHeight + gap : 0;
         int spaceTop = movementTop + (showMovementKeys ? size * 2 + gap * 2 : 0);
-        int totalHeight = movementTop + (showMovementKeys ? size * 2 + gap : 0)
-                + (showSpaceBar ? ((showClicks || showMovementKeys) ? gap : 0) + Math.max(4, size / 2) : 0);
-        if (showClicks && showMovementKeys) totalHeight += gap;
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, 0.0F);
         GlStateManager.scale(renderScale, renderScale, 1.0F);
@@ -287,9 +284,13 @@ public final class KeystrokesMod {
         load(); int size = boxSize, gap = Math.max(1, size / 9);
         return size * 3 + gap * 2;
     }
+    private static int getMouseHeight(int size) {
+        return Math.max(size + 8, showCps ? 22 : size + 8);
+    }
+
     public static int getHudHeight() {
         load(); int size = boxSize, gap = Math.max(1, size / 9);
-        return (showClicks ? size + 8 : 0) + (showClicks && showMovementKeys ? gap : 0)
+        return (showClicks ? getMouseHeight(size) : 0) + (showClicks && showMovementKeys ? gap : 0)
                 + (showMovementKeys ? size * 2 + gap : 0)
                 + (showSpaceBar ? ((showClicks || showMovementKeys) ? gap : 0) + Math.max(4, size / 2) : 0);
     }
