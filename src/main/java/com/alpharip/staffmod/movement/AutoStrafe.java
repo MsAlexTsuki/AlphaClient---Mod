@@ -99,7 +99,7 @@ public final class AutoStrafe {
     private void updateStrafeSide(EntityPlayer player, EntityPlayer target) {
         double yawRadians = Math.toRadians(player.rotationYaw);
         double rightX = Math.cos(yawRadians);
-        double rightZ = -Math.sin(yawRadians);
+        double rightZ = Math.sin(yawRadians);
         double targetLateralVelocity =
                 (target.posX - target.prevPosX) * rightX
                 + (target.posZ - target.prevPosZ) * rightZ;
