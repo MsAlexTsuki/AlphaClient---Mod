@@ -113,10 +113,10 @@ public final class AutoStrafe {
         // Target clearly left of the crosshair: move left to recover the angle.
         // Target clearly right: move right. Inside the dead zone, keep the current
         // side so small aim fluctuations cannot cause rapid A/D switching.
-        if (relativeYaw >= TARGET_SIDE_SWITCH_ANGLE) {
+        if (relativeYaw >= TARGET_SIDE_SWITCH_ANGLE && !strafeLeft) {
             strafeLeft = true;
             strafeHoldTicks = 0;
-        } else if (relativeYaw <= -TARGET_SIDE_SWITCH_ANGLE) {
+        } else if (relativeYaw <= -TARGET_SIDE_SWITCH_ANGLE && strafeLeft) {
             strafeLeft = false;
             strafeHoldTicks = 0;
         }
