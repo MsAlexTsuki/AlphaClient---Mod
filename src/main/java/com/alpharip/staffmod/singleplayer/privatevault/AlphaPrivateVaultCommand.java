@@ -1,15 +1,17 @@
 package com.alpharip.staffmod.singleplayer.privatevault;
 
 import net.minecraft.client.Minecraft;
-import com.alpharip.alphaclient.AlphaClient;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.BlockPos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /** Opens numbered, world-local Alpha Private Vault inventories in singleplayer. */
 public final class AlphaPrivateVaultCommand extends CommandBase {
@@ -55,9 +57,24 @@ public final class AlphaPrivateVaultCommand extends CommandBase {
         }
 
         try {
-            final AlphaPrivateVaultManager manager = AlphaPrivateVaultManager.getInstance();
-            final AlphaPrivateVaultInventory inventory = manager.loadVault(vaultNumber);
-            AlphaClient.openGuiFromCommand(new AlphaPrivateVaultScreen(vaultNumber, inventory, null));
+            final AlphaPrivateVaultInventory inventory =
+                    AlphaPrivateVaultManager.getInstance().loadVault(vaultNumber);
+            final IntegratedServer server = mc.getIntegratedServer();
+            final UUID playerId = mc.thePlayer.getUniqueID();
+
+            // Open the inventory through the integrated server so vanilla
+            // ContainerChest handles clicks and synchronizes both inventories.
+            server.addScheduledTask(new Runnable() {
+                @Override
+                public void run() {
+                    EntityPlayerMP serverPlayer =
+                            server.getConfigurationManager().getPlayerByUUID(playerId);
+                    if (serverPlayer == null) {
+                        return;
+                    }
+                    serverPlayer.displayGUIChest(inventory);
+                }
+            });
         } catch (Exception failure) {
             reply(sender, "Could not open vault " + vaultNumber + ": "
                     + (failure.getMessage() == null ? "unknown storage error" : failure.getMessage()));
