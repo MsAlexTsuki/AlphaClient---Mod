@@ -70,6 +70,9 @@ public final class KeystrokesRenderer {
     private static void roundedRect(float left, float top, float right, float bottom, float radius, int color) {
         float a = ((color >> 24) & 255) / 255F, r = ((color >> 16) & 255) / 255F;
         float g = ((color >> 8) & 255) / 255F, b = (color & 255) / 255F;
+        GlStateManager.disableTexture2D();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GL11.glColor4f(r, g, b, a);
         GL11.glBegin(GL11.GL_TRIANGLE_FAN);
         GL11.glVertex2f((left + right) / 2F, (top + bottom) / 2F);
@@ -83,5 +86,7 @@ public final class KeystrokesRenderer {
         }
         GL11.glEnd();
         GL11.glColor4f(1F,1F,1F,1F);
+        GlStateManager.disableBlend();
+        GlStateManager.enableTexture2D();
     }
 }
