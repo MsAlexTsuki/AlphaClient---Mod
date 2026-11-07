@@ -56,7 +56,7 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
                 panelWidth - 32, 20, "DIRECTION: " + AutoStrafeSettings.getDirection().name());
         directionButton.enabled = settingsEnabled;
         buttonList.add(directionButton);
-        addStepper(SPEED_DOWN, SPEED_UP, "SPEED: " + AutoStrafeSettings.getSpeed() + "%", top + 112, settingsEnabled);
+        addStepper(SPEED_DOWN, SPEED_UP, "STRAFE STRENGTH: " + AutoStrafeSettings.getSpeed() + "%", top + 112, settingsEnabled);
         addStepper(DISTANCE_DOWN, DISTANCE_UP,
                 "ORBIT DISTANCE: " + format(AutoStrafeSettings.getOrbitDistance()) + " blocks", top + 142, settingsEnabled);
         addStepper(RANGE_DOWN, RANGE_UP,
