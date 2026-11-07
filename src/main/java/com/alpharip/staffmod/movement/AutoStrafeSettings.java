@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 
 /** Persistent, validated settings for the Founder-only AutoStrafe module. */
 public final class AutoStrafeSettings {
-    private static final double DEFAULT_TARGET_RANGE = 6.0D;
+    private static final double DEFAULT_TARGET_RANGE = 4.0D;
 
     private static double targetRange = DEFAULT_TARGET_RANGE;
 
@@ -15,7 +15,7 @@ public final class AutoStrafeSettings {
     public static synchronized double getTargetRange() { return targetRange; }
 
     public static synchronized void setTargetRange(double value) {
-        targetRange = clamp(value, 3.0D, 8.0D);
+        targetRange = clamp(value, 3.0D, 4.0D);
         save();
     }
 
@@ -32,7 +32,7 @@ public final class AutoStrafeSettings {
 
     public static synchronized void loadFromJson(JsonObject json) {
         if (json == null) return;
-        targetRange = readDouble(json, "targetRange", DEFAULT_TARGET_RANGE, 3.0D, 8.0D);
+        targetRange = readDouble(json, "targetRange", DEFAULT_TARGET_RANGE, 3.0D, 4.0D);
     }
 
     private static void save() { AlphaClientConfig.save(); }
