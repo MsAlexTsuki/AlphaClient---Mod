@@ -130,7 +130,7 @@ public final class AlphaModule {
         }
 
         // Armor HUD, Potion HUD and CPS remain public.
-        if ("armor-hud-info".equals(id) || "potion-hud-info".equals(id) || "cps".equals(id) || "keystrokes".equals(id)) {
+        if ("armor-hud-info".equals(id) || "potion-hud-info".equals(id) || "cps".equals(id)) {
             return true;
         }
 
