@@ -11,7 +11,7 @@ import java.util.Properties;
 public final class KeystrokesSettings {
     private static final Properties VALUES = new Properties();
     private static final int[] PALETTE = {
-        0xFFFFD866, 0xFF55FF55, 0xFF55FFFF, 0xFFFF5555, 0xFFFFFFFF, 0xFFAA55FF
+        0xFFFFD866, 0xFF55FF55, 0xFF55FFFF, 0xFFFF5555, 0xFFFFFFFF, 0xFFAA55FF, 0xFF343943
     };
     private static boolean loaded;
     private static int x = 8, y = 80, backgroundAlpha = 150;
