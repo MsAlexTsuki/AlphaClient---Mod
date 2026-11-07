@@ -43,7 +43,7 @@ public final class KeystrokesColorSettingsGui extends AlphaGuiScreen {
         };
         for (int i = 0; i < fields.length; i++) {
             fields[i] = new GuiTextField(i, fontRendererObj, left + 150, top + 49 + i * 31, 128, 19);
-            fields[i].setMaxStringLength(8);
+            fields[i].setMaxStringLength(9);
             fields[i].setText(String.format("%08X", colors[i]));
         }
         buttonList.add(new AlphaButton(SAVE, left + 12, top + 225, 125, 20, "SAVE COLORS"));
@@ -105,7 +105,8 @@ public final class KeystrokesColorSettingsGui extends AlphaGuiScreen {
             for (int i = 0; i < fields.length; i++) {
                 String value = fields[i].getText().trim();
                 if (value.startsWith("#")) value = value.substring(1);
-                if (value.length() != 8) return;
+                if (value.length() == 6) value = "FF" + value;
+                if (value.length() != 8 || !value.matches("[0-9A-Fa-f]{8}")) return;
                 parsed[i] = (int) Long.parseLong(value, 16);
             }
             for (int i = 0; i < keys.length; i++) KeystrokesMod.setColor(keys[i], parsed[i]);
