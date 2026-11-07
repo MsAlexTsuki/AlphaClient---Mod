@@ -10,7 +10,7 @@ import java.io.IOException;
 public final class KeystrokesSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int SHOW_CLICKS = 10, SHOW_CPS = 11, SHOW_SPACE = 12, SHOW_MOVEMENT = 13;
-    private static final int ARROWS = 14, BORDER = 15, INNER_BORDER = 16, SHADOW = 17;
+    private static final int ARROWS = 14, BORDER = 15, SHADOW = 17, COLORS = 26;
     private static final int FADE_DOWN = 20, FADE_UP = 21, SIZE_DOWN = 22, SIZE_UP = 23;
     private static final int BORDER_DOWN = 24, BORDER_UP = 25;
     private final GuiScreen parent;
@@ -27,12 +27,11 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
         bottom = Math.min(height - 8, top + 290);
         int colW = (right - left - 38) / 2;
         int x1 = left + 12, x2 = left + 26 + colW;
-        int[] ids = {SHOW_CLICKS, SHOW_CPS, SHOW_SPACE, SHOW_MOVEMENT, ARROWS, BORDER, INNER_BORDER, SHADOW};
+        int[] ids = {SHOW_CLICKS, SHOW_CPS, SHOW_SPACE, SHOW_MOVEMENT, ARROWS, BORDER, SHADOW};
         String[] names = {"SHOW CLICKS", "SHOW LMB/RMB CPS", "SHOW SPACE BAR", "SHOW MOVEMENT KEYS",
-                "REPLACE WITH ARROWS", "OUTER BORDER", "INNER BORDER", "TEXT SHADOW"};
+                "REPLACE WITH ARROWS", "OUTER BORDER", "TEXT SHADOW"};
         boolean[] states = {KeystrokesMod.isShowClicks(), KeystrokesMod.isShowCps(), KeystrokesMod.isShowSpaceBar(),
-                KeystrokesMod.isShowMovementKeys(), KeystrokesMod.isUseArrows(), KeystrokesMod.isBorder(),
-                KeystrokesMod.isInnerBorder(), KeystrokesMod.isTextShadow()};
+                KeystrokesMod.isShowMovementKeys(), KeystrokesMod.isUseArrows(), KeystrokesMod.isBorder(), KeystrokesMod.isTextShadow()};
         for (int i = 0; i < ids.length; i++) {
             int x = (i % 2 == 0) ? x1 : x2;
             int y = top + 50 + (i / 2) * 23;
@@ -45,6 +44,7 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(SIZE_UP, right - 42, y, 30, 18, "+")); y += 28;
         buttonList.add(new AlphaButton(BORDER_DOWN, x1, y, 30, 18, "-"));
         buttonList.add(new AlphaButton(BORDER_UP, right - 42, y, 30, 18, "+"));
+        buttonList.add(new AlphaButton(COLORS, left + 12, top + 235, right - left - 24, 18, "CUSTOMIZE COLORS"));
         buttonList.add(new AlphaButton(BACK, left + 12, bottom - 25, 72, 18, "BACK"));
     }
 
@@ -75,7 +75,7 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
             case SHOW_MOVEMENT: KeystrokesMod.setShowMovementKeys(!KeystrokesMod.isShowMovementKeys()); break;
             case ARROWS: KeystrokesMod.setUseArrows(!KeystrokesMod.isUseArrows()); break;
             case BORDER: KeystrokesMod.setBorder(!KeystrokesMod.isBorder()); break;
-            case INNER_BORDER: KeystrokesMod.setInnerBorder(!KeystrokesMod.isInnerBorder()); break;
+            case COLORS: mc.displayGuiScreen(new KeystrokesColorSettingsGui(this)); return;
             case SHADOW: KeystrokesMod.setTextShadow(!KeystrokesMod.isTextShadow()); break;
             case FADE_DOWN: KeystrokesMod.adjustFadeDelay(-25); break;
             case FADE_UP: KeystrokesMod.adjustFadeDelay(25); break;
