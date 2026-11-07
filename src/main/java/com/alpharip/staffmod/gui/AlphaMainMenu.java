@@ -28,7 +28,7 @@ public final class AlphaMainMenu extends AlphaGuiScreen {
 
     private static final int ACCENT = 0xFFFFD866;
     private static final ResourceLocation ALPHA_LOGO =
-            new ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
+            new ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
 
     private static final int SNOW_COUNT = 150;
     private final Snowflake[] snowflakes = new Snowflake[SNOW_COUNT];
@@ -142,10 +142,6 @@ public final class AlphaMainMenu extends AlphaGuiScreen {
                 logoWidth, logoHeight, 512.0F, 448.0F);
         GlStateManager.disableBlend();
 
-        drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2,
-                logoY + logoHeight + 2, 0xFFFFF4D2);
-        drawCenteredString(fontRendererObj, "MINECRAFT 1.8.9  /  FORGE",
-                width / 2, logoY + logoHeight + 14, ACCENT);
     }
 
     private void drawAlphaBackground() {
