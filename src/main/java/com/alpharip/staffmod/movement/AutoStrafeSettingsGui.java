@@ -15,8 +15,6 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
     private static final int BACK = 1;
     private static final int ENABLED = 10;
     private static final int DIRECTION = 11;
-    private static final int SPEED_DOWN = 12, SPEED_UP = 13;
-    private static final int DISTANCE_DOWN = 14, DISTANCE_UP = 15;
     private static final int RANGE_DOWN = 16, RANGE_UP = 17;
     private static final int RESET = 18;
 
@@ -45,44 +43,41 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
         }
 
         panelWidth = Math.min(360, width - 16);
-        panelHeight = Math.min(260, height - 16);
+        panelHeight = Math.min(220, height - 16);
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
 
         boolean settingsEnabled = module.isConfiguredEnabled();
         buttonList.add(new AlphaButton(ENABLED, width / 2 - 90, top + 48, 180, 20,
                 "AUTOSTRAFE: " + (settingsEnabled ? "ON" : "OFF")));
-        AlphaButton directionButton = new AlphaButton(DIRECTION, left + 16, top + 84,
-                panelWidth - 32, 20, "DIRECTION: " + AutoStrafeSettings.getDirection().name());
+
+        AlphaButton directionButton = new AlphaButton(DIRECTION, left + 16, top + 82,
+                panelWidth - 32, 20, "STRAFE DIRECTION: " + AutoStrafeSettings.getDirection().name());
         directionButton.enabled = settingsEnabled;
         buttonList.add(directionButton);
-        addStepper(SPEED_DOWN, SPEED_UP, "STRAFE STRENGTH: " + AutoStrafeSettings.getSpeed() + "%", top + 112, settingsEnabled);
-        addStepper(DISTANCE_DOWN, DISTANCE_UP,
-                "ORBIT DISTANCE: " + format(AutoStrafeSettings.getOrbitDistance()) + " blocks", top + 142, settingsEnabled);
-        addStepper(RANGE_DOWN, RANGE_UP,
-                "TARGET RANGE: " + format(AutoStrafeSettings.getTargetRange()) + " blocks", top + 172, settingsEnabled);
 
-        AlphaButton resetButton = new AlphaButton(RESET, left + 16, top + panelHeight - 30, 112, 18, "RESET DEFAULTS");
+        int center = width / 2;
+        AlphaButton rangeDown = new AlphaButton(RANGE_DOWN, center - 142, top + 112, 24, 20, "-");
+        AlphaButton rangeValue = new AlphaButton(1016, center - 114, top + 112, 228, 20,
+                "TARGET RANGE: " + format(AutoStrafeSettings.getTargetRange()) + " blocks");
+        AlphaButton rangeUp = new AlphaButton(RANGE_UP, center + 118, top + 112, 24, 20, "+");
+        rangeDown.enabled = settingsEnabled;
+        rangeValue.enabled = settingsEnabled;
+        rangeUp.enabled = settingsEnabled;
+        buttonList.add(rangeDown);
+        buttonList.add(rangeValue);
+        buttonList.add(rangeUp);
+
+        AlphaButton resetButton = new AlphaButton(RESET, left + 16, top + panelHeight - 30,
+                112, 18, "RESET DEFAULTS");
         resetButton.enabled = settingsEnabled;
         buttonList.add(resetButton);
-        buttonList.add(new AlphaButton(BACK, left + panelWidth - 92, top + panelHeight - 30, 76, 18, "BACK"));
-    }
-
-    private void addStepper(int downId, int upId, String label, int y, boolean enabled) {
-        int center = width / 2;
-        AlphaButton down = new AlphaButton(downId, center - 142, y, 24, 20, "-");
-        AlphaButton value = new AlphaButton(1000 + downId, center - 114, y, 228, 20, label);
-        AlphaButton up = new AlphaButton(upId, center + 118, y, 24, 20, "+");
-        down.enabled = enabled;
-        value.enabled = enabled;
-        up.enabled = enabled;
-        buttonList.add(down);
-        buttonList.add(value);
-        buttonList.add(up);
+        buttonList.add(new AlphaButton(BACK, left + panelWidth - 92,
+                top + panelHeight - 30, 76, 18, "BACK"));
     }
 
     private String format(double value) {
-        return String.format(java.util.Locale.ROOT, "%.2f", value);
+        return String.format(java.util.Locale.ROOT, "%.1f", value);
     }
 
     @Override
@@ -110,18 +105,6 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
             case DIRECTION:
                 AutoStrafeSettings.cycleDirection();
                 break;
-            case SPEED_DOWN:
-                AutoStrafeSettings.setSpeed(AutoStrafeSettings.getSpeed() - 5);
-                break;
-            case SPEED_UP:
-                AutoStrafeSettings.setSpeed(AutoStrafeSettings.getSpeed() + 5);
-                break;
-            case DISTANCE_DOWN:
-                AutoStrafeSettings.setOrbitDistance(AutoStrafeSettings.getOrbitDistance() - 0.25D);
-                break;
-            case DISTANCE_UP:
-                AutoStrafeSettings.setOrbitDistance(AutoStrafeSettings.getOrbitDistance() + 0.25D);
-                break;
             case RANGE_DOWN:
                 AutoStrafeSettings.setTargetRange(AutoStrafeSettings.getTargetRange() - 0.5D);
                 break;
@@ -144,10 +127,10 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
         drawRect(left, top, left + panelWidth, top + 2, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "AUTOSTRAFE", width / 2, top + 12, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "FOUNDER SETTINGS", width / 2, top + 27, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Steers around the nearest visible player while you move.",
-                width / 2, top + 207, 0xFFF0F1F4);
-        drawCenteredString(fontRendererObj, "Settings are saved automatically.",
-                width / 2, top + 220, 0xFFB8BDC8);
+        drawCenteredString(fontRendererObj, "Uses W + the selected A/D direction near a visible player.",
+                width / 2, top + 151, 0xFFF0F1F4);
+        drawCenteredString(fontRendererObj, "Pressing S manually always overrides AutoStrafe.",
+                width / 2, top + 164, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
