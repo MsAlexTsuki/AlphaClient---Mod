@@ -7,7 +7,6 @@ import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
 import com.alpharip.staffmod.ComboCounter.ComboCounterSettingsGui;
-import com.alpharip.staffmod.movement.AutoStrafeSettingsGui;
 import com.alpharip.staffmod.founderfun.PixelGardenGUI;
 import com.alpharip.staffmod.waypoints.WaypointsGui;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
@@ -605,7 +604,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     }
                     if ("w-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new WTapSettingsGui(this)); return; }
                     if ("s-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new STapSettingsGui(this)); return; }
-                    if ("auto-strafe".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new AutoStrafeSettingsGui(this)); return; }
                     if ("legacy-pvp".equals(clickedModule.getId())
                             && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         mc.displayGuiScreen(new LegacyPvpSettingsGui(this));
