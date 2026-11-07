@@ -6,52 +6,33 @@ import com.google.gson.JsonObject;
 
 /** Persistent, validated settings for the Founder-only AutoStrafe module. */
 public final class AutoStrafeSettings {
-    public enum Direction {
-        LEFT, RIGHT
-    }
-
     private static final double DEFAULT_TARGET_RANGE = 6.0D;
 
     private static double targetRange = DEFAULT_TARGET_RANGE;
-    private static Direction direction = Direction.LEFT;
 
     private AutoStrafeSettings() { }
 
     public static synchronized double getTargetRange() { return targetRange; }
-    public static synchronized Direction getDirection() { return direction; }
 
     public static synchronized void setTargetRange(double value) {
         targetRange = clamp(value, 3.0D, 8.0D);
         save();
     }
 
-    public static synchronized void cycleDirection() {
-        direction = direction == Direction.LEFT ? Direction.RIGHT : Direction.LEFT;
-        save();
-    }
-
     public static synchronized void reset() {
         targetRange = DEFAULT_TARGET_RANGE;
-        direction = Direction.LEFT;
         save();
     }
 
     public static synchronized JsonObject toJson() {
         JsonObject json = new JsonObject();
         json.addProperty("targetRange", targetRange);
-        json.addProperty("direction", direction.name());
         return json;
     }
 
     public static synchronized void loadFromJson(JsonObject json) {
         if (json == null) return;
         targetRange = readDouble(json, "targetRange", DEFAULT_TARGET_RANGE, 3.0D, 8.0D);
-        try {
-            direction = json.has("direction")
-                    ? Direction.valueOf(json.get("direction").getAsString()) : Direction.LEFT;
-        } catch (Exception ignored) {
-            direction = Direction.LEFT;
-        }
     }
 
     private static void save() { AlphaClientConfig.save(); }
