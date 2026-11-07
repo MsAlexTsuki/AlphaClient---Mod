@@ -232,7 +232,7 @@ public final class KeystrokesMod {
             if (showClicks) top += mouseHeight + (showMovementKeys ? gap : 0) + gap;
             else if (showMovementKeys) top += gap;
             int height = Math.max(4, size / 2);
-            drawKey(mc, 0, top, gridWidth, height, "SPACE",
+            drawKey(mc, 0, top, gridWidth, height, "",
                     pressedAlpha(mc.gameSettings.keyBindJump.isKeyDown(), spacePressedAt), -1);
         }
         GlStateManager.popMatrix();
