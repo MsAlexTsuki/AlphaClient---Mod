@@ -193,7 +193,7 @@ public class HudEditorGui extends AlphaGuiScreen {
     }
 
     private int KeystrokesRendererWidth() { return KeystrokesRenderer.BASE_WIDTH; }
-    private int KeystrokesRendererHeight() { return KeystrokesRenderer.BASE_HEIGHT; }
+    private int KeystrokesRendererHeight() { return KeystrokesRenderer.getRenderedHeight(); }
 
     private void drawScaleHandle(int x, int y, int w, int h) {
         int right = x + Math.max(2, w);
@@ -238,7 +238,7 @@ public class HudEditorGui extends AlphaGuiScreen {
             if (isPingModuleEnabled() && scaleHandleHit(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "ping"; beginScale("ping", mouseY); return; }
             if (KeystrokesMod.isEnabled() && scaleHandleHit(KeystrokesSettings.getX(), KeystrokesSettings.getY(),
                     (int)(KeystrokesRenderer.BASE_WIDTH * HudScaleConfig.get("keystrokes")),
-                    (int)(KeystrokesRenderer.BASE_HEIGHT * HudScaleConfig.get("keystrokes")), mouseX, mouseY)) {
+                    (int)(KeystrokesRenderer.getRenderedHeight() * HudScaleConfig.get("keystrokes")), mouseX, mouseY)) {
                 selectedHud = "keystrokes"; beginScale("keystrokes", mouseY); return;
             }
             if (isCpsModuleEnabled() && scaleHandleHit(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "cps"; beginScale("cps", mouseY); return; }
@@ -324,7 +324,7 @@ public class HudEditorGui extends AlphaGuiScreen {
 
         int kx = KeystrokesSettings.getX(), ky = KeystrokesSettings.getY();
         int kw = (int)(KeystrokesRenderer.BASE_WIDTH * HudScaleConfig.get("keystrokes"));
-        int kh = (int)(KeystrokesRenderer.BASE_HEIGHT * HudScaleConfig.get("keystrokes"));
+        int kh = (int)(KeystrokesRenderer.getRenderedHeight() * HudScaleConfig.get("keystrokes"));
         if (KeystrokesMod.isEnabled() && mouseButton == 0 && mouseX >= kx - 2 && mouseX <= kx + kw + 2
                 && mouseY >= ky - 2 && mouseY <= ky + kh + 2) {
             dragging = true; keystrokesDragging = true; dragX = mouseX - kx; dragY = mouseY - ky;
@@ -426,7 +426,7 @@ public class HudEditorGui extends AlphaGuiScreen {
                 PingMod.setHudPosition(x, y);
             } else if (keystrokesDragging) {
                 int itemWidth = (int)(KeystrokesRenderer.BASE_WIDTH * HudScaleConfig.get("keystrokes"));
-                int itemHeight = (int)(KeystrokesRenderer.BASE_HEIGHT * HudScaleConfig.get("keystrokes"));
+                int itemHeight = (int)(KeystrokesRenderer.getRenderedHeight() * HudScaleConfig.get("keystrokes"));
                 x = Math.max(0, Math.min(width - itemWidth, x));
                 y = Math.max(0, Math.min(height - itemHeight, y));
                 KeystrokesSettings.setPosition(x, y);
