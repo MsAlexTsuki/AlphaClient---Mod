@@ -13,8 +13,11 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 /**
- * Founder-only movement assistance that steers active movement around the
- * nearest visible player while maintaining a configurable orbit distance.
+ * Founder-only movement assistance that circles the nearest visible player.
+ *
+ * Holding forward activates the orbit. Tangential movement is the default;
+ * forward/back input is only added when the player drifts outside the
+ * configured orbit-distance tolerance.
  *
  * Forge 1.8.9 has no InputUpdateEvent, so this uses the client PlayerTickEvent
  * before the player processes movement input and restores physical key states
@@ -23,6 +26,7 @@ import org.lwjgl.input.Mouse;
 public final class AutoStrafe {
     private static final double TARGET_DISTANCE_EPSILON = 0.001D;
     private static final double INPUT_THRESHOLD = 0.25D;
+    private static final double ORBIT_DISTANCE_TOLERANCE = 0.35D;
 
     private boolean controllingMovement;
     private boolean lastForward, lastBack, lastLeft, lastRight;
@@ -57,9 +61,9 @@ public final class AutoStrafe {
             return;
         }
 
-        double inputForward = (physicalForward ? 1.0D : 0.0D) - (physicalBack ? 1.0D : 0.0D);
-        double inputStrafe = (physicalLeft ? 1.0D : 0.0D) - (physicalRight ? 1.0D : 0.0D);
-        if (Math.abs(inputForward) + Math.abs(inputStrafe) < 0.01D) {
+        // W is the activation key. AutoStrafe takes over the movement keys
+        // while it is held, allowing it to choose the tangential direction.
+        if (!physicalForward) {
             restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
         }
@@ -90,8 +94,17 @@ public final class AutoStrafe {
             tangentZ = -towardX;
         }
 
+        // Keep orbiting tangentially at the desired distance. Only introduce
+        // forward/back correction after leaving the tolerance band; this
+        // prevents the constant diagonal input produced by the old algorithm.
         double distanceError = distance - AutoStrafeSettings.getOrbitDistance();
-        double radialStrength = clamp(distanceError * 0.65D, -1.0D, 1.0D);
+        double radialStrength = 0.0D;
+        if (distanceError > ORBIT_DISTANCE_TOLERANCE) {
+            radialStrength = clamp((distanceError - ORBIT_DISTANCE_TOLERANCE) * 0.8D, 0.0D, 1.0D);
+        } else if (distanceError < -ORBIT_DISTANCE_TOLERANCE) {
+            radialStrength = clamp((distanceError + ORBIT_DISTANCE_TOLERANCE) * 0.8D, -1.0D, 0.0D);
+        }
+
         double tangentStrength = AutoStrafeSettings.getSpeed() / 100.0D;
         double worldX = towardX * radialStrength + tangentX * tangentStrength;
         double worldZ = towardZ * radialStrength + tangentZ * tangentStrength;
