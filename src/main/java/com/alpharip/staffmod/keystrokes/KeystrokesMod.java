@@ -38,7 +38,7 @@ public final class KeystrokesMod {
     private static boolean showMovementKeys = true;
     private static boolean useArrows;
     private static boolean border;
-        private static boolean textShadow;
+    private static boolean textShadow;
     private static int fadeDelay = 75;
     private static int boxSize = 16;
     private static float borderThickness = 1.0F;
@@ -198,19 +198,8 @@ public final class KeystrokesMod {
         int gap = Math.max(1, size / 9);
         int gridWidth = size * 3 + gap * 2;
         int mouseHeight = getMouseHeight(size);
-        int mouseWidth = Math.max(18, Math.round((gridWidth - gap) / 2.0F * 0.72F));
+        int mouseWidth = Math.max(12, Math.round(size * 0.85F));
         int mouseGap = gap;
-        int mouseRowHeight = showClicks ? mouseHeight : 0;
-        int movementTop = showMovementKeys ? (showClicks ? mouseRowHeight + gap : 0) : 0;
-        int clicksTop = showMovementKeys ? size * 2 + gap : 0;
-        if (showMovementKeys && showClicks) clicksTop = movementTop + size * 2 + gap;
-        else if (showMovementKeys) clicksTop = size * 2 + gap;
-        else clicksTop = 0;
-        int afterMovement = showMovementKeys ? size * 2 + gap : 0;
-        int afterClicks = showClicks ? mouseHeight + gap : 0;
-        int spaceTop = (showMovementKeys ? size * 2 + gap : 0)
-                + (showClicks ? mouseHeight + gap : 0);
-        int contentWidth = gridWidth;
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, 0.0F);
         GlStateManager.scale(renderScale, renderScale, 1.0F);
@@ -239,7 +228,8 @@ public final class KeystrokesMod {
 
         if (showSpaceBar) {
             int top = (showMovementKeys ? size * 2 + gap : 0)
-                    + (showClicks ? mouseHeight + gap : 0);
+                    + (showClicks ? mouseHeight + gap : 0)
+                    + ((showMovementKeys || showClicks) ? gap : 0);
             int height = Math.max(4, size / 2);
             drawKey(mc, 0, top, gridWidth, height, "SPACE",
                     pressedAlpha(mc.gameSettings.keyBindJump.isKeyDown(), spacePressedAt), -1);
