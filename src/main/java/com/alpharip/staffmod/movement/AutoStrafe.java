@@ -13,21 +13,17 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 /**
- * Founder-only movement assistance that circles the nearest visible player.
+ * Founder-only movement assistance that strafes around the nearest visible player.
  *
- * Holding forward activates the orbit. Tangential movement is the default;
- * forward/back input is only added when the player drifts outside the
- * configured orbit-distance tolerance.
+ * Holding W activates the module. AutoStrafe keeps forward movement active and
+ * adds exactly one configured lateral input (A or D). It never synthesizes S.
+ * A physical S press immediately returns movement control to the player.
  *
  * Forge 1.8.9 has no InputUpdateEvent, so this uses the client PlayerTickEvent
  * before the player processes movement input and restores physical key states
  * whenever AutoStrafe cannot take control.
  */
 public final class AutoStrafe {
-    private static final double TARGET_DISTANCE_EPSILON = 0.001D;
-    private static final double INPUT_THRESHOLD = 0.25D;
-    private static final double ORBIT_DISTANCE_TOLERANCE = 0.35D;
-
     private boolean controllingMovement;
     private boolean lastForward, lastBack, lastLeft, lastRight;
 
@@ -47,7 +43,13 @@ public final class AutoStrafe {
         boolean physicalLeft = isPhysicalKeyDown(mc.gameSettings.keyBindLeft);
         boolean physicalRight = isPhysicalKeyDown(mc.gameSettings.keyBindRight);
 
-        // Preserve intentional key changes made by other modules such as W-Tap/S-Tap.
+        // A manually pressed S always takes priority. AutoStrafe never presses it.
+        if (physicalBack) {
+            restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
+            return;
+        }
+
+        // Preserve intentional key changes made by other modules such as W-Tap.
         if (hasExternalMovementOverride(mc, physicalForward, physicalBack, physicalLeft, physicalRight)) {
             controllingMovement = false;
             return;
@@ -56,14 +58,7 @@ public final class AutoStrafe {
         AlphaModule module = AlphaModuleRegistry.find("auto-strafe");
         if (mc.currentScreen != null || !SupabaseCommunityService.isSignedInFounder()
                 || module == null || !module.isImplemented()
-                || !module.isUnlocked() || !module.isEnabled()) {
-            restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
-            return;
-        }
-
-        // W is the activation key. AutoStrafe takes over the movement keys
-        // while it is held, allowing it to choose the tangential direction.
-        if (!physicalForward) {
+                || !module.isUnlocked() || !module.isEnabled() || !physicalForward) {
             restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
         }
@@ -74,59 +69,10 @@ public final class AutoStrafe {
             return;
         }
 
-        double dx = target.posX - mc.thePlayer.posX;
-        double dz = target.posZ - mc.thePlayer.posZ;
-        double distance = Math.sqrt(dx * dx + dz * dz);
-        if (distance < TARGET_DISTANCE_EPSILON) {
-            restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
-            return;
-        }
-
-        double towardX = dx / distance;
-        double towardZ = dz / distance;
-        double tangentX;
-        double tangentZ;
-        if (AutoStrafeSettings.getDirection() == AutoStrafeSettings.Direction.LEFT) {
-            tangentX = -towardZ;
-            tangentZ = towardX;
-        } else {
-            tangentX = towardZ;
-            tangentZ = -towardX;
-        }
-
-        // Keep orbiting tangentially at the desired distance. Only introduce
-        // forward/back correction after leaving the tolerance band; this
-        // prevents the constant diagonal input produced by the old algorithm.
-        double distanceError = distance - AutoStrafeSettings.getOrbitDistance();
-        double radialStrength = 0.0D;
-        if (distanceError > ORBIT_DISTANCE_TOLERANCE) {
-            radialStrength = clamp((distanceError - ORBIT_DISTANCE_TOLERANCE) * 0.8D, 0.0D, 1.0D);
-        } else if (distanceError < -ORBIT_DISTANCE_TOLERANCE) {
-            radialStrength = clamp((distanceError + ORBIT_DISTANCE_TOLERANCE) * 0.8D, -1.0D, 0.0D);
-        }
-
-        double tangentStrength = AutoStrafeSettings.getSpeed() / 100.0D;
-        double worldX = towardX * radialStrength + tangentX * tangentStrength;
-        double worldZ = towardZ * radialStrength + tangentZ * tangentStrength;
-
-        double outputMagnitude = Math.sqrt(worldX * worldX + worldZ * worldZ);
-        if (outputMagnitude < TARGET_DISTANCE_EPSILON) {
-            restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
-            return;
-        }
-        if (outputMagnitude > 1.0D) {
-            worldX /= outputMagnitude;
-            worldZ /= outputMagnitude;
-        }
-
-        // Convert the desired world-space vector into Minecraft's local
-        // forward/strafe axes. Movement bindings are digital in Minecraft 1.8.9.
-        double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
-        double sinYaw = Math.sin(yaw);
-        double cosYaw = Math.cos(yaw);
-        double localStrafe = worldX * cosYaw + worldZ * sinYaw;
-        double localForward = -worldX * sinYaw + worldZ * cosYaw;
-        applyMovementKeys(mc, localForward, localStrafe);
+        // Direction is explicit and stable: no random side selection or orbit-vector
+        // conversion that can unexpectedly turn the requested input into S.
+        boolean strafeLeft = AutoStrafeSettings.getDirection() == AutoStrafeSettings.Direction.LEFT;
+        applyMovementKeys(mc, strafeLeft);
     }
 
     private EntityPlayer findTarget(Minecraft mc) {
@@ -164,30 +110,16 @@ public final class AutoStrafe {
         return controllingMovement ? current != lastApplied && current != physical : current != physical;
     }
 
-    private void applyMovementKeys(Minecraft mc, double forward, double strafe) {
-        boolean pressForward = forward > INPUT_THRESHOLD;
-        boolean pressBack = forward < -INPUT_THRESHOLD;
-        boolean pressLeft = strafe > INPUT_THRESHOLD;
-        boolean pressRight = strafe < -INPUT_THRESHOLD;
+    private void applyMovementKeys(Minecraft mc, boolean strafeLeft) {
+        setKey(mc.gameSettings.keyBindForward, true);
+        setKey(mc.gameSettings.keyBindBack, false);
+        setKey(mc.gameSettings.keyBindLeft, strafeLeft);
+        setKey(mc.gameSettings.keyBindRight, !strafeLeft);
 
-        if (!pressForward && !pressBack && !pressLeft && !pressRight) {
-            if (Math.abs(forward) >= Math.abs(strafe)) {
-                pressForward = forward >= 0.0D;
-                pressBack = !pressForward;
-            } else {
-                pressLeft = strafe >= 0.0D;
-                pressRight = !pressLeft;
-            }
-        }
-
-        setKey(mc.gameSettings.keyBindForward, pressForward);
-        setKey(mc.gameSettings.keyBindBack, pressBack);
-        setKey(mc.gameSettings.keyBindLeft, pressLeft);
-        setKey(mc.gameSettings.keyBindRight, pressRight);
-        lastForward = pressForward;
-        lastBack = pressBack;
-        lastLeft = pressLeft;
-        lastRight = pressRight;
+        lastForward = true;
+        lastBack = false;
+        lastLeft = strafeLeft;
+        lastRight = !strafeLeft;
         controllingMovement = true;
     }
 
@@ -210,9 +142,5 @@ public final class AutoStrafe {
     private void setKey(KeyBinding binding, boolean pressed) {
         int keyCode = binding.getKeyCode();
         if (keyCode != 0) KeyBinding.setKeyBindState(keyCode, pressed);
-    }
-
-    private static double clamp(double value, double min, double max) {
-        return Math.max(min, Math.min(max, value));
     }
 }
