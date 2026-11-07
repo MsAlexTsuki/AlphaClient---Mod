@@ -7,6 +7,8 @@ import java.util.UUID;
 
 /** Coordinates target selection, optional prediction and mode-specific aim correction. */
 public final class AimAssistController {
+    private static volatile EntityPlayer selectedTarget;
+
     private final AimTargetSelector selector = new AimTargetSelector();
     private final AimRotationCalculator calculator = new AimRotationCalculator();
     private final AimSmoothingController smoothing = new AimSmoothingController();
@@ -24,7 +26,9 @@ public final class AimAssistController {
             resetPendingTarget();
             return;
         }
+
         EntityPlayer player = target.getPlayer();
+        selectedTarget = player;
         long now = System.currentTimeMillis();
         UUID targetId = player.getUniqueID();
         if (!targetId.equals(pendingTargetId)) {
@@ -70,7 +74,13 @@ public final class AimAssistController {
         return best;
     }
 
+    /** The exact player selected by AimAssist; consumed by AutoStrafe. */
+    public static EntityPlayer getSelectedTarget() {
+        return selectedTarget;
+    }
+
     public void resetPendingTarget() {
+        selectedTarget = null;
         pendingTargetId = null;
         pendingTargetSince = 0L;
     }
