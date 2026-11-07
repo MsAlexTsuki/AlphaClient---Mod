@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Mouse;
 
 import java.io.File;
@@ -125,6 +126,17 @@ public final class KeystrokesMod {
         catch (Exception ignored) { return fallback; }
     }
     private static int clamp(int value, int min, int max) { return Math.max(min, Math.min(max, value)); }
+
+    @SubscribeEvent
+    public void onMouseInput(InputEvent.MouseInputEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null || !mc.inGameHasFocus || mc.currentScreen != null
+                || !Mouse.getEventButtonState()) return;
+        long now = System.currentTimeMillis();
+        int button = Mouse.getEventButton();
+        if (button == 0) leftPressedAt = now;
+        else if (button == 1) rightPressedAt = now;
+    }
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
