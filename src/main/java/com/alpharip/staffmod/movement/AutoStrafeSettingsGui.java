@@ -118,9 +118,9 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
         drawRect(left, top, left + panelWidth, top + 2, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "AUTOSTRAFE", width / 2, top + 12, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "FOUNDER SETTINGS", width / 2, top + 27, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Keeps W active while maintaining a target-relative strafe.",
+        drawCenteredString(fontRendererObj, "Uses AimAssist's selected target; AimAssist controls the camera.",
                 width / 2, top + 125, 0xFFF0F1F4);
-        drawCenteredString(fontRendererObj, "Strafe direction changes only after the target crosses the view threshold.",
+        drawCenteredString(fontRendererObj, "Strafe direction reacts to the opponent's lateral movement.",
                 width / 2, top + 139, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
