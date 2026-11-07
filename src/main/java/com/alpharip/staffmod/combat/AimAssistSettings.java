@@ -60,7 +60,7 @@ public final class AimAssistSettings {
     public static synchronized Mode getMode() { return mode; }
     public static synchronized TargetPriority getTargetPriority() { return targetPriority; }
     public static synchronized TargetArea getTargetArea() { return targetArea; }
-    public static double getMaximumRange() { return 3.0D; }
+    public static double getMaximumRange() { return 4.0D; }
     public static float getMaximumRotationStep() { return 1.5F; }
 
     public static synchronized void setCorrectionSpeed(int value) {
