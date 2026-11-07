@@ -41,6 +41,7 @@ public final class WaypointsGui extends AlphaGuiScreen {
                 "Hide: "+onOff(WaypointSettings.isTemporarilyHidden())));
         buttonList.add(new AlphaButton(10,left+123,toggleY,Math.max(104,listWidth-92),18,
                 "Sort: "+sortName()));
+        buttonList.add(new AlphaButton(14,left+253,toggleY,118,18,"Death Waypoints"));
 
         int closeWidth=52;
         buttonList.add(new AlphaButton(7,left+panelWidth-closeWidth-14,top+10,closeWidth,18,"Close"));
@@ -136,6 +137,8 @@ public final class WaypointsGui extends AlphaGuiScreen {
             } else if(button.id==10) {
                 WaypointSettings.setString("sortMode",nextSort(WaypointSettings.getString("sortMode","distance")));
                 scroll=0;
+            } else if(button.id==14) {
+                mc.displayGuiScreen(new DeathWaypointsGui(this));return;
             } else if(button.id==11) {
                 saveEditedWaypoint();
             } else if(button.id==12) {
