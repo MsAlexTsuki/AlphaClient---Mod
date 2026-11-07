@@ -38,18 +38,18 @@ public final class KeystrokesRenderer {
         int nextY = 0;
         if (KeystrokesSettings.showMovement()) {
             key(mc, 25, nextY, 20, 20, "W", KeystrokesInput.isForward());
-            key(mc, 2, nextY + 22, 20, 20, "A", KeystrokesInput.isLeft());
+            key(mc, 4, nextY + 22, 20, 20, "A", KeystrokesInput.isLeft());
             key(mc, 25, nextY + 22, 20, 20, "S", KeystrokesInput.isBack());
-            key(mc, 48, nextY + 22, 20, 20, "D", KeystrokesInput.isRight());
+            key(mc, 46, nextY + 22, 20, 20, "D", KeystrokesInput.isRight());
             nextY += 42;
         }
         if (KeystrokesSettings.showMouse()) {
-            mouse(mc, 2, nextY, "LMB", KeystrokesInput.isLeftMouseDown(), KeystrokesInput.getLeftCps());
-            mouse(mc, 36, nextY, "RMB", KeystrokesInput.isRightMouseDown(), KeystrokesInput.getRightCps());
+            mouse(mc, 4, nextY, "LMB", KeystrokesInput.isLeftMouseDown(), KeystrokesInput.getLeftCps());
+            mouse(mc, 38, nextY, "RMB", KeystrokesInput.isRightMouseDown(), KeystrokesInput.getRightCps());
             nextY += 34;
         }
         if (KeystrokesSettings.showSpace()) {
-            key(mc, 2, nextY, 66, 20, "SPACE", KeystrokesInput.isJump());
+            key(mc, 4, nextY, 62, 20, "SPACE", KeystrokesInput.isJump());
         }
         GlStateManager.popMatrix();
     }
