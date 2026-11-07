@@ -5,10 +5,13 @@ import com.alpharip.staffmod.gui.AlphaGuiScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.ChatComponentText;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /** Browses the non-empty private vaults saved in the active singleplayer world. */
 public final class AlphaPrivateVaultsGui extends AlphaGuiScreen {
@@ -118,7 +121,18 @@ public final class AlphaPrivateVaultsGui extends AlphaGuiScreen {
             try {
                 AlphaPrivateVaultInventory inventory =
                         AlphaPrivateVaultManager.getInstance().loadVault(vaultNumber);
-                mc.displayGuiScreen(new AlphaPrivateVaultScreen(vaultNumber, inventory, this));
+                final IntegratedServer server = mc.getIntegratedServer();
+                final UUID playerId = mc.thePlayer.getUniqueID();
+                server.addScheduledTask(new Runnable() {
+                    @Override
+                    public void run() {
+                        EntityPlayerMP serverPlayer =
+                                server.getConfigurationManager().getPlayerByUUID(playerId);
+                        if (serverPlayer != null) {
+                            serverPlayer.displayGUIChest(inventory);
+                        }
+                    }
+                });
             } catch (Exception failure) {
                 mc.thePlayer.addChatMessage(new ChatComponentText(
                         "§c[Alpha Private Vault] Could not open vault " + vaultNumber + ": "
