@@ -96,6 +96,7 @@ public final class AlphaPrivateVaultManager {
         }
         AlphaPrivateVaultInventory inventory = new AlphaPrivateVaultInventory(vaultNumber);
         if (!file.isFile()) {
+            inventory.enablePersistence();
             return inventory;
         }
 
@@ -116,6 +117,7 @@ public final class AlphaPrivateVaultManager {
                     }
                 }
             }
+            inventory.enablePersistence();
             return inventory;
         } catch (Exception failure) {
             throw new IllegalStateException("Could not read the existing vault file safely: "
