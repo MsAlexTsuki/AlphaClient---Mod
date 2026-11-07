@@ -198,7 +198,7 @@ public final class KeystrokesMod {
         int gap = Math.max(1, size / 9);
         int gridWidth = size * 3 + gap * 2;
         int mouseHeight = getMouseHeight(size);
-        int mouseWidth = Math.max(22, Math.round(size * 1.5F));
+        int mouseWidth = showCps ? Math.max(24, Math.round(size * 1.5F)) : 22;
         int mouseGap = gap;
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, 0.0F);
@@ -283,8 +283,13 @@ public final class KeystrokesMod {
             Gui.drawRect(x + width - t, y, x + width, y + height, borderColor);
         }
         int color = active > 0.01F ? pressedTextColor : textColor;
-        drawScaledCentered(mc, label, x, y + 2, width, color, 0.90F);
-        if (cps >= 0) drawScaledCentered(mc, cps + " CPS", x, y + height - 8, width, color, 0.68F);
+        if (cps >= 0) {
+            drawScaledCentered(mc, label, x, y + 2, width, color, 0.90F);
+            drawScaledCentered(mc, cps + " CPS", x, y + height - 8, width, color, 0.68F);
+        } else {
+            int labelY = y + (height - mc.fontRendererObj.FONT_HEIGHT) / 2;
+            drawScaledCentered(mc, label, x, labelY, width, color, 0.90F);
+        }
     }
 
     private static void drawScaledCentered(Minecraft mc, String text, int x, int y,
@@ -325,7 +330,7 @@ public final class KeystrokesMod {
         return size * 3 + gap * 2;
     }
     private static int getMouseHeight(int size) {
-        return Math.max(18, Math.round(size * 1.25F));
+        return showCps ? Math.max(22, Math.round(size * 1.5F)) : 14;
     }
 
     public static int getHudHeight() {
