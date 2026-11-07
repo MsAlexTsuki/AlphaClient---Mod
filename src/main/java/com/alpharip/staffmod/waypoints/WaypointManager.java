@@ -277,6 +277,50 @@ public final class WaypointManager {
         selectedId="";
         route.clear();
     }
+    /**
+     * Updates the waypoint owned by an AlphaHome without depending on the active waypoint profile
+     * or the player's current dimension. Both stored identity keys must match the home record.
+     */
+    public synchronized boolean updateHomeWaypoint(String id, String expectedServerKey, String expectedWorldKey,
+                                                    String label, double x, double y, double z, int dimension,
+                                                    String newServerKey, String newWorldKey) {
+        if (id == null || id.trim().isEmpty() || !finite(x) || !finite(y) || !finite(z)) return false;
+        load();
+        for (StaffWaypoint point : points) {
+            if (id.equals(point.getId())
+                    && expectedServerKey != null && expectedServerKey.equals(point.getServerKey())
+                    && expectedWorldKey != null && expectedWorldKey.equals(point.getWorldKey())) {
+                point.set(label, String.valueOf(dimension), x, y, z);
+                point.setContext(newServerKey, dimension);
+                point.setWorldKey(newWorldKey);
+                point.setCategory("Homes");
+                point.setColor(0xFFC83D);
+                save();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Removes only the exact waypoint linked to a home record. */
+    public synchronized boolean removeHomeWaypoint(String id, String expectedServerKey, String expectedWorldKey) {
+        if (id == null || id.trim().isEmpty()) return false;
+        load();
+        for (int index = 0; index < points.size(); index++) {
+            StaffWaypoint point = points.get(index);
+            if (id.equals(point.getId())
+                    && expectedServerKey != null && expectedServerKey.equals(point.getServerKey())
+                    && expectedWorldKey != null && expectedWorldKey.equals(point.getWorldKey())) {
+                points.remove(index);
+                if (id.equals(selectedId)) selectedId = "";
+                if (route.contains(id)) clearRoute();
+                save();
+                return true;
+            }
+        }
+        return false;
+    }
+
     public synchronized void saveChanges() { save(); }
 
     public synchronized List<StaffWaypoint> getSortedCurrentWorld() {

@@ -68,6 +68,7 @@ import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
 import com.alpharip.staffmod.singleplayer.worldedit.AlphaWorldEditCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolMod;
+import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesCommand;
 import com.alpharip.staffmod.winlosetracker.WinLossTrackerRuntime;
 
 import net.minecraft.client.Minecraft;
@@ -144,6 +145,8 @@ public final class AlphaClient {
         ClientCommandHandler.instance.registerCommand(worldEditCommand);
         MinecraftForge.EVENT_BUS.register(worldEditCommand);
         ClientCommandHandler.instance.registerCommand(new AutoToolCommand());
+        ClientCommandHandler.instance.registerCommand(new AlphaHomesCommand("alphahome"));
+        ClientCommandHandler.instance.registerCommand(new AlphaHomesCommand("alphaclient:alphahome"));
         MinecraftForge.EVENT_BUS.register(new AutoToolMod());
         ClientCommandHandler.instance.registerCommand(new InventorySearchCommand());
         MinecraftForge.EVENT_BUS.register(new AlphaClientGuiHandler());
