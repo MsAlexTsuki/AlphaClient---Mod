@@ -302,6 +302,23 @@ public final class WaypointManager {
         return false;
     }
 
+    /** Renames only the waypoint linked to a home, after validating its world identity. */
+    public synchronized boolean renameHomeWaypoint(String id, String expectedServerKey,
+                                                   String expectedWorldKey, String newLabel) {
+        if (id == null || id.trim().isEmpty() || newLabel == null || newLabel.trim().isEmpty()) return false;
+        load();
+        for (StaffWaypoint point : points) {
+            if (id.equals(point.getId())
+                    && expectedServerKey != null && expectedServerKey.equals(point.getServerKey())
+                    && expectedWorldKey != null && expectedWorldKey.equals(point.getWorldKey())) {
+                point.setLabel(newLabel.trim());
+                save();
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Removes only the exact waypoint linked to a home record. */
     public synchronized boolean removeHomeWaypoint(String id, String expectedServerKey, String expectedWorldKey) {
         if (id == null || id.trim().isEmpty()) return false;
