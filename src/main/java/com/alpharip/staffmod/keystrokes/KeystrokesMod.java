@@ -24,6 +24,11 @@ public final class KeystrokesMod {
     private static final int DARK = 0xE60A0C11;
     private static final int PRESSED = 0xF0FFC83D;
     private static final int WHITE = 0xFFF3F4F6;
+    private static int backgroundColor = DARK;
+    private static int pressedBackgroundColor = PRESSED;
+    private static int textColor = WHITE;
+    private static int pressedTextColor = 0xFF111111;
+    private static int borderColor = GOLD;
     private static final String CONFIG_NAME = "alphaclient-keystrokes.properties";
 
     private static boolean loaded;
@@ -33,10 +38,9 @@ public final class KeystrokesMod {
     private static boolean showMovementKeys = true;
     private static boolean useArrows;
     private static boolean border;
-    private static boolean innerBorder;
-    private static boolean textShadow;
+        private static boolean textShadow;
     private static int fadeDelay = 75;
-    private static int boxSize = 18;
+    private static int boxSize = 16;
     private static float borderThickness = 1.0F;
     private static int hudX = 5;
     private static int hudY = 5;
@@ -62,10 +66,14 @@ public final class KeystrokesMod {
             showMovementKeys = bool(p, "showMovementKeys", true);
             useArrows = bool(p, "useArrows", false);
             border = bool(p, "border", false);
-            innerBorder = bool(p, "innerBorder", false);
             textShadow = bool(p, "textShadow", false);
             fadeDelay = clamp(integer(p, "fadeDelay", 75), 0, 500);
-            boxSize = clamp(integer(p, "boxSize", 18), 10, 32);
+            boxSize = clamp(integer(p, "boxSize", 16), 10, 32);
+            backgroundColor = color(p, "backgroundColor", DARK);
+            pressedBackgroundColor = color(p, "pressedBackgroundColor", PRESSED);
+            textColor = color(p, "textColor", WHITE);
+            pressedTextColor = color(p, "pressedTextColor", 0xFF111111);
+            borderColor = color(p, "borderColor", GOLD);
             borderThickness = Math.max(0.5F, Math.min(3.0F, decimal(p, "borderThickness", 1.0F)));
             hudX = Math.max(0, integer(p, "hudX", 5));
             hudY = Math.max(0, integer(p, "hudY", 5));
@@ -88,10 +96,14 @@ public final class KeystrokesMod {
         p.setProperty("showMovementKeys", String.valueOf(showMovementKeys));
         p.setProperty("useArrows", String.valueOf(useArrows));
         p.setProperty("border", String.valueOf(border));
-        p.setProperty("innerBorder", String.valueOf(innerBorder));
         p.setProperty("textShadow", String.valueOf(textShadow));
         p.setProperty("fadeDelay", String.valueOf(fadeDelay));
         p.setProperty("boxSize", String.valueOf(boxSize));
+        p.setProperty("backgroundColor", String.format("%08X", backgroundColor));
+        p.setProperty("pressedBackgroundColor", String.format("%08X", pressedBackgroundColor));
+        p.setProperty("textColor", String.format("%08X", textColor));
+        p.setProperty("pressedTextColor", String.format("%08X", pressedTextColor));
+        p.setProperty("borderColor", String.format("%08X", borderColor));
         p.setProperty("borderThickness", String.valueOf(borderThickness));
         p.setProperty("hudX", String.valueOf(hudX));
         p.setProperty("hudY", String.valueOf(hudY));
@@ -117,6 +129,10 @@ public final class KeystrokesMod {
     }
     private static int integer(Properties p, String key, int fallback) {
         try { return Integer.parseInt(p.getProperty(key, String.valueOf(fallback))); }
+        catch (Exception ignored) { return fallback; }
+    }
+    private static int color(Properties p, String key, int fallback) {
+        try { return (int) Long.parseLong(p.getProperty(key, String.format("%08X", fallback)), 16); }
         catch (Exception ignored) { return fallback; }
     }
     private static float decimal(Properties p, String key, float fallback) {
@@ -182,25 +198,28 @@ public final class KeystrokesMod {
         int gap = Math.max(1, size / 9);
         int gridWidth = size * 3 + gap * 2;
         int mouseHeight = getMouseHeight(size);
-        int movementTop = showClicks ? mouseHeight + gap : 0;
-        int spaceTop = movementTop + (showMovementKeys ? size * 2 + gap * 2 : 0);
+        int mouseWidth = Math.max(18, Math.round((gridWidth - gap) / 2.0F * 0.72F));
+        int mouseGap = gap;
+        int mouseRowHeight = showClicks ? mouseHeight : 0;
+        int movementTop = showMovementKeys ? (showClicks ? mouseRowHeight + gap : 0) : 0;
+        int clicksTop = showMovementKeys ? size * 2 + gap : 0;
+        if (showMovementKeys && showClicks) clicksTop = movementTop + size * 2 + gap;
+        else if (showMovementKeys) clicksTop = size * 2 + gap;
+        else clicksTop = 0;
+        int afterMovement = showMovementKeys ? size * 2 + gap : 0;
+        int afterClicks = showClicks ? mouseHeight + gap : 0;
+        int spaceTop = (showMovementKeys ? size * 2 + gap : 0)
+                + (showClicks ? mouseHeight + gap : 0);
+        int contentWidth = gridWidth;
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, 0.0F);
         GlStateManager.scale(renderScale, renderScale, 1.0F);
 
-        if (showClicks) {
-            int mouseWidth = (gridWidth - gap) / 2;
-            drawKey(mc, 0, 0, mouseWidth, mouseHeight, "LMB",
-                    pressedAlpha(isPressed(mc, 0), leftPressedAt), showCps ? CpsMod.getLeftCps() : -1);
-            drawKey(mc, mouseWidth + gap, 0, mouseWidth, mouseHeight, "RMB",
-                    pressedAlpha(isPressed(mc, 1), rightPressedAt), showCps ? CpsMod.getRightCps() : -1);
-        }
-
         if (showMovementKeys) {
-            int top = movementTop;
+            int top = 0;
             int wX = size + gap;
             drawKey(mc, wX, top, size, size, useArrows ? "↑" : "W",
-                    pressedAlpha(mc.gameSettings.keyBindForward.isKeyDown(),  wPressedAt), -1);
+                    pressedAlpha(mc.gameSettings.keyBindForward.isKeyDown(), wPressedAt), -1);
             drawKey(mc, 0, top + size + gap, size, size, useArrows ? "←" : "A",
                     pressedAlpha(mc.gameSettings.keyBindLeft.isKeyDown(), aPressedAt), -1);
             drawKey(mc, size + gap, top + size + gap, size, size, useArrows ? "↓" : "S",
@@ -209,8 +228,18 @@ public final class KeystrokesMod {
                     pressedAlpha(mc.gameSettings.keyBindRight.isKeyDown(), dPressedAt), -1);
         }
 
+        if (showClicks) {
+            int leftX = (gridWidth - (mouseWidth * 2 + mouseGap)) / 2;
+            int top = (showMovementKeys ? size * 2 + gap * 2 : 0);
+            drawMouseKey(mc, leftX, top, mouseWidth, mouseHeight, "LMB",
+                    pressedAlpha(isPressed(mc, 0), leftPressedAt), showCps ? CpsMod.getLeftCps() : -1);
+            drawMouseKey(mc, leftX + mouseWidth + mouseGap, top, mouseWidth, mouseHeight, "RMB",
+                    pressedAlpha(isPressed(mc, 1), rightPressedAt), showCps ? CpsMod.getRightCps() : -1);
+        }
+
         if (showSpaceBar) {
-            int top = spaceTop;
+            int top = (showMovementKeys ? size * 2 + gap : 0)
+                    + (showClicks ? mouseHeight + gap : 0);
             int height = Math.max(4, size / 2);
             drawKey(mc, 0, top, gridWidth, height, "SPACE",
                     pressedAlpha(mc.gameSettings.keyBindJump.isKeyDown(), spacePressedAt), -1);
@@ -233,27 +262,38 @@ public final class KeystrokesMod {
 
     private static void drawKey(Minecraft mc, int x, int y, int width, int height,
                                 String label, float active, int cps) {
-        int background = blend(DARK, PRESSED, active);
+        int background = blend(backgroundColor, pressedBackgroundColor, active);
         Gui.drawRect(x, y, x + width, y + height, background);
         if (border) {
             int t = Math.max(1, Math.round(borderThickness));
-            Gui.drawRect(x, y, x + width, y + t, GOLD);
-            Gui.drawRect(x, y + height - t, x + width, y + height, GOLD);
-            Gui.drawRect(x, y, x + t, y + height, GOLD);
-            Gui.drawRect(x + width - t, y, x + width, y + height, GOLD);
+            Gui.drawRect(x, y, x + width, y + t, borderColor);
+            Gui.drawRect(x, y + height - t, x + width, y + height, borderColor);
+            Gui.drawRect(x, y, x + t, y + height, borderColor);
+            Gui.drawRect(x + width - t, y, x + width, y + height, borderColor);
         }
-        if (innerBorder && width > 4 && height > 4) {
-            int inner = 0x66FFC83D;
-            Gui.drawRect(x + 2, y + 2, x + width - 2, y + 3, inner);
-            Gui.drawRect(x + 2, y + height - 3, x + width - 2, y + height - 2, inner);
-        }
-        int color = active > 0.01F ? 0xFF111111 : WHITE;
+        int color = active > 0.01F ? pressedTextColor : textColor;
         if (cps >= 0) {
-            drawCentered(mc, label, x, y + 3, width, color);
-            drawCentered(mc, cps + " CPS", x, y + height - mc.fontRendererObj.FONT_HEIGHT - 2, width, color);
+            drawCentered(mc, label, x, y + 2, width, color);
+            drawScaledCentered(mc, cps + " CPS", x, y + height - 8, width, color, 0.72F);
         } else {
             drawCentered(mc, label, x, y + (height - mc.fontRendererObj.FONT_HEIGHT) / 2, width, color);
         }
+    }
+
+    private static void drawMouseKey(Minecraft mc, int x, int y, int width, int height,
+                                     String label, float active, int cps) {
+        drawKey(mc, x, y, width, height, label, active, cps);
+    }
+
+    private static void drawScaledCentered(Minecraft mc, String text, int x, int y,
+                                           int width, int color, float factor) {
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x + width / 2.0F, y, 0.0F);
+        GlStateManager.scale(factor, factor, 1.0F);
+        int tx = -mc.fontRendererObj.getStringWidth(text) / 2;
+        if (textShadow) mc.fontRendererObj.drawStringWithShadow(text, tx, 0, color);
+        else mc.fontRendererObj.drawString(text, tx, 0, color, false);
+        GlStateManager.popMatrix();
     }
 
     private static void drawCentered(Minecraft mc, String text, int x, int y, int width, int color) {
@@ -287,10 +327,13 @@ public final class KeystrokesMod {
     }
 
     public static int getHudHeight() {
-        load(); int size = boxSize, gap = Math.max(1, size / 9);
-        return (showClicks ? getMouseHeight(size) : 0) + (showClicks && showMovementKeys ? gap : 0)
-                + (showMovementKeys ? size * 2 + gap : 0)
-                + (showSpaceBar ? ((showClicks || showMovementKeys) ? gap : 0) + Math.max(4, size / 2) : 0);
+        load();
+        int size = boxSize, gap = Math.max(1, size / 9);
+        int height = 0;
+        if (showMovementKeys) height += size * 2 + gap;
+        if (showClicks) height += getMouseHeight(size) + (height > 0 ? gap : 0);
+        if (showSpaceBar) height += Math.max(4, size / 2) + (height > 0 ? gap : 0);
+        return height;
     }
 
     public static boolean isShowClicks() { load(); return showClicks; }
@@ -305,8 +348,20 @@ public final class KeystrokesMod {
     public static void setUseArrows(boolean v) { load(); useArrows = v; save(); }
     public static boolean isBorder() { load(); return border; }
     public static void setBorder(boolean v) { load(); border = v; save(); }
-    public static boolean isInnerBorder() { load(); return innerBorder; }
-    public static void setInnerBorder(boolean v) { load(); innerBorder = v; save(); }
+    public static int getBackgroundColor() { load(); return backgroundColor; }
+    public static int getPressedBackgroundColor() { load(); return pressedBackgroundColor; }
+    public static int getTextColor() { load(); return textColor; }
+    public static int getPressedTextColor() { load(); return pressedTextColor; }
+    public static int getBorderColor() { load(); return borderColor; }
+    public static void setColor(String key, int value) {
+        load();
+        if ("background".equals(key)) backgroundColor = value;
+        else if ("pressedBackground".equals(key)) pressedBackgroundColor = value;
+        else if ("text".equals(key)) textColor = value;
+        else if ("pressedText".equals(key)) pressedTextColor = value;
+        else if ("border".equals(key)) borderColor = value;
+        save();
+    }
     public static boolean isTextShadow() { load(); return textShadow; }
     public static void setTextShadow(boolean v) { load(); textShadow = v; save(); }
     public static int getFadeDelay() { load(); return fadeDelay; }
