@@ -8,6 +8,7 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 
+import java.util.List;
 import java.util.Locale;
 
 /** Singleplayer-only command entry points for AlphaHomes. */
@@ -23,7 +24,7 @@ public final class AlphaHomesCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/alphahome sethome [name] | deletehome <name> | <name> | info | list";
+        return "/alphahome sethome [name] | deletehome <name> | rename <old> <new> | <name> | info | list";
     }
 
     @Override
@@ -51,6 +52,17 @@ public final class AlphaHomesCommand extends CommandBase {
                 AlphaHome home = manager.setHome(name);
                 reply(sender, "Home '" + home.getName() + "' saved at "
                         + coordinates(home) + " in dimension " + home.getDimension() + ".");
+            } else if ("rename".equals(action)) {
+                if (args.length != 3) {
+                    reply(sender, "Usage: /alphahome rename <old> <new>");
+                    return;
+                }
+                if (manager.renameHome(args[1], args[2])) {
+                    reply(sender, "Home '" + args[1] + "' was renamed to '" + args[2]
+                            + "'. Its linked waypoint was updated.");
+                } else {
+                    reply(sender, "Home not found: " + args[1] + ".");
+                }
             } else if ("deletehome".equals(action)) {
                 if (args.length < 2) {
                     reply(sender, "Usage: /alphahome deletehome <name>");
