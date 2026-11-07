@@ -282,7 +282,18 @@ public final class KeystrokesMod {
 
     private static void drawMouseKey(Minecraft mc, int x, int y, int width, int height,
                                      String label, float active, int cps) {
-        drawKey(mc, x, y, width, height, label, active, cps);
+        int background = blend(backgroundColor, pressedBackgroundColor, active);
+        Gui.drawRect(x, y, x + width, y + height, background);
+        if (border) {
+            int t = Math.max(1, Math.round(borderThickness));
+            Gui.drawRect(x, y, x + width, y + t, borderColor);
+            Gui.drawRect(x, y + height - t, x + width, y + height, borderColor);
+            Gui.drawRect(x, y, x + t, y + height, borderColor);
+            Gui.drawRect(x + width - t, y, x + width, y + height, borderColor);
+        }
+        int color = active > 0.01F ? pressedTextColor : textColor;
+        drawScaledCentered(mc, label, x, y + 1, width, color, 0.78F);
+        if (cps >= 0) drawScaledCentered(mc, cps + " CPS", x, y + height - 6, width, color, 0.58F);
     }
 
     private static void drawScaledCentered(Minecraft mc, String text, int x, int y,
@@ -323,7 +334,7 @@ public final class KeystrokesMod {
         return size * 3 + gap * 2;
     }
     private static int getMouseHeight(int size) {
-        return Math.max(size + 8, showCps ? 22 : size + 8);
+        return Math.max(12, Math.round(size * 0.72F));
     }
 
     public static int getHudHeight() {
