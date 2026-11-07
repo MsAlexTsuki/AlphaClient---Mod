@@ -394,7 +394,12 @@ public class HudEditorGui extends AlphaGuiScreen {
 
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
-        if (scaleDragging && button == 0) { HudScaleConfig.set(scaleTarget, scaleStartValue + (scaleStartY - mouseY) * 0.01F); return; }
+        if (scaleDragging && button == 0) {
+            float nextScale = scaleStartValue + (scaleStartY - mouseY) * 0.01F;
+            if ("keystrokes".equals(scaleTarget)) KeystrokesMod.setScale(nextScale);
+            else HudScaleConfig.set(scaleTarget, nextScale);
+            return;
+        }
         if (dragging && button == 0) {
             if (!afkTimerDragging && !fpsDragging && !pingDragging && !cpsDragging && !keystrokesDragging && !comboCounterDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !winLossDragging && !hasBhopAccess()) {
                 dragging = false;
