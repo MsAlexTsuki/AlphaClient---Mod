@@ -66,7 +66,11 @@ public final class AlphaPrivateVaultCommand extends CommandBase {
                         return;
                     }
 
-                    // Handle the container click locally; no multiplayer/server packet is involved.
+                    // Match GuiContainer's slot resolution, then handle the click locally.
+                    // No multiplayer/server packet is involved.
+                    if (slot != null) {
+                        slotId = slot.slotNumber;
+                    }
                     this.inventorySlots.slotClick(slotId, clickedButton, clickType, mc.thePlayer);
                     if (!manager.saveVault(vaultNumber, inventory)) {
                         mc.thePlayer.addChatMessage(new ChatComponentText(
