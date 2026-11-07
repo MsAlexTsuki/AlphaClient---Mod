@@ -46,8 +46,9 @@ public final class AutoStrafe {
         boolean physicalLeft = isPhysicalKeyDown(mc.gameSettings.keyBindLeft);
         boolean physicalRight = isPhysicalKeyDown(mc.gameSettings.keyBindRight);
 
-        // A manually pressed S always takes priority. AutoStrafe never presses it.
-        if (physicalBack) {
+        // Manual S, A or D input always takes priority over automated strafing.
+        // This prevents AutoStrafe from counter-steering the direction chosen by the player.
+        if (physicalBack || physicalLeft || physicalRight) {
             resetStrafeState();
             restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
