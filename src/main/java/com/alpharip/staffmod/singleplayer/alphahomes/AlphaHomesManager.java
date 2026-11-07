@@ -201,6 +201,48 @@ public final class AlphaHomesManager {
         return existing;
     }
 
+    public synchronized boolean renameHome(String oldName, String newName) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!isAvailable(mc)) throw new IllegalStateException("AlphaHomes is available only in a loaded singleplayer world.");
+        if (!ensureLoaded()) throw new IllegalStateException("AlphaHomes could not read this world's save file.");
+
+        String normalizedNewName = normalizeName(newName);
+        if (normalizedNewName.isEmpty()) throw new IllegalArgumentException("Enter a new home name.");
+        AlphaHome home = find(oldName);
+        if (home == null) return false;
+        AlphaHome conflict = find(normalizedNewName);
+        if (conflict != null && conflict != home) {
+            throw new IllegalArgumentException("A home with that name already exists.");
+        }
+
+        String previousName = home.getName();
+        if (previousName.equals(normalizedNewName)) return true;
+        home.update(home.getX(), home.getY(), home.getZ(), home.getDimension(),
+                home.getWaypointId(), home.getWaypointServerKey(), home.getWaypointWorldKey());
+        // Rename the linked waypoint first; its identity is validated against the saved world keys.
+        boolean waypointRenamed = home.getWaypointId().isEmpty()
+                || WaypointManager.getInstance().renameHomeWaypoint(home.getWaypointId(),
+                home.getWaypointServerKey(), home.getWaypointWorldKey(), normalizedNewName);
+        if (!waypointRenamed) {
+            throw new IllegalStateException("The linked waypoint could not be found; the home was not renamed.");
+        }
+
+        // AlphaHome has no separate name setter; replace this entry while preserving its waypoint identity.
+        AlphaHome renamed = new AlphaHome(normalizedNewName, home.getX(), home.getY(), home.getZ(),
+                home.getDimension(), home.getWaypointId(), home.getWaypointServerKey(), home.getWaypointWorldKey());
+        int index = homes.indexOf(home);
+        homes.set(index, renamed);
+        if (!save()) {
+            homes.set(index, home);
+            if (!home.getWaypointId().isEmpty()) {
+                WaypointManager.getInstance().renameHomeWaypoint(home.getWaypointId(),
+                        home.getWaypointServerKey(), home.getWaypointWorldKey(), previousName);
+            }
+            throw new IllegalStateException("AlphaHomes could not save the renamed home.");
+        }
+        return true;
+    }
+
     public synchronized boolean deleteHome(String name) {
         AlphaHome home = find(name);
         if (home == null) return false;
