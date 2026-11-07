@@ -85,19 +85,7 @@ AS $function$
     END AS allowed,
     CASE
       WHEN NOT m.enabled THEN 'disabled'
-      WHEN m.category_key = 'founder' THEN
-        CASE WHEN EXISTS (
-          SELECT 1 FROM public.profiles p
-          WHERE p.id = auth.uid()
-            AND (
-              p.rank_key = 'founder'
-              OR p.is_founder IS TRUE
-              OR EXISTS (
-                SELECT 1 FROM public.profile_ranks pr
-                WHERE pr.profile_id = p.id AND pr.rank_key = 'founder'
-              )
-            )
-        ) THEN 'rank' ELSE 'rank' END
+      WHEN m.category_key = 'founder' THEN 'rank'
       WHEN EXISTS (
         SELECT 1 FROM public.profiles p
         WHERE p.id = auth.uid()
