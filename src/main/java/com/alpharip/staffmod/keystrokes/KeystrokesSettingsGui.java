@@ -15,8 +15,8 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
     private static final int WASD = 10, SPACE = 11, MOUSE = 12, CPS = 13;
     private static final int SCALE_DOWN = 20, SCALE_UP = 21;
     private static final int ACTIVE_BASE = 100, INACTIVE_BASE = 110, TEXT_BASE = 120;
-    private static final int[] COLORS = {0xFFFFD866, 0xFF55FF55, 0xFF55FFFF, 0xFFFF5555, 0xFFFFFFFF, 0xFFAA55FF};
-    private static final String[] COLOR_NAMES = {"GOLD", "GREEN", "CYAN", "RED", "WHITE", "PURPLE"};
+    private static final int[] COLORS = {0xFFFFD866, 0xFF55FF55, 0xFF55FFFF, 0xFFFF5555, 0xFFFFFFFF, 0xFFAA55FF, 0xFF343943};
+    private static final String[] COLOR_NAMES = {"GOLD", "GREEN", "CYAN", "RED", "WHITE", "PURPLE", "SLATE"};
     private final GuiScreen parent;
     private int panelX, panelY;
 
@@ -57,7 +57,7 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
         for (int i = 0; i < COLORS.length; i++) {
             boolean selected = COLORS[i] == selectedColor;
             String caption = selected ? "[" + COLOR_NAMES[i] + "]" : COLOR_NAMES[i];
-            buttonList.add(new AlphaButton(baseId + i, startX + i * 56, y, 52, 19, caption, false, selected));
+            buttonList.add(new AlphaButton(baseId + i, startX + i * 48, y, 46, 19, caption, false, selected));
         }
     }
 
