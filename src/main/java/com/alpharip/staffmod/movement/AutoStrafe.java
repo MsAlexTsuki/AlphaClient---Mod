@@ -5,48 +5,68 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.MovementInput;
-import net.minecraftforge.client.event.InputUpdateEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 /**
  * Founder-only movement assistance that steers active movement around the
  * nearest visible player while maintaining a configurable orbit distance.
+ *
+ * Forge 1.8.9 has no InputUpdateEvent, so this uses the client PlayerTickEvent
+ * before the player processes movement input and restores physical key states
+ * whenever AutoStrafe cannot take control.
  */
 public final class AutoStrafe {
     private static final double TARGET_DISTANCE_EPSILON = 0.001D;
+    private static final double INPUT_THRESHOLD = 0.25D;
 
     @SubscribeEvent
-    public void onInputUpdate(InputUpdateEvent event) {
+    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event == null || event.phase != TickEvent.Phase.START) return;
+
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || event == null || event.entityPlayer == null
-                || event.entityPlayer != mc.thePlayer || mc.thePlayer == null
-                || mc.theWorld == null || mc.currentScreen != null
-                || !SupabaseCommunityService.isSignedInFounder()) {
+        if (mc == null || event.player == null || event.player != mc.thePlayer
+                || mc.thePlayer == null || mc.thePlayer.worldObj == null
+                || !mc.thePlayer.worldObj.isRemote) {
             return;
         }
 
         AlphaModule module = AlphaModuleRegistry.find("auto-strafe");
-        if (module == null || !module.isImplemented() || !module.isUnlocked() || !module.isEnabled()) {
+        if (mc.currentScreen != null || !SupabaseCommunityService.isSignedInFounder()
+                || module == null || !module.isImplemented()
+                || !module.isUnlocked() || !module.isEnabled()) {
+            restorePhysicalMovementKeys(mc);
             return;
         }
 
-        MovementInput input = event.movementInput;
-        if (input == null) return;
+        boolean physicalForward = isPhysicalKeyDown(mc.gameSettings.keyBindForward);
+        boolean physicalBack = isPhysicalKeyDown(mc.gameSettings.keyBindBack);
+        boolean physicalLeft = isPhysicalKeyDown(mc.gameSettings.keyBindLeft);
+        boolean physicalRight = isPhysicalKeyDown(mc.gameSettings.keyBindRight);
 
-        double inputForward = input.moveForward;
-        double inputStrafe = input.moveStrafe;
-        double inputMagnitude = Math.sqrt(inputForward * inputForward + inputStrafe * inputStrafe);
-        if (inputMagnitude < 0.01D) return;
+        double inputForward = (physicalForward ? 1.0D : 0.0D) - (physicalBack ? 1.0D : 0.0D);
+        double inputStrafe = (physicalLeft ? 1.0D : 0.0D) - (physicalRight ? 1.0D : 0.0D);
+        if (Math.abs(inputForward) + Math.abs(inputStrafe) < 0.01D) {
+            restorePhysicalMovementKeys(mc);
+            return;
+        }
 
         EntityPlayer target = findTarget(mc);
-        if (target == null) return;
+        if (target == null) {
+            restorePhysicalMovementKeys(mc);
+            return;
+        }
 
         double dx = target.posX - mc.thePlayer.posX;
         double dz = target.posZ - mc.thePlayer.posZ;
         double distance = Math.sqrt(dx * dx + dz * dz);
-        if (distance < TARGET_DISTANCE_EPSILON) return;
+        if (distance < TARGET_DISTANCE_EPSILON) {
+            restorePhysicalMovementKeys(mc);
+            return;
+        }
 
         double towardX = dx / distance;
         double towardZ = dz / distance;
@@ -63,27 +83,27 @@ public final class AutoStrafe {
         double distanceError = distance - AutoStrafeSettings.getOrbitDistance();
         double radialStrength = clamp(distanceError * 0.65D, -1.0D, 1.0D);
         double tangentStrength = AutoStrafeSettings.getSpeed() / 100.0D;
-
         double worldX = towardX * radialStrength + tangentX * tangentStrength;
         double worldZ = towardZ * radialStrength + tangentZ * tangentStrength;
+
         double outputMagnitude = Math.sqrt(worldX * worldX + worldZ * worldZ);
-        if (outputMagnitude < TARGET_DISTANCE_EPSILON) return;
+        if (outputMagnitude < TARGET_DISTANCE_EPSILON) {
+            restorePhysicalMovementKeys(mc);
+            return;
+        }
         if (outputMagnitude > 1.0D) {
             worldX /= outputMagnitude;
             worldZ /= outputMagnitude;
         }
 
-        // Convert the desired world-space vector back into Minecraft's local
-        // forward/strafe axes without changing the player's requested input strength.
+        // Convert the desired world-space vector into Minecraft's local
+        // forward/strafe axes. Movement bindings are digital in Minecraft 1.8.9.
         double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
         double sinYaw = Math.sin(yaw);
         double cosYaw = Math.cos(yaw);
         double localStrafe = worldX * cosYaw + worldZ * sinYaw;
         double localForward = -worldX * sinYaw + worldZ * cosYaw;
-        double scale = Math.min(1.0D, inputMagnitude);
-
-        input.moveForward = (float) clamp(localForward * scale, -1.0D, 1.0D);
-        input.moveStrafe = (float) clamp(localStrafe * scale, -1.0D, 1.0D);
+        applyMovementKeys(mc, localForward, localStrafe);
     }
 
     private EntityPlayer findTarget(Minecraft mc) {
@@ -105,6 +125,46 @@ public final class AutoStrafe {
             }
         }
         return best;
+    }
+
+    private void applyMovementKeys(Minecraft mc, double forward, double strafe) {
+        boolean pressForward = forward > INPUT_THRESHOLD;
+        boolean pressBack = forward < -INPUT_THRESHOLD;
+        boolean pressLeft = strafe > INPUT_THRESHOLD;
+        boolean pressRight = strafe < -INPUT_THRESHOLD;
+
+        if (!pressForward && !pressBack && !pressLeft && !pressRight) {
+            if (Math.abs(forward) >= Math.abs(strafe)) {
+                pressForward = forward >= 0.0D;
+                pressBack = !pressForward;
+            } else {
+                pressLeft = strafe >= 0.0D;
+                pressRight = !pressLeft;
+            }
+        }
+
+        setKey(mc.gameSettings.keyBindForward, pressForward);
+        setKey(mc.gameSettings.keyBindBack, pressBack);
+        setKey(mc.gameSettings.keyBindLeft, pressLeft);
+        setKey(mc.gameSettings.keyBindRight, pressRight);
+    }
+
+    private void restorePhysicalMovementKeys(Minecraft mc) {
+        setKey(mc.gameSettings.keyBindForward, isPhysicalKeyDown(mc.gameSettings.keyBindForward));
+        setKey(mc.gameSettings.keyBindBack, isPhysicalKeyDown(mc.gameSettings.keyBindBack));
+        setKey(mc.gameSettings.keyBindLeft, isPhysicalKeyDown(mc.gameSettings.keyBindLeft));
+        setKey(mc.gameSettings.keyBindRight, isPhysicalKeyDown(mc.gameSettings.keyBindRight));
+    }
+
+    private boolean isPhysicalKeyDown(KeyBinding binding) {
+        int keyCode = binding.getKeyCode();
+        if (keyCode == 0) return false;
+        return keyCode < 0 ? Mouse.isButtonDown(keyCode + 100) : Keyboard.isKeyDown(keyCode);
+    }
+
+    private void setKey(KeyBinding binding, boolean pressed) {
+        int keyCode = binding.getKeyCode();
+        if (keyCode != 0) KeyBinding.setKeyBindState(keyCode, pressed);
     }
 
     private static double clamp(double value, double min, double max) {
