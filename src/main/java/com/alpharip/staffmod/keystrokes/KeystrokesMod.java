@@ -171,8 +171,8 @@ public final class KeystrokesMod {
         int size = boxSize;
         int gap = Math.max(1, size / 9);
         int gridWidth = size * 3 + gap * 2;
-        int mouseHeight = size;
-        int movementTop = showClicks ? size + gap : 0;
+        int mouseHeight = size + 8;
+        int movementTop = showClicks ? mouseHeight + gap : 0;
         int spaceTop = movementTop + (showMovementKeys ? size * 2 + gap * 2 : 0) + (showSpaceBar ? gap : 0);
         int totalHeight = movementTop + (showMovementKeys ? size * 2 + gap : 0)
                 + (showSpaceBar ? gap + Math.max(4, size / 2) : 0);
@@ -184,9 +184,9 @@ public final class KeystrokesMod {
         if (showClicks) {
             int mouseWidth = (gridWidth - gap) / 2;
             drawKey(mc, 0, 0, mouseWidth, mouseHeight, "LMB",
-                    pressedAlpha(preview ? true : isPressed(mc, 0), leftPressedAt), showCps ? CpsMod.getLeftCps() : -1);
+                    pressedAlpha(isPressed(mc, 0), leftPressedAt), showCps ? CpsMod.getLeftCps() : -1);
             drawKey(mc, mouseWidth + gap, 0, mouseWidth, mouseHeight, "RMB",
-                    pressedAlpha(preview ? true : isPressed(mc, 1), rightPressedAt), showCps ? CpsMod.getRightCps() : -1);
+                    pressedAlpha(isPressed(mc, 1), rightPressedAt), showCps ? CpsMod.getRightCps() : -1);
         }
 
         if (showMovementKeys) {
@@ -240,12 +240,19 @@ public final class KeystrokesMod {
             Gui.drawRect(x + 2, y + 2, x + width - 2, y + 3, inner);
             Gui.drawRect(x + 2, y + height - 3, x + width - 2, y + height - 2, inner);
         }
-        String text = cps >= 0 ? label + " " + cps : label;
         int color = active > 0.01F ? 0xFF111111 : WHITE;
+        if (cps >= 0) {
+            drawCentered(mc, label, x, y + 3, width, color);
+            drawCentered(mc, cps + " CPS", x, y + height - mc.fontRendererObj.FONT_HEIGHT - 2, width, color);
+        } else {
+            drawCentered(mc, label, x, y + (height - mc.fontRendererObj.FONT_HEIGHT) / 2, width, color);
+        }
+    }
+
+    private static void drawCentered(Minecraft mc, String text, int x, int y, int width, int color) {
         int tx = x + (width - mc.fontRendererObj.getStringWidth(text)) / 2;
-        int ty = y + (height - mc.fontRendererObj.FONT_HEIGHT) / 2;
-        if (textShadow) mc.fontRendererObj.drawStringWithShadow(text, tx, ty, color);
-        else mc.fontRendererObj.drawString(text, tx, ty, color, false);
+        if (textShadow) mc.fontRendererObj.drawStringWithShadow(text, tx, y, color);
+        else mc.fontRendererObj.drawString(text, tx, y, color, false);
     }
 
     private static int blend(int from, int to, float amount) {
@@ -270,7 +277,7 @@ public final class KeystrokesMod {
     }
     public static int getHudHeight() {
         load(); int size = boxSize, gap = Math.max(1, size / 9);
-        return (showClicks ? size : 0) + (showClicks && showMovementKeys ? gap : 0)
+        return (showClicks ? size + 8 : 0) + (showClicks && showMovementKeys ? gap : 0)
                 + (showMovementKeys ? size * 2 + gap : 0)
                 + (showSpaceBar ? gap + Math.max(4, size / 2) : 0);
     }
