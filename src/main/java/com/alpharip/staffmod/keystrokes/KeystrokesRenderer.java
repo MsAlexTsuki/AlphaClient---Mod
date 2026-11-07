@@ -12,24 +12,45 @@ public final class KeystrokesRenderer {
     public static final int BASE_HEIGHT = 98;
     private KeystrokesRenderer() { }
 
+    public static int getRenderedHeight() {
+        int height = 0;
+        if (KeystrokesSettings.showMovement()) height += 42;
+        if (KeystrokesSettings.showMouse()) height += 34;
+        if (KeystrokesSettings.showSpace()) height += 20;
+        if (height > 0) height -= 2;
+        return height;
+    }
+
     public static void render(Minecraft mc, int x, int y, float scale) {
         if (mc == null || mc.fontRendererObj == null) return;
         KeystrokesSettings.load();
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, 0);
         GlStateManager.scale(scale, scale, 1);
+
+        int contentHeight = getRenderedHeight();
+        if (contentHeight > 0 && KeystrokesSettings.hasBackground()) {
+            int alpha = KeystrokesSettings.getBackgroundAlpha();
+            int panel = (alpha << 24) | 0x000A0C11;
+            if (KeystrokesSettings.isRounded()) roundedRect(0, 0, BASE_WIDTH, contentHeight, 5, panel);
+            else Gui.drawRect(0, 0, BASE_WIDTH, contentHeight, panel);
+        }
+
+        int nextY = 0;
         if (KeystrokesSettings.showMovement()) {
-            key(mc, 25, 0, 20, 20, "W", KeystrokesInput.isForward());
-            key(mc, 2, 22, 20, 20, "A", KeystrokesInput.isLeft());
-            key(mc, 25, 22, 20, 20, "S", KeystrokesInput.isBack());
-            key(mc, 48, 22, 20, 20, "D", KeystrokesInput.isRight());
+            key(mc, 25, nextY, 20, 20, "W", KeystrokesInput.isForward());
+            key(mc, 2, nextY + 22, 20, 20, "A", KeystrokesInput.isLeft());
+            key(mc, 25, nextY + 22, 20, 20, "S", KeystrokesInput.isBack());
+            key(mc, 48, nextY + 22, 20, 20, "D", KeystrokesInput.isRight());
+            nextY += 42;
         }
         if (KeystrokesSettings.showMouse()) {
-            mouse(mc, 2, 45, "LMB", KeystrokesInput.isLeftMouseDown(), KeystrokesInput.getLeftCps());
-            mouse(mc, 36, 45, "RMB", KeystrokesInput.isRightMouseDown(), KeystrokesInput.getRightCps());
+            mouse(mc, 2, nextY, "LMB", KeystrokesInput.isLeftMouseDown(), KeystrokesInput.getLeftCps());
+            mouse(mc, 36, nextY, "RMB", KeystrokesInput.isRightMouseDown(), KeystrokesInput.getRightCps());
+            nextY += 34;
         }
         if (KeystrokesSettings.showSpace()) {
-            key(mc, 2, 76, 66, 20, "SPACE", KeystrokesInput.isJump());
+            key(mc, 2, nextY, 66, 20, "SPACE", KeystrokesInput.isJump());
         }
         GlStateManager.popMatrix();
     }
@@ -56,15 +77,8 @@ public final class KeystrokesRenderer {
 
     private static void box(int x, int y, int w, int h, boolean active) {
         int fill = active ? KeystrokesSettings.getActiveColor() : KeystrokesSettings.getInactiveColor();
-        if (KeystrokesSettings.hasBackground()) {
-            int alpha = KeystrokesSettings.getBackgroundAlpha();
-            int bg = (alpha << 24) | 0x000A0C11;
-            if (KeystrokesSettings.isRounded()) {
-                roundedRect(x, y, x + w, y + h, 4, bg);
-            } else Gui.drawRect(x, y, x + w, y + h, bg);
-        }
-        if (KeystrokesSettings.isRounded()) roundedRect(x + 1, y + 1, x + w - 1, y + h - 1, 3, fill);
-        else Gui.drawRect(x + 1, y + 1, x + w - 1, y + h - 1, fill);
+        if (KeystrokesSettings.isRounded()) roundedRect(x, y, x + w, y + h, 3, fill);
+        else Gui.drawRect(x, y, x + w, y + h, fill);
     }
 
     private static void roundedRect(float left, float top, float right, float bottom, float radius, int color) {
