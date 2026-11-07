@@ -8,57 +8,97 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
-/** In-game controls for Keystrokes appearance and visible components. */
+/** Polished two-column settings screen for the Keystrokes HUD. */
 public final class KeystrokesSettingsGui extends AlphaGuiScreen {
-    private static final int BACK=1, BG=2, ROUND=3, MOVEMENT=4, SPACE=5, MOUSE=6, CPS=7, ACTIVE=8, INACTIVE=9, TEXT=10, ALPHA_DOWN=11, ALPHA_UP=12, SCALE_DOWN=13, SCALE_UP=14;
+    private static final int BACK = 1;
+    private static final int BG = 2, CORNERS = 3, OPACITY_DOWN = 4, OPACITY_UP = 5;
+    private static final int WASD = 10, SPACE = 11, MOUSE = 12, CPS = 13;
+    private static final int SCALE_DOWN = 20, SCALE_UP = 21;
+    private static final int ACTIVE_BASE = 100, INACTIVE_BASE = 110, TEXT_BASE = 120;
+    private static final int[] COLORS = {0xFFFFD866, 0xFF55FF55, 0xFF55FFFF, 0xFFFF5555, 0xFFFFFFFF, 0xFFAA55FF};
+    private static final String[] COLOR_NAMES = {"GOLD", "GREEN", "CYAN", "RED", "WHITE", "PURPLE"};
     private final GuiScreen parent;
-    public KeystrokesSettingsGui(GuiScreen parent) { this.parent=parent; }
+    private int panelX, panelY;
+
+    public KeystrokesSettingsGui(GuiScreen parent) { this.parent = parent; }
 
     @Override public void initGui() {
-        KeystrokesSettings.load(); buttonList.clear();
-        int w=190, x=(width-w)/2, y=Math.max(34,(height-220)/2);
-        buttonList.add(new AlphaButton(BG,x,y,w,20,"BACKGROUND: "+(KeystrokesSettings.hasBackground()?"ON":"OFF")));
-        buttonList.add(new AlphaButton(ROUND,x,y+24,w,20,"ROUNDED: "+(KeystrokesSettings.isRounded()?"ON":"OFF")));
-        buttonList.add(new AlphaButton(MOVEMENT,x,y+48,w,20,"WASD: "+(KeystrokesSettings.showMovement()?"ON":"OFF")));
-        buttonList.add(new AlphaButton(SPACE,x,y+72,w,20,"SPACE: "+(KeystrokesSettings.showSpace()?"ON":"OFF")));
-        buttonList.add(new AlphaButton(MOUSE,x,y+96,w,20,"MOUSE: "+(KeystrokesSettings.showMouse()?"ON":"OFF")));
-        buttonList.add(new AlphaButton(CPS,x,y+120,w,20,"CPS: "+(KeystrokesSettings.showCps()?"ON":"OFF")));
-        buttonList.add(new AlphaButton(ACTIVE,x,y+144,w,20,"CYCLE ACTIVE COLOR"));
-        buttonList.add(new AlphaButton(INACTIVE,x,y+168,w,20,"CYCLE INACTIVE COLOR"));
-        buttonList.add(new AlphaButton(TEXT,x,y+192,w,20,"CYCLE TEXT COLOR"));
-        buttonList.add(new AlphaButton(ALPHA_DOWN,x-36,y+24,30,20,"-"));
-        buttonList.add(new AlphaButton(ALPHA_UP,x+w+6,y+24,30,20,"+"));
-        buttonList.add(new AlphaButton(SCALE_DOWN,x-36,y+72,30,20,"-"));
-        buttonList.add(new AlphaButton(SCALE_UP,x+w+6,y+72,30,20,"+"));
-        buttonList.add(new AlphaButton(BACK,x,height-30,w,20,"BACK"));
+        KeystrokesSettings.load();
+        buttonList.clear();
+        panelX = (width - 360) / 2;
+        panelY = (height - 300) / 2;
+        int left = panelX + 12, right = panelX + 188, top = panelY + 38;
+        int colWidth = 160, rowHeight = 23;
+
+        buttonList.add(new AlphaButton(WASD, left, top, colWidth, 20, state("WASD", KeystrokesSettings.showMovement()), false, KeystrokesSettings.showMovement()));
+        buttonList.add(new AlphaButton(SPACE, left, top + rowHeight, colWidth, 20, state("SPACE", KeystrokesSettings.showSpace()), false, KeystrokesSettings.showSpace()));
+        buttonList.add(new AlphaButton(MOUSE, left, top + rowHeight * 2, colWidth, 20, state("MOUSE BUTTONS", KeystrokesSettings.showMouse()), false, KeystrokesSettings.showMouse()));
+        buttonList.add(new AlphaButton(CPS, left, top + rowHeight * 3, colWidth, 20, state("CPS COUNTERS", KeystrokesSettings.showCps()), false, KeystrokesSettings.showCps()));
+
+        buttonList.add(new AlphaButton(BG, right, top, colWidth, 20, state("HUD BACKGROUND", KeystrokesSettings.hasBackground()), false, KeystrokesSettings.hasBackground()));
+        buttonList.add(new AlphaButton(CORNERS, right, top + rowHeight, colWidth, 20, "CORNERS: " + (KeystrokesSettings.isRounded() ? "SOFT" : "SQUARE"), false, KeystrokesSettings.isRounded()));
+        buttonList.add(new AlphaButton(OPACITY_DOWN, right, top + rowHeight * 2, 76, 20, "OPACITY -"));
+        buttonList.add(new AlphaButton(OPACITY_UP, right + 84, top + rowHeight * 2, 76, 20, "OPACITY +"));
+        buttonList.add(new AlphaButton(SCALE_DOWN, right, top + rowHeight * 3, 76, 20, "SCALE -"));
+        buttonList.add(new AlphaButton(SCALE_UP, right + 84, top + rowHeight * 3, 76, 20, "SCALE +"));
+
+        addPalette(ACTIVE_BASE, panelY + 158, "ACTIVE", KeystrokesSettings.getActiveColor());
+        addPalette(INACTIVE_BASE, panelY + 198, "IDLE", KeystrokesSettings.getInactiveColor());
+        addPalette(TEXT_BASE, panelY + 238, "TEXT", KeystrokesSettings.getTextColor());
+        buttonList.add(new AlphaButton(BACK, panelX + 12, panelY + 274, 336, 18, "DONE", true));
+    }
+
+    private static String state(String name, boolean enabled) {
+        return name + "  " + (enabled ? "ON" : "OFF");
+    }
+
+    private void addPalette(int baseId, int y, String label, int selectedColor) {
+        int startX = panelX + 12;
+        for (int i = 0; i < COLORS.length; i++) {
+            boolean selected = COLORS[i] == selectedColor;
+            String caption = selected ? "[" + COLOR_NAMES[i] + "]" : COLOR_NAMES[i];
+            buttonList.add(new AlphaButton(baseId + i, startX + i * 56, y, 52, 19, caption, false, selected));
+        }
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
-        if(button==null)return;
-        switch(button.id) {
-            case BACK: mc.displayGuiScreen(parent); return;
-            case BG: KeystrokesSettings.toggleBackground(); break;
-            case ROUND: KeystrokesSettings.toggleRounded(); break;
-            case MOVEMENT: KeystrokesSettings.toggleMovement(); break;
-            case SPACE: KeystrokesSettings.toggleSpace(); break;
-            case MOUSE: KeystrokesSettings.toggleMouse(); break;
-            case CPS: KeystrokesSettings.toggleCps(); break;
-            case ACTIVE: KeystrokesSettings.cycleActiveColor(); break;
-            case INACTIVE: KeystrokesSettings.cycleInactiveColor(); break;
-            case TEXT: KeystrokesSettings.cycleTextColor(); break;
-            case ALPHA_DOWN: KeystrokesSettings.adjustBackgroundAlpha(-15); break;
-            case ALPHA_UP: KeystrokesSettings.adjustBackgroundAlpha(15); break;
-            case SCALE_DOWN: HudScaleConfig.set("keystrokes",HudScaleConfig.get("keystrokes")-0.1F); break;
-            case SCALE_UP: HudScaleConfig.set("keystrokes",HudScaleConfig.get("keystrokes")+0.1F); break;
+        if (button == null) return;
+        int id = button.id;
+        if (id == BACK) {
+            mc.displayGuiScreen(parent);
+            return;
         }
+        if (id == WASD) KeystrokesSettings.toggleMovement();
+        else if (id == SPACE) KeystrokesSettings.toggleSpace();
+        else if (id == MOUSE) KeystrokesSettings.toggleMouse();
+        else if (id == CPS) KeystrokesSettings.toggleCps();
+        else if (id == BG) KeystrokesSettings.toggleBackground();
+        else if (id == CORNERS) KeystrokesSettings.toggleRounded();
+        else if (id == OPACITY_DOWN) KeystrokesSettings.adjustBackgroundAlpha(-15);
+        else if (id == OPACITY_UP) KeystrokesSettings.adjustBackgroundAlpha(15);
+        else if (id == SCALE_DOWN) HudScaleConfig.set("keystrokes", HudScaleConfig.get("keystrokes") - 0.1F);
+        else if (id == SCALE_UP) HudScaleConfig.set("keystrokes", HudScaleConfig.get("keystrokes") + 0.1F);
+        else if (id >= ACTIVE_BASE && id < ACTIVE_BASE + COLORS.length) KeystrokesSettings.setActiveColor(COLORS[id - ACTIVE_BASE]);
+        else if (id >= INACTIVE_BASE && id < INACTIVE_BASE + COLORS.length) KeystrokesSettings.setInactiveColor(COLORS[id - INACTIVE_BASE]);
+        else if (id >= TEXT_BASE && id < TEXT_BASE + COLORS.length) KeystrokesSettings.setTextColor(COLORS[id - TEXT_BASE]);
         initGui();
     }
 
-    @Override public void drawScreen(int mouseX,int mouseY,float partialTicks) {
-        drawRect(0,0,width,height,0xB8000000);
-        drawCenteredString(fontRendererObj,"KEYSTROKES SETTINGS",width/2,Math.max(12,(height-220)/2-18),0xFFFFD866);
-        drawCenteredString(fontRendererObj,"Background opacity: "+KeystrokesSettings.getBackgroundAlpha()+"  |  HUD scale: "+String.format("%.1f",HudScaleConfig.get("keystrokes")),width/2,Math.max(20,(height-220)/2+218),0xFFE7E9EE);
-        super.drawScreen(mouseX,mouseY,partialTicks);
+    @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawRect(0, 0, width, height, 0xC8000000);
+        drawRect(panelX, panelY, panelX + 360, panelY + 300, 0xF012141B);
+        drawRect(panelX, panelY, panelX + 360, panelY + 2, 0xFFFFD866);
+        drawCenteredString(fontRendererObj, "KEYSTROKES", width / 2, panelY + 12, 0xFFFFD866);
+        drawString(fontRendererObj, "HUD COMPONENTS", panelX + 12, panelY + 27, 0xFF9DA4B1);
+        drawString(fontRendererObj, "APPEARANCE", panelX + 188, panelY + 27, 0xFF9DA4B1);
+        drawString(fontRendererObj, "ACTIVE KEY COLOR", panelX + 12, panelY + 148, 0xFF9DA4B1);
+        drawString(fontRendererObj, "IDLE KEY COLOR", panelX + 12, panelY + 188, 0xFF9DA4B1);
+        drawString(fontRendererObj, "TEXT COLOR", panelX + 12, panelY + 228, 0xFF9DA4B1);
+        drawString(fontRendererObj, "Opacity: " + KeystrokesSettings.getBackgroundAlpha()
+                + "    Scale: " + String.format("%.1f", HudScaleConfig.get("keystrokes")),
+                panelX + 188, panelY + 138, 0xFFE7E9EE);
+        super.drawScreen(mouseX, mouseY, partialTicks);
     }
-    @Override public boolean doesGuiPauseGame(){return false;}
+
+    @Override public boolean doesGuiPauseGame() { return false; }
 }
