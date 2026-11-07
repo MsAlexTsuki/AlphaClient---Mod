@@ -159,6 +159,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(cps);
 
+        AlphaModule keystrokes = new AlphaModule(
+                "keystrokes",
+                "Keystrokes",
+                "Display movement keys, mouse clicks, and optional CPS on the HUD.",
+                AlphaModule.Category.PUBLIC,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(keystrokes);
+
         AlphaModule comboCounter = new AlphaModule(
                 "combo-counter",
                 "Combo Counter",
