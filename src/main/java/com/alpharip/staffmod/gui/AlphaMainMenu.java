@@ -47,8 +47,8 @@ public final class AlphaMainMenu extends AlphaGuiScreen {
         buttonList.clear();
 
         compactLayout = width < 900 || height < 540;
-        buttonWidth = Math.min(compactLayout ? 280 : 320, Math.max(180, width - 48));
-        buttonHeight = height < 360 ? 22 : height < 420 ? 26 : 32;
+        buttonWidth = Math.min(compactLayout ? 272 : 310, Math.max(180, width - 48));
+        buttonHeight = height < 360 ? 21 : height < 420 ? 25 : 30;
         buttonGap = height < 360 ? 2 : height < 420 ? 3 : 5;
 
         int menuHeight = 5 * buttonHeight + 4 * buttonGap;
