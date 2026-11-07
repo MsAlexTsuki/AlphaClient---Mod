@@ -49,25 +49,36 @@ public final class AutoStrafeSettingsGui extends AlphaGuiScreen {
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
 
+        boolean settingsEnabled = module.isConfiguredEnabled();
         buttonList.add(new AlphaButton(ENABLED, width / 2 - 90, top + 48, 180, 20,
-                "AUTOSTRAFE: " + (module.isConfiguredEnabled() ? "ON" : "OFF")));
-        buttonList.add(new AlphaButton(DIRECTION, left + 16, top + 84, panelWidth - 32, 20,
-                "DIRECTION: " + AutoStrafeSettings.getDirection().name()));
-        addStepper(SPEED_DOWN, SPEED_UP, "SPEED: " + AutoStrafeSettings.getSpeed() + "%", top + 112);
+                "AUTOSTRAFE: " + (settingsEnabled ? "ON" : "OFF")));
+        AlphaButton directionButton = new AlphaButton(DIRECTION, left + 16, top + 84,
+                panelWidth - 32, 20, "DIRECTION: " + AutoStrafeSettings.getDirection().name());
+        directionButton.enabled = settingsEnabled;
+        buttonList.add(directionButton);
+        addStepper(SPEED_DOWN, SPEED_UP, "SPEED: " + AutoStrafeSettings.getSpeed() + "%", top + 112, settingsEnabled);
         addStepper(DISTANCE_DOWN, DISTANCE_UP,
-                "ORBIT DISTANCE: " + format(AutoStrafeSettings.getOrbitDistance()) + " blocks", top + 142);
+                "ORBIT DISTANCE: " + format(AutoStrafeSettings.getOrbitDistance()) + " blocks", top + 142, settingsEnabled);
         addStepper(RANGE_DOWN, RANGE_UP,
-                "TARGET RANGE: " + format(AutoStrafeSettings.getTargetRange()) + " blocks", top + 172);
+                "TARGET RANGE: " + format(AutoStrafeSettings.getTargetRange()) + " blocks", top + 172, settingsEnabled);
 
-        buttonList.add(new AlphaButton(RESET, left + 16, top + panelHeight - 30, 112, 18, "RESET DEFAULTS"));
+        AlphaButton resetButton = new AlphaButton(RESET, left + 16, top + panelHeight - 30, 112, 18, "RESET DEFAULTS");
+        resetButton.enabled = settingsEnabled;
+        buttonList.add(resetButton);
         buttonList.add(new AlphaButton(BACK, left + panelWidth - 92, top + panelHeight - 30, 76, 18, "BACK"));
     }
 
-    private void addStepper(int downId, int upId, String label, int y) {
+    private void addStepper(int downId, int upId, String label, int y, boolean enabled) {
         int center = width / 2;
-        buttonList.add(new AlphaButton(downId, center - 142, y, 24, 20, "-"));
-        buttonList.add(new AlphaButton(1000 + downId, center - 114, y, 228, 20, label));
-        buttonList.add(new AlphaButton(upId, center + 118, y, 24, 20, "+"));
+        AlphaButton down = new AlphaButton(downId, center - 142, y, 24, 20, "-");
+        AlphaButton value = new AlphaButton(1000 + downId, center - 114, y, 228, 20, label);
+        AlphaButton up = new AlphaButton(upId, center + 118, y, 24, 20, "+");
+        down.enabled = enabled;
+        value.enabled = enabled;
+        up.enabled = enabled;
+        buttonList.add(down);
+        buttonList.add(value);
+        buttonList.add(up);
     }
 
     private String format(double value) {
