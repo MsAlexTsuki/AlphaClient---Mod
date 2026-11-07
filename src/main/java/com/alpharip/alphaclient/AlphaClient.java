@@ -21,6 +21,7 @@ import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.ComboCounter.ComboCounter;
 import com.alpharip.staffmod.combat.AimAssist;
+import com.alpharip.staffmod.movement.AutoStrafe;
 import com.alpharip.staffmod.pvp.LegacyPvpMod;
 import com.alpharip.staffmod.optimization.FpsOptimization;
 import com.alpharip.staffmod.optimization.AlphaPerformanceCore;
@@ -164,6 +165,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new LegacyPvpMod());
         MinecraftForge.EVENT_BUS.register(new WTapAssistance());
         MinecraftForge.EVENT_BUS.register(new AimAssist());
+        MinecraftForge.EVENT_BUS.register(new AutoStrafe());
         MinecraftForge.EVENT_BUS.register(new FullbrightMod());
         MinecraftForge.EVENT_BUS.register(new AutoGGMod());
         MinecraftForge.EVENT_BUS.register(new AutoReconnectMod());

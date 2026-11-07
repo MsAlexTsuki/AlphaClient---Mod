@@ -134,8 +134,9 @@ public final class AlphaModule {
             return true;
         }
 
-        // AimAssist requires the authenticated Founder session; offline test-mode rank fallback is insufficient.
-        if ("aim-assist".equals(id)) {
+        // Founder-only combat assistance requires the authenticated Founder session;
+        // offline test-mode rank fallback and Owner access are insufficient.
+        if ("aim-assist".equals(id) || "auto-strafe".equals(id)) {
             return SupabaseCommunityService.isSignedInFounder();
         }
 

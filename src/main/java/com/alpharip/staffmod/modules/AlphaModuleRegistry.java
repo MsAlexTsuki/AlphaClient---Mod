@@ -229,6 +229,15 @@ public final class AlphaModuleRegistry {
                 true,
                 DEFAULT_MODULE_ENABLED
         ));
+
+        MODULES.add(new AlphaModule(
+                "auto-strafe",
+                "AutoStrafe",
+                "Automatically adjusts movement to orbit the nearest visible player while movement input is active.",
+                AlphaModule.Category.FOUNDER,
+                true,
+                DEFAULT_MODULE_ENABLED
+        ));
     }
 
     private AlphaModuleRegistry() {
