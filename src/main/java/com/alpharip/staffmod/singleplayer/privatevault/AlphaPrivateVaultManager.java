@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Stores only non-empty vaults inside the active singleplayer world's save folder.
@@ -29,6 +32,52 @@ public final class AlphaPrivateVaultManager {
     public static boolean isAvailable(Minecraft mc) {
         return mc != null && mc.isSingleplayer() && mc.getIntegratedServer() != null
                 && mc.thePlayer != null && mc.theWorld != null;
+    }
+
+    /**
+     * Returns only vault numbers with a saved data file in the active world.
+     * Unopened and empty vault numbers are intentionally absent.
+     */
+    public List<Integer> getSavedVaultNumbers() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!isAvailable(mc)) {
+            return Collections.emptyList();
+        }
+
+        try {
+            File directory = getStorageDirectory(mc);
+            File[] files = directory.listFiles();
+            List<Integer> vaultNumbers = new ArrayList<Integer>();
+            if (files == null) {
+                return vaultNumbers;
+            }
+
+            for (File file : files) {
+                if (!file.isFile()) {
+                    continue;
+                }
+                String name = file.getName();
+                if (!name.startsWith("vault-") || !name.endsWith(".dat")) {
+                    continue;
+                }
+
+                String numberText = name.substring(6, name.length() - 4);
+                try {
+                    int number = Integer.parseInt(numberText);
+                    if (number > 0) {
+                        vaultNumbers.add(number);
+                    }
+                } catch (NumberFormatException ignored) {
+                    // Ignore unrelated or malformed filenames.
+                }
+            }
+            Collections.sort(vaultNumbers);
+            return vaultNumbers;
+        } catch (IOException failure) {
+            System.err.println("[AlphaClient] Could not list Alpha Private Vaults: "
+                    + failure.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     public AlphaPrivateVaultInventory loadVault(int vaultNumber) {
@@ -150,6 +199,11 @@ public final class AlphaPrivateVaultManager {
     }
 
     private static File getVaultFile(Minecraft mc, int vaultNumber) throws IOException {
+        File storageDirectory = getStorageDirectory(mc);
+        return new File(storageDirectory, "vault-" + vaultNumber + ".dat");
+    }
+
+    private static File getStorageDirectory(Minecraft mc) throws IOException {
         String folderName = mc.getIntegratedServer().getFolderName();
         if (folderName == null || folderName.trim().isEmpty()) {
             throw new IOException("The active singleplayer world folder is unavailable.");
@@ -163,8 +217,7 @@ public final class AlphaPrivateVaultManager {
             throw new IOException("The active world path is invalid.");
         }
 
-        File storageDirectory = new File(new File(worldDirectory, "alphaclient"), "privatevaults");
-        return new File(storageDirectory, "vault-" + vaultNumber + ".dat");
+        return new File(new File(worldDirectory, "alphaclient"), "privatevaults");
     }
 
     private static void validateVaultNumber(int vaultNumber) {
