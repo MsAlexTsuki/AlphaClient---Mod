@@ -23,6 +23,9 @@ public final class AutoStrafe {
     private static final double TARGET_DISTANCE_EPSILON = 0.001D;
     private static final double INPUT_THRESHOLD = 0.25D;
 
+    private boolean controllingMovement;
+    private boolean lastForward, lastBack, lastLeft, lastRight;
+
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event == null || event.phase != TickEvent.Phase.START) return;
@@ -34,29 +37,35 @@ public final class AutoStrafe {
             return;
         }
 
-        AlphaModule module = AlphaModuleRegistry.find("auto-strafe");
-        if (mc.currentScreen != null || !SupabaseCommunityService.isSignedInFounder()
-                || module == null || !module.isImplemented()
-                || !module.isUnlocked() || !module.isEnabled()) {
-            restorePhysicalMovementKeys(mc);
-            return;
-        }
-
         boolean physicalForward = isPhysicalKeyDown(mc.gameSettings.keyBindForward);
         boolean physicalBack = isPhysicalKeyDown(mc.gameSettings.keyBindBack);
         boolean physicalLeft = isPhysicalKeyDown(mc.gameSettings.keyBindLeft);
         boolean physicalRight = isPhysicalKeyDown(mc.gameSettings.keyBindRight);
 
+        // Preserve intentional key changes made by other modules such as W-Tap/S-Tap.
+        if (hasExternalMovementOverride(mc, physicalForward, physicalBack, physicalLeft, physicalRight)) {
+            controllingMovement = false;
+            return;
+        }
+
+        AlphaModule module = AlphaModuleRegistry.find("auto-strafe");
+        if (mc.currentScreen != null || !SupabaseCommunityService.isSignedInFounder()
+                || module == null || !module.isImplemented()
+                || !module.isUnlocked() || !module.isEnabled()) {
+            restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
+            return;
+        }
+
         double inputForward = (physicalForward ? 1.0D : 0.0D) - (physicalBack ? 1.0D : 0.0D);
         double inputStrafe = (physicalLeft ? 1.0D : 0.0D) - (physicalRight ? 1.0D : 0.0D);
         if (Math.abs(inputForward) + Math.abs(inputStrafe) < 0.01D) {
-            restorePhysicalMovementKeys(mc);
+            restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
         }
 
         EntityPlayer target = findTarget(mc);
         if (target == null) {
-            restorePhysicalMovementKeys(mc);
+            restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
         }
 
@@ -64,7 +73,7 @@ public final class AutoStrafe {
         double dz = target.posZ - mc.thePlayer.posZ;
         double distance = Math.sqrt(dx * dx + dz * dz);
         if (distance < TARGET_DISTANCE_EPSILON) {
-            restorePhysicalMovementKeys(mc);
+            restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
         }
 
@@ -88,7 +97,7 @@ public final class AutoStrafe {
 
         double outputMagnitude = Math.sqrt(worldX * worldX + worldZ * worldZ);
         if (outputMagnitude < TARGET_DISTANCE_EPSILON) {
-            restorePhysicalMovementKeys(mc);
+            restorePhysicalMovementKeys(mc, physicalForward, physicalBack, physicalLeft, physicalRight);
             return;
         }
         if (outputMagnitude > 1.0D) {
@@ -127,6 +136,20 @@ public final class AutoStrafe {
         return best;
     }
 
+    private boolean hasExternalMovementOverride(Minecraft mc, boolean physicalForward,
+                                                boolean physicalBack, boolean physicalLeft,
+                                                boolean physicalRight) {
+        return isExternalOverride(mc.gameSettings.keyBindForward, physicalForward, lastForward)
+                || isExternalOverride(mc.gameSettings.keyBindBack, physicalBack, lastBack)
+                || isExternalOverride(mc.gameSettings.keyBindLeft, physicalLeft, lastLeft)
+                || isExternalOverride(mc.gameSettings.keyBindRight, physicalRight, lastRight);
+    }
+
+    private boolean isExternalOverride(KeyBinding binding, boolean physical, boolean lastApplied) {
+        boolean current = binding.isKeyDown();
+        return controllingMovement ? current != lastApplied && current != physical : current != physical;
+    }
+
     private void applyMovementKeys(Minecraft mc, double forward, double strafe) {
         boolean pressForward = forward > INPUT_THRESHOLD;
         boolean pressBack = forward < -INPUT_THRESHOLD;
@@ -147,13 +170,21 @@ public final class AutoStrafe {
         setKey(mc.gameSettings.keyBindBack, pressBack);
         setKey(mc.gameSettings.keyBindLeft, pressLeft);
         setKey(mc.gameSettings.keyBindRight, pressRight);
+        lastForward = pressForward;
+        lastBack = pressBack;
+        lastLeft = pressLeft;
+        lastRight = pressRight;
+        controllingMovement = true;
     }
 
-    private void restorePhysicalMovementKeys(Minecraft mc) {
-        setKey(mc.gameSettings.keyBindForward, isPhysicalKeyDown(mc.gameSettings.keyBindForward));
-        setKey(mc.gameSettings.keyBindBack, isPhysicalKeyDown(mc.gameSettings.keyBindBack));
-        setKey(mc.gameSettings.keyBindLeft, isPhysicalKeyDown(mc.gameSettings.keyBindLeft));
-        setKey(mc.gameSettings.keyBindRight, isPhysicalKeyDown(mc.gameSettings.keyBindRight));
+    private void restorePhysicalMovementKeys(Minecraft mc, boolean forward,
+                                             boolean back, boolean left, boolean right) {
+        if (!controllingMovement) return;
+        setKey(mc.gameSettings.keyBindForward, forward);
+        setKey(mc.gameSettings.keyBindBack, back);
+        setKey(mc.gameSettings.keyBindLeft, left);
+        setKey(mc.gameSettings.keyBindRight, right);
+        controllingMovement = false;
     }
 
     private boolean isPhysicalKeyDown(KeyBinding binding) {
