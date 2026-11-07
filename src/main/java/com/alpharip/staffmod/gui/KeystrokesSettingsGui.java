@@ -28,8 +28,8 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
         int colW = (right - left - 38) / 2;
         int x1 = left + 12, x2 = left + 26 + colW;
         int[] ids = {SHOW_CLICKS, SHOW_CPS, SHOW_SPACE, SHOW_MOVEMENT, ARROWS, BORDER, INNER_BORDER, SHADOW};
-        String[] names = {"SHOW CLICKS", "SHOW LMB & RMB CPS", "SHOW SPACE BAR", "SHOW MOVEMENT KEYS",
-                "REPLACE NAMES WITH ARROWS", "OUTER BORDER", "INNER BORDER", "TEXT SHADOW"};
+        String[] names = {"SHOW CLICKS", "SHOW LMB/RMB CPS", "SHOW SPACE BAR", "SHOW MOVEMENT KEYS",
+                "REPLACE WITH ARROWS", "OUTER BORDER", "INNER BORDER", "TEXT SHADOW"};
         boolean[] states = {KeystrokesMod.isShowClicks(), KeystrokesMod.isShowCps(), KeystrokesMod.isShowSpaceBar(),
                 KeystrokesMod.isShowMovementKeys(), KeystrokesMod.isUseArrows(), KeystrokesMod.isBorder(),
                 KeystrokesMod.isInnerBorder(), KeystrokesMod.isTextShadow()};
