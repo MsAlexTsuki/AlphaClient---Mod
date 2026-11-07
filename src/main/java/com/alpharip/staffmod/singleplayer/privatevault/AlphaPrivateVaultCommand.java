@@ -57,42 +57,7 @@ public final class AlphaPrivateVaultCommand extends CommandBase {
         try {
             final AlphaPrivateVaultManager manager = AlphaPrivateVaultManager.getInstance();
             final AlphaPrivateVaultInventory inventory = manager.loadVault(vaultNumber);
-            mc.displayGuiScreen(new GuiChest(mc.thePlayer.inventory, inventory) {
-                @Override
-                protected void handleMouseClick(net.minecraft.inventory.Slot slot, int slotId,
-                                                int clickedButton, int clickType) {
-                    if (!AlphaPrivateVaultManager.isAvailable(mc)) {
-                        mc.displayGuiScreen(null);
-                        return;
-                    }
-
-                    // Match GuiContainer's slot resolution, then handle the click locally.
-                    // No multiplayer/server packet is involved.
-                    if (slot != null) {
-                        slotId = slot.slotNumber;
-                    }
-                    this.inventorySlots.slotClick(slotId, clickedButton, clickType, mc.thePlayer);
-                    if (!manager.saveVault(vaultNumber, inventory)) {
-                        mc.thePlayer.addChatMessage(new ChatComponentText(
-                                "§c[Alpha Private Vault] Could not save vault " + vaultNumber + "."));
-                    }
-                }
-
-                @Override
-                public void onGuiClosed() {
-                    if (AlphaPrivateVaultManager.isAvailable(mc)
-                            && !manager.saveVault(vaultNumber, inventory)) {
-                        mc.thePlayer.addChatMessage(new ChatComponentText(
-                                "§c[Alpha Private Vault] Could not save vault " + vaultNumber + "."));
-                    }
-                    super.onGuiClosed();
-                }
-
-                @Override
-                public boolean doesGuiPauseGame() {
-                    return false;
-                }
-            });
+            mc.displayGuiScreen(new AlphaPrivateVaultScreen(vaultNumber, inventory, null));
         } catch (Exception failure) {
             reply(sender, "Could not open vault " + vaultNumber + ": "
                     + (failure.getMessage() == null ? "unknown storage error" : failure.getMessage()));
