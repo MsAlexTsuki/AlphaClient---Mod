@@ -217,8 +217,6 @@ public final class AlphaHomesManager {
 
         String previousName = home.getName();
         if (previousName.equals(normalizedNewName)) return true;
-        home.update(home.getX(), home.getY(), home.getZ(), home.getDimension(),
-                home.getWaypointId(), home.getWaypointServerKey(), home.getWaypointWorldKey());
         // Rename the linked waypoint first; its identity is validated against the saved world keys.
         boolean waypointRenamed = home.getWaypointId().isEmpty()
                 || WaypointManager.getInstance().renameHomeWaypoint(home.getWaypointId(),
