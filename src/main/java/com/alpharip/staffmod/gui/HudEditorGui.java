@@ -153,16 +153,7 @@ public class HudEditorGui extends AlphaGuiScreen {
 
         if (isCpsModuleEnabled()) {
             String cps = CpsMod.getDisplayText();
-            int kx = KeystrokesSettings.getX(), ky = KeystrokesSettings.getY();
-        int kw = (int)(KeystrokesRenderer.BASE_WIDTH * HudScaleConfig.get("keystrokes"));
-        int kh = (int)(KeystrokesRenderer.BASE_HEIGHT * HudScaleConfig.get("keystrokes"));
-        if (KeystrokesMod.isEnabled() && mouseButton == 0 && mouseX >= kx - 2 && mouseX <= kx + kw + 2
-                && mouseY >= ky - 2 && mouseY <= ky + kh + 2) {
-            dragging = true; keystrokesDragging = true; dragX = mouseX - kx; dragY = mouseY - ky;
-            selectedHud = "keystrokes"; return;
-        }
-
-        int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
+            int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
             int cw = fontRendererObj.getStringWidth(cps) + 10;
             float scale = HudScaleConfig.get("cps");
             GlStateManager.pushMatrix(); GlStateManager.translate(cx, cy, 0.0F); GlStateManager.scale(scale, scale, 1.0F);
@@ -329,6 +320,15 @@ public class HudEditorGui extends AlphaGuiScreen {
             dragY = mouseY - wlY;
             selectedHud = "win-loss-tracker";
             return;
+        }
+
+        int kx = KeystrokesSettings.getX(), ky = KeystrokesSettings.getY();
+        int kw = (int)(KeystrokesRenderer.BASE_WIDTH * HudScaleConfig.get("keystrokes"));
+        int kh = (int)(KeystrokesRenderer.BASE_HEIGHT * HudScaleConfig.get("keystrokes"));
+        if (KeystrokesMod.isEnabled() && mouseButton == 0 && mouseX >= kx - 2 && mouseX <= kx + kw + 2
+                && mouseY >= ky - 2 && mouseY <= ky + kh + 2) {
+            dragging = true; keystrokesDragging = true; dragX = mouseX - kx; dragY = mouseY - ky;
+            selectedHud = "keystrokes"; return;
         }
 
         int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
