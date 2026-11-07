@@ -4,6 +4,7 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
+import com.alpharip.staffmod.movement.AutoStrafeSettingsGui;
 import com.alpharip.staffmod.movement.STapAssistance;
 import com.alpharip.staffmod.movement.WTapAssistance;
 import com.alpharip.staffmod.permissions.PermissionService;
@@ -584,6 +585,14 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                         && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
                         && module.isImplemented() && module.isUnlocked()) {
                     mc.displayGuiScreen(new STapSettingsGui(this));
+                }
+                return;
+            }
+            if ("auto-strafe".equals(module.getId())) {
+                if (selectedRank == PermissionService.Rank.FOUNDER
+                        && com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()
+                        && module.isImplemented() && module.isUnlocked()) {
+                    mc.displayGuiScreen(new AutoStrafeSettingsGui(this));
                 }
                 return;
             }
