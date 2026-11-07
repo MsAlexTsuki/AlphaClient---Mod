@@ -57,7 +57,7 @@ public final class AlphaMainMenu extends AlphaGuiScreen {
         int logoBottom = Math.max(8, height / 22) + logoHeight;
         int bottomMargin = height < 360 ? 18 : 34;
         int logoGap = height < 360 ? 10 : 20;
-        int verticalBias = height < 360 ? 42 : 76;
+        int verticalBias = height < 360 ? 42 : 60;
         int preferredTop = Math.max(logoBottom + logoGap, (height - menuHeight) / 2 + verticalBias);
         menuTop = Math.min(preferredTop, Math.max(12, height - menuHeight - bottomMargin));
         menuLeft = (width - buttonWidth) / 2;
