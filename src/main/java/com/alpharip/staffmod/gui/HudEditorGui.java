@@ -9,6 +9,9 @@ import com.alpharip.staffmod.config.HudPositionConfig;
 import com.alpharip.staffmod.config.HudScaleConfig;
 import com.alpharip.staffmod.fps.FpsMod;
 import com.alpharip.staffmod.cps.CpsMod;
+import com.alpharip.staffmod.keystrokes.KeystrokesMod;
+import com.alpharip.staffmod.keystrokes.KeystrokesSettings;
+import com.alpharip.staffmod.keystrokes.KeystrokesRenderer;
 import com.alpharip.staffmod.ComboCounter.ComboCounter;
 import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.hud.InfoHudModules;
@@ -30,6 +33,7 @@ public class HudEditorGui extends AlphaGuiScreen {
     private boolean fpsDragging;
     private boolean pingDragging;
     private boolean cpsDragging;
+    private boolean keystrokesDragging;
     private boolean comboCounterDragging;
     private boolean afkTimerDragging;
     private boolean sessionTimerDragging;
@@ -77,6 +81,7 @@ public class HudEditorGui extends AlphaGuiScreen {
         FpsMod.loadHudPosition();
         PingMod.load();
         CpsMod.load();
+        KeystrokesSettings.load();
         if (ComboCounter.getInstance() != null) ComboCounter.getInstance().load();
         InfoHudModules.load();
         buttonList.clear();
@@ -139,9 +144,25 @@ public class HudEditorGui extends AlphaGuiScreen {
             }
         }
 
+        if (KeystrokesMod.isEnabled()) {
+            KeystrokesMod.renderEditorPreview();
+            if ("keystrokes".equals(selectedHud)) drawScaleHandle(KeystrokesSettings.getX(), KeystrokesSettings.getY(),
+                    (int)(KeystrokesRendererWidth() * HudScaleConfig.get("keystrokes")),
+                    (int)(KeystrokesRendererHeight() * HudScaleConfig.get("keystrokes")));
+        }
+
         if (isCpsModuleEnabled()) {
             String cps = CpsMod.getDisplayText();
-            int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
+            int kx = KeystrokesSettings.getX(), ky = KeystrokesSettings.getY();
+        int kw = (int)(KeystrokesRenderer.BASE_WIDTH * HudScaleConfig.get("keystrokes"));
+        int kh = (int)(KeystrokesRenderer.BASE_HEIGHT * HudScaleConfig.get("keystrokes"));
+        if (KeystrokesMod.isEnabled() && mouseButton == 0 && mouseX >= kx - 2 && mouseX <= kx + kw + 2
+                && mouseY >= ky - 2 && mouseY <= ky + kh + 2) {
+            dragging = true; keystrokesDragging = true; dragX = mouseX - kx; dragY = mouseY - ky;
+            selectedHud = "keystrokes"; return;
+        }
+
+        int cx = CpsMod.getHudX(), cy = CpsMod.getHudY();
             int cw = fontRendererObj.getStringWidth(cps) + 10;
             float scale = HudScaleConfig.get("cps");
             GlStateManager.pushMatrix(); GlStateManager.translate(cx, cy, 0.0F); GlStateManager.scale(scale, scale, 1.0F);
@@ -179,6 +200,9 @@ public class HudEditorGui extends AlphaGuiScreen {
         if ("potion".equals(selectedHud)) drawScaleHandle(InfoHudModules.getPotionX(), InfoHudModules.getPotionY(), (int)(InfoHudModules.getPotionEditorWidth() * HudScaleConfig.get("potion")), (int)(InfoHudModules.getPotionEditorHeight() * HudScaleConfig.get("potion")));
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
+
+    private int KeystrokesRendererWidth() { return KeystrokesRenderer.BASE_WIDTH; }
+    private int KeystrokesRendererHeight() { return KeystrokesRenderer.BASE_HEIGHT; }
 
     private void drawScaleHandle(int x, int y, int w, int h) {
         int right = x + Math.max(2, w);
@@ -221,6 +245,11 @@ public class HudEditorGui extends AlphaGuiScreen {
                     fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "playtimeTracker"; beginScale("playtimeTracker", mouseY); return; }
             if (isFpsModuleEnabled() && scaleHandleHit(FpsMod.getHudX(), FpsMod.getHudY(), (int)((fontRendererObj.getStringWidth("FPS " + net.minecraft.client.Minecraft.getDebugFPS()) + 10) * HudScaleConfig.get("fps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "fps"; beginScale("fps", mouseY); return; }
             if (isPingModuleEnabled() && scaleHandleHit(PingMod.getHudX(), PingMod.getHudY(), (int)((fontRendererObj.getStringWidth(PingMod.getDisplayText()) + 10) * HudScaleConfig.get("ping")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "ping"; beginScale("ping", mouseY); return; }
+            if (KeystrokesMod.isEnabled() && scaleHandleHit(KeystrokesSettings.getX(), KeystrokesSettings.getY(),
+                    (int)(KeystrokesRenderer.BASE_WIDTH * HudScaleConfig.get("keystrokes")),
+                    (int)(KeystrokesRenderer.BASE_HEIGHT * HudScaleConfig.get("keystrokes")), mouseX, mouseY)) {
+                selectedHud = "keystrokes"; beginScale("keystrokes", mouseY); return;
+            }
             if (isCpsModuleEnabled() && scaleHandleHit(CpsMod.getHudX(), CpsMod.getHudY(), (int)((fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10) * HudScaleConfig.get("cps")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "cps"; beginScale("cps", mouseY); return; }
             if (isComboCounterModuleEnabled() && ComboCounter.getInstance() != null && scaleHandleHit(ComboCounter.getInstance().getHudX(), ComboCounter.getInstance().getHudY(), (int)((fontRendererObj.getStringWidth(ComboCounter.getInstance().getDisplayText()) + 10) * HudScaleConfig.get("comboCounter")), fontRendererObj.FONT_HEIGHT + 6, mouseX, mouseY)) { selectedHud = "combo-counter"; beginScale("comboCounter", mouseY); return; }
             if (true && scaleHandleHit(InfoHudModules.getArmorX(), InfoHudModules.getArmorY(), (int)(InfoHudModules.getArmorEditorWidth() * HudScaleConfig.get("armor")), (int)(InfoHudModules.getArmorEditorHeight() * HudScaleConfig.get("armor")), mouseX, mouseY)) { selectedHud = "armor"; beginScale("armor", mouseY); return; }
@@ -368,7 +397,7 @@ public class HudEditorGui extends AlphaGuiScreen {
     protected void mouseClickMove(int mouseX, int mouseY, int button, long elapsed) {
         if (scaleDragging && button == 0) { HudScaleConfig.set(scaleTarget, scaleStartValue + (scaleStartY - mouseY) * 0.01F); return; }
         if (dragging && button == 0) {
-            if (!afkTimerDragging && !fpsDragging && !pingDragging && !cpsDragging && !comboCounterDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !winLossDragging && !hasBhopAccess()) {
+            if (!afkTimerDragging && !fpsDragging && !pingDragging && !cpsDragging && !keystrokesDragging && !comboCounterDragging && !sessionTimerDragging && !playtimeTrackerDragging && !armorDragging && !potionDragging && !winLossDragging && !hasBhopAccess()) {
                 dragging = false;
                 return;
             }
@@ -395,6 +424,12 @@ public class HudEditorGui extends AlphaGuiScreen {
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
                 y = Math.max(3, Math.min(height - fontRendererObj.FONT_HEIGHT - 3, y));
                 PingMod.setHudPosition(x, y);
+            } else if (keystrokesDragging) {
+                int itemWidth = (int)(KeystrokesRenderer.BASE_WIDTH * HudScaleConfig.get("keystrokes"));
+                int itemHeight = (int)(KeystrokesRenderer.BASE_HEIGHT * HudScaleConfig.get("keystrokes"));
+                x = Math.max(0, Math.min(width - itemWidth, x));
+                y = Math.max(0, Math.min(height - itemHeight, y));
+                KeystrokesSettings.setPosition(x, y);
             } else if (cpsDragging) {
                 int itemWidth = fontRendererObj.getStringWidth(CpsMod.getDisplayText()) + 10;
                 x = Math.max(3, Math.min(width - itemWidth - 3, x));
@@ -458,6 +493,7 @@ public class HudEditorGui extends AlphaGuiScreen {
         fpsDragging = false;
         pingDragging = false;
         cpsDragging = false;
+        keystrokesDragging = false;
         comboCounterDragging = false;
         afkTimerDragging = false;
         sessionTimerDragging = false;
@@ -480,6 +516,8 @@ public class HudEditorGui extends AlphaGuiScreen {
             FpsMod.setHudPosition(6, 6);
             PingMod.setHudPosition(6, 22);
             CpsMod.setHudPosition(5, 28);
+            KeystrokesSettings.setPosition(8, 80);
+            HudScaleConfig.set("keystrokes", 1.0F);
             if (ComboCounter.getInstance() != null) ComboCounter.getInstance().resetHudSettings();
             AfkTimerHud.setHudPosition(6, 6);
             SessionTimerHud.setHudPosition(6, 22);
