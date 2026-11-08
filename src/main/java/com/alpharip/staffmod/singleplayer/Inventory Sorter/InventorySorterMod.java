@@ -291,7 +291,7 @@ public final class InventorySorterMod {
                 if (name != 0) return name;
 
                 String firstId = String.valueOf(Item.itemRegistry.getNameForObject(first.getItem()));
-                String secondId = String.valueOf(ItemStack.itemRegistry.getNameForObject(second.getItem()));
+                String secondId = String.valueOf(Item.itemRegistry.getNameForObject(second.getItem()));
                 return firstId.compareToIgnoreCase(secondId);
             }
         };
