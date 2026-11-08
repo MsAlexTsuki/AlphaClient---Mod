@@ -4,6 +4,7 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.singleplayer.worldedit.WorldEditGui;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolGui;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolSettings;
+import com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavateGui;
 import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesGui;
 import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultsGui;
 import com.alpharip.staffmod.modules.AlphaModule;
@@ -18,6 +19,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
     private static final int AUTO_TOOL = 3;
     private static final int ALPHA_HOMES = 4;
     private static final int PRIVATE_VAULTS = 5;
+    private static final int TREE_EXCAVATE = 6;
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
@@ -70,6 +72,8 @@ public final class SingleplayerGui extends AlphaGuiScreen {
                 tileWidth, tileHeight, "AlphaHomes"));
         buttonList.add(new AlphaButton(PRIVATE_VAULTS, firstTileX + (tileWidth + gap) * 3, tileY,
                 tileWidth, tileHeight, "Private Vaults"));
+        buttonList.add(new AlphaButton(TREE_EXCAVATE, firstTileX, tileY + tileHeight + gap,
+                tileWidth, tileHeight, "Tree Excavate"));
     }
 
     @Override
@@ -100,6 +104,10 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         } else if (button.id == PRIVATE_VAULTS) {
             if (hasActiveSingleplayerWorld()) {
                 mc.displayGuiScreen(new AlphaPrivateVaultsGui(this));
+            }
+        } else if (button.id == TREE_EXCAVATE) {
+            if (hasActiveSingleplayerWorld()) {
+                mc.displayGuiScreen(new TreeExcavateGui(this));
             }
         }
     }
