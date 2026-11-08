@@ -563,7 +563,9 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
         if ("set".equals(cmd) && args.length == 2) {
-            IBlockState block = WorldEditBlockParser.parse(args[1]);
+            IBlockState block = "0".equals(args[1])
+                    ? net.minecraft.init.Blocks.air.getDefaultState()
+                    : WorldEditBlockParser.parse(args[1]);
             if (block == null) { reply(sender, "Usage: //acwe set <block>"); return; }
             fill(sender, block, GLOBAL_MASK); return;
         }
