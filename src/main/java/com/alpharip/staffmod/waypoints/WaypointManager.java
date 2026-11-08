@@ -139,6 +139,7 @@ public final class WaypointManager {
         point.setFavorite(incoming.isFavorite());
         point.setVisited(incoming.isVisited());
         point.setChromaEnabled(incoming.isChromaEnabled());
+        point.setVisible(incoming.isVisible());
         point.setProfileId(profile);
         points.add(point);
         return true;
