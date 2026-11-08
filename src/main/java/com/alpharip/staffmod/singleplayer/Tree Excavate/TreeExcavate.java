@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
@@ -67,9 +68,19 @@ public final class TreeExcavate {
         if (connectedLogs.size() <= 1 || !hasNearbyLeaves(world, connectedLogs)) return;
 
         boolean dropItems = !player.capabilities.isCreativeMode;
+        ItemStack heldItem = player.getCurrentEquippedItem();
         for (BlockPos log : connectedLogs) {
             if (log.equals(origin) || !world.isBlockLoaded(log)) continue;
-            world.destroyBlock(log, dropItems);
+
+            net.minecraft.block.Block block = world.getBlockState(log).getBlock();
+            if (!world.destroyBlock(log, dropItems) || !dropItems || heldItem == null || heldItem.stackSize <= 0) {
+                continue;
+            }
+
+            heldItem.onBlockDestroyed(world, block, log, player);
+            if (heldItem.stackSize == 0) {
+                player.destroyCurrentEquippedItem();
+            }
         }
     }
 
