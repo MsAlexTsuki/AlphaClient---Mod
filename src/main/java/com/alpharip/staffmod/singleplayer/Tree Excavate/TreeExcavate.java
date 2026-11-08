@@ -9,6 +9,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -48,9 +49,9 @@ public final class TreeExcavate {
                 + (enabled ? "Enabled." : "Disabled.")));
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onBlockBreak(BlockEvent.BreakEvent event) {
-        if (event == null || event.world == null || event.world.isRemote
+        if (event == null || event.isCanceled() || event.world == null || event.world.isRemote
                 || !(event.getPlayer() instanceof EntityPlayerMP)) return;
 
         Minecraft mc = Minecraft.getMinecraft();
