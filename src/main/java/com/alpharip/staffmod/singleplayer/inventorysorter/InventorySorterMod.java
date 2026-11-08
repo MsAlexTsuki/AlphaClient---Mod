@@ -43,8 +43,8 @@ public final class InventorySorterMod {
 
         int left = (event.gui.width - 176) / 2;
         int rightStart = left + 176 - 5 - (BUTTON_SIZE * 3 + BUTTON_GAP * 2);
-        int mouseX = event.getMouseX();
-        int mouseY = event.getMouseY();
+        int mouseX = event.mouseX;
+        int mouseY = event.mouseY;
 
         for (int i = 0; i < 3; i++) {
             int x = rightStart + i * (BUTTON_SIZE + BUTTON_GAP);
