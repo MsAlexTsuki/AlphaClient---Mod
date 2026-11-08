@@ -218,7 +218,8 @@ public final class BlockPlacementPreview {
         AxisAlignedBB fullBlockBox = new AxisAlignedBB(
                 mergePosition.getX(), mergePosition.getY(), mergePosition.getZ(),
                 mergePosition.getX() + 1.0D, mergePosition.getY() + 1.0D, mergePosition.getZ() + 1.0D);
-        boolean blocked = !world.checkNoEntityCollision(fullBlockBox);
+        boolean blocked = !player.canPlayerEdit(clickedPosition.offset(target.sideHit), target.sideHit, heldStack)
+                || !world.checkNoEntityCollision(fullBlockBox);
 
         return new PreviewData(previewState, mergePosition, fullBlockBox, blocked,
                 heldStack, renderSecondSlab, secondSlabOffsetY);
