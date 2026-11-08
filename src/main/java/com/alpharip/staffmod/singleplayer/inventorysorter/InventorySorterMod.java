@@ -69,6 +69,10 @@ public final class InventorySorterMod {
         int mouseY = event.gui.height - Mouse.getEventY() * event.gui.height / mc.displayHeight - 1;
 
         if (event.gui instanceof GuiChest && button == 0) {
+            if (mc.thePlayer.inventory.getItemStack() != null) {
+                event.setCanceled(true);
+                return;
+            }
             int left = (event.gui.width - 176) / 2;
             int top = getChestTop(event.gui);
             int startX = left + 176 - 5 - (BUTTON_SIZE * 3 + BUTTON_GAP * 2);
@@ -101,7 +105,7 @@ public final class InventorySorterMod {
                 ContainerChest chest = (ContainerChest) container;
                 int chestSize = chest.getLowerChestInventory().getSizeInventory();
                 if (hoveredSlot.slotNumber >= 0 && hoveredSlot.slotNumber < chestSize) {
-                    sortChest(mc, chest);
+                    if (mc.thePlayer.inventory.getItemStack() == null) sortChest(mc, chest);
                     event.setCanceled(true);
                     return;
                 }
@@ -109,7 +113,7 @@ public final class InventorySorterMod {
 
             if (hoveredSlot.inventory == mc.thePlayer.inventory
                     && hoveredSlot.getSlotIndex() >= 9 && hoveredSlot.getSlotIndex() <= 35) {
-                sortPlayerInventory(mc, container);
+                if (mc.thePlayer.inventory.getItemStack() == null) sortPlayerInventory(mc, container);
                 event.setCanceled(true);
             }
         }
