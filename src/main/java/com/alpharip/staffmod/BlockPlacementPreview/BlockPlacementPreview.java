@@ -339,11 +339,13 @@ public final class BlockPlacementPreview {
         private final float blue;
         private final float alpha;
         private final float lineWidth;
+        private final int textureBinding;
 
         private RenderState(boolean blend, boolean texture, boolean lighting, boolean depth,
                             boolean cull, boolean depthMask, int blendSourceRgb,
                             int blendDestinationRgb, int blendSourceAlpha, int blendDestinationAlpha,
-                            float red, float green, float blue, float alpha, float lineWidth) {
+                            float red, float green, float blue, float alpha, float lineWidth,
+                            int textureBinding) {
             this.blend = blend;
             this.texture = texture;
             this.lighting = lighting;
@@ -359,6 +361,7 @@ public final class BlockPlacementPreview {
             this.blue = blue;
             this.alpha = alpha;
             this.lineWidth = lineWidth;
+            this.textureBinding = textureBinding;
         }
 
         private static RenderState capture() {
@@ -382,7 +385,8 @@ public final class BlockPlacementPreview {
                     GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA),
                     GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA),
                     color.get(0), color.get(1), color.get(2), color.get(3),
-                    width.get(0)
+                    width.get(0),
+                    GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D)
             );
         }
 
@@ -397,6 +401,7 @@ public final class BlockPlacementPreview {
                     blendSourceRgb, blendDestinationRgb, blendSourceAlpha, blendDestinationAlpha);
             GlStateManager.color(red, green, blue, alpha);
             GL11.glLineWidth(lineWidth);
+            GlStateManager.bindTexture(textureBinding);
         }
 
         private static void setEnabled(int capability, boolean enabled) {
