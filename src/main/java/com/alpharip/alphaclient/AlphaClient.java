@@ -416,6 +416,7 @@ public final class AlphaClient {
                         openModMenuKey,
                         toggleBhopKey,
                         toggleMinimapKey,
+                        openMinimapSettingsKey,
                         openFullscreenMinimapKey,
                         createQuickWaypointKey,
                         openPixelGardenKey
