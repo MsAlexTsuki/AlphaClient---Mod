@@ -40,25 +40,46 @@ public final class AutoReplant {
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onHarvestDrops(BlockEvent.HarvestDropsEvent event) {
-        if (event == null || event.world == null || event.world.isRemote
-                || !(event.harvester instanceof EntityPlayerMP)
+    public void onBlockBreak(BlockEvent.BreakEvent event) {
+        if (event == null || event.isCanceled() || event.world == null || event.world.isRemote
+                || !(event.getPlayer() instanceof EntityPlayerMP)
                 || !AutoReplantSettings.isEnabled()) return;
 
-        EntityPlayerMP player = (EntityPlayerMP) event.harvester;
+        EntityPlayerMP player = (EntityPlayerMP) event.getPlayer();
         if (player.capabilities.isCreativeMode || player.isDead) return;
 
         CropPlan plan = getCropPlan(event.state);
         if (plan == null) return;
 
-        boolean seedTakenFromDrops = removeOneSeedFromDrops(event.drops, plan.seed, plan.seedMetadata);
         synchronized (pending) {
             List<PendingReplant> worldQueue = pending.get(event.world);
             if (worldQueue == null) {
                 worldQueue = new ArrayList<PendingReplant>();
                 pending.put(event.world, worldQueue);
             }
-            worldQueue.add(new PendingReplant(event.pos, player, plan, seedTakenFromDrops));
+            worldQueue.add(new PendingReplant(event.pos, player, plan));
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onHarvestDrops(BlockEvent.HarvestDropsEvent event) {
+        if (event == null || event.world == null || event.world.isRemote
+                || !(event.harvester instanceof EntityPlayerMP)) return;
+
+        CropPlan plan = getCropPlan(event.state);
+        if (plan == null || !plan.block.canBlockStay(event.world, event.pos, plan.plantedState)) return;
+        if (!removeOneSeedFromDrops(event.drops, plan.seed, plan.seedMetadata)) return;
+
+        synchronized (pending) {
+            List<PendingReplant> worldQueue = pending.get(event.world);
+            if (worldQueue == null) return;
+            for (int index = worldQueue.size() - 1; index >= 0; index--) {
+                PendingReplant task = worldQueue.get(index);
+                if (task.position.equals(event.pos) && task.player == event.harvester) {
+                    task.seedTakenFromDrops = true;
+                    return;
+                }
+            }
         }
     }
 
@@ -182,14 +203,13 @@ public final class AutoReplant {
         private final BlockPos position;
         private final EntityPlayerMP player;
         private final CropPlan plan;
-        private final boolean seedTakenFromDrops;
+        private boolean seedTakenFromDrops;
 
-        private PendingReplant(BlockPos position, EntityPlayerMP player,
-                               CropPlan plan, boolean seedTakenFromDrops) {
+        private PendingReplant(BlockPos position, EntityPlayerMP player, CropPlan plan) {
             this.position = position;
             this.player = player;
             this.plan = plan;
-            this.seedTakenFromDrops = seedTakenFromDrops;
+            this.seedTakenFromDrops = false;
         }
     }
 }
