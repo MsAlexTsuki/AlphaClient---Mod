@@ -76,7 +76,7 @@ public final class InventorySorterGui extends AlphaGuiScreen {
                 left + 16, top + 108, 0xFFB8BDC8);
 
         drawString(fontRendererObj, "MIDDLE-CLICK", left + 16, top + 137, 0xFFF2F3F5);
-        drawString(fontRendererObj, "Middle-click any slot to sort the section beneath the cursor.",
+        drawString(fontRendererObj, "Middle-click a chest slot or main-inventory slot to sort that section.",
                 left + 16, top + 154, 0xFFB8BDC8);
         drawString(fontRendererObj, "Chest slots sort the chest; player slots sort the main inventory.",
                 left + 16, top + 169, 0xFFB8BDC8);
