@@ -69,6 +69,16 @@ public final class TreeExcavate {
 
         boolean dropItems = !player.capabilities.isCreativeMode;
         ItemStack heldItem = player.getCurrentEquippedItem();
+
+        if (dropItems && heldItem != null && heldItem.isItemStackDamageable()) {
+            int remainingDurability = heldItem.getMaxDamage() - heldItem.getItemDamage();
+            int projectedDurability = remainingDurability - connectedLogs.size();
+            if (projectedDurability <= 1) {
+                player.addChatMessage(new ChatComponentText(
+                        "§c[Tree Excavate] Warning: this tree may leave your tool with 1 durability or less. Repair it before continuing."));
+            }
+        }
+
         for (BlockPos log : connectedLogs) {
             if (log.equals(origin) || !world.isBlockLoaded(log)) continue;
 
