@@ -10,7 +10,6 @@ import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesGui;
 import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultsGui;
 import com.alpharip.staffmod.singleplayer.inventorysorter.InventorySorterGui;
 import com.alpharip.staffmod.modules.AlphaModule;
-import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -80,11 +79,8 @@ public final class SingleplayerGui extends AlphaGuiScreen {
                 tileWidth, tileHeight, "Tree Excavate"));
         buttonList.add(new AlphaButton(AUTO_REPLANT, firstTileX + tileWidth + gap,
                 tileY + tileHeight + gap, tileWidth, tileHeight, "Auto Replant"));
-        AlphaModuleFeature inventorySorter = AlphaModuleRegistry.findFeature("inventory-sorter");
-        boolean sorterEnabled = inventorySorter != null && inventorySorter.isEnabled();
         buttonList.add(new AlphaButton(INVENTORY_SORTER, firstTileX + (tileWidth + gap) * 2,
-                tileY + tileHeight + gap, tileWidth, tileHeight,
-                "Inventory Sorter" + (sorterEnabled ? "  ON" : "")));
+                tileY + tileHeight + gap, tileWidth, tileHeight, "Inventory Sorter"));
     }
 
     @Override
