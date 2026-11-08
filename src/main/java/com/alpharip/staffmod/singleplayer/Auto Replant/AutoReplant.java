@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.singleplayer.autoreplant;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockCocoa;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockNetherWart;
@@ -82,7 +83,11 @@ public final class AutoReplant {
                 || task.player.worldObj != world || !world.isBlockLoaded(task.position)
                 || !world.isAirBlock(task.position)) return;
 
-        if (!task.plan.block.canBlockStay(world, task.position, task.plan.plantedState)) return;
+        if (task.plan.block instanceof BlockBush) {
+            if (!((BlockBush) task.plan.block).canBlockStay(world, task.position, task.plan.plantedState)) return;
+        } else if (task.plan.block instanceof BlockCocoa) {
+            if (!task.plan.block.canPlaceBlockAt(world, task.position)) return;
+        }
 
         EntityItem harvestedSeed = findNearbyDrop(world, task.position,
                 task.plan.seed, task.plan.seedMetadata);
