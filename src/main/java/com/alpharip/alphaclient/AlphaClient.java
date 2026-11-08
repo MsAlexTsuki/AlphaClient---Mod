@@ -68,6 +68,8 @@ import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
 import com.alpharip.staffmod.singleplayer.worldedit.AlphaWorldEditCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolMod;
+import com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavate;
+import com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavateCommand;
 import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesCommand;
 import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultCommand;
 import com.alpharip.staffmod.winlosetracker.WinLossTrackerRuntime;
@@ -147,6 +149,7 @@ public final class AlphaClient {
         ClientCommandHandler.instance.registerCommand(worldEditCommand);
         MinecraftForge.EVENT_BUS.register(worldEditCommand);
         ClientCommandHandler.instance.registerCommand(new AutoToolCommand());
+        ClientCommandHandler.instance.registerCommand(new TreeExcavateCommand());
         ClientCommandHandler.instance.registerCommand(new AlphaHomesCommand("alphahome"));
         ClientCommandHandler.instance.registerCommand(new AlphaPrivateVaultCommand());
         ClientCommandHandler.instance.registerCommand(new AlphaHomesCommand("alphaclient:alphahome"));
@@ -213,6 +216,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(winLossTrackerRuntime);
 
         AlphaKeyBindingSettings.load();
+        MinecraftForge.EVENT_BUS.register(new TreeExcavate());
         openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu",
                 AlphaKeyBindingSettings.getKeyCode("openHomeMenu", Keyboard.KEY_RCONTROL), "AlphaClient");
         ClientRegistry.registerKeyBinding(openModMenuKey);
