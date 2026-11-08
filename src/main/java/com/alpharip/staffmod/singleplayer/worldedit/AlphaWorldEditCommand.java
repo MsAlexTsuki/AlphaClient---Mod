@@ -1137,7 +1137,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
         // Chunk utilities.
         if ("listchunks".equals(cmd)) {
             final BlockPos at=mc.thePlayer.getPosition();
-            final WorldEditSelection.Bounds b=SELECTION.hasSelection()?selection(sender):
+            final WorldEditSelection.Bounds b=(SELECTION.getPos1()!=null||SELECTION.getPos2()!=null)?selection(sender):
                     new WorldEditSelection.Bounds(at.getX()-16,0,at.getZ()-16,at.getX()+16,255,at.getZ()+16);
             if(b==null)return;
             int minCx=b.minX>>4,maxCx=b.maxX>>4,minCz=b.minZ>>4,maxCz=b.maxZ>>4;
