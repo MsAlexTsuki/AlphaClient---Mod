@@ -1,6 +1,7 @@
 // --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.gui;
 
+import com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings;
 import com.alpharip.staffmod.hud.SessionTimerHud;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.quality.FullbrightMod;
@@ -30,6 +31,7 @@ public final class QualityGui extends AlphaGuiScreen {
     private static final int ANVIL_COST = 9;
     private static final int ENCHANTING_NAMES = 10;
     private static final int EASTER_EGGS = 11;
+    private static final int BLOCK_PLACEMENT_PREVIEW = 12;
     private static final int AFK_TIMER_INDEX = 7;
     private static final int SESSION_TIMER_INDEX = 8;
     private static final int PLAYTIME_TRACKER_INDEX = 9;
@@ -37,12 +39,13 @@ public final class QualityGui extends AlphaGuiScreen {
     private static final int FULLBRIGHT_INDEX = 0;
     private static final int ANVIL_COST_INDEX = 19;
     private static final int ENCHANTING_NAMES_INDEX = 20;
+    private static final int BLOCK_PLACEMENT_PREVIEW_INDEX = 22;
     private static final int ACCENT = 0xFFFFD866;
     private static final String[] FEATURES = {
             "Fullbright", "Alpha Module Manager", "Mod Profiles", "Auto GG", "Keybind Profiles",
             "Auto Respawn", "AlphaClient Core Experience", "AFK Timer", "Session Timer", "Playtime Tracker",
             "Config Manager", "Auto Reconnect", "Alpha System Monitor", "Alpha Crash Reporter",
-            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Search Inv", "Anvil Cost", "Enchanting Names", "Easter Eggs"
+            "Alpha Update Checker", "Alpha Control Center", "Keybind Manager", "Alpha Feature Flags", "Search Inv", "Anvil Cost", "Enchanting Names", "Easter Eggs", "Block Placement Preview"
     };
 
     private final GuiScreen parent;
@@ -102,7 +105,11 @@ public final class QualityGui extends AlphaGuiScreen {
             } else if (i == ENCHANTING_NAMES_INDEX) {
                 buttonList.add(new AlphaButton(ENCHANTING_NAMES, x, y, tileWidth, tileHeight,
                         "Enchanting Names", EnchantingNameMod.isEnabled()));
-            } else if (i == FEATURES.length - 1) {
+            } else if (i == BLOCK_PLACEMENT_PREVIEW_INDEX) {
+                boolean previewEnabled = BlockPlacementPreviewSettings.isEnabled();
+                buttonList.add(new AlphaButton(BLOCK_PLACEMENT_PREVIEW, x, y, tileWidth, tileHeight,
+                        "Block Placement Preview", previewEnabled));
+            } else if (i == FEATURES.length - 2) {
                 buttonList.add(new AlphaButton(EASTER_EGGS, x, y, tileWidth, tileHeight, "Easter Eggs", true));
             } else if (i == AFK_TIMER_INDEX) {
                 buttonList.add(new AlphaButton(AFK_TIMER, x, y, tileWidth, tileHeight, "AFK Timer", true));
@@ -162,6 +169,8 @@ public final class QualityGui extends AlphaGuiScreen {
             mc.displayGuiScreen(new EnchantingNameSettingsGui(this));
         } else if (button.id == EASTER_EGGS) {
             mc.displayGuiScreen(new EasterEggSettingsGui(this));
+        } else if (button.id == BLOCK_PLACEMENT_PREVIEW) {
+            mc.displayGuiScreen(new BlockPlacementPreviewSettingsGui(this));
         }
     }
 
