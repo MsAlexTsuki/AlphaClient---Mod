@@ -66,11 +66,16 @@ public final class WaypointsGui extends AlphaGuiScreen {
 
             int editorX=left+listWidth+25;
             int editorWidth=panelWidth-listWidth-39;
-            nameField=new GuiTextField(30,fontRendererObj,editorX+12,top+105,editorWidth-24,20);
+            int nameRowWidth=editorWidth-24;
+            int visibilityButtonWidth=Math.min(72,Math.max(64,nameRowWidth-88));
+            int nameFieldWidth=Math.max(80,nameRowWidth-visibilityButtonWidth-8);
+            nameField=new GuiTextField(30,fontRendererObj,editorX+12,top+105,nameFieldWidth,20);
             nameField.setMaxStringLength(40);
             nameField.setText(selected.getLabel());
             nameField.setFocused(false);
 
+            buttonList.add(new AlphaButton(15,editorX+12+nameFieldWidth+8,top+105,visibilityButtonWidth,20,
+                    "Visible: "+onOff(selected.isVisible())));
             buttonList.add(new AlphaButton(11,editorX+12,top+panelHeight-99,editorWidth-24,19,"Save Changes",true));
             buttonList.add(new AlphaButton(12,editorX+12,top+panelHeight-75,(editorWidth-29)/2,18,
                     "Favorite: "+onOff(selected.isFavorite())));
@@ -147,6 +152,9 @@ public final class WaypointsGui extends AlphaGuiScreen {
             } else if(button.id==13) {
                 StaffWaypoint point=findCurrent(selectedId);
                 if(point!=null){point.setChromaEnabled(!point.isChromaEnabled());manager.saveChanges();}
+            } else if(button.id==15) {
+                StaffWaypoint point=findCurrent(selectedId);
+                if(point!=null){point.setVisible(!point.isVisible());manager.saveChanges();}
             }
         } catch(Exception e){status="Waypoint action failed: "+e.getMessage();}
         initGui();
