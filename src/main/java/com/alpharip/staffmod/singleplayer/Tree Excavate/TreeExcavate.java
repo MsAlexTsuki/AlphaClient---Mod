@@ -71,7 +71,7 @@ public final class TreeExcavate {
         ItemStack heldItem = player.getCurrentEquippedItem();
 
         if (dropItems && heldItem != null && heldItem.isItemStackDamageable()) {
-            int remainingDurability = heldItem.getMaxDamage() - heldItem.getItemDamage();
+            int remainingDurability = heldItem.getMaxDamage() - heldItem.getItemDamage() + 1;
             int projectedDurability = remainingDurability - connectedLogs.size();
             if (projectedDurability <= 1) {
                 player.addChatMessage(new ChatComponentText(
