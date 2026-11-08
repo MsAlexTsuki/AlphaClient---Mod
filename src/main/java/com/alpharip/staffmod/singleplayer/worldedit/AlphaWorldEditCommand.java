@@ -40,6 +40,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
     private static final String WAND_TAG = "AlphaWorldEditWand";
     private static final int WALLS = 1, OUTLINE = 2, HOLLOW = 3;
     private static final WorldEditSelection SELECTION = new WorldEditSelection();
+    private static net.minecraft.world.World selectionWorld;
     private static final WorldEditClipboard CLIPBOARD = new WorldEditClipboard();
 
     @Override public String getCommandName() { return "/acwe"; }
@@ -59,6 +60,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
             reply(sender, "Alpha World Edit is available only in a loaded singleplayer world.");
             return;
         }
+        ensureSelectionWorld(mc.theWorld);
         if (args == null || args.length == 0 || "help".equalsIgnoreCase(args[0])) {
             help(sender);
             return;
@@ -1248,6 +1250,14 @@ public final class AlphaWorldEditCommand extends CommandBase {
         }});
     }
 
+    /** Clears region corners when the active singleplayer world changes. */
+    private static void ensureSelectionWorld(net.minecraft.world.World currentWorld) {
+        if (currentWorld == null || selectionWorld == currentWorld) return;
+        SELECTION.setPos1(null);
+        SELECTION.setPos2(null);
+        selectionWorld = currentWorld;
+    }
+
     private WorldEditSelection.Bounds selection(ICommandSender sender) {
         if (!SELECTION.hasSelection()) { reply(sender, "Set both positions first: //acwe pos1 and //acwe pos2."); return null; }
         WorldEditSelection.Bounds b = SELECTION.getBounds();
@@ -1327,6 +1337,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
                 || !event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID())
                 || !isWorldEditWand(event.entityPlayer.getHeldItem())) return;
 
+        ensureSelectionWorld(mc.theWorld);
         boolean firstPosition = event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK;
         boolean secondPosition = event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK;
         if (!firstPosition && !secondPosition) return;
@@ -1361,6 +1372,7 @@ public final class AlphaWorldEditCommand extends CommandBase {
         if(mc==null||!mc.isSingleplayer()||mc.thePlayer==null
                 ||!event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID()))return;
         if(!(event.world instanceof WorldServer))return;
+        ensureSelectionWorld(mc.theWorld);
         if(isWorldEditWand(event.entityPlayer.getHeldItem()))return;
         final WorldServer world=(WorldServer)event.world;
         final BlockPos clicked=event.pos;
