@@ -84,17 +84,23 @@ public final class AutoReplant {
 
         if (!task.plan.block.canBlockStay(world, task.position, task.plan.plantedState)) return;
 
-        boolean usedHarvestDrop = consumeNearbyDrop(world, task.position,
+        EntityItem harvestedSeed = findNearbyDrop(world, task.position,
                 task.plan.seed, task.plan.seedMetadata);
-        ItemStack inventorySeed = usedHarvestDrop ? null
-                : findSeed(task.player, task.plan.seed, task.plan.seedMetadata);
-        if (!usedHarvestDrop && inventorySeed == null) return;
+        ItemStack inventorySeed = harvestedSeed == null
+                ? findSeed(task.player, task.plan.seed, task.plan.seedMetadata) : null;
+        if (harvestedSeed == null && inventorySeed == null) return;
         if (!world.setBlockState(task.position, task.plan.plantedState, 3)) return;
 
-        if (inventorySeed != null) {
+        if (harvestedSeed != null) {
+            ItemStack dropStack = harvestedSeed.getEntityItem();
+            if (dropStack != null) {
+                dropStack.stackSize--;
+                if (dropStack.stackSize <= 0) harvestedSeed.setDead();
+            }
+        } else if (inventorySeed != null) {
             inventorySeed.stackSize--;
             if (inventorySeed.stackSize <= 0) {
-                for (int slot = 0; slot < task.player.inventory.getSizeInventory(); slot++) {
+                for (int slot = 0; slot < 36; slot++) {
                     if (task.player.inventory.getStackInSlot(slot) == inventorySeed) {
                         task.player.inventory.setInventorySlotContents(slot, null);
                         break;
@@ -107,8 +113,8 @@ public final class AutoReplant {
         }
     }
 
-    private static boolean consumeNearbyDrop(World world, BlockPos position, Item item, int metadata) {
-        if (world == null || position == null || item == null) return false;
+    private static EntityItem findNearbyDrop(World world, BlockPos position, Item item, int metadata) {
+        if (world == null || position == null || item == null) return null;
         AxisAlignedBB searchArea = new AxisAlignedBB(
                 position.getX() - 0.25D, position.getY() - 0.25D, position.getZ() - 0.25D,
                 position.getX() + 1.25D, position.getY() + 1.25D, position.getZ() + 1.25D);
@@ -116,13 +122,10 @@ public final class AutoReplant {
         for (EntityItem entity : nearbyDrops) {
             if (entity == null || entity.isDead || entity.ticksExisted > 2) continue;
             ItemStack stack = entity.getEntityItem();
-            if (stack == null || stack.stackSize <= 0 || stack.getItem() != item
-                    || stack.getItemDamage() != metadata) continue;
-            stack.stackSize--;
-            if (stack.stackSize <= 0) entity.setDead();
-            return true;
+            if (stack != null && stack.stackSize > 0 && stack.getItem() == item
+                    && stack.getItemDamage() == metadata) return entity;
         }
-        return false;
+        return null;
     }
 
     private static ItemStack findSeed(EntityPlayer player, Item item, int metadata) {
