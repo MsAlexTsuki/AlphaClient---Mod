@@ -235,6 +235,7 @@ public final class WorldWaypointIcons {
             int previousProjectionMatrixMode=beginExtendedProjection();
             try {
             for(StaffWaypoint point:points) {
+                if(!point.isVisible()) continue;
                 // Use the center of the waypoint's block for every marker element.
                 // This keeps the beam, ground circle and nametag on one shared vertical axis.
                 double markerX=Math.floor(point.getX())+0.5D;
