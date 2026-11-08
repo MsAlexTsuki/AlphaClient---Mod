@@ -24,6 +24,7 @@ public final class StaffWaypoint {
     private boolean favorite;
     private boolean visited;
     private boolean chromaEnabled;
+    private boolean visible = true;
     private long lastModified = System.currentTimeMillis();
 
     public StaffWaypoint() { }
@@ -61,6 +62,7 @@ public final class StaffWaypoint {
     public boolean isFavorite() { return favorite; }
     public boolean isVisited() { return visited; }
     public boolean isChromaEnabled() { return chromaEnabled; }
+    public boolean isVisible() { return visible; }
     public long getLastModified() { return lastModified; }
     private void touch() { lastModified=System.currentTimeMillis(); }
 
@@ -102,4 +104,5 @@ public final class StaffWaypoint {
     public void setFavorite(boolean value) { if(favorite!=value){favorite=value;touch();} }
     public void setVisited(boolean value) { if(visited!=value){visited=value;touch();} }
     public void setChromaEnabled(boolean value) { if(chromaEnabled!=value){chromaEnabled=value;touch();} }
+    public void setVisible(boolean value) { if(visible!=value){visible=value;touch();} }
 }
