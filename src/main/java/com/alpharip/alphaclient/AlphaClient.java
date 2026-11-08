@@ -71,6 +71,7 @@ import com.alpharip.staffmod.singleplayer.autotool.AutoToolMod;
 import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesCommand;
 import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultCommand;
 import com.alpharip.staffmod.winlosetracker.WinLossTrackerRuntime;
+import com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreview;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -162,6 +163,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(AlphaMinimap.getInstance());
         MinecraftForge.EVENT_BUS.register(WorldWaypointIcons.getInstance());
         MinecraftForge.EVENT_BUS.register(new RankViewerRenderer());
+        MinecraftForge.EVENT_BUS.register(BlockPlacementPreview.getInstance());
         MinecraftForge.EVENT_BUS.register(new FpsMod());
         MinecraftForge.EVENT_BUS.register(new PingMod());
         MinecraftForge.EVENT_BUS.register(new CpsMod());
@@ -414,7 +416,6 @@ public final class AlphaClient {
                         openModMenuKey,
                         toggleBhopKey,
                         toggleMinimapKey,
-                        openMinimapSettingsKey,
                         openFullscreenMinimapKey,
                         createQuickWaypointKey,
                         openPixelGardenKey
