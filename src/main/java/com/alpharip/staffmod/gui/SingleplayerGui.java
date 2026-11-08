@@ -8,7 +8,9 @@ import com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavateGui;
 import com.alpharip.staffmod.singleplayer.autoreplant.AutoReplantGui;
 import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesGui;
 import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultsGui;
+import com.alpharip.staffmod.singleplayer.inventorysorter.InventorySorterGui;
 import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -22,6 +24,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
     private static final int PRIVATE_VAULTS = 5;
     private static final int TREE_EXCAVATE = 6;
     private static final int AUTO_REPLANT = 7;
+    private static final int INVENTORY_SORTER = 8;
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
@@ -47,7 +50,6 @@ public final class SingleplayerGui extends AlphaGuiScreen {
             return;
         }
 
-        // Match QualityGui's compact three-column feature tile layout.
         panelLeft = Math.max(12, width / 2 - Math.min(230, width / 2 - 12));
         panelRight = Math.min(width - 12, panelLeft + 460);
         panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
@@ -78,6 +80,11 @@ public final class SingleplayerGui extends AlphaGuiScreen {
                 tileWidth, tileHeight, "Tree Excavate"));
         buttonList.add(new AlphaButton(AUTO_REPLANT, firstTileX + tileWidth + gap,
                 tileY + tileHeight + gap, tileWidth, tileHeight, "Auto Replant"));
+        AlphaModuleFeature inventorySorter = AlphaModuleRegistry.findFeature("inventory-sorter");
+        boolean sorterEnabled = inventorySorter != null && inventorySorter.isEnabled();
+        buttonList.add(new AlphaButton(INVENTORY_SORTER, firstTileX + (tileWidth + gap) * 2,
+                tileY + tileHeight + gap, tileWidth, tileHeight,
+                "Inventory Sorter" + (sorterEnabled ? "  ON" : "")));
     }
 
     @Override
@@ -94,29 +101,19 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         if (button.id == BACK) {
             mc.displayGuiScreen(parent);
         } else if (button.id == WORLD_EDIT) {
-            if (hasActiveSingleplayerWorld()) {
-                mc.displayGuiScreen(new WorldEditGui(this));
-            }
+            if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new WorldEditGui(this));
         } else if (button.id == AUTO_TOOL) {
-            if (hasActiveSingleplayerWorld()) {
-                mc.displayGuiScreen(new AutoToolGui(this));
-            }
+            if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new AutoToolGui(this));
         } else if (button.id == ALPHA_HOMES) {
-            if (hasActiveSingleplayerWorld()) {
-                mc.displayGuiScreen(new AlphaHomesGui(this));
-            }
+            if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new AlphaHomesGui(this));
         } else if (button.id == PRIVATE_VAULTS) {
-            if (hasActiveSingleplayerWorld()) {
-                mc.displayGuiScreen(new AlphaPrivateVaultsGui(this));
-            }
+            if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new AlphaPrivateVaultsGui(this));
         } else if (button.id == TREE_EXCAVATE) {
-            if (hasActiveSingleplayerWorld()) {
-                mc.displayGuiScreen(new TreeExcavateGui(this));
-            }
+            if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new TreeExcavateGui(this));
         } else if (button.id == AUTO_REPLANT) {
-            if (hasActiveSingleplayerWorld()) {
-                mc.displayGuiScreen(new AutoReplantGui(this));
-            }
+            if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new AutoReplantGui(this));
+        } else if (button.id == INVENTORY_SORTER) {
+            if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new InventorySorterGui(this));
         }
     }
 
@@ -127,8 +124,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         drawRect(panelLeft, panelTop, panelRight, panelTop + 2, ACCENT);
         drawCenteredString(fontRendererObj, "SINGLEPLAYER", width / 2,
                 panelTop + 13, 0xFFF3F4F6);
-        drawCenteredString(fontRendererObj, "SINGLEPLAYER MODS", width / 2,
-                panelTop + 30, ACCENT);
+        drawCenteredString(fontRendererObj, "SINGLEPLAYER MODS", width / 2, panelTop + 30, ACCENT);
         drawString(fontRendererObj, "Singleplayer-only tools", panelLeft + 12,
                 panelTop + 49, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
