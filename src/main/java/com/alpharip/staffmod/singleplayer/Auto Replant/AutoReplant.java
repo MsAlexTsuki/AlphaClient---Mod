@@ -130,7 +130,7 @@ public final class AutoReplant {
 
     private static ItemStack findSeed(EntityPlayer player, Item item, int metadata) {
         if (player == null || item == null) return null;
-        for (int slot = 0; slot < player.inventory.getSizeInventory(); slot++) {
+        for (int slot = 0; slot < 36; slot++) {
             ItemStack stack = player.inventory.getStackInSlot(slot);
             if (stack != null && stack.stackSize > 0 && stack.getItem() == item
                     && stack.getItemDamage() == metadata) return stack;
