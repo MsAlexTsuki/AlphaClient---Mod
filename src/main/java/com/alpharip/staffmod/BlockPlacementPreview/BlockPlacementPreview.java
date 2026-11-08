@@ -123,7 +123,6 @@ public final class BlockPlacementPreview {
             collisionBox = null;
         }
 
-        // Blocks without collision bounds still receive a useful one-block placement preview.
         boolean blocked = !block.canPlaceBlockAt(world, placementPosition);
         if (!blocked && collisionBox != null) {
             List<AxisAlignedBB> collisions = world.getCollidingBoundingBoxes(player, collisionBox);
