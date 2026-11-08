@@ -1,18 +1,25 @@
 package com.alpharip.staffmod.BlockPlacementPreview;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockChest;
+import net.minecraft.block.BlockEnderChest;
+import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemSlab;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
@@ -86,8 +93,14 @@ public final class BlockPlacementPreview {
         BlockPos clickedPosition = target.getBlockPos();
         IBlockState clickedState = world.getBlockState(clickedPosition);
 
+        PreviewData slabMerge = createSlabMergePreview(
+                world, player, target, heldStack, itemBlock, clickedPosition, clickedState);
+        if (slabMerge != null) {
+            return slabMerge;
+        }
+
         boolean replacingBlock = clickedState.getBlock().isReplaceable(world, clickedPosition);
-        BlockPos placementPosition = replacingBlock
+        BlockPos placementPosition = clickedState.getBlock() == Blocks.snow_layer || replacingBlock
                 ? clickedPosition
                 : clickedPosition.offset(target.sideHit);
 
@@ -118,12 +131,19 @@ public final class BlockPlacementPreview {
 
         AxisAlignedBB collisionBox;
         try {
-            collisionBox = block.getCollisionBoundingBox(world, placementPosition, placementState);
+            collisionBox = getCollisionBox(block, world, placementPosition, placementState);
         } catch (RuntimeException invalidBounds) {
             collisionBox = null;
         }
 
-        boolean blocked = !block.canPlaceBlockAt(world, placementPosition);
+        boolean canPlace;
+        try {
+            canPlace = itemBlock.canPlaceBlockOnSide(
+                    world, clickedPosition, target.sideHit, player, heldStack);
+        } catch (RuntimeException invalidPlacement) {
+            canPlace = false;
+        }
+        boolean blocked = !canPlace;
         if (!blocked && collisionBox != null) {
             List<AxisAlignedBB> collisions = world.getCollidingBoundingBoxes(player, collisionBox);
             if (collisions != null && !collisions.isEmpty()) {
@@ -131,7 +151,107 @@ public final class BlockPlacementPreview {
             }
         }
 
-        return new PreviewData(placementState, placementPosition, collisionBox, blocked);
+        return new PreviewData(placementState, placementPosition, collisionBox, blocked, heldStack, false, 0.0D);
+    }
+
+    private PreviewData createSlabMergePreview(World world, EntityPlayer player,
+                                                MovingObjectPosition target, ItemStack heldStack,
+                                                ItemBlock itemBlock, BlockPos clickedPosition,
+                                                IBlockState clickedState) {
+        if (!(itemBlock instanceof ItemSlab) || !(itemBlock.getBlock() instanceof BlockSlab)) {
+            return null;
+        }
+
+        BlockSlab singleSlab = (BlockSlab) itemBlock.getBlock();
+        if (singleSlab.isDouble()) {
+            return null;
+        }
+
+        IProperty variantProperty = singleSlab.getVariantProperty();
+        Object heldVariant = singleSlab.getVariant(heldStack);
+        BlockPos mergePosition = null;
+        IBlockState existingSlabState = null;
+
+        if (clickedState.getBlock() == singleSlab
+                && heldVariant != null
+                && heldVariant.equals(clickedState.getValue(variantProperty))) {
+            BlockSlab.EnumBlockHalf half = clickedState.getValue(BlockSlab.HALF);
+            if ((target.sideHit == EnumFacing.UP && half == BlockSlab.EnumBlockHalf.BOTTOM)
+                    || (target.sideHit == EnumFacing.DOWN && half == BlockSlab.EnumBlockHalf.TOP)) {
+                mergePosition = clickedPosition;
+                existingSlabState = clickedState;
+            }
+        }
+
+        if (mergePosition == null) {
+            BlockPos adjacentPosition = clickedPosition.offset(target.sideHit);
+            IBlockState adjacentState = world.getBlockState(adjacentPosition);
+            if (adjacentState.getBlock() == singleSlab
+                    && heldVariant != null
+                    && heldVariant.equals(adjacentState.getValue(variantProperty))) {
+                mergePosition = adjacentPosition;
+                existingSlabState = adjacentState;
+            }
+        }
+
+        if (mergePosition == null || existingSlabState == null) {
+            return null;
+        }
+
+        BlockSlab doubleSlab = getVanillaDoubleSlab(singleSlab);
+        IBlockState previewState;
+        boolean renderSecondSlab = false;
+        double secondSlabOffsetY = 0.0D;
+
+        if (doubleSlab != null) {
+            Comparable variant = (Comparable) existingSlabState.getValue(variantProperty);
+            previewState = doubleSlab.getDefaultState().withProperty(variantProperty, variant);
+        } else {
+            // Modded ItemSlab implementations may not use a vanilla double-slab block.
+            // Render a second half-slab to show the combined full-block result.
+            previewState = existingSlabState;
+            renderSecondSlab = true;
+            BlockSlab.EnumBlockHalf half = existingSlabState.getValue(BlockSlab.HALF);
+            secondSlabOffsetY = half == BlockSlab.EnumBlockHalf.BOTTOM ? 0.5D : -0.5D;
+        }
+
+        AxisAlignedBB fullBlockBox = new AxisAlignedBB(
+                mergePosition.getX(), mergePosition.getY(), mergePosition.getZ(),
+                mergePosition.getX() + 1.0D, mergePosition.getY() + 1.0D, mergePosition.getZ() + 1.0D);
+        boolean blocked = !world.checkNoEntityCollision(fullBlockBox);
+
+        return new PreviewData(previewState, mergePosition, fullBlockBox, blocked,
+                heldStack, renderSecondSlab, secondSlabOffsetY);
+    }
+
+    private BlockSlab getVanillaDoubleSlab(BlockSlab singleSlab) {
+        if (singleSlab == Blocks.stone_slab) {
+            return (BlockSlab) Blocks.double_stone_slab;
+        }
+        if (singleSlab == Blocks.wooden_slab) {
+            return (BlockSlab) Blocks.double_wooden_slab;
+        }
+        if (singleSlab == Blocks.stone_slab2) {
+            return (BlockSlab) Blocks.double_stone_slab2;
+        }
+        return null;
+    }
+
+    private AxisAlignedBB getCollisionBox(Block block, World world, BlockPos position, IBlockState state) {
+        if (block instanceof BlockSlab) {
+            BlockSlab slab = (BlockSlab) block;
+            if (slab.isDouble()) {
+                return new AxisAlignedBB(position.getX(), position.getY(), position.getZ(),
+                        position.getX() + 1.0D, position.getY() + 1.0D, position.getZ() + 1.0D);
+            }
+
+            BlockSlab.EnumBlockHalf half = state.getValue(BlockSlab.HALF);
+            double minY = half == BlockSlab.EnumBlockHalf.TOP ? 0.5D : 0.0D;
+            return new AxisAlignedBB(position.getX(), position.getY() + minY, position.getZ(),
+                    position.getX() + 1.0D, position.getY() + minY + 0.5D, position.getZ() + 1.0D);
+        }
+
+        return block.getCollisionBoundingBox(world, position, state);
     }
 
     private boolean containsBlockingCollision(List<AxisAlignedBB> collisions,
@@ -223,14 +343,41 @@ public final class BlockPlacementPreview {
     private void drawBlockModel(Minecraft minecraft, PreviewData preview, float opacity,
                                 RenderManager renderManager) {
         Block block = preview.state.getBlock();
+
+        if (block instanceof BlockChest || block instanceof BlockEnderChest) {
+            GlStateManager.pushMatrix();
+            try {
+                GlStateManager.translate(
+                        preview.position.getX() - renderManager.viewerPosX,
+                        preview.position.getY() - renderManager.viewerPosY,
+                        preview.position.getZ() - renderManager.viewerPosZ);
+                GlStateManager.enableTexture2D();
+                GlStateManager.disableLighting();
+                GlStateManager.color(1.0F, 1.0F, 1.0F,
+                        Math.max(0.05F, Math.min(1.0F, opacity)));
+                TileEntityItemStackRenderer.instance.renderByItem(preview.heldStack);
+            } finally {
+                GlStateManager.popMatrix();
+            }
+            return;
+        }
+
         if (block.getRenderType() != 3) {
             return;
+        }
+
+        IBlockState renderState = preview.state;
+        try {
+            // Walls and other connected blocks need their neighbor-derived state for the correct baked shape.
+            renderState = block.getActualState(preview.state, minecraft.theWorld, preview.position);
+        } catch (RuntimeException ignored) {
+            // Keep the placement state if a block does not provide a usable actual state.
         }
 
         IBakedModel model;
         try {
             model = minecraft.getBlockRendererDispatcher().getModelFromBlockState(
-                    preview.state, minecraft.theWorld, preview.position);
+                    renderState, minecraft.theWorld, preview.position);
         } catch (RuntimeException invalidModel) {
             return;
         }
@@ -241,13 +388,22 @@ public final class BlockPlacementPreview {
         minecraft.getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
         GlStateManager.enableTexture2D();
         GlStateManager.disableLighting();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, Math.max(0.05F, Math.min(1.0F, opacity)));
 
+        drawBakedModelAt(minecraft, preview, model, block, opacity, renderManager, 0.0D);
+        if (preview.renderSecondSlab) {
+            drawBakedModelAt(minecraft, preview, model, block, opacity,
+                    renderManager, preview.secondSlabOffsetY);
+        }
+    }
+
+    private void drawBakedModelAt(Minecraft minecraft, PreviewData preview, IBakedModel model,
+                                  Block block, float opacity, RenderManager renderManager,
+                                  double offsetY) {
         GlStateManager.pushMatrix();
         try {
             GlStateManager.translate(
                     preview.position.getX() - renderManager.viewerPosX,
-                    preview.position.getY() - renderManager.viewerPosY,
+                    preview.position.getY() - renderManager.viewerPosY + offsetY,
                     preview.position.getZ() - renderManager.viewerPosZ);
 
             Tessellator tessellator = Tessellator.getInstance();
@@ -268,12 +424,21 @@ public final class BlockPlacementPreview {
     private void renderModelQuads(WorldRenderer renderer, List<BakedQuad> quads, Block block,
                                   Minecraft minecraft, PreviewData preview, float opacity) {
         int alpha = (int) (Math.max(0.05F, Math.min(1.0F, opacity)) * 255.0F);
+        int tint = preview.blocked ? 0x00FF5555 : 0x0055FF55;
+        int tintRed = (tint >> 16) & 255;
+        int tintGreen = (tint >> 8) & 255;
+        int tintBlue = tint & 255;
+
         for (BakedQuad quad : quads) {
             int color = 0x00FFFFFF;
             if (quad.hasTintIndex()) {
                 color = block.colorMultiplier(minecraft.theWorld, preview.position, quad.getTintIndex());
             }
-            color = (alpha << 24) | (color & 0x00FFFFFF);
+
+            int red = ((color >> 16) & 255) * tintRed / 255;
+            int green = ((color >> 8) & 255) * tintGreen / 255;
+            int blue = (color & 255) * tintBlue / 255;
+            color = (alpha << 24) | (red << 16) | (green << 8) | blue;
 
             renderer.addVertexData(quad.getVertexData());
             renderer.putColor4(color);
@@ -313,12 +478,20 @@ public final class BlockPlacementPreview {
         private final BlockPos position;
         private final AxisAlignedBB collisionBox;
         private final boolean blocked;
+        private final ItemStack heldStack;
+        private final boolean renderSecondSlab;
+        private final double secondSlabOffsetY;
 
-        private PreviewData(IBlockState state, BlockPos position, AxisAlignedBB collisionBox, boolean blocked) {
+        private PreviewData(IBlockState state, BlockPos position, AxisAlignedBB collisionBox,
+                            boolean blocked, ItemStack heldStack,
+                            boolean renderSecondSlab, double secondSlabOffsetY) {
             this.state = state;
             this.position = position;
             this.collisionBox = collisionBox;
             this.blocked = blocked;
+            this.heldStack = heldStack;
+            this.renderSecondSlab = renderSecondSlab;
+            this.secondSlabOffsetY = secondSlabOffsetY;
         }
     }
 
