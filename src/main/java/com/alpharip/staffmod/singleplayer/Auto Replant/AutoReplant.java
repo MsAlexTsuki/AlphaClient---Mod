@@ -9,10 +9,12 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.BlockEvent;
@@ -22,7 +24,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -61,28 +62,6 @@ public final class AutoReplant {
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onHarvestDrops(BlockEvent.HarvestDropsEvent event) {
-        if (event == null || event.world == null || event.world.isRemote
-                || !(event.harvester instanceof EntityPlayerMP)) return;
-
-        CropPlan plan = getCropPlan(event.state);
-        if (plan == null || !plan.block.canBlockStay(event.world, event.pos, plan.plantedState)) return;
-        if (!removeOneSeedFromDrops(event.drops, plan.seed, plan.seedMetadata)) return;
-
-        synchronized (pending) {
-            List<PendingReplant> worldQueue = pending.get(event.world);
-            if (worldQueue == null) return;
-            for (int index = worldQueue.size() - 1; index >= 0; index--) {
-                PendingReplant task = worldQueue.get(index);
-                if (task.position.equals(event.pos) && task.player == event.harvester) {
-                    task.seedTakenFromDrops = true;
-                    return;
-                }
-            }
-        }
-    }
-
     @SubscribeEvent
     public void onWorldTick(TickEvent.WorldTickEvent event) {
         if (event == null || event.phase != TickEvent.Phase.END || event.world == null || event.world.isRemote) return;
@@ -103,11 +82,13 @@ public final class AutoReplant {
                 || task.player.worldObj != world || !world.isBlockLoaded(task.position)
                 || !world.isAirBlock(task.position)) return;
 
-        ItemStack inventorySeed = task.seedTakenFromDrops
-                ? null : findSeed(task.player, task.plan.seed, task.plan.seedMetadata);
-        if (!task.seedTakenFromDrops && inventorySeed == null) return;
-
         if (!task.plan.block.canBlockStay(world, task.position, task.plan.plantedState)) return;
+
+        boolean usedHarvestDrop = consumeNearbyDrop(world, task.position,
+                task.plan.seed, task.plan.seedMetadata);
+        ItemStack inventorySeed = usedHarvestDrop ? null
+                : findSeed(task.player, task.plan.seed, task.plan.seedMetadata);
+        if (!usedHarvestDrop && inventorySeed == null) return;
         if (!world.setBlockState(task.position, task.plan.plantedState, 3)) return;
 
         if (inventorySeed != null) {
@@ -126,6 +107,24 @@ public final class AutoReplant {
         }
     }
 
+    private static boolean consumeNearbyDrop(World world, BlockPos position, Item item, int metadata) {
+        if (world == null || position == null || item == null) return false;
+        AxisAlignedBB searchArea = new AxisAlignedBB(
+                position.getX() - 0.25D, position.getY() - 0.25D, position.getZ() - 0.25D,
+                position.getX() + 1.25D, position.getY() + 1.25D, position.getZ() + 1.25D);
+        List<EntityItem> nearbyDrops = world.getEntitiesWithinAABB(EntityItem.class, searchArea);
+        for (EntityItem entity : nearbyDrops) {
+            if (entity == null || entity.isDead || entity.ticksExisted > 2) continue;
+            ItemStack stack = entity.getEntityItem();
+            if (stack == null || stack.stackSize <= 0 || stack.getItem() != item
+                    || stack.getItemDamage() != metadata) continue;
+            stack.stackSize--;
+            if (stack.stackSize <= 0) entity.setDead();
+            return true;
+        }
+        return false;
+    }
+
     private static ItemStack findSeed(EntityPlayer player, Item item, int metadata) {
         if (player == null || item == null) return null;
         for (int slot = 0; slot < player.inventory.getSizeInventory(); slot++) {
@@ -134,20 +133,6 @@ public final class AutoReplant {
                     && stack.getItemDamage() == metadata) return stack;
         }
         return null;
-    }
-
-    private static boolean removeOneSeedFromDrops(List<ItemStack> drops, Item item, int metadata) {
-        if (drops == null || item == null) return false;
-        Iterator<ItemStack> iterator = drops.iterator();
-        while (iterator.hasNext()) {
-            ItemStack stack = iterator.next();
-            if (stack == null || stack.stackSize <= 0 || stack.getItem() != item
-                    || stack.getItemDamage() != metadata) continue;
-            if (stack.stackSize == 1) iterator.remove();
-            else stack.stackSize--;
-            return true;
-        }
-        return false;
     }
 
     private static CropPlan getCropPlan(IBlockState state) {
@@ -203,13 +188,11 @@ public final class AutoReplant {
         private final BlockPos position;
         private final EntityPlayerMP player;
         private final CropPlan plan;
-        private boolean seedTakenFromDrops;
 
         private PendingReplant(BlockPos position, EntityPlayerMP player, CropPlan plan) {
             this.position = position;
             this.player = player;
             this.plan = plan;
-            this.seedTakenFromDrops = false;
         }
     }
 }
