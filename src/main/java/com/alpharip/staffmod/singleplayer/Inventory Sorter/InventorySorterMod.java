@@ -12,6 +12,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.ContainerPlayer;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -287,7 +288,7 @@ public final class InventorySorterMod {
                 int name = first.getDisplayName().compareToIgnoreCase(second.getDisplayName());
                 if (name != 0) return name;
 
-                String firstId = String.valueOf(ItemStack.itemRegistry.getNameForObject(first.getItem()));
+                String firstId = String.valueOf(Item.itemRegistry.getNameForObject(first.getItem()));
                 String secondId = String.valueOf(ItemStack.itemRegistry.getNameForObject(second.getItem()));
                 return firstId.compareToIgnoreCase(secondId);
             }
