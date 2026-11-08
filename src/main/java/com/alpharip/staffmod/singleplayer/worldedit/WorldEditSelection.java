@@ -8,15 +8,7 @@ public final class WorldEditSelection {
     private BlockPos pos1;
     private BlockPos pos2;
 
-    /**
-     * Starts a new selection when pos1 is changed. A previous pos2 must not
-     * carry over and accidentally complete the new selection.
-     */
-    public void setPos1(BlockPos position) {
-        pos1 = position;
-        pos2 = null;
-    }
-
+    public void setPos1(BlockPos position) { pos1 = position; }
     public void setPos2(BlockPos position) { pos2 = position; }
     public BlockPos getPos1() { return pos1; }
     public BlockPos getPos2() { return pos2; }
