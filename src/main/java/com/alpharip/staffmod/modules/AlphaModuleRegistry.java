@@ -27,6 +27,7 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         );
         singleplayer.addFeature(new AlphaModuleFeature("autotool", "AutoTool", "Automatically select the best hotbar tool for the targeted block in singleplayer.", PermissionService.Rank.PUBLIC, true));
+        singleplayer.addFeature(new AlphaModuleFeature("inventory-sorter", "Inventory Sorter", "Manually grab and sort chest contents and sort the player inventory without changing the hotbar.", PermissionService.Rank.PUBLIC, true));
         MODULES.add(singleplayer);
 
         AlphaModule worldEdit = new AlphaModule(
