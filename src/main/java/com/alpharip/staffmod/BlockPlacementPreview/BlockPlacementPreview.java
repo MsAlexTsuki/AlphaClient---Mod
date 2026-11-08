@@ -59,7 +59,7 @@ public final class BlockPlacementPreview {
             return;
         }
 
-        drawPreview(minecraft.getRenderManager(), preview, opacity);
+        drawPreview(minecraft.getRenderManager(), preview, opacity, BlockPlacementPreviewSettings.isShowCollision());
     }
 
     private PreviewData createPreview(World world, EntityPlayer player,
@@ -173,7 +173,7 @@ public final class BlockPlacementPreview {
         return (float) Math.max(0.0D, Math.min(1.0D, value));
     }
 
-    private void drawPreview(RenderManager renderManager, PreviewData preview, float opacity) {
+    private void drawPreview(RenderManager renderManager, PreviewData preview, float opacity, boolean showCollision) {
         if (renderManager == null || preview == null || preview.box == null) {
             return;
         }
@@ -186,9 +186,9 @@ public final class BlockPlacementPreview {
         double maxY = box.maxY - renderManager.viewerPosY;
         double maxZ = box.maxZ - renderManager.viewerPosZ;
 
-        float red = preview.blocked ? 1.0F : 0.25F;
-        float green = preview.blocked ? 0.18F : 0.9F;
-        float blue = preview.blocked ? 0.18F : 0.45F;
+        float red = showCollision && preview.blocked ? 1.0F : 0.25F;
+        float green = showCollision && preview.blocked ? 0.18F : 0.9F;
+        float blue = showCollision && preview.blocked ? 0.18F : 0.45F;
         float alpha = Math.max(0.05F, Math.min(1.0F, opacity));
 
         RenderState previousState = RenderState.capture();
