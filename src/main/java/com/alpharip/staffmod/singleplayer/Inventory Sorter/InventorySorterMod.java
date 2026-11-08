@@ -146,21 +146,23 @@ public final class InventorySorterMod {
 
             if (container instanceof ContainerChest && screen instanceof GuiChest) {
                 int chestSize = ((ContainerChest) container).getLowerChestInventory().getSizeInventory();
+                // Consume middle-clicks on chest/player slots so creative clone-click cannot run.
+                event.setCanceled(true);
                 if (slot.slotNumber >= 0 && slot.slotNumber < chestSize) {
-                    event.setCanceled(true);
                     sortSlots(mc, container, 0, chestSize, "chest");
                 } else if (slot.slotNumber >= chestSize && slot.slotNumber < chestSize + 27) {
-                    event.setCanceled(true);
                     sortSlots(mc, container, chestSize, 27, "inventory");
                 }
-                // The hotbar and every slot outside the two supported areas are untouched.
+                // Hotbar slots intentionally do nothing.
                 return;
             }
 
-            if (container instanceof ContainerPlayer && screen instanceof GuiInventory
-                    && slot.slotNumber >= 9 && slot.slotNumber < 36) {
+            if (container instanceof ContainerPlayer && screen instanceof GuiInventory) {
+                // Consume unsupported player-inventory slots as well; only slots 9-35 sort.
                 event.setCanceled(true);
-                sortSlots(mc, container, 9, 27, "inventory");
+                if (slot.slotNumber >= 9 && slot.slotNumber < 36) {
+                    sortSlots(mc, container, 9, 27, "inventory");
+                }
                 return;
             }
             return;
