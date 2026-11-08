@@ -4,13 +4,20 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.resources.model.IBakedModel;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -59,7 +66,7 @@ public final class BlockPlacementPreview {
             return;
         }
 
-        drawPreview(minecraft.getRenderManager(), preview, opacity, BlockPlacementPreviewSettings.isShowCollision());
+        drawPreview(minecraft, preview, opacity, BlockPlacementPreviewSettings.isShowCollision());
     }
 
     private PreviewData createPreview(World world, EntityPlayer player,
@@ -117,15 +124,6 @@ public final class BlockPlacementPreview {
         }
 
         // Blocks without collision bounds still receive a useful one-block placement preview.
-        AxisAlignedBB renderBox = collisionBox != null
-                ? collisionBox
-                : AxisAlignedBB.fromBounds(
-                        placementPosition.getX(), placementPosition.getY(), placementPosition.getZ(),
-                        placementPosition.getX() + 1.0D,
-                        placementPosition.getY() + 1.0D,
-                        placementPosition.getZ() + 1.0D
-                );
-
         boolean blocked = !block.canPlaceBlockAt(world, placementPosition);
         if (!blocked && collisionBox != null) {
             List<AxisAlignedBB> collisions = world.getCollidingBoundingBoxes(player, collisionBox);
@@ -134,7 +132,7 @@ public final class BlockPlacementPreview {
             }
         }
 
-        return new PreviewData(renderBox, blocked);
+        return new PreviewData(placementState, placementPosition, collisionBox, blocked);
     }
 
     private boolean containsBlockingCollision(List<AxisAlignedBB> collisions,
@@ -173,63 +171,118 @@ public final class BlockPlacementPreview {
         return (float) Math.max(0.0D, Math.min(1.0D, value));
     }
 
-    private void drawPreview(RenderManager renderManager, PreviewData preview, float opacity, boolean showCollision) {
-        if (renderManager == null || preview == null || preview.box == null) {
+    private void drawPreview(Minecraft minecraft, PreviewData preview, float opacity, boolean showCollision) {
+        if (minecraft == null || minecraft.theWorld == null || preview == null || preview.state == null) {
             return;
         }
 
-        AxisAlignedBB box = preview.box;
-        double minX = box.minX - renderManager.viewerPosX;
-        double minY = box.minY - renderManager.viewerPosY;
-        double minZ = box.minZ - renderManager.viewerPosZ;
-        double maxX = box.maxX - renderManager.viewerPosX;
-        double maxY = box.maxY - renderManager.viewerPosY;
-        double maxZ = box.maxZ - renderManager.viewerPosZ;
-
-        float red = showCollision && preview.blocked ? 1.0F : 0.25F;
-        float green = showCollision && preview.blocked ? 0.18F : 0.9F;
-        float blue = showCollision && preview.blocked ? 0.18F : 0.45F;
-        float alpha = Math.max(0.05F, Math.min(1.0F, opacity));
+        RenderManager renderManager = minecraft.getRenderManager();
+        if (renderManager == null) {
+            return;
+        }
 
         RenderState previousState = RenderState.capture();
         GlStateManager.pushMatrix();
         try {
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-            GlStateManager.disableTexture2D();
-            GlStateManager.disableLighting();
             GlStateManager.enableDepth();
             GlStateManager.depthMask(false);
             GlStateManager.disableCull();
 
-            GlStateManager.color(red, green, blue, alpha);
-            drawFaces(minX, minY, minZ, maxX, maxY, maxZ);
+            drawBlockModel(minecraft, preview, opacity, renderManager);
 
-            GL11.glLineWidth(2.0F);
-            GlStateManager.color(red, green, blue, Math.min(1.0F, alpha + 0.35F));
-            drawEdges(minX, minY, minZ, maxX, maxY, maxZ);
+            if (showCollision && preview.collisionBox != null) {
+                AxisAlignedBB box = preview.collisionBox;
+                double minX = box.minX - renderManager.viewerPosX;
+                double minY = box.minY - renderManager.viewerPosY;
+                double minZ = box.minZ - renderManager.viewerPosZ;
+                double maxX = box.maxX - renderManager.viewerPosX;
+                double maxY = box.maxY - renderManager.viewerPosY;
+                double maxZ = box.maxZ - renderManager.viewerPosZ;
+
+                GlStateManager.disableTexture2D();
+                GlStateManager.disableLighting();
+                GL11.glLineWidth(2.0F);
+                if (preview.blocked) {
+                    GlStateManager.color(1.0F, 0.12F, 0.12F, 0.95F);
+                } else {
+                    GlStateManager.color(0.15F, 0.85F, 1.0F, 0.95F);
+                }
+                drawEdges(minX, minY, minZ, maxX, maxY, maxZ);
+            }
         } finally {
             GlStateManager.popMatrix();
             previousState.restore();
         }
     }
 
-    private static void drawFaces(double x0, double y0, double z0,
-                                  double x1, double y1, double z1) {
-        GL11.glBegin(GL11.GL_QUADS);
-        GL11.glVertex3d(x0, y0, z0); GL11.glVertex3d(x1, y0, z0);
-        GL11.glVertex3d(x1, y1, z0); GL11.glVertex3d(x0, y1, z0);
-        GL11.glVertex3d(x1, y0, z1); GL11.glVertex3d(x0, y0, z1);
-        GL11.glVertex3d(x0, y1, z1); GL11.glVertex3d(x1, y1, z1);
-        GL11.glVertex3d(x0, y0, z1); GL11.glVertex3d(x0, y0, z0);
-        GL11.glVertex3d(x0, y1, z0); GL11.glVertex3d(x0, y1, z1);
-        GL11.glVertex3d(x1, y0, z0); GL11.glVertex3d(x1, y0, z1);
-        GL11.glVertex3d(x1, y1, z1); GL11.glVertex3d(x1, y1, z0);
-        GL11.glVertex3d(x0, y1, z0); GL11.glVertex3d(x1, y1, z0);
-        GL11.glVertex3d(x1, y1, z1); GL11.glVertex3d(x0, y1, z1);
-        GL11.glVertex3d(x0, y0, z1); GL11.glVertex3d(x1, y0, z1);
-        GL11.glVertex3d(x1, y0, z0); GL11.glVertex3d(x0, y0, z0);
-        GL11.glEnd();
+    /**
+     * Draws the baked Minecraft block model at the target position. The collision
+     * outline is rendered separately so visual geometry and physical bounds remain distinct.
+     */
+    private void drawBlockModel(Minecraft minecraft, PreviewData preview, float opacity,
+                                RenderManager renderManager) {
+        Block block = preview.state.getBlock();
+        if (block.getRenderType() != 3) {
+            return;
+        }
+
+        IBakedModel model;
+        try {
+            model = minecraft.getBlockRendererDispatcher().getModelFromBlockState(
+                    preview.state, minecraft.theWorld, preview.position);
+        } catch (RuntimeException invalidModel) {
+            return;
+        }
+        if (model == null) {
+            return;
+        }
+
+        minecraft.getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
+        GlStateManager.enableTexture2D();
+        GlStateManager.disableLighting();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, Math.max(0.05F, Math.min(1.0F, opacity)));
+
+        GlStateManager.pushMatrix();
+        try {
+            GlStateManager.translate(
+                    preview.position.getX() - renderManager.viewerPosX,
+                    preview.position.getY() - renderManager.viewerPosY,
+                    preview.position.getZ() - renderManager.viewerPosZ);
+
+            Tessellator tessellator = Tessellator.getInstance();
+            WorldRenderer renderer = tessellator.getWorldRenderer();
+            renderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
+
+            for (EnumFacing facing : EnumFacing.values()) {
+                renderModelQuads(renderer, model.getFaceQuads(facing), block, minecraft, preview, opacity);
+            }
+            renderModelQuads(renderer, model.getGeneralQuads(), block, minecraft, preview, opacity);
+
+            tessellator.draw();
+        } finally {
+            GlStateManager.popMatrix();
+        }
+    }
+
+    private void renderModelQuads(WorldRenderer renderer, List<BakedQuad> quads, Block block,
+                                  Minecraft minecraft, PreviewData preview, float opacity) {
+        int alpha = (int) (Math.max(0.05F, Math.min(1.0F, opacity)) * 255.0F);
+        for (BakedQuad quad : quads) {
+            int color = 0x00FFFFFF;
+            if (quad.hasTintIndex()) {
+                color = block.colorMultiplier(minecraft.theWorld, preview.position, quad.getTintIndex());
+            }
+            color = (alpha << 24) | (color & 0x00FFFFFF);
+
+            renderer.addVertexData(quad.getVertexData());
+            renderer.putColor4(color);
+            if (quad.getFace() != null) {
+                net.minecraft.util.Vec3i normal = quad.getFace().getDirectionVec();
+                renderer.putNormal((float) normal.getX(), (float) normal.getY(), (float) normal.getZ());
+            }
+        }
     }
 
     private static void drawEdges(double x0, double y0, double z0,
@@ -257,11 +310,15 @@ public final class BlockPlacementPreview {
     }
 
     private static final class PreviewData {
-        private final AxisAlignedBB box;
+        private final IBlockState state;
+        private final BlockPos position;
+        private final AxisAlignedBB collisionBox;
         private final boolean blocked;
 
-        private PreviewData(AxisAlignedBB box, boolean blocked) {
-            this.box = box;
+        private PreviewData(IBlockState state, BlockPos position, AxisAlignedBB collisionBox, boolean blocked) {
+            this.state = state;
+            this.position = position;
+            this.collisionBox = collisionBox;
             this.blocked = blocked;
         }
     }
