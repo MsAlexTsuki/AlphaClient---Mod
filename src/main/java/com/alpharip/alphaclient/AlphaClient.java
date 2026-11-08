@@ -69,6 +69,7 @@ import com.alpharip.staffmod.singleplayer.worldedit.AlphaWorldEditCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolMod;
 import com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavate;
+import com.alpharip.staffmod.singleplayer.autoreplant.AutoReplant;
 import com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavateCommand;
 import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesCommand;
 import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultCommand;
@@ -217,6 +218,7 @@ public final class AlphaClient {
 
         AlphaKeyBindingSettings.load();
         MinecraftForge.EVENT_BUS.register(new TreeExcavate());
+        MinecraftForge.EVENT_BUS.register(new AutoReplant());
         openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu",
                 AlphaKeyBindingSettings.getKeyCode("openHomeMenu", Keyboard.KEY_RCONTROL), "AlphaClient");
         ClientRegistry.registerKeyBinding(openModMenuKey);
