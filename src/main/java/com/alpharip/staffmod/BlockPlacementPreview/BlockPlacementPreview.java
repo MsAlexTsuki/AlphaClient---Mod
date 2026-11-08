@@ -305,9 +305,11 @@ public final class BlockPlacementPreview {
         }
 
         private static RenderState capture() {
-            FloatBuffer color = BufferUtils.createFloatBuffer(4);
+            // LWJGL 2 validates glGetFloat buffers for the largest possible result (16 floats),
+            // even when the selected OpenGL state contains fewer values.
+            FloatBuffer color = BufferUtils.createFloatBuffer(16);
             GL11.glGetFloat(GL11.GL_CURRENT_COLOR, color);
-            FloatBuffer width = BufferUtils.createFloatBuffer(1);
+            FloatBuffer width = BufferUtils.createFloatBuffer(16);
             GL11.glGetFloat(GL11.GL_LINE_WIDTH, width);
             ByteBuffer depthWrite = BufferUtils.createByteBuffer(1);
             GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK, depthWrite);
