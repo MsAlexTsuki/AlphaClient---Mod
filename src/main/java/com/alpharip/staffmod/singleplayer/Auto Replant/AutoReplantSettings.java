@@ -71,8 +71,8 @@ public final class AutoReplantSettings {
     private static void save() {
         if (!loaded || loadFailed || activeSettingsFile == null) return;
         File parent = activeSettingsFile.getParentFile();
-        if (parent == null && !activeSettingsFile.getParentFile().mkdirs()) return;
-        if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.isDirectory()) return;
+        if (parent == null) return;
+        if (!parent.exists() && !parent.mkdirs() && !parent.isDirectory()) return;
 
         File temporary = new File(parent, activeSettingsFile.getName() + ".tmp");
         Properties values = new Properties();
