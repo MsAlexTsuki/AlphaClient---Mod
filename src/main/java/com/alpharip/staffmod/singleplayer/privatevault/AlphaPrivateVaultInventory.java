@@ -1,6 +1,5 @@
 package com.alpharip.staffmod.singleplayer.privatevault;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.inventory.InventoryBasic;
 
 /** The 54-slot inventory used by one numbered private vault. */
@@ -24,23 +23,14 @@ public final class AlphaPrivateVaultInventory extends InventoryBasic {
 
     /**
      * ContainerChest calls markDirty after inventory mutations on the integrated
-     * server. Save on the client thread because the existing world-local storage
-     * manager resolves the active Minecraft save from the client instance.
+     * server. Queue a debounced save instead of serializing and writing the vault
+     * for every individual slot mutation.
      */
     @Override
     public void markDirty() {
         super.markDirty();
-        if (!persistenceEnabled) {
-            return;
+        if (persistenceEnabled) {
+            AlphaPrivateVaultManager.getInstance().queueVaultSave(this);
         }
-
-        final int number = vaultNumber;
-        Minecraft.getMinecraft().addScheduledTask(new Runnable() {
-            @Override
-            public void run() {
-                AlphaPrivateVaultManager.getInstance().saveVault(number,
-                        AlphaPrivateVaultInventory.this);
-            }
-        });
     }
 }
