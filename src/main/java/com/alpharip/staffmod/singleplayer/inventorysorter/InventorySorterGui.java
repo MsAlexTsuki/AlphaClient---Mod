@@ -35,7 +35,7 @@ public final class InventorySorterGui extends AlphaGuiScreen {
         }
 
         panelWidth = Math.min(420, width - 24);
-        panelHeight = 232;
+        panelHeight = 250;
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
 
@@ -74,14 +74,18 @@ public final class InventorySorterGui extends AlphaGuiScreen {
                 left + 16, top + 93, 0xFFB8BDC8);
         drawString(fontRendererObj, "Sort Inventory sorts the main inventory, excluding the hotbar.",
                 left + 16, top + 108, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Deposit All moves main-inventory items into the open chest.",
+                left + 16, top + 123, 0xFFB8BDC8);
 
-        drawString(fontRendererObj, "MIDDLE-CLICK", left + 16, top + 137, 0xFFF2F3F5);
+        drawString(fontRendererObj, "MIDDLE-CLICK", left + 16, top + 151, 0xFFF2F3F5);
         drawString(fontRendererObj, "Middle-click a chest slot or main-inventory slot to sort that section.",
-                left + 16, top + 154, 0xFFB8BDC8);
+                left + 16, top + 168, 0xFFB8BDC8);
         drawString(fontRendererObj, "Chest slots sort the chest; player slots sort the main inventory.",
-                left + 16, top + 169, 0xFFB8BDC8);
-        drawString(fontRendererObj, "No automatic sorting, double-click actions, or hotbar sorting.",
-                left + 16, top + 190, 0xFFB8BDC8);
+                left + 16, top + 183, 0xFFB8BDC8);
+        drawString(fontRendererObj, "Vanilla double-click item collection remains available.",
+                left + 16, top + 204, 0xFFB8BDC8);
+        drawString(fontRendererObj, "No automatic sorting or hotbar sorting.",
+                left + 16, top + 219, 0xFFB8BDC8);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
