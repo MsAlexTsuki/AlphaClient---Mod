@@ -3,6 +3,8 @@ package com.alpharip.staffmod.singleplayer.inventorysorter;
 
 import com.alpharip.staffmod.gui.AlphaButton;
 import com.alpharip.staffmod.gui.AlphaGuiScreen;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -10,6 +12,7 @@ import net.minecraft.client.gui.GuiScreen;
 /** Full singleplayer information screen for Inventory Sorter. */
 public final class InventorySorterGui extends AlphaGuiScreen {
     private static final int BACK = 1;
+    private static final int TOGGLE = 2;
     private static final int ACCENT = 0xFFFFC83D;
 
     private final GuiScreen parent;
@@ -41,6 +44,10 @@ public final class InventorySorterGui extends AlphaGuiScreen {
 
         buttonList.add(new AlphaButton(BACK, left + 16, top + panelHeight - 30,
                 90, 20, "BACK"));
+        AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("inventory-sorter");
+        boolean enabled = feature != null && feature.isEnabled();
+        buttonList.add(new AlphaButton(TOGGLE, left + panelWidth - 126,
+                top + panelHeight - 30, 110, 20, enabled ? "ON" : "OFF", enabled));
     }
 
     @Override
@@ -48,6 +55,10 @@ public final class InventorySorterGui extends AlphaGuiScreen {
         if (button == null) return;
         if (button.id == BACK || !isAvailable()) {
             mc.displayGuiScreen(parent);
+        } else if (button.id == TOGGLE) {
+            AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("inventory-sorter");
+            if (feature != null) feature.setEnabled(!feature.isConfiguredEnabled());
+            initGui();
         }
     }
 
@@ -66,26 +77,30 @@ public final class InventorySorterGui extends AlphaGuiScreen {
                 top + 15, 0xFFF2F3F5);
         drawCenteredString(fontRendererObj, "SINGLEPLAYER TOOL", width / 2,
                 top + 32, ACCENT);
+        AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("inventory-sorter");
+        boolean enabled = feature != null && feature.isEnabled();
+        drawCenteredString(fontRendererObj, "STATUS: " + (enabled ? "ON" : "OFF"),
+                width / 2, top + 47, enabled ? 0xFF75D889 : 0xFFFF7777);
 
-        drawString(fontRendererObj, "CHEST CONTROLS", left + 16, top + 61, 0xFFF2F3F5);
-        drawString(fontRendererObj, "Grab All transfers chest items into available inventory space.",
-                left + 16, top + 78, 0xFFB8BDC8);
+        drawString(fontRendererObj, "CHEST CONTROLS", left + 16, top + 65, 0xFFF2F3F5);
+        drawString(fontRendererObj, "Quick Grab transfers chest items into available inventory space.",
+                left + 16, top + 82, 0xFFB8BDC8);
         drawString(fontRendererObj, "Sort Chest sorts the open chest contents.",
-                left + 16, top + 93, 0xFFB8BDC8);
+                left + 16, top + 97, 0xFFB8BDC8);
         drawString(fontRendererObj, "Sort Inventory sorts the main inventory, excluding the hotbar.",
-                left + 16, top + 108, 0xFFB8BDC8);
+                left + 16, top + 112, 0xFFB8BDC8);
         drawString(fontRendererObj, "Deposit All moves main-inventory items into the open chest.",
-                left + 16, top + 123, 0xFFB8BDC8);
+                left + 16, top + 127, 0xFFB8BDC8);
 
-        drawString(fontRendererObj, "MIDDLE-CLICK", left + 16, top + 151, 0xFFF2F3F5);
+        drawString(fontRendererObj, "MIDDLE-CLICK", left + 16, top + 155, 0xFFF2F3F5);
         drawString(fontRendererObj, "Middle-click a chest slot or main-inventory slot to sort that section.",
-                left + 16, top + 168, 0xFFB8BDC8);
+                left + 16, top + 172, 0xFFB8BDC8);
         drawString(fontRendererObj, "Chest slots sort the chest; player slots sort the main inventory.",
-                left + 16, top + 183, 0xFFB8BDC8);
+                left + 16, top + 187, 0xFFB8BDC8);
         drawString(fontRendererObj, "Vanilla double-click item collection remains available.",
-                left + 16, top + 204, 0xFFB8BDC8);
+                left + 16, top + 208, 0xFFB8BDC8);
         drawString(fontRendererObj, "No automatic sorting or hotbar sorting.",
-                left + 16, top + 219, 0xFFB8BDC8);
+                left + 16, top + 223, 0xFFB8BDC8);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
