@@ -215,7 +215,7 @@ public final class InventorySorterMod {
             mc.playerController.windowClick(chest.windowId, slot.slotNumber, 0, 1, mc.thePlayer);
             ItemStack remaining = slot.getStack();
             if (remaining != null && remaining.stackSize >= previousCount) {
-                break;
+                continue;
             }
         }
     }
