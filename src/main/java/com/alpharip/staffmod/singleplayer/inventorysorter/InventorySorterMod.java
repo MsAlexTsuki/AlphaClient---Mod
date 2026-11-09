@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Manual chest and inventory sorting controls.
  *
- * No automatic sorting and no double-click behavior are registered here.
+ * Sorting is manual. Vanilla double-click behavior is left untouched.
  * Middle-click sorts the section beneath the cursor.
  */
 public final class InventorySorterMod {
@@ -34,6 +34,8 @@ public final class InventorySorterMod {
     private static final int QUICK_GRAB = 0;
     private static final int SORT_CHEST = 1;
     private static final int SORT_INVENTORY = 2;
+    private static final int DEPOSIT_ALL = 3;
+    private static final int BUTTON_COUNT = 4;
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onChestDraw(GuiScreenEvent.DrawScreenEvent.Post event) {
@@ -42,11 +44,11 @@ public final class InventorySorterMod {
         }
 
         int left = (event.gui.width - 176) / 2;
-        int rightStart = left + 176 - 5 - (BUTTON_SIZE * 3 + BUTTON_GAP * 2);
+        int rightStart = left + 176 - 5 - (BUTTON_SIZE * BUTTON_COUNT + BUTTON_GAP * (BUTTON_COUNT - 1));
         int mouseX = event.mouseX;
         int mouseY = event.mouseY;
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < BUTTON_COUNT; i++) {
             int x = rightStart + i * (BUTTON_SIZE + BUTTON_GAP);
             boolean hovered = mouseX >= x && mouseX < x + BUTTON_SIZE
                     && mouseY >= getChestTop(event.gui) + BUTTON_Y
@@ -68,15 +70,12 @@ public final class InventorySorterMod {
         int mouseX = Mouse.getEventX() * event.gui.width / mc.displayWidth;
         int mouseY = event.gui.height - Mouse.getEventY() * event.gui.height / mc.displayHeight - 1;
 
-        if (event.gui instanceof GuiChest && button == 0) {
-            if (mc.thePlayer.inventory.getItemStack() != null) {
-                event.setCanceled(true);
-                return;
-            }
+        if (event.gui instanceof GuiChest && button == 0
+                && mc.thePlayer.inventory.getItemStack() == null) {
             int left = (event.gui.width - 176) / 2;
             int top = getChestTop(event.gui);
-            int startX = left + 176 - 5 - (BUTTON_SIZE * 3 + BUTTON_GAP * 2);
-            for (int i = 0; i < 3; i++) {
+            int startX = left + 176 - 5 - (BUTTON_SIZE * BUTTON_COUNT + BUTTON_GAP * (BUTTON_COUNT - 1));
+            for (int i = 0; i < BUTTON_COUNT; i++) {
                 int x = startX + i * (BUTTON_SIZE + BUTTON_GAP);
                 if (inside(mouseX, mouseY, x, top + BUTTON_Y, BUTTON_SIZE, BUTTON_SIZE)) {
                     ContainerChest chest = (ContainerChest) mc.thePlayer.openContainer;
@@ -84,8 +83,10 @@ public final class InventorySorterMod {
                         grabAll(mc, chest);
                     } else if (i == SORT_CHEST) {
                         sortChest(mc, chest);
-                    } else {
+                    } else if (i == SORT_INVENTORY) {
                         sortPlayerInventory(mc, chest);
+                    } else {
+                        depositAll(mc, chest);
                     }
                     event.setCanceled(true);
                     return;
@@ -139,11 +140,17 @@ public final class InventorySorterMod {
             Gui.drawRect(x + 2, y + 6, x + 8, y + 7, icon);
             Gui.drawRect(x + 2, y + 9, x + 6, y + 10, icon);
             Gui.drawRect(x + 9, y + 6, x + 10, y + 10, icon);
-        } else {
+        } else if (type == SORT_INVENTORY) {
             Gui.drawRect(x + 2, y + 2, x + 5, y + 5, icon);
             Gui.drawRect(x + 7, y + 2, x + 10, y + 5, icon);
             Gui.drawRect(x + 2, y + 7, x + 5, y + 10, icon);
             Gui.drawRect(x + 7, y + 7, x + 10, y + 10, icon);
+        } else {
+            Gui.drawRect(x + 2, y + 3, x + 10, y + 4, icon);
+            Gui.drawRect(x + 5, y + 4, x + 7, y + 8, icon);
+            Gui.drawRect(x + 3, y + 7, x + 5, y + 9, icon);
+            Gui.drawRect(x + 7, y + 7, x + 9, y + 9, icon);
+            Gui.drawRect(x + 2, y + 9, x + 10, y + 10, icon);
         }
     }
 
@@ -187,6 +194,26 @@ public final class InventorySorterMod {
             int previousCount = before.stackSize;
             mc.playerController.windowClick(chest.windowId, slot, 0, 1, mc.thePlayer);
             ItemStack remaining = chest.getSlot(slot).getStack();
+            if (remaining != null && remaining.stackSize >= previousCount) {
+                break;
+            }
+        }
+    }
+
+    private static void depositAll(Minecraft mc, ContainerChest chest) {
+        // Only the player's 27 main-inventory slots are eligible. Hotbar 0-8 is excluded.
+        for (Object value : chest.inventorySlots) {
+            Slot slot = (Slot) value;
+            if (slot.inventory != mc.thePlayer.inventory
+                    || slot.getSlotIndex() < 9 || slot.getSlotIndex() > 35) {
+                continue;
+            }
+
+            ItemStack before = slot.getStack();
+            if (before == null) continue;
+            int previousCount = before.stackSize;
+            mc.playerController.windowClick(chest.windowId, slot.slotNumber, 0, 1, mc.thePlayer);
+            ItemStack remaining = slot.getStack();
             if (remaining != null && remaining.stackSize >= previousCount) {
                 break;
             }
