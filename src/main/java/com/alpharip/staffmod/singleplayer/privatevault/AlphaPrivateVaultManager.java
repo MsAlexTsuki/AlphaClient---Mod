@@ -1,7 +1,6 @@
 package com.alpharip.staffmod.singleplayer.privatevault;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.inventory.ContainerChest;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -120,9 +119,8 @@ public final class AlphaPrivateVaultManager {
                     continue;
                 }
 
-                boolean vaultClosed = !isVaultOpen(mc, inventory);
                 boolean quietPeriodElapsed = now - pending.lastMutationAt >= SAVE_DEBOUNCE_MS;
-                if (vaultClosed || quietPeriodElapsed) {
+                if (quietPeriodElapsed) {
                     readyToSave.add(inventory);
                     iterator.remove();
                 }
@@ -132,12 +130,6 @@ public final class AlphaPrivateVaultManager {
         for (AlphaPrivateVaultInventory inventory : readyToSave) {
             saveVault(inventory.getVaultNumber(), inventory);
         }
-    }
-
-    private static boolean isVaultOpen(Minecraft mc, AlphaPrivateVaultInventory inventory) {
-        return mc.thePlayer != null
-                && mc.thePlayer.openContainer instanceof ContainerChest
-                && ((ContainerChest) mc.thePlayer.openContainer).getLowerChestInventory() == inventory;
     }
 
     /**
