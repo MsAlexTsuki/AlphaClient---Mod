@@ -2,6 +2,8 @@
 package com.alpharip.staffmod.singleplayer.inventorysorter;
 
 import net.minecraft.client.Minecraft;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
+import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
@@ -37,9 +39,15 @@ public final class InventorySorterMod {
     private static final int DEPOSIT_ALL = 3;
     private static final int BUTTON_COUNT = 4;
 
+    private static boolean isEnabled() {
+        AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("inventory-sorter");
+        return feature != null && feature.isEnabled();
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onChestDraw(GuiScreenEvent.DrawScreenEvent.Post event) {
-        if (!(event.gui instanceof GuiChest) || !InventorySorterAccess.isAvailable(Minecraft.getMinecraft())) {
+        if (!isEnabled() || !(event.gui instanceof GuiChest)
+                || !InventorySorterAccess.isAvailable(Minecraft.getMinecraft())) {
             return;
         }
 
@@ -60,7 +68,7 @@ public final class InventorySorterMod {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMouseInput(GuiScreenEvent.MouseInputEvent.Pre event) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (!InventorySorterAccess.isAvailable(mc) || mc.thePlayer == null
+        if (!isEnabled() || !InventorySorterAccess.isAvailable(mc) || mc.thePlayer == null
                 || !(event.gui instanceof GuiChest || event.gui instanceof GuiInventory)
                 || !Mouse.getEventButtonState()) {
             return;
