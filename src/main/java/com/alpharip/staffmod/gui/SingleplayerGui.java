@@ -11,6 +11,7 @@ import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultsGui;
 import com.alpharip.staffmod.singleplayer.inventorysorter.InventorySorterGui;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -24,6 +25,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
     private static final int TREE_EXCAVATE = 6;
     private static final int AUTO_REPLANT = 7;
     private static final int INVENTORY_SORTER = 8;
+    private static final int INVENTORY_SORTER_INFO = 9;
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
@@ -79,8 +81,13 @@ public final class SingleplayerGui extends AlphaGuiScreen {
                 tileWidth, tileHeight, "Tree Excavate"));
         buttonList.add(new AlphaButton(AUTO_REPLANT, firstTileX + tileWidth + gap,
                 tileY + tileHeight + gap, tileWidth, tileHeight, "Auto Replant"));
+        AlphaModuleFeature inventorySorter = AlphaModuleRegistry.findFeature("inventory-sorter");
+        boolean inventorySorterEnabled = inventorySorter != null && inventorySorter.isEnabled();
         buttonList.add(new AlphaButton(INVENTORY_SORTER, firstTileX + (tileWidth + gap) * 2,
-                tileY + tileHeight + gap, tileWidth, tileHeight, "Inventory Sorter"));
+                tileY + tileHeight + gap, tileWidth, tileHeight,
+                "Inventory Sorter: " + (inventorySorterEnabled ? "ON" : "OFF"), inventorySorterEnabled));
+        buttonList.add(new AlphaButton(INVENTORY_SORTER_INFO, firstTileX + (tileWidth + gap) * 3,
+                tileY + tileHeight + gap, tileWidth, tileHeight, "Sorter Info"));
     }
 
     @Override
@@ -109,6 +116,12 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         } else if (button.id == AUTO_REPLANT) {
             if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new AutoReplantGui(this));
         } else if (button.id == INVENTORY_SORTER) {
+            if (hasActiveSingleplayerWorld()) {
+                AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("inventory-sorter");
+                if (feature != null) feature.setEnabled(!feature.isConfiguredEnabled());
+                initGui();
+            }
+        } else if (button.id == INVENTORY_SORTER_INFO) {
             if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new InventorySorterGui(this));
         }
     }
