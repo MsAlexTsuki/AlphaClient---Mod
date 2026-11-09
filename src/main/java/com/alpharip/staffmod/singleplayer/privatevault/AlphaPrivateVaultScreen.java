@@ -4,16 +4,19 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.inventory.Slot;
+import net.minecraft.util.ChatComponentText;
 
 import java.io.IOException;
 
 /** Client-local chest screen shared by the vault browser. */
 public final class AlphaPrivateVaultScreen extends GuiChest {
+    private final int vaultNumber;
     private final AlphaPrivateVaultInventory vaultInventory;
     private final GuiScreen parent;
 
     public AlphaPrivateVaultScreen(int vaultNumber, AlphaPrivateVaultInventory inventory, GuiScreen parent) {
         super(Minecraft.getMinecraft().thePlayer.inventory, inventory);
+        this.vaultNumber = vaultNumber;
         this.vaultInventory = inventory;
         this.parent = parent;
     }
@@ -45,8 +48,10 @@ public final class AlphaPrivateVaultScreen extends GuiChest {
     @Override
     public void onGuiClosed() {
         Minecraft mc = Minecraft.getMinecraft();
-        if (AlphaPrivateVaultManager.isAvailable(mc)) {
-            AlphaPrivateVaultManager.getInstance().flushVaultNow(vaultInventory);
+        if (AlphaPrivateVaultManager.isAvailable(mc)
+                && !AlphaPrivateVaultManager.getInstance().flushVaultNow(vaultInventory)) {
+            mc.thePlayer.addChatMessage(new ChatComponentText(
+                    "§c[Alpha Private Vault] Could not save vault " + vaultNumber + "."));
         }
         super.onGuiClosed();
     }
