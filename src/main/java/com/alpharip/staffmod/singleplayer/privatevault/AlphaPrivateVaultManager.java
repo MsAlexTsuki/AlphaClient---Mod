@@ -1,10 +1,14 @@
 package com.alpharip.staffmod.singleplayer.privatevault;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.inventory.ContainerChest;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +17,10 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Stores only non-empty vaults inside the active singleplayer world's save folder.
@@ -22,8 +29,14 @@ import java.util.List;
 public final class AlphaPrivateVaultManager {
     private static final AlphaPrivateVaultManager INSTANCE = new AlphaPrivateVaultManager();
     private static final int SLOT_COUNT = 54;
+    private static final long SAVE_DEBOUNCE_MS = 300L;
 
-    private AlphaPrivateVaultManager() { }
+    private final Map<AlphaPrivateVaultInventory, PendingVaultSave> pendingSaves =
+            new HashMap<AlphaPrivateVaultInventory, PendingVaultSave>();
+
+    private AlphaPrivateVaultManager() {
+        MinecraftForge.EVENT_BUS.register(this);
+    }
 
     public static AlphaPrivateVaultManager getInstance() {
         return INSTANCE;
@@ -32,6 +45,99 @@ public final class AlphaPrivateVaultManager {
     public static boolean isAvailable(Minecraft mc) {
         return mc != null && mc.isSingleplayer() && mc.getIntegratedServer() != null
                 && mc.thePlayer != null && mc.theWorld != null;
+    }
+
+    /**
+     * Queues one save per inventory and moves its deadline forward whenever
+     * another slot mutation occurs. All actual file work runs on the client tick.
+     */
+    public void queueVaultSave(AlphaPrivateVaultInventory inventory) {
+        if (inventory == null) {
+            return;
+        }
+
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!isAvailable(mc)) {
+            return;
+        }
+
+        String worldFolder = mc.getIntegratedServer().getFolderName();
+        if (worldFolder == null || worldFolder.trim().isEmpty()) {
+            return;
+        }
+
+        synchronized (pendingSaves) {
+            pendingSaves.put(inventory,
+                    new PendingVaultSave(worldFolder, System.currentTimeMillis()));
+        }
+    }
+
+    /**
+     * Flushes a vault immediately, primarily when a custom vault screen closes.
+     */
+    public boolean flushVaultNow(AlphaPrivateVaultInventory inventory) {
+        if (inventory == null) {
+            return false;
+        }
+
+        synchronized (pendingSaves) {
+            pendingSaves.remove(inventory);
+        }
+        return saveVault(inventory.getVaultNumber(), inventory);
+    }
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!isAvailable(mc)) {
+            return;
+        }
+
+        String activeWorld = mc.getIntegratedServer().getFolderName();
+        if (activeWorld == null) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        List<AlphaPrivateVaultInventory> readyToSave =
+                new ArrayList<AlphaPrivateVaultInventory>();
+
+        synchronized (pendingSaves) {
+            Iterator<Map.Entry<AlphaPrivateVaultInventory, PendingVaultSave>> iterator =
+                    pendingSaves.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<AlphaPrivateVaultInventory, PendingVaultSave> entry = iterator.next();
+                AlphaPrivateVaultInventory inventory = entry.getKey();
+                PendingVaultSave pending = entry.getValue();
+
+                // Never write a previous world's pending inventory into a new world.
+                if (!activeWorld.equals(pending.worldFolder)) {
+                    iterator.remove();
+                    continue;
+                }
+
+                boolean vaultClosed = !isVaultOpen(mc, inventory);
+                boolean quietPeriodElapsed = now - pending.lastMutationAt >= SAVE_DEBOUNCE_MS;
+                if (vaultClosed || quietPeriodElapsed) {
+                    readyToSave.add(inventory);
+                    iterator.remove();
+                }
+            }
+        }
+
+        for (AlphaPrivateVaultInventory inventory : readyToSave) {
+            saveVault(inventory.getVaultNumber(), inventory);
+        }
+    }
+
+    private static boolean isVaultOpen(Minecraft mc, AlphaPrivateVaultInventory inventory) {
+        return mc.thePlayer != null
+                && mc.thePlayer.openContainer instanceof ContainerChest
+                && ((ContainerChest) mc.thePlayer.openContainer).getLowerChestInventory() == inventory;
     }
 
     /**
@@ -225,6 +331,16 @@ public final class AlphaPrivateVaultManager {
     private static void validateVaultNumber(int vaultNumber) {
         if (vaultNumber < 1) {
             throw new IllegalArgumentException("Vault numbers must be 1 or higher.");
+        }
+    }
+
+    private static final class PendingVaultSave {
+        private final String worldFolder;
+        private final long lastMutationAt;
+
+        private PendingVaultSave(String worldFolder, long lastMutationAt) {
+            this.worldFolder = worldFolder;
+            this.lastMutationAt = lastMutationAt;
         }
     }
 }
