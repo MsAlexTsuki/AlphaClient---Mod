@@ -47,26 +47,28 @@ public final class AlertSoundsGui extends GuiScreen {
         buttonList.clear();
 
         int panelWidth = Math.min(390, Math.max(300, width - 24));
+        int panelHeight = Math.min(height - 18, 390);
         int left = (width - panelWidth) / 2;
+        int top = (height - panelHeight) / 2;
         int fieldWidth = panelWidth - 32;
 
-        eventField = new GuiTextField(0, fontRendererObj, left + 16, 72, fieldWidth, 18);
+        eventField = new GuiTextField(0, fontRendererObj, left + 16, top + 72, fieldWidth, 18);
         eventField.setMaxStringLength(64);
-        soundField = new GuiTextField(1, fontRendererObj, left + 16, 112, fieldWidth, 18);
+        soundField = new GuiTextField(1, fontRendererObj, left + 16, top + 112, fieldWidth, 18);
         soundField.setMaxStringLength(128);
-        volumeField = new GuiTextField(2, fontRendererObj, left + 16, 152, 64, 18);
+        volumeField = new GuiTextField(2, fontRendererObj, left + 16, top + 152, 64, 18);
         volumeField.setMaxStringLength(5);
         volumeField.setText(Float.toString(settings.getVolume()));
 
-        buttonList.add(new GuiButton(TOGGLE_BUTTON, left + 16, 34, fieldWidth, 20,
+        buttonList.add(new GuiButton(TOGGLE_BUTTON, left + 16, top + 34, fieldWidth, 20,
                 "Alert Sounds: " + onOff(settings.isEnabled())));
-        buttonList.add(new GuiButton(SAVE_BUTTON, left + 16, 177, fieldWidth / 2 - 3, 20,
+        buttonList.add(new GuiButton(SAVE_BUTTON, left + 16, top + 177, fieldWidth / 2 - 3, 20,
                 "Save Mapping"));
-        buttonList.add(new GuiButton(REMOVE_BUTTON, left + 19 + fieldWidth / 2, 177,
+        buttonList.add(new GuiButton(REMOVE_BUTTON, left + 19 + fieldWidth / 2, top + 177,
                 fieldWidth / 2 - 3, 20, "Remove Mapping"));
-        buttonList.add(new GuiButton(TEST_BUTTON, left + 16, 202, fieldWidth, 20,
+        buttonList.add(new GuiButton(TEST_BUTTON, left + 16, top + 202, fieldWidth, 20,
                 "Test Sound"));
-        buttonList.add(new GuiButton(BACK_BUTTON, left + panelWidth - 92, height - 30,
+        buttonList.add(new GuiButton(BACK_BUTTON, left + panelWidth - 92, top + panelHeight - 30,
                 76, 20, "Back"));
     }
 
@@ -150,9 +152,13 @@ public final class AlertSoundsGui extends GuiScreen {
 
         int panelWidth = Math.min(390, Math.max(300, width - 24));
         int left = (width - panelWidth) / 2;
-        int listTop = 244;
+        int panelHeight = Math.min(height - 18, 390);
+        int top = (height - panelHeight) / 2;
+        int listTop = top + 251;
+        int listBottom = top + panelHeight - 39;
         int rowHeight = 14;
-        if (mouseX >= left + 16 && mouseX <= left + panelWidth - 16 && mouseY >= listTop) {
+        if (mouseX >= left + 16 && mouseX <= left + panelWidth - 16
+                && mouseY >= listTop && mouseY < listBottom) {
             int row = (mouseY - listTop) / rowHeight;
             List<String> events = new ArrayList<String>(settings.getMappings().keySet());
             int index = scrollOffset + row;
@@ -203,14 +209,14 @@ public final class AlertSoundsGui extends GuiScreen {
         drawRect(left, top, right, bottom, 0xF00B0D12);
         drawRect(left, top, right, top + 2, 0xFFFFD866);
         drawCenteredString(fontRendererObj, "ALERT SOUNDS", width / 2, top + 10, 0xFFF2F3F5);
-        drawString(fontRendererObj, "EVENT NAME", left + 16, 62, 0xFFB8BDC8);
-        drawRect(left + 15, 71, right - 15, 91, 0xFF11141B);
+        drawString(fontRendererObj, "EVENT NAME", left + 16, top + 62, 0xFFB8BDC8);
+        drawRect(left + 15, top + 71, right - 15, top + 91, 0xFF11141B);
         eventField.drawTextBox();
-        drawString(fontRendererObj, "SOUND IDENTIFIER", left + 16, 102, 0xFFB8BDC8);
-        drawRect(left + 15, 111, right - 15, 131, 0xFF11141B);
+        drawString(fontRendererObj, "SOUND IDENTIFIER", left + 16, top + 102, 0xFFB8BDC8);
+        drawRect(left + 15, top + 111, right - 15, top + 131, 0xFF11141B);
         soundField.drawTextBox();
-        drawString(fontRendererObj, "VOLUME (0.0 - 1.0)", left + 16, 142, 0xFFB8BDC8);
-        drawRect(left + 15, 151, left + 87, 171, 0xFF11141B);
+        drawString(fontRendererObj, "VOLUME (0.0 - 1.0)", left + 16, top + 142, 0xFFB8BDC8);
+        drawRect(left + 15, top + 151, left + 87, top + 171, 0xFF11141B);
         volumeField.drawTextBox();
 
         int listTop = top + 251;
