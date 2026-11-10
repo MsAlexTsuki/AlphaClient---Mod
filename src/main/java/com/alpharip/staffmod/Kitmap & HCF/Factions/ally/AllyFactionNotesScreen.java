@@ -37,13 +37,13 @@ public final class AllyFactionNotesScreen extends GuiScreen {
 
         int fieldWidth = Math.min(220, width - 40);
         int fieldX = width / 2 - fieldWidth / 2;
-        factionField = new GuiTextField(1, fontRendererObj, fieldX, 34, fieldWidth, 18);
+        factionField = new GuiTextField(1, fontRendererObj, fieldX, 44, fieldWidth, 18);
         factionField.setMaxStringLength(32);
-        noteField = new GuiTextField(2, fontRendererObj, fieldX, 72, fieldWidth, 18);
+        noteField = new GuiTextField(2, fontRendererObj, fieldX, 82, fieldWidth, 18);
         noteField.setMaxStringLength(160);
 
         int buttonWidth = 100;
-        int buttonY = 101;
+        int buttonY = 108;
         buttonList.add(new GuiButton(0, width / 2 - 154, buttonY,
                 buttonWidth, 20, "Save note"));
         buttonList.add(new GuiButton(1, width / 2 - 50, buttonY,
@@ -119,7 +119,7 @@ public final class AllyFactionNotesScreen extends GuiScreen {
             noteField.mouseClicked(mouseX, mouseY, mouseButton);
         }
 
-        int panelTop = 145;
+        int panelTop = 140;
         int rowHeight = 18;
         int left = width / 2 - 205;
         int right = width / 2 + 5;
@@ -177,18 +177,19 @@ public final class AllyFactionNotesScreen extends GuiScreen {
             return;
         }
 
+        if (keyCode == 15) {
+            boolean focusFaction = !factionField.isFocused();
+            factionField.setFocused(focusFaction);
+            noteField.setFocused(!focusFaction);
+            return;
+        }
+
         if (factionField.isFocused()) {
             factionField.textboxKeyTyped(typedChar, keyCode);
             return;
         }
         if (noteField.isFocused()) {
             noteField.textboxKeyTyped(typedChar, keyCode);
-            return;
-        }
-
-        if (keyCode == 15) {
-            factionField.setFocused(!factionField.isFocused());
-            noteField.setFocused(!factionField.isFocused());
             return;
         }
         super.keyTyped(typedChar, keyCode);
@@ -204,13 +205,13 @@ public final class AllyFactionNotesScreen extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
 
-        drawCenteredString(fontRendererObj, "ALLY FACTION NOTES", width / 2, 12, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "ALLY FACTION NOTES", width / 2, 8, 0xFFFFFF);
         drawCenteredString(fontRendererObj, "Faction notes are stored locally on this Minecraft installation.",
-                width / 2, 23, 0xAAAAAA);
+                width / 2, 21, 0xAAAAAA);
 
-        drawString(fontRendererObj, "Faction name", factionField.xPosition, 24, 0xDDDDDD);
+        drawString(fontRendererObj, "Faction name", factionField.xPosition, 34, 0xDDDDDD);
         factionField.drawTextBox();
-        drawString(fontRendererObj, "New note", noteField.xPosition, 62, 0xDDDDDD);
+        drawString(fontRendererObj, "New note", noteField.xPosition, 72, 0xDDDDDD);
         noteField.drawTextBox();
 
         super.drawScreen(mouseX, mouseY, partialTicks);
