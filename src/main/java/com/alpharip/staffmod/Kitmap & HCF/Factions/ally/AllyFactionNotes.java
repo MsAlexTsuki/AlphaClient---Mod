@@ -10,6 +10,16 @@ import java.util.Map;
  * Local notes grouped by allied faction name.
  *
  * This class is deliberately independent from AlphaClient core and Supabase.
+ *
+ * TODO - remaining integration work:
+ * 1. Connect this prototype to the Kitmap/HCF faction menu so players can open it in-game.
+ * 2. Add faction detection or a faction-selection source, if the server exposes reliable data.
+ * 3. Decide and implement who is allowed to view, add, and clear allied-faction notes.
+ * 4. Decide whether notes should remain local or support an approved sharing/synchronization method.
+ * 5. Register and wire the module into AlphaClient only when the prototype is ready for core integration.
+ * 6. Test the GUI, local JSON persistence, and behavior in Minecraft 1.8.9 singleplayer and on a server.
+ *
+ * No permission model, automatic faction detection, or synchronization is implemented yet.
  */
 public final class AllyFactionNotes {
     public static final String NAME = "Ally Faction Notes";
