@@ -185,7 +185,8 @@ public final class AlertSoundsGui extends GuiScreen {
     }
 
     private int visibleRows() {
-        return Math.max(1, (height - 275) / 14);
+        int panelHeight = Math.min(height - 18, 390);
+        return Math.max(1, (panelHeight - 296) / 14);
     }
 
     @Override
