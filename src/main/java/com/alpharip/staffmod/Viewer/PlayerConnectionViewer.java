@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.Viewer;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.ServerData;
 
 /**
@@ -16,11 +17,29 @@ public final class PlayerConnectionViewer {
 
     private static final PlayerConnectionViewer INSTANCE = new PlayerConnectionViewer();
     private final ConnectionTracker tracker = new ConnectionTracker();
+    private final PlayerConnectionViewerEventHandler eventHandler =
+            new PlayerConnectionViewerEventHandler(this);
+    private boolean registered;
 
     private PlayerConnectionViewer() { }
 
     public static PlayerConnectionViewer getInstance() {
         return INSTANCE;
+    }
+
+    /** Register the client-tick observer from the client initialization layer. */
+    public synchronized void register() {
+        if (registered) return;
+        net.minecraftforge.fml.common.FMLCommonHandler.instance().bus().register(eventHandler);
+        registered = true;
+    }
+
+    /** Unregister the observer when the owning client feature is shut down. */
+    public synchronized void unregister() {
+        if (!registered) return;
+        net.minecraftforge.fml.common.FMLCommonHandler.instance().bus().unregister(eventHandler);
+        registered = false;
+        tracker.reset();
     }
 
     public ConnectionSnapshot captureCurrentClientState() {
@@ -48,7 +67,13 @@ public final class PlayerConnectionViewer {
         return tracker.getLatest();
     }
 
-    public PlayerConnectionViewerGui createGui(net.minecraft.client.gui.GuiScreen parent) {
+    public PlayerConnectionViewerGui createGui(GuiScreen parent) {
         return new PlayerConnectionViewerGui(parent, this);
+    }
+
+    /** Opens the standalone overview screen; this does not add a menu button or keybind. */
+    public void openGui(GuiScreen parent) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft != null) minecraft.displayGuiScreen(createGui(parent));
     }
 }
