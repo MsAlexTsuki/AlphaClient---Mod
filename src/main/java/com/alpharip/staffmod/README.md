@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Inventory at creation: **200 Java files** across the folders listed below.
+- Inventory at creation: **210 Java files** across the folders listed below.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -643,3 +643,21 @@ Folder: `Aim Pattern Library/`
 
 **Prototype boundary:** The source idea only supplied a numeric observation accumulator. Named patterns, categories, the 50-pattern default limit, statistics, and the GUI are prototype expansions. Observations are caller-supplied numeric values; no live aim data is collected, no aim behavior is changed, and no pattern recognition or automatic comparison is implemented. Data and settings remain in memory only. There is no persistence, Supabase integration, Forge event integration, or AlphaClient Core integration. No compile or in-game test is claimed.
 
+
+
+## Singleplayer — Easy Craft
+
+Folder: `Singleplayer/EasyCraft/`
+
+- **EasyCraft.java** — Owns the recipe catalog and local favorites collection for the standalone prototype. It is not registered with AlphaClient Core.
+- **EasyCraftCategory.java** — Defines the compact recipe-book categories: All, Building, Tools, Combat, Food, Redstone, and Misc.
+- **EasyCraftRecipe.java** — Wraps a vanilla/Forge `IRecipe`, copies its output and supported shaped/shapeless ingredients, assigns a display category, and creates a local favorite key. Ingredient extraction for custom third-party recipe implementations still needs compatibility review.
+- **EasyCraftRecipeCatalog.java** — Reads the recipes registered in Minecraft/Forge's `CraftingManager`, skips invalid outputs, and filters by search, category, and favorites.
+- **EasyCraftFavorites.java** — Manages the user's favorite recipe keys and saves changes through local storage.
+- **EasyCraftFavoriteStorage.java** — Reads/writes favorites in `config/alphaclient/easycraft-favorites.properties`; no account or remote storage is used.
+- **EasyCraftCraftingAdapter.java** — Defines the integration contract for checking available crafts and requesting crafting through the active vanilla Crafting Table container. A real container adapter is still required.
+- **EasyCraftTableButton.java** — Draws the small book-icon button intended for the vanilla Crafting Table GUI.
+- **EasyCraftCraftingTableHook.java** — Provides the narrow button creation/opening boundary for `GuiCrafting` only. The actual call sites in the vanilla screen or an approved mixin have not been added.
+- **EasyCraftGui.java** — Provides a compact modern-Recipe-Book-inspired GUI with category tabs, search, recipe icons, ingredient preview, favorite toggle, available-craft count, Craft, and Back controls. It is designed to be opened only from the Crafting Table context.
+
+**Prototype boundary:** This is an independent Singleplayer prototype folder beside `staffops/`. It does not change AlphaClient Core, `development`, the normal player inventory GUI, Alpha Launcher, rank/permission rules, or Supabase. The book button is a hook component, not yet injected into the live Crafting Table screen. The adapter that safely transfers ingredients through the vanilla `ContainerWorkbench` and performs the requested craft is not implemented yet; the Craft button delegates to that adapter contract. The recipe catalog reads registered vanilla/Forge recipes, but custom recipe ingredient extraction may need additional adapters. Favorites are local-only. No compile, automated test, or in-game test is claimed because this branch contains no build configuration in the inspected tree and no runtime test was run.
