@@ -24,7 +24,8 @@ public final class EasyCraftCraftingTableHook {
                                        EasyCraftRecipeCatalog catalog,
                                        EasyCraftFavorites favorites) {
         if (buttonId != BUTTON_ID) return false;
-        if (parent == null || adapter == null || !adapter.isCraftingTableOpen()) return true;
+        if (parent == null || adapter == null || !Minecraft.getMinecraft().isSingleplayer()
+                || !adapter.isCraftingTableOpen()) return true;
         Minecraft.getMinecraft().displayGuiScreen(new EasyCraftGui(parent, adapter, catalog, favorites));
         return true;
     }
