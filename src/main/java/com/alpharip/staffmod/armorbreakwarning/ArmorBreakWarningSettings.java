@@ -24,11 +24,9 @@ public final class ArmorBreakWarningSettings {
     }
 
     public synchronized void cycleThreshold() {
-        int next = 0;
         for (int i = 0; i < THRESHOLDS.length; i++) {
             if (THRESHOLDS[i] == thresholdPercent) {
-                next = (i + 1) % THRESHOLDS.length;
-                thresholdPercent = THRESHOLDS[next];
+                thresholdPercent = THRESHOLDS[(i + 1) % THRESHOLDS.length];
                 return;
             }
             if (THRESHOLDS[i] > thresholdPercent) {
@@ -36,20 +34,6 @@ public final class ArmorBreakWarningSettings {
                 return;
             }
         }
-        thresholdPercent = THRESHOLDS[next];
-    }
-
-    int getBreakThreshold(ItemDurability durability) {
-        if (durability == null || durability.maximum <= 0) return 0;
-        return Math.max(1, (durability.maximum * thresholdPercent) / 100);
-    }
-
-    /** Small immutable input used to keep the threshold calculation independent of Minecraft classes. */
-    static final class ItemDurability {
-        final int maximum;
-
-        ItemDurability(int maximum) {
-            this.maximum = maximum;
-        }
+        thresholdPercent = THRESHOLDS[0];
     }
 }
