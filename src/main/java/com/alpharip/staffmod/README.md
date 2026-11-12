@@ -690,3 +690,17 @@ Folder: `AirHud/`
 - **AirHudGui.java** — Standalone settings screen for enablement, label visibility, position, and color.
 
 **Prototype boundary:** The original idea only contained a minimal overlay event handler dependent on AlphaModuleRegistry. The standalone facade, settings, local persistence, corner positioning, color selection, and GUI are prototype expansions. No existing menu button, keybind, AlphaClient Core registration, Supabase, or Launcher integration is included. The displayed seconds are estimated from client air ticks. Compilation and in-game behavior remain unverified.
+
+
+## Armor Break Warning
+
+Folder: `armorbreakwarning/`
+
+- **ArmorBreakWarning.java** — Standalone module facade with explicit Forge event registration, local settings, storage, and GUI opening.
+- **ArmorBreakWarningSettings.java** — Holds enablement and the remaining-durability threshold. The default is 10%; the standalone GUI cycles through 5%, 10%, 15%, 20%, and 25%.
+- **ArmorBreakWarningRenderer.java** — Counts equipped damageable armor pieces at or below the configured remaining-durability threshold and renders the warning in the HUD.
+- **ArmorBreakWarningEventHandler.java** — Provides the Forge overlay-event adapter.
+- **ArmorBreakWarningStorage.java** — Loads and saves local settings at `config/alphaclient/armor-break-warning.properties`.
+- **ArmorBreakWarningGui.java** — Standalone settings screen for enablement and threshold selection.
+
+**Prototype boundary:** The original idea provides a fixed 10% threshold and a HUD warning with the number of low-durability armor pieces. The configurable threshold and standalone settings screen are prototype additions. This checks only the local player's equipped armor; it is separate from opponent armor-break prediction. Registration is explicit. No existing menu button, keybind, AlphaModuleRegistry integration, AlphaClient Core registration, rank permission, Supabase, or Launcher integration is included. Compilation and in-game behavior remain unverified.
