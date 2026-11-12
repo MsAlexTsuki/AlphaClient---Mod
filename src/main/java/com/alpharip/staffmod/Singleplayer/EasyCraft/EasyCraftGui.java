@@ -59,8 +59,8 @@ public final class EasyCraftGui extends GuiScreen {
         buttonList.add(new GuiButton(TAB_FOOD, left + 206, top + 43, 39, 18, "Food"));
         buttonList.add(new GuiButton(TAB_REDSTONE, left + 247, top + 43, 53, 18, "Redstone"));
         buttonList.add(new GuiButton(TAB_FAVORITES, left + 302, top + 43, 62, 18, "Favorites"));
-        buttonList.add(new GuiButton(CRAFT, left + 258, top + 207, 72, 20, "Craft"));
-        buttonList.add(new GuiButton(CLOSE, left + 334, top + 207, 40, 20, "Back"));
+        buttonList.add(new GuiButton(CRAFT, left + 17, top + 207, 72, 20, "Craft"));
+        buttonList.add(new GuiButton(CLOSE, left + 95, top + 207, 50, 20, "Back"));
         buttonList.add(new GuiButton(FAVORITE, left + 350, top + 68, 22, 18, "*"));
         search = new GuiTextField(0, fontRendererObj, left + 12, top + 17, 180, 18);
         search.setMaxStringLength(64);
@@ -74,8 +74,8 @@ public final class EasyCraftGui extends GuiScreen {
         visibleRecipes.clear();
         visibleRecipes.addAll(catalog.find(search == null ? "" : search.getText(),
                 category, favoritesOnly, favorites));
-        if (scrollOffset > Math.max(0, visibleRecipes.size() - 24))
-            scrollOffset = Math.max(0, visibleRecipes.size() - 24);
+        if (scrollOffset > Math.max(0, visibleRecipes.size() - 18))
+            scrollOffset = Math.max(0, visibleRecipes.size() - 18);
         if (selected != null && !containsRecipe(selected)) selected = null;
         if (selected == null && !visibleRecipes.isEmpty()) selected = visibleRecipes.get(0);
     }
@@ -136,7 +136,7 @@ public final class EasyCraftGui extends GuiScreen {
     private void drawRecipeGrid(int left, int top, int mouseX, int mouseY) {
         int startX = left + 17;
         int startY = top + 87;
-        for (int slot = 0; slot < 24; slot++) {
+        for (int slot = 0; slot < 18; slot++) {
             int index = scrollOffset + slot;
             int x = startX + (slot % 6) * 32;
             int y = startY + (slot / 6) * 34;
@@ -168,18 +168,18 @@ public final class EasyCraftGui extends GuiScreen {
         List<ItemStack> ingredients = selected.getIngredients();
         int shown = Math.min(ingredients.size(), 9);
         for (int i = 0; i < shown; i++) {
-            int slotX = x + (i % 3) * 34;
-            int slotY = top + 141 + (i / 3) * 30;
-            drawRect(slotX, slotY, slotX + 28, slotY + 26, 0xFF343C49);
-            renderStack(ingredients.get(i), slotX + 5, slotY + 4);
+            int slotX = x + (i % 3) * 28;
+            int slotY = top + 140 + (i / 3) * 24;
+            drawRect(slotX, slotY, slotX + 24, slotY + 22, 0xFF343C49);
+            renderStack(ingredients.get(i), slotX + 4, slotY + 3);
         }
 
         int available = crafting.isCraftingTableOpen() ? Math.max(0, crafting.getAvailableCraftCount(selected)) : 0;
         String count = available > 0 ? "Can craft: " + available : "Missing ingredients";
-        drawString(fontRendererObj, count, x, top + 202, available > 0 ? 0xFF8EDB8E : 0xFFFF8A8A);
+        drawString(fontRendererObj, count, x, top + 214, available > 0 ? 0xFF8EDB8E : 0xFFFF8A8A);
 
         drawString(fontRendererObj, favorites.contains(selected.getKey()) ? "Saved to Favorites" : "Not favorited",
-                x, top + 216, 0xFFFFD45A);
+                x, top + 229, 0xFFFFD45A);
     }
 
     private void renderStack(ItemStack stack, int x, int y) {
@@ -202,7 +202,7 @@ public final class EasyCraftGui extends GuiScreen {
                 && mouseY >= top + 87 && mouseY < top + 223) {
             int column = (mouseX - (left + 17)) / 32;
             int row = (mouseY - (top + 87)) / 34;
-            if (column >= 0 && column < 6 && row >= 0 && row < 4) {
+            if (column >= 0 && column < 6 && row >= 0 && row < 3) {
                 int index = scrollOffset + row * 6 + column;
                 if (index >= 0 && index < visibleRecipes.size()) selected = visibleRecipes.get(index);
             }
