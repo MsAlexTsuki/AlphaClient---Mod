@@ -661,3 +661,20 @@ Folder: `Singleplayer/EasyCraft/`
 - **EasyCraftGui.java** — Provides a compact modern-Recipe-Book-inspired GUI with category tabs, search, recipe icons, ingredient preview, favorite toggle, available-craft count, Craft, and Back controls. It is designed to be opened only from the Crafting Table context.
 
 **Prototype boundary:** This is an independent Singleplayer prototype folder beside `staffops/`. It does not change AlphaClient Core, `development`, the normal player inventory GUI, Alpha Launcher, rank/permission rules, or Supabase. The book button is a hook component, not yet injected into the live Crafting Table screen. The adapter that safely transfers ingredients through the vanilla `ContainerWorkbench` and performs the requested craft is not implemented yet; the Craft button delegates to that adapter contract. The recipe catalog reads registered vanilla/Forge recipes, but custom recipe ingredient extraction may need additional adapters. Favorites are local-only. No compile, automated test, or in-game test is claimed because this branch contains no build configuration in the inspected tree and no runtime test was run.
+
+## Player History
+
+Folder: `playerhistory/`
+
+- **PlayerHistory.java** — Standalone module facade. Retains the original lightweight record API and exposes explicit lifecycle and GUI-opening methods.
+- **PlayerHistoryEntry.java** — Immutable per-player summary with UUID, latest name, first/last observation timestamps, session count, and accumulated observed online duration.
+- **PlayerHistoryEvent.java** — Immutable first-observed/joined/left event with timestamp and connection context.
+- **PlayerHistoryStore.java** — Maintains player summaries and a bounded 500-event timeline; returns sorted immutable snapshots.
+- **PlayerHistoryStorage.java** — Loads/saves local Properties data at `config/alphaclient/player-history.properties`; skips malformed individual entries and replaces files through a temporary write.
+- **PlayerHistoryTracker.java** — Samples the active client's visible network player list every 20 client ticks, ignores the local player, and records observed presence transitions.
+- **PlayerHistoryEventHandler.java** — Forge client-tick adapter. Registration is explicit; no AlphaClient Core hook is added.
+- **PlayerHistoryFormatter.java** — Formats timestamps and observed durations.
+- **PlayerHistoryGui.java** — Standalone searchable and scrollable player list with online/offline state, session count, and total observed time.
+
+**Prototype boundary:** The original idea only provided an in-memory text-record model. Live player-list sampling, per-UUID summaries, event history, the searchable GUI, local persistence, the 20-tick sampling interval, and the 500-event cap are prototype expansions. The tracker sees only entries exposed by the local client and cannot recover history from before registration or inspect server-side/private data. First-sample entries are labelled FIRST_OBSERVED rather than confirmed joins. No menu button, keybind, rank permission, StaffMods integration, Supabase, or AlphaClient Core registration is included. Minecraft/Forge compatibility, compilation, and in-game behavior remain unverified.
+
