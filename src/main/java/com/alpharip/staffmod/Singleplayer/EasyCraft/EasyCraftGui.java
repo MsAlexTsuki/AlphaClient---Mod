@@ -243,7 +243,8 @@ public final class EasyCraftGui extends GuiScreen {
     @Override
     public void updateScreen() {
         if (search != null) search.updateCursorCounter();
-        if (!crafting.isCraftingTableOpen()) Minecraft.getMinecraft().displayGuiScreen(parent);
+        if (!Minecraft.getMinecraft().isSingleplayer() || !crafting.isCraftingTableOpen())
+            Minecraft.getMinecraft().displayGuiScreen(parent);
     }
 
     @Override
