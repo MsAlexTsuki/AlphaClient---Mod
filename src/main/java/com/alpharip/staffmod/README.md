@@ -678,3 +678,15 @@ Folder: `playerhistory/`
 
 **Prototype boundary:** The original idea only provided an in-memory text-record model. Live player-list sampling, per-UUID summaries, event history, the searchable GUI, local persistence, the 20-tick sampling interval, and the 500-event cap are prototype expansions. The tracker sees only entries exposed by the local client and cannot recover history from before registration or inspect server-side/private data. First-sample entries are labelled FIRST_OBSERVED rather than confirmed joins. No menu button, keybind, rank permission, StaffMods integration, Supabase, or AlphaClient Core registration is included. Minecraft/Forge compatibility, compilation, and in-game behavior remain unverified.
 
+## Air HUD
+
+Folder: `AirHud/`
+
+- **AirHud.java** — Standalone module facade with explicit Forge event registration, settings access, local loading/saving, and GUI opening. It does not depend on AlphaModuleRegistry.
+- **AirHudSettings.java** — Holds enablement, label visibility, one of four screen-corner positions, and a selectable text color.
+- **AirHudRenderer.java** — Displays remaining air ticks and a tick-derived seconds estimate while the local player is underwater.
+- **AirHudEventHandler.java** — Provides the Forge overlay-event listener boundary.
+- **AirHudStorage.java** — Loads and saves settings locally at `config/alphaclient/air-hud.properties`.
+- **AirHudGui.java** — Standalone settings screen for enablement, label visibility, position, and color.
+
+**Prototype boundary:** The original idea only contained a minimal overlay event handler dependent on AlphaModuleRegistry. The standalone facade, settings, local persistence, corner positioning, color selection, and GUI are prototype expansions. No existing menu button, keybind, AlphaClient Core registration, Supabase, or Launcher integration is included. The displayed seconds are estimated from client air ticks. Compilation and in-game behavior remain unverified.
