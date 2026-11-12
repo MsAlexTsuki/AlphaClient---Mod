@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.Viewer;
+package com.alpharip.staffmod.Viewer.playerconnectionviewer;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;

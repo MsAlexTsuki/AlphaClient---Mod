@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.Viewer;
+package com.alpharip.staffmod.Viewer.playerconnectionviewer;
 
 /** Immutable snapshot of connection details visible to this Minecraft client. */
 public final class ConnectionSnapshot {

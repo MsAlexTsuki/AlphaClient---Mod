@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.Viewer;
+package com.alpharip.staffmod.Viewer.playerconnectionviewer;
 
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;

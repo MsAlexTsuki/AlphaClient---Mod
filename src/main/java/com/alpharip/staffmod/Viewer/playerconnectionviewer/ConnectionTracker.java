@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.Viewer;
+package com.alpharip.staffmod.Viewer.playerconnectionviewer;
 
 /** Keeps the latest local connection snapshot and tracks the current session duration. */
 public final class ConnectionTracker {

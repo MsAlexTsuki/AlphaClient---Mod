@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.Viewer;
+package com.alpharip.staffmod.Viewer.playerconnectionviewer;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
