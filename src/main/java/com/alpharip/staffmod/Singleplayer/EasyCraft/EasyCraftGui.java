@@ -23,6 +23,7 @@ public final class EasyCraftGui extends GuiScreen {
     private static final int TAB_FAVORITES = 7;
     private static final int CRAFT = 8;
     private static final int CLOSE = 9;
+    private static final int FAVORITE = 10;
 
     private final GuiScreen parent;
     private final EasyCraftCraftingAdapter crafting;
@@ -60,6 +61,7 @@ public final class EasyCraftGui extends GuiScreen {
         buttonList.add(new GuiButton(TAB_FAVORITES, left + 302, top + 43, 62, 18, "Favorites"));
         buttonList.add(new GuiButton(CRAFT, left + 258, top + 207, 72, 20, "Craft"));
         buttonList.add(new GuiButton(CLOSE, left + 334, top + 207, 40, 20, "Back"));
+        buttonList.add(new GuiButton(FAVORITE, left + 350, top + 68, 22, 18, "*"));
         search = new GuiTextField(0, fontRendererObj, left + 12, top + 17, 180, 18);
         search.setMaxStringLength(64);
         refreshVisibleRecipes();
@@ -100,6 +102,9 @@ public final class EasyCraftGui extends GuiScreen {
                         && crafting.getAvailableCraftCount(selected) > 0) {
                     crafting.craft(selected, 1);
                 }
+                break;
+            case FAVORITE:
+                if (selected != null) favorites.toggle(selected.getKey());
                 break;
             case CLOSE:
                 Minecraft.getMinecraft().displayGuiScreen(parent);
@@ -173,10 +178,8 @@ public final class EasyCraftGui extends GuiScreen {
         String count = available > 0 ? "Can craft: " + available : "Missing ingredients";
         drawString(fontRendererObj, count, x, top + 202, available > 0 ? 0xFF8EDB8E : 0xFFFF8A8A);
 
-        boolean isFavorite = favorites.contains(selected.getKey());
-        drawString(fontRendererObj, isFavorite ? "* Favorite" : "+ Add favorite",
+        drawString(fontRendererObj, favorites.contains(selected.getKey()) ? "Saved to Favorites" : "Not favorited",
                 x, top + 216, 0xFFFFD45A);
-        drawString(fontRendererObj, "Click here to toggle", x, top + 227, 0xFFB7C0CC);
     }
 
     private void renderStack(ItemStack stack, int x, int y) {
@@ -205,12 +208,6 @@ public final class EasyCraftGui extends GuiScreen {
             }
         }
 
-        int detailX = left + 232;
-        if (selected != null && mouseX >= detailX && mouseX <= detailX + 145
-                && mouseY >= top + 213 && mouseY <= top + 239) {
-            favorites.toggle(selected.getKey());
-            refreshVisibleRecipes();
-        }
     }
 
     @Override
