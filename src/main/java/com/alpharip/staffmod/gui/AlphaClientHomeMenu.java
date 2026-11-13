@@ -41,7 +41,7 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         // No opaque background: keep the live Minecraft world visible.
-        int logoWidth = Math.min(250, Math.max(120, width - 32));
+        int logoWidth = Math.min(170, Math.max(120, width - 32));
         int logoHeight = logoWidth;
         int logoX = (width - logoWidth) / 2;
         int logoY = Math.max(8, modsY - logoHeight - 28);
