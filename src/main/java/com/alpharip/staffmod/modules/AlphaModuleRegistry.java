@@ -40,6 +40,16 @@ public final class AlphaModuleRegistry {
         );
         MODULES.add(worldEdit);
 
+        AlphaModule rogueWorldEdit = new AlphaModule(
+                "world-edit-rogue",
+                "World Edit",
+                "Rogue WorldEdit controls, including the verified Survival cheats toggle.",
+                AlphaModule.Category.ROGUE,
+                true,
+                DEFAULT_MODULE_ENABLED
+        );
+        MODULES.add(rogueWorldEdit);
+
         AlphaModule misc = new AlphaModule(
                 "misc",
                 "Misc",
