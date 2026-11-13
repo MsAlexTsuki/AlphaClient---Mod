@@ -66,6 +66,11 @@ public final class AlphaWorldEditCommand extends CommandBase {
             return;
         }
 
+        if (!WorldEditCheatSettings.canUseInCurrentGameMode(mc.thePlayer)) {
+            reply(sender, "WorldEdit in Survival requires the Rogue+ Cheats toggle.");
+            return;
+        }
+
         String cmd = args[0].toLowerCase(Locale.ROOT);
         activeAuditCommand = "//acwe " + joinArguments(args);
 
@@ -1337,7 +1342,8 @@ public final class AlphaWorldEditCommand extends CommandBase {
         if (module == null || !module.isEnabled() || !editWandEnabled
                 || mc == null || !mc.isSingleplayer() || mc.thePlayer == null
                 || !event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID())
-                || !isWorldEditWand(event.entityPlayer.getHeldItem())) return;
+                || !isWorldEditWand(event.entityPlayer.getHeldItem())
+                || !WorldEditCheatSettings.canUseInCurrentGameMode(event.entityPlayer)) return;
 
         ensureSelectionWorld(mc.theWorld);
         boolean firstPosition = event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK;
@@ -1372,7 +1378,8 @@ public final class AlphaWorldEditCommand extends CommandBase {
         if(module==null||!module.isEnabled())return;
         Minecraft mc=Minecraft.getMinecraft();
         if(mc==null||!mc.isSingleplayer()||mc.thePlayer==null
-                ||!event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID()))return;
+                ||!event.entityPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID())
+                ||!WorldEditCheatSettings.canUseInCurrentGameMode(event.entityPlayer))return;
         if(!(event.world instanceof WorldServer))return;
         ensureSelectionWorld(mc.theWorld);
         if(isWorldEditWand(event.entityPlayer.getHeldItem()))return;
