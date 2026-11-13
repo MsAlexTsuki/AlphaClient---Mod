@@ -44,7 +44,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int PROFILE_DELETE = 432;
     private static final int DONATOR_SUBFOLDER_BASE = 500;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
-            new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha-client-icon.png");
+            new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
