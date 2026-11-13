@@ -1287,6 +1287,10 @@ public final class AlphaWorldEditCommand extends CommandBase {
             WorldEditAuditLog.setCurrentAction(auditAction);
             WorldServer world = server.worldServerForDimension(dimension);
             if (world == null) { reply(sender, "Singleplayer world is unavailable."); return; }
+            if (!WorldEditCheatSettings.canUseInCurrentGameMode(mc.thePlayer)) {
+                reply(sender, "WorldEdit in Survival requires the Rogue+ Cheats toggle.");
+                return;
+            }
             try { task.run(world); }
             finally { WorldEditAuditLog.clearCurrentAction(); }
         }});
