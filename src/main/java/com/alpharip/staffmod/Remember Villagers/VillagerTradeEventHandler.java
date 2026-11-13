@@ -21,7 +21,9 @@ final class VillagerTradeEventHandler {
         GuiScreen screen = event.gui;
         if (!(screen instanceof GuiMerchant)) return;
         IMerchant merchant = findMerchant(screen);
-        if (merchant != null) capture.capture(merchant);
+        if (merchant != null && capture.capture(merchant)) {
+            remembervillagertrade.getInstance().save();
+        }
     }
 
     private IMerchant findMerchant(Object screen) {
