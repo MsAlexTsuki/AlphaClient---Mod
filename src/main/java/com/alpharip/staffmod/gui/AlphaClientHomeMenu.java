@@ -52,8 +52,6 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
         drawScaledCustomSizeModalRect(logoX, logoY, 0.0F, 0.0F, 1024, 1024,
                 logoWidth, logoHeight, 1024.0F, 1024.0F);
         GlStateManager.disableBlend();
-        drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2,
-                logoY + logoHeight + 3, 0xFFF3F0E8);
 
         // Parent editor renders the actual HUD previews and handles dragging/scaling.
         super.drawScreen(mouseX, mouseY, partialTicks);
