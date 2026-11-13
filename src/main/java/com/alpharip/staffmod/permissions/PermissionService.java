@@ -271,6 +271,16 @@ public final class PermissionService {
         return false;
     }
 
+    /** WorldEdit Survival access requires a verified Rogue-or-higher community rank. */
+    public static boolean hasRogueOrHigherWorldEditAccess() {
+        if (!isOnlineRankVerified() || verifiedOnlineRanks.isEmpty()) return false;
+        int minimum = rankPriority(Rank.ROGUE);
+        for (Rank rank : verifiedOnlineRanks) {
+            if (rank != null && rankPriority(rank) >= minimum) return true;
+        }
+        return false;
+    }
+
     public static boolean hasAccess(Rank required) {
         if (required == null) return false;
         Set<Rank> ranks = isOfflineTestSession()
