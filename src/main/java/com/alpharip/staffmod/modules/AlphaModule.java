@@ -124,6 +124,11 @@ public final class AlphaModule {
     }
 
     public boolean isUnlocked() {
+        // The Rogue WorldEdit entry is protected by the dedicated verified Rogue+ gate.
+        if ("world-edit-rogue".equals(id)) {
+            return PermissionService.hasRogueOrHigherWorldEditAccess();
+        }
+
         // Pixel Garden is controlled by its authenticated command-permission bundle.
         if ("pixelgarden".equals(id)) {
             return PermissionService.hasCommandPermission("menu.pixelgarden", false);
