@@ -347,7 +347,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1F, 1F, 1F, 1F);
-        drawModalRectWithCustomSizedTexture(panelLeft + 18, panelTop + 5, 0, 0, 32, 32, 256, 256);
+        drawScaledCustomSizeModalRect(panelLeft + 18, panelTop + 5, 0.0F, 0.0F, 1024, 1024, 32, 32, 1024.0F, 1024.0F);
         drawString(fontRendererObj, "MODS", panelLeft + 8, panelTop + 40, 0xFFF0F1F4);
         drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
                 + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
