@@ -10,6 +10,7 @@ import com.alpharip.staffmod.ComboCounter.ComboCounterSettingsGui;
 import com.alpharip.staffmod.gui.KeystrokesSettingsGui;
 import com.alpharip.staffmod.founderfun.PixelGardenGUI;
 import com.alpharip.staffmod.waypoints.WaypointsGui;
+import com.alpharip.staffmod.singleplayer.worldedit.RogueWorldEditGui;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.permissions.PermissionService;
@@ -538,6 +539,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 if (!clickedModule.isUnlocked()) {
                     selectedModuleId = "";
                     initGui();
+                    return;
+                }
+                if ("world-edit-rogue".equals(clickedModule.getId())) {
+                    mc.displayGuiScreen(new RogueWorldEditGui(this));
                     return;
                 }
                 if ("pixelgarden".equals(clickedModule.getId())) {
