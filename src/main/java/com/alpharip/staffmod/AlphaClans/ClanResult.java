@@ -11,7 +11,9 @@ public final class ClanResult {
         this.clan = clan;
     }
 
-    public static ClanResult success(String message, Clan clan) { return new ClanResult(true, message, clan); }
+    public static ClanResult success(String message, Clan clan) {
+        return new ClanResult(true, message, clan == null ? null : clan.copy());
+    }
     public static ClanResult failure(String message) { return new ClanResult(false, message, null); }
     public boolean isSuccessful() { return successful; }
     public String getMessage() { return message; }
