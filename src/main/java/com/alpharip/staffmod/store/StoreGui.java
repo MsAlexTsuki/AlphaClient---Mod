@@ -27,6 +27,8 @@ public class StoreGui extends GuiScreen {
     private static final int ENABLE_ID = 51;
     private static final int DISABLE_ID = 52;
     private static final int REMOVE_ID = 53;
+    private static final int EQUIP_COSMETIC_ID = 54;
+    private static final int UNEQUIP_COSMETIC_ID = 55;
     private static final int BACK_ID = 60;
     private static final int ROW_HEIGHT = 38;
 
@@ -85,6 +87,8 @@ public class StoreGui extends GuiScreen {
         if (showingCosmetics()) {
             CosmeticCategory[] categories = CosmeticCategory.values();
             addCategoryButtons(left, right, categories.length, categories);
+            buttonList.add(new GuiButton(EQUIP_COSMETIC_ID, detailLeft, height - 54, 72, 20, "Equip"));
+            buttonList.add(new GuiButton(UNEQUIP_COSMETIC_ID, detailLeft + 76, height - 54, 72, 20, "Unequip"));
         } else if (showingPartners()) {
             PartnerType[] categories = PartnerType.values();
             addCategoryButtons(left, right, categories.length, categories);
@@ -199,7 +203,24 @@ public class StoreGui extends GuiScreen {
             initGui();
             return;
         }
-        if (showingCosmetics() || showingPartners()) return;
+        if (showingCosmetics()) {
+            CosmeticEntry cosmetic = getSelectedCosmetic();
+            if (cosmetic == null) {
+                message = "Select a cosmetic first.";
+                return;
+            }
+            if (button.id == EQUIP_COSMETIC_ID) {
+                message = store.getCosmeticManager().equip(cosmetic.getId())
+                        ? "Cosmetic equipped in its category loadout."
+                        : "This cosmetic is not owned or cannot be equipped.";
+            } else if (button.id == UNEQUIP_COSMETIC_ID) {
+                message = store.getCosmeticManager().unequip(cosmetic.getId())
+                        ? "Cosmetic unequipped."
+                        : "This cosmetic is not currently equipped.";
+            }
+            return;
+        }
+        if (showingPartners()) return;
 
         AddonEntry entry = getSelectedAddon();
         if (entry == null) {
@@ -377,6 +398,12 @@ public class StoreGui extends GuiScreen {
         y = drawWrapped(selected.getDescription(), x, y, maxWidth, 0xFFCCCCCC);
         y += 8;
         drawString(fontRendererObj, "Category: " + selected.getCategory().getDisplayName(),
+                x, y, 0xFFB8BDC8); y += 12;
+        drawString(fontRendererObj, "Ownership: "
+                + (store.getCosmeticManager().isOwned(selected.getId()) ? "Owned" : "Not owned"),
+                x, y, 0xFFB8BDC8); y += 12;
+        drawString(fontRendererObj, "Loadout: "
+                + (store.getCosmeticManager().isEquipped(selected.getId()) ? "Equipped" : "Not equipped"),
                 x, y, 0xFFB8BDC8); y += 12;
         drawString(fontRendererObj, "Preview: live cosmetic rendering is not connected yet.",
                 x, y, 0xFF888888); y += 12;
