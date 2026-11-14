@@ -4,7 +4,7 @@ package com.alpharip.staffmod.gui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
-/** Folder-style feature card using the same visual language as General module tiles. */
+/** Compact feature card styled to match General's ModuleTileButton. */
 public final class FeatureTileButton extends GuiButton {
     private static final int YELLOW = 0xFFFFD866;
     private final String name;
@@ -28,8 +28,9 @@ public final class FeatureTileButton extends GuiButton {
         if (!visible) return;
         hovered = mouseX >= xPosition && mouseY >= yPosition
                 && mouseX < xPosition + width && mouseY < yPosition + height;
-        int bg = !enabled ? 0xA512141A : (hovered ? 0xF0272B34 : 0xE0181B22);
-        int edge = !enabled ? 0x664B515D : (hovered ? YELLOW : 0x664B515D);
+
+        int bg = hovered ? 0xF0272B34 : 0xE0181B22;
+        int edge = hovered ? YELLOW : 0x664B515D;
         drawRect(xPosition, yPosition, xPosition + width, yPosition + height, bg);
         drawRect(xPosition, yPosition, xPosition + width, yPosition + 1, edge);
         drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height, 0xAA090A0E);
@@ -37,14 +38,17 @@ public final class FeatureTileButton extends GuiButton {
         drawRect(xPosition + width - 1, yPosition, xPosition + width, yPosition + height, edge);
 
         if (status != null) {
-            int statusColor = "ON".equals(status) ? YELLOW
+            int stateColor = "ON".equals(status) ? YELLOW
                     : ("PLANNED".equals(status) ? 0xFF8A8F99 : 0xFFB8BDC8);
             mc.fontRendererObj.drawString(UiText.normalize(status),
-                    xPosition + 7, yPosition + 4, statusColor, false);
+                    xPosition + 7, yPosition + 4, stateColor, false);
         }
+
         int iconWidth = mc.fontRendererObj.getStringWidth(icon);
+        int iconY = yPosition + Math.max(10, (height - 8) / 2 - 1);
         mc.fontRendererObj.drawString(icon, xPosition + (width - iconWidth) / 2,
-                yPosition + 21, enabled ? 0xFFE5E7EB : 0xFF777D88, false);
+                iconY, 0xFFE5E7EB, false);
+
         String label = name;
         int maxWidth = width - 10;
         if (mc.fontRendererObj.getStringWidth(label) > maxWidth) {
@@ -55,6 +59,6 @@ public final class FeatureTileButton extends GuiButton {
         }
         mc.fontRendererObj.drawString(UiText.normalize(label),
                 xPosition + (width - mc.fontRendererObj.getStringWidth(label)) / 2,
-                yPosition + height - 11, enabled ? 0xFFF0F1F4 : 0xFF777D88, false);
+                yPosition + height - 10, 0xFFF0F1F4, false);
     }
 }
