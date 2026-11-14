@@ -4,6 +4,7 @@ package com.alpharip.staffmod.singleplayer.mobstacker;
 import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.permissions.PermissionService;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
@@ -14,7 +15,6 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraft.client.Minecraft;
 
 import java.util.List;
 
@@ -31,6 +31,7 @@ public final class MobStackerMod {
     private static final String SKIP_MERGE = "AlphaMobStackSkipMerge";
     private static final String NAME_CAPTURED = "AlphaMobStackNameCaptured";
     private static final String ORIGINAL_NAME = "AlphaMobStackOriginalName";
+    private static final String ORIGINAL_HAS_CUSTOM_NAME = "AlphaMobStackOriginalHasCustomName";
     private static final String ORIGINAL_ALWAYS_RENDER = "AlphaMobStackOriginalAlwaysRender";
 
     private static boolean isAvailableAndEnabled() {
@@ -70,8 +71,14 @@ public final class MobStackerMod {
         for (EntityLiving candidate : nearby) {
             if (candidate == null || candidate == joining || candidate.isDead
                     || candidate.getClass() != joining.getClass()) continue;
+
             int count = getStackCount(candidate);
             if (count >= MAX_STACK_SIZE) continue;
+
+            NBTTagList candidateMembers = getMembers(candidate);
+            if (count > 1 && candidateMembers.tagCount() != count - 1) continue;
+            if (!hasSameVariant(candidate, joining)) continue;
+
             double distanceSq = candidate.getDistanceSqToEntity(joining);
             if (distanceSq <= radiusSq && distanceSq < nearestDistanceSq) {
                 target = candidate;
@@ -106,24 +113,25 @@ public final class MobStackerMod {
         int count = getStackCount(dying);
         if (count <= 1) return;
 
-        NBTTagCompound data = dying.getEntityData();
         NBTTagList members = getMembers(dying);
-        if (members.tagCount() != count - 1) {
-            // Never consume a stack whose saved member queue is incomplete.
-            event.setCanceled(true);
-            dying.setHealth(dying.getMaxHealth());
+        if (members.tagCount() <= 0) {
+            // A broken stack must never make its representative immortal.
+            // Let this entity complete its normal death sequence.
             return;
         }
 
         NBTTagCompound nextMember = (NBTTagCompound) members.getCompoundTagAt(0).copy();
         members.removeTag(0);
 
-        Entity replacement = EntityList.createEntityFromNBT(nextMember, dying.worldObj);
+        Entity replacement;
+        try {
+            replacement = EntityList.createEntityFromNBT(nextMember, dying.worldObj);
+        } catch (RuntimeException ignored) {
+            // Replacement failure must not cancel the current mob's death.
+            return;
+        }
         if (!(replacement instanceof EntityLiving)) {
-            // Keep the current mob alive rather than silently losing the rest
-            // of the stack if a replacement cannot be reconstructed.
-            event.setCanceled(true);
-            dying.setHealth(dying.getMaxHealth());
+            // The current mob still dies normally; do not restore its health.
             return;
         }
 
@@ -131,17 +139,20 @@ public final class MobStackerMod {
                 dying.rotationYaw, dying.rotationPitch);
 
         NBTTagCompound replacementData = replacement.getEntityData();
-        replacementData.setInteger(COUNT, count - 1);
+        int remainingCount = members.tagCount() + 1;
+        replacementData.setInteger(COUNT, remainingCount);
         replacementData.setTag(MEMBERS, members);
         replacementData.setBoolean(SKIP_MERGE, true);
         updateStackName((EntityLiving) replacement);
 
-        if (!dying.worldObj.spawnEntityInWorld(replacement)) {
-            event.setCanceled(true);
-            dying.setHealth(dying.getMaxHealth());
+        try {
+            // If spawning fails, the current mob still completes its normal
+            // death sequence. A failed replacement can never block a kill.
+            dying.worldObj.spawnEntityInWorld(replacement);
+        } catch (RuntimeException ignored) {
+            // Intentionally allow the original death to proceed.
         }
-        // The dying entity is allowed to complete its normal death sequence:
-        // vanilla handles one mob's drops, XP and death effects.
+        // Vanilla handles one mob's drops, XP and death effects.
     }
 
     private static int getStackCount(EntityLiving entity) {
@@ -156,13 +167,48 @@ public final class MobStackerMod {
         return members == null ? new NBTTagList() : members;
     }
 
+    /**
+     * Compares the entity-specific NBT while ignoring identity and transient
+     * world state. Variant fields such as sheep color, slime size, horse type,
+     * villager profession and baby/adult state remain part of the comparison.
+     */
+    private static boolean hasSameVariant(EntityLiving first, EntityLiving second) {
+        return createVariantSnapshot(first).equals(createVariantSnapshot(second));
+    }
+
+    private static NBTTagCompound createVariantSnapshot(EntityLiving entity) {
+        NBTTagCompound snapshot = new NBTTagCompound();
+        entity.writeToNBT(snapshot);
+
+        String[] transientTags = {
+                "Pos", "Motion", "Rotation", "FallDistance", "Fire", "Air",
+                "OnGround", "Dimension", "PortalCooldown", "UUID", "UUIDMost",
+                "UUIDLeast", "Health", "AbsorptionAmount", "HurtTime", "DeathTime",
+                "AttackTime", "Leash", "Leashed", "Invulnerable", "ForgeData"
+        };
+        for (String tag : transientTags) snapshot.removeTag(tag);
+
+        // The representative's visible stack label is not an entity variant.
+        // Compare its original name state instead of the generated "xN" label.
+        NBTTagCompound data = entity.getEntityData();
+        if (data.getBoolean(NAME_CAPTURED)) {
+            if (data.getBoolean(ORIGINAL_HAS_CUSTOM_NAME)) {
+                snapshot.setString("CustomName", data.getString(ORIGINAL_NAME));
+            } else {
+                snapshot.removeTag("CustomName");
+            }
+            snapshot.setBoolean("CustomNameVisible", data.getBoolean(ORIGINAL_ALWAYS_RENDER));
+        }
+        return snapshot;
+    }
+
     private static NBTTagCompound createMemberSnapshot(EntityLiving entity) {
         if (entity == null) return null;
         NBTTagCompound snapshot = new NBTTagCompound();
         entity.writeToNBT(snapshot);
 
-        // Preserve other mods' ForgeData, but never nest this stack's own
-        // counter/queue inside every stored member snapshot.
+        // Preserve other entity NBT, but never nest this stack's own metadata
+        // inside every stored member snapshot.
         if (snapshot.hasKey("ForgeData", 10)) {
             NBTTagCompound forgeData = snapshot.getCompoundTag("ForgeData");
             forgeData.removeTag(COUNT);
@@ -170,6 +216,7 @@ public final class MobStackerMod {
             forgeData.removeTag(SKIP_MERGE);
             forgeData.removeTag(NAME_CAPTURED);
             forgeData.removeTag(ORIGINAL_NAME);
+            forgeData.removeTag(ORIGINAL_HAS_CUSTOM_NAME);
             forgeData.removeTag(ORIGINAL_ALWAYS_RENDER);
         }
         return snapshot;
@@ -182,13 +229,14 @@ public final class MobStackerMod {
 
         if (!data.getBoolean(NAME_CAPTURED)) {
             String customName = entity.getCustomNameTag();
-            String baseName = customName == null || customName.trim().isEmpty()
-                    ? entity.getName() : customName;
-            if (baseName == null || baseName.trim().isEmpty()) {
-                baseName = EntityList.getEntityString(entity);
+            boolean hasCustomName = customName != null && !customName.trim().isEmpty();
+            String displayName = hasCustomName ? customName : entity.getName();
+            if (displayName == null || displayName.trim().isEmpty()) {
+                displayName = EntityList.getEntityString(entity);
             }
             data.setBoolean(NAME_CAPTURED, true);
-            data.setString(ORIGINAL_NAME, baseName == null ? "" : baseName);
+            data.setString(ORIGINAL_NAME, displayName == null ? "" : displayName);
+            data.setBoolean(ORIGINAL_HAS_CUSTOM_NAME, hasCustomName);
             data.setBoolean(ORIGINAL_ALWAYS_RENDER, entity.getAlwaysRenderNameTag());
         }
 
@@ -198,10 +246,12 @@ public final class MobStackerMod {
             entity.setAlwaysRenderNameTag(true);
         } else {
             String originalName = data.getString(ORIGINAL_NAME);
-            entity.setCustomNameTag(originalName.isEmpty() ? "" : originalName);
+            boolean hadCustomName = data.getBoolean(ORIGINAL_HAS_CUSTOM_NAME);
+            entity.setCustomNameTag(hadCustomName ? originalName : "");
             entity.setAlwaysRenderNameTag(data.getBoolean(ORIGINAL_ALWAYS_RENDER));
             data.removeTag(NAME_CAPTURED);
             data.removeTag(ORIGINAL_NAME);
+            data.removeTag(ORIGINAL_HAS_CUSTOM_NAME);
             data.removeTag(ORIGINAL_ALWAYS_RENDER);
         }
     }
