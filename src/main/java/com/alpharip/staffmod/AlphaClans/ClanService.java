@@ -174,6 +174,7 @@ public final class ClanService {
     public synchronized ClanResult sendMessage(UUID senderId, String senderName, String message) throws IOException {
         Clan clan = getClanForPlayerInternal(senderId);
         if (clan == null || !hasPermission(clan, senderId, ClanPermission.CHAT)) return ClanResult.failure("You are not in a clan.");
+        if (senderName == null || senderName.trim().isEmpty()) return ClanResult.failure("A valid sender name is required.");
         if (message == null || message.trim().isEmpty()) return ClanResult.failure("Message cannot be empty.");
         if (message.trim().length() > 256) return ClanResult.failure("Clan messages are limited to 256 characters.");
         clan.addMessage(new ClanChatMessage(UUID.randomUUID(), senderId, senderName, message, System.currentTimeMillis()));
@@ -183,11 +184,15 @@ public final class ClanService {
 
     public synchronized Clan getClanForPlayer(UUID playerId) {
         Clan clan = getClanForPlayerInternal(playerId);
-        return clan;
+        return clan == null ? null : clan.copy();
     }
-    public synchronized Clan getClan(UUID clanId) { return clans.get(clanId); }
+    public synchronized Clan getClan(UUID clanId) {
+        Clan clan = clans.get(clanId);
+        return clan == null ? null : clan.copy();
+    }
     public synchronized List<Clan> getAllClans() {
-        List<Clan> result = new ArrayList<Clan>(clans.values());
+        List<Clan> result = new ArrayList<Clan>();
+        for (Clan clan : clans.values()) result.add(clan.copy());
         Collections.sort(result, new Comparator<Clan>() {
             @Override public int compare(Clan a, Clan b) { return a.getName().compareToIgnoreCase(b.getName()); }
         });
