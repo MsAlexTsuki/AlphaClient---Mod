@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Singleplayer entity stacker. Each stack keeps the serialized state of its
- * remaining mobs so each replacement retains its own vanilla entity data.
+ * Singleplayer entity stacker. Each stack is represented by one live entity
+ * and a count; replacements are recreated from that entity without a member queue.
  */
 public final class MobStackerMod {
     public static final int MAX_STACK_SIZE = 264;
@@ -157,7 +157,13 @@ public final class MobStackerMod {
         nextMob.removeTag("UUIDLeast");
         nextMob.setFloat("Health", dying.getMaxHealth());
 
-        NBTTagCompound replacementData = nextMob.getCompoundTag("ForgeData");
+        NBTTagCompound replacementData;
+        if (nextMob.hasKey("ForgeData", 10)) {
+            replacementData = nextMob.getCompoundTag("ForgeData");
+        } else {
+            replacementData = new NBTTagCompound();
+            nextMob.setTag("ForgeData", replacementData);
+        }
         replacementData.removeTag(COUNT);
         replacementData.removeTag(SKIP_MERGE);
         replacementData.setInteger(COUNT, remainingCount);
