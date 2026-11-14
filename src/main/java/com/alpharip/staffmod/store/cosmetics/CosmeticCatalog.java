@@ -10,7 +10,10 @@ public final class CosmeticCatalog {
     private CosmeticCategory selectedCategory = CosmeticCategory.ALL;
     private String searchQuery = "";
 
-    public CosmeticCatalog() { this(new CosmeticRegistry()); }
+    public CosmeticCatalog() {
+        this(new CosmeticRegistry());
+        CosmeticPrototypeCatalog.registerAll(registry);
+    }
 
     public CosmeticCatalog(CosmeticRegistry registry) {
         if (registry == null) throw new IllegalArgumentException("Cosmetic registry is required.");
