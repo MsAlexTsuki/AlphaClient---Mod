@@ -9,7 +9,10 @@ import com.alpharip.staffmod.singleplayer.autoreplant.AutoReplantGui;
 import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesGui;
 import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultsGui;
 import com.alpharip.staffmod.singleplayer.inventorysorter.InventorySorterGui;
+import com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavateSettings;
+import com.alpharip.staffmod.singleplayer.autoreplant.AutoReplantSettings;
 import com.alpharip.staffmod.modules.AlphaModule;
+import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -74,12 +77,19 @@ public final class SingleplayerGui extends AlphaGuiScreen {
                 tileWidth, tileHeight, "AlphaHomes", "◆", null, false, true));
         buttonList.add(new FeatureTileButton(PRIVATE_VAULTS, firstTileX + (tileWidth + gap) * 3, tileY,
                 tileWidth, tileHeight, "Private Vaults", "◆", null, false, true));
+        boolean treeExcavateEnabled = TreeExcavateSettings.isEnabled();
         buttonList.add(new FeatureTileButton(TREE_EXCAVATE, firstTileX, tileY + tileHeight + gap,
-                tileWidth, tileHeight, "Tree Excavate", "◆", null, false, true));
+                tileWidth, tileHeight, "Tree Excavate", "◆",
+                treeExcavateEnabled ? "ON" : "OFF", treeExcavateEnabled, true));
+        boolean autoReplantEnabled = AutoReplantSettings.isEnabled();
         buttonList.add(new FeatureTileButton(AUTO_REPLANT, firstTileX + tileWidth + gap,
-                tileY + tileHeight + gap, tileWidth, tileHeight, "Auto Replant", "◆", null, false, true));
+                tileY + tileHeight + gap, tileWidth, tileHeight, "Auto Replant", "◆",
+                autoReplantEnabled ? "ON" : "OFF", autoReplantEnabled, true));
+        AlphaModuleFeature inventorySorter = AlphaModuleRegistry.findFeature("inventory-sorter");
+        boolean inventorySorterEnabled = inventorySorter != null && inventorySorter.isEnabled();
         buttonList.add(new FeatureTileButton(INVENTORY_SORTER, firstTileX + (tileWidth + gap) * 2,
-                tileY + tileHeight + gap, tileWidth, tileHeight, "Inventory Sorter", "◆", null, false, true));
+                tileY + tileHeight + gap, tileWidth, tileHeight, "Inventory Sorter", "◆",
+                inventorySorterEnabled ? "ON" : "OFF", inventorySorterEnabled, true));
     }
 
     @Override
@@ -100,6 +110,13 @@ public final class SingleplayerGui extends AlphaGuiScreen {
                 if (worldEdit != null) worldEdit.setEnabled(!worldEdit.isEnabled());
             } else if (button.id == AUTO_TOOL) {
                 AutoToolSettings.setEnabled(!AutoToolSettings.isEnabled());
+            } else if (button.id == TREE_EXCAVATE) {
+                TreeExcavateSettings.setEnabled(!TreeExcavateSettings.isEnabled());
+            } else if (button.id == AUTO_REPLANT) {
+                AutoReplantSettings.setEnabled(!AutoReplantSettings.isEnabled());
+            } else if (button.id == INVENTORY_SORTER) {
+                AlphaModuleFeature inventorySorter = AlphaModuleRegistry.findFeature("inventory-sorter");
+                if (inventorySorter != null) inventorySorter.setEnabled(!inventorySorter.isEnabled());
             }
             initGui();
             return;
