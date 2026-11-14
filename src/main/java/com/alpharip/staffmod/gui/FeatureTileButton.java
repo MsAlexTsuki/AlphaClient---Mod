@@ -29,7 +29,7 @@ public final class FeatureTileButton extends GuiButton {
         hovered = mouseX >= xPosition && mouseY >= yPosition
                 && mouseX < xPosition + width && mouseY < yPosition + height;
         int bg = !enabled ? 0xA512141A : (hovered ? 0xF0272B34 : 0xE0181B22);
-        int edge = !enabled ? 0x664B515D : (active || hovered ? YELLOW : 0x664B515D);
+        int edge = !enabled ? 0x664B515D : (hovered ? YELLOW : 0x664B515D);
         drawRect(xPosition, yPosition, xPosition + width, yPosition + height, bg);
         drawRect(xPosition, yPosition, xPosition + width, yPosition + 1, edge);
         drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height, 0xAA090A0E);
