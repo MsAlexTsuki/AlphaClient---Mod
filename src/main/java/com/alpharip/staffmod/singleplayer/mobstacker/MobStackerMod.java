@@ -20,9 +20,9 @@ import java.util.List;
  * Singleplayer mob stacking.
  *
  * A stack is stored in Forge's persistent entity data, so it is saved with
- * the entity. Each member still dies through the normal vanilla death path:
- * a replacement entity carries the remaining count while the dying entity
- * produces its ordinary drops and experience.
+ * the entity. Each removed stack member follows the normal vanilla death
+ * path through a temporary single-mob copy, preserving ordinary drops and
+ * experience while the original mob retains its live AI state.
  */
 public final class MobStackerMod {
     private static final String STACK_COUNT_KEY = "AlphaClientMobStackCount";
