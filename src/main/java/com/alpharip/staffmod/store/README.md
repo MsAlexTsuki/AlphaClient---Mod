@@ -6,9 +6,10 @@ Location: `src/main/java/com/alpharip/staffmod/store/` (outside `staffops/`).
 
 - **Addons** — locally registered add-on metadata, search, category filters, installed-only filter, details, and local prototype state transitions.
 - **Cosmetics** — 128 migrated cosmetic components are automatically registered in the catalogue, with category filters, search, and item details.
+- **Owned** — a top-level Store section that lists all cosmetics confirmed as owned across every cosmetic category; the catalogue category filter does not restrict this list.
 - **Partners** — a directory for people who promote AlphaClient, receive staff capes, or collaborate with AlphaClient, with relationship filters, search, and profile details.
 - `Store.java` — central section registry, selected-section state, and ownership of the Addons, Cosmetics, and Partners catalogues.
-- `StoreGui.java` — Minecraft 1.8.9 section navigation and catalogue browser.
+- `StoreGui.java` — Minecraft 1.8.9 section navigation and catalogue browser, including the global Owned cosmetics view.
 - `StoreSkinPreview.java` — renders the currently logged-in Minecraft player and their active skin in the right-hand Store panel when a world/player is loaded. Main-menu profile rendering is still not implemented.
 
 ## Cosmetics files
