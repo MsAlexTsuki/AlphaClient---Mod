@@ -71,7 +71,6 @@ import com.alpharip.staffmod.singleplayer.autotool.AutoToolMod;
 import com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavate;
 import com.alpharip.staffmod.singleplayer.autoreplant.AutoReplant;
 import com.alpharip.staffmod.singleplayer.inventorysorter.InventorySorterMod;
-import com.alpharip.staffmod.singleplayer.mobstacker.MobStackerMod;
 import com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavateCommand;
 import com.alpharip.staffmod.singleplayer.alphahomes.AlphaHomesCommand;
 import com.alpharip.staffmod.singleplayer.privatevault.AlphaPrivateVaultCommand;
@@ -222,9 +221,6 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new TreeExcavate());
         MinecraftForge.EVENT_BUS.register(new AutoReplant());
         MinecraftForge.EVENT_BUS.register(new InventorySorterMod());
-        MobStackerMod mobStackerMod = new MobStackerMod();
-        MinecraftForge.EVENT_BUS.register(mobStackerMod);
-        net.minecraftforge.fml.common.FMLCommonHandler.instance().bus().register(mobStackerMod);
         openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu",
                 AlphaKeyBindingSettings.getKeyCode("openHomeMenu", Keyboard.KEY_RCONTROL), "AlphaClient");
         ClientRegistry.registerKeyBinding(openModMenuKey);
