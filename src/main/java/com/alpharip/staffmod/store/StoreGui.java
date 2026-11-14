@@ -350,13 +350,13 @@ public class StoreGui extends GuiScreen {
                     + (entry.getPlatform().isEmpty() ? "" : "  |  " + entry.getPlatform()),
                     listLeft + 6, y + 19, 0xFFB8BDC8);
         }
-        if (entries.isEmpty()) drawEmptyState("No partners registered yet.",
-                "Add people who promote, help, or collaborate with AlphaClient.");
+        if (entries.isEmpty()) drawEmptyState("No directory entries match this filter.",
+                "Add partners, staff-cape recipients, or collaborators.");
         drawRect(listRight + 12, listTop, width - 12, listBottom, 0x88303030);
         drawString(fontRendererObj, "PARTNER DETAILS", listRight + 20, listTop + 8, 0xFFFFD866);
         PartnerEntry selected = getSelectedPartner();
         if (selected == null) {
-            drawString(fontRendererObj, "Select a partner to view their details.",
+            drawString(fontRendererObj, "Select an entry to view its details.",
                     listRight + 20, listTop + 28, 0xFFB8BDC8);
             return;
         }
