@@ -7,12 +7,12 @@ Location: `src/main/java/com/alpharip/staffmod/AlphaClans/` (a sibling of `staff
 - Clan creation with validated names and tags.
 - One-clan-per-player membership.
 - Owner, officer, and member roles with permission checks.
-- Invitations with seven-day expiry, accept and decline.
+- Invitations with seven-day expiry, accept and decline, and a bounded pending-invite count.
 - Join, leave, kick, promote, demote, ownership transfer, rename, tag changes, and disband.
 - Clan chat history (last 100 messages; 256 characters per message).
 - Command parser and command handler with quoted arguments.
 - UI-ready screen snapshot model.
-- Local binary persistence with version header, bounds checks, and atomic file replacement.
+- Local binary persistence with version header, bounds checks, owner/member/invite consistency validation, and atomic file replacement.
 
 ## Local-only prototype boundary
 
