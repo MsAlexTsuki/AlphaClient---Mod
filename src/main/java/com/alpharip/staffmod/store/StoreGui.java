@@ -341,7 +341,7 @@ public class StoreGui extends GuiScreen {
             return;
         }
         int x = listRight + 20;
-        int y = listTop + 25;
+        int y = listTop + 198;
         int maxWidth = width - x - 24;
         drawString(fontRendererObj, fontRendererObj.trimStringToWidth(selected.getName(), maxWidth),
                 x, y, 0xFFFFFFFF);
@@ -382,7 +382,7 @@ public class StoreGui extends GuiScreen {
             return;
         }
         int x = listRight + 20;
-        int y = listTop + 25;
+        int y = listTop + 198;
         int maxWidth = width - x - 24;
         drawString(fontRendererObj, fontRendererObj.trimStringToWidth(selected.getName(), maxWidth),
                 x, y, 0xFFFFFFFF);
