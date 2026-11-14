@@ -86,17 +86,40 @@ public final class AlphaModule {
     public boolean isImplemented() { return implemented; }
 
     /** Effective state: a saved ON choice cannot activate while access is locked. */
-    public boolean isEnabled() { return enabled && isUnlocked(); }
+    public boolean isEnabled() {
+        if ("world-edit-rogue".equals(id)) {
+            AlphaModule shared = AlphaModuleRegistry.find("world-edit");
+            return shared != null && shared.isEnabled();
+        }
+        return enabled && isUnlocked();
+    }
 
     /** Raw saved preference, used only when serializing/restoring configuration. */
-    public boolean isConfiguredEnabled() { return enabled; }
+    public boolean isConfiguredEnabled() {
+        if ("world-edit-rogue".equals(id)) {
+            AlphaModule shared = AlphaModuleRegistry.find("world-edit");
+            return shared != null && shared.isConfiguredEnabled();
+        }
+        return enabled;
+    }
 
     /** Restores a saved preference without treating startup as a user toggle. */
     public void restoreEnabledState(boolean enabled) {
-        if (implemented) this.enabled = enabled;
+        if (!implemented) return;
+        if ("world-edit-rogue".equals(id)) {
+            AlphaModule shared = AlphaModuleRegistry.find("world-edit");
+            if (shared != null) shared.restoreEnabledState(enabled);
+            return;
+        }
+        this.enabled = enabled;
     }
 
     public void setEnabled(boolean enabled) {
+        if ("world-edit-rogue".equals(id)) {
+            AlphaModule shared = AlphaModuleRegistry.find("world-edit");
+            if (shared != null && (!enabled || isUnlocked())) shared.setEnabled(enabled);
+            return;
+        }
         if (implemented && (!enabled || isUnlocked())) {
             if (this.enabled != enabled) {
                 this.enabled = enabled;
@@ -190,6 +213,6 @@ public final class AlphaModule {
     public String getStatusLabel() {
         if (!isUnlocked()) return "LOCKED";
         if (!implemented) return "COMING SOON";
-        return enabled ? "ON" : "OFF";
+        return isEnabled() ? "ON" : "OFF";
     }
 }
