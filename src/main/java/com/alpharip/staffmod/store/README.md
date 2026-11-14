@@ -54,3 +54,12 @@ The migrated Java files are prototype foundations. The catalogue labels them as 
 - The Store is not wired into the live AlphaClient menu/module registry.
 - The 3D player preview currently requires `mc.thePlayer`; it does not load a session profile from the main menu.
 - Minecraft 1.8.9 GUI behavior and Java compilation/runtime behavior have not been verified in the project environment.
+
+
+### Cosmetic ownership and loadouts
+
+- `CosmeticOwnershipRegistry.java` stores an in-memory ownership snapshot. Only IDs supplied by a trusted entitlement source and present in the catalogue are accepted.
+- `CosmeticLoadouts.java` stores one equipped cosmetic per category for the active local session.
+- `CosmeticManager.java` coordinates ownership and loadouts. Equipping an item that is not owned is rejected. If an ownership refresh removes an item, that item is automatically unequipped.
+- The Store Cosmetics page exposes Equip and Unequip actions and displays ownership/loadout state.
+- Ownership and equipped state are currently memory-only. There is no payment provider, purchase flow, remote entitlement source, or persistent account synchronization. Do not treat local state as proof of purchase.
