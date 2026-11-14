@@ -25,7 +25,7 @@ public final class FileClanRepository implements ClanRepository {
     private final Path file;
 
     public FileClanRepository(Path file) {
-        if (file == null) throw new IllegalArgumentException("Storage path is required");
+        if (file == null || file.getFileName() == null) throw new IllegalArgumentException("A storage file path is required");
         this.file = file;
     }
 
@@ -75,50 +75,76 @@ public final class FileClanRepository implements ClanRepository {
     @Override
     public synchronized void saveAll(List<Clan> clans) throws IOException {
         if (clans == null) throw new IllegalArgumentException("Clan list is required");
+        if (clans.size() > MAX_CLANS) throw new IOException("Too many clans to save");
         Path parent = file.toAbsolutePath().getParent();
         if (parent != null) Files.createDirectories(parent);
         Path temp = file.resolveSibling(file.getFileName().toString() + ".tmp");
-        try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(temp)))) {
-            out.writeInt(MAGIC);
-            out.writeInt(VERSION);
-            out.writeInt(clans.size());
-            for (Clan clan : clans) {
-                writeUuid(out, clan.getId());
-                out.writeUTF(clan.getName());
-                out.writeUTF(clan.getTag());
-                writeUuid(out, clan.getOwnerId());
-                out.writeLong(clan.getCreatedAt());
-                out.writeInt(clan.getMembers().size());
-                for (ClanMember member : clan.getMembers().values()) {
-                    writeUuid(out, member.getPlayerId());
-                    out.writeUTF(member.getPlayerName());
-                    out.writeUTF(member.getRole().name());
-                    out.writeLong(member.getJoinedAt());
-                    out.writeLong(member.getLastSeenAt());
-                }
-                out.writeInt(clan.getInvites().size());
-                for (ClanInvite invite : clan.getInvites()) {
-                    writeUuid(out, invite.getClanId());
-                    writeUuid(out, invite.getInviterId());
-                    writeUuid(out, invite.getTargetId());
-                    out.writeLong(invite.getCreatedAt());
-                    out.writeLong(invite.getExpiresAt());
-                }
-                out.writeInt(clan.getMessages().size());
-                for (ClanChatMessage message : clan.getMessages()) {
-                    writeUuid(out, message.getId());
-                    writeUuid(out, message.getSenderId());
-                    out.writeUTF(message.getSenderName());
-                    out.writeUTF(message.getMessage());
-                    out.writeLong(message.getTimestamp());
-                }
-            }
-            out.flush();
-        }
         try {
-            Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException ex) {
-            Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+            try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(temp)))) {
+                out.writeInt(MAGIC);
+                out.writeInt(VERSION);
+                out.writeInt(clans.size());
+                for (Clan clan : clans) {
+                    if (clan == null) throw new IOException("Cannot save an empty clan record");
+                    if (clan.getMembers().isEmpty() || clan.getMembers().size() > MAX_MEMBERS) {
+                        throw new IOException("Invalid member count for clan " + clan.getId());
+                    }
+                    ClanMember owner = clan.getMember(clan.getOwnerId());
+                    if (owner == null || owner.getRole() != ClanRole.OWNER) {
+                        throw new IOException("Clan must have one matching owner before it can be saved");
+                    }
+                    int ownerCount = 0;
+                    for (ClanMember member : clan.getMembers().values()) {
+                        if (member.getRole() == ClanRole.OWNER) ownerCount++;
+                    }
+                    if (ownerCount != 1) throw new IOException("Clan must contain exactly one owner");
+                    if (clan.getInvites().size() > MAX_INVITES || clan.getMessages().size() > MAX_MESSAGES) {
+                        throw new IOException("Clan contains too many invites or messages");
+                    }
+                    for (ClanInvite invite : clan.getInvites()) {
+                        if (!clan.getId().equals(invite.getClanId())) throw new IOException("Invite belongs to a different clan");
+                    }
+                    writeUuid(out, clan.getId());
+                    out.writeUTF(clan.getName());
+                    out.writeUTF(clan.getTag());
+                    writeUuid(out, clan.getOwnerId());
+                    out.writeLong(clan.getCreatedAt());
+                    out.writeInt(clan.getMembers().size());
+                    for (ClanMember member : clan.getMembers().values()) {
+                        writeUuid(out, member.getPlayerId());
+                        out.writeUTF(member.getPlayerName());
+                        out.writeUTF(member.getRole().name());
+                        out.writeLong(member.getJoinedAt());
+                        out.writeLong(member.getLastSeenAt());
+                    }
+                    out.writeInt(clan.getInvites().size());
+                    for (ClanInvite invite : clan.getInvites()) {
+                        writeUuid(out, invite.getClanId());
+                        writeUuid(out, invite.getInviterId());
+                        writeUuid(out, invite.getTargetId());
+                        out.writeLong(invite.getCreatedAt());
+                        out.writeLong(invite.getExpiresAt());
+                    }
+                    out.writeInt(clan.getMessages().size());
+                    for (ClanChatMessage message : clan.getMessages()) {
+                        writeUuid(out, message.getId());
+                        writeUuid(out, message.getSenderId());
+                        out.writeUTF(message.getSenderName());
+                        out.writeUTF(message.getMessage());
+                        out.writeLong(message.getTimestamp());
+                    }
+                }
+                out.flush();
+            }
+            try {
+                Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException ex) {
+                Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException | RuntimeException failure) {
+            try { Files.deleteIfExists(temp); }
+            catch (IOException cleanupFailure) { failure.addSuppressed(cleanupFailure); }
+            throw failure;
         }
     }
 
