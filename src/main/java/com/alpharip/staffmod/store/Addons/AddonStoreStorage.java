@@ -23,9 +23,10 @@ public final class AddonStoreStorage {
         this.file = file;
     }
 
-    public synchronized void loadInto(AddonRegistry registry) throws IOException {
-        if (registry == null) throw new IllegalArgumentException("Registry is required.");
-        if (!Files.exists(file)) return;
+    /** Reads states independently so they can be applied as trusted entries are registered. */
+    public synchronized Map<String, AddonInstallState> loadStates() throws IOException {
+        Map<String, AddonInstallState> states = new LinkedHashMap<String, AddonInstallState>();
+        if (!Files.exists(file)) return states;
         long size = Files.size(file);
         if (size > MAX_FILE_BYTES) throw new IOException("Store state file exceeds the size limit.");
         Properties properties = new Properties();
@@ -34,7 +35,6 @@ public final class AddonStoreStorage {
         }
         if (!SCHEMA.equals(properties.getProperty("schema")))
             throw new IOException("Unsupported Store state format.");
-        Map<String, AddonInstallState> states = new LinkedHashMap<String, AddonInstallState>();
         for (String key : properties.stringPropertyNames()) {
             if (!key.startsWith("state.")) continue;
             String id = key.substring("state.".length());
@@ -42,10 +42,10 @@ public final class AddonStoreStorage {
             try {
                 states.put(id, AddonInstallState.valueOf(properties.getProperty(key)));
             } catch (IllegalArgumentException ignored) {
-                // Ignore invalid individual states; other valid entries can still be restored.
+                // Ignore invalid individual states; valid entries can still be restored.
             }
         }
-        registry.restoreStates(states);
+        return states;
     }
 
     public synchronized void save(AddonRegistry registry) throws IOException {

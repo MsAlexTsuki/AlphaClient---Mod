@@ -40,6 +40,13 @@ public final class AddonRegistry {
         return Collections.unmodifiableMap(new LinkedHashMap<String, AddonInstallState>(states));
     }
 
+    /** Restores one state only when the corresponding trusted catalogue entry exists. */
+    public synchronized boolean restoreState(String id, AddonInstallState state) {
+        if (id == null || state == null || !entries.containsKey(id)) return false;
+        states.put(id, state);
+        return true;
+    }
+
     /** Restores only states for entries already registered by trusted client code. */
     public synchronized int restoreStates(Map<String, AddonInstallState> restored) {
         if (restored == null) return 0;
