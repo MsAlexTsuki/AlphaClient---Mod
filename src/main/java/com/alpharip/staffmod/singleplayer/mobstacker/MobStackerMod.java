@@ -120,7 +120,7 @@ public final class MobStackerMod {
          */
         EntityLiving singleMobCopy = createSingleMobCopy(stackedMob);
         if (singleMobCopy == null) {
-            preserveStackAfterFailedReplacement(event, stackedMob);
+            preserveStackAfterFailedCopy(event, stackedMob);
             return;
         }
 
@@ -180,7 +180,7 @@ public final class MobStackerMod {
     private static void preserveStackAfterFailedReplacement(LivingDeathEvent event, EntityLiving dying) {
         event.setCanceled(true);
         dying.setHealth(dying.getMaxHealth());
-        System.err.println("[AlphaClient] Mob Stacker could not create a replacement entity; "
+        System.err.println("[AlphaClient] Mob Stacker could not create a temporary mob copy; "
                 + "the existing stack was preserved.");
     }
 }
