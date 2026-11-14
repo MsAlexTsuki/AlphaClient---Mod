@@ -1,6 +1,6 @@
 package com.alpharip.staffmod.autosave;
 
-/** Local display and placement settings for the AutoSave HUD. */
+/** Local display and placement settings for the singleplayer-only AutoSave HUD. */
 public final class AutoSaveSettings {
     private boolean enabled = true;
     private boolean showSaveState = true;
