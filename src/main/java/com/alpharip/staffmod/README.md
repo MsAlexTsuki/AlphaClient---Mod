@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Inventory at creation: **210 Java files** across the folders listed below.
+- Current verified inventory: **536 Java files** across **41 folders**, plus 1 Java file(s) directly in the package root.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -704,3 +704,678 @@ Folder: `armorbreakwarning/`
 - **ArmorBreakWarningGui.java** — Standalone settings screen for enablement and threshold selection.
 
 **Prototype boundary:** The original idea provides a fixed 10% threshold and a HUD warning with the number of low-durability armor pieces. The configurable threshold and standalone settings screen are prototype additions. This checks only the local player's equipped armor; it is separate from opponent armor-break prediction. Registration is explicit. No existing menu button, keybind, AlphaModuleRegistry integration, AlphaClient Core registration, rank permission, Supabase, or Launcher integration is included. Compilation and in-game behavior remain unverified.
+
+
+## Current Java Source Inventory (authoritative)
+
+Snapshot: branch `mod-ideas`, tree `665cfbbdf46f9132e5d7ec400e533b82d8cbacad`.
+Count: **536 Java files** in **41 folders** plus **1 root-level Java file**.
+This manifest is generated from the files present in the branch at the snapshot above. It excludes everything under `staffops/` and excludes non-Java files. A listed file being present does not mean it compiles, is registered, or has been tested.
+
+### `AccessibilityTheme/`
+
+- `AccessibilityThemeGui.java`
+- `AccessibilityThemeSettings.java`
+
+### `AccessReviewReminder/`
+
+- `AccessReviewEntry.java`
+- `AccessReviewReminder.java`
+- `AccessReviewReminderGui.java`
+- `AccessReviewStorage.java`
+
+### `account/`
+
+- `AccountLink.java`
+- `AccountLinking.java`
+- `AccountLinkingGui.java`
+- `AccountLinkingService.java`
+- `AccountLinkingSettings.java`
+- `AccountLinkRegistry.java`
+- `AccountLinkStatus.java`
+- `AccountLinkValidator.java`
+
+### `achievements/`
+
+- `AchievementChecklist.java`
+- `AchievementChecklistGui.java`
+- `AchievementChecklistSearch.java`
+- `AchievementChecklistSettings.java`
+- `AchievementEntry.java`
+- `AchievementWall.java`
+- `AchievementWallEntry.java`
+- `AchievementWallGui.java`
+- `AchievementWallService.java`
+- `AchievementWallSettings.java`
+- `AchievementWallSnapshot.java`
+- `AchievementWallSort.java`
+- `suffix/AchievementSuffixEntry.java`
+- `suffix/AchievementSuffixGui.java`
+- `suffix/AchievementSuffixRegistry.java`
+- `suffix/AchievementSuffixService.java`
+- `suffix/AchievementSuffixSettings.java`
+
+### `ActingRankAssignment/`
+
+- `ActingRankAssignment.java`
+- `ActingRankAssignmentGui.java`
+- `ActingRankEntry.java`
+- `ActingRankRegistry.java`
+- `ActingRankService.java`
+- `ActingRankSettings.java`
+- `ActingRankStatus.java`
+- `ActingRankValidator.java`
+
+### `ActiveDeviceListGlobalSignOut/`
+
+- `ActiveDeviceListGlobalSignOut.java`
+- `ActiveDeviceListGlobalSignOutGui.java`
+- `ActiveDeviceRegistry.java`
+- `ActiveDeviceService.java`
+- `ActiveDeviceSession.java`
+- `ActiveDeviceSettings.java`
+- `ActiveDeviceSignOutResult.java`
+- `ActiveDeviceStatus.java`
+- `ActiveDeviceValidator.java`
+
+### `AdjustableRainAndSnowSpeed/`
+
+- `AdjustableRainAndSnowSpeed.java`
+- `AdjustableRainAndSnowSpeedGui.java`
+- `WeatherSpeedController.java`
+- `WeatherSpeedSettings.java`
+- `WeatherSpeedSnapshot.java`
+- `WeatherType.java`
+
+### `AdjustableStarDensity/`
+
+- `AdjustableStarDensity.java`
+- `AdjustableStarDensityGui.java`
+- `StarDensityController.java`
+- `StarDensitySettings.java`
+- `StarDensitySnapshot.java`
+- `StarDensityStyle.java`
+
+### `AdjustThirdPerson/`
+
+- `AdjustableThirdPersonCameraDistance.java`
+- `ThirdPersonOptionsGui.java`
+- `ThirdPersonOptionsHooks.java`
+
+### `AfkCamera/`
+
+- `AfkActivityTracker.java`
+- `AfkCamera.java`
+- `AfkCameraController.java`
+- `AfkCameraGui.java`
+- `AfkCameraSettings.java`
+- `AfkCameraSnapshot.java`
+- `AfkCameraStyle.java`
+
+### `Aim Pattern Library/`
+
+- `AimPattern.java`
+- `AimPatternCategory.java`
+- `AimPatternLibrary.java`
+- `AimPatternLibraryGui.java`
+- `AimPatternRegistry.java`
+- `AimPatternService.java`
+- `AimPatternSettings.java`
+- `AimPatternStats.java`
+- `AimPatternValidator.java`
+
+### `AirHud/`
+
+- `AirHud.java`
+- `AirHudEventHandler.java`
+- `AirHudGui.java`
+- `AirHudRenderer.java`
+- `AirHudSettings.java`
+- `AirHudStorage.java`
+- `MinecraftForgeBridge.java`
+
+### `Analystics/`
+
+- `Combo Analysis/ComboAnalysisAfterFight.java`
+- `Combo Analysis/ComboConfig.java`
+- `Combo Analysis/ComboResult.java`
+- `Combo Analysis/ComboSession.java`
+- `Combo Analysis/ComboStats.java`
+- `Target/TargetSwitchAnalyzer.java`
+- `Target/TargetSwitchConfig.java`
+- `Target/TargetSwitchResult.java`
+- `Target/TargetSwitchSession.java`
+- `Target/TargetSwitchStats.java`
+
+### `armorbreakwarning/`
+
+- `ArmorBreakWarning.java`
+- `ArmorBreakWarningEventHandler.java`
+- `ArmorBreakWarningGui.java`
+- `ArmorBreakWarningRenderer.java`
+- `ArmorBreakWarningSettings.java`
+- `ArmorBreakWarningStorage.java`
+
+### `ArrowCounter/`
+
+- `ArrowCounter.java`
+- `ArrowCounterEventHandler.java`
+- `ArrowCounterGui.java`
+- `ArrowCounterRenderer.java`
+- `ArrowCounterScanner.java`
+- `ArrowCounterSettings.java`
+- `ArrowCounterStorage.java`
+
+### `Badges/`
+
+- `Anniversary/AnniversaryBadgeCalculator.java`
+- `Anniversary/AnniversaryBadgeGui.java`
+- `Anniversary/AnniversaryBadgeSettings.java`
+- `Anniversary/AnniversaryBadgeStatus.java`
+- `Anniversary/AnniversaryBadgeTier.java`
+- `Anniversary/Birthday/BirthdayCelebrationGui.java`
+- `Anniversary/Birthday/BirthdayCelebrationService.java`
+- `Anniversary/Birthday/BirthdayCelebrationSettings.java`
+- `Anniversary/Birthday/BirthdayConfettiParticle.java`
+- `Anniversary/Birthday/BirthdayConfettiParticleSink.java`
+- `Playtime/PlaytimeBadgeCalculator.java`
+- `Playtime/PlaytimeBadgeGui.java`
+- `Playtime/PlaytimeBadgeService.java`
+- `Playtime/PlaytimeBadgeStatus.java`
+- `Playtime/PlaytimeBadgeTier.java`
+
+### `BiomeHud/`
+
+- `BiomeHud.java`
+- `BiomeHudEventHandler.java`
+- `BiomeHudGui.java`
+- `BiomeHudRenderer.java`
+- `BiomeHudSettings.java`
+- `BiomeHudStorage.java`
+
+### `Block Break Ring/`
+
+- `BlockBreakProgressRing.java`
+- `BlockBreakRingAnimation.java`
+- `BlockBreakRingConfig.java`
+- `BlockBreakRingEventHandler.java`
+- `BlockBreakRingGui.java`
+- `BlockBreakRingRenderer.java`
+- `BlockBreakRingSnapshot.java`
+
+### `ChestItemTotal/`
+
+- `ChestItemTotal.java`
+- `ChestItemTotalEntry.java`
+- `ChestItemTotalEventHandler.java`
+- `ChestItemTotalGui.java`
+- `ChestItemTotalRenderer.java`
+- `ChestItemTotalScanner.java`
+- `ChestItemTotalSettings.java`
+- `ChestItemTotalSnapshot.java`
+- `ChestItemTotalStorage.java`
+
+### `Clutch/`
+
+- `ClutchHighlight.java`
+- `ClutchHighlights.java`
+- `ClutchHighlightsConfig.java`
+- `ClutchHighlightType.java`
+
+### `Combo/`
+
+- `ComboBreakerConfig.java`
+- `ComboBreakerCue.java`
+
+### `Cooldowns/`
+
+- `Cooldowns.java`
+- `enderpearl/PearlCooldown.java`
+
+### `Cosmetics/`
+
+- `AlphaBadgeChatCosmetic.java`
+- `AlphaColoredName.java`
+- `AlphaCosmeticsCore.java`
+- `AlphaLogoKillEffect.java`
+- `AlphaLogoVictoryEffect.java`
+- `AlphaParticlesHitEffect.java`
+- `AlphaTrail.java`
+- `AnimatedName.java`
+- `AnimatedPrefixes.java`
+- `AnimationCustomizer.java`
+- `BigName.java`
+- `BowEmote.java`
+- `CapeManager.java`
+- `Capes.java`
+- `CelebrateEmote.java`
+- `ChatAppearanceCustomization.java`
+- `ChatBadges.java`
+- `ChatBubblesAbovePlayerHeads.java`
+- `CoinsVictoryEffect.java`
+- `ComboParticlesHitEffect.java`
+- `ConfettiKillEffect.java`
+- `ConfettiVictoryEffect.java`
+- `CosmeticAssetManagement.java`
+- `CosmeticAuditHistory.java`
+- `CosmeticBundles.java`
+- `CosmeticCoinShop.java`
+- `CosmeticCollectionScreen.java`
+- `CosmeticDatabase.java`
+- `CosmeticLoadouts.java`
+- `CosmeticManager.java`
+- `CosmeticMixer.java`
+- `CosmeticMysteryBoxes.java`
+- `CosmeticPerformanceSettings.java`
+- `CosmeticPetsLobby.java`
+- `CosmeticPreview.java`
+- `CosmeticSecurity.java`
+- `CosmeticSetSynergy.java`
+- `CosmeticShopPreview.java`
+- `CosmeticStore.java`
+- `CosmeticVisibility.java`
+- `CosmeticVisibilitySettings.java`
+- `CreatorBadgeChatCosmetic.java`
+- `CriticalParticlesHitEffect.java`
+- `CrossArmsEmote.java`
+- `CrownVictoryEffect.java`
+- `CursorSkins.java`
+- `CustomCrosshairManager.java`
+- `CustomGrassAndFoliageColors.java`
+- `CustomHotbarSkin.java`
+- `CustomHudFont.java`
+- `CustomLoadingScreens.java`
+- `CustomMenuButtonStyles.java`
+- `CustomMenuSounds.java`
+- `CustomMenuSoundscape.java`
+- `CustomNametagBackgroundsAnimations.java`
+- `CustomProfileBanners.java`
+- `CustomRainSnowParticles.java`
+- `CustomSkyAndStars.java`
+- `CustomWeatherParticles.java`
+- `CustomXpBarColor.java`
+- `DabEmote.java`
+- `DanceEmote.java`
+- `DeveloperBadgeChatCosmetic.java`
+- `EarlySupporterBadge.java`
+- `EmoteManager.java`
+- `EmoteWheel.java`
+- `EmoteWheelCustomization.java`
+- `EnergyBurstVictoryEffect.java`
+- `EnergyTrail.java`
+- `ExplosionVictoryEffect.java`
+- `FireTrail.java`
+- `FireworksVictoryEffect.java`
+- `FounderBadgeChatCosmetic.java`
+- `FriendNametagColors.java`
+- `FriendNametags.java`
+- `FriendsCosmeticIntegration.java`
+- `GlowName.java`
+- `GradientName.java`
+- `HeartTrail.java`
+- `LaughEmote.java`
+- `LauncherCosmeticIntegration.java`
+- `LightningTrail.java`
+- `LightningVictoryEffect.java`
+- `LimitedCosmeticsSystem.java`
+- `LimitedTimeEventBadges.java`
+- `LinkedAccountVerificationBadge.java`
+- `LocalSkinPreviewSwitcher.java`
+- `MenuOpeningAnimations.java`
+- `MouseTrail.java`
+- `MultipleAchievementBadges.java`
+- `NameTagCustomizer.java`
+- `OwnerEmotePack.java`
+- `ParticleCustomizer.java`
+- `PixelExplosionKillEffect.java`
+- `PixelTrail.java`
+- `PointEmote.java`
+- `PortalVictoryEffect.java`
+- `PremiumBadgeChatCosmetic.java`
+- `RadialEmoteMenu.java`
+- `RainbowName.java`
+- `RainbowNametagForYourself.java`
+- `RainbowTrail.java`
+- `RankBasedCosmetics.java`
+- `RotatingSkinPreviewInMenus.java`
+- `SaluteEmote.java`
+- `ScreenshotFilters.java`
+- `SelectableMainMenuBackgrounds.java`
+- `SilentNotificationSkin.java`
+- `SitEmote.java`
+- `SkinLayerToggle.java`
+- `SkinManager.java`
+- `SmokeKillEffect.java`
+- `SmokeTrail.java`
+- `SocialBadgeShowcase.java`
+- `SoulKillEffect.java`
+- `SpotifyNowPlayingBadge.java`
+- `StaffBadgeChatCosmetic.java`
+- `StarsVictoryEffect.java`
+- `StarTrail.java`
+- `SwingAnimationSpeed.java`
+- `ThreeDSkins.java`
+- `TrailEffects.java`
+- `UnlockableGradientColoredNames.java`
+- `UnlockableHotbarSkins.java`
+- `ViewmodelCustomizer.java`
+- `VoidTrail.java`
+- `WaveEmote.java`
+- `Wings.java`
+
+### `Customization/`
+
+- `AlphaThemeManager.java`
+- `BasicColorFilters.java`
+- `BlockOverlayCustomizer.java`
+- `BlockPaletteColorGenerator.java`
+- `ColorBlindAccessibilityMode.java`
+- `ColorCodePreview.java`
+- `ConfigProfiles.java`
+- `CustomBlockOutlineColor.java`
+- `CustomGuiScale.java`
+- `CustomInventoryBackground.java`
+- `CustomScoreboard.java`
+- `CustomScoreboardStyling.java`
+- `DynamicTheme.java`
+- `EnchantGlintCustomization.java`
+- `EnchantmentGlintSettings.java`
+- `GildedLedgerTheme.java`
+- `HotbarLoadoutPresets.java`
+- `HotbarManager.java`
+- `HudAlignmentGuidesAndSnapToGrid.java`
+- `OneHandedKeyboardLayout.java`
+- `PerPlayerChatColors.java`
+- `PerScreenGuiScaling.java`
+- `PvpHudEditor.java`
+- `RarityBasedTooltipColors.java`
+- `ReduceScreenShake.java`
+- `SelectableHeartStyles.java`
+- `SensitivityProfilesPerItem.java`
+- `ServerProfiles.java`
+- `ServerProfileSpecificKeybinds.java`
+- `ShareableProfiles.java`
+- `TransparentHotbar.java`
+- `ViewBobbingCustomizer.java`
+- `WaterColorBrightnessControls.java`
+
+### `Indicators/`
+
+- `Bow/BowChargeCalculator.java`
+- `Bow/BowChargeConfig.java`
+- `Bow/BowChargeIndicator.java`
+- `Bow/BowChargeSnapshot.java`
+- `Knockback/KnockbackDirectionIndicator.java`
+- `Knockback/KnockbackDirectionSnapshot.java`
+- `Knockback/KnockbackIndicatorConfig.java`
+
+### `Kitmap & HCF/`
+
+- `Factions/ally/AllyFactionNotes.java`
+- `Factions/ally/AllyFactionNotesModule.java`
+- `Factions/ally/AllyFactionNotesScreen.java`
+- `Factions/ally/AllyFactionNotesStore.java`
+
+### `OpponentProfiles/`
+
+- `OpponentProfile.java`
+
+### `playerhistory/`
+
+- `PlayerHistory.java`
+- `PlayerHistoryEntry.java`
+- `PlayerHistoryEvent.java`
+- `PlayerHistoryEventHandler.java`
+- `PlayerHistoryFormatter.java`
+- `PlayerHistoryGui.java`
+- `PlayerHistoryStorage.java`
+- `PlayerHistoryStore.java`
+- `PlayerHistoryTracker.java`
+
+### `Predictions/`
+
+- `Armor/ArmorBreakPrediction.java`
+- `Armor/ArmorBreakPredictionConfig.java`
+- `Armor/ArmorBreakResult.java`
+- `Armor/ArmorDurabilityTracker.java`
+- `Armor/ArmorSlot.java`
+- `Enderpearl/EnderPearlLandingPrediction.java`
+- `Enderpearl/EnderPearlPredictionConfig.java`
+- `Enderpearl/EnderPearlPredictionResult.java`
+- `Enderpearl/EnderPearlTrajectoryPredictor.java`
+- `Enderpearl/EnderPearlVector.java`
+
+### `Remember Villagers/`
+
+- `remembervillagertrade.java`
+- `RememberVillagerTradesGui.java`
+- `VillagerTradeCapture.java`
+- `VillagerTradeEntry.java`
+- `VillagerTradeEventHandler.java`
+- `VillagerTradeRecord.java`
+- `VillagerTradeRegistry.java`
+- `VillagerTradeStorage.java`
+
+### `Singleplayer/`
+
+- `EasyCraft/EasyCraft.java`
+- `EasyCraft/EasyCraftCategory.java`
+- `EasyCraft/EasyCraftCraftingAdapter.java`
+- `EasyCraft/EasyCraftCraftingTableHook.java`
+- `EasyCraft/EasyCraftFavorites.java`
+- `EasyCraft/EasyCraftFavoriteStorage.java`
+- `EasyCraft/EasyCraftGui.java`
+- `EasyCraft/EasyCraftRecipe.java`
+- `EasyCraft/EasyCraftRecipeCatalog.java`
+- `EasyCraft/EasyCraftTableButton.java`
+
+### `Sounds/`
+
+- `Alert Sound/AlertSounds.java`
+- `Alert Sound/AlertSoundsGui.java`
+
+### `Staff Dashboard Expansion/`
+
+- `Attendance/StaffAttendanceGui.java`
+- `Attendance/StaffAttendanceManager.java`
+- `Attendance/StaffAttendanceOverview.java`
+- `Attendance/StaffAttendanceSession.java`
+- `Availability/StaffAvailabilityBoard.java`
+- `Availability/StaffAvailabilityEntry.java`
+- `Availability/StaffAvailabilityGui.java`
+- `Availability/StaffAvailabilityStatus.java`
+- `Competency/StaffCompetency.java`
+- `Competency/StaffCompetencyAssessment.java`
+- `Competency/StaffCompetencyGui.java`
+- `Competency/StaffCompetencyLevel.java`
+- `Competency/StaffCompetencyManager.java`
+- `Competency/StaffCompetencyMatrix.java`
+- `Coverage/CoverageForecastManager.java`
+- `Coverage/CoverageRequirement.java`
+- `Coverage/CoverageResult.java`
+- `Coverage/StaffCoverageForecast.java`
+- `Coverage/StaffCoverageForecastGui.java`
+- `Goals/StaffGoal.java`
+- `Goals/StaffGoalBoard.java`
+- `Goals/StaffGoalBoardGui.java`
+- `Goals/StaffGoalStatus.java`
+- `Improvement Plan/StaffImprovementAction.java`
+- `Improvement Plan/StaffImprovementEvaluation.java`
+- `Improvement Plan/StaffImprovementManager.java`
+- `Improvement Plan/StaffImprovementPlan.java`
+- `Improvement Plan/StaffImprovementPlanGui.java`
+- `Improvement Plan/StaffImprovementStatus.java`
+- `OverloadedStaffAlert/OverloadedStaffAlert.java`
+- `OverloadedStaffAlert/StaffWorkload.java`
+- `OverloadedStaffAlert/WorkloadAlert.java`
+- `OverloadedStaffAlert/WorkloadConfig.java`
+- `OverloadedStaffAlert/WorkloadLevel.java`
+- `OverloadedStaffAlert/WorkloadManager.java`
+- `Presence/StaffPresenceEntry.java`
+- `Presence/StaffPresenceGui.java`
+- `Presence/StaffPresenceList.java`
+- `Presence/StaffPresenceManager.java`
+- `Rank Comp/StaffRankComparison.java`
+- `Rank Comp/StaffRankComparisonGui.java`
+- `Rank Comp/StaffRankComparisonModule.java`
+- `Rank Comp/StaffRankComparisonResult.java`
+- `Rank Comp/StaffRankProfile.java`
+- `Responsibility Board/StaffResponsibility.java`
+- `Responsibility Board/StaffResponsibilityBoard.java`
+- `Responsibility Board/StaffResponsibilityBoardGui.java`
+- `Responsibility Board/StaffResponsibilityManager.java`
+- `Responsibility Board/StaffResponsibilityPriority.java`
+- `Responsibility Board/StaffResponsibilityStatus.java`
+- `Review Calendar/StaffReview.java`
+- `Review Calendar/StaffReviewBoardGui.java`
+- `Review Calendar/StaffReviewCalendar.java`
+- `Review Calendar/StaffReviewCalendarGui.java`
+- `Review Calendar/StaffReviewCalendarManager.java`
+- `Review Calendar/StaffReviewDayGui.java`
+- `Review Calendar/StaffReviewEditorGui.java`
+- `Review Calendar/StaffReviewReminder.java`
+- `Review Calendar/StaffReviewStatus.java`
+- `Shifts/ChecklistCategory.java`
+- `Shifts/ChecklistItem.java`
+- `Shifts/ShiftStartChecklist.java`
+- `Shifts/ShiftStartChecklistGui.java`
+- `Shifts/StaffShift.java`
+- `Shifts/StaffShiftBoard.java`
+- `Shifts/StaffShiftBoardGui.java`
+- `Shifts/StaffShiftManager.java`
+- `Shifts/StaffShiftStatus.java`
+- `Staff Duty Mode/StaffDutyManager.java`
+- `Staff Duty Mode/StaffDutyMode.java`
+- `Staff Duty Mode/StaffDutyModeGui.java`
+- `Staff Duty Mode/StaffDutyState.java`
+- `Staff Handoff/StaffHandoff.java`
+- `Staff Handoff/StaffHandoffGui.java`
+- `Staff Handoff/StaffHandoffManager.java`
+- `Staff Handoff/StaffHandoffStatus.java`
+- `Staff Queue/StaffQueue.java`
+- `Staff Queue/StaffQueueEntry.java`
+- `Staff Queue/StaffQueueGui.java`
+- `Staff Queue/StaffQueuePriority.java`
+- `Staff Queue/StaffQueueStatus.java`
+
+### `Statistics/`
+
+- `Duels/DuelRecord.java`
+- `Duels/DuelStatisticsConfig.java`
+- `Duels/DuelStatisticsSnapshot.java`
+- `Duels/OpponentSpecificDuelStatistics.java`
+
+### `store/`
+
+- `Addons/AddonCategory.java`
+- `Addons/AddonEntry.java`
+- `Addons/AddonInstallState.java`
+- `Addons/AddonManager.java`
+- `Addons/AddonRegistry.java`
+- `Addons/AddonSearch.java`
+- `Addons/AddonStore.java`
+- `Addons/AddonStoreGui.java`
+- `Addons/AddonStoreSettings.java`
+- `Store.java`
+
+### `TimeTill/`
+
+- `TimeTillEventHandler.java`
+- `TimeTillFormatter.java`
+- `TimeTillGui.java`
+- `TimeTillRenderer.java`
+- `TimeTillSettings.java`
+- `TimeTillStorage.java`
+- `timetillsunsetornight.java`
+
+### `Timing/`
+
+- `block break timing/BlockBreakSample.java`
+- `block break timing/BlockBreakTiming.java`
+- `block break timing/BlockBreakTimingConfig.java`
+- `block break timing/BlockBreakTimingStats.java`
+- `Block placement timing/BlockPlacementSample.java`
+- `Block placement timing/BlockPlacementTiming.java`
+- `Block placement timing/BlockPlacementTimingConfig.java`
+- `Block placement timing/BlockPlacementTimingStats.java`
+- `brewing/BrewingStandReader.java`
+- `brewing/BrewingTimer.java`
+- `brewing/BrewingTimerSettingsScreen.java`
+- `Combat Timer/CombatTimer.java`
+
+### `Trackers/`
+
+- `Acknowledgement/AcknowledgementEntry.java`
+- `Acknowledgement/AcknowledgementGui.java`
+- `Acknowledgement/AcknowledgementRegistry.java`
+- `Acknowledgement/AcknowledgementService.java`
+- `Acknowledgement/AcknowledgementSettings.java`
+- `Acknowledgement/AcknowledgementStatus.java`
+- `Acknowledgement/AcknowledgementTracker.java`
+- `Acknowledgement/AcknowledgementValidator.java`
+- `Arrow Tracker/ArrowTrack.java`
+- `Arrow Tracker/ArrowTracker.java`
+- `Arrow Tracker/ArrowTrackerConfig.java`
+- `Arrow Tracker/ArrowTrackerSnapshot.java`
+
+### `Trainers/`
+
+- `Aim Trainer/AimDriftHeatmap.java`
+- `Aim Trainer/AimTrainerConfig.java`
+- `Aim Trainer/AimTrainerResult.java`
+- `Aim Trainer/AimTrainerSession.java`
+- `Aim Trainer/AimTrainerStats.java`
+- `Bridge/BridgePersonalBest.java`
+- `Bridge/BridgeRun.java`
+- `Bridge/BridgeRunResult.java`
+- `Bridge/BridgeRunStats.java`
+- `Bridge/BridgeSpeedTrainer.java`
+- `Bridge/BridgeTrainerConfig.java`
+- `enderpearl/EnderPearlAccuracyPractice.java`
+- `potion throw Coach/PotionThrowCoach.java`
+- `potion throw Coach/PotionThrowCoachConfig.java`
+- `potion throw Coach/PotionThrowCoachPanel.java`
+- `potion throw Coach/PotionThrowCoachStats.java`
+- `potion throw Coach/PotionThrowResult.java`
+- `WarmupTrainer/WarmupRoutine.java`
+- `WarmupTrainer/WarmUpRoutineRunner.java`
+- `WarmupTrainer/WarmUpRoutineRunnerPanel.java`
+- `WarmupTrainer/WarmupSession.java`
+- `WarmupTrainer/WarmupStats.java`
+- `WarmupTrainer/WarmupStep.java`
+
+### `Viewer/`
+
+- `playerconnectionviewer/ConnectionFormatter.java`
+- `playerconnectionviewer/ConnectionSnapshot.java`
+- `playerconnectionviewer/ConnectionState.java`
+- `playerconnectionviewer/ConnectionTracker.java`
+- `playerconnectionviewer/PlayerConnectionViewer.java`
+- `playerconnectionviewer/PlayerConnectionViewerEventHandler.java`
+- `playerconnectionviewer/PlayerConnectionViewerGui.java`
+- `PlayerDirectionViewer/PlayerDirectionFormatter.java`
+- `PlayerDirectionViewer/PlayerDirectionSnapshot.java`
+- `PlayerDirectionViewer/PlayerDirectionViewer.java`
+- `PlayerDirectionViewer/PlayerDirectionViewerEventHandler.java`
+- `PlayerDirectionViewer/PlayerDirectionViewerGui.java`
+
+### `Wrapped/`
+
+- `AnnualAlphaWrappedCalculator.java`
+- `AnnualAlphaWrappedCard.java`
+- `AnnualAlphaWrappedGui.java`
+- `AnnualAlphaWrappedPeriod.java`
+- `AnnualAlphaWrappedService.java`
+- `AnnualAlphaWrappedSession.java`
+- `AnnualAlphaWrappedSettings.java`
+- `AnnualAlphaWrappedSummary.java`
+
+### Package root
+
+- `StaffMod.java`
+
+### Inventory notes
+
+- `ArrowCounter/`, `BiomeHud/`, `ChestItemTotal/`, `Remember Villagers/`, and `TimeTill/` are included because their Java prototype files are present in this snapshot.
+- The current manifest is authoritative for file presence. Older explanatory sections above may describe earlier prototype states; if a folder or file is absent from this manifest, it is not present in this snapshot.
+- `BlockPlacementPreview/` and `Aimassist Expansion/` are not present in this snapshot and are therefore not counted.
