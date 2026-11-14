@@ -13,6 +13,7 @@ import com.alpharip.staffmod.store.partners.PartnerType;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.entity.EntityPlayerSP;
 import java.io.IOException;
 import java.util.List;
 
@@ -253,6 +254,23 @@ public class StoreGui extends GuiScreen {
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
+    private void drawSkinPreview() {
+        int centerX = (listRight + width - 12) / 2;
+        drawCenteredString(fontRendererObj, "YOUR MINECRAFT SKIN", centerX,
+                listTop + 22, 0xFFFFD866);
+        EntityPlayerSP player = mc.thePlayer;
+        if (player == null) {
+            drawCenteredString(fontRendererObj, "Player skin unavailable",
+                    centerX, listTop + 90, 0xFFB8BDC8);
+            drawCenteredString(fontRendererObj, "Open the Store in-game to preview your skin.",
+                    centerX, listTop + 104, 0xFF888888);
+            return;
+        }
+        StoreSkinPreview.draw(centerX, listTop + 172, 58, player);
+        drawCenteredString(fontRendererObj, player.getName(), centerX,
+                listTop + 180, 0xFFB8BDC8);
+    }
+
     private void drawAddons() {
         List<AddonEntry> entries = store.getAddonStore().getVisibleAddons();
         int visibleRows = Math.max(0, (listBottom - listTop) / ROW_HEIGHT);
@@ -274,14 +292,15 @@ public class StoreGui extends GuiScreen {
                 "Register catalogue entries from trusted AlphaClient code.");
         drawRect(listRight + 12, listTop, width - 12, listBottom, 0x88303030);
         drawString(fontRendererObj, "DETAILS", listRight + 20, listTop + 8, 0xFFFFD866);
+        drawSkinPreview();
         AddonEntry selected = getSelectedAddon();
         if (selected == null) {
             drawString(fontRendererObj, "Select an add-on to view its details.",
-                    listRight + 20, listTop + 28, 0xFFB8BDC8);
+                    listRight + 20, listTop + 198, 0xFFB8BDC8);
             return;
         }
         int x = listRight + 20;
-        int y = listTop + 25;
+        int y = listTop + 198;
         int maxWidth = width - x - 24;
         drawString(fontRendererObj, fontRendererObj.trimStringToWidth(selected.getName(), maxWidth),
                 x, y, 0xFFFFFFFF);
@@ -314,10 +333,11 @@ public class StoreGui extends GuiScreen {
                 "Register real cosmetic entries from trusted AlphaClient code.");
         drawRect(listRight + 12, listTop, width - 12, listBottom, 0x88303030);
         drawString(fontRendererObj, "COSMETIC DETAILS", listRight + 20, listTop + 8, 0xFFFFD866);
+        drawSkinPreview();
         CosmeticEntry selected = getSelectedCosmetic();
         if (selected == null) {
             drawString(fontRendererObj, "Select a cosmetic to view its details.",
-                    listRight + 20, listTop + 28, 0xFFB8BDC8);
+                    listRight + 20, listTop + 198, 0xFFB8BDC8);
             return;
         }
         int x = listRight + 20;
@@ -354,10 +374,11 @@ public class StoreGui extends GuiScreen {
                 "Add partners, staff-cape recipients, or collaborators.");
         drawRect(listRight + 12, listTop, width - 12, listBottom, 0x88303030);
         drawString(fontRendererObj, "PARTNER DETAILS", listRight + 20, listTop + 8, 0xFFFFD866);
+        drawSkinPreview();
         PartnerEntry selected = getSelectedPartner();
         if (selected == null) {
             drawString(fontRendererObj, "Select an entry to view its details.",
-                    listRight + 20, listTop + 28, 0xFFB8BDC8);
+                    listRight + 20, listTop + 198, 0xFFB8BDC8);
             return;
         }
         int x = listRight + 20;
