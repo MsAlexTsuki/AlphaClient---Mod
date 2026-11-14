@@ -113,25 +113,29 @@ public final class MobStackerMod {
         int count = getStackCount(dying);
         if (count <= 1) return;
 
-        NBTTagList members = getMembers(dying);
-        if (members.tagCount() <= 0) {
-            // A broken stack must never make its representative immortal.
-            // Let this entity complete its normal death sequence.
+        NBTTagList storedMembers = getMembers(dying);
+        if (storedMembers.tagCount() <= 0) {
+            // There is no serialized member available to replace this stack's
+            // representative. Keep the stack intact rather than deleting it.
+            event.setCanceled(true);
             return;
         }
 
-        NBTTagCompound nextMember = (NBTTagCompound) members.getCompoundTagAt(0).copy();
-        members.removeTag(0);
+        // Work on a copy. The live stack metadata must not be changed unless
+        // the replacement has successfully joined the world.
+        NBTTagCompound nextMember = (NBTTagCompound) storedMembers.getCompoundTagAt(0).copy();
+        NBTTagList remainingMembers = (NBTTagList) storedMembers.copy();
+        remainingMembers.removeTag(0);
 
         Entity replacement;
         try {
             replacement = EntityList.createEntityFromNBT(nextMember, dying.worldObj);
         } catch (RuntimeException ignored) {
-            // Replacement failure must not cancel the current mob's death.
+            event.setCanceled(true);
             return;
         }
         if (!(replacement instanceof EntityLiving)) {
-            // The current mob still dies normally; do not restore its health.
+            event.setCanceled(true);
             return;
         }
 
@@ -139,20 +143,25 @@ public final class MobStackerMod {
                 dying.rotationYaw, dying.rotationPitch);
 
         NBTTagCompound replacementData = replacement.getEntityData();
-        int remainingCount = members.tagCount() + 1;
+        int remainingCount = remainingMembers.tagCount() + 1;
         replacementData.setInteger(COUNT, remainingCount);
-        replacementData.setTag(MEMBERS, members);
+        replacementData.setTag(MEMBERS, remainingMembers);
         replacementData.setBoolean(SKIP_MERGE, true);
         updateStackName((EntityLiving) replacement);
 
         try {
-            // If spawning fails, the current mob still completes its normal
-            // death sequence. A failed replacement can never block a kill.
-            dying.worldObj.spawnEntityInWorld(replacement);
+            // Only let the current representative die after its replacement
+            // has actually been accepted by the world.
+            if (!dying.worldObj.spawnEntityInWorld(replacement)) {
+                event.setCanceled(true);
+                return;
+            }
         } catch (RuntimeException ignored) {
-            // Intentionally allow the original death to proceed.
+            event.setCanceled(true);
+            return;
         }
-        // Vanilla handles one mob's drops, XP and death effects.
+
+        // Vanilla handles exactly one mob's drops, XP and death effects.
     }
 
     private static int getStackCount(EntityLiving entity) {
