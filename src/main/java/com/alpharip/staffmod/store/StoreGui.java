@@ -30,8 +30,6 @@ public class StoreGui extends GuiScreen {
     private static final int REMOVE_ID = 53;
     private static final int EQUIP_COSMETIC_ID = 54;
     private static final int UNEQUIP_COSMETIC_ID = 55;
-    private static final int COSMETIC_CATALOGUE_TAB_ID = 56;
-    private static final int COSMETIC_OWNED_TAB_ID = 57;
     private static final int BACK_ID = 60;
     private static final int ROW_HEIGHT = 38;
 
@@ -41,7 +39,6 @@ public class StoreGui extends GuiScreen {
     private int selectedIndex = -1;
     private int scrollOffset;
     private String message = "";
-    private boolean showingOwnedCosmetics;
     private int listLeft, listRight, listTop, listBottom;
 
     public StoreGui(GuiScreen parent, Store store) {
@@ -52,6 +49,14 @@ public class StoreGui extends GuiScreen {
 
     private boolean showingCosmetics() {
         return "cosmetics".equals(store.getSelectedSectionId());
+    }
+
+    private boolean showingOwnedCosmetics() {
+        return "owned".equals(store.getSelectedSectionId());
+    }
+
+    private boolean showingCosmeticContent() {
+        return showingCosmetics() || showingOwnedCosmetics();
     }
 
     private boolean showingPartners() {
@@ -69,19 +74,21 @@ public class StoreGui extends GuiScreen {
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj, left, 39,
                 Math.max(100, right - left - 86), 18);
         searchField.setMaxStringLength(80);
-        searchField.setText(showingCosmetics()
+        searchField.setText(showingCosmeticContent()
                 ? store.getCosmeticCatalog().getSearchQuery()
                 : showingPartners()
                     ? store.getPartnerCatalog().getSearchQuery()
                     : store.getAddonStore().getSettings().getSearchQuery());
 
         buttonList.add(new GuiButton(BACK_ID, 12, height - 30, 72, 20, "Back"));
-        int sectionWidth = Math.max(90, (right - left) / Math.max(1, store.getSections().size()));
+        int sectionWidth = Math.max(70, (right - left) / Math.max(1, store.getSections().size()));
         int sectionX = left;
         for (int i = 0; i < store.getSections().size(); i++) {
             Store.StoreSection section = store.getSections().get(i);
+            String title = "owned".equals(section.getId())
+                    ? "Owned (" + ownedCosmeticCount() + ")" : section.getTitle();
             String label = section.getId().equals(store.getSelectedSectionId())
-                    ? "[" + section.getTitle() + "]" : section.getTitle();
+                    ? "[" + title + "]" : title;
             buttonList.add(new GuiButton(SECTION_BASE + i, sectionX, 62,
                     sectionWidth - 3, 20, label));
             sectionX += sectionWidth;
@@ -89,14 +96,11 @@ public class StoreGui extends GuiScreen {
 
         int detailLeft = Math.max(width / 2 + 35, right - 155);
         if (showingCosmetics()) {
-            buttonList.add(new GuiButton(COSMETIC_CATALOGUE_TAB_ID, left, 85, 104, 18,
-                    showingOwnedCosmetics ? "Catalogue" : "[Catalogue]"));
-            buttonList.add(new GuiButton(COSMETIC_OWNED_TAB_ID, left + 108, 85, 104, 18,
-                    showingOwnedCosmetics ? "[Owned (" + ownedCosmeticCount() + ")]" : "Owned (" + ownedCosmeticCount() + ")"));
-            if (!showingOwnedCosmetics) {
-                CosmeticCategory[] categories = CosmeticCategory.values();
-                addCategoryButtons(left, right, categories.length, categories, 108);
-            }
+            CosmeticCategory[] categories = CosmeticCategory.values();
+            addCategoryButtons(left, right, categories.length, categories);
+            buttonList.add(new GuiButton(EQUIP_COSMETIC_ID, detailLeft, height - 54, 72, 20, "Equip"));
+            buttonList.add(new GuiButton(UNEQUIP_COSMETIC_ID, detailLeft + 76, height - 54, 72, 20, "Unequip"));
+        } else if (showingOwnedCosmetics()) {
             buttonList.add(new GuiButton(EQUIP_COSMETIC_ID, detailLeft, height - 54, 72, 20, "Equip"));
             buttonList.add(new GuiButton(UNEQUIP_COSMETIC_ID, detailLeft + 76, height - 54, 72, 20, "Unequip"));
         } else if (showingPartners()) {
@@ -115,8 +119,12 @@ public class StoreGui extends GuiScreen {
 
         listLeft = left;
         listRight = Math.max(left + 110, width / 2 + 18);
-        listTop = showingCosmetics() ? 132 : 110;
+        listTop = 110;
         listBottom = height - 66;
+    }
+
+    private void addCategoryButtons(int left, int right, int count, Object[] categories) {
+        addCategoryButtons(left, right, count, categories, 85);
     }
 
     private void addCategoryButtons(int left, int right, int count, Object[] categories, int y) {
@@ -139,10 +147,10 @@ public class StoreGui extends GuiScreen {
 
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (!store.isEnabled()) return;
-        if (!showingCosmetics() && !showingPartners()
+        if (!showingCosmeticContent() && !showingPartners()
                 && !store.getAddonStore().getSettings().isEnabled()) return;
         if (searchField != null && searchField.textboxKeyTyped(typedChar, keyCode)) {
-            if (showingCosmetics()) store.getCosmeticCatalog().setSearchQuery(searchField.getText());
+            if (showingCosmeticContent()) store.getCosmeticCatalog().setSearchQuery(searchField.getText());
             else if (showingPartners()) store.getPartnerCatalog().setSearchQuery(searchField.getText());
             else store.getAddonStore().getSettings().setSearchQuery(searchField.getText());
             selectedIndex = -1;
@@ -179,7 +187,7 @@ public class StoreGui extends GuiScreen {
             return;
         }
         if (!store.isEnabled()) return;
-        if (!showingCosmetics() && !showingPartners()
+        if (!showingCosmeticContent() && !showingPartners()
                 && !store.getAddonStore().getSettings().isEnabled()) {
             message = "The Addons section is disabled.";
             return;
@@ -188,15 +196,6 @@ public class StoreGui extends GuiScreen {
         if (button.id >= SECTION_BASE && button.id < SECTION_BASE + sectionCount) {
             Store.StoreSection section = store.getSections().get(button.id - SECTION_BASE);
             store.selectSection(section.getId());
-            selectedIndex = -1;
-            scrollOffset = 0;
-            initGui();
-            return;
-        }
-        if (showingCosmetics() && (button.id == COSMETIC_CATALOGUE_TAB_ID
-                || button.id == COSMETIC_OWNED_TAB_ID)) {
-            showingOwnedCosmetics = button.id == COSMETIC_OWNED_TAB_ID;
-            store.getCosmeticCatalog().setSelectedCategory(CosmeticCategory.ALL);
             selectedIndex = -1;
             scrollOffset = 0;
             initGui();
@@ -222,7 +221,7 @@ public class StoreGui extends GuiScreen {
             initGui();
             return;
         }
-        if (showingCosmetics()) {
+        if (showingCosmeticContent()) {
             CosmeticEntry cosmetic = getSelectedCosmetic();
             if (cosmetic == null) {
                 message = "Select a cosmetic first.";
@@ -260,20 +259,21 @@ public class StoreGui extends GuiScreen {
     }
 
     private int categoryCount() {
-        if (showingCosmetics()) return showingOwnedCosmetics ? 0 : CosmeticCategory.values().length;
+        if (showingCosmetics()) return CosmeticCategory.values().length;
+        if (showingOwnedCosmetics()) return 0;
         if (showingPartners()) return PartnerType.values().length;
         return AddonCategory.values().length;
     }
 
     private int visibleCount() {
-        if (showingCosmetics()) return getVisibleCosmeticEntries().size();
+        if (showingCosmeticContent()) return getVisibleCosmeticEntries().size();
         if (showingPartners()) return store.getPartnerCatalog().getVisiblePartners().size();
         return store.getAddonStore().getVisibleAddons().size();
     }
 
     private List<CosmeticEntry> getVisibleCosmeticEntries() {
         List<CosmeticEntry> catalogue = store.getCosmeticCatalog().getVisibleCosmetics();
-        if (!showingOwnedCosmetics) return catalogue;
+        if (!showingOwnedCosmetics()) return catalogue;
         List<CosmeticEntry> owned = new ArrayList<CosmeticEntry>();
         for (CosmeticEntry entry : catalogue) {
             if (store.getCosmeticManager().isOwned(entry.getId())) owned.add(entry);
@@ -320,13 +320,14 @@ public class StoreGui extends GuiScreen {
             super.drawScreen(mouseX, mouseY, partialTicks);
             return;
         }
-        String pageTitle = showingCosmetics() ? (showingOwnedCosmetics ? "COSMETICS  /  OWNED" : "COSMETICS  /  CATALOGUE")
+        String pageTitle = showingCosmetics() ? "COSMETICS  /  CATALOGUE"
+                : showingOwnedCosmetics() ? "OWNED COSMETICS"
                 : showingPartners() ? "PARTNERS  /  DIRECTORY" : "ADDONS  /  LOCAL CATALOGUE";
         drawCenteredString(fontRendererObj, pageTitle, width / 2, 25, 0xFFFFD866);
         if (searchField != null) searchField.drawTextBox();
         drawString(fontRendererObj, "Search", listLeft, 30, 0xFFB8BDC8);
 
-        if (showingCosmetics()) drawCosmetics();
+        if (showingCosmeticContent()) drawCosmetics();
         else if (showingPartners()) drawPartners();
         else drawAddons();
 
@@ -413,10 +414,10 @@ public class StoreGui extends GuiScreen {
             drawString(fontRendererObj, entry.getCategory().getDisplayName(),
                     listLeft + 6, y + 19, 0xFFB8BDC8);
         }
-        if (entries.isEmpty()) drawEmptyState(showingOwnedCosmetics
+        if (entries.isEmpty()) drawEmptyState(showingOwnedCosmetics()
                         ? "You do not own any cosmetics yet."
                         : "No cosmetics match this filter.",
-                showingOwnedCosmetics ? "Owned cosmetics appear here after ownership is confirmed."
+                showingOwnedCosmetics() ? "Owned cosmetics appear here after ownership is confirmed."
                         : "Register real cosmetic entries from trusted AlphaClient code.");
         drawRect(listRight + 12, listTop, width - 12, listBottom, 0x88303030);
         drawString(fontRendererObj, "COSMETIC DETAILS", listRight + 20, listTop + 8, 0xFFFFD866);
