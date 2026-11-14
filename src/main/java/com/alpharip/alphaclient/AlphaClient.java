@@ -222,7 +222,9 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new TreeExcavate());
         MinecraftForge.EVENT_BUS.register(new AutoReplant());
         MinecraftForge.EVENT_BUS.register(new InventorySorterMod());
-        MinecraftForge.EVENT_BUS.register(new MobStackerMod());
+        MobStackerMod mobStackerMod = new MobStackerMod();
+        MinecraftForge.EVENT_BUS.register(mobStackerMod);
+        net.minecraftforge.fml.common.FMLCommonHandler.instance().bus().register(mobStackerMod);
         openModMenuKey = new KeyBinding("AlphaClient: Open Home Menu",
                 AlphaKeyBindingSettings.getKeyCode("openHomeMenu", Keyboard.KEY_RCONTROL), "AlphaClient");
         ClientRegistry.registerKeyBinding(openModMenuKey);
