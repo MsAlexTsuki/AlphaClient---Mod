@@ -84,7 +84,7 @@ public class StoreGui extends GuiScreen {
 
         listLeft = left;
         listRight = Math.max(left + 110, width / 2 + 18);
-        listTop = 91;
+        listTop = 110;
         listBottom = height - 66;
     }
 
