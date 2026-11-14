@@ -86,7 +86,7 @@ public final class MobStackerMod {
 
         List<EntityLiving> eligible = new ArrayList<EntityLiving>();
         for (EntityLiving mob : nearby) {
-            if (mob != null && !mob.isDead && mob != player
+            if (mob != null && !mob.isDead
                     && mob.getDistanceSqToEntity(player) <= radiusSq) {
                 eligible.add(mob);
             }
