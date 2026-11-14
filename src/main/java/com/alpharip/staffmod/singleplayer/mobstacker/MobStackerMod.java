@@ -127,7 +127,7 @@ public final class MobStackerMod {
         boolean acceptedDamage = singleMobCopy.attackEntityFrom(event.source, Float.MAX_VALUE);
         if (!acceptedDamage || !singleMobCopy.isDead) {
             singleMobCopy.setDead();
-            preserveStackAfterFailedReplacement(event, stackedMob);
+            preserveStackAfterFailedCopy(event, stackedMob);
             return;
         }
 
@@ -177,7 +177,7 @@ public final class MobStackerMod {
         return data;
     }
 
-    private static void preserveStackAfterFailedReplacement(LivingDeathEvent event, EntityLiving dying) {
+    private static void preserveStackAfterFailedCopy(LivingDeathEvent event, EntityLiving dying) {
         event.setCanceled(true);
         dying.setHealth(dying.getMaxHealth());
         System.err.println("[AlphaClient] Mob Stacker could not create a temporary mob copy; "
