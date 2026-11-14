@@ -37,9 +37,9 @@ public final class MiscGui extends AlphaGuiScreen {
 
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
         buttonList.add(new FeatureTileButton(SERVER_HISTORY, startX, startY,
-                tileWidth, tileHeight, "Server History", "SH", true));
+                tileWidth, tileHeight, "Server History", "SH", null, false, true));
         buttonList.add(new FeatureTileButton(FIGHT_HISTORY, startX + tileWidth + gap, startY,
-                tileWidth, tileHeight, "Fight History", "FH", true));
+                tileWidth, tileHeight, "Fight History", "FH", null, false, true));
     }
 
     @Override
