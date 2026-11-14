@@ -222,6 +222,24 @@ public final class ClanService {
         return clanId == null ? null : clans.get(clanId);
     }
     private void persist() throws IOException {
-        repository.saveAll(new ArrayList<Clan>(clans.values()));
+        try {
+            repository.saveAll(new ArrayList<Clan>(clans.values()));
+        } catch (IOException saveFailure) {
+            // Keep the live service consistent with the last successfully saved state.
+            try {
+                List<Clan> savedClans = repository.loadAll();
+                clans.clear();
+                clanByPlayer.clear();
+                for (Clan savedClan : savedClans) {
+                    clans.put(savedClan.getId(), savedClan);
+                    for (ClanMember member : savedClan.getMembers().values()) {
+                        clanByPlayer.put(member.getPlayerId(), savedClan.getId());
+                    }
+                }
+            } catch (IOException restoreFailure) {
+                saveFailure.addSuppressed(restoreFailure);
+            }
+            throw saveFailure;
+        }
     }
 }
