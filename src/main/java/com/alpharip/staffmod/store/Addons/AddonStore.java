@@ -3,6 +3,7 @@ package com.alpharip.staffmod.store.addons;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ public final class AddonStore {
     public String getStorageWarning() { return storageWarning; }
 
     public List<AddonEntry> getVisibleAddons() {
+        if (!settings.isEnabled()) return Collections.emptyList();
         List<AddonEntry> matches = search.search(registry.getAll(),
                 settings.getSearchQuery(), settings.getSelectedCategory());
         if (!settings.isShowInstalledOnly()) return matches;
@@ -59,10 +61,18 @@ public final class AddonStore {
         return added;
     }
 
-    public boolean markInstalled(String id) { return changeState(manager.markInstalled(id)); }
-    public boolean enable(String id) { return changeState(manager.enable(id)); }
-    public boolean disable(String id) { return changeState(manager.disable(id)); }
-    public boolean markRemoved(String id) { return changeState(manager.markRemoved(id)); }
+    public boolean markInstalled(String id) {
+        return settings.isEnabled() && changeState(manager.markInstalled(id));
+    }
+    public boolean enable(String id) {
+        return settings.isEnabled() && changeState(manager.enable(id));
+    }
+    public boolean disable(String id) {
+        return settings.isEnabled() && changeState(manager.disable(id));
+    }
+    public boolean markRemoved(String id) {
+        return settings.isEnabled() && changeState(manager.markRemoved(id));
+    }
 
     private boolean changeState(boolean changed) {
         if (changed) persistStates();
