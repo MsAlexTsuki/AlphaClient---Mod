@@ -23,8 +23,11 @@ public final class CosmeticPreviewRenderer {
 
         Gui.drawRect(x - 2, y - 2, x + size + 2, y + size + 2, 0xFF101010);
         minecraft.getTextureManager().bindTexture(texture);
+        boolean cape = entry.getCategory() == CosmeticCategory.CAPES;
+        int previewHeight = cape ? Math.max(16, size / 2) : size;
+        float textureHeight = cape ? 32.0F : 64.0F;
         Gui.drawModalRectWithCustomSizedTexture(x, y, 0.0F, 0.0F,
-                size, size, size, size);
+                size, previewHeight, 64.0F, textureHeight);
         return true;
     }
 
