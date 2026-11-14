@@ -4,6 +4,7 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings;
 import com.alpharip.staffmod.hud.SessionTimerHud;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
+import com.alpharip.staffmod.hud.AfkTimerHud;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
 import com.alpharip.staffmod.quality.AutoReconnectMod;
@@ -81,8 +82,9 @@ public final class QualityGui extends AlphaGuiScreen {
             int x = panelLeft + 12 + (local % columns) * (tileWidth + gap);
             int y = panelTop + 68 + (local / columns) * rowHeight;
             if (i == PLAYTIME_TRACKER_INDEX) {
+                boolean on = PlaytimeTrackerHud.isEnabled();
                 buttonList.add(new FeatureTileButton(PLAYTIME_TRACKER, x, y,
-                        tileWidth, tileHeight, "Playtime Tracker", "◆", null, false, true));
+                        tileWidth, tileHeight, "Playtime Tracker", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == 3) {
                 boolean on = AutoGGMod.isEnabled();
                 buttonList.add(new FeatureTileButton(AUTO_GG, x, y, tileWidth, tileHeight,
@@ -115,8 +117,9 @@ public final class QualityGui extends AlphaGuiScreen {
                 buttonList.add(new FeatureTileButton(EASTER_EGGS, x, y, tileWidth, tileHeight,
                         "Easter Eggs", "◆", null, false, true));
             } else if (i == AFK_TIMER_INDEX) {
+                boolean on = AfkTimerHud.isEnabled();
                 buttonList.add(new FeatureTileButton(AFK_TIMER, x, y, tileWidth, tileHeight,
-                        "AFK Timer", "◆", null, false, true));
+                        "AFK Timer", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == SESSION_TIMER_INDEX) {
                 boolean on = SessionTimerHud.isEnabled();
                 buttonList.add(new FeatureTileButton(SESSION_TIMER, x, y, tileWidth, tileHeight,
@@ -165,6 +168,10 @@ public final class QualityGui extends AlphaGuiScreen {
                 EnchantingNameMod.setEnabled(!EnchantingNameMod.isEnabled());
             } else if (button.id == SESSION_TIMER) {
                 SessionTimerHud.setEnabled(!SessionTimerHud.isEnabled());
+            } else if (button.id == AFK_TIMER) {
+                AfkTimerHud.setEnabled(!AfkTimerHud.isEnabled());
+            } else if (button.id == PLAYTIME_TRACKER) {
+                PlaytimeTrackerHud.setEnabled(!PlaytimeTrackerHud.isEnabled());
             } else if (button.id == BLOCK_PLACEMENT_PREVIEW) {
                 BlockPlacementPreviewSettings.setEnabled(!BlockPlacementPreviewSettings.isEnabled());
             }
