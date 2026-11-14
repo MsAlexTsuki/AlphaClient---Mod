@@ -1373,7 +1373,10 @@ public class ModuleProfileManager {
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             profile.getModule(module.getId()).addProperty("enabled", false);
             for (AlphaModuleFeature feature : module.getFeatures()) {
-                profile.getModule(feature.getId()).addProperty("enabled", false);
+                profile.getModule(feature.getId()).addProperty(
+                        "enabled",
+                        "mob-stacker".equals(feature.getId())
+                );
             }
         }
         JsonObject fullbright = profile.getModule("fullbright");
@@ -1496,15 +1499,23 @@ public class ModuleProfileManager {
                     module.restoreEnabledState(false);
                 }
             }
+            // Mob Stacker was previously initialized OFF by older builds. Enable it once
+            // for existing profiles, then preserve the user's future ON/OFF choice.
+            final String mobStackerDefaultMigration = "alpha-mob-stacker-default-enabled-v1";
+            if (!profile.getModules().has(mobStackerDefaultMigration)) {
+                profile.getModule("mob-stacker").addProperty("enabled", true);
+                profile.getModules().addProperty(mobStackerDefaultMigration, true);
+            }
+
             // Every registered feature has its own profile toggle, independent of its parent module.
-            // Missing feature entries are initialized OFF in every profile; saved choices are preserved.
+            // Missing feature entries use their feature-specific default; saved choices are preserved.
             for (AlphaModule module : AlphaModuleRegistry.getAll()) {
                 for (AlphaModuleFeature feature : module.getFeatures()) {
                     JsonObject featureSettings = profile.getModule(feature.getId());
                     JsonElement savedFeatureEnabled = featureSettings.get("enabled");
                     if (savedFeatureEnabled == null || !savedFeatureEnabled.isJsonPrimitive()
                             || !savedFeatureEnabled.getAsJsonPrimitive().isBoolean()) {
-                        featureSettings.addProperty("enabled", false);
+                        featureSettings.addProperty("enabled", "mob-stacker".equals(feature.getId()));
                     }
                 }
             }
