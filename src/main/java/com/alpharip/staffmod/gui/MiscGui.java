@@ -29,17 +29,17 @@ public final class MiscGui extends AlphaGuiScreen {
         panelBottom = Math.min(height - 12, panelTop + 300);
 
         int gap = 8;
-        int columns = 2;
+        int columns = 3;
         int tileWidth = (panelRight - panelLeft - 24 - gap * (columns - 1)) / columns;
-        int tileHeight = 54;
+        int tileHeight = 36;
         int startY = panelTop + 68;
         int startX = panelLeft + 12;
 
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
         buttonList.add(new FeatureTileButton(SERVER_HISTORY, startX, startY,
-                tileWidth, tileHeight, "Server History", "SH", null, false, true));
+                tileWidth, tileHeight, "Server History", "◆", null, false, true));
         buttonList.add(new FeatureTileButton(FIGHT_HISTORY, startX + tileWidth + gap, startY,
-                tileWidth, tileHeight, "Fight History", "FH", null, false, true));
+                tileWidth, tileHeight, "Fight History", "◆", null, false, true));
     }
 
     @Override
