@@ -34,8 +34,12 @@ public final class ClanCommandHandler {
                     break;
                 case "create":
                     if (args.size() < 2) { output.add("Usage: /clan create <name> <tag>"); break; }
-                    result = service.createClan(senderId, senderName, command.joinedArguments(0).substring(0,
-                            command.joinedArguments(0).lastIndexOf(' ')),
+                    StringBuilder clanName = new StringBuilder();
+                    for (int i = 0; i < args.size() - 1; i++) {
+                        if (clanName.length() > 0) clanName.append(' ');
+                        clanName.append(args.get(i));
+                    }
+                    result = service.createClan(senderId, senderName, clanName.toString(),
                             args.get(args.size() - 1));
                     output.add(result.getMessage());
                     break;
