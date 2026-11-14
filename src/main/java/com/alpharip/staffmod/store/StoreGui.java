@@ -54,6 +54,10 @@ public class StoreGui extends GuiScreen {
 
     @Override public void initGui() {
         buttonList.clear();
+        if (!store.isEnabled()) {
+            buttonList.add(new GuiButton(BACK_ID, 12, height - 30, 72, 20, "Back"));
+            return;
+        }
         int left = Math.max(12, width / 2 - 220);
         int right = Math.min(width - 12, width / 2 + 220);
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj, left, 39,
@@ -84,7 +88,7 @@ public class StoreGui extends GuiScreen {
         } else if (showingPartners()) {
             PartnerType[] categories = PartnerType.values();
             addCategoryButtons(left, right, categories.length, categories);
-        } else {
+        } else if (store.getAddonStore().getSettings().isEnabled()) {
             AddonCategory[] categories = AddonCategory.values();
             addCategoryButtons(left, right, categories.length, categories);
             buttonList.add(new GuiButton(INSTALLED_ID, right - 80, 38, 80, 20,
@@ -120,6 +124,9 @@ public class StoreGui extends GuiScreen {
     }
 
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (!store.isEnabled()) return;
+        if (!showingCosmetics() && !showingPartners()
+                && !store.getAddonStore().getSettings().isEnabled()) return;
         if (searchField != null && searchField.textboxKeyTyped(typedChar, keyCode)) {
             if (showingCosmetics()) store.getCosmeticCatalog().setSearchQuery(searchField.getText());
             else if (showingPartners()) store.getPartnerCatalog().setSearchQuery(searchField.getText());
@@ -153,6 +160,16 @@ public class StoreGui extends GuiScreen {
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
+        if (button.id == BACK_ID) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
+        if (!store.isEnabled()) return;
+        if (!showingCosmetics() && !showingPartners()
+                && !store.getAddonStore().getSettings().isEnabled()) {
+            message = "The Addons section is disabled.";
+            return;
+        }
         int sectionCount = store.getSections().size();
         if (button.id >= SECTION_BASE && button.id < SECTION_BASE + sectionCount) {
             Store.StoreSection section = store.getSections().get(button.id - SECTION_BASE);
@@ -180,10 +197,6 @@ public class StoreGui extends GuiScreen {
             selectedIndex = -1;
             scrollOffset = 0;
             initGui();
-            return;
-        }
-        if (button.id == BACK_ID) {
-            mc.displayGuiScreen(parent);
             return;
         }
         if (showingCosmetics() || showingPartners()) return;
@@ -236,6 +249,19 @@ public class StoreGui extends GuiScreen {
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
         drawCenteredString(fontRendererObj, "ALPHA STORE", width / 2, 12, 0xFFFFFFFF);
+        if (!store.isEnabled()) {
+            drawCenteredString(fontRendererObj, "The Store is currently disabled.",
+                    width / 2, height / 2, 0xFFB8BDC8);
+            super.drawScreen(mouseX, mouseY, partialTicks);
+            return;
+        }
+        if (!showingCosmetics() && !showingPartners()
+                && !store.getAddonStore().getSettings().isEnabled()) {
+            drawCenteredString(fontRendererObj, "The Addons section is disabled.",
+                    width / 2, height / 2, 0xFFB8BDC8);
+            super.drawScreen(mouseX, mouseY, partialTicks);
+            return;
+        }
         String pageTitle = showingCosmetics() ? "COSMETICS  /  CATALOGUE"
                 : showingPartners() ? "PARTNERS  /  DIRECTORY" : "ADDONS  /  LOCAL CATALOGUE";
         drawCenteredString(fontRendererObj, pageTitle, width / 2, 25, 0xFFFFD866);
