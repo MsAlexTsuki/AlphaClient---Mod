@@ -18,7 +18,7 @@ All 128 files previously stored in `store/Cosmetics/` have been moved into the l
 - `CosmeticEntry.java` — immutable cosmetic catalogue metadata.
 - `CosmeticCategory.java` — Capes, Trails, Emotes, Names, Chat, Effects, UI, and Other filters.
 - `CosmeticRegistry.java` — bounded registry populated by trusted AlphaClient code.
-- `CosmeticCatalog.java` — local search and category filtering; the default constructor registers the migrated components.
+- `CosmeticCatalog.java` — local search and category filtering; every constructor registers the migrated components.
 - `CosmeticPrototypeCatalog.java` — registers all 128 migrated components with catalogue metadata and category assignments.
 
 The migrated Java files are prototype foundations. The catalogue labels them as prototypes and does not claim that live rendering, ownership, equipping, payments, or purchase behavior is implemented. Some files are supporting systems rather than standalone cosmetic products; their catalogue descriptions still explicitly identify the prototype-only state.

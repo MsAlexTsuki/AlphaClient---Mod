@@ -12,12 +12,12 @@ public final class CosmeticCatalog {
 
     public CosmeticCatalog() {
         this(new CosmeticRegistry());
-        CosmeticPrototypeCatalog.registerAll(registry);
     }
 
     public CosmeticCatalog(CosmeticRegistry registry) {
         if (registry == null) throw new IllegalArgumentException("Cosmetic registry is required.");
         this.registry = registry;
+        CosmeticPrototypeCatalog.registerAll(this.registry);
     }
 
     public CosmeticRegistry getRegistry() { return registry; }
