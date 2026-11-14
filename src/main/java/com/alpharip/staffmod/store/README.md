@@ -6,7 +6,7 @@ Location: `src/main/java/com/alpharip/staffmod/store/` (outside `staffops/`).
 
 - **Addons** — locally registered add-on metadata, search, category filters, installed-only filter, details, and local prototype state transitions.
 - **Cosmetics** — a separate cosmetic catalogue with category filters, search, and item details.
-- **Partners** — a directory for people who promote, help, or collaborate with AlphaClient, with relationship filters, search, and profile details.
+- **Partners** — a directory for people who promote AlphaClient, receive staff capes, or collaborate with AlphaClient, with relationship filters, search, and profile details.
 - `Store.java` — central section registry, selected-section state, and ownership of the Addons, Cosmetics, and Partners catalogues.
 - `StoreGui.java` — Minecraft 1.8.9 section navigation and catalogue browser.
 
@@ -31,14 +31,14 @@ Location: `src/main/java/com/alpharip/staffmod/store/` (outside `staffops/`).
 
 ## Partners files
 
-- `partners/PartnerEntry.java` — immutable partner profile metadata (name, relationship type, description, platform, and optional profile link).
-- `partners/PartnerType.java` — Promoter, Helper, and Collaborator relationship filters.
+- `partners/PartnerEntry.java` — immutable directory profile metadata (name, relationship type, description, platform, and optional profile link).
+- `partners/PartnerType.java` — Partners, Staff, and Collaborator relationship filters. Staff is intended for people who receive staff capes.
 - `partners/PartnerRegistry.java` — bounded in-memory directory populated by trusted local AlphaClient code.
 - `partners/PartnerCatalog.java` — local search and relationship filtering.
 
 ## Current behavior
 
-Both sections are browseable through the central Store GUI. Addons support local metadata states (available, installed, disabled, removed); optional local state persistence is available through `new AddonStore(path)`. Cosmetics support catalogue registration, search, category filtering, and details. Partners support directory registration, search, relationship filtering, and profile details. The catalogues are not pre-populated with invented entries.
+All three sections are browseable through the central Store GUI. Addons support local metadata states (available, installed, disabled, removed); optional local state persistence is available through `new AddonStore(path)`. Cosmetics support catalogue registration, search, category filtering, and details. Partners support directory registration, search, relationship filtering, and profile details. The catalogues are not pre-populated with invented entries.
 
 ## Explicit integration boundaries
 
