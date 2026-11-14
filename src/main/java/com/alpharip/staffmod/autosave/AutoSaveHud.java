@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
-/** Draws a temporary indicator after a world-save event has been observed. */
+/** Draws the save indicator only while the player is in singleplayer. */
 public final class AutoSaveHud {
     private final AutoSaveSettings settings;
     private final AutoSaveState state;
@@ -19,7 +19,7 @@ public final class AutoSaveHud {
         if (!settings.isEnabled() || !settings.isShowSaveState()) return;
 
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.thePlayer == null || mc.theWorld == null
+        if (mc == null || !mc.isSingleplayer() || mc.thePlayer == null || mc.theWorld == null
                 || mc.fontRendererObj == null || mc.gameSettings == null
                 || mc.gameSettings.hideGUI || mc.gameSettings.showDebugInfo) return;
 
