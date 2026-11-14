@@ -10,7 +10,6 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -32,7 +31,6 @@ public final class MobStackerMod {
     private int playerScanTicks;
 
     private static final String COUNT = "AlphaMobStackCount";
-    private static final String MEMBERS = "AlphaMobStackMembers";
     private static final String SKIP_MERGE = "AlphaMobStackSkipMerge";
     private static final String NAME_CAPTURED = "AlphaMobStackNameCaptured";
     private static final String ORIGINAL_NAME = "AlphaMobStackOriginalName";
@@ -121,72 +119,25 @@ public final class MobStackerMod {
         int available = MAX_STACK_SIZE - targetCount;
         if (available <= 0 || sourceCount <= 0) return false;
 
-        NBTTagList sourceMembers = getMembers(source);
-        if (sourceCount > 1 && sourceMembers.tagCount() != sourceCount - 1) return false;
-
+        // Keep one real entity as the representative of each stack. Only the
+        // count is transferred; no serialized-member queue is maintained.
         int transferCount = Math.min(sourceCount, available);
-        NBTTagCompound sourceRepresentative = createMemberSnapshot(source);
-        if (sourceRepresentative == null) return false;
+        int remainingSourceCount = sourceCount - transferCount;
 
-        EntityLiving remainderEntity = null;
-        NBTTagList remainingMembers = new NBTTagList();
-        int remainingCount = sourceCount - transferCount;
-
-        if (remainingCount > 0) {
-            // The source representative and the first transferCount - 1
-            // stored members move into the target. The next stored member
-            // becomes the representative of the source's remaining stack.
-            int nextRepresentativeIndex = transferCount - 1;
-            if (nextRepresentativeIndex < 0 || nextRepresentativeIndex >= sourceMembers.tagCount()) {
-                return false;
-            }
-
-            NBTTagCompound nextMember = (NBTTagCompound) sourceMembers
-                    .getCompoundTagAt(nextRepresentativeIndex).copy();
-            Entity replacement;
-            try {
-                replacement = EntityList.createEntityFromNBT(nextMember, source.worldObj);
-            } catch (RuntimeException ignored) {
-                return false;
-            }
-            if (!(replacement instanceof EntityLiving)) return false;
-
-            remainderEntity = (EntityLiving) replacement;
-            remainderEntity.setPositionAndRotation(source.posX, source.posY, source.posZ,
-                    source.rotationYaw, source.rotationPitch);
-
-            remainingMembers = (NBTTagList) sourceMembers.copy();
-            for (int i = 0; i < transferCount; i++) {
-                remainingMembers.removeTag(0);
-            }
-
-            NBTTagCompound remainderData = remainderEntity.getEntityData();
-            remainderData.setInteger(COUNT, remainingCount);
-            remainderData.setTag(MEMBERS, remainingMembers);
-            remainderData.setBoolean(SKIP_MERGE, true);
-            updateStackName(remainderEntity);
-
-            if (!source.worldObj.spawnEntityInWorld(remainderEntity)) return false;
-        }
-
-        NBTTagCompound targetData = target.getEntityData();
-        NBTTagList targetMembers = getMembers(target);
-        targetMembers.appendTag(sourceRepresentative);
-
-        int storedToTransfer = transferCount - 1;
-        for (int i = 0; i < storedToTransfer; i++) {
-            targetMembers.appendTag(sourceMembers.getCompoundTagAt(i).copy());
-        }
-
-        targetData.setTag(MEMBERS, targetMembers);
-        targetData.setInteger(COUNT, targetCount + transferCount);
+        target.getEntityData().setInteger(COUNT, targetCount + transferCount);
         updateStackName(target);
 
-        source.setDead();
+        if (remainingSourceCount > 0) {
+            source.getEntityData().setInteger(COUNT, remainingSourceCount);
+            updateStackName(source);
+        } else {
+            source.setDead();
+        }
+
         return true;
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onLivingDeath(LivingDeathEvent event) {
         if (event == null || event.isCanceled() || event.entityLiving == null
                 || event.entityLiving.worldObj == null || event.entityLiving.worldObj.isRemote
@@ -196,52 +147,56 @@ public final class MobStackerMod {
         int count = getStackCount(dying);
         if (count <= 1) return;
 
-        NBTTagList storedMembers = getMembers(dying);
-        if (storedMembers.tagCount() <= 0) {
-            // A malformed stack cannot provide a replacement. Let the
-            // representative complete its normal death sequence.
-            return;
-        }
+        int remainingCount = count - 1;
+        NBTTagCompound nextMob = dying.serializeNBT();
 
-        // Work on a copy so the source stack is never mutated in-place.
-        NBTTagCompound nextMember = (NBTTagCompound) storedMembers.getCompoundTagAt(0).copy();
-        NBTTagList remainingMembers = (NBTTagList) storedMembers.copy();
-        remainingMembers.removeTag(0);
+        // This is a fresh representative of the same mob type and variant,
+        // not a queued snapshot. Remove the dying entity's UUID so Minecraft
+        // assigns the replacement a new identity.
+        nextMob.removeTag("UUIDMost");
+        nextMob.removeTag("UUIDLeast");
+        nextMob.setFloat("Health", dying.getMaxHealth());
+
+        NBTTagCompound replacementData = nextMob.getCompoundTag("ForgeData");
+        replacementData.removeTag(COUNT);
+        replacementData.removeTag(SKIP_MERGE);
+        replacementData.setInteger(COUNT, remainingCount);
+        replacementData.setBoolean(SKIP_MERGE, true);
 
         Entity replacement;
         try {
-            replacement = EntityList.createEntityFromNBT(nextMember, dying.worldObj);
+            replacement = EntityList.createEntityFromNBT(nextMob, dying.worldObj);
         } catch (RuntimeException ignored) {
-            return;
+            replacement = null;
         }
-        if (!(replacement instanceof EntityLiving)) return;
 
-        replacement.setPositionAndRotation(dying.posX, dying.posY, dying.posZ,
-                dying.rotationYaw, dying.rotationPitch);
+        if (replacement instanceof EntityLiving) {
+            EntityLiving next = (EntityLiving) replacement;
+            next.setPositionAndRotation(dying.posX, dying.posY, dying.posZ,
+                    dying.rotationYaw, dying.rotationPitch);
+            updateStackName(next);
 
-        NBTTagCompound replacementData = replacement.getEntityData();
-        int remainingCount = remainingMembers.tagCount() + 1;
-        replacementData.setInteger(COUNT, remainingCount);
-        replacementData.setTag(MEMBERS, remainingMembers);
-        replacementData.setBoolean(SKIP_MERGE, true);
-        updateStackName((EntityLiving) replacement);
+            if (dying.worldObj.spawnEntityInWorld(next)) {
+                // Let the original death finish normally so its usual drops
+                // and experience are retained. The replacement carries the
+                // remaining stack count.
+                return;
+            }
+        }
 
-        // The member snapshots include the entity ID through serializeNBT(),
-        // allowing EntityList.createEntityFromNBT() to reconstruct the mob.
-        // Do not cancel the original death and do not retry invalid snapshots.
-        dying.worldObj.spawnEntityInWorld(replacement);
+        // Never lose the complete stack if Minecraft rejects the replacement.
+        // Keep the current entity alive as the remaining representative.
+        event.setCanceled(true);
+        dying.setHealth(dying.getMaxHealth());
+        NBTTagCompound dyingData = dying.getEntityData();
+        dyingData.setInteger(COUNT, remainingCount);
+        updateStackName(dying);
     }
 
     private static int getStackCount(EntityLiving entity) {
         if (entity == null) return 1;
         int count = entity.getEntityData().getInteger(COUNT);
         return count < 1 ? 1 : Math.min(count, MAX_STACK_SIZE);
-    }
-
-    private static NBTTagList getMembers(EntityLiving entity) {
-        NBTTagCompound data = entity.getEntityData();
-        NBTTagList members = data.getTagList(MEMBERS, 10);
-        return members == null ? new NBTTagList() : members;
     }
 
     /**
@@ -302,40 +257,6 @@ public final class MobStackerMod {
         }
 
         return variant;
-    }
-
-    private static NBTTagCompound createMemberSnapshot(EntityLiving entity) {
-        if (entity == null) return null;
-
-        // Entity.writeToNBT() omits the entity ID in Forge 1.8.9.
-        // EntityList.createEntityFromNBT() requires that ID to recreate it.
-        NBTTagCompound snapshot = entity.serializeNBT();
-
-        // Store the mob's original name, not the generated "Name xCount"
-        // label used to display an existing stack.
-        NBTTagCompound entityData = entity.getEntityData();
-        if (entityData.getBoolean(NAME_CAPTURED)) {
-            if (entityData.getBoolean(ORIGINAL_HAS_CUSTOM_NAME)) {
-                snapshot.setString("CustomName", entityData.getString(ORIGINAL_NAME));
-            } else {
-                snapshot.removeTag("CustomName");
-            }
-            snapshot.setBoolean("CustomNameVisible", entityData.getBoolean(ORIGINAL_ALWAYS_RENDER));
-        }
-
-        // Preserve other entity NBT, but never nest this stack's own metadata
-        // inside every stored member snapshot.
-        if (snapshot.hasKey("ForgeData", 10)) {
-            NBTTagCompound forgeData = snapshot.getCompoundTag("ForgeData");
-            forgeData.removeTag(COUNT);
-            forgeData.removeTag(MEMBERS);
-            forgeData.removeTag(SKIP_MERGE);
-            forgeData.removeTag(NAME_CAPTURED);
-            forgeData.removeTag(ORIGINAL_NAME);
-            forgeData.removeTag(ORIGINAL_HAS_CUSTOM_NAME);
-            forgeData.removeTag(ORIGINAL_ALWAYS_RENDER);
-        }
-        return snapshot;
     }
 
     private static void updateStackName(EntityLiving entity) {
