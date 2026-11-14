@@ -17,12 +17,19 @@ public final class CosmeticAssetManager {
     private CosmeticAssetManager() { }
 
     public static ResourceLocation getTextureLocation(CosmeticEntry entry) {
-        if (entry == null) return null;
+        if (entry == null || !supportsTexturePreview(entry.getCategory())) return null;
         String id = entry.getId();
         if (!isSafeId(id)) return null;
 
         String category = entry.getCategory().name().toLowerCase(Locale.ROOT);
         return new ResourceLocation(DOMAIN, TEXTURE_ROOT + category + "/" + id + ".png");
+    }
+
+    public static boolean supportsTexturePreview(CosmeticCategory category) {
+        return category == CosmeticCategory.CAPES
+                || category == CosmeticCategory.TRAILS
+                || category == CosmeticCategory.EFFECTS
+                || category == CosmeticCategory.UI;
     }
 
     public static String getExpectedAssetPath(CosmeticEntry entry) {
