@@ -72,7 +72,7 @@ public final class AddonStore {
     public boolean persistStates() {
         if (storage == null) return true;
         try {
-            storage.save(registry);
+            storage.save(registry, pendingStates);
             storageWarning = "";
             return true;
         } catch (IOException exception) {

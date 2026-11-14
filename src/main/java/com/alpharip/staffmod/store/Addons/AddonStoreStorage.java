@@ -49,12 +49,21 @@ public final class AddonStoreStorage {
     }
 
     public synchronized void save(AddonRegistry registry) throws IOException {
+        save(registry, null);
+    }
+
+    /** Preserves saved states for catalogue entries that have not been registered this session yet. */
+    public synchronized void save(AddonRegistry registry, Map<String, AddonInstallState> pending)
+            throws IOException {
         if (registry == null) throw new IllegalArgumentException("Registry is required.");
         Path parent = file.toAbsolutePath().getParent();
         if (parent != null) Files.createDirectories(parent);
         Properties properties = new Properties();
         properties.setProperty("schema", SCHEMA);
-        for (Map.Entry<String, AddonInstallState> entry : registry.getStatesSnapshot().entrySet()) {
+        Map<String, AddonInstallState> allStates =
+                new LinkedHashMap<String, AddonInstallState>(registry.getStatesSnapshot());
+        if (pending != null) allStates.putAll(pending);
+        for (Map.Entry<String, AddonInstallState> entry : allStates.entrySet()) {
             if (entry.getKey() != null && entry.getValue() != null)
                 properties.setProperty("state." + entry.getKey(), entry.getValue().name());
         }
