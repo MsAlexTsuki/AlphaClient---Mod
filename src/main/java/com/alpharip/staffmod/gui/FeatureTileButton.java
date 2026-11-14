@@ -9,13 +9,18 @@ public final class FeatureTileButton extends GuiButton {
     private static final int YELLOW = 0xFFFFD866;
     private final String name;
     private final String icon;
+    private final String status;
+    private final boolean active;
 
     public FeatureTileButton(int id, int x, int y, int width, int height,
-                             String name, String icon, boolean enabled) {
+                             String name, String icon, String status,
+                             boolean active, boolean clickable) {
         super(id, x, y, width, height, "");
         this.name = name;
         this.icon = icon;
-        this.enabled = enabled;
+        this.status = status;
+        this.active = active;
+        this.enabled = clickable;
     }
 
     @Override
@@ -24,13 +29,19 @@ public final class FeatureTileButton extends GuiButton {
         hovered = mouseX >= xPosition && mouseY >= yPosition
                 && mouseX < xPosition + width && mouseY < yPosition + height;
         int bg = !enabled ? 0xA512141A : (hovered ? 0xF0272B34 : 0xE0181B22);
-        int edge = !enabled ? 0x664B515D : (hovered ? YELLOW : 0x664B515D);
+        int edge = !enabled ? 0x664B515D : (active || hovered ? YELLOW : 0x664B515D);
         drawRect(xPosition, yPosition, xPosition + width, yPosition + height, bg);
         drawRect(xPosition, yPosition, xPosition + width, yPosition + 1, edge);
         drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height, 0xAA090A0E);
         drawRect(xPosition, yPosition, xPosition + 1, yPosition + height, edge);
         drawRect(xPosition + width - 1, yPosition, xPosition + width, yPosition + height, edge);
 
+        if (status != null) {
+            int statusColor = "ON".equals(status) ? YELLOW
+                    : ("PLANNED".equals(status) ? 0xFF8A8F99 : 0xFFB8BDC8);
+            mc.fontRendererObj.drawString(UiText.normalize(status),
+                    xPosition + 7, yPosition + 4, statusColor, false);
+        }
         int iconWidth = mc.fontRendererObj.getStringWidth(icon);
         mc.fontRendererObj.drawString(icon, xPosition + (width - iconWidth) / 2,
                 yPosition + 21, enabled ? 0xFFE5E7EB : 0xFF777D88, false);
