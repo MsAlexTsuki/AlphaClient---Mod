@@ -1,28 +1,38 @@
 package com.alpharip.staffmod.store;
 
 import com.alpharip.staffmod.store.addons.AddonStore;
+import com.alpharip.staffmod.store.cosmetics.CosmeticCatalog;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Central Store core. The catalogue and its local state are supplied by AlphaClient. */
+/** Central Store core. Each section owns its own catalogue and session state. */
 public final class Store {
     private boolean enabled = true;
     private String selectedSectionId = "addons";
     private final Map<String, StoreSection> sections = new LinkedHashMap<String, StoreSection>();
     private final AddonStore addonStore;
+    private final CosmeticCatalog cosmeticCatalog;
 
     public Store() {
-        this(new AddonStore());
+        this(new AddonStore(), new CosmeticCatalog());
     }
 
     public Store(AddonStore addonStore) {
-        if (addonStore == null) throw new IllegalArgumentException("Addon store is required.");
+        this(addonStore, new CosmeticCatalog());
+    }
+
+    public Store(AddonStore addonStore, CosmeticCatalog cosmeticCatalog) {
+        if (addonStore == null || cosmeticCatalog == null)
+            throw new IllegalArgumentException("Store catalogues are required.");
         this.addonStore = addonStore;
+        this.cosmeticCatalog = cosmeticCatalog;
         registerSection(new StoreSection("addons", "Addons",
                 "Browse and manage AlphaClient add-ons."));
+        registerSection(new StoreSection("cosmetics", "Cosmetics",
+                "Browse cosmetic items and customization options."));
     }
 
     public synchronized boolean isEnabled() { return enabled; }
@@ -47,10 +57,12 @@ public final class Store {
         return Collections.unmodifiableList(new ArrayList<StoreSection>(sections.values()));
     }
     public AddonStore getAddonStore() { return addonStore; }
+    public CosmeticCatalog getCosmeticCatalog() { return cosmeticCatalog; }
 
     public synchronized void clearSessionState() {
         selectedSectionId = sections.isEmpty() ? null : sections.keySet().iterator().next();
         addonStore.clearSessionFilters();
+        cosmeticCatalog.clearSessionFilters();
     }
 
     public static final class StoreSection {
