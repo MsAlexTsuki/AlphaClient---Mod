@@ -108,7 +108,12 @@ public final class MobStackerMod {
 
         NBTTagCompound data = dying.getEntityData();
         NBTTagList members = getMembers(dying);
-        if (members.tagCount() < 1) return;
+        if (members.tagCount() != count - 1) {
+            // Never consume a stack whose saved member queue is incomplete.
+            event.setCanceled(true);
+            dying.setHealth(dying.getMaxHealth());
+            return;
+        }
 
         NBTTagCompound nextMember = (NBTTagCompound) members.getCompoundTagAt(0).copy();
         members.removeTag(0);
@@ -193,7 +198,7 @@ public final class MobStackerMod {
             entity.setAlwaysRenderNameTag(true);
         } else {
             String originalName = data.getString(ORIGINAL_NAME);
-            entity.setCustomNameTag(originalName.isEmpty() ? null : originalName);
+            entity.setCustomNameTag(originalName.isEmpty() ? "" : originalName);
             entity.setAlwaysRenderNameTag(data.getBoolean(ORIGINAL_ALWAYS_RENDER));
             data.removeTag(NAME_CAPTURED);
             data.removeTag(ORIGINAL_NAME);
