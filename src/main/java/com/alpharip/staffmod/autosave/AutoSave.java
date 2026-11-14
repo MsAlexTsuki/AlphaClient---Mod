@@ -7,8 +7,11 @@ import net.minecraftforge.common.MinecraftForge;
 import java.io.File;
 
 /**
- * Standalone AutoSave prototype entry point.
- * Observes Forge world-save events and exposes a configurable HUD and GUI.
+ * Singleplayer-only AutoSave prototype entry point.
+ * Observes integrated-server world-save events and exposes a configurable HUD and GUI.
+ *
+ * TODO: Register this module in AlphaClient's normal module/menu system and verify
+ * the integrated-server save event, GUI access, and HUD behavior in Minecraft 1.8.9.
  */
 public final class AutoSave {
     private static final AutoSave INSTANCE = new AutoSave();
@@ -38,7 +41,9 @@ public final class AutoSave {
     }
 
     public void openGui(GuiScreen parent) {
-        Minecraft.getMinecraft().displayGuiScreen(new AutoSaveGui(parent, this));
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || !mc.isSingleplayer()) return;
+        mc.displayGuiScreen(new AutoSaveGui(parent, this));
     }
 
     public void save() {
