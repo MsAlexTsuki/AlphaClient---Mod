@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Current verified inventory: **536 Java files** across **41 folders**, plus 1 Java file(s) directly in the package root.
+- Current verified inventory: **544 Java files** across **42 folders**, plus 1 Java file directly in the package root.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -1370,9 +1370,35 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `AnnualAlphaWrappedSettings.java`
 - `AnnualAlphaWrappedSummary.java`
 
+### `rememberchestinventory/`
+
+- `ChestItemSnapshot.java`
+- `ChestMemoryEntry.java`
+- `ChestMemoryManager.java`
+- `ChestMemoryScanner.java`
+- `ChestMemorySearch.java`
+- `ChestMemoryStorage.java`
+- `RememberChestInventory.java`
+- `RememberChestInventoryGui.java`
+
 ### Package root
 
 - `StaffMod.java`
+
+## Remember Chest Inventory
+
+Folder: `rememberchestinventory/`
+
+- **RememberChestInventory.java** — Standalone prototype entry point. Owns the manager, scanner, local storage lifecycle, and GUI opening. It is not registered with the live client module system yet.
+- **ChestMemoryEntry.java** — Immutable snapshot of one chest, keyed by dimension and block coordinates, with chest name, observation timestamp, and item summaries.
+- **ChestItemSnapshot.java** — Immutable item summary containing registry-style item ID, display name, metadata, and stack count. The Minecraft inventory-to-snapshot adapter still needs implementation.
+- **ChestMemoryManager.java** — Maintains a bounded, insertion-ordered chest history, replaces a prior snapshot at the same location, supports clearing, and exposes search results.
+- **ChestMemoryScanner.java** — Converts observed item summaries into a detached chest snapshot. It is an adapter boundary; it does not currently read a Minecraft container or chest tile entity.
+- **ChestMemorySearch.java** — Searches remembered chest names, dimension/coordinates, item display names, and item IDs.
+- **ChestMemoryStorage.java** — Saves and loads snapshots to a local properties file with bounded record counts and text encoding. No remote persistence or Supabase calls are used.
+- **RememberChestInventoryGui.java** — Provides a searchable list of remembered chest locations, dimension, observation time, and item-type count, with clear-history and Done actions. It does not yet display each stored item stack or connect to an automatic chest-open event.
+
+**Current prototype status:** The data model, bounded history, search, local persistence, and basic viewer GUI are present. Automatic capture from Minecraft 1.8.9 chest inventories, live module registration, item-level GUI details, and build/runtime verification remain outstanding. Do not describe automatic chest remembering as working until the Forge/container adapter is implemented and tested.
 
 ### Inventory notes
 
