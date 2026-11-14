@@ -1280,6 +1280,11 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `Addons/AddonStoreGui.java`
 - `Addons/AddonStoreSettings.java`
 - `Addons/AddonStoreStorage.java`
+- `cosmetics/CosmeticCategory.java`
+- `cosmetics/CosmeticEntry.java`
+- `cosmetics/CosmeticRegistry.java`
+- `cosmetics/CosmeticCatalog.java`
+- `Cosmetics/` — 128 moved idea/prototype source files; package declarations still reference `com.alpharip.staffmod.staffops.ideas` and these files are not wired as Store catalogue entries.
 
 ### `TimeTill/`
 
