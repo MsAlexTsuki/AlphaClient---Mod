@@ -378,7 +378,7 @@ public class StoreGui extends GuiScreen {
         y += 8;
         drawString(fontRendererObj, "Category: " + selected.getCategory().getDisplayName(),
                 x, y, 0xFFB8BDC8); y += 12;
-        drawString(fontRendererObj, "Preview: texture asset only; no 3D cosmetic attachment yet.",
+        drawString(fontRendererObj, "Preview: live cosmetic rendering is not connected yet.",
                 x, y, 0xFF888888); y += 12;
         if (!selected.getSourceClass().isEmpty())
             drawWrapped("Source: " + selected.getSourceClass(), x, y, maxWidth, 0xFFB8BDC8);
