@@ -34,9 +34,9 @@ public final class InventorySorterMod {
     private static final int BUTTON_SIZE = 12;
     private static final int BUTTON_GAP = 3;
     private static final int QUICK_GRAB = 0;
-    private static final int SORT_CHEST = 1;
-    private static final int SORT_INVENTORY = 2;
-    private static final int DEPOSIT_ALL = 3;
+    private static final int DEPOSIT_ALL = 1;
+    private static final int SORT_CHEST = 2;
+    private static final int SORT_INVENTORY = 3;
     private static final int BUTTON_COUNT = 4;
 
     private static boolean isEnabled() {
