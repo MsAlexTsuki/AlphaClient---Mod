@@ -30,7 +30,7 @@ import java.util.List;
  * Middle-click sorts the section beneath the cursor.
  */
 public final class InventorySorterMod {
-    private static final int BUTTON_Y = 4;
+    private static final int BUTTON_OFFSET = 4;
     private static final int BUTTON_SIZE = 12;
     private static final int BUTTON_GAP = 3;
     private static final int QUICK_GRAB = 0;
@@ -52,16 +52,14 @@ public final class InventorySorterMod {
         }
 
         int left = (event.gui.width - 176) / 2;
-        int rightStart = left + 176 - 5 - (BUTTON_SIZE * BUTTON_COUNT + BUTTON_GAP * (BUTTON_COUNT - 1));
+        int buttonX = left + 176 + BUTTON_OFFSET;
         int mouseX = event.mouseX;
         int mouseY = event.mouseY;
 
         for (int i = 0; i < BUTTON_COUNT; i++) {
-            int x = rightStart + i * (BUTTON_SIZE + BUTTON_GAP);
-            boolean hovered = mouseX >= x && mouseX < x + BUTTON_SIZE
-                    && mouseY >= getChestTop(event.gui) + BUTTON_Y
-                    && mouseY < getChestTop(event.gui) + BUTTON_Y + BUTTON_SIZE;
-            drawButton(x, getChestTop(event.gui) + BUTTON_Y, i, hovered);
+            int y = getChestTop(event.gui) + BUTTON_OFFSET + i * (BUTTON_SIZE + BUTTON_GAP);
+            boolean hovered = inside(mouseX, mouseY, buttonX, y, BUTTON_SIZE, BUTTON_SIZE);
+            drawButton(buttonX, y, i, hovered);
         }
     }
 
@@ -82,10 +80,10 @@ public final class InventorySorterMod {
                 && mc.thePlayer.inventory.getItemStack() == null) {
             int left = (event.gui.width - 176) / 2;
             int top = getChestTop(event.gui);
-            int startX = left + 176 - 5 - (BUTTON_SIZE * BUTTON_COUNT + BUTTON_GAP * (BUTTON_COUNT - 1));
+            int buttonX = left + 176 + BUTTON_OFFSET;
             for (int i = 0; i < BUTTON_COUNT; i++) {
-                int x = startX + i * (BUTTON_SIZE + BUTTON_GAP);
-                if (inside(mouseX, mouseY, x, top + BUTTON_Y, BUTTON_SIZE, BUTTON_SIZE)) {
+                int y = top + BUTTON_OFFSET + i * (BUTTON_SIZE + BUTTON_GAP);
+                if (inside(mouseX, mouseY, buttonX, y, BUTTON_SIZE, BUTTON_SIZE)) {
                     ContainerChest chest = (ContainerChest) mc.thePlayer.openContainer;
                     if (i == QUICK_GRAB) {
                         grabAll(mc, chest);
