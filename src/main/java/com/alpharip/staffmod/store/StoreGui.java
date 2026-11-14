@@ -272,11 +272,15 @@ public class StoreGui extends GuiScreen {
     }
 
     private List<CosmeticEntry> getVisibleCosmeticEntries() {
-        List<CosmeticEntry> catalogue = store.getCosmeticCatalog().getVisibleCosmetics();
-        if (!showingOwnedCosmetics()) return catalogue;
+        if (!showingOwnedCosmetics()) return store.getCosmeticCatalog().getVisibleCosmetics();
+
+        String query = store.getCosmeticCatalog().getSearchQuery().toLowerCase(java.util.Locale.ROOT);
         List<CosmeticEntry> owned = new ArrayList<CosmeticEntry>();
-        for (CosmeticEntry entry : catalogue) {
-            if (store.getCosmeticManager().isOwned(entry.getId())) owned.add(entry);
+        for (CosmeticEntry entry : store.getCosmeticCatalog().getRegistry().getAll()) {
+            if (!store.getCosmeticManager().isOwned(entry.getId())) continue;
+            String searchable = (entry.getId() + " " + entry.getName() + " "
+                    + entry.getDescription() + " " + entry.getSourceClass()).toLowerCase(java.util.Locale.ROOT);
+            if (query.isEmpty() || searchable.contains(query)) owned.add(entry);
         }
         return owned;
     }
