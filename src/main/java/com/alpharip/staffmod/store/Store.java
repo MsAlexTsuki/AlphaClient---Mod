@@ -39,12 +39,12 @@ public final class Store {
         this.cosmeticCatalog = cosmeticCatalog;
         this.cosmeticManager = new CosmeticManager(cosmeticCatalog.getRegistry());
         this.partnerCatalog = partnerCatalog;
+        registerSection(new StoreSection("owned", "Owned",
+                "View all cosmetics owned by the active account."));
         registerSection(new StoreSection("addons", "Addons",
                 "Browse and manage AlphaClient add-ons."));
         registerSection(new StoreSection("cosmetics", "Cosmetics",
                 "Browse cosmetic items and customization options."));
-        registerSection(new StoreSection("owned", "Owned",
-                "View all cosmetics owned by the active account."));
         registerSection(new StoreSection("partners", "Partners",
                 "People who promote, help, or collaborate with AlphaClient."));
     }
