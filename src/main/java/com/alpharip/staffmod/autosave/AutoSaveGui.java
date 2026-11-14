@@ -6,7 +6,7 @@ import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 import java.util.Locale;
 
-/** Settings screen for the AutoSave HUD prototype. */
+/** Settings screen for the singleplayer-only AutoSave HUD prototype. */
 public final class AutoSaveGui extends GuiScreen {
     private final GuiScreen parent;
     private final AutoSave module;
@@ -20,6 +20,10 @@ public final class AutoSaveGui extends GuiScreen {
 
     @Override
     public void initGui() {
+        if (mc == null || !mc.isSingleplayer()) {
+            if (mc != null) mc.displayGuiScreen(parent);
+            return;
+        }
         buttonList.clear();
         int center = width / 2;
         int top = height / 2 - 92;
