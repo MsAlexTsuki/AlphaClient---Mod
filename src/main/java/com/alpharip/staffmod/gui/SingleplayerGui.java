@@ -65,19 +65,19 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         AlphaModule worldEdit = AlphaModuleRegistry.find("world-edit");
         boolean worldEditEnabled = worldEdit != null && worldEdit.isEnabled();
         buttonList.add(new FeatureTileButton(WORLD_EDIT, firstTileX, tileY,
-                tileWidth, tileHeight, "World Edit", "WE", worldEditEnabled));
+                tileWidth, tileHeight, "World Edit", "WE", worldEditEnabled ? "ON" : "OFF", worldEditEnabled, true));
         buttonList.add(new FeatureTileButton(AUTO_TOOL, firstTileX + tileWidth + gap, tileY,
-                tileWidth, tileHeight, "AutoTool", "AT", AutoToolSettings.isEnabled()));
+                tileWidth, tileHeight, "AutoTool", "AT", AutoToolSettings.isEnabled() ? "ON" : "OFF", AutoToolSettings.isEnabled(), true));
         buttonList.add(new FeatureTileButton(ALPHA_HOMES, firstTileX, tileY + tileHeight + gap,
-                tileWidth, tileHeight, "AlphaHomes", "AH", true));
+                tileWidth, tileHeight, "AlphaHomes", "AH", null, false, true));
         buttonList.add(new FeatureTileButton(PRIVATE_VAULTS, firstTileX + tileWidth + gap,
-                tileY + tileHeight + gap, tileWidth, tileHeight, "Private Vaults", "PV", true));
+                tileY + tileHeight + gap, tileWidth, tileHeight, "Private Vaults", "PV", null, false, true));
         buttonList.add(new FeatureTileButton(TREE_EXCAVATE, firstTileX,
-                tileY + (tileHeight + gap) * 2, tileWidth, tileHeight, "Tree Excavate", "TE", true));
+                tileY + (tileHeight + gap) * 2, tileWidth, tileHeight, "Tree Excavate", "TE", null, false, true));
         buttonList.add(new FeatureTileButton(AUTO_REPLANT, firstTileX + tileWidth + gap,
-                tileY + (tileHeight + gap) * 2, tileWidth, tileHeight, "Auto Replant", "AR", true));
+                tileY + (tileHeight + gap) * 2, tileWidth, tileHeight, "Auto Replant", "AR", null, false, true));
         buttonList.add(new FeatureTileButton(INVENTORY_SORTER, firstTileX,
-                tileY + (tileHeight + gap) * 3, tileWidth, tileHeight, "Inventory Sorter", "IS", true));
+                tileY + (tileHeight + gap) * 3, tileWidth, tileHeight, "Inventory Sorter", "IS", null, false, true));
     }
 
     @Override
