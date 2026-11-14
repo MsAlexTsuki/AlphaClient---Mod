@@ -93,6 +93,17 @@ public final class SingleplayerGui extends AlphaGuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) {
         if (button == null) return;
+        if (button instanceof FeatureTileButton
+                && ((FeatureTileButton) button).wasSwitchClicked()) {
+            if (button.id == WORLD_EDIT) {
+                AlphaModule worldEdit = AlphaModuleRegistry.find("world-edit");
+                if (worldEdit != null) worldEdit.setEnabled(!worldEdit.isEnabled());
+            } else if (button.id == AUTO_TOOL) {
+                AutoToolSettings.setEnabled(!AutoToolSettings.isEnabled());
+            }
+            initGui();
+            return;
+        }
         if (button.id == BACK) {
             mc.displayGuiScreen(parent);
         } else if (button.id == WORLD_EDIT) {
