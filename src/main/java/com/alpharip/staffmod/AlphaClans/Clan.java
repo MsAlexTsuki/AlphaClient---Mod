@@ -44,6 +44,26 @@ public final class Clan {
     public ClanInvite getInvite(UUID targetId) { return invites.get(targetId); }
     public boolean isMember(UUID playerId) { return members.containsKey(playerId); }
 
+    /** Returns a detached copy so callers cannot mutate service-owned clan state. */
+    Clan copy() {
+        Clan copy = new Clan(id, name, tag, ownerId, createdAt);
+        for (ClanMember member : members.values()) {
+            ClanMember memberCopy = new ClanMember(member.getPlayerId(), member.getPlayerName(),
+                    member.getRole(), member.getJoinedAt());
+            memberCopy.updateLastSeen(member.getLastSeenAt());
+            copy.restoreMember(memberCopy);
+        }
+        for (ClanInvite invite : invites.values()) {
+            copy.restoreInvite(new ClanInvite(invite.getClanId(), invite.getInviterId(),
+                    invite.getTargetId(), invite.getCreatedAt(), invite.getExpiresAt()));
+        }
+        for (ClanChatMessage message : messages) {
+            copy.restoreMessage(new ClanChatMessage(message.getId(), message.getSenderId(),
+                    message.getSenderName(), message.getMessage(), message.getTimestamp()));
+        }
+        return copy;
+    }
+
     void setName(String value) {
         if (value == null || value.trim().length() < 3 || value.trim().length() > 24) {
             throw new IllegalArgumentException("Clan names must contain 3 to 24 characters");
