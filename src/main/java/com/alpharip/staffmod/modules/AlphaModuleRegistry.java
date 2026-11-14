@@ -28,7 +28,7 @@ public final class AlphaModuleRegistry {
         );
         singleplayer.addFeature(new AlphaModuleFeature("autotool", "AutoTool", "Automatically select the best hotbar tool for the targeted block in singleplayer.", PermissionService.Rank.PUBLIC, true));
         singleplayer.addFeature(new AlphaModuleFeature("inventory-sorter", "Inventory Sorter", "Manually grab and sort chest contents and sort the player inventory without changing the hotbar.", PermissionService.Rank.PUBLIC, true));
-        singleplayer.addFeature(new AlphaModuleFeature("mob-stacker", "Mob Stacker", "Combine nearby mobs of the same type into stacks of up to 264 in singleplayer.", PermissionService.Rank.PUBLIC, true));
+        singleplayer.addFeature(new AlphaModuleFeature("mob-stacker", "Mob Stacker", "Combine nearby mobs of the same type into stacks of up to 264 in singleplayer.", PermissionService.Rank.SCOUT, true));
         MODULES.add(singleplayer);
 
         AlphaModule worldEdit = new AlphaModule(
