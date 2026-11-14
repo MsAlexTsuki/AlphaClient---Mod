@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Current verified inventory: **551 Java files** across **43 folders**, plus 1 Java file directly in the package root.
+- Current verified inventory: **559 Java files** across **44 folders**, plus 1 Java file directly in the package root.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -1381,6 +1381,17 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `RememberChestInventory.java`
 - `RememberChestInventoryGui.java`
 
+### `animalbreedingcooldowntimer/`
+
+- `AnimalBreedingCooldownTimer.java`
+- `AnimalBreedingEntry.java`
+- `AnimalBreedingEventHandler.java`
+- `AnimalBreedingGui.java`
+- `AnimalBreedingHud.java`
+- `AnimalBreedingSettings.java`
+- `AnimalBreedingStorage.java`
+- `AnimalBreedingTracker.java`
+
 ### `autosave/`
 
 - `AutoSave.java`
@@ -1425,6 +1436,21 @@ Folder: `autosave/`
 - **AutoSaveStorage.java** — Persists HUD settings locally under `config/alphaclient/autosave.properties`; no remote or Supabase storage is used.
 
 **Current prototype status:** The standalone classes, configurable HUD, settings GUI, and local settings persistence are present. The event adapter is written against Forge's world-save and overlay event APIs, but event delivery, actual singleplayer autosave timing, GUI navigation, and HUD rendering have not been compiled or runtime-tested. The prototype is not yet registered in the normal AlphaClient module interface. It reports an observed save event; it does not control Minecraft's save interval or force a save.
+
+## Animal Breeding Cooldown Timer
+
+Folder: `animalbreedingcooldowntimer/`
+
+- **AnimalBreedingCooldownTimer.java** — Standalone prototype entry point. Owns settings, per-animal tracking, local persistence, HUD registration, and GUI opening. It is not registered in the live AlphaClient module/menu system.
+- **AnimalBreedingEntry.java** — Immutable record for one animal, including UUID, display name, last successful breeding timestamp, configured cooldown, and remaining-time calculation.
+- **AnimalBreedingEventHandler.java** — Defines the callback boundary for a confirmed successful breeding event. It deliberately does not infer breeding from nearby animals or a baby spawn.
+- **AnimalBreedingGui.java** — Provides module/HUD toggles, configurable cooldown duration, a tracked-animal overview, and a clear-history action.
+- **AnimalBreedingHud.java** — Displays the tracked animals and their remaining cooldown or Ready state.
+- **AnimalBreedingSettings.java** — Holds local enable, HUD, interval, and position settings. The 60-second interval is a prototype default inherited from the original idea stub, not a verified vanilla Minecraft cooldown.
+- **AnimalBreedingStorage.java** — Persists settings and tracked-animal snapshots locally in a properties file. No remote persistence or Supabase calls are used.
+- **AnimalBreedingTracker.java** — Maintains a bounded registry of per-animal cooldown entries.
+
+**Current prototype status:** The data model, per-animal timer calculations, local settings/history persistence, basic GUI, and HUD renderer are present in source. Successful breeding detection is not connected to a verified Minecraft 1.8.9 / Forge 11.15.1.2318 hook; the callback must be invoked only after the game confirms a successful breeding event. Module/menu registration, compile verification, and runtime testing remain outstanding. Do not describe automatic breeding detection or cooldown tracking in-game as working until that hook is implemented and tested.
 
 ### Inventory notes
 
