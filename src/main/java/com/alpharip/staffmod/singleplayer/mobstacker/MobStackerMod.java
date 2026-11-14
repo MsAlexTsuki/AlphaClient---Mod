@@ -173,33 +173,59 @@ public final class MobStackerMod {
      * villager profession and baby/adult state remain part of the comparison.
      */
     private static boolean hasSameVariant(EntityLiving first, EntityLiving second) {
-        return createVariantSnapshot(first).equals(createVariantSnapshot(second));
+        if (first == null || second == null || first.getClass() != second.getClass()) return false;
+
+        NBTTagCompound firstVariant = createVariantSnapshot(first);
+        NBTTagCompound secondVariant = createVariantSnapshot(second);
+        return firstVariant.equals(secondVariant);
     }
 
+    /**
+     * Only compare stable identity/variant properties. Full entity NBT also
+     * contains mutable state such as equipment, health, effects, age timers,
+     * movement and other data that must not prevent otherwise compatible mobs
+     * from joining the same stack.
+     */
     private static NBTTagCompound createVariantSnapshot(EntityLiving entity) {
-        NBTTagCompound snapshot = new NBTTagCompound();
-        entity.writeToNBT(snapshot);
+        NBTTagCompound entityNbt = new NBTTagCompound();
+        entity.writeToNBT(entityNbt);
 
-        String[] transientTags = {
-                "Pos", "Motion", "Rotation", "FallDistance", "Fire", "Air",
-                "OnGround", "Dimension", "PortalCooldown", "UUID", "UUIDMost",
-                "UUIDLeast", "Health", "AbsorptionAmount", "HurtTime", "DeathTime",
-                "AttackTime", "Leash", "Leashed", "Invulnerable", "ForgeData"
+        NBTTagCompound variant = new NBTTagCompound();
+        String[] variantTags = {
+                // Shared age / growth state.
+                "IsBaby", "Baby", "Age", "GrowingAge",
+
+                // Common vanilla mob variants.
+                "Color", "Sheared", "Size", "SkeletonType", "IsVillager",
+                "VillagerProfession", "Profession", "RabbitType", "CatType",
+                "CollarColor", "Type", "Variant", "Elder", "powered"
         };
-        for (String tag : transientTags) snapshot.removeTag(tag);
 
-        // The representative's visible stack label is not an entity variant.
-        // Compare its original name state instead of the generated "xN" label.
-        NBTTagCompound data = entity.getEntityData();
-        if (data.getBoolean(NAME_CAPTURED)) {
-            if (data.getBoolean(ORIGINAL_HAS_CUSTOM_NAME)) {
-                snapshot.setString("CustomName", data.getString(ORIGINAL_NAME));
-            } else {
-                snapshot.removeTag("CustomName");
+        for (String tag : variantTags) {
+            if (entityNbt.hasKey(tag)) {
+                variant.setTag(tag, entityNbt.getTag(tag).copy());
             }
-            snapshot.setBoolean("CustomNameVisible", data.getBoolean(ORIGINAL_ALWAYS_RENDER));
         }
-        return snapshot;
+
+        // Keep separately named mobs distinct, but ignore the generated stack
+        // label so an existing stack remains compatible with a new unnamed mob.
+        NBTTagCompound data = entity.getEntityData();
+        boolean hasCustomName;
+        String customName;
+        if (data.getBoolean(NAME_CAPTURED)) {
+            hasCustomName = data.getBoolean(ORIGINAL_HAS_CUSTOM_NAME);
+            customName = data.getString(ORIGINAL_NAME);
+        } else {
+            customName = entity.getCustomNameTag();
+            hasCustomName = customName != null && !customName.trim().isEmpty();
+        }
+
+        variant.setBoolean("AlphaHasCustomName", hasCustomName);
+        if (hasCustomName) {
+            variant.setString("AlphaCustomName", customName);
+        }
+
+        return variant;
     }
 
     private static NBTTagCompound createMemberSnapshot(EntityLiving entity) {
