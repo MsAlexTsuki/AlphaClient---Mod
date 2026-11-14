@@ -1267,6 +1267,9 @@ This manifest is generated from the files present in the branch at the snapshot 
 
 ### `store/`
 
+- `Store.java`
+- `StoreGui.java`
+- `README.md`
 - `Addons/AddonCategory.java`
 - `Addons/AddonEntry.java`
 - `Addons/AddonInstallState.java`
@@ -1276,7 +1279,7 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `Addons/AddonStore.java`
 - `Addons/AddonStoreGui.java`
 - `Addons/AddonStoreSettings.java`
-- `Store.java`
+- `Addons/AddonStoreStorage.java`
 
 ### `TimeTill/`
 

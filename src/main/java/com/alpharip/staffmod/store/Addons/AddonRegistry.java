@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Bounded in-memory catalogue. No remote catalogue or persistence is used. */
+/** Bounded in-memory catalogue. Entries are registered by trusted local AlphaClient code. */
 public final class AddonRegistry {
     private final Map<String, AddonEntry> entries = new LinkedHashMap<String, AddonEntry>();
     private final Map<String, AddonInstallState> states = new LinkedHashMap<String, AddonInstallState>();
@@ -33,6 +33,23 @@ public final class AddonRegistry {
         if (!entries.containsKey(id) || state == null) return false;
         states.put(id, state);
         return true;
+    }
+
+    /** Returns a detached, read-only state snapshot suitable for local persistence. */
+    public synchronized Map<String, AddonInstallState> getStatesSnapshot() {
+        return Collections.unmodifiableMap(new LinkedHashMap<String, AddonInstallState>(states));
+    }
+
+    /** Restores only states for entries already registered by trusted client code. */
+    public synchronized int restoreStates(Map<String, AddonInstallState> restored) {
+        if (restored == null) return 0;
+        int count = 0;
+        for (Map.Entry<String, AddonInstallState> item : restored.entrySet()) {
+            if (item.getKey() == null || item.getValue() == null || !entries.containsKey(item.getKey())) continue;
+            states.put(item.getKey(), item.getValue());
+            count++;
+        }
+        return count;
     }
 
     public synchronized List<AddonEntry> getAll() {

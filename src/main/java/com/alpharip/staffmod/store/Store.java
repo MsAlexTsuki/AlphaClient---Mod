@@ -7,30 +7,29 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Central Store core. Owns store-wide state and registered sections.
- * This prototype is local and does not download, install, or execute external code.
- */
+/** Central Store core. The catalogue and its local state are supplied by AlphaClient. */
 public final class Store {
-    private boolean enabled;
-    private String selectedSectionId;
+    private boolean enabled = true;
+    private String selectedSectionId = "addons";
     private final Map<String, StoreSection> sections = new LinkedHashMap<String, StoreSection>();
     private final AddonStore addonStore;
 
     public Store() {
-        this.enabled = true;
-        this.selectedSectionId = "addons";
-        this.addonStore = new AddonStore();
+        this(new AddonStore());
+    }
+
+    public Store(AddonStore addonStore) {
+        if (addonStore == null) throw new IllegalArgumentException("Addon store is required.");
+        this.addonStore = addonStore;
         registerSection(new StoreSection("addons", "Addons",
-                "Browse and manage locally registered AlphaClient add-ons."));
+                "Browse and manage AlphaClient add-ons."));
     }
 
     public synchronized boolean isEnabled() { return enabled; }
     public synchronized void setEnabled(boolean enabled) { this.enabled = enabled; }
 
     public synchronized boolean registerSection(StoreSection section) {
-        if (section == null || section.getId().trim().isEmpty()) return false;
-        if (sections.containsKey(section.getId())) return false;
+        if (section == null || sections.containsKey(section.getId())) return false;
         sections.put(section.getId(), section);
         if (selectedSectionId == null) selectedSectionId = section.getId();
         return true;
@@ -42,33 +41,26 @@ public final class Store {
         return true;
     }
 
-    public synchronized StoreSection getSelectedSection() {
-        return sections.get(selectedSectionId);
-    }
-
+    public synchronized StoreSection getSelectedSection() { return sections.get(selectedSectionId); }
     public synchronized String getSelectedSectionId() { return selectedSectionId; }
-
     public synchronized List<StoreSection> getSections() {
         return Collections.unmodifiableList(new ArrayList<StoreSection>(sections.values()));
     }
-
     public AddonStore getAddonStore() { return addonStore; }
 
     public synchronized void clearSessionState() {
         selectedSectionId = sections.isEmpty() ? null : sections.keySet().iterator().next();
-        addonStore.clear();
+        addonStore.clearSessionFilters();
     }
 
-    /** Immutable descriptor for one page/section in the central Store. */
     public static final class StoreSection {
         private final String id;
         private final String title;
         private final String description;
 
         public StoreSection(String id, String title, String description) {
-            if (id == null || id.trim().isEmpty() || title == null || title.trim().isEmpty()) {
+            if (id == null || id.trim().isEmpty() || title == null || title.trim().isEmpty())
                 throw new IllegalArgumentException("Section ID and title are required.");
-            }
             this.id = id.trim();
             this.title = title.trim();
             this.description = description == null ? "" : description.trim();
