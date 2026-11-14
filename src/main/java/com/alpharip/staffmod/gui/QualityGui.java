@@ -82,21 +82,23 @@ public final class QualityGui extends AlphaGuiScreen {
             int y = panelTop + 68 + (local / columns) * rowHeight;
             int id = 1000 + i;
             String icon = "◆";
-            boolean enabled = true;
+            String status = null;
+            boolean active = false;
+            boolean clickable = true;
             if (i == PLAYTIME_TRACKER_INDEX) { id = PLAYTIME_TRACKER; icon = "◷"; }
-            else if (i == 3) { id = AUTO_GG; icon = "GG"; }
-            else if (i == AUTO_RECONNECT_INDEX) { id = AUTO_RECONNECT; icon = "↻"; }
-            else if (i == FULLBRIGHT_INDEX) { id = FULLBRIGHT; icon = "☼"; }
-            else if (i == 18) { id = SEARCH_INV; icon = "⌕"; enabled = InventorySearchSettings.isEnabled(); }
-            else if (i == ANVIL_COST_INDEX) { id = ANVIL_COST; icon = "XP"; enabled = AnvilCostMod.isEnabled(); }
-            else if (i == ENCHANTING_NAMES_INDEX) { id = ENCHANTING_NAMES; icon = "✦"; enabled = EnchantingNameMod.isEnabled(); }
-            else if (i == BLOCK_PLACEMENT_PREVIEW_INDEX) { id = BLOCK_PLACEMENT_PREVIEW; icon = "▧"; enabled = BlockPlacementPreviewSettings.isEnabled(); }
+            else if (i == 3) { id = AUTO_GG; icon = "GG"; status = AutoGGMod.isEnabled() ? "ON" : "OFF"; active = AutoGGMod.isEnabled(); }
+            else if (i == AUTO_RECONNECT_INDEX) { id = AUTO_RECONNECT; icon = "↻"; status = AutoReconnectMod.isEnabled() ? "ON" : "OFF"; active = AutoReconnectMod.isEnabled(); }
+            else if (i == FULLBRIGHT_INDEX) { id = FULLBRIGHT; icon = "☼"; status = FullbrightMod.isEnabled() ? "ON" : "OFF"; active = FullbrightMod.isEnabled(); }
+            else if (i == 18) { id = SEARCH_INV; icon = "⌕"; status = InventorySearchSettings.isEnabled() ? "ON" : "OFF"; active = InventorySearchSettings.isEnabled(); }
+            else if (i == ANVIL_COST_INDEX) { id = ANVIL_COST; icon = "XP"; status = AnvilCostMod.isEnabled() ? "ON" : "OFF"; active = AnvilCostMod.isEnabled(); }
+            else if (i == ENCHANTING_NAMES_INDEX) { id = ENCHANTING_NAMES; icon = "✦"; status = EnchantingNameMod.isEnabled() ? "ON" : "OFF"; active = EnchantingNameMod.isEnabled(); }
+            else if (i == BLOCK_PLACEMENT_PREVIEW_INDEX) { id = BLOCK_PLACEMENT_PREVIEW; icon = "▧"; status = BlockPlacementPreviewSettings.isEnabled() ? "ON" : "OFF"; active = BlockPlacementPreviewSettings.isEnabled(); }
             else if (i == FEATURES.length - 2) { id = EASTER_EGGS; icon = "★"; }
             else if (i == AFK_TIMER_INDEX) { id = AFK_TIMER; icon = "Z"; }
-            else if (i == SESSION_TIMER_INDEX) { id = SESSION_TIMER; icon = "◴"; enabled = SessionTimerHud.isEnabled(); }
-            else enabled = false;
+            else if (i == SESSION_TIMER_INDEX) { id = SESSION_TIMER; icon = "◴"; status = SessionTimerHud.isEnabled() ? "ON" : "OFF"; active = SessionTimerHud.isEnabled(); }
+            else { status = "PLANNED"; clickable = false; }
             buttonList.add(new FeatureTileButton(id, x, y, tileWidth, tileHeight,
-                    FEATURES[i], icon, enabled));
+                    FEATURES[i], icon, status, active, clickable));
         }
     }
 
