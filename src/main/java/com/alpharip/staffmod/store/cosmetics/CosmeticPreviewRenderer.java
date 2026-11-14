@@ -15,9 +15,13 @@ public final class CosmeticPreviewRenderer {
                                int x, int y, int size) {
         if (minecraft == null || entry == null || size < 16) return false;
 
+        if (!CosmeticAssetManager.supportsTexturePreview(entry.getCategory())) {
+            drawPendingPreview(minecraft, x, y, size);
+            return false;
+        }
         ResourceLocation texture = CosmeticAssetManager.getTextureLocation(entry);
         if (texture == null || !CosmeticAssetManager.isTextureAvailable(minecraft, entry)) {
-            drawMissingAsset(minecraft, entry, x, y, size);
+            drawMissingAsset(minecraft, x, y, size);
             return false;
         }
 
@@ -35,9 +39,18 @@ public final class CosmeticPreviewRenderer {
                                          int x, int y, int size) {
         Gui.drawRect(x - 2, y - 2, x + size + 2, y + size + 2, 0xFF101010);
         Gui.drawRect(x, y, x + size, y + size, 0xFF292929);
-        String label = "ASSET MISSING";
+        String label = "PNG NOT ADDED";
         minecraft.fontRendererObj.drawString(label,
                 x + Math.max(2, (size - minecraft.fontRendererObj.getStringWidth(label)) / 2),
                 y + size / 2 - 4, 0xFFFFC857);
+    }
+
+    private static void drawPendingPreview(Minecraft minecraft, int x, int y, int size) {
+        Gui.drawRect(x - 2, y - 2, x + size + 2, y + size + 2, 0xFF101010);
+        Gui.drawRect(x, y, x + size, y + size, 0xFF292929);
+        String label = "PREVIEW PENDING";
+        minecraft.fontRendererObj.drawString(label,
+                x + Math.max(2, (size - minecraft.fontRendererObj.getStringWidth(label)) / 2),
+                y + size / 2 - 4, 0xFFB8BDC8);
     }
 }
