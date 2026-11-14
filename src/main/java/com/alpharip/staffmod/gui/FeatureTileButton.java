@@ -7,10 +7,13 @@ import net.minecraft.client.gui.GuiButton;
 /** Compact feature card styled to match General's ModuleTileButton. */
 public final class FeatureTileButton extends GuiButton {
     private static final int YELLOW = 0xFFFFD866;
+    private static final int SWITCH_WIDTH = 18;
+    private static final int SWITCH_HEIGHT = 9;
     private final String name;
     private final String icon;
     private final String status;
     private final boolean active;
+    private boolean switchClicked;
 
     public FeatureTileButton(int id, int x, int y, int width, int height,
                              String name, String icon, String status,
@@ -44,6 +47,15 @@ public final class FeatureTileButton extends GuiButton {
                     xPosition + 7, yPosition + 4, stateColor, false);
         }
 
+        if (hasSwitch()) {
+            int sx = xPosition + width - SWITCH_WIDTH - 7;
+            int sy = yPosition + 6;
+            drawRect(sx, sy, sx + SWITCH_WIDTH, sy + SWITCH_HEIGHT,
+                    active ? YELLOW : 0xFF454A54);
+            int knobX = active ? sx + SWITCH_WIDTH - 7 : sx + 2;
+            drawRect(knobX, sy + 1, knobX + 5, sy + SWITCH_HEIGHT - 1, 0xFFF6F6F6);
+        }
+
         int iconWidth = mc.fontRendererObj.getStringWidth(icon);
         int iconY = yPosition + Math.max(10, (height - 8) / 2 - 1);
         mc.fontRendererObj.drawString(icon, xPosition + (width - iconWidth) / 2,
@@ -60,5 +72,26 @@ public final class FeatureTileButton extends GuiButton {
         mc.fontRendererObj.drawString(UiText.normalize(label),
                 xPosition + (width - mc.fontRendererObj.getStringWidth(label)) / 2,
                 yPosition + height - 10, 0xFFF0F1F4, false);
+    }
+
+    public boolean wasSwitchClicked() {
+        return switchClicked;
+    }
+
+    private boolean hasSwitch() {
+        return "ON".equals(status) || "OFF".equals(status);
+    }
+
+    @Override
+    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+        boolean pressed = super.mousePressed(mc, mouseX, mouseY);
+        switchClicked = false;
+        if (pressed && hasSwitch()) {
+            int sx = xPosition + width - SWITCH_WIDTH - 7;
+            int sy = yPosition + 6;
+            switchClicked = mouseX >= sx && mouseX < sx + SWITCH_WIDTH
+                    && mouseY >= sy && mouseY < sy + SWITCH_HEIGHT;
+        }
+        return pressed;
     }
 }
