@@ -65,9 +65,9 @@ public final class QualityGui extends AlphaGuiScreen {
         panelTop = Math.max(12, height / 2 - Math.min(150, height / 2 - 12));
         panelBottom = Math.min(height - 12, panelTop + 300);
         int gap = 8;
-        int columns = 3;
+        int columns = 2;
         int tileWidth = (panelRight - panelLeft - 24 - gap * (columns - 1)) / columns;
-        int tileHeight = 36;
+        int tileHeight = 54;
         int rowHeight = tileHeight + gap;
         visibleRows = Math.max(1, (panelBottom - panelTop - 100) / rowHeight);
         int totalRows = (FEATURES.length + columns - 1) / columns;
@@ -80,49 +80,23 @@ public final class QualityGui extends AlphaGuiScreen {
             int local = i - startIndex;
             int x = panelLeft + 12 + (local % columns) * (tileWidth + gap);
             int y = panelTop + 68 + (local / columns) * rowHeight;
-            if (i == PLAYTIME_TRACKER_INDEX) {
-                buttonList.add(new AlphaButton(PLAYTIME_TRACKER, x, y,
-                        tileWidth, tileHeight, "Playtime Tracker", true));
-            } else if (i == 3) {
-                buttonList.add(new AlphaButton(AUTO_GG, x, y,
-                        tileWidth, tileHeight, "Auto GG: " + (AutoGGMod.isEnabled() ? "ON" : "OFF"),
-                        AutoGGMod.isEnabled()));
-            } else if (i == AUTO_RECONNECT_INDEX) {
-                buttonList.add(new AlphaButton(AUTO_RECONNECT, x, y, tileWidth, tileHeight,
-                        "Auto Reconnect: " + (AutoReconnectMod.isEnabled() ? "ON" : "OFF"),
-                        AutoReconnectMod.isEnabled()));
-            } else if (i == FULLBRIGHT_INDEX) {
-                buttonList.add(new AlphaButton(FULLBRIGHT, x, y, tileWidth, tileHeight,
-                        "Fullbright: " + (FullbrightMod.isEnabled() ? "ON" : "OFF"), true));
-            } else if (i == 18) {
-                boolean searchInvEnabled = InventorySearchSettings.isEnabled();
-                buttonList.add(new AlphaButton(SEARCH_INV, x, y, tileWidth, tileHeight,
-                        "Search Inv: " + (searchInvEnabled ? "ON" : "OFF"), searchInvEnabled));
-            } else if (i == ANVIL_COST_INDEX) {
-                boolean anvilCostEnabled = AnvilCostMod.isEnabled();
-                buttonList.add(new AlphaButton(ANVIL_COST, x, y, tileWidth, tileHeight,
-                        "Anvil Cost: " + (anvilCostEnabled ? "ON" : "OFF"), anvilCostEnabled));
-            } else if (i == ENCHANTING_NAMES_INDEX) {
-                buttonList.add(new AlphaButton(ENCHANTING_NAMES, x, y, tileWidth, tileHeight,
-                        "Enchanting Names", EnchantingNameMod.isEnabled()));
-            } else if (i == BLOCK_PLACEMENT_PREVIEW_INDEX) {
-                boolean previewEnabled = BlockPlacementPreviewSettings.isEnabled();
-                buttonList.add(new AlphaButton(BLOCK_PLACEMENT_PREVIEW, x, y, tileWidth, tileHeight,
-                        "Block Placement Preview", previewEnabled));
-            } else if (i == FEATURES.length - 2) {
-                buttonList.add(new AlphaButton(EASTER_EGGS, x, y, tileWidth, tileHeight, "Easter Eggs", true));
-            } else if (i == AFK_TIMER_INDEX) {
-                buttonList.add(new AlphaButton(AFK_TIMER, x, y, tileWidth, tileHeight, "AFK Timer", true));
-            } else if (i == SESSION_TIMER_INDEX) {
-                buttonList.add(new AlphaButton(SESSION_TIMER, x, y, tileWidth, tileHeight,
-                        "Session Timer: " + (SessionTimerHud.isEnabled() ? "ON" : "OFF"),
-                        SessionTimerHud.isEnabled()));
-            } else {
-                AlphaButton planned = new AlphaButton(1000 + i, x, y,
-                        tileWidth, tileHeight, FEATURES[i] + "  -  PLANNED");
-                planned.enabled = false;
-                buttonList.add(planned);
-            }
+            int id = 1000 + i;
+            String icon = "◆";
+            boolean enabled = true;
+            if (i == PLAYTIME_TRACKER_INDEX) { id = PLAYTIME_TRACKER; icon = "◷"; }
+            else if (i == 3) { id = AUTO_GG; icon = "GG"; }
+            else if (i == AUTO_RECONNECT_INDEX) { id = AUTO_RECONNECT; icon = "↻"; }
+            else if (i == FULLBRIGHT_INDEX) { id = FULLBRIGHT; icon = "☼"; }
+            else if (i == 18) { id = SEARCH_INV; icon = "⌕"; enabled = InventorySearchSettings.isEnabled(); }
+            else if (i == ANVIL_COST_INDEX) { id = ANVIL_COST; icon = "XP"; enabled = AnvilCostMod.isEnabled(); }
+            else if (i == ENCHANTING_NAMES_INDEX) { id = ENCHANTING_NAMES; icon = "✦"; enabled = EnchantingNameMod.isEnabled(); }
+            else if (i == BLOCK_PLACEMENT_PREVIEW_INDEX) { id = BLOCK_PLACEMENT_PREVIEW; icon = "▧"; enabled = BlockPlacementPreviewSettings.isEnabled(); }
+            else if (i == FEATURES.length - 2) { id = EASTER_EGGS; icon = "★"; }
+            else if (i == AFK_TIMER_INDEX) { id = AFK_TIMER; icon = "Z"; }
+            else if (i == SESSION_TIMER_INDEX) { id = SESSION_TIMER; icon = "◴"; enabled = SessionTimerHud.isEnabled(); }
+            else enabled = false;
+            buttonList.add(new FeatureTileButton(id, x, y, tileWidth, tileHeight,
+                    FEATURES[i], icon, enabled));
         }
     }
 
@@ -179,7 +153,7 @@ public final class QualityGui extends AlphaGuiScreen {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
         if (wheel != 0) {
-            int columns = 3;
+            int columns = 2;
             int totalRows = (FEATURES.length + columns - 1) / columns;
             int maxScroll = Math.max(0, totalRows - visibleRows);
             scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset + (wheel < 0 ? 1 : -1)));
