@@ -32,6 +32,8 @@ public final class AddonStoreStorage {
         Properties properties = new Properties();
         try (InputStream input = Files.newInputStream(file)) {
             properties.load(input);
+        } catch (IllegalArgumentException exception) {
+            throw new IOException("Store state file contains malformed properties data.", exception);
         }
         if (!SCHEMA.equals(properties.getProperty("schema")))
             throw new IOException("Unsupported Store state format.");
