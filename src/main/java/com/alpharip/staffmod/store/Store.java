@@ -55,7 +55,7 @@ public final class Store {
     }
 
     public synchronized boolean selectSection(String sectionId) {
-        if (sectionId == null || !sections.containsKey(sectionId)) return false;
+        if (!enabled || sectionId == null || !sections.containsKey(sectionId)) return false;
         selectedSectionId = sectionId;
         return true;
     }
