@@ -149,6 +149,28 @@ public final class QualityGui extends AlphaGuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
+        if (button instanceof FeatureTileButton
+                && ((FeatureTileButton) button).wasSwitchClicked()) {
+            if (button.id == AUTO_GG) {
+                AutoGGMod.setEnabled(!AutoGGMod.isEnabled());
+            } else if (button.id == AUTO_RECONNECT) {
+                AutoReconnectMod.setEnabled(!AutoReconnectMod.isEnabled());
+            } else if (button.id == FULLBRIGHT) {
+                FullbrightMod.setEnabled(!FullbrightMod.isEnabled());
+            } else if (button.id == SEARCH_INV) {
+                InventorySearchSettings.setEnabled(!InventorySearchSettings.isEnabled());
+            } else if (button.id == ANVIL_COST) {
+                AnvilCostMod.setEnabled(!AnvilCostMod.isEnabled());
+            } else if (button.id == ENCHANTING_NAMES) {
+                EnchantingNameMod.setEnabled(!EnchantingNameMod.isEnabled());
+            } else if (button.id == SESSION_TIMER) {
+                SessionTimerHud.setEnabled(!SessionTimerHud.isEnabled());
+            } else if (button.id == BLOCK_PLACEMENT_PREVIEW) {
+                BlockPlacementPreviewSettings.setEnabled(!BlockPlacementPreviewSettings.isEnabled());
+            }
+            initGui();
+            return;
+        }
         if (button.id == BACK) {
             mc.displayGuiScreen(parent);
         } else if (button.id == AFK_TIMER) {
