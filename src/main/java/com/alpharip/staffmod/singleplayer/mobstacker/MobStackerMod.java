@@ -185,21 +185,13 @@ public final class MobStackerMod {
                                           NBTTagList remainingMembers) {
         if (world == null || member == null || remainingMembers == null) return;
 
-        NBTTagCompound data = (NBTTagCompound) member.copy();
-        Entity replacement;
-        try {
-            replacement = EntityList.createEntityFromNBT(data, world);
-        } catch (RuntimeException ignored) {
-            return;
-        }
-        if (!(replacement instanceof EntityLiving)) return;
-
-        NBTTagCompound replacementData = replacement.getEntityData();
-        replacementData.setInteger(COUNT, remainingMembers.tagCount() + 1);
-        replacementData.setTag(MEMBERS, (NBTTagList) remainingMembers.copy());
-        replacementData.setBoolean(SKIP_MERGE, true);
-        NBTTagCompound snapshot = new NBTTagCompound();
-        replacement.writeToNBT(snapshot);
+        NBTTagCompound snapshot = (NBTTagCompound) member.copy();
+        NBTTagCompound forgeData = snapshot.hasKey("ForgeData", 10)
+                ? snapshot.getCompoundTag("ForgeData") : new NBTTagCompound();
+        forgeData.setInteger(COUNT, remainingMembers.tagCount() + 1);
+        forgeData.setTag(MEMBERS, (NBTTagList) remainingMembers.copy());
+        forgeData.setBoolean(SKIP_MERGE, true);
+        snapshot.setTag("ForgeData", forgeData);
         PENDING_SPAWNS.add(new PendingSpawn(world, snapshot));
     }
 
