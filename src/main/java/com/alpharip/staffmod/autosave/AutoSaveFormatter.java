@@ -1,6 +1,6 @@
 package com.alpharip.staffmod.autosave;
 
-/** Formats elapsed time since the latest observed world-save event. */
+/** Formats elapsed time for the singleplayer-only AutoSave indicator. */
 public final class AutoSaveFormatter {
     private AutoSaveFormatter() { }
 
