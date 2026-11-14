@@ -2,6 +2,7 @@ package com.alpharip.staffmod.store;
 
 import com.alpharip.staffmod.store.addons.AddonStore;
 import com.alpharip.staffmod.store.cosmetics.CosmeticCatalog;
+import com.alpharip.staffmod.store.cosmetics.CosmeticManager;
 import com.alpharip.staffmod.store.partners.PartnerCatalog;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +17,7 @@ public final class Store {
     private final Map<String, StoreSection> sections = new LinkedHashMap<String, StoreSection>();
     private final AddonStore addonStore;
     private final CosmeticCatalog cosmeticCatalog;
+    private final CosmeticManager cosmeticManager;
     private final PartnerCatalog partnerCatalog;
 
     public Store() {
@@ -35,6 +37,7 @@ public final class Store {
             throw new IllegalArgumentException("Store catalogues are required.");
         this.addonStore = addonStore;
         this.cosmeticCatalog = cosmeticCatalog;
+        this.cosmeticManager = new CosmeticManager(cosmeticCatalog.getRegistry());
         this.partnerCatalog = partnerCatalog;
         registerSection(new StoreSection("addons", "Addons",
                 "Browse and manage AlphaClient add-ons."));
@@ -67,6 +70,7 @@ public final class Store {
     }
     public AddonStore getAddonStore() { return addonStore; }
     public CosmeticCatalog getCosmeticCatalog() { return cosmeticCatalog; }
+    public CosmeticManager getCosmeticManager() { return cosmeticManager; }
     public PartnerCatalog getPartnerCatalog() { return partnerCatalog; }
 
     public synchronized void clearSessionState() {
