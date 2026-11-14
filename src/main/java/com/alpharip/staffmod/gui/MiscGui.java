@@ -1,6 +1,8 @@
 // --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.gui;
 
+import com.alpharip.staffmod.fighthistory.FightHistoryManager;
+import com.alpharip.staffmod.serverhistory.ServerHistoryManager;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -36,15 +38,29 @@ public final class MiscGui extends AlphaGuiScreen {
         int startX = panelLeft + 12;
 
         buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        boolean serverHistoryEnabled = ServerHistoryManager.isEnabled();
         buttonList.add(new FeatureTileButton(SERVER_HISTORY, startX, startY,
-                tileWidth, tileHeight, "Server History", "◆", null, false, true));
+                tileWidth, tileHeight, "Server History", "◆",
+                serverHistoryEnabled ? "ON" : "OFF", serverHistoryEnabled, true));
+        boolean fightHistoryEnabled = FightHistoryManager.isEnabled();
         buttonList.add(new FeatureTileButton(FIGHT_HISTORY, startX + tileWidth + gap, startY,
-                tileWidth, tileHeight, "Fight History", "◆", null, false, true));
+                tileWidth, tileHeight, "Fight History", "◆",
+                fightHistoryEnabled ? "ON" : "OFF", fightHistoryEnabled, true));
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
+        if (button instanceof FeatureTileButton
+                && ((FeatureTileButton) button).wasSwitchClicked()) {
+            if (button.id == SERVER_HISTORY) {
+                ServerHistoryManager.setEnabled(!ServerHistoryManager.isEnabled());
+            } else if (button.id == FIGHT_HISTORY) {
+                FightHistoryManager.setEnabled(!FightHistoryManager.isEnabled());
+            }
+            initGui();
+            return;
+        }
         if (button.id == BACK) {
             mc.displayGuiScreen(parent);
         } else if (button.id == SERVER_HISTORY) {
