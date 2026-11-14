@@ -11,7 +11,7 @@ public final class ClanChatMessage {
 
     public ClanChatMessage(UUID id, UUID senderId, String senderName, String message, long timestamp) {
         if (id == null || senderId == null || senderName == null || senderName.trim().isEmpty()
-                || message == null || message.trim().isEmpty()) {
+                || message == null || message.trim().isEmpty() || message.trim().length() > 256) {
             throw new IllegalArgumentException("Invalid clan message");
         }
         this.id = id;
