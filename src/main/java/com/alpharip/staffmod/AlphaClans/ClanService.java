@@ -21,10 +21,26 @@ public final class ClanService {
         if (repository == null) throw new IllegalArgumentException("Clan repository is required");
         this.repository = repository;
         for (Clan clan : repository.loadAll()) {
+            if (clan == null) throw new IOException("Clan storage contains an empty clan record");
             if (clans.put(clan.getId(), clan) != null) throw new IOException("Duplicate clan id in storage");
+            if (clan.getMembers().isEmpty() || clan.getMembers().size() > MAX_MEMBERS) {
+                throw new IOException("Clan storage contains an invalid member count");
+            }
+            ClanMember owner = clan.getMember(clan.getOwnerId());
+            if (owner == null || owner.getRole() != ClanRole.OWNER) {
+                throw new IOException("Clan storage has no matching owner member");
+            }
+            int ownerCount = 0;
             for (ClanMember member : clan.getMembers().values()) {
+                if (member.getRole() == ClanRole.OWNER) ownerCount++;
                 if (clanByPlayer.put(member.getPlayerId(), clan.getId()) != null) {
                     throw new IOException("A player is assigned to more than one clan");
+                }
+            }
+            if (ownerCount != 1) throw new IOException("Clan storage must contain exactly one owner");
+            for (ClanInvite invite : clan.getInvites()) {
+                if (!clan.getId().equals(invite.getClanId())) {
+                    throw new IOException("Clan storage contains an invite for another clan");
                 }
             }
         }
