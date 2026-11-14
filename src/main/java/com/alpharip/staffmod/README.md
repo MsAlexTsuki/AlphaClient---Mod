@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Current verified inventory: **544 Java files** across **42 folders**, plus 1 Java file directly in the package root.
+- Current verified inventory: **551 Java files** across **43 folders**, plus 1 Java file directly in the package root.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -1381,6 +1381,17 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `RememberChestInventory.java`
 - `RememberChestInventoryGui.java`
 
+### `autosave/`
+
+- `AutoSave.java`
+- `AutoSaveEventHandler.java`
+- `AutoSaveFormatter.java`
+- `AutoSaveGui.java`
+- `AutoSaveHud.java`
+- `AutoSaveSettings.java`
+- `AutoSaveState.java`
+- `AutoSaveStorage.java`
+
 ### Package root
 
 - `StaffMod.java`
@@ -1399,6 +1410,21 @@ Folder: `rememberchestinventory/`
 - **RememberChestInventoryGui.java** — Provides a searchable list of remembered chest locations, dimension, observation time, and item-type count, with clear-history and Done actions. It does not yet display each stored item stack or connect to an automatic chest-open event.
 
 **Current prototype status:** The data model, bounded history, search, local persistence, and basic viewer GUI are present. Automatic capture from Minecraft 1.8.9 chest inventories, live module registration, item-level GUI details, and build/runtime verification remain outstanding. Do not describe automatic chest remembering as working until the Forge/container adapter is implemented and tested.
+
+## AutoSave
+
+Folder: `autosave/`
+
+- **AutoSave.java** — Standalone prototype entry point. Owns settings, save-state tracking, local persistence, HUD rendering, GUI opening, and registration of its Forge event adapter. It is not connected to the live AlphaClient module/menu registry.
+- **AutoSaveEventHandler.java** — Observes Forge `WorldEvent.Save` events and forwards server-side save observations to the module; also forwards HUD overlay events. The event path has not been runtime-verified against the project's exact Forge build.
+- **AutoSaveFormatter.java** — Formats elapsed time since the latest observed world-save event for the HUD.
+- **AutoSaveGui.java** — Provides enable/disable, HUD visibility, recent-save display window, scale, and X/Y position controls with a preview.
+- **AutoSaveHud.java** — Displays a temporary "World saved" indicator after an observed save event, respecting HUD visibility and debug-screen state.
+- **AutoSaveSettings.java** — Holds local display, duration, position, and scale settings with bounds.
+- **AutoSaveState.java** — Stores a thread-safe timestamp and world name for the most recently observed save event.
+- **AutoSaveStorage.java** — Persists HUD settings locally under `config/alphaclient/autosave.properties`; no remote or Supabase storage is used.
+
+**Current prototype status:** The standalone classes, configurable HUD, settings GUI, and local settings persistence are present. The event adapter is written against Forge's world-save and overlay event APIs, but event delivery, actual singleplayer autosave timing, GUI navigation, and HUD rendering have not been compiled or runtime-tested. The prototype is not yet registered in the normal AlphaClient module interface. It reports an observed save event; it does not control Minecraft's save interval or force a save.
 
 ### Inventory notes
 
