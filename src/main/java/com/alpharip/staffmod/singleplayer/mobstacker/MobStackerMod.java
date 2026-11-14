@@ -15,7 +15,10 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -33,6 +36,21 @@ public final class MobStackerMod {
     private static final String ORIGINAL_NAME = "AlphaMobStackOriginalName";
     private static final String ORIGINAL_HAS_CUSTOM_NAME = "AlphaMobStackOriginalHasCustomName";
     private static final String ORIGINAL_ALWAYS_RENDER = "AlphaMobStackOriginalAlwaysRender";
+
+    // Failed replacement spawns are retried after the current death event.
+    // This prevents a failed spawn from either deleting the remaining stack
+    // or canceling the mob's death indefinitely.
+    private static final List<PendingSpawn> PENDING_SPAWNS = new ArrayList<PendingSpawn>();
+
+    private static final class PendingSpawn {
+        private final World world;
+        private final NBTTagCompound entityData;
+
+        private PendingSpawn(World world, NBTTagCompound entityData) {
+            this.world = world;
+            this.entityData = entityData;
+        }
+    }
 
     private static boolean isAvailableAndEnabled() {
         Minecraft mc = Minecraft.getMinecraft();
@@ -115,14 +133,12 @@ public final class MobStackerMod {
 
         NBTTagList storedMembers = getMembers(dying);
         if (storedMembers.tagCount() <= 0) {
-            // There is no serialized member available to replace this stack's
-            // representative. Keep the stack intact rather than deleting it.
-            event.setCanceled(true);
+            // A malformed stack cannot provide a replacement. Let the
+            // representative complete its normal death sequence.
             return;
         }
 
-        // Work on a copy. The live stack metadata must not be changed unless
-        // the replacement has successfully joined the world.
+        // Work on a copy so the source stack is never mutated in-place.
         NBTTagCompound nextMember = (NBTTagCompound) storedMembers.getCompoundTagAt(0).copy();
         NBTTagList remainingMembers = (NBTTagList) storedMembers.copy();
         remainingMembers.removeTag(0);
@@ -131,11 +147,13 @@ public final class MobStackerMod {
         try {
             replacement = EntityList.createEntityFromNBT(nextMember, dying.worldObj);
         } catch (RuntimeException ignored) {
-            event.setCanceled(true);
+            // Never cancel a death to preserve a stack. Retain the member for
+            // a later retry instead.
+            queueReplacement(dying.worldObj, nextMember, remainingMembers);
             return;
         }
         if (!(replacement instanceof EntityLiving)) {
-            event.setCanceled(true);
+            queueReplacement(dying.worldObj, nextMember, remainingMembers);
             return;
         }
 
@@ -149,19 +167,69 @@ public final class MobStackerMod {
         replacementData.setBoolean(SKIP_MERGE, true);
         updateStackName((EntityLiving) replacement);
 
+        NBTTagCompound replacementSnapshot = new NBTTagCompound();
+        replacement.writeToNBT(replacementSnapshot);
         try {
-            // Only let the current representative die after its replacement
-            // has actually been accepted by the world.
             if (!dying.worldObj.spawnEntityInWorld(replacement)) {
-                event.setCanceled(true);
-                return;
+                // The original mob still dies normally. Retry the serialized
+                // replacement on a later world tick.
+                PENDING_SPAWNS.add(new PendingSpawn(dying.worldObj, replacementSnapshot));
             }
         } catch (RuntimeException ignored) {
-            event.setCanceled(true);
-            return;
+            PENDING_SPAWNS.add(new PendingSpawn(dying.worldObj, replacementSnapshot));
         }
 
-        // Vanilla handles exactly one mob's drops, XP and death effects.
+    }
+
+    private static void queueReplacement(World world, NBTTagCompound member,
+                                          NBTTagList remainingMembers) {
+        if (world == null || member == null || remainingMembers == null) return;
+
+        NBTTagCompound data = (NBTTagCompound) member.copy();
+        Entity replacement;
+        try {
+            replacement = EntityList.createEntityFromNBT(data, world);
+        } catch (RuntimeException ignored) {
+            return;
+        }
+        if (!(replacement instanceof EntityLiving)) return;
+
+        NBTTagCompound replacementData = replacement.getEntityData();
+        replacementData.setInteger(COUNT, remainingMembers.tagCount() + 1);
+        replacementData.setTag(MEMBERS, (NBTTagList) remainingMembers.copy());
+        replacementData.setBoolean(SKIP_MERGE, true);
+        NBTTagCompound snapshot = new NBTTagCompound();
+        replacement.writeToNBT(snapshot);
+        PENDING_SPAWNS.add(new PendingSpawn(world, snapshot));
+    }
+
+    @SubscribeEvent
+    public void onWorldTick(TickEvent.WorldTickEvent event) {
+        if (event == null || event.phase != TickEvent.Phase.END || event.world == null
+                || event.world.isRemote || PENDING_SPAWNS.isEmpty()) return;
+
+        Iterator<PendingSpawn> iterator = PENDING_SPAWNS.iterator();
+        while (iterator.hasNext()) {
+            PendingSpawn pending = iterator.next();
+            if (pending.world != event.world) continue;
+
+            Entity replacement;
+            try {
+                replacement = EntityList.createEntityFromNBT(
+                        (NBTTagCompound) pending.entityData.copy(), event.world);
+            } catch (RuntimeException ignored) {
+                continue;
+            }
+            if (!(replacement instanceof EntityLiving)) continue;
+
+            try {
+                if (event.world.spawnEntityInWorld(replacement)) {
+                    iterator.remove();
+                }
+            } catch (RuntimeException ignored) {
+                // Keep the serialized replacement queued for the next tick.
+            }
+        }
     }
 
     private static int getStackCount(EntityLiving entity) {
