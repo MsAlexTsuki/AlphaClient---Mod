@@ -27,6 +27,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
     private static final int TREE_EXCAVATE = 6;
     private static final int AUTO_REPLANT = 7;
     private static final int INVENTORY_SORTER = 8;
+    private static final int MOB_STACKER = 9;
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
@@ -90,6 +91,13 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         buttonList.add(new FeatureTileButton(INVENTORY_SORTER, firstTileX + (tileWidth + gap) * 2,
                 tileY + tileHeight + gap, tileWidth, tileHeight, "Inventory Sorter", "◆",
                 inventorySorterEnabled ? "ON" : "OFF", inventorySorterEnabled, true));
+        AlphaModuleFeature mobStacker = AlphaModuleRegistry.findFeature("mob-stacker");
+        boolean mobStackerAvailable = mobStacker != null && mobStacker.isAvailable();
+        boolean mobStackerEnabled = mobStacker != null && mobStacker.isEnabled();
+        String mobStackerStatus = !mobStackerAvailable ? "LOCKED" : (mobStackerEnabled ? "ON" : "OFF");
+        buttonList.add(new FeatureTileButton(MOB_STACKER, firstTileX + (tileWidth + gap) * 3,
+                tileY + tileHeight + gap, tileWidth, tileHeight, "Mob Stacker", "◆",
+                mobStackerStatus, mobStackerEnabled, mobStackerAvailable));
     }
 
     @Override
@@ -117,6 +125,9 @@ public final class SingleplayerGui extends AlphaGuiScreen {
             } else if (button.id == INVENTORY_SORTER) {
                 AlphaModuleFeature inventorySorter = AlphaModuleRegistry.findFeature("inventory-sorter");
                 if (inventorySorter != null) inventorySorter.setEnabled(!inventorySorter.isEnabled());
+            } else if (button.id == MOB_STACKER) {
+                AlphaModuleFeature mobStacker = AlphaModuleRegistry.findFeature("mob-stacker");
+                if (mobStacker != null && mobStacker.isAvailable()) mobStacker.setEnabled(!mobStacker.isEnabled());
             }
             initGui();
             return;
@@ -137,6 +148,12 @@ public final class SingleplayerGui extends AlphaGuiScreen {
             if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new AutoReplantGui(this));
         } else if (button.id == INVENTORY_SORTER) {
             if (hasActiveSingleplayerWorld()) mc.displayGuiScreen(new InventorySorterGui(this));
+        } else if (button.id == MOB_STACKER) {
+            AlphaModuleFeature mobStacker = AlphaModuleRegistry.findFeature("mob-stacker");
+            if (mobStacker != null && mobStacker.isAvailable()) {
+                mobStacker.setEnabled(!mobStacker.isEnabled());
+                initGui();
+            }
         }
     }
 
