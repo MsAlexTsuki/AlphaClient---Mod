@@ -1,10 +1,10 @@
 package com.alpharip.staffmod.store.partners;
 
-/** Relationship types for people connected to AlphaClient through promotion or collaboration. */
+/** Directory categories for AlphaClient partners, staff-cape recipients, and collaborators. */
 public enum PartnerType {
     ALL("All"),
-    PROMOTER("Promoter"),
-    HELPER("Helper"),
+    PARTNERS("Partners"),
+    STAFF("Staff"),
     COLLABORATOR("Collaborator");
 
     private final String displayName;
