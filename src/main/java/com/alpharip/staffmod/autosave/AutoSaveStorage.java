@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-/** Local settings persistence for AutoSave; no remote or Supabase storage. */
+/** Local settings persistence for singleplayer AutoSave; no remote or Supabase storage. */
 final class AutoSaveStorage {
     void load(File file, AutoSaveSettings settings) {
         if (file == null || settings == null || !file.isFile()) return;
