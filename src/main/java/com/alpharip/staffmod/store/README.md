@@ -9,6 +9,7 @@ Location: `src/main/java/com/alpharip/staffmod/store/` (outside `staffops/`).
 - **Partners** — a directory for people who promote AlphaClient, receive staff capes, or collaborate with AlphaClient, with relationship filters, search, and profile details.
 - `Store.java` — central section registry, selected-section state, and ownership of the Addons, Cosmetics, and Partners catalogues.
 - `StoreGui.java` — Minecraft 1.8.9 section navigation and catalogue browser.
+- `StoreSkinPreview.java` — renders the currently logged-in Minecraft player and their session-resolved skin in the right-hand Store panel.
 
 ## Addons files
 
@@ -38,7 +39,7 @@ Location: `src/main/java/com/alpharip/staffmod/store/` (outside `staffops/`).
 
 ## Current behavior
 
-All three sections are browseable through the central Store GUI. Addons support local metadata states (available, installed, disabled, removed); optional local state persistence is available through `new AddonStore(path)`. Cosmetics support catalogue registration, search, category filtering, and details. Partners support directory registration, search, relationship filtering, and profile details. The catalogues are not pre-populated with invented entries.
+All three sections are browseable through the central Store GUI. The right-hand details panel also displays a 3D preview of the current Minecraft player and their active skin when the Store is opened in-game. Addons support local metadata states (available, installed, disabled, removed); optional local state persistence is available through `new AddonStore(path)`. Cosmetics support catalogue registration, search, category filtering, and details. Partners support directory registration, search, relationship filtering, and profile details. The catalogues are not pre-populated with invented entries.
 
 ## Explicit integration boundaries
 
