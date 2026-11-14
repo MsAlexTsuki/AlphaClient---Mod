@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
@@ -15,6 +16,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,8 @@ import java.util.List;
 public final class MobStackerMod {
     public static final int MAX_STACK_SIZE = 264;
     public static final double MERGE_RADIUS = 20.0D;
+
+    private int playerScanTicks;
 
     private static final String COUNT = "AlphaMobStackCount";
     private static final String MEMBERS = "AlphaMobStackMembers";
@@ -57,51 +61,129 @@ public final class MobStackerMod {
             return;
         }
 
-        int joiningCount = getStackCount(joining);
-        // A persisted stack is already a complete group. Do not collapse it
-        // into another stack during chunk loading.
-        if (joiningCount > 1) return;
+        // New mobs are merged by the player-radius scan, not by their
+        // distance from another mob. This keeps the 20-block limit centered
+        // on the player instead of allowing distant groups to merge.
+        if (getStackCount(joining) <= 1) {
+            joiningData.setInteger(COUNT, 1);
+        }
+    }
 
-        World world = event.world;
+    @SubscribeEvent
+    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event == null || event.phase != TickEvent.Phase.END || event.player == null
+                || event.player.worldObj == null || event.player.worldObj.isRemote
+                || !isAvailableAndEnabled()) return;
+
+        if (++playerScanTicks < 10) return;
+        playerScanTicks = 0;
+
+        EntityPlayer player = event.player;
+        World world = player.worldObj;
         double radiusSq = MERGE_RADIUS * MERGE_RADIUS;
         List<EntityLiving> nearby = world.getEntitiesWithinAABB(EntityLiving.class,
-                joining.getEntityBoundingBox().expand(MERGE_RADIUS, MERGE_RADIUS, MERGE_RADIUS));
+                player.getEntityBoundingBox().expand(MERGE_RADIUS, MERGE_RADIUS, MERGE_RADIUS));
 
-        EntityLiving target = null;
-        double nearestDistanceSq = Double.MAX_VALUE;
-        for (EntityLiving candidate : nearby) {
-            if (candidate == null || candidate == joining || candidate.isDead
-                    || candidate.getClass() != joining.getClass()) continue;
-
-            int count = getStackCount(candidate);
-            if (count >= MAX_STACK_SIZE) continue;
-
-            NBTTagList candidateMembers = getMembers(candidate);
-            if (count > 1 && candidateMembers.tagCount() != count - 1) continue;
-            if (!hasSameVariant(candidate, joining)) continue;
-
-            double distanceSq = candidate.getDistanceSqToEntity(joining);
-            if (distanceSq <= radiusSq && distanceSq < nearestDistanceSq) {
-                target = candidate;
-                nearestDistanceSq = distanceSq;
+        List<EntityLiving> eligible = new ArrayList<EntityLiving>();
+        for (EntityLiving mob : nearby) {
+            if (mob != null && !mob.isDead && mob != player
+                    && mob.getDistanceSqToEntity(player) <= radiusSq) {
+                eligible.add(mob);
             }
         }
 
-        if (target == null) {
-            joiningData.setInteger(COUNT, 1);
-            return;
+        // Re-check existing entities periodically so mobs and existing stacks
+        // are combined as soon as they enter the player's 20-block radius.
+        for (int i = 0; i < eligible.size(); i++) {
+            EntityLiving target = eligible.get(i);
+            if (target == null || target.isDead || getStackCount(target) >= MAX_STACK_SIZE) continue;
+
+            for (int j = i + 1; j < eligible.size(); j++) {
+                EntityLiving source = eligible.get(j);
+                if (source == null || source.isDead || target.isDead
+                        || source.getClass() != target.getClass()
+                        || source.getDistanceSqToEntity(player) > radiusSq
+                        || target.getDistanceSqToEntity(player) > radiusSq
+                        || !hasSameVariant(target, source)) continue;
+
+                if (!mergeStacks(target, source)) continue;
+                if (getStackCount(target) >= MAX_STACK_SIZE) break;
+            }
+        }
+    }
+
+    private static boolean mergeStacks(EntityLiving target, EntityLiving source) {
+        if (target == null || source == null || target == source || target.isDead || source.isDead
+                || target.getClass() != source.getClass() || !hasSameVariant(target, source)) return false;
+
+        int targetCount = getStackCount(target);
+        int sourceCount = getStackCount(source);
+        int available = MAX_STACK_SIZE - targetCount;
+        if (available <= 0 || sourceCount <= 0) return false;
+
+        NBTTagList sourceMembers = getMembers(source);
+        if (sourceCount > 1 && sourceMembers.tagCount() != sourceCount - 1) return false;
+
+        int transferCount = Math.min(sourceCount, available);
+        NBTTagCompound sourceRepresentative = createMemberSnapshot(source);
+        if (sourceRepresentative == null) return false;
+
+        EntityLiving remainderEntity = null;
+        NBTTagList remainingMembers = new NBTTagList();
+        int remainingCount = sourceCount - transferCount;
+
+        if (remainingCount > 0) {
+            // The source representative and the first transferCount - 1
+            // stored members move into the target. The next stored member
+            // becomes the representative of the source's remaining stack.
+            int nextRepresentativeIndex = transferCount - 1;
+            if (nextRepresentativeIndex < 0 || nextRepresentativeIndex >= sourceMembers.tagCount()) {
+                return false;
+            }
+
+            NBTTagCompound nextMember = (NBTTagCompound) sourceMembers
+                    .getCompoundTagAt(nextRepresentativeIndex).copy();
+            Entity replacement;
+            try {
+                replacement = EntityList.createEntityFromNBT(nextMember, source.worldObj);
+            } catch (RuntimeException ignored) {
+                return false;
+            }
+            if (!(replacement instanceof EntityLiving)) return false;
+
+            remainderEntity = (EntityLiving) replacement;
+            remainderEntity.setPositionAndRotation(source.posX, source.posY, source.posZ,
+                    source.rotationYaw, source.rotationPitch);
+
+            remainingMembers = (NBTTagList) sourceMembers.copy();
+            for (int i = 0; i < transferCount; i++) {
+                remainingMembers.removeTag(0);
+            }
+
+            NBTTagCompound remainderData = remainderEntity.getEntityData();
+            remainderData.setInteger(COUNT, remainingCount);
+            remainderData.setTag(MEMBERS, remainingMembers);
+            remainderData.setBoolean(SKIP_MERGE, true);
+            updateStackName(remainderEntity);
+
+            if (!source.worldObj.spawnEntityInWorld(remainderEntity)) return false;
         }
 
-        NBTTagCompound memberSnapshot = createMemberSnapshot(joining);
-        if (memberSnapshot == null) return;
-
         NBTTagCompound targetData = target.getEntityData();
-        NBTTagList members = getMembers(target);
-        members.appendTag(memberSnapshot);
-        targetData.setTag(MEMBERS, members);
-        targetData.setInteger(COUNT, getStackCount(target) + 1);
+        NBTTagList targetMembers = getMembers(target);
+        targetMembers.appendTag(sourceRepresentative);
+
+        int storedToTransfer = transferCount - 1;
+        for (int i = 0; i < storedToTransfer; i++) {
+            targetMembers.appendTag(sourceMembers.getCompoundTagAt(i).copy());
+        }
+
+        targetData.setTag(MEMBERS, targetMembers);
+        targetData.setInteger(COUNT, targetCount + transferCount);
         updateStackName(target);
-        event.setCanceled(true);
+
+        source.setDead();
+        return true;
     }
 
     @SubscribeEvent
@@ -228,6 +310,18 @@ public final class MobStackerMod {
         // Entity.writeToNBT() omits the entity ID in Forge 1.8.9.
         // EntityList.createEntityFromNBT() requires that ID to recreate it.
         NBTTagCompound snapshot = entity.serializeNBT();
+
+        // Store the mob's original name, not the generated "Name xCount"
+        // label used to display an existing stack.
+        NBTTagCompound entityData = entity.getEntityData();
+        if (entityData.getBoolean(NAME_CAPTURED)) {
+            if (entityData.getBoolean(ORIGINAL_HAS_CUSTOM_NAME)) {
+                snapshot.setString("CustomName", entityData.getString(ORIGINAL_NAME));
+            } else {
+                snapshot.removeTag("CustomName");
+            }
+            snapshot.setBoolean("CustomNameVisible", entityData.getBoolean(ORIGINAL_ALWAYS_RENDER));
+        }
 
         // Preserve other entity NBT, but never nest this stack's own metadata
         // inside every stored member snapshot.
