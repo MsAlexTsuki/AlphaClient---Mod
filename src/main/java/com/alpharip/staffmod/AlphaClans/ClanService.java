@@ -12,6 +12,7 @@ import java.util.UUID;
 
 public final class ClanService {
     public static final int MAX_MEMBERS = 50;
+    public static final int MAX_PENDING_INVITES = 1000;
     public static final long INVITE_LIFETIME_MS = 7L * 24L * 60L * 60L * 1000L;
     private final ClanRepository repository;
     private final Map<UUID, Clan> clans = new LinkedHashMap<UUID, Clan>();
@@ -73,6 +74,9 @@ public final class ClanService {
         long now = System.currentTimeMillis();
         clan.removeExpiredInvites(now);
         if (clan.getInvite(targetId) != null) return ClanResult.failure("That player already has a pending invite.");
+        if (clan.getInvites().size() >= MAX_PENDING_INVITES) {
+            return ClanResult.failure("This clan has reached its pending invite limit.");
+        }
         clan.putInvite(new ClanInvite(clan.getId(), inviterId, targetId, now, now + INVITE_LIFETIME_MS));
         persist();
         return ClanResult.success("Clan invite sent.", clan);
