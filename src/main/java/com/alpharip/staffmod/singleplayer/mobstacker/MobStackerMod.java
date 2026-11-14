@@ -4,6 +4,8 @@ package com.alpharip.staffmod.singleplayer.mobstacker;
 import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
@@ -12,9 +14,13 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.util.ArrayList;
 import java.util.List;
+import org.lwjgl.opengl.GL11;
 
 /**
  * Singleplayer mob stacking.
@@ -182,5 +188,144 @@ public final class MobStackerMod {
         dying.setHealth(dying.getMaxHealth());
         System.err.println("[AlphaClient] Mob Stacker could not create a temporary mob copy; "
                 + "the existing stack was preserved.");
+    }
+
+    /**
+     * Re-check nearby mobs after movement as well as when they first spawn.
+     * Running every five world ticks lets mobs that land near one another
+     * merge without waiting for another spawn event.
+     */
+    @SubscribeEvent
+    public void onWorldTick(TickEvent.WorldTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !isFeatureEnabled()
+                || !isSingleplayerWorld(event.world)
+                || event.world.getTotalWorldTime() % 5L != 0L) {
+            return;
+        }
+
+        List<Entity> loadedEntities = new ArrayList<Entity>(event.world.loadedEntityList);
+        for (Entity entity : loadedEntities) {
+            if (!(entity instanceof EntityLiving)) {
+                continue;
+            }
+
+            EntityLiving incoming = (EntityLiving) entity;
+            if (incoming.isDead || !incoming.isEntityAlive()) {
+                continue;
+            }
+
+            int incomingCount = getStackCount(incoming);
+            if (incomingCount >= MobStackerSettings.MAX_STACK_SIZE) {
+                continue;
+            }
+
+            AxisAlignedBB searchArea = incoming.getEntityBoundingBox().expand(
+                    MobStackerSettings.STACK_RADIUS,
+                    MobStackerSettings.STACK_RADIUS,
+                    MobStackerSettings.STACK_RADIUS
+            );
+            List<EntityLiving> nearby = event.world.getEntitiesWithinAABB(EntityLiving.class, searchArea);
+
+            for (EntityLiving existing : nearby) {
+                // Only merge into an older entity. This prevents the same pair
+                // from transferring its count in both directions during one scan.
+                if (existing == incoming || existing.isDead || !existing.isEntityAlive()
+                        || existing.getEntityId() >= incoming.getEntityId()
+                        || existing.getClass() != incoming.getClass()) {
+                    continue;
+                }
+
+                if (incoming.getDistanceSqToEntity(existing)
+                        > MobStackerSettings.STACK_RADIUS * MobStackerSettings.STACK_RADIUS) {
+                    continue;
+                }
+
+                int existingCount = getStackCount(existing);
+                int availableSpace = MobStackerSettings.MAX_STACK_SIZE - existingCount;
+                if (availableSpace <= 0) {
+                    continue;
+                }
+
+                int transferred = Math.min(availableSpace, incomingCount);
+                setStackCount(existing, existingCount + transferred);
+                incomingCount -= transferred;
+
+                if (incomingCount <= 0) {
+                    incoming.setDead();
+                    break;
+                }
+            }
+
+            if (!incoming.isDead && incomingCount > 0) {
+                setStackCount(incoming, incomingCount);
+            }
+        }
+    }
+
+    private static boolean isClientMobStackerEnabled() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("mob-stacker");
+        return minecraft != null && minecraft.isSingleplayer()
+                && minecraft.theWorld != null && minecraft.thePlayer != null
+                && feature != null && feature.isEnabled();
+    }
+
+    /**
+     * Replace custom vanilla mob labels with the Mob Stacker label, then draw
+     * the same label for every rendered mob (including mobs without custom names).
+     */
+    @SubscribeEvent
+    public void onMobNameTagPre(RenderLivingEvent.Specials.Pre event) {
+        if (event.entity instanceof EntityLiving && isClientMobStackerEnabled()) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public void onRenderMobNameTag(RenderLivingEvent.Post event) {
+        if (!(event.entity instanceof EntityLiving) || !isClientMobStackerEnabled()) {
+            return;
+        }
+
+        EntityLiving entity = (EntityLiving) event.entity;
+        if (entity.isInvisible() || entity.isDead) {
+            return;
+        }
+
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft.fontRendererObj == null || minecraft.getRenderManager() == null) {
+            return;
+        }
+
+        String mobName = EntityList.getEntityString(entity);
+        if (mobName == null || mobName.trim().isEmpty()) {
+            mobName = entity.getName();
+        }
+        String label = mobName + " x" + getStackCount(entity);
+        int halfWidth = minecraft.fontRendererObj.getStringWidth(label) / 2;
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT
+                | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_CURRENT_BIT);
+        GlStateManager.pushMatrix();
+        try {
+            GlStateManager.translate(event.x, event.y + entity.height + 0.5D, event.z);
+            GlStateManager.rotate(-minecraft.getRenderManager().playerViewY,
+                    0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(minecraft.getRenderManager().playerViewX,
+                    1.0F, 0.0F, 0.0F);
+            GlStateManager.scale(-0.026666668F, -0.026666668F, 0.026666668F);
+            GlStateManager.disableLighting();
+            GlStateManager.disableDepth();
+            GlStateManager.depthMask(false);
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+
+            Gui.drawRect(-halfWidth - 2, -2, halfWidth + 2,
+                    minecraft.fontRendererObj.FONT_HEIGHT + 2, 0x50000000);
+            minecraft.fontRendererObj.drawStringWithShadow(label, -halfWidth, 0, 0xFFFFFFFF);
+        } finally {
+            GlStateManager.popMatrix();
+            GL11.glPopAttrib();
+        }
     }
 }
