@@ -55,9 +55,9 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         panelBottom = Math.min(height - 12, panelTop + 300);
 
         int gap = 8;
-        int columns = 3;
+        int columns = 4;
         tileWidth = (panelRight - panelLeft - 24 - gap * (columns - 1)) / columns;
-        int tileHeight = 54;
+        int tileHeight = 36;
         int tileY = panelTop + 68;
         int firstTileX = panelLeft + 12;
 
@@ -65,19 +65,21 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         AlphaModule worldEdit = AlphaModuleRegistry.find("world-edit");
         boolean worldEditEnabled = worldEdit != null && worldEdit.isEnabled();
         buttonList.add(new FeatureTileButton(WORLD_EDIT, firstTileX, tileY,
-                tileWidth, tileHeight, "World Edit", "WE", worldEditEnabled ? "ON" : "OFF", worldEditEnabled, true));
+                tileWidth, tileHeight, "World Edit", "◆",
+                worldEditEnabled ? "ON" : "OFF", worldEditEnabled, true));
         buttonList.add(new FeatureTileButton(AUTO_TOOL, firstTileX + tileWidth + gap, tileY,
-                tileWidth, tileHeight, "AutoTool", "AT", AutoToolSettings.isEnabled() ? "ON" : "OFF", AutoToolSettings.isEnabled(), true));
+                tileWidth, tileHeight, "AutoTool", "◆",
+                AutoToolSettings.isEnabled() ? "ON" : "OFF", AutoToolSettings.isEnabled(), true));
         buttonList.add(new FeatureTileButton(ALPHA_HOMES, firstTileX + (tileWidth + gap) * 2, tileY,
-                tileWidth, tileHeight, "AlphaHomes", "AH", null, false, true));
-        buttonList.add(new FeatureTileButton(PRIVATE_VAULTS, firstTileX, tileY + tileHeight + gap,
-                tileWidth, tileHeight, "Private Vaults", "PV", null, false, true));
-        buttonList.add(new FeatureTileButton(TREE_EXCAVATE, firstTileX + tileWidth + gap,
-                tileY + tileHeight + gap, tileWidth, tileHeight, "Tree Excavate", "TE", null, false, true));
-        buttonList.add(new FeatureTileButton(AUTO_REPLANT, firstTileX + (tileWidth + gap) * 2,
-                tileY + tileHeight + gap, tileWidth, tileHeight, "Auto Replant", "AR", null, false, true));
-        buttonList.add(new FeatureTileButton(INVENTORY_SORTER, firstTileX,
-                tileY + (tileHeight + gap) * 2, tileWidth, tileHeight, "Inventory Sorter", "IS", null, false, true));
+                tileWidth, tileHeight, "AlphaHomes", "◆", null, false, true));
+        buttonList.add(new FeatureTileButton(PRIVATE_VAULTS, firstTileX + (tileWidth + gap) * 3, tileY,
+                tileWidth, tileHeight, "Private Vaults", "◆", null, false, true));
+        buttonList.add(new FeatureTileButton(TREE_EXCAVATE, firstTileX, tileY + tileHeight + gap,
+                tileWidth, tileHeight, "Tree Excavate", "◆", null, false, true));
+        buttonList.add(new FeatureTileButton(AUTO_REPLANT, firstTileX + tileWidth + gap,
+                tileY + tileHeight + gap, tileWidth, tileHeight, "Auto Replant", "◆", null, false, true));
+        buttonList.add(new FeatureTileButton(INVENTORY_SORTER, firstTileX + (tileWidth + gap) * 2,
+                tileY + tileHeight + gap, tileWidth, tileHeight, "Inventory Sorter", "◆", null, false, true));
     }
 
     @Override
