@@ -31,8 +31,12 @@ import org.lwjgl.opengl.GL11;
  * experience while the original mob retains its live AI state.
  */
 public final class MobStackerMod {
-    private static final String STACK_COUNT_KEY = "AlphaClientMobStackCount";
+    static final String STACK_COUNT_KEY = "AlphaClientMobStackCount";
     private static final String SKIP_STACKING_KEY = "AlphaClientMobStackSkipJoin";
+
+    static {
+        MobStackerNetwork.initialize();
+    }
 
     private static boolean isFeatureEnabled() {
         AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("mob-stacker");
@@ -52,7 +56,12 @@ public final class MobStackerMod {
     }
 
     private static void setStackCount(EntityLiving entity, int count) {
-        entity.getEntityData().setInteger(STACK_COUNT_KEY, Math.max(1, count));
+        int normalizedCount = Math.max(1, count);
+        int previousCount = getStackCount(entity);
+        entity.getEntityData().setInteger(STACK_COUNT_KEY, normalizedCount);
+        if (previousCount != normalizedCount) {
+            MobStackerNetwork.sync(entity, normalizedCount);
+        }
     }
 
     @SubscribeEvent
@@ -258,6 +267,10 @@ public final class MobStackerMod {
 
             if (!incoming.isDead && incomingCount > 0) {
                 setStackCount(incoming, incomingCount);
+                // Re-send persisted stacks after the entity has entered the client world.
+                if (incomingCount > 1) {
+                    MobStackerNetwork.sync(incoming, incomingCount);
+                }
             }
         }
     }
