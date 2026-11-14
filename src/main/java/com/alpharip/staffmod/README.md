@@ -1285,6 +1285,10 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `cosmetics/CosmeticRegistry.java`
 - `cosmetics/CosmeticCatalog.java`
 - `Cosmetics/` — 128 moved idea/prototype source files; package declarations still reference `com.alpharip.staffmod.staffops.ideas` and these files are not wired as Store catalogue entries.
+- `partners/PartnerEntry.java`
+- `partners/PartnerType.java`
+- `partners/PartnerRegistry.java`
+- `partners/PartnerCatalog.java`
 
 ### `TimeTill/`
 

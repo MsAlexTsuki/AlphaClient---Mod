@@ -7,6 +7,9 @@ import com.alpharip.staffmod.store.addons.AddonStore;
 import com.alpharip.staffmod.store.cosmetics.CosmeticCatalog;
 import com.alpharip.staffmod.store.cosmetics.CosmeticCategory;
 import com.alpharip.staffmod.store.cosmetics.CosmeticEntry;
+import com.alpharip.staffmod.store.partners.PartnerCatalog;
+import com.alpharip.staffmod.store.partners.PartnerEntry;
+import com.alpharip.staffmod.store.partners.PartnerType;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -44,6 +47,10 @@ public class StoreGui extends GuiScreen {
         return "cosmetics".equals(store.getSelectedSectionId());
     }
 
+    private boolean showingPartners() {
+        return "partners".equals(store.getSelectedSectionId());
+    }
+
     @Override public void initGui() {
         buttonList.clear();
         int left = Math.max(12, width / 2 - 220);
@@ -53,7 +60,9 @@ public class StoreGui extends GuiScreen {
         searchField.setMaxStringLength(80);
         searchField.setText(showingCosmetics()
                 ? store.getCosmeticCatalog().getSearchQuery()
-                : store.getAddonStore().getSettings().getSearchQuery());
+                : showingPartners()
+                    ? store.getPartnerCatalog().getSearchQuery()
+                    : store.getAddonStore().getSettings().getSearchQuery());
 
         buttonList.add(new GuiButton(BACK_ID, 12, height - 30, 72, 20, "Back"));
         int sectionWidth = Math.max(90, (right - left) / Math.max(1, store.getSections().size()));
@@ -70,6 +79,9 @@ public class StoreGui extends GuiScreen {
         int detailLeft = Math.max(width / 2 + 35, right - 155);
         if (showingCosmetics()) {
             CosmeticCategory[] categories = CosmeticCategory.values();
+            addCategoryButtons(left, right, categories.length, categories);
+        } else if (showingPartners()) {
+            PartnerType[] categories = PartnerType.values();
             addCategoryButtons(left, right, categories.length, categories);
         } else {
             AddonCategory[] categories = AddonCategory.values();
@@ -91,9 +103,12 @@ public class StoreGui extends GuiScreen {
     private void addCategoryButtons(int left, int right, int count, Object[] categories) {
         int categoryWidth = Math.max(44, (right - left) / Math.max(1, count));
         for (int i = 0; i < count; i++) {
-            String label = categories[i] instanceof AddonCategory
-                    ? ((AddonCategory) categories[i]).getDisplayName()
-                    : ((CosmeticCategory) categories[i]).getDisplayName();
+            String label;
+            if (categories[i] instanceof AddonCategory)
+                label = ((AddonCategory) categories[i]).getDisplayName();
+            else if (categories[i] instanceof CosmeticCategory)
+                label = ((CosmeticCategory) categories[i]).getDisplayName();
+            else label = ((PartnerType) categories[i]).getDisplayName();
             buttonList.add(new GuiButton(CATEGORY_BASE + i, left + i * categoryWidth, 85,
                     categoryWidth - 2, 18, label));
         }
@@ -106,6 +121,7 @@ public class StoreGui extends GuiScreen {
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (searchField != null && searchField.textboxKeyTyped(typedChar, keyCode)) {
             if (showingCosmetics()) store.getCosmeticCatalog().setSearchQuery(searchField.getText());
+            else if (showingPartners()) store.getPartnerCatalog().setSearchQuery(searchField.getText());
             else store.getAddonStore().getSettings().setSearchQuery(searchField.getText());
             selectedIndex = -1;
             scrollOffset = 0;
@@ -149,6 +165,8 @@ public class StoreGui extends GuiScreen {
             int categoryIndex = button.id - CATEGORY_BASE;
             if (showingCosmetics())
                 store.getCosmeticCatalog().setSelectedCategory(CosmeticCategory.values()[categoryIndex]);
+            else if (showingPartners())
+                store.getPartnerCatalog().setSelectedType(PartnerType.values()[categoryIndex]);
             else store.getAddonStore().getSettings().setSelectedCategory(AddonCategory.values()[categoryIndex]);
             selectedIndex = -1;
             scrollOffset = 0;
@@ -167,7 +185,7 @@ public class StoreGui extends GuiScreen {
             mc.displayGuiScreen(parent);
             return;
         }
-        if (showingCosmetics()) return;
+        if (showingCosmetics() || showingPartners()) return;
 
         AddonEntry entry = getSelectedAddon();
         if (entry == null) {
@@ -188,12 +206,15 @@ public class StoreGui extends GuiScreen {
     }
 
     private int categoryCount() {
-        return showingCosmetics() ? CosmeticCategory.values().length : AddonCategory.values().length;
+        if (showingCosmetics()) return CosmeticCategory.values().length;
+        if (showingPartners()) return PartnerType.values().length;
+        return AddonCategory.values().length;
     }
 
     private int visibleCount() {
-        return showingCosmetics() ? store.getCosmeticCatalog().getVisibleCosmetics().size()
-                : store.getAddonStore().getVisibleAddons().size();
+        if (showingCosmetics()) return store.getCosmeticCatalog().getVisibleCosmetics().size();
+        if (showingPartners()) return store.getPartnerCatalog().getVisiblePartners().size();
+        return store.getAddonStore().getVisibleAddons().size();
     }
 
     private AddonEntry getSelectedAddon() {
@@ -206,16 +227,22 @@ public class StoreGui extends GuiScreen {
         return selectedIndex >= 0 && selectedIndex < entries.size() ? entries.get(selectedIndex) : null;
     }
 
+    private PartnerEntry getSelectedPartner() {
+        List<PartnerEntry> entries = store.getPartnerCatalog().getVisiblePartners();
+        return selectedIndex >= 0 && selectedIndex < entries.size() ? entries.get(selectedIndex) : null;
+    }
+
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
         drawCenteredString(fontRendererObj, "ALPHA STORE", width / 2, 12, 0xFFFFFFFF);
-        drawCenteredString(fontRendererObj, showingCosmetics()
-                ? "COSMETICS  /  CATALOGUE" : "ADDONS  /  LOCAL CATALOGUE",
-                width / 2, 25, 0xFFFFD866);
+        String pageTitle = showingCosmetics() ? "COSMETICS  /  CATALOGUE"
+                : showingPartners() ? "PARTNERS  /  DIRECTORY" : "ADDONS  /  LOCAL CATALOGUE";
+        drawCenteredString(fontRendererObj, pageTitle, width / 2, 25, 0xFFFFD866);
         if (searchField != null) searchField.drawTextBox();
         drawString(fontRendererObj, "Search", listLeft, 30, 0xFFB8BDC8);
 
         if (showingCosmetics()) drawCosmetics();
+        else if (showingPartners()) drawPartners();
         else drawAddons();
 
         drawString(fontRendererObj, fontRendererObj.trimStringToWidth(message, width - 100),
@@ -305,6 +332,49 @@ public class StoreGui extends GuiScreen {
                 x, y, 0xFFB8BDC8); y += 12;
         if (!selected.getSourceClass().isEmpty())
             drawWrapped("Source: " + selected.getSourceClass(), x, y, maxWidth, 0xFFB8BDC8);
+    }
+
+    private void drawPartners() {
+        PartnerCatalog catalog = store.getPartnerCatalog();
+        List<PartnerEntry> entries = catalog.getVisiblePartners();
+        int visibleRows = Math.max(0, (listBottom - listTop) / ROW_HEIGHT);
+        for (int i = 0; i < visibleRows && scrollOffset + i < entries.size(); i++) {
+            int index = scrollOffset + i;
+            PartnerEntry entry = entries.get(index);
+            int y = listTop + i * ROW_HEIGHT;
+            drawRect(listLeft, y, listRight, y + 34,
+                    index == selectedIndex ? 0xCC665522 : 0xAA252525);
+            drawString(fontRendererObj, fontRendererObj.trimStringToWidth(entry.getName(),
+                    listRight - listLeft - 12), listLeft + 6, y + 5, 0xFFFFFFFF);
+            drawString(fontRendererObj, entry.getType().getDisplayName()
+                    + (entry.getPlatform().isEmpty() ? "" : "  |  " + entry.getPlatform()),
+                    listLeft + 6, y + 19, 0xFFB8BDC8);
+        }
+        if (entries.isEmpty()) drawEmptyState("No partners registered yet.",
+                "Add people who promote, help, or collaborate with AlphaClient.");
+        drawRect(listRight + 12, listTop, width - 12, listBottom, 0x88303030);
+        drawString(fontRendererObj, "PARTNER DETAILS", listRight + 20, listTop + 8, 0xFFFFD866);
+        PartnerEntry selected = getSelectedPartner();
+        if (selected == null) {
+            drawString(fontRendererObj, "Select a partner to view their details.",
+                    listRight + 20, listTop + 28, 0xFFB8BDC8);
+            return;
+        }
+        int x = listRight + 20;
+        int y = listTop + 25;
+        int maxWidth = width - x - 24;
+        drawString(fontRendererObj, fontRendererObj.trimStringToWidth(selected.getName(), maxWidth),
+                x, y, 0xFFFFFFFF);
+        y += 16;
+        drawString(fontRendererObj, "Relationship: " + selected.getType().getDisplayName(),
+                x, y, 0xFFB8BDC8); y += 12;
+        if (!selected.getPlatform().isEmpty()) {
+            drawString(fontRendererObj, "Platform: " + selected.getPlatform(), x, y, 0xFFB8BDC8);
+            y += 12;
+        }
+        y = drawWrapped(selected.getDescription(), x, y + 4, maxWidth, 0xFFCCCCCC);
+        if (!selected.getProfileUrl().isEmpty())
+            drawWrapped("Link: " + selected.getProfileUrl(), x, y + 4, maxWidth, 0xFFB8BDC8);
     }
 
     private void drawEmptyState(String title, String subtitle) {

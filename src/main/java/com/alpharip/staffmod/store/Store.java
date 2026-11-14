@@ -2,6 +2,7 @@ package com.alpharip.staffmod.store;
 
 import com.alpharip.staffmod.store.addons.AddonStore;
 import com.alpharip.staffmod.store.cosmetics.CosmeticCatalog;
+import com.alpharip.staffmod.store.partners.PartnerCatalog;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -15,24 +16,32 @@ public final class Store {
     private final Map<String, StoreSection> sections = new LinkedHashMap<String, StoreSection>();
     private final AddonStore addonStore;
     private final CosmeticCatalog cosmeticCatalog;
+    private final PartnerCatalog partnerCatalog;
 
     public Store() {
-        this(new AddonStore(), new CosmeticCatalog());
+        this(new AddonStore(), new CosmeticCatalog(), new PartnerCatalog());
     }
 
     public Store(AddonStore addonStore) {
-        this(addonStore, new CosmeticCatalog());
+        this(addonStore, new CosmeticCatalog(), new PartnerCatalog());
     }
 
     public Store(AddonStore addonStore, CosmeticCatalog cosmeticCatalog) {
-        if (addonStore == null || cosmeticCatalog == null)
+        this(addonStore, cosmeticCatalog, new PartnerCatalog());
+    }
+
+    public Store(AddonStore addonStore, CosmeticCatalog cosmeticCatalog, PartnerCatalog partnerCatalog) {
+        if (addonStore == null || cosmeticCatalog == null || partnerCatalog == null)
             throw new IllegalArgumentException("Store catalogues are required.");
         this.addonStore = addonStore;
         this.cosmeticCatalog = cosmeticCatalog;
+        this.partnerCatalog = partnerCatalog;
         registerSection(new StoreSection("addons", "Addons",
                 "Browse and manage AlphaClient add-ons."));
         registerSection(new StoreSection("cosmetics", "Cosmetics",
                 "Browse cosmetic items and customization options."));
+        registerSection(new StoreSection("partners", "Partners",
+                "People who promote, help, or collaborate with AlphaClient."));
     }
 
     public synchronized boolean isEnabled() { return enabled; }
@@ -58,11 +67,13 @@ public final class Store {
     }
     public AddonStore getAddonStore() { return addonStore; }
     public CosmeticCatalog getCosmeticCatalog() { return cosmeticCatalog; }
+    public PartnerCatalog getPartnerCatalog() { return partnerCatalog; }
 
     public synchronized void clearSessionState() {
         selectedSectionId = sections.isEmpty() ? null : sections.keySet().iterator().next();
         addonStore.clearSessionFilters();
         cosmeticCatalog.clearSessionFilters();
+        partnerCatalog.clearSessionFilters();
     }
 
     public static final class StoreSection {
