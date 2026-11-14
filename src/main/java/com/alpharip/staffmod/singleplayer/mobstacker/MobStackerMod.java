@@ -19,7 +19,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -31,19 +30,6 @@ public final class MobStackerMod {
     public static final double MERGE_RADIUS = 20.0D;
 
     private int playerScanTicks;
-
-    // Retain raw member data until the original death has fully completed.
-    private static final List<PendingSpawn> PENDING_SPAWNS = new ArrayList<PendingSpawn>();
-
-    private static final class PendingSpawn {
-        private final World world;
-        private final NBTTagCompound entityData;
-
-        private PendingSpawn(World world, NBTTagCompound entityData) {
-            this.world = world;
-            this.entityData = entityData;
-        }
-    }
 
     private static final String COUNT = "AlphaMobStackCount";
     private static final String MEMBERS = "AlphaMobStackMembers";
@@ -222,53 +208,28 @@ public final class MobStackerMod {
         NBTTagList remainingMembers = (NBTTagList) storedMembers.copy();
         remainingMembers.removeTag(0);
 
-        // Preserve the original entity ID and NBT. Do not round-trip this
-        // compound through writeToNBT(), which omits the ID required by
-        // EntityList.createEntityFromNBT() in this Minecraft version.
-        NBTTagCompound queuedData = (NBTTagCompound) nextMember.copy();
-        NBTTagCompound forgeData = queuedData.hasKey("ForgeData", 10)
-                ? queuedData.getCompoundTag("ForgeData") : new NBTTagCompound();
-        int remainingCount = remainingMembers.tagCount() + 1;
-        forgeData.setInteger(COUNT, remainingCount);
-        forgeData.setTag(MEMBERS, remainingMembers);
-        forgeData.setBoolean(SKIP_MERGE, true);
-        queuedData.setTag("ForgeData", forgeData);
-
-        // Spawn on the next server world tick, after vanilla has processed
-        // the representative's death and removed it from the world.
-        PENDING_SPAWNS.add(new PendingSpawn(dying.worldObj, queuedData));
-    }
-
-    @SubscribeEvent
-    public void onWorldTick(TickEvent.WorldTickEvent event) {
-        if (event == null || event.phase != TickEvent.Phase.END || event.world == null
-                || event.world.isRemote || PENDING_SPAWNS.isEmpty()) return;
-
-        Iterator<PendingSpawn> iterator = PENDING_SPAWNS.iterator();
-        while (iterator.hasNext()) {
-            PendingSpawn pending = iterator.next();
-            if (pending.world != event.world) continue;
-
-            Entity replacement;
-            try {
-                replacement = EntityList.createEntityFromNBT(
-                        (NBTTagCompound) pending.entityData.copy(), event.world);
-            } catch (RuntimeException ignored) {
-                continue;
-            }
-            if (!(replacement instanceof EntityLiving)) {
-                iterator.remove();
-                continue;
-            }
-
-            try {
-                if (event.world.spawnEntityInWorld(replacement)) {
-                    iterator.remove();
-                }
-            } catch (RuntimeException ignored) {
-                // Keep the intact serialized member and retry next world tick.
-            }
+        Entity replacement;
+        try {
+            replacement = EntityList.createEntityFromNBT(nextMember, dying.worldObj);
+        } catch (RuntimeException ignored) {
+            return;
         }
+        if (!(replacement instanceof EntityLiving)) return;
+
+        replacement.setPositionAndRotation(dying.posX, dying.posY, dying.posZ,
+                dying.rotationYaw, dying.rotationPitch);
+
+        NBTTagCompound replacementData = replacement.getEntityData();
+        int remainingCount = remainingMembers.tagCount() + 1;
+        replacementData.setInteger(COUNT, remainingCount);
+        replacementData.setTag(MEMBERS, remainingMembers);
+        replacementData.setBoolean(SKIP_MERGE, true);
+        updateStackName((EntityLiving) replacement);
+
+        // The member snapshots include the entity ID through serializeNBT(),
+        // allowing EntityList.createEntityFromNBT() to reconstruct the mob.
+        // Do not cancel the original death and do not retry invalid snapshots.
+        dying.worldObj.spawnEntityInWorld(replacement);
     }
 
     private static int getStackCount(EntityLiving entity) {
