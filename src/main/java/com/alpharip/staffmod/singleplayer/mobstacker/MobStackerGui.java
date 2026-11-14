@@ -43,7 +43,7 @@ public final class MobStackerGui extends AlphaGuiScreen {
         }
 
         panelWidth = Math.min(420, width - 24);
-        panelHeight = 190;
+        panelHeight = 110;
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
 
@@ -81,24 +81,8 @@ public final class MobStackerGui extends AlphaGuiScreen {
         drawRect(left, top, left + panelWidth, top + panelHeight, 0xF00B0D12);
         drawRect(left, top, left + panelWidth, top + 2, ACCENT);
 
-        AlphaModuleFeature feature = AlphaModuleRegistry.findFeature("mob-stacker");
-        boolean enabled = feature != null && feature.isEnabled();
-
         drawCenteredString(fontRendererObj, "MOB STACKER", width / 2,
                 top + 15, 0xFFF2F3F5);
-        drawCenteredString(fontRendererObj, "SINGLEPLAYER  •  SCOUT+", width / 2,
-                top + 33, ACCENT);
-        drawCenteredString(fontRendererObj, "STATUS: " + (enabled ? "ON" : "OFF"),
-                width / 2, top + 51, enabled ? 0xFF75D889 : 0xFFFF7777);
-
-        drawString(fontRendererObj, "Maximum stack size: "
-                + MobStackerSettings.MAX_STACK_SIZE, left + 18, top + 78, 0xFFB8BDC8);
-        drawString(fontRendererObj, "Merge distance: "
-                + (int) MobStackerSettings.STACK_RADIUS + " blocks", left + 18, top + 96, 0xFFB8BDC8);
-        drawString(fontRendererObj, "Only mobs of the same entity type can stack.",
-                left + 18, top + 119, 0xFFB8BDC8);
-        drawString(fontRendererObj, "Each kill removes one mob from the stack.",
-                left + 18, top + 137, 0xFFB8BDC8);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
