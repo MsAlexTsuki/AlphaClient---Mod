@@ -1457,3 +1457,21 @@ Folder: `animalbreedingcooldowntimer/`
 - `ArrowCounter/`, `BiomeHud/`, `ChestItemTotal/`, `Remember Villagers/`, and `TimeTill/` are included because their Java prototype files are present in this snapshot.
 - The current manifest is authoritative for file presence. Older explanatory sections above may describe earlier prototype states; if a folder or file is absent from this manifest, it is not present in this snapshot.
 - `BlockPlacementPreview/` and `Aimassist Expansion/` are not present in this snapshot and are therefore not counted.
+
+
+## Alpha Clans
+
+Folder: `AlphaClans/` (a sibling of `staffops/`).
+
+- **AlphaClans.java** — Standalone entry point that creates the clan service and UI-ready screen model using a caller-supplied local storage path.
+- **Clan.java / ClanMember.java / ClanRole.java / ClanPermission.java** — Clan identity, membership, owner/officer/member roles, and permission model.
+- **ClanInvite.java / ClanChatMessage.java** — Expiring invitations and bounded clan chat records.
+- **ClanService.java** — Clan lifecycle and authorization operations: create, invite, accept/decline, leave, kick, promote/demote, transfer ownership, rename, change tag, disband, and chat.
+- **ClanCommand.java / ClanCommandParser.java / ClanCommandHandler.java** — Tokenized command model, quoted argument parsing, and command dispatch. Multi-word clan names are accepted by `/clan create <name> <tag>`.
+- **ClanPlayerDirectory.java** — Integration boundary for resolving Minecraft player names to UUIDs; a Minecraft-backed adapter is still required.
+- **ClanRepository.java / FileClanRepository.java** — Local-only versioned binary persistence with bounded record counts and atomic replacement.
+- **ClanScreenModel.java** — Immutable UI snapshot model for clan details, members, chat, and pending invitations.
+
+**Current status:** The standalone clan domain, command parsing/dispatch, UI data model, and local persistence are present. Storage loading and saving now reject invalid owner/member/invitation relationships and invalid record bounds; chat messages are capped at 256 characters. The original idea stub was moved into this standalone module and is no longer kept under `staffops/ideas/`.
+
+**Still missing / not verified:** A rendered Minecraft `GuiScreen`, command registration with Minecraft, a Minecraft player-directory adapter, server-authoritative persistence and cross-player synchronization, and AlphaClient module/menu wiring. No Supabase integration is used. Compile and runtime behavior have not been verified by this inventory.
