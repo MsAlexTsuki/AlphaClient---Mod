@@ -70,7 +70,7 @@ function renderProducts() {
       : '<span class="card-status">Preview item</span>';
     return `
       <article class="product-card ${item.owned ? "owned" : ""}" data-item="${item.id}" tabindex="0" role="button" aria-label="View ${item.name} details">
-        <div class="product-art" data-art="${item.art}">
+        <div class="product-art" data-art="${item.art}" data-item="${item.id}">
           <span class="product-badge">${item.badge}</span>${ownedMarkup}
           <span class="product-glyph">${item.glyph}</span>
         </div>
@@ -115,6 +115,7 @@ function openDetails(id) {
   document.getElementById("modal-title").textContent = item.name;
   document.getElementById("modal-description").textContent = item.description;
   document.getElementById("modal-art").dataset.art = item.art;
+  document.getElementById("modal-art").dataset.item = item.id;
   document.getElementById("modal-art").querySelector("span").textContent = item.glyph;
   document.getElementById("modal-badge").textContent = item.badge;
   document.getElementById("modal-type").textContent = item.label;
