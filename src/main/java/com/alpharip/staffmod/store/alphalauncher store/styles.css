@@ -300,7 +300,12 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
   letter-spacing:.025em;
   white-space:nowrap;
 }
-.nametag-only-preview{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 32px);padding:13px 20px;border:1px solid #d8ad50;border-radius:5px;background:linear-gradient(180deg,#242016,#11100d);box-shadow:0 0 28px #e5b84b30, inset 0 0 0 1px #fff1;color:#ffe39a;font:700 clamp(15px,3vw,22px) 'Space Grotesk';letter-spacing:.035em;text-align:center;white-space:nowrap;z-index:2}
+.nametag-only-preview{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 32px);padding:15px 22px;border:1px solid #d8ad50;border-radius:5px;background:linear-gradient(180deg,#242016,#11100d);box-shadow:0 0 28px #e5b84b30,inset 0 0 0 1px #fff1;text-align:center;white-space:nowrap;z-index:2}
+.nameplate-preview-badge,.nameplate-card-badge{display:block;width:max-content;margin:0 auto 5px;padding:3px 9px;border:1px solid #d8ad50;border-radius:3px;background:linear-gradient(180deg,#3a2d12,#211a0c);box-shadow:0 0 12px #e5b84b35;color:#ffe39a;font:700 10px 'Space Grotesk';letter-spacing:.09em;line-height:1.2}
+.nameplate-preview-name,.nameplate-card-name{display:block;color:#f4f4f4;font:700 clamp(15px,3vw,22px) 'Space Grotesk';letter-spacing:.015em;line-height:1.25}
+.nameplate-card-preview{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;padding:0 8px;text-align:center;z-index:1}
+.nameplate-card-badge{font-size:8px;padding:2px 6px;margin-bottom:4px}
+.nameplate-card-name{font-size:clamp(10px,1.5vw,14px);white-space:nowrap}
 .modal-art[data-item="alpha-tag"] .nametag-only-preview{display:block}
 .modal-art[data-item="alpha-tag"] .player-stage,
 .modal-art[data-item="alpha-tag"] .drag-hint{display:none}
