@@ -1,7 +1,6 @@
 package com.alpharip.staffmod.AlphaCoins.alphacoinsplaytime;
 
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.io.File;
