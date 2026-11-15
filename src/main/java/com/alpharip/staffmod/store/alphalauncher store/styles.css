@@ -343,3 +343,28 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
   .modal-art[data-item="spark-effect"] .spark-trail span{animation:none}
   .modal-art[data-item="spark-effect"] .spark-trail span{opacity:.8}
 }
+
+
+/* Golden Spark catalogue card: compact walking player with a trailing particle stream. */
+.product-art[data-item="spark-effect"] .product-glyph{display:none}
+.spark-card-scene{position:absolute;inset:0;z-index:1;overflow:hidden}
+.spark-card-trail{position:absolute;left:17%;top:48%;width:112px;height:52px}
+.spark-card-trail i{position:absolute;left:82px;top:20px;width:5px;height:5px;background:#ffe18a;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:0 0 7px 2px #ffc83d;opacity:0;animation:alpha-card-spark-trail 950ms ease-out infinite}
+.spark-card-trail i:nth-child(2){left:94px;top:9px;width:4px;height:4px;animation-delay:150ms}
+.spark-card-trail i:nth-child(3){left:69px;top:31px;width:6px;height:6px;animation-delay:300ms}
+.spark-card-trail i:nth-child(4){left:104px;top:29px;width:4px;height:4px;animation-delay:450ms}
+.spark-card-trail i:nth-child(5){left:55px;top:13px;width:4px;height:4px;animation-delay:600ms}
+.spark-card-trail i:nth-child(6){left:88px;top:40px;width:5px;height:5px;animation-delay:750ms}
+.spark-card-model{transform:translate(-50%,-47%) scale(.76)}
+.spark-card-model .emote-card-arm-left,.spark-card-model .emote-card-arm-right{animation:alpha-card-spark-arm 520ms ease-in-out infinite}
+.spark-card-model .emote-card-arm-right{animation-delay:-260ms}
+.spark-card-model .emote-card-leg-left,.spark-card-model .emote-card-leg-right{transform-origin:50% 0;animation:alpha-card-spark-leg 520ms ease-in-out infinite}
+.spark-card-model .emote-card-leg-right{animation-delay:-260ms}
+@keyframes alpha-card-spark-trail{0%{opacity:0;transform:translate(0,0) scale(.4)}20%{opacity:1}100%{opacity:0;transform:translate(-48px,14px) scale(1.2)}}
+@keyframes alpha-card-spark-arm{0%,100%{transform:rotate(17deg)}50%{transform:rotate(-17deg)}}
+@keyframes alpha-card-spark-leg{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
+@media(prefers-reduced-motion:reduce){
+  .spark-card-trail i,.spark-card-model .emote-card-arm-left,.spark-card-model .emote-card-arm-right,
+  .spark-card-model .emote-card-leg-left,.spark-card-model .emote-card-leg-right{animation:none}
+  .spark-card-trail i{opacity:.8}
+}
