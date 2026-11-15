@@ -361,3 +361,70 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
 @media(prefers-reduced-motion:reduce){.spark-card-trail *,.spark-card-model .emote-card-arm-left,.spark-card-model .emote-card-arm-right,.spark-card-model .emote-card-leg-left,.spark-card-model .emote-card-leg-right{animation:none}.spark-card-trail *{opacity:.8}}
   .spark-card-trail i{opacity:.8}
 }
+
+
+/* Golden Spark: the character walks away and leaves a persistent path behind. */
+.modal-art[data-item="spark-effect"] .player-model{
+  animation:alpha-spark-walk-away 2.4s ease-in-out infinite;
+}
+@keyframes alpha-spark-walk-away{
+  0%,8%{translate:0 0;scale:1}
+  78%,88%{translate:0 -46px;scale:.78}
+  100%{translate:0 0;scale:1}
+}
+.modal-art[data-item="spark-effect"] .spark-trail{
+  display:block;position:absolute;inset:0;width:100%;height:100%;
+  transform:none;z-index:1;overflow:visible;pointer-events:none;
+}
+.modal-art[data-item="spark-effect"] .spark-trail-path{
+  fill:none;stroke:url(#sparkTrailGradient);stroke-width:13;stroke-linecap:round;
+  filter:drop-shadow(0 0 7px #ffc83d) drop-shadow(0 0 14px #ffc83d99);
+  stroke-dasharray:180;stroke-dashoffset:0;
+  animation:alpha-spark-path 2.4s ease-in-out infinite;
+}
+@keyframes alpha-spark-path{
+  0%,8%{opacity:0;stroke-dashoffset:180}
+  22%{opacity:1}
+  78%,88%{opacity:.95;stroke-dashoffset:0}
+  100%{opacity:0;stroke-dashoffset:0}
+}
+.modal-art[data-item="spark-effect"] .player-stage{overflow:hidden}
+.modal-art[data-item="spark-effect"] .player-model{z-index:2}
+.modal-art[data-item="spark-effect"] .player-arm-left,
+.modal-art[data-item="spark-effect"] .player-arm-right{animation:alpha-spark-arm 520ms ease-in-out infinite}
+.modal-art[data-item="spark-effect"] .player-arm-right{animation-delay:-260ms}
+.modal-art[data-item="spark-effect"] .player-leg-left,
+.modal-art[data-item="spark-effect"] .player-leg-right{animation:alpha-spark-leg 520ms ease-in-out infinite}
+.modal-art[data-item="spark-effect"] .player-leg-left{animation-delay:-260ms}
+
+/* The catalogue card uses the same movement direction and trail-behind composition. */
+.spark-card-scene{overflow:hidden}
+.spark-card-model{z-index:2;animation:alpha-card-walk-away 2.4s ease-in-out infinite}
+@keyframes alpha-card-walk-away{
+  0%,8%{translate:0 0;scale:1}
+  78%,88%{translate:0 -17px;scale:.84}
+  100%{translate:0 0;scale:1}
+}
+.spark-card-trail{
+  position:absolute;left:50%;top:69px;width:66px;height:76px;
+  transform:translateX(-50%);z-index:1;pointer-events:none;
+}
+.spark-card-trail svg{display:block;width:100%;height:100%;overflow:visible}
+.spark-card-trail-path{
+  fill:none;stroke:url(#cardSparkTrailGradient);stroke-width:13;stroke-linecap:round;
+  filter:drop-shadow(0 0 5px #ffc83d) drop-shadow(0 0 10px #ffc83d99);
+  stroke-dasharray:100;stroke-dashoffset:0;
+  animation:alpha-card-path 2.4s ease-in-out infinite;
+}
+@keyframes alpha-card-path{
+  0%,8%{opacity:0;stroke-dashoffset:100}
+  22%{opacity:1}
+  78%,88%{opacity:.95;stroke-dashoffset:0}
+  100%{opacity:0;stroke-dashoffset:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .modal-art[data-item="spark-effect"] .player-model,.spark-card-model,
+  .modal-art[data-item="spark-effect"] .spark-trail-path,.spark-card-trail-path{animation:none}
+  .modal-art[data-item="spark-effect"] .player-model{translate:0 -46px;scale:.78}
+  .modal-art[data-item="spark-effect"] .spark-trail-path,.spark-card-trail-path{opacity:1;stroke-dashoffset:0}
+}
