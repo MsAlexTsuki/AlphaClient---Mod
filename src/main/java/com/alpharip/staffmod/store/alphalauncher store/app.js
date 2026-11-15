@@ -78,7 +78,7 @@ function renderProducts() {
           <div class="product-category">${item.label}</div>
           <h3 class="product-name">${item.name}</h3>
           <p class="product-desc">${item.description}</p>
-          <div class="card-bottom">${status}<button class="preview-link" data-preview="${item.id}" type="button">Details ↗</button></div>
+          <div class="card-bottom">${status}<span class="preview-link">Details ↗</span></div>
         </div>
       </article>`;
   }).join("");
