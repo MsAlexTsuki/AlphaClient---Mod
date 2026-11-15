@@ -25,3 +25,8 @@ This folder contains a standalone, responsive frontend prototype for the Store e
 
 ## Preview
 Open `index.html` in a browser to inspect the prototype.
+
+- Interactive Minecraft-inspired player preview in the cosmetic detail modal.
+- Drag horizontally with the mouse or touch to rotate the player model.
+- Cosmetic-specific visual overlays are shown on the preview model.
+- The player preview is a CSS-based visual mock-up, not a real Minecraft skin renderer or in-game preview.
