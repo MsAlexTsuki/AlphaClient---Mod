@@ -55,8 +55,24 @@ function getVisibleProducts() {
     return inView && categoryMatch && searchMatch;
   });
 
-  if (sortSelect.value === "name") visible.sort((a, b) => a.name.localeCompare(b.name));
-  if (sortSelect.value === "category") visible.sort((a, b) => a.label.localeCompare(b.label) || a.name.localeCompare(b.name));
+  // In Discover, keep purchasable items first and move owned items to the bottom.
+  // In My Collection, preserve the existing owned-only view.
+  if (activeView === "discover") {
+    visible.sort((a, b) => Number(a.owned) - Number(b.owned));
+  }
+
+  if (sortSelect.value === "name") {
+    visible.sort((a, b) => {
+      if (activeView === "discover" && a.owned !== b.owned) return Number(a.owned) - Number(b.owned);
+      return a.name.localeCompare(b.name);
+    });
+  }
+  if (sortSelect.value === "category") {
+    visible.sort((a, b) => {
+      if (activeView === "discover" && a.owned !== b.owned) return Number(a.owned) - Number(b.owned);
+      return a.label.localeCompare(b.label) || a.name.localeCompare(b.name);
+    });
+  }
   return visible;
 }
 
