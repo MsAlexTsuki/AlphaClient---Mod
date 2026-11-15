@@ -40,7 +40,8 @@ public final class AlphaCoinsPlaytime {
     public synchronized boolean activateProfile(String profileId) {
         if (profileId == null || profileId.trim().isEmpty()) return false;
         String normalized = profileId.trim();
-        if (loaded && normalized.equals(activeProfileId)) return true;
+        if (loaded && normalized.equals(activeProfileId)
+                && normalized.equals(coinsCore.getActiveProfileId())) return true;
 
         save();
         coinsCore.activateProfile(normalized, configDirectory, null);
@@ -66,7 +67,8 @@ public final class AlphaCoinsPlaytime {
      * The event adapter supplies elapsed wall-clock time; this method never counts offline time.
      */
     public synchronized boolean recordActivePlaytime(long elapsedMillis) {
-        if (!loaded || elapsedMillis <= 0L) return false;
+        if (!loaded || elapsedMillis <= 0L
+                || !activeProfileId.equals(coinsCore.getActiveProfileId())) return false;
         if (Long.MAX_VALUE - totalPlaytimeMillis < elapsedMillis) {
             totalPlaytimeMillis = Long.MAX_VALUE;
         } else {
