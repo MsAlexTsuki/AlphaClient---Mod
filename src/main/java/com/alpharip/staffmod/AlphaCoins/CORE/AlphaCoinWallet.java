@@ -20,8 +20,8 @@ public final class AlphaCoinWallet {
     }
 
     synchronized boolean credit(long amount, String reason) {
-        if (amount <= 0L) return false;
-        balance = balance > Long.MAX_VALUE - amount ? Long.MAX_VALUE : balance + amount;
+        if (amount <= 0L || amount > Long.MAX_VALUE - balance) return false;
+        balance += amount;
         addTransaction(new AlphaCoinTransaction(amount, reason, System.currentTimeMillis()));
         return true;
     }
