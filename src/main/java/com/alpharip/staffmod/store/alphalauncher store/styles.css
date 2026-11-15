@@ -262,3 +262,21 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
   object-fit:contain!important;
   background:transparent!important;
 }
+
+
+/* Wave Emote: show the character performing the emote instead of a placeholder glyph. */
+.product-art[data-item="wave-emote"] .product-glyph{display:none}
+.emote-card-preview{position:absolute;left:50%;top:50%;width:76px;height:112px;transform:translate(-50%,-45%);z-index:1}
+.emote-card-head{position:absolute;left:27px;top:3px;width:24px;height:24px;border-radius:2px;background:linear-gradient(#e8c29a 0 68%,#bd8967 68%);box-shadow:inset 0 0 0 2px #0002}
+.emote-card-body{position:absolute;left:22px;top:29px;width:34px;height:42px;border-radius:2px;background:linear-gradient(90deg,#293442,#536174 50%,#293442)}
+.emote-card-arm{position:absolute;left:53px;top:30px;width:12px;height:39px;border-radius:2px;background:linear-gradient(90deg,#39485b,#64758a);transform-origin:50% 0%;animation:alpha-card-wave 850ms ease-in-out infinite alternate}
+.emote-card-legs{position:absolute;left:24px;top:70px;width:30px;height:35px;background:linear-gradient(90deg,#303c4d 0 47%,transparent 47% 53%,#303c4d 53%);border-radius:0 0 2px 2px}
+@keyframes alpha-card-wave{from{transform:rotate(-48deg)}to{transform:rotate(-78deg)}}
+.modal-art[data-item="wave-emote"] .player-cosmetic-mark{display:none}
+.modal-art[data-item="wave-emote"] .player-arm-right{transform-origin:50% 0%;animation:alpha-player-wave 850ms ease-in-out infinite alternate}
+@keyframes alpha-player-wave{from{transform:rotateZ(-128deg) rotateX(-8deg)}to{transform:rotateZ(-150deg) rotateX(8deg)}}
+@media(prefers-reduced-motion:reduce){
+  .emote-card-arm,.modal-art[data-item="wave-emote"] .player-arm-right{animation:none}
+  .emote-card-arm{transform:rotate(-63deg)}
+  .modal-art[data-item="wave-emote"] .player-arm-right{transform:rotateZ(-140deg)}
+}
