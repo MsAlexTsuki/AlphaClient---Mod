@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.AlphaDailyChallenges;
+package com.alpharip.staffmod.AlphaCoins.AlphaCoinsDailyChallenges;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;

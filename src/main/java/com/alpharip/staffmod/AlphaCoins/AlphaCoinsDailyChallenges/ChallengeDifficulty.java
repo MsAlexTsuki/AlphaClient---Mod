@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.AlphaDailyChallenges;
+package com.alpharip.staffmod.AlphaCoins.AlphaCoinsDailyChallenges;
 
 public enum ChallengeDifficulty {
     EASY("Easy"),

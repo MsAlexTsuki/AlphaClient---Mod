@@ -1,6 +1,6 @@
 # AlphaDailyChallenges
 
-Location: `src/main/java/com/alpharip/staffmod/AlphaDailyChallenges/`  
+Location: `src/main/java/com/alpharip/staffmod/AlphaCoins/AlphaCoinsDailyChallenges/`  
 Branch: `mod-ideas`
 
 ## Purpose

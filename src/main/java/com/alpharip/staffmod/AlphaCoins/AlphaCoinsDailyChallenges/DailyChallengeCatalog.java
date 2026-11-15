@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.AlphaDailyChallenges;
+package com.alpharip.staffmod.AlphaCoins.AlphaCoinsDailyChallenges;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

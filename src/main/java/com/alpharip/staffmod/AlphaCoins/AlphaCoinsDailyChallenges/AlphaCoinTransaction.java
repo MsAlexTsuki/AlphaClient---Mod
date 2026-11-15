@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.AlphaDailyChallenges;
+package com.alpharip.staffmod.AlphaCoins.AlphaCoinsDailyChallenges;
 
 /** Immutable local wallet ledger entry. Positive amounts are credits; negative amounts are debits. */
 public final class AlphaCoinTransaction {

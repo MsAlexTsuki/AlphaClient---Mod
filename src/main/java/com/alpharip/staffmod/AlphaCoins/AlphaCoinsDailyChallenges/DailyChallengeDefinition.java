@@ -1,4 +1,4 @@
-package com.alpharip.staffmod.AlphaDailyChallenges;
+package com.alpharip.staffmod.AlphaCoins.AlphaCoinsDailyChallenges;
 
 /** Immutable definition for one repeatable daily objective. */
 public final class DailyChallengeDefinition {
