@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090a0d">
+  <meta name="description" content="Explore the Alpha cosmetics collection prototype.">
   <title>Alpha Store — AlphaLauncher</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
@@ -16,9 +17,9 @@
       </a>
       <div class="side-label">STORE</div>
       <button class="side-link active" data-view="discover"><span class="side-icon">◇</span> Discover</button>
-      <button class="side-link" data-view="collection"><span class="side-icon">▦</span> My Collection</button>
+      <button class="side-link" data-view="collection"><span class="side-icon">▦</span> My Collection <span class="nav-count" id="collection-count">2</span></button>
       <div class="sidebar-bottom">
-        <div class="account-chip"><span class="avatar">A</span><span><strong>Alpha Account</strong><small>Launcher preview</small></span></div>
+        <div class="account-chip"><span class="avatar">A</span><span><strong>Alpha Account</strong><small>Local preview profile</small></span></div>
         <span class="prototype-tag">PROTOTYPE</span>
       </div>
     </aside>
@@ -47,21 +48,34 @@
 
       <section class="content-section" id="catalogue">
         <div class="section-heading">
-          <div><div class="eyebrow muted">FIND YOUR STYLE</div><h2 id="section-title">Featured cosmetics</h2></div>
-          <label class="search-box"><span>⌕</span><input id="search-input" type="search" placeholder="Search cosmetics..." autocomplete="off"><kbd>⌘ K</kbd></label>
+          <div><div class="eyebrow muted" id="section-eyebrow">FIND YOUR STYLE</div><h2 id="section-title">Featured cosmetics</h2></div>
+          <label class="search-box" id="search-wrap"><span>⌕</span><input id="search-input" type="search" placeholder="Search cosmetics..." autocomplete="off"><kbd>⌘ K</kbd></label>
         </div>
 
-        <div class="filter-row" id="filter-row">
-          <button class="filter active" data-category="all">All items <span>06</span></button>
-          <button class="filter" data-category="capes">Capes</button>
-          <button class="filter" data-category="emotes">Emotes</button>
-          <button class="filter" data-category="nametags">Nametags</button>
-          <button class="filter" data-category="effects">Effects</button>
-          <button class="filter" data-category="ui">UI</button>
+        <div class="catalogue-toolbar" id="catalogue-toolbar">
+          <div class="filter-row" id="filter-row">
+            <button class="filter active" data-category="all">All items <span>06</span></button>
+            <button class="filter" data-category="capes">Capes</button>
+            <button class="filter" data-category="emotes">Emotes</button>
+            <button class="filter" data-category="nametags">Nametags</button>
+            <button class="filter" data-category="effects">Effects</button>
+            <button class="filter" data-category="ui">UI</button>
+          </div>
+          <label class="sort-control">SORT BY
+            <select id="sort-select">
+              <option value="featured">Featured</option>
+              <option value="name">Name A–Z</option>
+              <option value="category">Category</option>
+            </select>
+          </label>
         </div>
 
+        <div class="collection-notice" id="collection-notice" hidden><span class="notice-dot"></span> Demo collection · ownership is local sample data, not linked to an Alpha account.</div>
         <div class="product-grid" id="product-grid" aria-live="polite"></div>
-        <div class="empty-state" id="empty-state" hidden>No cosmetics match your search.</div>
+        <div class="empty-state" id="empty-state" hidden>
+          <span class="empty-mark">◇</span><strong id="empty-title">No cosmetics found</strong><p id="empty-description">Try another search or category.</p>
+          <button class="text-button" id="clear-filters">Clear filters</button>
+        </div>
       </section>
 
       <section class="membership-banner">
@@ -77,8 +91,14 @@
   <div class="modal-backdrop" id="modal" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <button class="modal-close" id="modal-close" aria-label="Close">×</button>
-      <div class="modal-art" id="modal-art"><span>A</span></div>
-      <div class="modal-info"><div class="eyebrow muted" id="modal-category">COSMETIC</div><h2 id="modal-title">Cosmetic name</h2><p id="modal-description"></p><div class="modal-note">Preview item · Not available for purchase</div></div>
+      <div class="modal-art" id="modal-art"><span>A</span><small>ITEM PREVIEW</small></div>
+      <div class="modal-info">
+        <div class="modal-topline"><div class="eyebrow muted" id="modal-category">COSMETIC</div><span class="detail-badge" id="modal-badge">FEATURED</span></div>
+        <h2 id="modal-title">Cosmetic name</h2>
+        <p id="modal-description"></p>
+        <div class="detail-specs"><div><span>TYPE</span><strong id="modal-type">Cape</strong></div><div><span>COLLECTION</span><strong>Alpha Cosmetics</strong></div><div><span>STATUS</span><strong id="modal-status">Preview item</strong></div></div>
+        <div class="modal-actions"><button class="primary-button" id="modal-equip" hidden>Equip cosmetic</button><span class="modal-note" id="modal-note">Preview item · Not available for purchase</span></div>
+      </div>
     </section>
   </div>
   <script src="./app.js"></script>
