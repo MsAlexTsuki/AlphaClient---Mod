@@ -84,11 +84,14 @@ function renderProducts() {
     const status = item.owned
       ? (isEquipped ? '<span class="card-status equipped">Equipped</span>' : '<span class="card-status">In collection</span>')
       : '<span class="card-status">Preview item</span>';
+    const artwork = item.id === "wave-emote"
+      ? '<div class="emote-card-preview" aria-label="Animated waving player"><span class="emote-card-head"></span><span class="emote-card-body"></span><span class="emote-card-arm"></span><span class="emote-card-legs"></span></div>'
+      : `<span class="product-glyph">${item.glyph}</span>`;
     return `
       <article class="product-card ${item.owned ? "owned" : ""}" data-item="${item.id}" tabindex="0" role="button" aria-label="View ${item.name} details">
         <div class="product-art" data-art="${item.art}" data-item="${item.id}">
           <span class="product-badge">${item.badge}</span>${ownedMarkup}
-          <span class="product-glyph">${item.glyph}</span>
+          ${artwork}
         </div>
         <div class="product-meta">
           <div class="product-category">${item.label}</div>
