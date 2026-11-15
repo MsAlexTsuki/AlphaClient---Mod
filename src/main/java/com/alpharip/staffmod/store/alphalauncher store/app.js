@@ -2,7 +2,7 @@ const products = [
   {id:"aurora-cape",name:"Aurora Cape",category:"capes",label:"CAPE",description:"A clean gold-accented cape concept for the Alpha collection, with no letter overlay.",glyph:"",art:"cape",badge:"FEATURED",owned:true},
   {id:"ember-cape",name:"Ember Cape",category:"capes",label:"CAPE",description:"A warm, ember-inspired cape concept with a bold golden glow.",glyph:"✦",art:"cape",badge:"PREVIEW",owned:false},
   {id:"wave-emote",name:"Wave Emote",category:"emotes",label:"EMOTE",description:"A simple greeting emote concept for player expression.",glyph:"↗",art:"emote",badge:"PREVIEW",owned:false},
-  {id:"alpha-tag",name:"Alpha Nameplate",category:"nametags",label:"NAMETAG",description:"A distinctive Alpha-styled nameplate treatment designed to make a player name stand out.",glyph:"ALPHA",art:"name",badge:"COMMUNITY",owned:true},
+  {id:"alpha-tag",name:"Alpha Nameplate",category:"nametags",label:"NAMETAG",description:"A distinctive Alpha-styled nameplate treatment designed to make a player name stand out.",glyph:"MsAlexTsuki",art:"name",badge:"COMMUNITY",owned:true},
   {id:"spark-effect",name:"Golden Spark",category:"effects",label:"EFFECT",description:"A subtle gold particle-effect concept for a clean visual accent.",glyph:"✧",art:"effect",badge:"PREVIEW",owned:false},
   {id:"dark-ui",name:"Obsidian UI",category:"ui",label:"UI STYLE",description:"A dark interface accent concept for the Alpha experience.",glyph:"A",art:"ui",badge:"PREVIEW",owned:false}
 ];
@@ -136,6 +136,7 @@ function openDetails(id) {
   document.getElementById("modal-art").dataset.art = item.art;
   document.getElementById("modal-art").dataset.item = item.id;
   document.getElementById("player-cosmetic-mark").textContent = item.glyph;
+  document.querySelector(".player-preview-label").textContent = item.category === "nametags" ? "NAMETAG PREVIEW" : "PLAYER PREVIEW";
   document.getElementById("modal-badge").textContent = item.badge;
   document.getElementById("modal-type").textContent = item.label;
   updateModalState(id);
