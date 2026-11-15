@@ -18,7 +18,7 @@ public final class ItemNbtViewer {
     private ItemNbtViewer() { }
     public static ItemNbtViewer getInstance() { return INSTANCE; }
 
-    /** Reads the currently held stack from the local client and builds its NBT tree. */
+    /** Reads the currently held stack and rebuilds the tree only when its NBT changes. */
     public synchronized void captureHeldItem() {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.thePlayer == null) {
@@ -32,8 +32,10 @@ public final class ItemNbtViewer {
         }
         NBTTagCompound compound = new NBTTagCompound();
         stack.writeToNBT(compound);
-        serializedNbt = compound.toString();
+        String currentNbt = compound.toString();
         itemDisplayName = stack.getDisplayName();
+        if (root != null && currentNbt.equals(serializedNbt)) return;
+        serializedNbt = currentNbt;
         root = treeBuilder.build(compound);
     }
 
