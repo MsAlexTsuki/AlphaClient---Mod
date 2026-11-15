@@ -7,15 +7,20 @@ This folder contains a standalone, responsive frontend prototype for the Store e
 - Memberships are shown as a possible future area.
 - No resource packs, maps, worlds, general digital products, or third-party marketplace listings.
 
-## Files
-- `index.html` — prototype page structure.
-- `styles.css` — responsive dark Alpha-themed presentation.
-- `app.js` — local demo catalogue, category filtering, search, and item preview modal.
+## Current prototype features
+- Cosmetics catalogue with category filters, text search, and sorting.
+- Product detail modal with item type, description, collection label, and preview artwork.
+- My Collection view with clearly marked sample-owned cosmetics.
+- Equip and unequip interactions for sample-owned cosmetics.
+- The equipped sample item is remembered locally in the browser when storage is available.
+- Responsive desktop and mobile layouts.
 
 ## Important boundaries
-- This is a visual/interaction prototype, not a live AlphaLauncher integration.
-- Catalogue entries are sample preview data, not real products or promises of availability.
-- No checkout, payment processing, balance, Supabase access, account ownership, or entitlement grants are implemented.
+- This is a standalone visual and interaction prototype, not a live AlphaLauncher integration.
+- Catalogue entries and owned items are sample preview data, not real products, purchases, or account entitlements.
+- Equip state is local browser demo state only; it is not synced to an Alpha account or Minecraft.
+- No checkout, payment processing, balance, Supabase access, account ownership, entitlement grants, or live catalogue are implemented.
 - No AlphaLauncher or AlphaClient production files are changed by this prototype.
 
+## Preview
 Open `index.html` in a browser to inspect the prototype.
