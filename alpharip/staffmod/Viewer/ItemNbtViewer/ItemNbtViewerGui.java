@@ -56,6 +56,7 @@ public final class ItemNbtViewerGui extends GuiScreen {
         visibleNodes.clear();
         NbtTreeNode root = viewer.getRoot();
         if (root != null) appendVisible(root);
+        if (selectedNode != null && !visibleNodes.contains(selectedNode)) selectedNode = null;
         GuiButton copySelected = findButton(COPY_SELECTED);
         if (copySelected != null) copySelected.enabled = selectedNode != null;
         GuiButton copyAll = findButton(COPY_ALL);
