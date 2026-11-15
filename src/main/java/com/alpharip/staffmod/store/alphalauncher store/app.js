@@ -86,7 +86,9 @@ function renderProducts() {
       : '<span class="card-status">Preview item</span>';
     const artwork = item.id === "wave-emote"
       ? '<div class="emote-card-model" role="img" aria-label="Minecraft character performing the Wave Emote"><span class="emote-card-head"></span><span class="emote-card-body"></span><span class="emote-card-arm-left"></span><span class="emote-card-arm-right"></span><span class="emote-card-leg-left"></span><span class="emote-card-leg-right"></span></div>'
-      : item.id === "alpha-tag"
+      : item.id === "spark-effect"
+        ? '<div class="spark-card-scene" role="img" aria-label="Minecraft character walking with a golden spark trail"><span class="spark-card-trail"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="emote-card-model spark-card-model"><span class="emote-card-head"></span><span class="emote-card-body"></span><span class="emote-card-arm-left"></span><span class="emote-card-arm-right"></span><span class="emote-card-leg-left"></span><span class="emote-card-leg-right"></span></span></div>'
+        : item.id === "alpha-tag"
         ? '<span class="nameplate-card-preview" role="img" aria-label="Alpha nameplate above player name"><span class="nameplate-card-badge">[Alpha]</span><span class="nameplate-card-name">MsAlexTsuki</span></span>'
         : `<span class="product-glyph">${item.glyph}</span>`;
     return `
