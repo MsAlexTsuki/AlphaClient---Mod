@@ -12,7 +12,7 @@ public final class AlphaCoinWallet {
 
     public synchronized long getBalance() { return balance; }
 
-    public synchronized boolean spend(long amount, String reason) {
+    synchronized boolean spend(long amount, String reason) {
         if (amount <= 0L || balance < amount) return false;
         balance -= amount;
         addTransaction(new AlphaCoinTransaction(-amount, reason, System.currentTimeMillis()));
