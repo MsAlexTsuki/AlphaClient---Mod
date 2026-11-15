@@ -138,7 +138,7 @@ function openDetails(id) {
   document.getElementById("modal-art").dataset.art = item.art;
   document.getElementById("modal-art").dataset.item = item.id;
   document.getElementById("player-cosmetic-mark").textContent = item.glyph;
-  document.querySelector(".player-preview-label").textContent = item.category === "nametags" ? "NAMETAG PREVIEW" : "PLAYER PREVIEW";
+  document.querySelector(".player-preview-label").textContent = item.category === "nametags" ? "NAMEPLATE PREVIEW" : "PLAYER PREVIEW";
   document.getElementById("modal-badge").textContent = item.badge;
   document.getElementById("modal-type").textContent = item.label;
   updateModalState(id);
