@@ -86,7 +86,9 @@ function renderProducts() {
       : '<span class="card-status">Preview item</span>';
     const artwork = item.id === "wave-emote"
       ? '<div class="emote-card-model" role="img" aria-label="Minecraft character performing the Wave Emote"><span class="emote-card-head"></span><span class="emote-card-body"></span><span class="emote-card-arm-left"></span><span class="emote-card-arm-right"></span><span class="emote-card-leg-left"></span><span class="emote-card-leg-right"></span></div>'
-      : `<span class="product-glyph">${item.glyph}</span>`;
+      : item.id === "alpha-tag"
+        ? '<span class="nameplate-card-preview" role="img" aria-label="Alpha nameplate above player name"><span class="nameplate-card-badge">[Alpha]</span><span class="nameplate-card-name">MsAlexTsuki</span></span>'
+        : `<span class="product-glyph">${item.glyph}</span>`;
     return `
       <article class="product-card ${item.owned ? "owned" : ""}" data-item="${item.id}" tabindex="0" role="button" aria-label="View ${item.name} details">
         <div class="product-art" data-art="${item.art}" data-item="${item.id}">
