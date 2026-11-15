@@ -91,7 +91,37 @@
   <div class="modal-backdrop" id="modal" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <button class="modal-close" id="modal-close" aria-label="Close">×</button>
-      <div class="modal-art" id="modal-art"><span>A</span><small>ITEM PREVIEW</small></div>
+      <div class="modal-art" id="modal-art" data-item="aurora-cape" aria-label="Drag to rotate the cosmetic preview">
+        <div class="player-stage">
+          <div class="player-model" id="player-model">
+            <div class="player-cape"></div>
+            <div class="player-nameplate">ALPHA</div>
+            <div class="player-head cube">
+              <span class="face front"><i class="pixel-eye left"></i><i class="pixel-eye right"></i><i class="pixel-mouth"></i></span>
+              <span class="face back"></span><span class="face left"></span><span class="face right"></span><span class="face top"></span><span class="face bottom"></span>
+            </div>
+            <div class="player-body cube">
+              <span class="face front"></span><span class="face back"></span><span class="face left"></span><span class="face right"></span><span class="face top"></span><span class="face bottom"></span>
+            </div>
+            <div class="player-arm player-arm-left cube">
+              <span class="face front"></span><span class="face back"></span><span class="face left"></span><span class="face right"></span><span class="face top"></span><span class="face bottom"></span>
+            </div>
+            <div class="player-arm player-arm-right cube">
+              <span class="face front"></span><span class="face back"></span><span class="face left"></span><span class="face right"></span><span class="face top"></span><span class="face bottom"></span>
+            </div>
+            <div class="player-leg player-leg-left cube">
+              <span class="face front"></span><span class="face back"></span><span class="face left"></span><span class="face right"></span><span class="face top"></span><span class="face bottom"></span>
+            </div>
+            <div class="player-leg player-leg-right cube">
+              <span class="face front"></span><span class="face back"></span><span class="face left"></span><span class="face right"></span><span class="face top"></span><span class="face bottom"></span>
+            </div>
+            <div class="player-cosmetic-mark" id="player-cosmetic-mark">A</div>
+            <div class="player-effect" aria-hidden="true">✦</div>
+          </div>
+        </div>
+        <small class="drag-hint"><span>↔</span> CLICK AND DRAG TO ROTATE</small>
+        <small class="player-preview-label">PLAYER PREVIEW</small>
+      </div>
       <div class="modal-info">
         <div class="modal-topline"><div class="eyebrow muted" id="modal-category">COSMETIC</div><span class="detail-badge" id="modal-badge">FEATURED</span></div>
         <h2 id="modal-title">Cosmetic name</h2>
