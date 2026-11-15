@@ -145,3 +145,66 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
 .product-art[data-item="alpha-tag"] .product-glyph{font-size:25px;padding:10px 12px}
 .product-art[data-item="spark-effect"] .product-glyph{font-size:68px}
 .product-art[data-item="dark-ui"] .product-glyph{font-size:37px;padding:13px;border-radius:9px}
+
+
+/* Interactive 3D-style player preview */
+.modal-art{perspective:850px;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+.modal-art.is-dragging{cursor:grabbing}
+.player-stage{position:absolute;inset:12px 0 31px;display:grid;place-items:center;perspective:850px;overflow:hidden}
+.player-model{position:relative;width:116px;height:238px;transform-style:preserve-3d;transform:rotateY(0deg);will-change:transform}
+.cube{position:absolute;transform-style:preserve-3d}
+.cube .face{position:absolute;display:block;box-sizing:border-box;backface-visibility:hidden;border:1px solid #0002}
+.player-head{width:48px;height:48px;left:34px;top:4px;transform-style:preserve-3d}
+.player-head .face{background:#d5a77d}
+.player-head .front{width:48px;height:48px;transform:translateZ(24px);background:linear-gradient(#e5bc91 0 68%,#c99269 68%)}
+.player-head .back{width:48px;height:48px;transform:rotateY(180deg) translateZ(24px);background:#b98561}
+.player-head .left{width:48px;height:48px;transform:rotateY(-90deg) translateZ(24px);background:#c18d68}
+.player-head .right{width:48px;height:48px;transform:rotateY(90deg) translateZ(24px);background:#d0a078}
+.player-head .top{width:48px;height:48px;transform:rotateX(90deg) translateZ(24px);background:#e9c39b}
+.player-head .bottom{width:48px;height:48px;transform:rotateX(-90deg) translateZ(24px);background:#a97859}
+.pixel-eye{position:absolute;top:23px;width:5px;height:5px;background:#292321}
+.pixel-eye.left{left:11px}.pixel-eye.right{right:11px}
+.pixel-mouth{position:absolute;left:20px;top:34px;width:8px;height:3px;background:#744c3d}
+.player-body{width:58px;height:72px;left:29px;top:54px}
+.player-body .front{width:58px;height:72px;transform:translateZ(12px);background:linear-gradient(90deg,#292f3a,#3b4656 50%,#292f3a)}
+.player-body .back{width:58px;height:72px;transform:rotateY(180deg) translateZ(12px);background:#252a33}
+.player-body .left{width:24px;height:72px;transform:rotateY(-90deg) translateZ(12px);background:#202630}
+.player-body .right{width:24px;height:72px;transform:rotateY(90deg) translateZ(46px);background:#343d49}
+.player-body .top{width:58px;height:24px;transform:rotateX(90deg) translateZ(12px);background:#4b5665}
+.player-body .bottom{width:58px;height:24px;transform:rotateX(-90deg) translateZ(60px);background:#252a33}
+.player-arm{width:23px;height:68px;top:56px}
+.player-arm-left{left:5px}.player-arm-right{right:5px}
+.player-arm .front,.player-arm .back{width:23px;height:68px}
+.player-arm .front{transform:translateZ(10px);background:#394555}
+.player-arm .back{transform:rotateY(180deg) translateZ(10px);background:#252e39}
+.player-arm .left,.player-arm .right{width:20px;height:68px}
+.player-arm .left{transform:rotateY(-90deg) translateZ(10px);background:#29323e}
+.player-arm .right{transform:rotateY(90deg) translateZ(13px);background:#465365}
+.player-arm .top,.player-arm .bottom{width:23px;height:20px}
+.player-arm .top{transform:rotateX(90deg) translateZ(10px);background:#4b5868}
+.player-arm .bottom{transform:rotateX(-90deg) translateZ(58px);background:#c89a73}
+.player-leg{width:27px;height:76px;top:128px}
+.player-leg-left{left:30px}.player-leg-right{right:30px}
+.player-leg .front,.player-leg .back{width:27px;height:76px}
+.player-leg .front{transform:translateZ(11px);background:#303b4b}
+.player-leg .back{transform:rotateY(180deg) translateZ(11px);background:#202936}
+.player-leg .left,.player-leg .right{width:22px;height:76px}
+.player-leg .left{transform:rotateY(-90deg) translateZ(11px);background:#263140}
+.player-leg .right{transform:rotateY(90deg) translateZ(16px);background:#3a4658}
+.player-leg .top,.player-leg .bottom{width:27px;height:22px}
+.player-leg .top{transform:rotateX(90deg) translateZ(11px);background:#445166}
+.player-leg .bottom{transform:rotateX(-90deg) translateZ(65px);background:#171b22}
+.player-cape{position:absolute;z-index:-1;left:24px;top:52px;width:68px;height:105px;transform:translateZ(-15px) rotateX(-5deg);transform-origin:top center;clip-path:polygon(7% 0,93% 0,100% 100%,50% 88%,0 100%);background:linear-gradient(135deg,#f6d77e,#b47b22 55%,#493116);opacity:0;backface-visibility:hidden}
+.player-nameplate{position:absolute;left:50%;top:-17px;transform:translateX(-50%) translateZ(22px);padding:3px 7px;border:1px solid #d8ad50;border-radius:3px;background:#17150f;color:#ffe39a;font:700 7px 'Space Grotesk';letter-spacing:.12em;white-space:nowrap;opacity:0}
+.player-cosmetic-mark{position:absolute;left:50%;top:77px;transform:translateX(-50%) translateZ(13px);color:#ffe39a;font:700 17px 'Space Grotesk';text-shadow:0 0 12px #ffc83d99;pointer-events:none}
+.player-effect{position:absolute;left:50%;top:108px;transform:translateX(-50%) translateZ(24px);font-size:25px;color:#ffe18a;text-shadow:0 0 15px #ffc83d;opacity:0;pointer-events:none}
+.modal-art[data-item="aurora-cape"] .player-cape,.modal-art[data-item="ember-cape"] .player-cape{opacity:1}
+.modal-art[data-item="ember-cape"] .player-cape{background:linear-gradient(135deg,#ffd49a,#d75b2b 55%,#54221d)}
+.modal-art[data-item="alpha-tag"] .player-nameplate{opacity:1}
+.modal-art[data-item="spark-effect"] .player-effect{opacity:1}
+.modal-art[data-item="dark-ui"] .player-body .front{background:linear-gradient(90deg,#46515f,#8995a3 50%,#46515f)}
+.modal-art[data-item="wave-emote"] .player-cosmetic-mark{font-size:23px;color:#a9d9f4}
+.drag-hint{position:absolute;bottom:17px;left:50%;transform:translateX(-50%);color:#c6a65c;font-size:7px;letter-spacing:.13em;white-space:nowrap;pointer-events:none}
+.drag-hint span{font-size:12px;margin-right:5px}
+.player-preview-label{position:absolute;top:13px;left:15px;color:#777f8b;font-size:7px;letter-spacing:.14em;pointer-events:none}
+@media(max-width:640px){.modal-art{min-height:250px;height:250px}.player-stage{inset:10px 0 28px}.player-model{transform-origin:50% 50%}.drag-hint{bottom:12px}}
