@@ -50,7 +50,8 @@ public final class AlphaCoinsCore {
         return spent;
     }
 
-    public AlphaCoinWallet getWallet() { return wallet; }
+    synchronized long getBalance() { return wallet.getBalance(); }
+    synchronized java.util.List<AlphaCoinTransaction> getTransactions() { return wallet.getHistory(); }
     public AlphaCoinService getService() { return service; }
     public synchronized String getActiveProfileId() { return activeProfileId; }
     public synchronized boolean isLoaded() { return loaded; }
