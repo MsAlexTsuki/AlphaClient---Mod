@@ -285,3 +285,7 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
   .emote-card-arm-right{transform:rotate(-136deg)}
   .modal-art[data-item="wave-emote"] .player-arm-right{transform:rotateZ(-136deg)}
 }
+
+
+/* Keep the cape visible from the rear when the player preview is rotated. */
+.modal-art .player-model .player-cape{backface-visibility:visible}
