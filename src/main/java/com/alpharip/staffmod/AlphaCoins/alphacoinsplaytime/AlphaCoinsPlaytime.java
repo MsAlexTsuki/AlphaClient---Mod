@@ -33,7 +33,7 @@ public final class AlphaCoinsPlaytime {
     public AlphaCoinsPlaytime(File configDirectory) {
         if (configDirectory == null) throw new IllegalArgumentException("Config directory is required.");
         this.configDirectory = configDirectory;
-        this.dataDirectory = new File(configDirectory, "alphacoinsplaytime");
+        this.dataDirectory = new File(new File(configDirectory, "alphacoins"), "playtime");
     }
 
     /** Loads one profile and activates the matching shared AlphaCoins CORE wallet. */
