@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Current verified inventory: **559 Java files** across **44 folders**, plus 1 Java file directly in the package root.
+- Current verified inventory: **565 Java files** across **45 folders**, plus 1 Java file directly in the package root.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -1487,3 +1487,21 @@ Folder: `AlphaClans/` (a sibling of `staffops/`).
 **Current status:** The standalone clan domain, command parsing/dispatch, UI data model, and local persistence are present. Storage loading and saving now reject invalid owner/member/invitation relationships and invalid record bounds; chat messages are capped at 256 characters. The original idea stub was moved into this standalone module and is no longer kept under `staffops/ideas/`.
 
 **Still missing / not verified:** A rendered Minecraft `GuiScreen`, command registration with Minecraft, a Minecraft player-directory adapter, server-authoritative persistence and cross-player synchronization, and AlphaClient module/menu wiring. No Supabase integration is used. Compile and runtime behavior have not been verified by this inventory.
+
+
+## AlphaCoins — Playtime Rewards
+
+Folder: `AlphaCoins/alphacoinsplaytime/`
+
+- **AlphaCoinsPlaytime.java** — Tracks cumulative active playtime per Alpha profile, loads/saves the reward state, and credits due rewards through `AlphaCoinsCore.getInstance().getService().addCoins(...)`. It does not create a separate wallet.
+- **PlaytimeRewardDefinition.java** — Defines the recurring 24-hour and 10-day rewards plus the one-time 1-, 3-, 6-, 9-, and 12-month milestones.
+- **PlaytimeRewardStatus.java** — Immutable progress data for a reward row, including progress, remaining time, completed intervals, and earned state.
+- **PlaytimeRewardStorage.java** — Versioned local properties storage for cumulative playtime and already-issued reward intervals/milestones.
+- **AlphaCoinsPlaytimeEventHandler.java** — Forge client-tick adapter. It counts elapsed time only while a player and world are present; a one-second delta cap prevents long client stalls from being counted as playtime.
+- **AlphaCoinsPlaytimeModule.java** — Explicit register/unregister lifecycle wrapper. It is not wired into AlphaClient Core or the live module menu.
+
+**Reward rules:** 5 AlphaCoins for every completed 24 hours; 50 AlphaCoins for every completed 10-day interval; one-time milestone rewards of 100 (30 days), 300 (90 days), 800 (180 days), 1,200 (270 days), and 2,400 (365 days). Month and year durations are represented as fixed 30-day and 365-day playtime periods.
+
+**Current status:** The standalone service, reward definitions, progress model, local storage, Forge tick adapter, and explicit lifecycle wrapper are present on `mod-ideas`. The original `staffops/ideas/AlphaCoinsPlaytime.java` source file is retained unchanged. No AlphaClient Core, `development`, Alpha Launcher, or Supabase files were changed.
+
+**Still missing / not verified:** Registration from an approved AlphaClient integration point, a rendered GUI/menu entry, pause-menu behavior, compile verification, and runtime verification. Reward state and wallet state are stored in separate local files, so the prototype does not provide an atomic transaction across both files if the process crashes between wallet credit and reward-state persistence.
