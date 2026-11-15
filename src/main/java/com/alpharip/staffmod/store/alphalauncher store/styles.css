@@ -266,7 +266,7 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
 
 /* Wave Emote: render a Minecraft-style player and animate the raised arm. */
 .product-art[data-item="wave-emote"] .product-glyph{display:none}
-.emote-card-model{position:absolute;left:50%;top:50%;width:116px;height:142px;transform:translate(-50%,-47%);z-index:1}
+.emote-card-model{position:absolute;left:50%;top:50%;width:116px;height:142px;transform:translate(-50%,-47%) scale(.76);z-index:1}
 .emote-card-head{position:absolute;left:39px;top:0;width:38px;height:38px;background:linear-gradient(#e5bc91 0 68%,#c99269 68%);border:2px solid #171b22;box-sizing:border-box}
 .emote-card-head:before,.emote-card-head:after{content:"";position:absolute;top:19px;width:5px;height:5px;background:#292321}
 .emote-card-head:before{left:7px}.emote-card-head:after{right:7px}
