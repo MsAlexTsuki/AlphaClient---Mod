@@ -9,7 +9,8 @@ This folder contains a standalone, responsive frontend prototype for the Store e
 
 ## Current prototype features
 - Cosmetics catalogue with category filters, text search, and sorting.
-- Product detail modal with item type, description, collection label, and preview artwork.
+- Product detail modal with item type, description, collection label, and item-specific preview artwork.
+- Distinct visual treatments for capes, emotes, nametags, effects, and UI cosmetics.
 - My Collection view with clearly marked sample-owned cosmetics.
 - Equip and unequip interactions for sample-owned cosmetics.
 - The equipped sample item is remembered locally in the browser when storage is available.
