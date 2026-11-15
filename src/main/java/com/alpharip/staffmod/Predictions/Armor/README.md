@@ -26,10 +26,9 @@ the local player's equipped armor inventory.
 
 The current `AlphaClient` source already imports and registers
 `com.alpharip.staffmod.hud.ArmorDurabilityWarningMod`; that package is retained
-for this adapter. However, the current `AlphaModuleRegistry` does not contain
-the `armor-durability-warning` module ID used by the adapter. Until that module
-entry is added in the main client integration, the adapter returns without
-rendering. This prototype does not modify `AlphaClient`, the module registry,
-or any other core file.
+for this adapter. The current `AlphaModuleRegistry` also contains the
+`armor-durability-warning` module ID, so the existing module toggle and access
+checks are retained. This prototype does not modify `AlphaClient`, the module
+registry, or any other core file.
 
 No build or in-game test has been performed.
