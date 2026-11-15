@@ -116,7 +116,7 @@ function openDetails(id) {
   document.getElementById("modal-description").textContent = item.description;
   document.getElementById("modal-art").dataset.art = item.art;
   document.getElementById("modal-art").dataset.item = item.id;
-  document.getElementById("modal-art").querySelector("span").textContent = item.glyph;
+  document.getElementById("player-cosmetic-mark").textContent = item.glyph;
   document.getElementById("modal-badge").textContent = item.badge;
   document.getElementById("modal-type").textContent = item.label;
   updateModalState(id);
@@ -210,3 +210,46 @@ document.addEventListener("keydown", (event) => {
 });
 
 renderProducts();
+
+
+// Pointer-based horizontal drag rotation for the player preview.
+const playerPreview = document.getElementById("modal-art");
+const playerModel = document.getElementById("player-model");
+let playerRotation = 0;
+let dragStartX = 0;
+let dragStartRotation = 0;
+let activePointerId = null;
+
+playerPreview.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0 && event.pointerType === "mouse") return;
+  if (modal.hidden) return;
+  activePointerId = event.pointerId;
+  dragStartX = event.clientX;
+  dragStartRotation = playerRotation;
+  playerPreview.classList.add("is-dragging");
+  playerPreview.setPointerCapture(event.pointerId);
+  event.preventDefault();
+});
+
+playerPreview.addEventListener("pointermove", (event) => {
+  if (activePointerId !== event.pointerId) return;
+  const horizontalDelta = event.clientX - dragStartX;
+  playerRotation = dragStartRotation + horizontalDelta * 0.8;
+  playerModel.style.transform = `rotateY(${playerRotation}deg)`;
+});
+
+function stopPlayerRotation(event) {
+  if (activePointerId !== event.pointerId) return;
+  activePointerId = null;
+  playerPreview.classList.remove("is-dragging");
+  if (playerPreview.hasPointerCapture(event.pointerId)) {
+    playerPreview.releasePointerCapture(event.pointerId);
+  }
+}
+
+playerPreview.addEventListener("pointerup", stopPlayerRotation);
+playerPreview.addEventListener("pointercancel", stopPlayerRotation);
+playerPreview.addEventListener("lostpointercapture", () => {
+  activePointerId = null;
+  playerPreview.classList.remove("is-dragging");
+});
