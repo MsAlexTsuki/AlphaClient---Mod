@@ -18,10 +18,10 @@ public final class AlphaCoinService {
     }
 
     public long getBalance() {
-        return core.getWallet().getBalance();
+        return core.getBalance();
     }
 
     public java.util.List<AlphaCoinTransaction> getTransactions() {
-        return core.getWallet().getHistory();
+        return core.getTransactions();
     }
 }
