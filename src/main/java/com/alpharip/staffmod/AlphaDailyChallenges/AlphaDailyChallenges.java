@@ -3,6 +3,7 @@ package com.alpharip.staffmod.AlphaDailyChallenges;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import java.io.File;
 
 /**
@@ -32,12 +33,14 @@ public final class AlphaDailyChallenges {
     public synchronized void register() {
         if (registered) return;
         MinecraftForge.EVENT_BUS.register(eventHandler);
+        FMLCommonHandler.instance().bus().register(eventHandler);
         registered = true;
     }
 
     public synchronized void unregister() {
         if (!registered) return;
         MinecraftForge.EVENT_BUS.unregister(eventHandler);
+        FMLCommonHandler.instance().bus().unregister(eventHandler);
         manager.save();
         registered = false;
     }
@@ -51,6 +54,8 @@ public final class AlphaDailyChallenges {
         if (mc == null) return;
         if (mc.thePlayer != null) {
             manager.activateProfile(mc.thePlayer.getUniqueID().toString());
+        } else {
+            manager.activateProfile("offline");
         }
         mc.displayGuiScreen(new DailyChallengesGui(parent, manager));
     }

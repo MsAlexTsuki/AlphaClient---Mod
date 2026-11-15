@@ -5,12 +5,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-/** Collects supported client-session activity. The handler is registered by the module facade. */
+/** Collects supported client-session activity. The handler is registered on both Forge event buses. */
 final class DailyChallengeEventHandler {
     private static final int TICKS_PER_MINUTE = 1200;
     private final AlphaDailyChallenges module;
@@ -40,7 +40,7 @@ final class DailyChallengeEventHandler {
 
     @SubscribeEvent
     public void onBlockBreak(BlockEvent.BreakEvent event) {
-        EntityPlayer player = event.player;
+        EntityPlayer player = event.getPlayer();
         if (isActivePlayer(player)) {
             module.getManager().record(ChallengeMetric.BLOCKS_BROKEN, 1);
         }
