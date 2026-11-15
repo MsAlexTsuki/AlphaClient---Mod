@@ -289,3 +289,19 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
 
 /* Keep the cape visible from the rear when the player preview is rotated. */
 .modal-art .player-model .player-cape{backface-visibility:visible}
+
+
+/* Show a name-only preview for nametag cosmetics instead of a player skin. */
+.product-art[data-item="alpha-tag"] .product-glyph{
+  max-width:calc(100% - 24px);
+  padding:9px 11px;
+  overflow:hidden;
+  font-size:clamp(10px,2.1vw,15px);
+  letter-spacing:.025em;
+  white-space:nowrap;
+}
+.nametag-only-preview{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 32px);padding:13px 20px;border:1px solid #d8ad50;border-radius:5px;background:linear-gradient(180deg,#242016,#11100d);box-shadow:0 0 28px #e5b84b30, inset 0 0 0 1px #fff1;color:#ffe39a;font:700 clamp(15px,3vw,22px) 'Space Grotesk';letter-spacing:.035em;text-align:center;white-space:nowrap;z-index:2}
+.modal-art[data-item="alpha-tag"] .nametag-only-preview{display:block}
+.modal-art[data-item="alpha-tag"] .player-stage,
+.modal-art[data-item="alpha-tag"] .drag-hint{display:none}
+.modal-art[data-item="alpha-tag"] .player-preview-label{bottom:18px;top:auto}
