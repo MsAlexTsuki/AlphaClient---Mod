@@ -64,7 +64,7 @@ public final class DailyChallengesGui extends GuiScreen {
         int top = Math.max(76, height / 2 - 92);
 
         drawCenteredString(fontRendererObj, "Alpha Daily Challenges", center, top - 48, 0xFFFFFF);
-        drawCenteredString(fontRendererObj, "AlphaCoins: " + manager.getWallet().getBalance(),
+        drawCenteredString(fontRendererObj, "AlphaCoins: " + manager.getCoinBalance(),
                 center, top - 28, 0xFFD34E);
 
         List<DailyChallengeProgress> challenges = manager.getChallenges();
