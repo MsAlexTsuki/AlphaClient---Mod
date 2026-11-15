@@ -30,3 +30,6 @@ Open `index.html` in a browser to inspect the prototype.
 - Drag horizontally with the mouse or touch to rotate the player model.
 - Cosmetic-specific visual overlays are shown on the preview model.
 - The player preview is a CSS-based visual mock-up, not a real Minecraft skin renderer or in-game preview.
+
+- Replaced placeholder brand marks with the existing AlphaClient logo asset from the `development` branch.
+- Reused the same logo in the Store sidebar, account preview avatar, and featured hero area.
