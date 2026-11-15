@@ -249,3 +249,25 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
 .modal-art .player-model .player-leg .bottom{background:#171b22}
 .modal-art .player-model .pixel-eye{background:#292321;border:0}
 .modal-art .player-model .pixel-mouth{background:#744c3d;border:0}
+
+
+/* Definitively remove the old CSS-drawn A tile; show only the supplied logo image. */
+.brand-mark{
+  background:transparent!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  box-shadow:none!important;
+  border:0!important;
+  border-radius:0!important;
+}
+.brand-mark::before,.brand-mark::after{content:none!important;display:none!important}
+.brand-mark img{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  background:transparent!important;
+}
