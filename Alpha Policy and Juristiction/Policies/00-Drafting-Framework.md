@@ -37,21 +37,35 @@ Use short sections, descriptive headings, concise paragraphs, and lists. Avoid r
 
 These categories must not be merged in a way that obscures which rules apply to ordinary users and which apply only to staff.
 
-## 4. Verified product context from the inspected Launcher branch
+## 4. Verified product and Supabase context
 
 The inspected Alpha Launcher branch contains code for:
 
 - Alpha Account authentication through Supabase
-- Community profile data, including username, display name, rank, Founder flag, and avatar URL
+- Community profile data, including username, display name, rank, Founder flag, biography, and avatar URL
 - Online presence
-- Friends and private messaging components
+- Friends and private messages
 - Linking Minecraft UUIDs to Alpha profiles
 - Locally stored launcher settings and saved Microsoft-account display information
 - A Store interface with a cosmetic catalogue
 
-This is a code inspection snapshot, not a complete data-flow audit. It does not establish every data recipient, retention period, legal basis, security control, or production deployment setting.
+The live AlphaClient Supabase project was also inspected on 16 November 2026. It reports region `eu-west-1` (EU West / Ireland). The database schema includes:
 
-The inspected Store catalogue code alone does not establish that purchases or payment processing are currently available. Store terms must not promise or describe a checkout, refund process, or payment provider until those flows are verified.
+- Authentication accounts and identities, email-based identity records, authentication metadata, sessions, and refresh-token records
+- Profiles, profile ranks, rank permissions, and community verification
+- Friend requests, friendships, private messages, and profile activity
+- Minecraft UUID links and active Minecraft session heartbeat records
+- A public `profile-avatars` storage bucket, configured for PNG, JPEG, WebP, and GIF files with a 5 MB file limit
+- Staff presence, staff operations, staff activity, player notes, private staff notes, and administrative audit records
+- Pixel Garden account saves, progression/prestige state, reset-token state, and shared quest/NPC definitions
+- Client module/command permissions, per-user grants/overrides, permission notes, and permission audit records
+- Easter Egg activation/settings records and AlphaClient release-management records
+
+The current database contains fields for email authentication, optional username/display-name metadata, profile biography/avatar, Minecraft UUIDs, private-message content, gameplay save state, presence timestamps, staff notes, rank/permission changes, and administrative audit details. The detailed user-facing inventory is maintained in POL-002.
+
+This is a schema and selected deployed-function inspection snapshot, not a complete data-flow audit. It does not establish every runtime network request, data recipient, retention period, legal basis, backup location, infrastructure log, external provider, or local-device data flow. The Supabase Auth audit-log schema has an IP-address field, but its table contained no rows at inspection time; actual IP collection/retention remains unverified.
+
+The inspected Store catalogue code and Supabase application schema do not establish that purchases or payment processing are currently available. Store terms must not promise or describe a checkout, refund process, or payment provider until those flows are verified.
 
 ## 5. Alpha-specific rules that must be preserved
 
