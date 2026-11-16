@@ -23,7 +23,7 @@ public final class AlphaCommandVisibility {
             "staffgeneral", "bhop", "stafftmod", "staffmods", "staffmod", "staffsrmod",
             "staffadmin", "staffsradmin", "staffplatformadmin", "staffplatadmin",
             "staffmanagement", "staffmanager", "staffoperations", "alphanote", "staffowner",
-            "stafffounder", "alphaperms", "wtap");
+            "stafffounder", "alphaperms");
     private static final Set<String> DONATOR_MENU = immutable(
             "scout", "donator", "rogue", "elite", "alpha", "alphaplus", "beta");
 
@@ -48,8 +48,8 @@ public final class AlphaCommandVisibility {
         boolean developer = PermissionService.hasAccess(PermissionService.Rank.DEVELOPER);
 
         if (founder || developer) return true;
-        if (owner) return !"wtap".equals(root) && !"stafffounder".equals(root)
-                && !"staffowner".equals(root) && !"alphaclient:wtap".equals(root)
+        if (owner) return !"stafffounder".equals(root)
+                && !"staffowner".equals(root)
                 && !"alphaclient:stafffounder".equals(root);
 
         boolean member = MEMBER.contains(root);
@@ -63,7 +63,7 @@ public final class AlphaCommandVisibility {
 
         if (isStaff(rank)) {
             if (STAFF_COMMANDS.contains(root)) {
-                if ("stafffounder".equals(root) || "staffowner".equals(root) || "wtap".equals(root)) return false;
+                if ("stafffounder".equals(root) || "staffowner".equals(root)) return false;
                 if ("staffgeneral".equals(root) || "bhop".equals(root)
                         || "stafftmod".equals(root) || "staffmods".equals(root)) {
                     return true;
