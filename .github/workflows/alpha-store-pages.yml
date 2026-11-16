@@ -1,4 +1,4 @@
-name: Publish Alpha Store Preview
+name: Publish Alpha Store and Policy Previews
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
       - mod-ideas
     paths:
       - "src/main/java/com/alpharip/staffmod/store/alphalauncher store/**"
+      - "Alpha Policy and Juristiction/Policies/**"
+      - "Alpha Policy and Juristiction/Website/**"
       - ".github/workflows/alpha-store-pages.yml"
   workflow_dispatch:
 
@@ -15,7 +17,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: alpha-store-pages
+  group: alpha-pages-previews
   cancel-in-progress: true
 
 jobs:
@@ -31,11 +33,18 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload Store website
+      - name: Assemble preview websites
+        run: |
+          mkdir -p _site/policy _site/Policies
+          cp -a "src/main/java/com/alpharip/staffmod/store/alphalauncher store/." _site/
+          cp -a "Alpha Policy and Juristiction/Website/." _site/policy/
+          cp -a "Alpha Policy and Juristiction/Policies/." _site/Policies/
+
+      - name: Upload Store and Policy websites
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "src/main/java/com/alpharip/staffmod/store/alphalauncher store"
+          path: "_site"
 
-      - name: Deploy Store website
+      - name: Deploy preview websites
         id: deployment
         uses: actions/deploy-pages@v4
