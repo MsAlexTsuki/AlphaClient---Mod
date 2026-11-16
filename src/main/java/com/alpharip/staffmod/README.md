@@ -1505,3 +1505,26 @@ Folder: `AlphaCoins/alphacoinsplaytime/`
 **Current status:** The standalone service, reward definitions, progress model, local storage, Forge tick adapter, and explicit lifecycle wrapper are present on `mod-ideas`. The original `staffops/ideas/AlphaCoinsPlaytime.java` source file is retained unchanged. No AlphaClient Core, `development`, Alpha Launcher, or Supabase files were changed.
 
 **Still missing / not verified:** Registration from an approved AlphaClient integration point, a rendered GUI/menu entry, pause-menu behavior, compile verification, and runtime verification. Reward state and wallet state are stored in separate local files, so the prototype does not provide an atomic transaction across both files if the process crashes between wallet credit and reward-state persistence.
+
+
+## Case Escalation Timer
+
+Folder: `caseescalationtimer/` (a sibling of `staffops/`).
+
+- **CaseEscalationTimer.java** — Standalone module facade. Owns the tracker, caller-supplied warning policy, local notification manager, and storage adapter; it is not registered in the live AlphaClient module system.
+- **EscalationCase.java** — Immutable case timer record with ID, title, optional reference, opening/deadline timestamps, state, and pause accounting. Pausing and resuming shifts the deadline by the paused duration.
+- **EscalationCaseState.java** — Defines the OPEN, PAUSED, and RESOLVED lifecycle states.
+- **EscalationDeadline.java** — Creates deadlines from an explicit positive duration and calculates remaining time.
+- **EscalationStatus.java** — Represents no deadline, open, warning, due, overdue, paused, and resolved states.
+- **EscalationPolicy.java** — Holds a caller-supplied warning window. It defaults to no warning window; no Alpha escalation SLA or warning threshold is assumed.
+- **EscalationTracker.java** — Maintains the in-memory case registry and supports add, replace, remove, lookup, and snapshot operations.
+- **EscalationNotificationType.java** — Defines local warning, deadline-reached, and overdue notification event types.
+- **EscalationNotification.java** — Immutable local notification event data; it does not send chat messages or server commands.
+- **EscalationNotificationManager.java** — Emits one local event when a case enters a warning, due, or overdue state.
+- **EscalationFormatter.java** — Calculates deadline status and formats remaining/overdue time.
+- **EscalationStorage.java** — Loads and saves case records in a local JSON file. No remote persistence or Supabase calls are used.
+- **CaseEscalationTimerGui.java** — Standalone GUI to add cases with a deadline in hours, view their status/countdown, and pause or resume timers. Changes must be explicitly saved.
+
+**Current status:** The prototype data model, configurable warning window, deadline calculations, pause/resume handling, local notification events, local JSON persistence, and basic GUI are present in source. The warning window is disabled by default because no approved Alpha threshold was supplied.
+
+**Still missing / not verified:** The prototype does not fetch case data, assign staff, define Alpha escalation rules, deliver native toast/chat notifications, or connect to a server. Resolved state can be set through the API but is not yet exposed as a GUI action. No rank/permission checks, StaffMods registration, or live module integration are included. No Supabase integration is used. Compilation and Minecraft 1.8.9 / Forge 11.15.1.2318 runtime behavior have not been verified.
