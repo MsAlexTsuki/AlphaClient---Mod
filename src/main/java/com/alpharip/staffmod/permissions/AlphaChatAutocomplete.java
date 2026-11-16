@@ -22,7 +22,7 @@ public final class AlphaChatAutocomplete {
                     "bhop", "staffgeneral", "stafftmod", "staffmods", "staffmod", "staffsrmod",
                     "staffadmin", "staffsradmin", "staffplatformadmin", "staffplatadmin",
                     "staffmanagement", "staffmanager", "staffoperations", "alphanote",
-                    "staffowner", "stafffounder", "alphaperms", "wtap", "scout", "donator",
+                    "staffowner", "stafffounder", "alphaperms", "scout", "donator",
                     "rogue", "elite", "alpha", "alphaplus", "beta", "pixelgarden", "garden",
                     "pgivecoins", "alphaclient:bhop", "alphaclient:staffgeneral",
                     "alphaclient:stafftmod", "alphaclient:staffmods", "alphaclient:staffmod",
@@ -30,7 +30,7 @@ public final class AlphaChatAutocomplete {
                     "alphaclient:staffplatformadmin", "alphaclient:staffplatadmin",
                     "alphaclient:staffmanagement", "alphaclient:staffmanager",
                     "alphaclient:staffoperations", "alphaclient:alphanote", "alphaclient:staffowner",
-                    "alphaclient:stafffounder", "alphaclient:alphaperms", "alphaclient:wtap"
+                    "alphaclient:stafffounder", "alphaclient:alphaperms"
             )));
 
     private AlphaChatAutocomplete() { }
