@@ -26,8 +26,8 @@ A feature must not be described as available, a payment as supported, or a data 
 
 | ID | Document | Status |
 |---|---|---|
-| POL-001 | Terms of Service | Not drafted |
-| POL-002 | Privacy Policy | Not drafted |
+| POL-001 | Terms of Service | Draft v0.1 — confirmation and legal review required |
+| POL-002 | Privacy Policy | Draft v0.1 — data-flow verification and legal review required |
 | POL-003 | Acceptable Use Policy | Not drafted |
 | POL-004 | Community Guidelines | Not drafted |
 | POL-005 | Staff Code of Conduct | Not drafted |
@@ -50,6 +50,6 @@ A feature must not be described as available, a payment as supported, or a data 
 7. Do not claim that a policy has been legally reviewed or that Alpha is compliant unless that has been independently verified.
 8. Keep policy content separate from Launcher implementation. This repository folder is the drafting source; it does not itself publish or enforce policies.
 
-## Publication readiness
+## Operator information currently confirmed\n\n- Operator model: private individual (not a company), as supplied by the project owner.\n- Country of establishment: The Netherlands.\n- Full legal name, postal address, and contact email: not yet supplied; drafts use explicit placeholders.\n\n## Publication readiness
 
 No document in this workspace should be treated as final or legally approved until its factual placeholders have been resolved and the appropriate legal review has taken place.
