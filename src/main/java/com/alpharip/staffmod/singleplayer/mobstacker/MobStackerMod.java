@@ -11,6 +11,7 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -275,8 +276,19 @@ public final class MobStackerMod {
     }
 
     /**
-     * Replace custom vanilla mob labels with the Mob Stacker label, then draw
-     * the same label for every rendered mob (including mobs without custom names).
+     * Vanilla's client ray trace only reports an entity when it is the visible
+     * hit target; a block between the player and the mob therefore prevents
+     * the Mob Stacker label from being shown.
+     */
+    private static boolean isLookedAtByPlayer(Minecraft minecraft, Entity entity) {
+        return minecraft.objectMouseOver != null
+                && minecraft.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY
+                && minecraft.objectMouseOver.entityHit == entity;
+    }
+
+    /**
+     * Suppress vanilla labels for all living entities while Mob Stacker is
+     * enabled, then draw the replacement label only for the mob under the crosshair.
      */
     @SubscribeEvent
     public void onMobNameTagPre(RenderLivingEvent.Specials.Pre event) {
@@ -297,7 +309,8 @@ public final class MobStackerMod {
         }
 
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft.fontRendererObj == null || minecraft.getRenderManager() == null) {
+        if (minecraft.fontRendererObj == null || minecraft.getRenderManager() == null
+                || !isLookedAtByPlayer(minecraft, entity)) {
             return;
         }
 
@@ -319,8 +332,8 @@ public final class MobStackerMod {
                     1.0F, 0.0F, 0.0F);
             GlStateManager.scale(-0.026666668F, -0.026666668F, 0.026666668F);
             GlStateManager.disableLighting();
-            GlStateManager.disableDepth();
-            GlStateManager.depthMask(false);
+            GlStateManager.enableDepth();
+            GlStateManager.depthMask(true);
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 
