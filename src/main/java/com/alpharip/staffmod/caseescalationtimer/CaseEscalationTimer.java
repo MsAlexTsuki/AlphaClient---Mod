@@ -17,11 +17,10 @@ public final class CaseEscalationTimer {
         this.storage = new EscalationStorage(dataFile);
     }
 
-    public boolean load() {
+    public void load() {
         List<EscalationCase> loaded = storage.load();
         tracker.replaceAll(loaded);
         notifications.reset();
-        return true;
     }
 
     public boolean save() { return storage.save(tracker.getCases()); }
