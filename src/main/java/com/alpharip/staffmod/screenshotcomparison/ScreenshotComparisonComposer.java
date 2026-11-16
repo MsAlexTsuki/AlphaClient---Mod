@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 
 /** Builds the image displayed by the comparison screen. */
 public final class ScreenshotComparisonComposer {
+    private static final long MAX_OUTPUT_PIXELS = 40000000L;
     private final ScreenshotDifferenceAnalyzer analyzer = new ScreenshotDifferenceAnalyzer();
 
     public BufferedImage compose(ScreenshotComparisonPair pair, ScreenshotComparisonConfig config) {
@@ -22,6 +23,7 @@ public final class ScreenshotComparisonComposer {
         if (mode == ScreenshotComparisonMode.OVERLAY) {
             int width = Math.max(before.getWidth(), after.getWidth());
             int height = Math.max(before.getHeight(), after.getHeight());
+            ensureSafeOutput(width, height);
             BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = result.createGraphics();
             try {
@@ -39,6 +41,7 @@ public final class ScreenshotComparisonComposer {
 
         int width = before.getWidth() + after.getWidth() + 12;
         int height = Math.max(before.getHeight(), after.getHeight());
+        ensureSafeOutput(width, height);
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = result.createGraphics();
         try {
@@ -57,5 +60,12 @@ public final class ScreenshotComparisonComposer {
     public ScreenshotDifferenceResult analyze(ScreenshotComparisonPair pair,
                                                ScreenshotComparisonConfig config) {
         return analyzer.analyze(pair, config.getDifferenceThreshold());
+    }
+
+    private static void ensureSafeOutput(int width, int height) {
+        long pixels = (long) width * (long) height;
+        if (pixels <= 0L || pixels > MAX_OUTPUT_PIXELS) {
+            throw new IllegalArgumentException("The composed preview exceeds 40 megapixels.");
+        }
     }
 }

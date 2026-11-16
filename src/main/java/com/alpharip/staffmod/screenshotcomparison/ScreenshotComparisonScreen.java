@@ -20,6 +20,8 @@ public final class ScreenshotComparisonScreen extends GuiScreen {
 
     private GuiTextField beforePath;
     private GuiTextField afterPath;
+    private ScreenshotComparisonImage beforeImage;
+    private ScreenshotComparisonImage afterImage;
     private ScreenshotComparisonPair pair;
     private BufferedImage preview;
     private String status = "Enter two local screenshot paths.";
@@ -71,10 +73,9 @@ public final class ScreenshotComparisonScreen extends GuiScreen {
 
     private void loadBefore() {
         try {
-            ScreenshotComparisonImage image = loader.load(beforePath.getText());
-            pair = new ScreenshotComparisonPair(image, pair == null ? image : pair.getAfter());
-            status = "Before screenshot loaded: " + image.getWidth() + " x " + image.getHeight();
-            buildComparison();
+            beforeImage = loader.load(beforePath.getText());
+            status = "Before screenshot loaded: " + beforeImage.getWidth() + " x " + beforeImage.getHeight();
+            refreshPair();
         } catch (IOException exception) {
             status = "Before: " + exception.getMessage();
         }
@@ -82,13 +83,22 @@ public final class ScreenshotComparisonScreen extends GuiScreen {
 
     private void loadAfter() {
         try {
-            ScreenshotComparisonImage image = loader.load(afterPath.getText());
-            pair = new ScreenshotComparisonPair(pair == null ? image : pair.getBefore(), image);
-            status = "After screenshot loaded: " + image.getWidth() + " x " + image.getHeight();
-            buildComparison();
+            afterImage = loader.load(afterPath.getText());
+            status = "After screenshot loaded: " + afterImage.getWidth() + " x " + afterImage.getHeight();
+            refreshPair();
         } catch (IOException exception) {
             status = "After: " + exception.getMessage();
         }
+    }
+
+    private void refreshPair() {
+        if (beforeImage == null || afterImage == null) {
+            pair = null;
+            status += " Load the other screenshot to continue.";
+            return;
+        }
+        pair = new ScreenshotComparisonPair(beforeImage, afterImage);
+        buildComparison();
     }
 
     private void buildComparison() {
@@ -96,13 +106,20 @@ public final class ScreenshotComparisonScreen extends GuiScreen {
             status = "Load both screenshots before comparing.";
             return;
         }
-        preview = composer.compose(pair, config);
-        texture.update(preview);
-        ScreenshotDifferenceResult result = composer.analyze(pair, config);
-        metrics = String.format(java.util.Locale.ROOT,
-                "Changed pixels: %.2f%%  |  Mean RGB difference: %.1f",
-                result.getChangedPercentage(), result.getMeanChannelDifference());
-        status = "Comparison ready · " + config.getMode().getDisplayName();
+        try {
+            preview = composer.compose(pair, config);
+            texture.update(preview);
+            ScreenshotDifferenceResult result = composer.analyze(pair, config);
+            metrics = String.format(java.util.Locale.ROOT,
+                    "Changed pixels: %.2f%%  |  Mean RGB difference: %.1f",
+                    result.getChangedPercentage(), result.getMeanChannelDifference());
+            status = "Comparison ready · " + config.getMode().getDisplayName();
+        } catch (IllegalArgumentException exception) {
+            preview = null;
+            texture.clear();
+            metrics = "";
+            status = "Comparison unavailable: " + exception.getMessage();
+        }
     }
 
     @Override

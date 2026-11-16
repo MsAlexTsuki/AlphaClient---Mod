@@ -5,6 +5,8 @@ import java.awt.image.BufferedImage;
 
 /** Compares normalized pixels; differing image dimensions are scaled to a shared canvas. */
 public final class ScreenshotDifferenceAnalyzer {
+    private static final long MAX_COMPARISON_PIXELS = 40000000L;
+
     public ScreenshotDifferenceResult analyze(ScreenshotComparisonPair pair, int threshold) {
         if (pair == null) throw new IllegalArgumentException("A screenshot pair is required.");
         int safeThreshold = Math.max(0, Math.min(255, threshold));
@@ -12,10 +14,13 @@ public final class ScreenshotDifferenceAnalyzer {
         BufferedImage after = pair.getAfter().getImage();
         int width = Math.max(before.getWidth(), after.getWidth());
         int height = Math.max(before.getHeight(), after.getHeight());
+        long total = (long) width * (long) height;
+        if (total <= 0L || total > MAX_COMPARISON_PIXELS) {
+            throw new IllegalArgumentException("The normalized comparison canvas exceeds 40 megapixels.");
+        }
         BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
         long changed = 0L;
-        long total = (long) width * (long) height;
         long differenceSum = 0L;
         for (int y = 0; y < height; y++) {
             int by = Math.min(before.getHeight() - 1, (int) ((long) y * before.getHeight() / height));
