@@ -18,11 +18,10 @@ public final class AppealConflictDetectorGui extends GuiScreen {
     @Override
     public void initGui() {
         this.buttonList.clear();
-        this.buttonList.add(new GuiButton(0, this.width / 2 - 50, this.height -  thirty(), 100, 20, "Close"));
+        this.buttonList.add(new GuiButton(0, this.width / 2 - 50, this.height - 30, 100, 20, "Close"));
         refresh();
     }
 
-    private int thirty() { return 30; }
 
     private void refresh() {
         reports = service.evaluateAll();
