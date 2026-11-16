@@ -1,1 +1,85 @@
-package com.alpharip.staffmod.caseredactiontool; import com.google.gson.*;import java.io.*;import java.util.*; public final class RedactionStorage {private final File file;public RedactionStorage(File f){file=f;}public List<RedactionDocument> load(){List<RedactionDocument> out=new ArrayList<RedactionDocument>();if(file==null||!file.isFile())return out;try{JsonObject root=new JsonParser().parse(new FileReader(file)).getAsJsonObject();if(root.get("version").getAsInt()!=1)return out;for(JsonElement x:root.getAsJsonArray("documents")){try{JsonObject o=x.getAsJsonObject();List<RedactionEntry> es=new ArrayList<RedactionEntry>();for(JsonElement z:o.getAsJsonArray("entries")){JsonObject e=z.getAsJsonObject();es.add(new RedactionEntry(e.get("start").getAsInt(),e.get("end").getAsInt(),e.get("reason").getAsString(),e.get("enabled").getAsBoolean()));}out.add(new RedactionDocument(o.get("id").getAsString(),o.get("title").getAsString(),o.get("source").getAsString(),es));}catch(Exception ignored){}}}catch(Exception e){System.out.println("[AlphaClient] Redaction load failed: "+e.getMessage());}return out;}public boolean save(List<RedactionDocument> docs){if(file==null||docs==null)return false;File p=file.getParentFile();if(p!=null&&!p.exists()&&!p.mkdirs())return false;JsonObject root=new JsonObject();root.addProperty("version",1);JsonArray a=new JsonArray();for(RedactionDocument d:docs){JsonObject o=new JsonObject();o.addProperty("id",d.getId());o.addProperty("title",d.getTitle());o.addProperty("source",d.getSource());JsonArray es=new JsonArray();for(RedactionEntry e:d.getEntries()){JsonObject z=new JsonObject();z.addProperty("start",e.getStart());z.addProperty("end",e.getEnd());z.addProperty("reason",e.getReason());z.addProperty("enabled",e.isEnabled());es.add(z);}o.add("entries",es);a.add(o);}root.add("documents",a);try{FileWriter w=new FileWriter(file);try{w.write(root.toString());}finally{w.close();}return true;}catch(Exception e){return false;}}}
+package com.alpharip.staffmod.cases.caseredactiontool;
+import com.google.gson.*;
+import java.io.*;
+import java.util.*;
+
+public final class RedactionStorage {
+    private final File file;
+
+    public RedactionStorage(File file) {
+        this.file = file;
+    }
+
+    public List<RedactionDocument> load() {
+        List<RedactionDocument> documents = new ArrayList<RedactionDocument>();
+        if (file == null || !file.isFile()) return documents;
+
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
+            if (root.get("version").getAsInt() != 1) return documents;
+
+            for (JsonElement element : root.getAsJsonArray("documents")) {
+                try {
+                    JsonObject object = element.getAsJsonObject();
+                    List<RedactionEntry> entries = new ArrayList<RedactionEntry>();
+                    for (JsonElement entryElement : object.getAsJsonArray("entries")) {
+                        JsonObject entry = entryElement.getAsJsonObject();
+                        entries.add(new RedactionEntry(
+                            entry.get("start").getAsInt(),
+                            entry.get("end").getAsInt(),
+                            entry.get("reason").getAsString(),
+                            entry.get("enabled").getAsBoolean()
+                        ));
+                    }
+                    documents.add(new RedactionDocument(
+                        object.get("id").getAsString(),
+                        object.get("title").getAsString(),
+                        object.get("source").getAsString(),
+                        entries
+                    ));
+                } catch (Exception invalidDocument) {
+                    // Skip malformed documents without discarding valid entries.
+                }
+            }
+        } catch (Exception exception) {
+            System.out.println("[AlphaClient] Redaction load failed: " + exception.getMessage());
+        }
+        return documents;
+    }
+
+    public boolean save(List<RedactionDocument> documents) {
+        if (file == null || documents == null) return false;
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) return false;
+
+        JsonObject root = new JsonObject();
+        root.addProperty("version", 1);
+        JsonArray documentArray = new JsonArray();
+        for (RedactionDocument document : documents) {
+            JsonObject object = new JsonObject();
+            object.addProperty("id", document.getId());
+            object.addProperty("title", document.getTitle());
+            object.addProperty("source", document.getSource());
+
+            JsonArray entries = new JsonArray();
+            for (RedactionEntry entry : document.getEntries()) {
+                JsonObject entryObject = new JsonObject();
+                entryObject.addProperty("start", entry.getStart());
+                entryObject.addProperty("end", entry.getEnd());
+                entryObject.addProperty("reason", entry.getReason());
+                entryObject.addProperty("enabled", entry.isEnabled());
+                entries.add(entryObject);
+            }
+            object.add("entries", entries);
+            documentArray.add(object);
+        }
+        root.add("documents", documentArray);
+
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(root.toString());
+            return true;
+        } catch (Exception exception) {
+            return false;
+        }
+    }
+}

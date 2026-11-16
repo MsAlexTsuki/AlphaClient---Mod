@@ -1,1 +1,96 @@
-package com.alpharip.staffmod.cases.detectioncaseautolinker; import com.google.gson.*;import java.io.*;import java.util.*; public final class DetectionLinkStorage {private final File file;public DetectionLinkStorage(File f){file=f;}public List<DetectionRecord> load(){List<DetectionRecord> out=new ArrayList<DetectionRecord>();if(file==null||!file.isFile())return out;try{JsonObject root=new JsonParser().parse(new FileReader(file)).getAsJsonObject();for(JsonElement e:root.getAsJsonArray("cases")){JsonObject o=e.getAsJsonObject(),a=o.getAsJsonObject("attributes");Map<String,String> m=new LinkedHashMap<String,String>();for(Map.Entry<String,JsonElement> x:a.entrySet())m.put(x.getKey(),x.getValue().getAsString());out.add(new DetectionRecord(o.get("id").getAsString(),o.get("label").getAsString(),m));}}catch(Exception e){System.out.println("[AlphaClient] Detection link load failed: "+e.getMessage());}return out;}public Set<String> loadKeys(){Set<String> out=new LinkedHashSet<String>();if(file==null||!file.isFile())return out;try{JsonObject root=new JsonParser().parse(new FileReader(file)).getAsJsonObject();JsonArray a=root.getAsJsonArray("requiredKeys");if(a!=null)for(JsonElement e:a)out.add(e.getAsString());}catch(Exception ignored){}return out;}public boolean save(List<DetectionRecord> cs,Set<String> keys){if(file==null)return false;File p=file.getParentFile();if(p!=null&&!p.exists()&&!p.mkdirs())return false;JsonObject root=new JsonObject();JsonArray a=new JsonArray(),k=new JsonArray();for(DetectionRecord c:cs){JsonObject o=new JsonObject(),attrs=new JsonObject();o.addProperty("id",c.getId());o.addProperty("label",c.getLabel());for(Map.Entry<String,String> e:c.getAttributes().entrySet())attrs.addProperty(e.getKey(),e.getValue());o.add("attributes",attrs);a.add(o);}for(String s:keys)k.add(new JsonPrimitive(s));root.add("cases",a);root.add("requiredKeys",k);try{FileWriter w=new FileWriter(file);try{w.write(root.toString());}finally{w.close();}return true;}catch(Exception e){return false;}}}
+package com.alpharip.staffmod.cases.detectioncaseautolinker;
+import com.google.gson.*;
+import java.io.*;
+import java.util.*;
+
+public final class DetectionLinkStorage {
+    private final File file;
+
+    public DetectionLinkStorage(File file) {
+        this.file = file;
+    }
+
+    public List<DetectionRecord> load() {
+        List<DetectionRecord> records = new ArrayList<DetectionRecord>();
+        if (file == null || !file.isFile()) return records;
+
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
+            JsonArray cases = root.getAsJsonArray("cases");
+            if (cases == null) return records;
+
+            for (JsonElement element : cases) {
+                try {
+                    JsonObject object = element.getAsJsonObject();
+                    JsonObject attributes = object.getAsJsonObject("attributes");
+                    Map<String, String> values = new LinkedHashMap<String, String>();
+                    if (attributes != null) {
+                        for (Map.Entry<String, JsonElement> entry : attributes.entrySet()) {
+                            values.put(entry.getKey(), entry.getValue().getAsString());
+                        }
+                    }
+                    records.add(new DetectionRecord(
+                        object.get("id").getAsString(),
+                        object.get("label").getAsString(),
+                        values
+                    ));
+                } catch (Exception invalidRecord) {
+                    // Skip malformed records while retaining valid records.
+                }
+            }
+        } catch (Exception exception) {
+            System.out.println("[AlphaClient] Detection link load failed: " + exception.getMessage());
+        }
+        return records;
+    }
+
+    public Set<String> loadKeys() {
+        Set<String> keys = new LinkedHashSet<String>();
+        if (file == null || !file.isFile()) return keys;
+
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
+            JsonArray storedKeys = root.getAsJsonArray("requiredKeys");
+            if (storedKeys != null) {
+                for (JsonElement element : storedKeys) {
+                    String key = element.getAsString();
+                    if (key != null && !key.trim().isEmpty()) keys.add(key.trim());
+                }
+            }
+        } catch (Exception ignored) {
+            // Missing or malformed match-key data leaves matching unconfigured.
+        }
+        return keys;
+    }
+
+    public boolean save(List<DetectionRecord> cases, Set<String> keys) {
+        if (file == null || cases == null || keys == null) return false;
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) return false;
+
+        JsonObject root = new JsonObject();
+        JsonArray caseArray = new JsonArray();
+        JsonArray keyArray = new JsonArray();
+        for (DetectionRecord record : cases) {
+            JsonObject object = new JsonObject();
+            JsonObject attributes = new JsonObject();
+            object.addProperty("id", record.getId());
+            object.addProperty("label", record.getLabel());
+            for (Map.Entry<String, String> entry : record.getAttributes().entrySet()) {
+                attributes.addProperty(entry.getKey(), entry.getValue());
+            }
+            object.add("attributes", attributes);
+            caseArray.add(object);
+        }
+        for (String key : keys) keyArray.add(new JsonPrimitive(key));
+        root.add("cases", caseArray);
+        root.add("requiredKeys", keyArray);
+
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(root.toString());
+            return true;
+        } catch (Exception exception) {
+            return false;
+        }
+    }
+}
