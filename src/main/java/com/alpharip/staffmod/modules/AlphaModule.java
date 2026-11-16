@@ -162,12 +162,6 @@ public final class AlphaModule {
             return true;
         }
 
-        // Founder-only combat assistance requires the authenticated Founder session;
-        // offline test-mode rank fallback and Owner access are insufficient.
-        if ("aim-assist".equals(id) || "auto-strafe".equals(id)) {
-            return SupabaseCommunityService.isSignedInFounder();
-        }
-
         // Founder-only modules remain exclusive and cannot be granted to other ranks.
         if (category == Category.FOUNDER) {
             return PermissionService.hasAccess(PermissionService.Rank.FOUNDER)

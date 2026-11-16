@@ -92,9 +92,6 @@ public final class AlphaHelpGui extends GuiScreen {
         }
 
         if (com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()) {
-            addCommand("AimAssist enable or disable", "/aimassist <on|off>", "staffmods.founder", true);
-            addCommand("AimAssist target area", "/aimassist area <fullbody|upperbody|torso|head>", "staffmods.founder", true);
-            addCommand("AimAssist core module", "/alphaclient module aim-assist <on|off|toggle>", "staffmods.founder", true);
             addCommand("Easter Eggs administration", "/alphaclient:easteregg", "staffmods.founder", true);
             addCommand("Enable an Easter Egg", "/easteregg on <id>", "staffmods.founder", true);
             addCommand("Disable an Easter Egg", "/easteregg off <id>", "staffmods.founder", true);
@@ -129,7 +126,6 @@ public final class AlphaHelpGui extends GuiScreen {
         addCommand("Legacy PvP", "/legacypvp", "command.legacypvp", true);
         addCommand("Quality settings", "/quality", "command.quality", true);
         addCommand("BHOP", "/bhop", "command.bhop", PermissionService.hasAccess(PermissionService.Rank.T_MOD));
-        addCommand("W-Tap", "/wtap", "command.wtap", PermissionService.hasAccess(PermissionService.Rank.T_MOD));
 
         if (PermissionService.hasStaffModsAccess()) {
             addCommand("StaffMods menu", "/staffmods", "staffmods.open", true);
