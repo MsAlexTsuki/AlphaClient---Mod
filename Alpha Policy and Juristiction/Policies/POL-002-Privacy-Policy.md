@@ -1,7 +1,7 @@
 # Alpha Privacy Policy
 
 **Document ID:** POL-002  
-**Version:** 0.2-draft  
+**Version:** 0.3-draft  
 **Status:** Draft — not approved for publication  
 **Effective date:** Not effective until formally published  
 **Last updated:** 16 November 2026  
@@ -67,11 +67,10 @@ The Supabase `profiles` table contains:
 - biography;
 - avatar URL;
 - community rank key;
-- Founder status flag;
 - linked Minecraft UUID;
 - profile creation and update timestamps.
 
-Some profile attributes are controlled by Alpha's server-side permission and rank systems rather than freely supplied by the user. For example, the database protects the Founder flag and primary rank from ordinary self-assignment.
+Some profile attributes, such as the community rank, are controlled by Alpha's server-side permission and rank systems rather than freely supplied by the user.
 
 Authenticated Alpha users can read community profiles under the current database policy. The profile-avatar storage bucket is configured as public, meaning avatar files in that bucket are publicly readable. The current bucket configuration allows PNG, JPEG, WebP, and GIF files, with a maximum file size of 5 MB. Users can upload, update, and delete their own avatar files under the configured storage policies.
 
@@ -141,7 +140,6 @@ The database also stores information used to administer Alpha accounts and acces
 - per-user module/category grants, effects, reasons, expiry times, revocation times, and the staff account responsible;
 - per-user command permission overrides and update information;
 - community verification status, verifier account ID, and verification timestamps;
-- Founder/developer-admin allowlist membership.
 
 These records are generally created or changed by authorized Alpha staff or server-side processes. They are not all information submitted by the affected user.
 
