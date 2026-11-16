@@ -1,10 +1,10 @@
-package com.alpharip.staffmod.staffops.ideas;
+package com.alpharip.staffmod.cases.investigationcasemanager;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** Local-only case catalogue for prototyping an investigation UI. */
+/** Local-only investigation case catalogue. */
 public final class InvestigationCases {
     private final List<CaseEntry> cases = new ArrayList<CaseEntry>();
     private long nextId = 1L;
@@ -17,6 +17,32 @@ public final class InvestigationCases {
                 summary == null ? "" : summary, createdAtMillis);
         cases.add(entry);
         return entry;
+    }
+
+    public CaseEntry restore(long id, String title, String summary, long createdAtMillis) {
+        if (id <= 0L || title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid stored case");
+        }
+        CaseEntry entry = new CaseEntry(id, title.trim(),
+                summary == null ? "" : summary, createdAtMillis);
+        cases.add(entry);
+        nextId = Math.max(nextId, id + 1L);
+        return entry;
+    }
+
+    public boolean remove(long id) {
+        for (int i = 0; i < cases.size(); i++) {
+            if (cases.get(i).getId() == id) {
+                cases.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void clear() {
+        cases.clear();
+        nextId = 1L;
     }
 
     public List<CaseEntry> getCases() {

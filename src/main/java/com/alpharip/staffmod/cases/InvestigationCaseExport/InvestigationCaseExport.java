@@ -1,9 +1,9 @@
-package com.alpharip.staffmod.staffops.ideas;
+package com.alpharip.staffmod.cases.investigationcaseexport;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** Formats caller-supplied case fields as a simple text export; no file I/O is performed. */
+/** Formats caller-supplied case fields as plain text; no file I/O is performed here. */
 public final class InvestigationCaseExport {
     public String format(Map<String, String> fields) {
         StringBuilder out = new StringBuilder();
@@ -14,5 +14,9 @@ public final class InvestigationCaseExport {
                 .append(entry.getValue() == null ? "" : entry.getValue()).append('\n');
         }
         return out.toString();
+    }
+
+    public InvestigationCaseExportGui createGui(net.minecraft.client.gui.GuiScreen parent) {
+        return new InvestigationCaseExportGui(parent, this);
     }
 }
