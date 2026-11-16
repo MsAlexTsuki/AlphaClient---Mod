@@ -1509,7 +1509,7 @@ Folder: `AlphaCoins/alphacoinsplaytime/`
 
 ## Case Escalation Timer
 
-Folder: `caseescalationtimer/` (a sibling of `staffops/`).
+Folder: `cases/caseescalationtimer/`.
 
 - **CaseEscalationTimer.java** — Standalone module facade. Owns the tracker, caller-supplied warning policy, local notification manager, and storage adapter; it is not registered in the live AlphaClient module system.
 - **EscalationCase.java** — Immutable case timer record with ID, title, optional reference, opening/deadline timestamps, state, and pause accounting. Pausing and resuming shifts the deadline by the paused duration.

@@ -1,7 +1,7 @@
 # Appeal Conflict Detector prototype
 
 ## Location
-`src/main/java/com/alpharip/staffmod/appealconflictdetector/`
+`src/main/java/com/alpharip/staffmod/cases/appealconflictdetector/`
 
 ## Purpose
 Checks whether an assigned appeal reviewer is also listed as a participant in that appeal, using only conflict rules explicitly supplied by the caller. It produces findings for human review; it does not automatically reject an appeal or change an assignment.
