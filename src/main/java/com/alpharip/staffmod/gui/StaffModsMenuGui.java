@@ -4,9 +4,6 @@ package com.alpharip.staffmod.gui;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
-import com.alpharip.staffmod.movement.AutoStrafeSettingsGui;
-import com.alpharip.staffmod.movement.STapAssistance;
-import com.alpharip.staffmod.movement.WTapAssistance;
 import com.alpharip.staffmod.permissions.PermissionService;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -207,10 +204,6 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         switch (module.getId()) {
             case "staffmods":
                 return BhopMode.isEnabled();
-            case "w-tap-assistance":
-                return WTapAssistance.isEnabled();
-            case "s-tap-assistance":
-                return STapAssistance.isEnabled();
             default:
                 return module.isEnabled();
         }
@@ -392,24 +385,6 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             if ("staffmods".equals(module.getId())) continue;
 
-            // AimAssist is listed only in the authenticated Founder's folder.
-            if ("aim-assist".equals(module.getId())) {
-                if (selectedRank == PermissionService.Rank.FOUNDER
-                        && com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()
-                        && module.isImplemented() && module.isUnlocked()) {
-                    modules.add(module);
-                }
-                continue;
-            }
-            if ("w-tap-assistance".equals(module.getId())) {
-                if (selectedRank == PermissionService.Rank.FOUNDER
-                        && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                        && module.isUnlocked()) {
-                    modules.add(module);
-                }
-                continue;
-            }
-
             if (!module.isUnlocked()) continue;
             if (module.getCategory() == AlphaModule.Category.FOUNDER) {
                 if (selectedRank == PermissionService.Rank.FOUNDER
@@ -565,37 +540,6 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
             int index = button.id - MODULE_BASE;
             if (index < 0 || index >= visibleModules.size()) return;
             AlphaModule module = visibleModules.get(index);
-            if ("aim-assist".equals(module.getId())) {
-                if (selectedRank == PermissionService.Rank.FOUNDER
-                        && com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()
-                        && module.isImplemented() && module.isUnlocked()) {
-                    mc.displayGuiScreen(new AimAssistSettingsGui(this));
-                }
-                return;
-            }
-            if ("w-tap-assistance".equals(module.getId())) {
-                if (selectedRank == PermissionService.Rank.FOUNDER
-                        && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)) {
-                    mc.displayGuiScreen(new WTapSettingsGui(this));
-                }
-                return;
-            }
-            if ("s-tap-assistance".equals(module.getId())) {
-                if (selectedRank == PermissionService.Rank.FOUNDER
-                        && PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                        && module.isImplemented() && module.isUnlocked()) {
-                    mc.displayGuiScreen(new STapSettingsGui(this));
-                }
-                return;
-            }
-            if ("auto-strafe".equals(module.getId())) {
-                if (selectedRank == PermissionService.Rank.FOUNDER
-                        && com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder()
-                        && module.isImplemented() && module.isUnlocked()) {
-                    mc.displayGuiScreen(new AutoStrafeSettingsGui(this));
-                }
-                return;
-            }
             if (!module.isUnlocked()) return;
             if ("staffmods".equals(module.getId())) {
                 mc.displayGuiScreen(new BhopSettingsGui(this));

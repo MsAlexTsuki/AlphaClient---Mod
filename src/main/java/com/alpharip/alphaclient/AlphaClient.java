@@ -21,15 +21,12 @@ import com.alpharip.staffmod.ping.PingMod;
 import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.keystrokes.KeystrokesMod;
 import com.alpharip.staffmod.ComboCounter.ComboCounter;
-import com.alpharip.staffmod.combat.AimAssist;
-import com.alpharip.staffmod.movement.AutoStrafe;
 import com.alpharip.staffmod.pvp.LegacyPvpMod;
 import com.alpharip.staffmod.optimization.FpsOptimization;
 import com.alpharip.staffmod.optimization.AlphaPerformanceCore;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
-import com.alpharip.staffmod.movement.WTapAssistance;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
@@ -178,9 +175,6 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(comboCounter);
         MinecraftForge.EVENT_BUS.register(new InfoHudModules());
         MinecraftForge.EVENT_BUS.register(new LegacyPvpMod());
-        MinecraftForge.EVENT_BUS.register(new WTapAssistance());
-        MinecraftForge.EVENT_BUS.register(new AimAssist());
-        MinecraftForge.EVENT_BUS.register(new AutoStrafe());
         MinecraftForge.EVENT_BUS.register(new FullbrightMod());
         MinecraftForge.EVENT_BUS.register(new AutoGGMod());
         MinecraftForge.EVENT_BUS.register(new AutoReconnectMod());
@@ -259,11 +253,11 @@ public final class AlphaClient {
         String[] commands = {
                 "alphaclient", "ac", "alphahelp", "alphaclient:help", "alphaclient:modules", "alphaclient:autotool",
                 "alphaclient:settings", "alphaclient:module", "alphaclient:easteregg", "easteregg", "alphaclient:fps",
-                "alphaclient:cps", "alphaclient:bhop", "alphaclient:wtap",
+                "alphaclient:cps", "alphaclient:bhop",
                 "alphaclient:fullbright", "alphaclient:legacypvp", "alphaclient:playtime",
                 "alphaclient:sessiontimer", "alphaclient:afktimer",
                 "fpshud", "cpshud", "pothud", "playtime", "sessiontimer", "afktimer",
-                "bhop", "wtap", "aimassist", "fullbright", "nameviewer", "legacypvp", "quality",
+                "bhop", "fullbright", "nameviewer", "legacypvp", "quality",
                 "hudeditor", "profiles", "profile", "alphaperms", "staffoperations", "alphanote", "staffmods", "staffgeneral", "stafftmod", "staffmod",
                 "staffsrmod", "staffadmin", "staffsradmin", "staffmanagement",
                 "staffplatformadmin", "staffplatadmin", "staffmanager", "staffowner", "stafffounder",

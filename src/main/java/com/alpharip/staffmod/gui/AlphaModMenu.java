@@ -100,7 +100,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         List<AlphaModule.Category> sidebarCategories = new ArrayList<AlphaModule.Category>();
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
             // Staff rank folders belong exclusively inside StaffMods, not in the regular Mods sidebar.
-            // Founder owns dedicated W-Tap/S-Tap modules in this menu; keep other staff folders inside StaffMods.
             if (isStaffRankCategory(category)
                     || isDonatorRankCategory(category)) continue;
             boolean categoryAllowed = PermissionService.hasAccess(category.getRequiredRank());
@@ -613,8 +612,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                         mc.displayGuiScreen(new ComboCounterSettingsGui(this));
                         return;
                     }
-                    if ("w-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new WTapSettingsGui(this)); return; }
-                    if ("s-tap-assistance".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new STapSettingsGui(this)); return; }
                     if ("legacy-pvp".equals(clickedModule.getId())
                             && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         mc.displayGuiScreen(new LegacyPvpSettingsGui(this));

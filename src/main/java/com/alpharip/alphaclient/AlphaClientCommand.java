@@ -18,15 +18,12 @@ import com.alpharip.staffmod.gui.PlaytimeTrackerSettingsGui;
 import com.alpharip.staffmod.gui.QualityGui;
 import com.alpharip.staffmod.gui.SessionTimerSettingsGui;
 import com.alpharip.staffmod.gui.StaffModsMenuGui;
-import com.alpharip.staffmod.gui.WTapSettingsGui;
 import com.alpharip.staffmod.hud.AfkTimerHud;
 import com.alpharip.staffmod.hud.PlaytimeTrackerHud;
 import com.alpharip.staffmod.hud.SessionTimerHud;
-import com.alpharip.staffmod.combat.AimAssistSettings;
 import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
-import com.alpharip.staffmod.movement.WTapAssistance;
 import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
@@ -81,10 +78,6 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
 
-        if ("aimassist".equals(route)) {
-            handleAimAssistCommand(sender, args);
-            return;
-        }
 
         if ("easteregg".equals(route) || "alphaclient:easteregg".equals(route)) {
             handleEasterEggCommand(sender, args);
@@ -141,12 +134,6 @@ public final class AlphaClientCommand extends CommandBase {
                 || ("alphaclient".equals(route) && args != null && args.length > 0 && "bhop".equalsIgnoreCase(args[0])))
                 && !hasBhopAccess()) {
             reply(sender, "Access denied: BHOP requires the correct staff rank and staff.bhop permission.");
-            return;
-        }
-        if (("wtap".equals(route) || "alphaclient:wtap".equals(route)
-                || ("alphaclient".equals(route) && args != null && args.length > 0 && "wtap".equalsIgnoreCase(args[0])))
-                && !hasWTapAccess()) {
-            reply(sender, "Access denied: W-Tap Assistance is Founder-only.");
             return;
         }
         if (permissionKey != null && Boolean.FALSE.equals(PermissionService.getCommandPermissionOverride(permissionKey))) {
@@ -287,8 +274,6 @@ public final class AlphaClientCommand extends CommandBase {
             handleHud(sender, args, false);
         } else if ("alphaclient:bhop".equals(route)) {
             handleBhop(sender, args);
-        } else if ("alphaclient:wtap".equals(route)) {
-            handleWTap(sender, args);
         } else if ("alphaclient:fullbright".equals(route)) {
             handleFullbright(sender, args);
         } else if ("alphaclient:legacypvp".equals(route)) {
@@ -400,19 +385,13 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/playtime help", "Show Playtime Tracker commands and settings");
             guideLine(sender, "/staffmods help", "Show StaffMods folder commands");
             guideLine(sender, "/alphaperms help", "Show the Founder permission-manager guide");
-        } else if ("aimassist".equals(name)) {
-            guideHeader(sender, "AIMASSIST");
-            guideLine(sender, "/aimassist on", "Enable AimAssist");
-            guideLine(sender, "/aimassist off", "Disable AimAssist");
-            guideLine(sender, "/aimassist area <fullbody|upperbody|torso|head>", "Select the target area");
-            guideLine(sender, "/alphaclient module aim-assist <on|off|toggle>", "Use the core AlphaClient module command");
         } else if ("alphaclient".equals(name) || "alphaclient:help".equals(name)) {
             guideHeader(sender, "ALPHACLIENT");
             guideLine(sender, "/alphaclient help", "Show this guide");
             guideLine(sender, "/alphaclient modules", "List registered modules and their status");
             guideLine(sender, "/alphaclient settings <module>", "Open a module's settings");
             guideLine(sender, "/alphaclient module <module> <on|off|toggle>", "Change a supported module's state");
-            guideLine(sender, "/alphaclient fps|cps|bhop|wtap", "Open the corresponding module command");
+            guideLine(sender, "/alphaclient fps|cps|bhop", "Open the corresponding module command");
             guideLine(sender, "/alphaclient fullbright|legacypvp", "Open the corresponding feature command");
             guideLine(sender, "/alphaclient playtime|sessiontimer|afktimer", "Use the corresponding timer command");
             guideLine(sender, "/alphahelp", "Show the rank-filtered command overview");
@@ -441,13 +420,12 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/fpshud settings", "Open FPS HUD settings");
             guideLine(sender, "/cpshud settings", "Open CPS HUD settings");
             guideLine(sender, "/bhop settings", "Open BHOP settings");
-            guideLine(sender, "/wtap settings", "Open W-Tap settings");
             guideLine(sender, "/legacypvp settings", "Open Legacy PvP settings");
         } else if ("alphaclient:module".equals(name)) {
             guideHeader(sender, "MODULE CONTROL");
             guideLine(sender, "/alphaclient:module <module> <on|off|toggle>", "Change a supported module's state");
             guideLine(sender, "/alphaclient module <module> <on|off|toggle>", "Use the main AlphaClient command route");
-            guideLine(sender, "Special module IDs: bhop, wtap, fullbright, playtime, sessiontimer, afktimer", "These use dedicated command handlers");
+            guideLine(sender, "Special module IDs: bhop, fullbright, playtime, sessiontimer, afktimer", "These use dedicated command handlers");
             guideLine(sender, "/alphaclient:modules", "List available modules");
             guideLine(sender, "/staffmods", "Open StaffMods; it is a folder, not a single module");
         } else if ("fpshud".equals(name) || "alphaclient:fps".equals(name)) {
@@ -473,8 +451,6 @@ public final class AlphaClientCommand extends CommandBase {
             guideLine(sender, "/bhop shiftup <on|off>", "Toggle Shift-Up");
             guideLine(sender, "/bhop name <text>", "Set the displayed name");
             guideLine(sender, "/bhop color <#RRGGBB>", "Set the display color");
-        } else if ("wtap".equals(name) || "alphaclient:wtap".equals(name)) {
-            sendWTapHelp(sender);
         } else if ("fullbright".equals(name) || "alphaclient:fullbright".equals(name)) {
             guideHeader(sender, "FULLBRIGHT");
             guideLine(sender, "/fullbright <on|off|toggle>", "Change Fullbright state");
@@ -670,7 +646,6 @@ public final class AlphaClientCommand extends CommandBase {
         if ("fps".equals(id)) return "command.fpshud";
         if ("cps".equals(id)) return "command.cpshud";
         if ("staffmods".equals(id) || "bhop".equals(id)) return "command.bhop";
-        if ("w-tap-assistance".equals(id) || "wtap".equals(id)) return "command.wtap";
         if ("fullbright".equals(id)) return "command.fullbright";
         if ("name-viewer".equals(id) || "nameviewer".equals(id)) return "command.nameviewer";
         if ("legacy-pvp".equals(id) || "legacypvp".equals(id)) return "command.legacypvp";
@@ -692,7 +667,6 @@ public final class AlphaClientCommand extends CommandBase {
             if ("fps".equals(subcommand)) return "command.fpshud";
             if ("cps".equals(subcommand)) return "command.cpshud";
             if ("bhop".equals(subcommand)) return "command.bhop";
-            if ("wtap".equals(subcommand)) return "command.wtap";
             if ("fullbright".equals(subcommand)) return "command.fullbright";
             if ("legacypvp".equals(subcommand)) return "command.legacypvp";
             if ("playtime".equals(subcommand)) return "command.playtime";
@@ -716,7 +690,6 @@ public final class AlphaClientCommand extends CommandBase {
         if ("fpshud".equals(route) || "alphaclient:fps".equals(route)) return "command.fpshud";
         if ("cpshud".equals(route) || "alphaclient:cps".equals(route)) return "command.cpshud";
         if ("bhop".equals(route) || "alphaclient:bhop".equals(route)) return "command.bhop";
-        if ("wtap".equals(route) || "alphaclient:wtap".equals(route)) return "command.wtap";
         if ("fullbright".equals(route) || "alphaclient:fullbright".equals(route)) return "command.fullbright";
         if ("nameviewer".equals(route)) return "command.nameviewer";
         if ("legacypvp".equals(route) || "alphaclient:legacypvp".equals(route)) return "command.legacypvp";
@@ -1082,7 +1055,7 @@ public final class AlphaClientCommand extends CommandBase {
     private boolean isAlias(String name) {
         return "fpshud".equals(name) || "cpshud".equals(name) || "playtime".equals(name)
                 || "sessiontimer".equals(name) || "afktimer".equals(name) || "bhop".equals(name)
-                || "wtap".equals(name) || "fullbright".equals(name) || "nameviewer".equals(name)
+                || "fullbright".equals(name) || "nameviewer".equals(name)
                 || "legacypvp".equals(name) || "quality".equals(name);
     }
 
@@ -1092,7 +1065,6 @@ public final class AlphaClientCommand extends CommandBase {
         if ("sessiontimer".equals(alias)) return "sessiontimer";
         if ("afktimer".equals(alias)) return "afktimer";
         if ("bhop".equals(alias)) return "bhop";
-        if ("wtap".equals(alias)) return "wtap";
         if ("nameviewer".equals(alias)) return "nameviewer";
         if ("legacypvp".equals(alias)) return "legacypvp";
         if ("quality".equals(alias)) return "quality";
@@ -1106,57 +1078,8 @@ public final class AlphaClientCommand extends CommandBase {
         if ("sessiontimer".equals(alias)) return "alphaclient:sessiontimer";
         if ("afktimer".equals(alias)) return "alphaclient:afktimer";
         if ("bhop".equals(alias)) return "alphaclient:bhop";
-        if ("wtap".equals(alias)) return "alphaclient:wtap";
         if ("fullbright".equals(alias)) return "alphaclient:fullbright";
         return "alphaclient:settings";
-    }
-
-    private void handleAimAssistCommand(ICommandSender sender, String[] args) {
-        if (!SupabaseCommunityService.isSignedInFounder()) {
-            reply(sender, "Access denied: AimAssist is Founder-only.");
-            return;
-        }
-
-        AlphaModule module = AlphaModuleRegistry.find("aim-assist");
-        if (module == null || !module.isImplemented() || !module.isUnlocked()) {
-            reply(sender, "AimAssist is currently unavailable.");
-            return;
-        }
-        if (args == null || args.length == 0 || (args.length == 1 && "help".equalsIgnoreCase(args[0]))) {
-            showCommandGuide(sender, "aimassist");
-            return;
-        }
-
-        String action = args[0].toLowerCase(Locale.ROOT);
-        if ("on".equals(action) || "off".equals(action) || "toggle".equals(action)) {
-            boolean enabled = "on".equals(action) || ("toggle".equals(action) && !module.isEnabled());
-            module.setEnabled(enabled);
-            reply(sender, "AimAssist " + (module.isEnabled() ? "enabled." : "disabled."));
-            return;
-        }
-
-        if ("area".equals(action)) {
-            if (args.length < 2) {
-                reply(sender, "Usage: /aimassist area <fullbody|upperbody|torso|head>");
-                return;
-            }
-            String areaName = joinArgs(args, 1).replace("-", "").replace("_", "").replace(" ", "")
-                    .toUpperCase(Locale.ROOT);
-            AimAssistSettings.TargetArea area;
-            if ("FULLBODY".equals(areaName)) area = AimAssistSettings.TargetArea.FULL_BODY;
-            else if ("UPPERBODY".equals(areaName)) area = AimAssistSettings.TargetArea.UPPER_BODY;
-            else if ("TORSO".equals(areaName)) area = AimAssistSettings.TargetArea.TORSO;
-            else if ("HEAD".equals(areaName)) area = AimAssistSettings.TargetArea.HEAD;
-            else {
-                reply(sender, "Unknown AimAssist area. Use fullbody, upperbody, torso, or head.");
-                return;
-            }
-            AimAssistSettings.setTargetArea(area);
-            reply(sender, "AimAssist target area set to " + area.getLabel() + ".");
-            return;
-        }
-
-        reply(sender, "Usage: /aimassist <on|off|area <area>>");
     }
 
     private void handleModule(ICommandSender sender, String[] args) {
@@ -1165,16 +1088,11 @@ public final class AlphaClientCommand extends CommandBase {
             return;
         }
         String rawId = args[0].toLowerCase(Locale.ROOT);
-        if ("aim-assist".equals(rawId) || "aimassist".equals(rawId)) {
-            handleAimAssistCommand(sender, new String[] { args[1] });
-            return;
-        }
         if ("staffmods".equals(rawId)) {
             reply(sender, "StaffMods is a folder, not a module. Use /staffmods to open it.");
             return;
         }
         if ("bhop".equals(rawId)) { handleBhop(sender, new String[] { args[1] }); return; }
-        if ("wtap".equals(rawId) || "w-tap".equals(rawId) || "w-tap-assistance".equals(rawId)) { handleWTap(sender, new String[] { args[1] }); return; }
         if ("fullbright".equals(rawId)) { handleFullbright(sender, new String[] { args[1] }); return; }
         if ("quality".equals(rawId)) {
             reply(sender, "Quality is a feature group, not a single toggle. Use /quality to open its settings.");
@@ -1233,13 +1151,11 @@ public final class AlphaClientCommand extends CommandBase {
 
     private boolean hasModuleAccess(AlphaModule module) {
         if (module == null) return false;
-        if ("aim-assist".equals(module.getId())) return module.isImplemented() && module.isUnlocked();
         String permissionKey = moduleCommandPermission(module.getId());
         Boolean commandOverride = PermissionService.getCommandPermissionOverride(permissionKey);
         if (commandOverride != null) return commandOverride.booleanValue();
         if (!module.isUnlocked()) return false;
         if ("staffmods".equals(module.getId())) return hasBhopAccess();
-        if ("w-tap-assistance".equals(module.getId())) return hasWTapAccess();
         return true;
     }
 
@@ -1247,15 +1163,6 @@ public final class AlphaClientCommand extends CommandBase {
         Boolean override = PermissionService.getCommandPermissionOverride("command.bhop");
         if (override != null) return override.booleanValue();
         return PermissionService.hasModAccess("staff.bhop");
-    }
-
-    private boolean hasWTapAccess() {
-        Boolean override = PermissionService.getCommandPermissionOverride("command.wtap");
-        if (override != null) return override.booleanValue();
-        // Use the authenticated community profile's explicit Founder flag as well as the rank gate.
-        return PermissionService.hasModAccess("w-tap-assistance")
-                || PermissionService.hasAccess(PermissionService.Rank.FOUNDER)
-                || SupabaseCommunityService.isSignedInFounder();
     }
 
     private void handleBhop(ICommandSender sender, String[] args) {
@@ -1306,71 +1213,6 @@ public final class AlphaClientCommand extends CommandBase {
         } else {
             reply(sender, "Usage: /bhop [settings|on|off|toggle|speed <1-20>|shiftup <on|off>|name <text>|color <#RRGGBB>]");
         }
-    }
-
-    private void handleWTap(ICommandSender sender, String[] args) {
-        if (!hasWTapAccess()) { reply(sender, "Access denied: W-Tap Assistance is Founder-only."); return; }
-        if (args.length > 0 && "help".equalsIgnoreCase(args[0])) { sendWTapHelp(sender); return; }
-        if (args.length == 0 || "settings".equalsIgnoreCase(args[0])) { openSettings(sender, "wtap"); return; }
-        String action = args[0].toLowerCase(Locale.ROOT);
-        if (args.length == 1 && ("on".equals(action) || "off".equals(action) || "toggle".equals(action))) {
-            boolean enabled = "toggle".equals(action) ? !WTapAssistance.isEnabled() : "on".equals(action);
-            WTapAssistance.setEnabled(enabled);
-            reply(sender, "W-Tap Assistance " + (WTapAssistance.isEnabled() ? "enabled." : "disabled."));
-        } else if ("delay".equals(action) && args.length == 2) {
-            Integer value = parseInteger(args[1], 0, 10);
-            if (value == null) { reply(sender, "Usage: /wtap delay <0-10>"); return; }
-            WTapAssistance.setDelay(value.intValue());
-            reply(sender, "W-Tap delay set to " + WTapAssistance.getDelay() + " ticks.");
-        } else if ("cooldown".equals(action) && args.length == 2) {
-            Integer value = parseInteger(args[1], 0, 20);
-            if (value == null) { reply(sender, "Usage: /wtap cooldown <0-20>"); return; }
-            WTapAssistance.setCooldown(value.intValue());
-            reply(sender, "W-Tap cooldown set to " + WTapAssistance.getCooldown() + " ticks.");
-        } else if ("mode".equals(action) && args.length == 2) {
-            String[] modes = { "legit", "standard", "aggressive", "manual" };
-            int index = indexOf(modes, args[1].toLowerCase(Locale.ROOT));
-            if (index < 0) { reply(sender, "Usage: /wtap mode <legit|standard|aggressive|manual>"); return; }
-            WTapAssistance.setMode(index);
-            reply(sender, "W-Tap mode set to " + modes[index].toUpperCase(Locale.ROOT) + ".");
-        } else if ("trigger".equals(action) && args.length == 2) {
-            String value = args[1].toLowerCase(Locale.ROOT);
-            if ("hit".equals(value) || "on-hit".equals(value)) WTapAssistance.setTrigger(0);
-            else if ("attack".equals(value) || "on-attack".equals(value)) WTapAssistance.setTrigger(1);
-            else { reply(sender, "Usage: /wtap trigger <hit|attack>"); return; }
-            reply(sender, "W-Tap trigger updated.");
-        } else if ("target".equals(action) && args.length == 2) {
-            String value = args[1].toLowerCase(Locale.ROOT);
-            if ("players".equals(value)) WTapAssistance.setTarget(0);
-            else if ("all".equals(value) || "living".equals(value)) WTapAssistance.setTarget(1);
-            else { reply(sender, "Usage: /wtap target <players|all>"); return; }
-            reply(sender, "W-Tap target updated.");
-        } else if ("requirew".equals(action) && args.length == 2) {
-            Boolean value = parseOnOff(args[1]);
-            if (value == null) { reply(sender, "Usage: /wtap requirew <on|off>"); return; }
-            WTapAssistance.setRequireW(value.booleanValue());
-            reply(sender, "W-Tap Require W " + (value.booleanValue() ? "enabled." : "disabled."));
-        } else {
-            sendWTapHelp(sender);
-        }
-    }
-
-    private void sendWTapHelp(ICommandSender sender) {
-        reply(sender, "§6§lW-TAP ASSISTANCE §8| §7Command Guide");
-        reply(sender, "§7Quick actions");
-        reply(sender, "§f/wtap on §8- §aEnable W-Tap");
-        reply(sender, "§f/wtap off §8- §cDisable W-Tap");
-        reply(sender, "§f/wtap toggle §8- §7Switch enabled state");
-        reply(sender, "§f/wtap settings §8- §7Open the settings menu");
-        reply(sender, "§7Timing");
-        reply(sender, "§f/wtap delay <0-10> §8- §7Set delay in ticks");
-        reply(sender, "§f/wtap cooldown <0-20> §8- §7Set cooldown in ticks");
-        reply(sender, "§7Behaviour");
-        reply(sender, "§f/wtap mode <legit|standard|aggressive|manual>");
-        reply(sender, "§f/wtap trigger <hit|attack> §8- §7Choose activation trigger");
-        reply(sender, "§f/wtap target <players|all> §8- §7Choose valid targets");
-        reply(sender, "§f/wtap requirew <on|off> §8- §7Require the W key");
-        reply(sender, "§8Tip: use §f/wtap help §8to show this guide again.");
     }
 
     private void handleLegacyPvp(ICommandSender sender, String[] args) {
@@ -1636,7 +1478,6 @@ public final class AlphaClientCommand extends CommandBase {
     private void openSettings(ICommandSender sender, String moduleName) {
         String id = normalizeModuleId(moduleName);
         if ("bhop".equals(id) && !hasBhopAccess()) { reply(sender, "Access denied: BHOP requires the correct staff rank and staff.bhop permission."); return; }
-        if ("wtap".equals(id) && !hasWTapAccess()) { reply(sender, "Access denied: W-Tap Assistance is Founder-only."); return; }
         AlphaModule module = AlphaModuleRegistry.find(id);
         if (module != null && !hasModuleAccess(module)) { reply(sender, "Access denied: your current rank or module permission does not allow this module."); return; }
 
@@ -1651,7 +1492,6 @@ public final class AlphaClientCommand extends CommandBase {
         else if ("sessiontimer".equals(id) || "session-timer".equals(id)) target = new SessionTimerSettingsGui(parent);
         else if ("afktimer".equals(id) || "afk-timer".equals(id)) target = new AfkTimerSettingsGui(parent);
         else if ("bhop".equals(id) || "staffmods".equals(id)) target = new BhopSettingsGui(parent);
-        else if ("wtap".equals(id) || "w-tap-assistance".equals(id)) target = new WTapSettingsGui(parent);
         else if ("nameviewer".equals(id) || "name-viewer".equals(id)) target = new NameViewerSettingsGui(parent);
         else if ("legacypvp".equals(id) || "legacy-pvp".equals(id)) target = new LegacyPvpSettingsGui(parent);
         else if ("quality".equals(id)) target = new QualityGui(parent);
@@ -1673,7 +1513,7 @@ public final class AlphaClientCommand extends CommandBase {
         reply(sender, "sessionTimer - " + (SessionTimerHud.isEnabled() ? "ON" : "OFF"));
         reply(sender, "afkTimer - " + (AfkTimerHud.isEnabled() ? "ON" : "OFF"));
         reply(sender, "bhop - " + (hasBhopAccess() ? (BhopMode.isEnabled() ? "ON" : "OFF") : "LOCKED"));
-        reply(sender, "Aliases: /fpshud /cpshud /bhop /wtap /fullbright /nameviewer /legacypvp /playtime /sessiontimer /afktimer /quality.");
+        reply(sender, "Aliases: /fpshud /cpshud /bhop /fullbright /nameviewer /legacypvp /playtime /sessiontimer /afktimer /quality.");
         reply(sender, "Planned features remain unavailable until implemented.");
     }
 
@@ -1711,9 +1551,6 @@ public final class AlphaClientCommand extends CommandBase {
         if (hasBhopAccess()) {
             reply(sender, "BHOP: /bhop [settings|on|off|toggle|speed|shiftup|name|color].");
         }
-        if (hasWTapAccess()) {
-            reply(sender, "W-Tap: /wtap [settings|on|off|toggle|delay|cooldown|mode|trigger|target|requirew].");
-        }
         if (SupabaseCommunityService.isSignedInFounder()) {
             reply(sender, "Founder-only permission manager: /alphaperms help.");
         }
@@ -1743,7 +1580,6 @@ public final class AlphaClientCommand extends CommandBase {
         if ("session-timer".equals(value) || "sessiontimer".equals(value)) return "sessiontimer";
         if ("afk-timer".equals(value) || "afktimer".equals(value)) return "afktimer";
         if ("bhop".equals(value)) return "staffmods";
-        if ("wtap".equals(value) || "w-tap".equals(value)) return "w-tap-assistance";
         if ("nameviewer".equals(value)) return "name-viewer";
         if ("legacypvp".equals(value)) return "legacy-pvp";
         return value;
@@ -1811,13 +1647,6 @@ public final class AlphaClientCommand extends CommandBase {
                     options.add(profile.getProfileName());
                 }
             }
-        } else if ("aimassist".equals(commandName)) {
-            if (!SupabaseCommunityService.isSignedInFounder()) return options;
-            if (args.length == 1) {
-                options.add("on"); options.add("off"); options.add("area"); options.add("help");
-            } else if (args.length == 2 && "area".equalsIgnoreCase(args[0])) {
-                options.add("fullbody"); options.add("upperbody"); options.add("torso"); options.add("head");
-            }
         } else if ("easteregg".equals(commandName) || "alphaclient:easteregg".equals(commandName)) {
             if (!SupabaseCommunityService.isSignedInFounder()) return options;
             if (args.length == 1) {
@@ -1832,7 +1661,7 @@ public final class AlphaClientCommand extends CommandBase {
             }
         } else if ("alphaclient".equals(commandName)) {
             if (args.length == 1) {
-                String[] values = {"help","modules","settings","module","fps","cps","bhop","wtap","fullbright"};
+                String[] values = {"help","modules","settings","module","fps","cps","bhop","fullbright"};
                 for (String value : values) if (isCompletionAllowed(commandPermissionForRoute("alphaclient", new String[]{value}))) options.add(value);
             } else if (args.length == 2 && "easteregg".equalsIgnoreCase(args[0])
                     && SupabaseCommunityService.isSignedInFounder()) {
@@ -1852,10 +1681,10 @@ public final class AlphaClientCommand extends CommandBase {
                     if ("staffmods".equals(module.getId()) || "quality".equals(module.getId())) continue;
                     if (isCompletionAllowed(moduleCommandPermission(module.getId()))) options.add(module.getId());
                 }
-                String[] extra = {"bhop","wtap","fullbright","playtime","sessiontimer","afktimer"};
+                String[] extra = {"bhop","fullbright","playtime","sessiontimer","afktimer"};
                 for (String value : extra) if (isCompletionAllowed(moduleCommandPermission(value))) options.add(value);
             } else if (args.length == 2 && "settings".equalsIgnoreCase(args[0])) {
-                String[] values = {"fps","cps","bhop","wtap","fullbright","playtime","sessiontimer","afktimer","nameviewer","legacypvp","quality"};
+                String[] values = {"fps","cps","bhop","fullbright","playtime","sessiontimer","afktimer","nameviewer","legacypvp","quality"};
                 for (String value : values) if (isCompletionAllowed(moduleCommandPermission(value))) options.add(value);
             }
         } else if (("alphaclient:autotool".equals(commandName) && args.length == 1)
@@ -1869,7 +1698,7 @@ public final class AlphaClientCommand extends CommandBase {
         } else if ("alphaclient:module".equals(commandName) && args.length == 2) {
             options.add("on"); options.add("off"); options.add("toggle");
         } else if ("alphaclient:settings".equals(commandName) && args.length == 1) {
-            String[] values = {"fps","cps","bhop","wtap","fullbright","playtime","sessiontimer","afktimer","nameviewer","legacypvp","quality"};
+            String[] values = {"fps","cps","bhop","fullbright","playtime","sessiontimer","afktimer","nameviewer","legacypvp","quality"};
             for (String value : values) if (isCompletionAllowed(moduleCommandPermission(value))) options.add(value);
         }
         return options;
@@ -1878,7 +1707,6 @@ public final class AlphaClientCommand extends CommandBase {
     private boolean isCompletionAllowed(String permissionKey) {
         if (permissionKey == null) return true;
         if ("command.bhop".equals(permissionKey)) return hasBhopAccess();
-        if ("command.wtap".equals(permissionKey)) return hasWTapAccess();
         Boolean override = PermissionService.getCommandPermissionOverride(permissionKey);
         if (Boolean.FALSE.equals(override)) return false;
         if (permissionKey.startsWith("staffmods.")) return PermissionService.hasStaffModsAccess();

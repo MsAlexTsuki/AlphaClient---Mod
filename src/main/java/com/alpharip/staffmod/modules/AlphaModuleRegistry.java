@@ -223,44 +223,6 @@ public final class AlphaModuleRegistry {
                 DEFAULT_MODULE_ENABLED
         ));
 
-        AlphaModule wTap = new AlphaModule(
-                "w-tap-assistance",
-                "W-Tap Assistance",
-                "Configure W-Tap Assistance options.",
-                AlphaModule.Category.FOUNDER,
-                true,
-                DEFAULT_MODULE_ENABLED
-        );
-        MODULES.add(wTap);
-
-        AlphaModule sTap = new AlphaModule(
-                "s-tap-assistance",
-                "S-Tap Assistance",
-                "Randomizable W-key tap style; does not require the S key.",
-                AlphaModule.Category.FOUNDER,
-                true,
-                DEFAULT_MODULE_ENABLED
-        );
-        MODULES.add(sTap);
-
-        // AimAssist is visible and usable only for the authenticated Founder account.
-        MODULES.add(new AlphaModule(
-                "aim-assist",
-                "AimAssist",
-                "Smoothly correct aim only when a visible player is already close to the crosshair.",
-                AlphaModule.Category.FOUNDER,
-                true,
-                DEFAULT_MODULE_ENABLED
-        ));
-
-        MODULES.add(new AlphaModule(
-                "auto-strafe",
-                "AutoStrafe",
-                "Automatically adjusts movement to orbit the nearest visible player while movement input is active.",
-                AlphaModule.Category.FOUNDER,
-                true,
-                DEFAULT_MODULE_ENABLED
-        ));
     }
 
     private AlphaModuleRegistry() {
