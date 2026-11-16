@@ -30,4 +30,5 @@ Then open:
 - This is an internal prototype on the `mod-ideas` branch.
 - The policy documents remain drafts and are not effective or approved for publication.
 - This website is not wired into Alpha Launcher and does not publish or enforce policies.
-- No GitHub Pages workflow is added for this website. The existing Store publishing workflow is left unchanged.
+- The existing GitHub Pages deployment now includes this policy viewer at the `/policy/` path while keeping the Store website at the Pages root.
+- The policy Markdown files are deployed alongside the viewer so its document reader can load them.
