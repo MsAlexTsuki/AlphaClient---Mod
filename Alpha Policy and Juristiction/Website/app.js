@@ -5,26 +5,26 @@ function escapeHtml(value) {
 }
 function inlineMarkdown(text) {
   let value = escapeHtml(text);
-  value = value.replace(/\\*\\*(.+?)\\*\\*/g,"<strong>$1</strong>");
-  value = value.replace(/\\*(.+?)\\*/g,"<em>$1</em>");
-  value = value.replace(/`([^`]+)`/g,"<code>$1</code>");
-  value = value.replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  value = value.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");
+  value = value.replace(/\*(.+?)\*/g,"<em>$1</em>");
+  value = value.replace(/\x60([^\x60]+)\x60/g,"<code>$1</code>");
+  value = value.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
   return value;
 }
 function renderMarkdown(markdown) {
-  const lines = markdown.replace(/\\r/g,"").split("\\n");
+  const lines = markdown.replace(/\r/g,"").split("\n");
   const output = [];
   let paragraph = [], listType = null, tableRows = [], quote = [];
   const flushParagraph = () => { if(paragraph.length){output.push("<p>"+inlineMarkdown(paragraph.join(" "))+"</p>");paragraph=[];} };
-  const flushList = () => { if(listType){output.push(`</${listType}>`);listType=null;} };
+  const flushList = () => { if(listType){output.push("</"+listType+">");listType=null;} };
   const flushQuote = () => { if(quote.length){output.push("<blockquote>"+quote.map(line=>"<p>"+inlineMarkdown(line)+"</p>").join("")+"</blockquote>");quote=[];} };
   const flushTable = () => {
     if(!tableRows.length)return;
-    const rows = tableRows.filter(row=>!/^\\s*\\|?\\s*:?-{3,}/.test(row));
-    output.push("<div class=\\"table-wrap\\"><table>"+rows.map((row,index)=>{
-      const cells=row.trim().replace(/^\\||\\|$/g,"").split("|").map(cell=>cell.trim());
+    const rows = tableRows.filter(row=>!/^\s*\|?\s*:?-{3,}/.test(row));
+    output.push("<div class=\"table-wrap\"><table>"+rows.map((row,index)=>{
+      const cells=row.trim().replace(/^\||\|$/g,"").split("|").map(cell=>cell.trim());
       const tag=index===0?"th":"td";
-      return "<tr>"+cells.map(cell=>`<${tag}>${inlineMarkdown(cell)}</${tag}>`).join("")+"</tr>";
+      return "<tr>"+cells.map(cell=>"<"+tag+">"+inlineMarkdown(cell)+"</"+tag+">").join("")+"</tr>";
     }).join("")+"</table></div>");
     tableRows=[];
   };
@@ -33,24 +33,24 @@ function renderMarkdown(markdown) {
     if(!line){flushParagraph();flushList();flushQuote();flushTable();continue;}
     if(line.startsWith("|")){flushParagraph();flushList();flushQuote();tableRows.push(line);continue;}
     flushTable();
-    if(line.startsWith(">")){flushParagraph();flushList();quote.push(line.replace(/^>\\s?/,""));continue;}
+    if(line.startsWith(">")){flushParagraph();flushList();quote.push(line.replace(/^>\s?/,""));continue;}
     flushQuote();
-    const heading=line.match(/^(#{1,4})\\s+(.+)$/);
-    if(heading){flushParagraph();flushList();const level=heading[1].length;output.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);continue;}
+    const heading=line.match(/^(#{1,4})\s+(.+)$/);
+    if(heading){flushParagraph();flushList();const level=heading[1].length;output.push("<h"+level+">"+inlineMarkdown(heading[2])+"</h"+level+">");continue;}
     if(/^---+$/.test(line)){flushParagraph();flushList();output.push("<hr>");continue;}
-    const unordered=line.match(/^[-*]\\s+(.+)$/);
-    const ordered=line.match(/^\\d+\\.\\s+(.+)$/);
-    if(unordered||ordered){flushParagraph();const type=unordered?"ul":"ol";if(listType!==type){flushList();listType=type;output.push(`<${type}>`);}output.push("<li>"+inlineMarkdown((unordered||ordered)[1])+"</li>");continue;}
+    const unordered=line.match(/^[-*]\s+(.+)$/);
+    const ordered=line.match(/^\d+\.\s+(.+)$/);
+    if(unordered||ordered){flushParagraph();const type=unordered?"ul":"ol";if(listType!==type){flushList();listType=type;output.push("<"+type+">");}output.push("<li>"+inlineMarkdown((unordered||ordered)[1])+"</li>");continue;}
     flushList();paragraph.push(line);
   }
   flushParagraph();flushList();flushQuote();flushTable();
   return output.join("");
 }
 const root=document.getElementById("policy-documents");
-root.innerHTML=policies.map((policy,index)=>`<section class="policy-document" id="${policy.id.toLowerCase()}">
-  <div class="policy-document-heading"><span class="policy-document-number">${policy.id}</span><span class="policy-document-category">${escapeHtml(policy.category)}</span><span class="policy-document-status">DRAFT · NOT EFFECTIVE</span></div>
-  <h2>${escapeHtml(policy.title)}</h2>
-  <div class="policy-document-version">Version ${escapeHtml(policy.version)} · Working draft</div>
-  <article class="markdown-body">${renderMarkdown(policy.markdown)}</article>
-</section>`).join("");
+root.innerHTML=policies.map(policy=>'<section class="policy-document" id="'+policy.id.toLowerCase()+'">'+
+  '<div class="policy-document-heading"><span class="policy-document-number">'+policy.id+'</span><span class="policy-document-category">'+escapeHtml(policy.category)+'</span><span class="policy-document-status">DRAFT · NOT EFFECTIVE</span></div>'+
+  '<h2>'+escapeHtml(policy.title)+'</h2>'+
+  '<div class="policy-document-version">Version '+escapeHtml(policy.version)+' · Working draft</div>'+
+  '<article class="markdown-body">'+renderMarkdown(policy.markdown)+'</article>'+
+'</section>').join("");
 document.getElementById("policy-count").textContent=String(policies.length).padStart(2,"0");
