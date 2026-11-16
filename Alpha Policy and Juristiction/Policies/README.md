@@ -32,6 +32,7 @@ A feature must not be described as available, a payment as supported, or a data 
 | POL-004 | Community Guidelines | Draft v0.1 — covered spaces and moderation workflow require confirmation |
 | POL-005 | Staff Code of Conduct | Draft v0.1 — internal authority and adoption process require confirmation |
 | POL-006 | Ranks and Permissions Policy | Draft v0.1 — live permission implementation must be verified |
+| POL-014 | Alpha Software End User License Agreement | Draft v1.0 — Minecraft compatibility, distribution, Store model, and legal review required |
 | POL-013 | AI Usage and Transparency Policy | Draft v1.0 — AI usage acknowledgement; approval and legal review required |
 | POL-007 | Store and Digital Content Policy | Draft v0.1 — checkout/seller/payment flow not verified |
 | POL-008 | Beta Testing Policy | Draft v0.1 — active program and eligibility process require confirmation |
