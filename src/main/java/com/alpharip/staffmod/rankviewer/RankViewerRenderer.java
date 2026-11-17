@@ -40,13 +40,15 @@ public final class RankViewerRenderer {
         if (renderingLocalPlayer || player.isInvisible()) return;
 
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
-        if (rank == null) return;
+        String clanTag = ClanTagCache.INSTANCE.get(player.getUniqueID());
+        if (rank == null && clanTag == null) return;
 
-        // Replace the vanilla player nametag only when this player has an active Alpha rank.
+        // Replace the vanilla player nametag when either a public Alpha rank badge
+        // or a clan tag is available, so both share one nametag instead of overlapping.
         event.setCanceled(true);
         // Forge fires this event before vanilla applies the nametag translation,
         // so use the camera-relative render coordinates supplied by the event.
-        drawNameWithBadge(minecraft, player, rank, player.getName(), event.x,
+        drawNameWithBadge(minecraft, player, rank, clanTag, player.getName(), event.x,
                 event.y + player.height + 0.5D, event.z,
                 minecraft.getRenderManager().playerViewY,
                 minecraft.getRenderManager().playerViewX, 0.026666668F);
@@ -60,7 +62,7 @@ public final class RankViewerRenderer {
         // Name Viewer controls both the local player's name and rank badge in F5.
         if (minecraft.gameSettings.thirdPersonView == 0) return;
         AlphaModule module = AlphaModuleRegistry.find("name-viewer");
-        if (module == null || !module.isEnabled() || !module.isUnlocked()) return;
+        boolean showLocalRankBadge = module != null && module.isEnabled() && module.isUnlocked();
 
         EntityPlayer player = minecraft.thePlayer;
         if (player.isInvisible()) return;
@@ -73,22 +75,25 @@ public final class RankViewerRenderer {
         y -= renderManager.viewerPosY;
         z -= renderManager.viewerPosZ;
 
-        // The local badge is controlled exclusively by the active Alpha account login.
-        // Do not fall back to a Minecraft UUID cache or show a placeholder rank after logout.
-        AlphaRank rank = SupabaseCommunityService.getSignedInDisplayRank();
-        if (rank == null) return;
-        // Name Viewer displays the player's name together with their rank badge.
-        drawNameWithBadge(minecraft, player, rank, player.getName(), x,
+        // Local rank badges remain controlled by Name Viewer and the active Alpha login.
+        // Clan tags are independent and remain visible above the local player in third person.
+        AlphaRank rank = showLocalRankBadge ? SupabaseCommunityService.getSignedInDisplayRank() : null;
+        String clanTag = ClanTagCache.INSTANCE.get(player.getUniqueID());
+        if (rank == null && clanTag == null) return;
+        drawNameWithBadge(minecraft, player, rank, clanTag, player.getName(), x,
                 y + player.height + 0.5D - (player.isSneaking() ? 0.25D : 0.0D), z,
                 renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
     }
 
-    private void drawNameWithBadge(Minecraft minecraft, EntityPlayer player, AlphaRank rank, String name,
+    private void drawNameWithBadge(Minecraft minecraft, EntityPlayer player, AlphaRank rank, String clanTag, String name,
                                    double x, double y, double z,
                                    float playerViewY, float playerViewX, float scale) {
         int nameWidth = minecraft.fontRendererObj.getStringWidth(name);
         int badgeWidth = rank == null ? 0 : BADGE_SIZE + BADGE_GAP;
-        int totalWidth = nameWidth + badgeWidth;
+        int nameRowWidth = nameWidth + badgeWidth;
+        String clanLabel = clanTag == null || clanTag.trim().isEmpty() ? null : "[" + clanTag + "]";
+        int clanLabelWidth = clanLabel == null ? 0 : minecraft.fontRendererObj.getStringWidth(clanLabel);
+        int totalWidth = Math.max(nameRowWidth, clanLabelWidth);
         int nameColor = getRelationshipNameColor(minecraft, player, rank);
         // Vanilla 1.8.9 makes sneaking name tags translucent. Apply the same fade
         // to the local F5 name and badge without changing their position.
@@ -140,13 +145,13 @@ public final class RankViewerRenderer {
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
             GlStateManager.depthMask(false);
 
-            int cursor = -totalWidth / 2;
+            int cursor = -nameRowWidth / 2;
 
-            // Keep the panel almost flush with the badge and name: one pixel of
-            // outer padding and a low-opacity border, so it does not dominate the nametag.
-            int left = cursor - 1;
-            int right = cursor + totalWidth + 1;
-            int top = -1;
+            // Keep the panel almost flush with the badge, clan tag and name.
+            // The clan tag occupies its own line immediately above the player name.
+            int left = -totalWidth / 2 - 1;
+            int right = totalWidth / 2 + 1;
+            int top = clanLabel == null ? -1 : -11;
             int bottom = BADGE_SIZE + 1;
             // Vanilla sneaking nametags use a 25%-opaque black background.
             int panelColor = sneaking ? 0x40000000 : 0x10000000;
@@ -156,6 +161,12 @@ public final class RankViewerRenderer {
             Gui.drawRect(left, bottom - 1, right, bottom, borderColor);
             Gui.drawRect(left, top, left + 1, bottom, borderColor);
             Gui.drawRect(right - 1, top, right, bottom, borderColor);
+
+            if (clanLabel != null) {
+                int clanColor = sneaking ? 0x40000000 : 0xFFFFD866;
+                minecraft.fontRendererObj.drawStringWithShadow(
+                        clanLabel, -clanLabelWidth / 2, -10, clanColor);
+            }
 
             if (rank != null) {
                 GlStateManager.pushMatrix();
