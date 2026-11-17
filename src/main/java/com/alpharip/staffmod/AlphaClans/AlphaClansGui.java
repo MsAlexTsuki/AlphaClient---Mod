@@ -1,6 +1,7 @@
 // --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.AlphaClans;
 
+import com.alpharip.staffmod.gui.AlphaButton;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.client.gui.GuiButton;
