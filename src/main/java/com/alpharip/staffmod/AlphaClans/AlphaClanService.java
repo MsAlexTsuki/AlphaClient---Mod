@@ -25,7 +25,14 @@ public final class AlphaClanService {
     public void refreshIfStale() { if (System.currentTimeMillis() - lastRefresh > 5000L) refresh(); }
 
     public void refresh() {
-        if (!SupabaseCommunityService.isSignedIn() || !loading.compareAndSet(false, true)) return;
+        if (!SupabaseCommunityService.isSignedIn()) {
+            Snapshot value = new Snapshot();
+            value.status = "Sign in to your Alpha Account to use AlphaClans.";
+            snapshot = value;
+            lastRefresh = System.currentTimeMillis();
+            return;
+        }
+        if (!loading.compareAndSet(false, true)) return;
         worker.execute(() -> {
             try {
                 Snapshot value = load();
