@@ -49,9 +49,10 @@ public final class AlphaClansGui extends GuiScreen {
                 String label=val(c,"name")+" ["+val(c,"tag")+"]  "+val(c,"member_count")+"/50  "+val(c,"visibility").toUpperCase();
                 buttonList.add(new AlphaButton(SELECT+i,left+14,listY+i*24,widthPanel-28,21,clip(label,widthPanel-48),i==selectedBrowser));
             }
-            name=field(40,left+14,top+heightPanel-62,150); tag=field(41,left+170,top+heightPanel-62,72);
-            buttonList.add(new AlphaButton(TOGGLE,left+248,top+heightPanel-62,76,18,privateClan?"PRIVATE":"PUBLIC"));
-            buttonList.add(new AlphaButton(CREATE,left+330,top+heightPanel-62,100,18,"CREATE CLAN",true));
+            int formY=top+heightPanel-61;
+            name=field(40,left+14,formY,166); tag=field(41,left+190,formY,72);
+            buttonList.add(new AlphaButton(TOGGLE,left+272,formY,94,18,privateClan?"PRIVATE":"PUBLIC"));
+            buttonList.add(new AlphaButton(CREATE,left+376,formY,Math.min(150,widthPanel-390),18,"CREATE CLAN",true));
             if(selectedBrowser>=0&&selectedBrowser<s.browser.size()) buttonList.add(new AlphaButton(JOIN,left+14,top+heightPanel-34,145,20,"JOIN / REQUEST",true));
         } else if(tab==CLAN){
             for(int i=0;i<Math.min(8,s.members.size());i++){
@@ -143,33 +144,89 @@ public final class AlphaClansGui extends GuiScreen {
     }
     @Override protected void mouseClicked(int x,int y,int b)throws IOException{super.mouseClicked(x,y,b);if(name!=null)name.mouseClicked(x,y,b);if(tag!=null)tag.mouseClicked(x,y,b);if(input!=null)input.mouseClicked(x,y,b);}
     @Override public void drawScreen(int mx,int my,float pt){
-        drawDefaultBackground();drawRect(left,top,left+widthPanel,top+heightPanel,0xE80C0E13);drawRect(left,top,left+widthPanel,top+2,0xFFFFD866);
-        drawCenteredString(fontRendererObj,"ALPHACLANS",width/2,top+35,0xFFFFD866);
+        drawDefaultBackground();
+        // Main surface and restrained Alpha accent.
+        drawRect(left,top,left+widthPanel,top+heightPanel,0xF20B0D12);
+        drawRect(left,top,left+widthPanel,top+2,0xFFFFD866);
+        drawRect(left+1,top+1,left+widthPanel-1,top+heightPanel-1,0x221F2530);
+        drawRect(left+12,top+39,left+widthPanel-12,top+40,0x553C424D);
+
+        drawString(fontRendererObj,"ALPHACLANS",left+16,top+43,0xFFFFD866);
+        drawString(fontRendererObj,tabTitle(),left+16,top+59,0xFF9299A6);
         AlphaClanService.Snapshot s=AlphaClanService.INSTANCE.getSnapshot();
-        if(tab==BROWSER){drawRows(s.browser,top+54,0);if(name!=null)name.drawTextBox();if(tag!=null)tag.drawTextBox();}
-        else if(tab==CLAN){
-            if(s.clan==null)drawCenteredString(fontRendererObj,"You are not in a clan. Find one in BROWSER.",width/2,top+100,0xFFB8BDC8);
-            else{drawCenteredString(fontRendererObj,val(s.clan,"name")+" ["+val(s.clan,"tag")+"]",width/2,top+52,0xFFFFD866);drawRows(s.members,top+74,1);
-                if(input!=null)input.drawTextBox();if(name!=null)name.drawTextBox();if(tag!=null)tag.drawTextBox();}
-        }else if(tab==INVITES)drawRows(s.invites,top+54,2);
-        else if(tab==REQUESTS)drawRows(s.requests,top+54,3);
-        else if(tab==CHAT){
+
+        if(tab==BROWSER){
+            drawSectionLabel("CLAN DIRECTORY",left+14,top+77);
+            drawRows(s.browser,top+94,0);
+            // Dedicated creation strip, visually separated from the directory.
+            int cardTop=top+heightPanel-91;
+            drawRect(left+10,cardTop,left+widthPanel-10,top+heightPanel-25,0xB914171E);
+            drawRect(left+10,cardTop,left+widthPanel-10,cardTop+1,0x66545B68);
+            drawString(fontRendererObj,"CREATE A CLAN",left+16,cardTop+8,0xFFE6E8ED);
+            drawString(fontRendererObj,"NAME",left+14,cardTop+22,0xFF9299A6);
+            drawString(fontRendererObj,"TAG",left+190,cardTop+22,0xFF9299A6);
+            if(name!=null)name.drawTextBox();
+            if(tag!=null)tag.drawTextBox();
+        } else if(tab==CLAN){
+            if(s.clan==null)drawEmptyState("NO CLAN YET","Browse the directory to find a clan or create your own.",top+112);
+            else{
+                drawSectionLabel("MEMBERS",left+14,top+78);
+                drawRows(s.members,top+96,1);
+                if(input!=null)input.drawTextBox();if(name!=null)name.drawTextBox();if(tag!=null)tag.drawTextBox();
+            }
+        } else if(tab==INVITES){
+            drawSectionLabel("PENDING INVITATIONS",left+14,top+78);drawRows(s.invites,top+96,2);
+        } else if(tab==REQUESTS){
+            drawSectionLabel("JOIN REQUESTS",left+14,top+78);drawRows(s.requests,top+96,3);
+        } else if(tab==CHAT){
+            drawSectionLabel("CLAN CONVERSATION",left+14,top+78);
             int count=Math.min(10,s.messages.size());
-            for(int i=0;i<count;i++){JsonObject m=s.messages.get(count-i-1).getAsJsonObject();String line=val(AlphaClanService.nested(m,"profiles"),"username")+": "+val(m,"body");
-                fontRendererObj.drawStringWithShadow(clip(line,widthPanel-32),left+16,top+58+i*18,0xFFE6E8ED);}
+            if(count==0)drawEmptyState("NO MESSAGES YET","Messages from your clan will appear here.",top+132);
+            for(int i=0;i<count;i++){
+                JsonObject m=s.messages.get(count-i-1).getAsJsonObject();
+                String user=val(AlphaClanService.nested(m,"profiles"),"username");
+                String line=user+": "+val(m,"body");
+                int rowY=top+101+i*19;
+                drawRect(left+12,rowY-3,left+widthPanel-12,rowY+13,0x55212630);
+                fontRendererObj.drawString(clip(user,widthPanel/3),left+20,rowY,0xFFFFD866);
+                fontRendererObj.drawStringWithShadow(clip(line,widthPanel-48),left+20+fontRendererObj.getStringWidth(clip(user,widthPanel/3))+5,rowY,0xFFE6E8ED);
+            }
             if(input!=null)input.drawTextBox();
         }
-        fontRendererObj.drawStringWithShadow(clip(s.status,widthPanel-24),left+12,top+heightPanel-12,0xFFB8BDC8);
+        drawRect(left+12,top+heightPanel-22,left+widthPanel-12,top+heightPanel-21,0x443C424D);
+        fontRendererObj.drawString(clip(s.status,widthPanel-32),left+16,top+heightPanel-15,0xFF9299A6);
         super.drawScreen(mx,my,pt);
     }
+    private String tabTitle(){
+        switch(tab){case BROWSER:return "Discover public and private communities";case CLAN:return "Your clan and its members";
+            case INVITES:return "Invitations sent to your account";case REQUESTS:return "Review requests to join your clan";
+            case CHAT:return "Talk with your clan members";default:return "";}
+    }
+    private void drawSectionLabel(String text,int x,int y){fontRendererObj.drawString(text,x,y,0xFFFFD866);}
+    private void drawEmptyState(String title,String detail,int y){
+        drawRect(width/2-13,y-23,width/2+13,y+3,0x66212630);
+        drawCenteredString(fontRendererObj,"◆",width/2,y-17,0xFFFFD866);
+        drawCenteredString(fontRendererObj,title,width/2,y+12,0xFFE6E8ED);
+        drawCenteredString(fontRendererObj,detail,width/2,y+26,0xFF9299A6);
+    }
     private void drawRows(JsonArray rows,int y,int mode){
-        int n=Math.min(8,rows.size());if(n==0){drawCenteredString(fontRendererObj,"Nothing to display yet.",width/2,y+36,0xFFB8BDC8);return;}
-        for(int i=0;i<n;i++){JsonObject r=rows.get(i).getAsJsonObject();String label;
-            if(mode==0)label=val(r,"name")+" ["+val(r,"tag")+"]  "+val(r,"member_count")+"/50  "+val(r,"visibility");
-            else if(mode==1)label=AlphaClanService.playerName(r)+"  "+val(r,"role");
-            else if(mode==2)label=val(AlphaClanService.nested(r,"clans"),"name")+" ["+val(AlphaClanService.nested(r,"clans"),"tag")+"]";
-            else label=AlphaClanService.playerName(r);
-            fontRendererObj.drawStringWithShadow(clip(label,widthPanel-32),left+16,y+i*23,i==(mode==0?selectedBrowser:selected)?0xFFFFD866:0xFFE6E8ED);
+        int n=Math.min(8,rows.size());
+        if(n==0){drawEmptyState(mode==0?"NO CLANS FOUND":"NOTHING HERE YET",
+                mode==0?"Create a clan to get started.":"New items will appear here when available.",y+32);return;}
+        for(int i=0;i<n;i++){
+            JsonObject r=rows.get(i).getAsJsonObject();String label,meta="";
+            if(mode==0){label=val(r,"name");meta="["+val(r,"tag")+"]   "+val(r,"member_count")+"/50   "+val(r,"visibility").toUpperCase();}
+            else if(mode==1){label=AlphaClanService.playerName(r);meta=val(r,"role").toUpperCase();}
+            else if(mode==2){label=val(AlphaClanService.nested(r,"clans"),"name");meta="["+val(AlphaClanService.nested(r,"clans"),"tag")+"]";}
+            else{label=AlphaClanService.playerName(r);meta="PENDING";}
+            int rowY=y+i*25;
+            boolean active=i==(mode==0?selectedBrowser:selected);
+            drawRect(left+12,rowY-4,left+widthPanel-12,rowY+17,active?0xAA302A1B:0x77212630);
+            drawRect(left+12,rowY-4,left+13,rowY+17,active?0xFFFFD866:0x664B515D);
+            fontRendererObj.drawStringWithShadow(clip(label,widthPanel/2),left+22,rowY+2,0xFFE6E8ED);
+            String right=clip(meta,widthPanel/2-28);
+            fontRendererObj.drawString(right,left+widthPanel-22-fontRendererObj.getStringWidth(right),rowY+2,
+                    active?0xFFFFD866:0xFF9299A6);
         }
     }
     private String val(JsonObject o,String k){String v=AlphaClanService.str(o,k);return v==null?"":v;}
