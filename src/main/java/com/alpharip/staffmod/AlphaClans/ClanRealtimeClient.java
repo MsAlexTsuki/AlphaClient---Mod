@@ -93,7 +93,7 @@ public final class ClanRealtimeClient {
                             && frame.contains("\"status\":\"error\""))) {
                         throw new java.io.IOException("Supabase rejected the private clan channel.");
                     }
-                    if (frame.contains("\"type\":\"broadcast\"")) AlphaClanService.INSTANCE.refresh();
+                    if (frame.contains("\"type\":\"broadcast\"")) AlphaClanService.INSTANCE.refreshIfStale();
                 }
             } catch (java.net.SocketTimeoutException ignored) {}
         }
