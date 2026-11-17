@@ -61,10 +61,12 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
                 height - 16, 0xBFFFFFFF);
     }
 
-    /** Compact shield-and-members icon used for the AlphaClans shortcut. */
+    /** Small, clean shield-and-members shortcut for AlphaClans. */
     private static final class ClanIconButton extends GuiButton {
+        private static final int SIZE = 18;
+
         ClanIconButton(int id, int x, int y) {
-            super(id, x, y, 38, 38, "");
+            super(id, x, y, SIZE, SIZE, "");
         }
 
         @Override
@@ -72,34 +74,29 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
             if (!visible) return;
             hovered = mouseX >= xPosition && mouseY >= yPosition
                     && mouseX < xPosition + width && mouseY < yPosition + height;
+
             int accent = hovered ? 0xFFFFD866 : 0xFFE6E8ED;
-            drawRect(xPosition, yPosition, xPosition + width, yPosition + height,
-                    hovered ? 0xE02A2D35 : 0xC014161D);
-            drawRect(xPosition, yPosition, xPosition + width, yPosition + 1,
-                    hovered ? 0xFFFFD866 : 0x664B515D);
-            drawRect(xPosition, yPosition + height - 1, xPosition + width,
-                    yPosition + height, 0xAA090A0E);
-            drawRect(xPosition, yPosition, xPosition + 1, yPosition + height,
-                    hovered ? 0xFFFFD866 : 0x664B515D);
-            drawRect(xPosition + width - 1, yPosition, xPosition + width,
-                    yPosition + height, hovered ? 0xFFFFD866 : 0x664B515D);
+            // A restrained, nearly transparent hit area; no oversized panel.
+            if (hovered) {
+                drawRect(xPosition, yPosition, xPosition + width,
+                        yPosition + height, 0x552A2D35);
+            }
 
-            int cx = xPosition + 19;
-            int top = yPosition + 6;
-            // Shield outline, built from short segments to keep the icon crisp at GUI scale.
-            drawRect(cx - 7, top, cx + 7, top + 2, accent);
-            drawRect(cx - 10, top + 2, cx - 8, top + 10, accent);
-            drawRect(cx + 8, top + 2, cx + 10, top + 10, accent);
-            drawRect(cx - 8, top + 10, cx - 5, top + 15, accent);
-            drawRect(cx + 5, top + 10, cx + 8, top + 15, accent);
-            drawRect(cx - 5, top + 15, cx, top + 18, accent);
-            drawRect(cx, top + 15, cx + 5, top + 18, accent);
+            // Compact shield silhouette.
+            int x = xPosition + 4;
+            int y = yPosition + 2;
+            drawRect(x + 2, y, x + 10, y + 1, accent);
+            drawRect(x + 1, y + 1, x + 11, y + 3, accent);
+            drawRect(x, y + 3, x + 12, y + 8, accent);
+            drawRect(x + 1, y + 8, x + 11, y + 10, accent);
+            drawRect(x + 3, y + 10, x + 9, y + 12, accent);
 
-            // Two member silhouettes inside the shield.
-            drawRect(cx - 6, top + 5, cx - 2, top + 9, accent);
-            drawRect(cx + 2, top + 5, cx + 6, top + 9, accent);
-            drawRect(cx - 8, top + 10, cx, top + 13, accent);
-            drawRect(cx, top + 10, cx + 8, top + 13, accent);
+            // Dark inset and two small member silhouettes.
+            drawRect(x + 2, y + 2, x + 10, y + 8, 0xFF171A21);
+            drawRect(x + 3, y + 3, x + 5, y + 5, accent);
+            drawRect(x + 7, y + 3, x + 9, y + 5, accent);
+            drawRect(x + 2, y + 6, x + 6, y + 7, accent);
+            drawRect(x + 6, y + 6, x + 10, y + 7, accent);
         }
     }
 
