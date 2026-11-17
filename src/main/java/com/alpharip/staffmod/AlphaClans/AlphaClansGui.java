@@ -12,7 +12,7 @@ import java.io.IOException;
 
 /** AlphaClans browser, member management, join-request and realtime chat screen. */
 public final class AlphaClansGui extends GuiScreen {
-    private static final int BACK=1,BROWSER=2,CLAN=3,INVITES=4,REQUESTS=5,CHAT=6;
+    private static final int BACK=1,BROWSER=2,CLAN=3,INVITES=4,REQUESTS=5,CHAT=6,LOGIN=7;
     private static final int SELECT=100,CREATE=10,JOIN=11,TOGGLE=12,INVITE=13,SEND=14,LEAVE=15,DISBAND=16;
     private static final int ACCEPT=17,DECLINE=18,KICK=19,ROLE=20,TRANSFER=21,SAVE=22;
     private final GuiScreen parent;
@@ -34,6 +34,8 @@ public final class AlphaClansGui extends GuiScreen {
         buttonList.add(new AlphaButton(INVITES,x+194,y,62,18,"INVITES",tab==INVITES));
         buttonList.add(new AlphaButton(REQUESTS,x+260,y,76,18,"REQUESTS",tab==REQUESTS));
         buttonList.add(new AlphaButton(CHAT,x+340,y,58,18,"CHAT",tab==CHAT));
+        if(!com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedIn())
+            buttonList.add(new AlphaButton(LOGIN,left+widthPanel-92,y,80,18,"SIGN IN",true));
         AlphaClanService.Snapshot s=AlphaClanService.INSTANCE.getSnapshot();
         String activeClanId=AlphaClanService.str(s.clan,"id");
         if(tab==CLAN && activeClanId!=null && !activeClanId.equals(settingsClanId)){
@@ -100,6 +102,7 @@ public final class AlphaClansGui extends GuiScreen {
     @Override protected void actionPerformed(GuiButton b)throws IOException{
         if(b==null)return;
         if(b.id==BACK){mc.displayGuiScreen(parent);return;}
+        if(b.id==LOGIN){mc.displayGuiScreen(new com.alpharip.staffmod.gui.CommunityLoginGui(this));return;}
         if(b.id>=BROWSER&&b.id<=CHAT){tab=b.id;selected=-1;initGui();return;}
         if(b.id==TOGGLE){privateClan=!privateClan;initGui();return;}
         if(b.id>=SELECT&&b.id<SELECT+10){if(tab==BROWSER)selectedBrowser=b.id-SELECT;else selected=b.id-SELECT;initGui();return;}
