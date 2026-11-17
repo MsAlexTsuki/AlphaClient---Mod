@@ -77,7 +77,7 @@ public final class AlphaClansGui extends GuiScreen {
             }
         } else if (tab==TAB_CLAN && s.clan!=null) {
             int listY=bodyTop+74;
-            addRows(s.members,listY,Math.max(1,(footerTop-listY-8)/25),false);
+            addRows(s.members,listY,Math.max(1,(footerTop-listY-8)/21),false);
             if (selected>=0 && selected<s.members.size()) {
                 JsonObject member=s.members.get(selected).getAsJsonObject();
                 String target=AlphaClanService.str(member,"profile_id");
@@ -188,8 +188,14 @@ public final class AlphaClansGui extends GuiScreen {
                 label=AlphaClanService.playerName(row); meta="PENDING";
             }
             int id=SELECT_BASE+i;
-            buttonList.add(new AlphaButton(id,left+14,y+i*25,panelWidth-28,22,"",
-                    false,i==(browser?selectedBrowser:selected),true));
+            if (!browser && tab==TAB_CLAN) {
+                int rowWidth=memberRowWidth();
+                buttonList.add(new AlphaButton(id,memberRowX(),y+i*21,rowWidth,18,"",
+                        false,i==selected,true));
+            } else {
+                buttonList.add(new AlphaButton(id,left+14,y+i*25,panelWidth-28,22,"",
+                        false,i==(browser?selectedBrowser:selected),true));
+            }
         }
     }
     @Override public void updateScreen() {
@@ -370,11 +376,55 @@ public final class AlphaClansGui extends GuiScreen {
         }
     }
     private void drawMemberRows(JsonArray rows,int y) {
-        int max=Math.max(1,(footerTop-y-8)/25);
+        int max=Math.max(1,(footerTop-y-8)/21);
         for(int i=0;i<Math.min(max,rows.size());i++) {
-            JsonObject r=rows.get(i).getAsJsonObject();
-            drawRow(AlphaClanService.playerName(r),value(r,"role").toUpperCase(),y+i*25,i==selected);
+            JsonObject member=rows.get(i).getAsJsonObject();
+            drawMemberRow(member,y+i*21,i==selected);
         }
+    }
+    private int memberRowWidth() { return Math.min(360,panelWidth-28); }
+    private int memberRowX() { return left+(panelWidth-memberRowWidth())/2; }
+    private void drawMemberRow(JsonObject member,int y,boolean active) {
+        int x=memberRowX(), rowWidth=memberRowWidth();
+        JsonObject presence=AlphaClanService.nested(member,"clan_presence");
+        String lastSeen=AlphaClanService.str(presence,"last_seen_at");
+        long lastSeenMillis=-1L;
+        if(lastSeen!=null) {
+            try { lastSeenMillis=java.time.OffsetDateTime.parse(lastSeen).toInstant().toEpochMilli(); }
+            catch(Exception ignored) {
+                try { lastSeenMillis=java.time.Instant.parse(lastSeen).toEpochMilli(); }
+                catch(Exception ignoredAgain) {}
+            }
+        }
+        boolean online=presence.has("online") && !presence.get("online").isJsonNull()
+                && presence.get("online").getAsBoolean()
+                && lastSeenMillis>=0L && System.currentTimeMillis()-lastSeenMillis<=90000L;
+        String status;
+        if(lastSeenMillis<0L) status="LAST SEEN UNKNOWN";
+        else if(online) status="ONLINE";
+        else status="OFFLINE · "+elapsedSince(lastSeenMillis);
+        int statusColor=online?0xFF59D68B:(lastSeenMillis<0L?0xFF9299A6:0xFFE07878);
+        int dotColor=online?0xFF59D68B:(lastSeenMillis<0L?0xFF9299A6:0xFFE07878);
+        drawRect(x,y,x+rowWidth,y+18,active?0xAA302A1B:0x77212630);
+        drawRect(x,y,x+1,y+18,active?0xFFFFD866:0x664B515D);
+        drawRect(x+7,y+7,x+11,y+11,dotColor);
+        String role=value(member,"role").toUpperCase();
+        int statusWidth=fontRendererObj.getStringWidth(status);
+        int roleWidth=fontRendererObj.getStringWidth(role);
+        int nameMax=Math.max(24,rowWidth-34-roleWidth-statusWidth-24);
+        String name=clip(AlphaClanService.playerName(member),nameMax);
+        int nameX=x+17;
+        fontRendererObj.drawStringWithShadow(name,nameX,y+5,0xFFE6E8ED);
+        int roleX=nameX+fontRendererObj.getStringWidth(name)+7;
+        fontRendererObj.drawString(role,roleX,y+5,active?0xFFFFD866:0xFFB8BEC9);
+        fontRendererObj.drawString(status,x+rowWidth-8-statusWidth,y+5,statusColor);
+    }
+    private String elapsedSince(long timestamp) {
+        long seconds=Math.max(0L,(System.currentTimeMillis()-timestamp)/1000L);
+        if(seconds<60L)return "just now";
+        if(seconds<3600L)return (seconds/60L)+"m ago";
+        if(seconds<86400L)return (seconds/3600L)+"h ago";
+        return (seconds/86400L)+"d ago";
     }
     private void drawGenericRows(JsonArray rows,int y,int mode) {
         int max=Math.max(1,(footerTop-y-8)/25);
