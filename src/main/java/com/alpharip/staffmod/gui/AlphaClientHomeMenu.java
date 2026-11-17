@@ -14,6 +14,7 @@ import java.io.IOException;
  */
 public final class AlphaClientHomeMenu extends HudEditorGui {
     private static final int MODS = 900;
+    private static final int CLANS = 901;
     private static final ResourceLocation LOGO =
             new ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -36,6 +37,7 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
         modsX = (width - modsWidth) / 2;
         modsY = Math.max(84, height / 2 - 4);
         buttonList.add(new AlphaButton(MODS, modsX, modsY, modsWidth, modsHeight, "MODS", true));
+        buttonList.add(new AlphaButton(CLANS, modsX, modsY + modsHeight + 7, modsWidth, modsHeight, "ALPHACLANS"));
     }
 
     @Override
@@ -63,6 +65,11 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button != null && button.id == MODS) {
             Minecraft.getMinecraft().displayGuiScreen(new AlphaModMenu(this));
+            return;
+        }
+        if (button != null && button.id == CLANS) {
+            com.alpharip.staffmod.AlphaClans.AlphaClanService.INSTANCE.refresh();
+            Minecraft.getMinecraft().displayGuiScreen(new com.alpharip.staffmod.AlphaClans.AlphaClansGui(this));
             return;
         }
         super.actionPerformed(button);
