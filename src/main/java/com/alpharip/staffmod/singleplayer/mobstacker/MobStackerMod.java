@@ -11,7 +11,7 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -276,71 +276,26 @@ public final class MobStackerMod {
     }
 
     /**
-     * Finds the entity under the crosshair without stopping the ray at blocks.
-     * This keeps the label target-only while allowing it to be seen through walls.
+     * Uses Minecraft's normal crosshair hit result. A mob is selected only
+     * when the crosshair actually hits that entity.
      */
     private static boolean isLookedAtByPlayer(Minecraft minecraft, Entity entity) {
-        if (minecraft.thePlayer == null || minecraft.theWorld == null) {
-            return false;
-        }
-
-        Vec3 start = minecraft.thePlayer.getPositionEyes(1.0F);
-        Vec3 look = minecraft.thePlayer.getLook(1.0F);
-        double reach = minecraft.playerController.getBlockReachDistance();
-        Vec3 end = start.addVector(look.xCoord * reach, look.yCoord * reach,
-                look.zCoord * reach);
-
-        AxisAlignedBB searchArea = new AxisAlignedBB(
-                Math.min(start.xCoord, end.xCoord),
-                Math.min(start.yCoord, end.yCoord),
-                Math.min(start.zCoord, end.zCoord),
-                Math.max(start.xCoord, end.xCoord),
-                Math.max(start.yCoord, end.yCoord),
-                Math.max(start.zCoord, end.zCoord)
-        ).expand(1.0D, 1.0D, 1.0D);
-
-        Entity lookedAt = null;
-        double closestHit = reach * reach;
-        List<Entity> candidates = minecraft.theWorld.getEntitiesWithinAABB(Entity.class, searchArea);
-        for (Entity candidate : candidates) {
-            if (!(candidate instanceof EntityLiving) || candidate == minecraft.thePlayer
-                    || !candidate.canBeCollidedWith() || candidate.isDead) {
-                continue;
-            }
-
-            float border = candidate.getCollisionBorderSize();
-            AxisAlignedBB hitBox = candidate.getEntityBoundingBox().expand(border, border, border);
-            MovingObjectPosition intercept = hitBox.calculateIntercept(start, end);
-            if (intercept == null) {
-                continue;
-            }
-
-            double hitDistance = start.squareDistanceTo(intercept.hitVec);
-            if (hitDistance < closestHit) {
-                closestHit = hitDistance;
-                lookedAt = candidate;
-            }
-        }
-
-        return lookedAt == entity;
+        return minecraft.objectMouseOver != null
+                && minecraft.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY
+                && minecraft.objectMouseOver.entityHit == entity;
     }
 
     /**
-     * Suppress vanilla labels for all living entities while Mob Stacker is
-     * enabled, then draw the replacement label only for the mob under the crosshair.
+     * Suppress the vanilla label and draw the Mob Stacker label in the same
+     * name-tag render phase, so it follows the normal entity render position.
      */
     @SubscribeEvent
     public void onMobNameTagPre(RenderLivingEvent.Specials.Pre event) {
-        if (event.entity instanceof EntityLiving && isClientMobStackerEnabled()) {
-            event.setCanceled(true);
-        }
-    }
-
-    @SubscribeEvent
-    public void onRenderMobNameTag(RenderLivingEvent.Post event) {
         if (!(event.entity instanceof EntityLiving) || !isClientMobStackerEnabled()) {
             return;
         }
+
+        event.setCanceled(true);
 
         EntityLiving entity = (EntityLiving) event.entity;
         if (entity.isInvisible() || entity.isDead) {
@@ -371,8 +326,8 @@ public final class MobStackerMod {
                     1.0F, 0.0F, 0.0F);
             GlStateManager.scale(-0.026666668F, -0.026666668F, 0.026666668F);
             GlStateManager.disableLighting();
-            GlStateManager.disableDepth();
-            GlStateManager.depthMask(false);
+            GlStateManager.enableDepth();
+            GlStateManager.depthMask(true);
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 
@@ -384,4 +339,15 @@ public final class MobStackerMod {
             GL11.glPopAttrib();
         }
     }
+    /**
+     * Suppress vanilla labels for all living entities while Mob Stacker is
+     * enabled, then draw the replacement label only for the mob under the crosshair.
+     */
+    @SubscribeEvent
+    public void onMobNameTagPre(RenderLivingEvent.Specials.Pre event) {
+        if (event.entity instanceof EntityLiving && isClientMobStackerEnabled()) {
+            event.setCanceled(true);
+        }
+    }
+
 }
