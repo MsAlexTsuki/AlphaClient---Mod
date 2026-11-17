@@ -23,7 +23,7 @@ public final class AlphaClansGui extends GuiScreen {
     public AlphaClansGui(GuiScreen parent){this.parent=parent;}
 
     @Override public void initGui(){
-        buttonList.clear();
+        buttonList.clear(); name=null; tag=null; input=null;
         widthPanel=Math.min(560,Math.max(310,width-20)); heightPanel=Math.min(350,Math.max(250,height-20));
         left=(width-widthPanel)/2; top=(height-heightPanel)/2;
         int x=left+10,y=top+10;
