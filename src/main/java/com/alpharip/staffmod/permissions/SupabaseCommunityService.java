@@ -1,6 +1,7 @@
 // --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.permissions;
 
+import com.alpharip.staffmod.AlphaClans.AlphaClanService;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -320,6 +321,8 @@ public final class SupabaseCommunityService {
         // Refresh the active public badge presence on every authenticated account sync.
         // The session expires automatically if this client stops heartbeating or crashes.
         heartbeatCurrentMinecraftUuid(token);
+        // Keep AlphaClans presence alive independently of whether its GUI is open.
+        AlphaClanService.INSTANCE.refreshIfStale();
     }
 
     /**
