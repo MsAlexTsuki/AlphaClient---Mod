@@ -467,17 +467,20 @@ public final class SupabaseCommunityService {
     public static String getSignedInUserId() { return accessToken == null ? null : signedInUserId; }
     public static String getClanAccessToken() { return accessToken; }
 
-    public static synchronized JsonArray clanRequestArray(String method, String path) throws Exception {
-        if (accessToken == null) throw new SecurityException("Sign in to your Alpha Account first.");
-        return requestArray(method, path, accessToken);
+    public static JsonArray clanRequestArray(String method, String path) throws Exception {
+        String token = accessToken;
+        if (token == null) throw new SecurityException("Sign in to your Alpha Account first.");
+        return requestArray(method, path, token);
     }
-    public static synchronized JsonArray clanRequestArray(String method, String path, String body) throws Exception {
-        if (accessToken == null) throw new SecurityException("Sign in to your Alpha Account first.");
-        return requestArray(method, path, accessToken, body);
+    public static JsonArray clanRequestArray(String method, String path, String body) throws Exception {
+        String token = accessToken;
+        if (token == null) throw new SecurityException("Sign in to your Alpha Account first.");
+        return requestArray(method, path, token, body);
     }
-    public static synchronized JsonElement clanRequestElement(String method, String path, String body) throws Exception {
-        if (accessToken == null) throw new SecurityException("Sign in to your Alpha Account first.");
-        HttpURLConnection connection = open(method, path, accessToken);
+    public static JsonElement clanRequestElement(String method, String path, String body) throws Exception {
+        String token = accessToken;
+        if (token == null) throw new SecurityException("Sign in to your Alpha Account first.");
+        HttpURLConnection connection = open(method, path, token);
         connection.setDoOutput(true);
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         connection.setRequestProperty("Content-Type", "application/json");
