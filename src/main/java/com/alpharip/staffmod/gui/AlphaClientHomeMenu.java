@@ -37,7 +37,7 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
         modsX = (width - modsWidth) / 2;
         modsY = Math.max(84, height / 2 - 4);
         buttonList.add(new AlphaButton(MODS, modsX, modsY, modsWidth, modsHeight, "MODS", true));
-        buttonList.add(new AlphaButton(CLANS, modsX, modsY + modsHeight + 7, modsWidth, modsHeight, "ALPHACLANS"));
+        buttonList.add(new ClanIconButton(CLANS, (width - 38) / 2, modsY + modsHeight + 7));
     }
 
     @Override
@@ -59,6 +59,48 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
         super.drawScreen(mouseX, mouseY, partialTicks);
         drawCenteredString(fontRendererObj, "DRAG HUD ELEMENTS TO MOVE", width / 2,
                 height - 16, 0xBFFFFFFF);
+    }
+
+    /** Compact shield-and-members icon used for the AlphaClans shortcut. */
+    private static final class ClanIconButton extends GuiButton {
+        ClanIconButton(int id, int x, int y) {
+            super(id, x, y, 38, 38, "");
+        }
+
+        @Override
+        public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+            if (!visible) return;
+            hovered = mouseX >= xPosition && mouseY >= yPosition
+                    && mouseX < xPosition + width && mouseY < yPosition + height;
+            int accent = hovered ? 0xFFFFD866 : 0xFFE6E8ED;
+            drawRect(xPosition, yPosition, xPosition + width, yPosition + height,
+                    hovered ? 0xE02A2D35 : 0xC014161D);
+            drawRect(xPosition, yPosition, xPosition + width, yPosition + 1,
+                    hovered ? 0xFFFFD866 : 0x664B515D);
+            drawRect(xPosition, yPosition + height - 1, xPosition + width,
+                    yPosition + height, 0xAA090A0E);
+            drawRect(xPosition, yPosition, xPosition + 1, yPosition + height,
+                    hovered ? 0xFFFFD866 : 0x664B515D);
+            drawRect(xPosition + width - 1, yPosition, xPosition + width,
+                    yPosition + height, hovered ? 0xFFFFD866 : 0x664B515D);
+
+            int cx = xPosition + 19;
+            int top = yPosition + 6;
+            // Shield outline, built from short segments to keep the icon crisp at GUI scale.
+            drawRect(cx - 7, top, cx + 7, top + 2, accent);
+            drawRect(cx - 10, top + 2, cx - 8, top + 10, accent);
+            drawRect(cx + 8, top + 2, cx + 10, top + 10, accent);
+            drawRect(cx - 8, top + 10, cx - 5, top + 15, accent);
+            drawRect(cx + 5, top + 10, cx + 8, top + 15, accent);
+            drawRect(cx - 5, top + 15, cx, top + 18, accent);
+            drawRect(cx, top + 15, cx + 5, top + 18, accent);
+
+            // Two member silhouettes inside the shield.
+            drawRect(cx - 6, top + 5, cx - 2, top + 9, accent);
+            drawRect(cx + 2, top + 5, cx + 6, top + 9, accent);
+            drawRect(cx - 8, top + 10, cx, top + 13, accent);
+            drawRect(cx, top + 10, cx + 8, top + 13, accent);
+        }
     }
 
     @Override
