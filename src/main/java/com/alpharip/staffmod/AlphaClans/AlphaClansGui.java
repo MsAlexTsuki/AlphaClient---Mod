@@ -45,15 +45,17 @@ public final class AlphaClansGui extends GuiScreen {
         int listY=top+52;
         if(tab==BROWSER){
             if(creatingClan){
-                int inner=widthPanel-48;
-                int nameWidth=Math.max(130,inner-104);
+                int formWidth=286;
+                int formLeft=left+(widthPanel-formWidth)/2;
                 int fieldY=top+151;
-                name=field(40,left+24,fieldY,nameWidth);
-                tag=field(41,left+34+nameWidth,fieldY,Math.max(70,inner-nameWidth-10));
-                buttonList.add(new AlphaButton(TOGGLE,left+24,top+218,widthPanel-48,22,
+                name=field(40,formLeft,fieldY,190);
+                tag=field(41,formLeft+202,fieldY,72);
+                buttonList.add(new AlphaButton(TOGGLE,left+(widthPanel-220)/2,top+218,220,20,
                         privateClan?"PRIVATE  -  Request approval":"PUBLIC  -  Anyone can join",false,true));
-                buttonList.add(new AlphaButton(CREATE,left+widthPanel-174,top+heightPanel-42,150,24,"CREATE CLAN",true));
-                buttonList.add(new AlphaButton(CANCEL_CREATE,left+24,top+heightPanel-42,92,24,"CANCEL"));
+                int actionsWidth=218;
+                int actionsLeft=left+(widthPanel-actionsWidth)/2;
+                buttonList.add(new AlphaButton(CANCEL_CREATE,actionsLeft,top+heightPanel-42,84,22,"CANCEL"));
+                buttonList.add(new AlphaButton(CREATE,actionsLeft+96,top+heightPanel-42,122,22,"CREATE CLAN",true));
             } else {
                 for(int i=0;i<Math.min(8,s.browser.size());i++){
                     JsonObject c=s.browser.get(i).getAsJsonObject();
@@ -102,7 +104,7 @@ public final class AlphaClansGui extends GuiScreen {
         renderedSnapshot=s;
         AlphaClanService.INSTANCE.refreshIfStale();
     }
-    private GuiTextField field(int id,int x,int y,int w){GuiTextField f=new GuiTextField(id,fontRendererObj,x,y,w,18);f.setMaxStringLength(id==45?256:64);f.setEnableBackgroundDrawing(true);f.setTextColor(0xFFE8EAF0);return f;}
+    private GuiTextField field(int id,int x,int y,int w){GuiTextField f=new GuiTextField(id,fontRendererObj,x,y,w,18);f.setMaxStringLength(id==45?256:(id==41||id==44?3:(id==40||id==43?24:64)));f.setEnableBackgroundDrawing(true);f.setTextColor(0xFFE8EAF0);return f;}
     @Override public void updateScreen(){
         super.updateScreen(); AlphaClanService.INSTANCE.refreshIfStale();
         Object current=AlphaClanService.INSTANCE.getSnapshot();
@@ -179,17 +181,18 @@ public final class AlphaClansGui extends GuiScreen {
                 drawRect(cardLeft,cardTop,cardRight,cardTop+1,0x66545B68);
                 drawString(fontRendererObj,"CREATE YOUR CLAN",left+24,top+91,0xFFFFD866);
                 drawString(fontRendererObj,"Set up your clan identity and choose who can join.",left+24,top+109,0xFF9299A6);
-                drawString(fontRendererObj,"CLAN NAME",left+24,top+132,0xFFE6E8ED);
-                drawString(fontRendererObj,"2-24 CHARACTERS",left+24,top+141,0xFF777F8D);
-                int tagLabelX=left+34+(widthPanel-48-104);
-                drawString(fontRendererObj,"CLAN TAG",tagLabelX,top+132,0xFFE6E8ED);
-                drawString(fontRendererObj,"2-5 LETTERS OR NUMBERS",tagLabelX,top+141,0xFF777F8D);
-                drawString(fontRendererObj,"WHO CAN JOIN?",left+24,top+197,0xFFE6E8ED);
-                drawString(fontRendererObj,privateClan?"PRIVATE CLAN":"PUBLIC CLAN",left+24,top+248,0xFFFFD866);
-                drawString(fontRendererObj,privateClan
+                int formWidth=286;
+                int formLeft=left+(widthPanel-formWidth)/2;
+                drawString(fontRendererObj,"CLAN NAME",formLeft,top+132,0xFFE6E8ED);
+                drawString(fontRendererObj,"3-24 CHARACTERS",formLeft,top+141,0xFF777F8D);
+                drawString(fontRendererObj,"CLAN TAG",formLeft+202,top+132,0xFFE6E8ED);
+                drawString(fontRendererObj,"2-3 LETTERS",formLeft+202,top+141,0xFF777F8D);
+                drawCenteredString(fontRendererObj,"WHO CAN JOIN?",width/2,top+197,0xFFE6E8ED);
+                drawCenteredString(fontRendererObj,privateClan?"PRIVATE CLAN":"PUBLIC CLAN",width/2,top+246,0xFFFFD866);
+                drawCenteredString(fontRendererObj,privateClan
                         ?"Visible in the browser. Players must request to join."
                         :"Visible in the browser. Players can join immediately.",
-                        left+24,top+261,0xFF9299A6);
+                        width/2,top+259,0xFF9299A6);
                 if(name!=null)name.drawTextBox();
                 if(tag!=null)tag.drawTextBox();
             } else {
