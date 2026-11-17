@@ -16,6 +16,7 @@ public final class AlphaClanService {
         Thread t = new Thread(r, "AlphaClient-Clans"); t.setDaemon(true); return t;
     });
     private final AtomicBoolean loading = new AtomicBoolean(false);
+    private final AtomicBoolean actionRunning = new AtomicBoolean(false);
     private volatile Snapshot snapshot = new Snapshot();
     private volatile long lastRefresh;
     private volatile String realtimeClan;
@@ -40,7 +41,7 @@ public final class AlphaClanService {
             lastRefresh = System.currentTimeMillis();
             return;
         }
-        if (!loading.compareAndSet(false, true)) return;
+        if (actionRunning.get() || !loading.compareAndSet(false, true)) return;
         worker.execute(() -> {
             try {
                 Snapshot value = load();
@@ -61,7 +62,6 @@ public final class AlphaClanService {
         if (!SupabaseCommunityService.isSignedIn()) { s.status = "Sign in to your Alpha Account to use AlphaClans."; return s; }
         String uid = SupabaseCommunityService.getSignedInUserId();
         if (uid == null) throw new IllegalStateException("Alpha profile not found.");
-        s.browser = SupabaseCommunityService.clanRequestArray("POST", "/rest/v1/rpc/get_clan_browser", "{}");
         JsonArray membership = SupabaseCommunityService.clanRequestArray("GET",
                 "/rest/v1/clan_members?select=clan_id,profile_id,role&profile_id=eq." + enc(uid) + "&limit=1");
         if (membership.size() > 0) {
@@ -78,6 +78,16 @@ public final class AlphaClanService {
                     "/rest/v1/clan_join_requests?select=id,profile_id,created_at,profiles(username,display_name)&clan_id=eq." + enc(clanId) + "&status=eq.pending&order=created_at.asc");
             s.owner = "owner".equals(str(member, "role"));
             s.officer = "officer".equals(str(member, "role"));
+        }
+        s.browser = SupabaseCommunityService.clanRequestArray("POST", "/rest/v1/rpc/get_clan_browser", "{}");
+        if (s.clan != null) {
+            String ownClanId = str(s.clan, "id");
+            JsonArray available = new JsonArray();
+            for (int i = 0; i < s.browser.size(); i++) {
+                JsonObject candidate = s.browser.get(i).getAsJsonObject();
+                if (!ownClanId.equals(str(candidate, "id"))) available.add(candidate);
+            }
+            s.browser = available;
         }
         s.invites = SupabaseCommunityService.clanRequestArray("GET",
                 "/rest/v1/clan_invites?select=id,clan_id,expires_at,clans(name,tag)&target_profile_id=eq." + enc(uid)
@@ -141,14 +151,27 @@ public final class AlphaClanService {
     }
     private interface Op { void run() throws Exception; }
     private void action(String success, Op op) {
+        if (!actionRunning.compareAndSet(false, true)) {
+            snapshot.status = "Another clan action is still processing.";
+            return;
+        }
         worker.execute(() -> {
-            Snapshot before = snapshot; before.status = "Working...";
+            snapshot.status = "Working...";
             try {
-                op.run(); Snapshot value = load(); value.status = success; snapshot = value; lastRefresh = System.currentTimeMillis();
+                op.run();
+                Snapshot value = load();
+                value.status = success;
+                snapshot = value;
+                lastRefresh = System.currentTimeMillis();
                 String id = str(value.clan, "id");
                 if (id == null) { realtimeClan = null; ClanRealtimeClient.INSTANCE.disconnect(); }
                 else if (!id.equals(realtimeClan)) { realtimeClan = id; ClanRealtimeClient.INSTANCE.subscribe(id); }
-            } catch (Exception e) { snapshot.status = message(e); }
+            } catch (Exception e) {
+                Snapshot value = snapshot;
+                value.status = message(e);
+            } finally {
+                actionRunning.set(false);
+            }
         });
     }
     private static String enc(String value) throws Exception { return URLEncoder.encode(value, "UTF-8"); }
