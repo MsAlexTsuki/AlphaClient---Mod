@@ -18,6 +18,7 @@ public final class AlphaClansGui extends GuiScreen {
     private final GuiScreen parent;
     private int tab=BROWSER,selected=-1,selectedBrowser=-1,left,top,widthPanel,heightPanel;
     private boolean privateClan;
+    private String settingsClanId;
     private GuiTextField name,tag,input;
     private Object renderedSnapshot;
     public AlphaClansGui(GuiScreen parent){this.parent=parent;}
@@ -34,6 +35,11 @@ public final class AlphaClansGui extends GuiScreen {
         buttonList.add(new AlphaButton(REQUESTS,x+260,y,76,18,"REQUESTS",tab==REQUESTS));
         buttonList.add(new AlphaButton(CHAT,x+340,y,58,18,"CHAT",tab==CHAT));
         AlphaClanService.Snapshot s=AlphaClanService.INSTANCE.getSnapshot();
+        String activeClanId=AlphaClanService.str(s.clan,"id");
+        if(tab==CLAN && activeClanId!=null && !activeClanId.equals(settingsClanId)){
+            privateClan="private".equalsIgnoreCase(AlphaClanService.str(s.clan,"visibility"));
+            settingsClanId=activeClanId;
+        }
         int listY=top+52;
         if(tab==BROWSER){
             for(int i=0;i<Math.min(8,s.browser.size());i++){
