@@ -141,6 +141,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
         registerClientCommands();
+        ClientCommandHandler.instance.registerCommand(new com.alpharip.staffmod.AlphaClans.AlphaClanCommand());
         ClientCommandHandler.instance.registerCommand(new PaletteCommand());
         Palette.getInstance().register();
         WaypointManager.getInstance().load();
