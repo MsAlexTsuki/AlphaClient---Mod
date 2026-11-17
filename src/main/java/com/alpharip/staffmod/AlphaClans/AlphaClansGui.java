@@ -67,7 +67,9 @@ public final class AlphaClansGui extends GuiScreen {
                     buttonList.add(new AlphaButton(DISBAND,left+166,top+heightPanel-60,76,18,"DISBAND"));
                     buttonList.add(new AlphaButton(ROLE,left+248,top+heightPanel-60,68,18,"ROLE"));
                     buttonList.add(new AlphaButton(TRANSFER,left+322,top+heightPanel-60,82,18,"TRANSFER"));
+                    buttonList.add(new AlphaButton(KICK,left+408,top+heightPanel-60,68,18,"KICK"));
                     name=field(43,left+14,top+heightPanel-34,130); tag=field(44,left+150,top+heightPanel-34,64);
+                    name.setText(val(s.clan,"name")); tag.setText(val(s.clan,"tag"));
                     buttonList.add(new AlphaButton(TOGGLE,left+220,top+heightPanel-34,76,18,privateClan?"PRIVATE":"PUBLIC"));
                     buttonList.add(new AlphaButton(SAVE,left+302,top+heightPanel-34,88,18,"SAVE SETTINGS"));
                 } else if(s.officer) buttonList.add(new AlphaButton(KICK,left+166,top+heightPanel-60,68,18,"KICK"));
@@ -122,6 +124,7 @@ public final class AlphaClansGui extends GuiScreen {
         }
         if(tab==CLAN&&selected>=0&&selected<s.members.size()){
             JsonObject m=s.members.get(selected).getAsJsonObject();String id=val(m,"profile_id");
+            if(s.clan!=null && id.equals(val(s.clan,"owner_id")))return;
             if(b.id==KICK)AlphaClanService.INSTANCE.kick(id);
             if(b.id==ROLE)AlphaClanService.INSTANCE.setRole(id,!"officer".equalsIgnoreCase(val(m,"role")));
             if(b.id==TRANSFER)AlphaClanService.INSTANCE.transfer(id);
