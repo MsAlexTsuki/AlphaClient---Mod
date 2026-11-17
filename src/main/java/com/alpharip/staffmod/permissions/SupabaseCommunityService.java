@@ -346,6 +346,7 @@ public final class SupabaseCommunityService {
     }
 
     public static synchronized void signOut() {
+        com.alpharip.staffmod.AlphaClans.AlphaClanService.INSTANCE.onSignedOut();
         String token = accessToken;
         String badgeSessionId = publicBadgeSessionId;
         try {
