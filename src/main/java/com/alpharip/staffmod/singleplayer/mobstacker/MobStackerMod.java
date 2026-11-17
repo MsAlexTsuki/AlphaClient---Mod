@@ -303,8 +303,8 @@ public final class MobStackerMod {
         double closestHit = reach * reach;
         List<Entity> candidates = minecraft.theWorld.getEntitiesWithinAABB(Entity.class, searchArea);
         for (Entity candidate : candidates) {
-            if (candidate == minecraft.thePlayer || !candidate.canBeCollidedWith()
-                    || candidate.isDead) {
+            if (!(candidate instanceof EntityLiving) || candidate == minecraft.thePlayer
+                    || !candidate.canBeCollidedWith() || candidate.isDead) {
                 continue;
             }
 
