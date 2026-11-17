@@ -188,8 +188,8 @@ public final class AlphaClansGui extends GuiScreen {
                 label=AlphaClanService.playerName(row); meta="PENDING";
             }
             int id=SELECT_BASE+i;
-            buttonList.add(new AlphaButton(id,left+14,y+i*25,panelWidth-28,22,clip(label+"     "+meta,panelWidth-48),
-                    i==(browser?selectedBrowser:selected)));
+            buttonList.add(new AlphaButton(id,left+14,y+i*25,panelWidth-28,22,"",
+                    false,i==(browser?selectedBrowser:selected),true));
         }
     }
     @Override public void updateScreen() {
