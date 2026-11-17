@@ -22,6 +22,14 @@ public final class AlphaClanService {
 
     private AlphaClanService() {}
     public Snapshot getSnapshot() { return snapshot; }
+    public void onSignedOut() {
+        realtimeClan = null;
+        ClanRealtimeClient.INSTANCE.disconnect();
+        Snapshot value = new Snapshot();
+        value.status = "Sign in to your Alpha Account to use AlphaClans.";
+        snapshot = value;
+        lastRefresh = System.currentTimeMillis();
+    }
     public void refreshIfStale() { if (System.currentTimeMillis() - lastRefresh > 5000L) refresh(); }
 
     public void refresh() {
