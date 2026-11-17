@@ -16,6 +16,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -276,35 +277,37 @@ public final class MobStackerMod {
     }
 
     /**
-     * Uses Minecraft's normal crosshair hit result. A mob is selected only
-     * when the crosshair actually hits that entity.
-     */
-    private static boolean isLookedAtByPlayer(Minecraft minecraft, Entity entity) {
-        return minecraft.objectMouseOver != null
-                && minecraft.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY
-                && minecraft.objectMouseOver.entityHit == entity;
-    }
-
-    /**
-     * Suppress the vanilla label and draw the Mob Stacker label in the same
-     * name-tag render phase, so it follows the normal entity render position.
+     * Suppress vanilla living-entity labels while Mob Stacker is enabled.
+     * The custom stack label is rendered separately after the world render.
      */
     @SubscribeEvent
     public void onMobNameTagPre(RenderLivingEvent.Specials.Pre event) {
-        if (!(event.entity instanceof EntityLiving) || !isClientMobStackerEnabled()) {
-            return;
+        if (event.entity instanceof EntityLiving && isClientMobStackerEnabled()) {
+            event.setCanceled(true);
         }
+    }
 
-        event.setCanceled(true);
-
-        EntityLiving entity = (EntityLiving) event.entity;
-        if (entity.isInvisible() || entity.isDead) {
+    /**
+     * Draw the selected mob's stack label after the world has rendered.
+     * Disabling depth testing here keeps the label visible through blocks
+     * without changing the visibility of the mob itself.
+     */
+    @SubscribeEvent
+    public void onRenderWorldLast(RenderWorldLastEvent event) {
+        if (!isClientMobStackerEnabled()) {
             return;
         }
 
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft.fontRendererObj == null || minecraft.getRenderManager() == null
-                || !isLookedAtByPlayer(minecraft, entity)) {
+        if (minecraft.objectMouseOver == null
+                || minecraft.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.ENTITY
+                || !(minecraft.objectMouseOver.entityHit instanceof EntityLiving)
+                || minecraft.fontRendererObj == null || minecraft.getRenderManager() == null) {
+            return;
+        }
+
+        EntityLiving entity = (EntityLiving) minecraft.objectMouseOver.entityHit;
+        if (entity.isInvisible() || entity.isDead || entity.worldObj != minecraft.theWorld) {
             return;
         }
 
@@ -315,19 +318,29 @@ public final class MobStackerMod {
         String label = mobName + " x" + getStackCount(entity);
         int halfWidth = minecraft.fontRendererObj.getStringWidth(label) / 2;
 
+        net.minecraft.client.renderer.entity.RenderManager renderManager =
+                minecraft.getRenderManager();
+        double x = entity.lastTickPosX
+                + (entity.posX - entity.lastTickPosX) * event.partialTicks
+                - renderManager.viewerPosX;
+        double y = entity.lastTickPosY
+                + (entity.posY - entity.lastTickPosY) * event.partialTicks
+                - renderManager.viewerPosY + entity.height + 0.5D;
+        double z = entity.lastTickPosZ
+                + (entity.posZ - entity.lastTickPosZ) * event.partialTicks
+                - renderManager.viewerPosZ;
+
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT
                 | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_CURRENT_BIT);
         GlStateManager.pushMatrix();
         try {
-            GlStateManager.translate(event.x, event.y + entity.height + 0.5D, event.z);
-            GlStateManager.rotate(-minecraft.getRenderManager().playerViewY,
-                    0.0F, 1.0F, 0.0F);
-            GlStateManager.rotate(minecraft.getRenderManager().playerViewX,
-                    1.0F, 0.0F, 0.0F);
+            GlStateManager.translate(x, y, z);
+            GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
             GlStateManager.scale(-0.026666668F, -0.026666668F, 0.026666668F);
             GlStateManager.disableLighting();
-            GlStateManager.enableDepth();
-            GlStateManager.depthMask(true);
+            GlStateManager.disableDepth();
+            GlStateManager.depthMask(false);
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 
