@@ -14,10 +14,10 @@ import java.io.IOException;
 public final class AlphaClansGui extends GuiScreen {
     private static final int BACK=1,BROWSER=2,CLAN=3,INVITES=4,REQUESTS=5,CHAT=6,LOGIN=7;
     private static final int SELECT=100,CREATE=10,JOIN=11,TOGGLE=12,INVITE=13,SEND=14,LEAVE=15,DISBAND=16;
-    private static final int ACCEPT=17,DECLINE=18,KICK=19,ROLE=20,TRANSFER=21,SAVE=22;
+    private static final int ACCEPT=17,DECLINE=18,KICK=19,ROLE=20,TRANSFER=21,SAVE=22,OPEN_CREATE=23,CANCEL_CREATE=24;
     private final GuiScreen parent;
     private int tab=BROWSER,selected=-1,selectedBrowser=-1,left,top,widthPanel,heightPanel;
-    private boolean privateClan;
+    private boolean privateClan,creatingClan;
     private String settingsClanId;
     private GuiTextField name,tag,input;
     private Object renderedSnapshot;
@@ -44,16 +44,25 @@ public final class AlphaClansGui extends GuiScreen {
         }
         int listY=top+52;
         if(tab==BROWSER){
-            for(int i=0;i<Math.min(8,s.browser.size());i++){
-                JsonObject c=s.browser.get(i).getAsJsonObject();
-                String label=val(c,"name")+" ["+val(c,"tag")+"]  "+val(c,"member_count")+"/50  "+val(c,"visibility").toUpperCase();
-                buttonList.add(new AlphaButton(SELECT+i,left+14,listY+i*24,widthPanel-28,21,clip(label,widthPanel-48),i==selectedBrowser));
+            if(creatingClan){
+                int inner=widthPanel-48;
+                int nameWidth=Math.max(130,inner-104);
+                int fieldY=top+151;
+                name=field(40,left+24,fieldY,nameWidth);
+                tag=field(41,left+34+nameWidth,fieldY,Math.max(70,inner-nameWidth-10));
+                buttonList.add(new AlphaButton(TOGGLE,left+24,top+218,widthPanel-48,22,
+                        privateClan?"PRIVATE  -  Request approval":"PUBLIC  -  Anyone can join",false,true));
+                buttonList.add(new AlphaButton(CREATE,left+widthPanel-174,top+heightPanel-42,150,24,"CREATE CLAN",true));
+                buttonList.add(new AlphaButton(CANCEL_CREATE,left+24,top+heightPanel-42,92,24,"CANCEL"));
+            } else {
+                for(int i=0;i<Math.min(8,s.browser.size());i++){
+                    JsonObject c=s.browser.get(i).getAsJsonObject();
+                    String label=val(c,"name")+" ["+val(c,"tag")+"]  "+val(c,"member_count")+"/50  "+val(c,"visibility").toUpperCase();
+                    buttonList.add(new AlphaButton(SELECT+i,left+14,listY+i*24,widthPanel-28,21,clip(label,widthPanel-48),i==selectedBrowser));
+                }
+                buttonList.add(new AlphaButton(OPEN_CREATE,left+widthPanel-142,top+heightPanel-34,128,20,"CREATE A CLAN",true));
+                if(selectedBrowser>=0&&selectedBrowser<s.browser.size()) buttonList.add(new AlphaButton(JOIN,left+14,top+heightPanel-34,145,20,"JOIN / REQUEST",true));
             }
-            int formY=top+heightPanel-61;
-            name=field(40,left+14,formY,166); tag=field(41,left+190,formY,72);
-            buttonList.add(new AlphaButton(TOGGLE,left+272,formY,94,18,privateClan?"PRIVATE":"PUBLIC"));
-            buttonList.add(new AlphaButton(CREATE,left+376,formY,Math.min(150,widthPanel-390),18,"CREATE CLAN",true));
-            if(selectedBrowser>=0&&selectedBrowser<s.browser.size()) buttonList.add(new AlphaButton(JOIN,left+14,top+heightPanel-34,145,20,"JOIN / REQUEST",true));
         } else if(tab==CLAN){
             for(int i=0;i<Math.min(8,s.members.size());i++){
                 JsonObject m=s.members.get(i).getAsJsonObject();
@@ -108,6 +117,8 @@ public final class AlphaClansGui extends GuiScreen {
         if(b.id==LOGIN){mc.displayGuiScreen(new com.alpharip.staffmod.gui.CommunityLoginGui(this));return;}
         if(b.id>=BROWSER&&b.id<=CHAT){tab=b.id;selected=-1;initGui();return;}
         if(b.id==TOGGLE){privateClan=!privateClan;initGui();return;}
+        if(b.id==OPEN_CREATE){creatingClan=true;selectedBrowser=-1;initGui();return;}
+        if(b.id==CANCEL_CREATE){creatingClan=false;name=null;tag=null;initGui();return;}
         if(b.id>=SELECT&&b.id<SELECT+10){if(tab==BROWSER)selectedBrowser=b.id-SELECT;else selected=b.id-SELECT;initGui();return;}
         AlphaClanService.Snapshot s=AlphaClanService.INSTANCE.getSnapshot();
         if(b.id==CREATE&&name!=null&&tag!=null){AlphaClanService.INSTANCE.create(name.getText(),tag.getText(),privateClan);return;}
@@ -156,17 +167,30 @@ public final class AlphaClansGui extends GuiScreen {
         AlphaClanService.Snapshot s=AlphaClanService.INSTANCE.getSnapshot();
 
         if(tab==BROWSER){
-            drawSectionLabel("CLAN DIRECTORY",left+14,top+77);
-            drawRows(s.browser,top+94,0);
-            // Dedicated creation strip, visually separated from the directory.
-            int cardTop=top+heightPanel-91;
-            drawRect(left+10,cardTop,left+widthPanel-10,top+heightPanel-25,0xB914171E);
-            drawRect(left+10,cardTop,left+widthPanel-10,cardTop+1,0x66545B68);
-            drawString(fontRendererObj,"CREATE A CLAN",left+16,cardTop+8,0xFFE6E8ED);
-            drawString(fontRendererObj,"NAME",left+14,cardTop+22,0xFF9299A6);
-            drawString(fontRendererObj,"TAG",left+190,cardTop+22,0xFF9299A6);
-            if(name!=null)name.drawTextBox();
-            if(tag!=null)tag.drawTextBox();
+            if(creatingClan){
+                int cardLeft=left+18,cardRight=left+widthPanel-18;
+                int cardTop=top+82,cardBottom=top+heightPanel-27;
+                drawRect(cardLeft,cardTop,cardRight,cardBottom,0xAA12151C);
+                drawRect(cardLeft,cardTop,cardRight,cardTop+1,0x66545B68);
+                drawString(fontRendererObj,"CREATE YOUR CLAN",left+24,top+91,0xFFFFD866);
+                drawString(fontRendererObj,"Set up your clan identity and choose who can join.",left+24,top+109,0xFF9299A6);
+                drawString(fontRendererObj,"CLAN NAME",left+24,top+132,0xFFE6E8ED);
+                drawString(fontRendererObj,"2-24 CHARACTERS",left+24,top+141,0xFF777F8D);
+                int tagLabelX=left+34+(widthPanel-48-104);
+                drawString(fontRendererObj,"CLAN TAG",tagLabelX,top+132,0xFFE6E8ED);
+                drawString(fontRendererObj,"2-5 LETTERS OR NUMBERS",tagLabelX,top+141,0xFF777F8D);
+                drawString(fontRendererObj,"WHO CAN JOIN?",left+24,top+197,0xFFE6E8ED);
+                drawString(fontRendererObj,privateClan?"PRIVATE CLAN":"PUBLIC CLAN",left+24,top+248,0xFFFFD866);
+                drawString(fontRendererObj,privateClan
+                        ?"Visible in the browser. Players must request to join."
+                        :"Visible in the browser. Players can join immediately.",
+                        left+24,top+261,0xFF9299A6);
+                if(name!=null)name.drawTextBox();
+                if(tag!=null)tag.drawTextBox();
+            } else {
+                drawSectionLabel("CLAN DIRECTORY",left+14,top+77);
+                drawRows(s.browser,top+94,0);
+            }
         } else if(tab==CLAN){
             if(s.clan==null)drawEmptyState("NO CLAN YET","Browse the directory to find a clan or create your own.",top+112);
             else{
