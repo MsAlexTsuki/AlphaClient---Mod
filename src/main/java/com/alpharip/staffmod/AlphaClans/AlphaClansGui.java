@@ -34,7 +34,7 @@ public final class AlphaClansGui extends GuiScreen {
         panelWidth=Math.min(620,Math.max(320,width-24));
         panelHeight=Math.min(410,Math.max(270,height-24));
         left=(width-panelWidth)/2; top=(height-panelHeight)/2;
-        bodyTop=top+91; footerTop=top+panelHeight-48;
+        bodyTop=top+91; footerTop=top+panelHeight-58;
 
         AlphaClanService.Snapshot s=AlphaClanService.INSTANCE.getSnapshot();
         String clanId=AlphaClanService.str(s.clan,"id");
@@ -47,6 +47,7 @@ public final class AlphaClansGui extends GuiScreen {
 
         buttonList.add(new AlphaButton(BACK,left+12,top+12,54,20,"BACK"));
         List<Integer> tabs=availableTabs(s);
+        if (!tabs.contains(tab)) tab=tabs.get(0);
         int gap=4, usable=panelWidth-28;
         int tabWidth=Math.max(46,Math.min(88,(usable-(tabs.size()-1)*gap)/Math.max(1,tabs.size())));
         int total=tabs.size()*tabWidth+Math.max(0,tabs.size()-1)*gap;
@@ -121,7 +122,7 @@ public final class AlphaClansGui extends GuiScreen {
             buttonList.add(new AlphaButton(VIS_PRIVATE,formLeft+146,bodyTop+112,136,24,"PRIVATE",privateClan,privateClan));
             buttonList.add(new AlphaButton(SAVE,left+panelWidth-116,footerTop+10,102,24,"SAVE",true));
         } else if (tab==TAB_INVITES && s.clan==null) {
-            addRows(s.invites,bodyTop+18,Math.max(1,(footerTop-bodyTop-26)/26),false);
+            addRows(s.invites,bodyTop+18,Math.max(1,(footerTop-bodyTop-26)/25),false);
             if (selected>=0 && selected<s.invites.size()) {
                 buttonList.add(new AlphaButton(ACCEPT,left+14,footerTop+10,90,24,"ACCEPT",true));
                 buttonList.add(new AlphaButton(DECLINE,left+112,footerTop+10,90,24,"DECLINE"));
@@ -205,8 +206,8 @@ public final class AlphaClansGui extends GuiScreen {
             }
             String n=name==null?"":name.getText(), t=tag==null?"":tag.getText(), v=input==null?"":input.getText();
             initGui();
-            if(name!=null && name.getText().isEmpty()) name.setText(n);
-            if(tag!=null && tag.getText().isEmpty()) tag.setText(t);
+            if(name!=null && !n.isEmpty()) name.setText(n);
+            if(tag!=null && !t.isEmpty()) tag.setText(t);
             if(input!=null) input.setText(v);
         }
     }
@@ -298,7 +299,7 @@ public final class AlphaClansGui extends GuiScreen {
                 drawCenteredString(fontRendererObj,"WHO CAN JOIN?",width/2,bodyTop+82,0xFFE6E8ED);
                 drawCenteredString(fontRendererObj,privateClan
                         ?"Private clans appear in the directory; requests need approval."
-                        :"Public clans can be joined immediately.",width/2,bodyTop+126,0xFF9299A6);
+                        :"Public clans can be joined immediately.",width/2,bodyTop+116,0xFF9299A6);
                 if(name!=null)name.drawTextBox(); if(tag!=null)tag.drawTextBox();
             } else {
                 drawSection("CLAN DIRECTORY",left+16,bodyTop);
