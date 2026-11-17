@@ -31,6 +31,7 @@ import com.alpharip.staffmod.profile.ModuleProfileManager;
 import com.alpharip.staffmod.permissions.PermissionService;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.rankviewer.RankCache;
+import com.alpharip.staffmod.rankviewer.ClanTagCache;
 import com.alpharip.staffmod.rankviewer.RankViewerRenderer;
 import com.alpharip.staffmod.quality.FullbrightMod;
 import com.alpharip.staffmod.quality.AutoGGMod;
@@ -184,6 +185,7 @@ public final class AlphaClient {
         FightHistoryManager.loadHistory();
         MinecraftForge.EVENT_BUS.register(FightHistoryManager.getInstance());
         RankCache.INSTANCE.start();
+        ClanTagCache.INSTANCE.start();
         SupabaseCommunityService.start();
 
         AlphaClientConfig.load();
