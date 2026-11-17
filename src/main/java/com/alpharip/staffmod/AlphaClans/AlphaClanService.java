@@ -7,6 +7,9 @@ import com.google.gson.JsonObject;
 import java.net.URLEncoder;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Authenticated Supabase-backed AlphaClans operations. */
@@ -17,6 +20,10 @@ public final class AlphaClanService {
     });
     private final AtomicBoolean loading = new AtomicBoolean(false);
     private final AtomicBoolean actionRunning = new AtomicBoolean(false);
+    private final ScheduledExecutorService presenceWorker = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "AlphaClient-ClanPresence"); t.setDaemon(true); return t;
+    });
+    private volatile ScheduledFuture<?> presenceTask;
     private volatile Snapshot snapshot = new Snapshot();
     private volatile long lastRefresh;
     private volatile String realtimeClan;
@@ -26,7 +33,7 @@ public final class AlphaClanService {
     public Snapshot getSnapshot() { return snapshot; }
     public void onSignedOut() {
         realtimeClan = null;
-        lastPresenceHeartbeat = 0L;
+        stopPresenceHeartbeat();
         ClanRealtimeClient.INSTANCE.disconnect();
         Snapshot value = new Snapshot();
         value.status = "Sign in to your Alpha Account to use AlphaClans.";
@@ -37,6 +44,7 @@ public final class AlphaClanService {
 
     public void refresh() {
         if (!SupabaseCommunityService.isSignedIn()) {
+            stopPresenceHeartbeat();
             Snapshot value = new Snapshot();
             value.status = "Sign in to your Alpha Account to use AlphaClans.";
             snapshot = value;
@@ -50,8 +58,14 @@ public final class AlphaClanService {
                 snapshot = value;
                 lastRefresh = System.currentTimeMillis();
                 String id = value.clan == null ? null : str(value.clan, "id");
-                if (id == null) { realtimeClan = null; ClanRealtimeClient.INSTANCE.disconnect(); }
-                else if (!id.equals(realtimeClan)) { realtimeClan = id; ClanRealtimeClient.INSTANCE.subscribe(id); }
+                if (id == null) {
+                    stopPresenceHeartbeat();
+                    realtimeClan = null;
+                    ClanRealtimeClient.INSTANCE.disconnect();
+                } else {
+                    startPresenceHeartbeat();
+                    if (!id.equals(realtimeClan)) { realtimeClan = id; ClanRealtimeClient.INSTANCE.subscribe(id); }
+                }
             } catch (Exception e) {
                 Snapshot value = snapshot;
                 value.status = message(e);
@@ -74,18 +88,12 @@ public final class AlphaClanService {
                     "/rest/v1/clans?select=id,name,tag,description,visibility,owner_id&id=eq." + enc(clanId) + "&limit=1");
             if (clans.size() > 0) s.clan = clans.get(0).getAsJsonObject();
             try {
-                long now = System.currentTimeMillis();
-                if (now - lastPresenceHeartbeat >= 30000L) {
-                    SupabaseCommunityService.clanRequestElement("POST",
-                            "/rest/v1/rpc/clan_presence_heartbeat", "{}");
-                    lastPresenceHeartbeat = now;
-                }
+                heartbeatPresence();
                 s.members = SupabaseCommunityService.clanRequestArray("GET",
                         "/rest/v1/clan_members?select=profile_id,role,joined_at,profiles(username,display_name),clan_presence(online,last_seen_at)&clan_id=eq."
                                 + enc(clanId) + "&order=joined_at.asc");
             } catch (Exception presenceError) {
                 presenceAvailable = false;
-                lastPresenceHeartbeat = System.currentTimeMillis();
                 s.members = SupabaseCommunityService.clanRequestArray("GET",
                         "/rest/v1/clan_members?select=profile_id,role,joined_at,profiles(username,display_name)&clan_id=eq."
                                 + enc(clanId) + "&order=joined_at.asc");
@@ -161,6 +169,30 @@ public final class AlphaClanService {
             throw new IllegalArgumentException("Clan tags must contain 2 to 3 letters.");
     }
 
+    private synchronized void heartbeatPresence() throws Exception {
+        long now = System.currentTimeMillis();
+        if (now - lastPresenceHeartbeat < 30000L) return;
+        SupabaseCommunityService.clanRequestElement("POST",
+                "/rest/v1/rpc/clan_presence_heartbeat", "{}");
+        lastPresenceHeartbeat = now;
+    }
+    private synchronized void startPresenceHeartbeat() {
+        if (presenceTask != null && !presenceTask.isCancelled() && !presenceTask.isDone()) return;
+        presenceTask = presenceWorker.scheduleWithFixedDelay(() -> {
+            if (!SupabaseCommunityService.isSignedIn()) return;
+            try { heartbeatPresence(); }
+            catch (Exception e) {
+                System.err.println("[AlphaClient] Clan presence heartbeat failed: " + message(e));
+            }
+        }, 30L, 30L, TimeUnit.SECONDS);
+    }
+    private synchronized void stopPresenceHeartbeat() {
+        if (presenceTask != null) {
+            presenceTask.cancel(false);
+            presenceTask = null;
+        }
+        lastPresenceHeartbeat = 0L;
+    }
     private String clanId() {
         String id = str(snapshot.clan, "id"); if (id == null) throw new IllegalStateException("You are not in a clan."); return id;
     }
@@ -183,8 +215,14 @@ public final class AlphaClanService {
                 snapshot = value;
                 lastRefresh = System.currentTimeMillis();
                 String id = str(value.clan, "id");
-                if (id == null) { realtimeClan = null; ClanRealtimeClient.INSTANCE.disconnect(); }
-                else if (!id.equals(realtimeClan)) { realtimeClan = id; ClanRealtimeClient.INSTANCE.subscribe(id); }
+                if (id == null) {
+                    stopPresenceHeartbeat();
+                    realtimeClan = null;
+                    ClanRealtimeClient.INSTANCE.disconnect();
+                } else {
+                    startPresenceHeartbeat();
+                    if (!id.equals(realtimeClan)) { realtimeClan = id; ClanRealtimeClient.INSTANCE.subscribe(id); }
+                }
             } catch (Exception e) {
                 Snapshot value = snapshot;
                 value.status = message(e);
