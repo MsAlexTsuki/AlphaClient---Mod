@@ -152,7 +152,17 @@ public final class AlphaClanService {
         });
     }
     private static String enc(String value) throws Exception { return URLEncoder.encode(value, "UTF-8"); }
-    private static String message(Exception e) { return e.getMessage() == null ? "Clan request failed." : e.getMessage(); }
+    private static String message(Exception e) {
+        String raw = e.getMessage() == null ? "" : e.getMessage();
+        String lower = raw.toLowerCase(java.util.Locale.ROOT);
+        if (lower.contains("clans_name_normalized_uidx"))
+            return "That clan name is already taken. Choose another name.";
+        if (lower.contains("clans_tag_normalized_uidx"))
+            return "That clan tag is already taken. Choose another tag.";
+        if (lower.contains("duplicate key") || lower.contains("unique constraint"))
+            return "That clan name or tag is already taken. Choose another one.";
+        return raw.isEmpty() ? "Clan request failed." : raw;
+    }
     public static String str(JsonObject o, String key) { return o == null || !o.has(key) || o.get(key).isJsonNull() ? null : o.get(key).getAsString(); }
     public static JsonObject nested(JsonObject o, String key) { return o != null && o.has(key) && o.get(key).isJsonObject() ? o.getAsJsonObject(key) : new JsonObject(); }
     public static String playerName(JsonObject row) {
