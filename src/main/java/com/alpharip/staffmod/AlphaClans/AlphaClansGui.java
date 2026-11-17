@@ -116,7 +116,12 @@ public final class AlphaClansGui extends GuiScreen {
         if(b.id==BACK){mc.displayGuiScreen(parent);return;}
         if(b.id==LOGIN){mc.displayGuiScreen(new com.alpharip.staffmod.gui.CommunityLoginGui(this));return;}
         if(b.id>=BROWSER&&b.id<=CHAT){tab=b.id;selected=-1;initGui();return;}
-        if(b.id==TOGGLE){privateClan=!privateClan;initGui();return;}
+        if(b.id==TOGGLE){
+            String clanName=name==null?"":name.getText(),clanTag=tag==null?"":tag.getText();
+            privateClan=!privateClan;initGui();
+            if(name!=null)name.setText(clanName);if(tag!=null)tag.setText(clanTag);
+            return;
+        }
         if(b.id==OPEN_CREATE){creatingClan=true;selectedBrowser=-1;initGui();return;}
         if(b.id==CANCEL_CREATE){creatingClan=false;name=null;tag=null;initGui();return;}
         if(b.id>=SELECT&&b.id<SELECT+10){if(tab==BROWSER)selectedBrowser=b.id-SELECT;else selected=b.id-SELECT;initGui();return;}
