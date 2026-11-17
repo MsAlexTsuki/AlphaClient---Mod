@@ -460,6 +460,29 @@ public final class SupabaseCommunityService {
     }
 
     public static boolean isSignedIn() { return accessToken != null; }
+    public static String getSignedInUserId() { return accessToken == null ? null : signedInUserId; }
+    public static String getClanAccessToken() { return accessToken; }
+
+    public static synchronized JsonArray clanRequestArray(String method, String path) throws Exception {
+        if (accessToken == null) throw new SecurityException("Sign in to your Alpha Account first.");
+        return requestArray(method, path, accessToken);
+    }
+    public static synchronized JsonArray clanRequestArray(String method, String path, String body) throws Exception {
+        if (accessToken == null) throw new SecurityException("Sign in to your Alpha Account first.");
+        return requestArray(method, path, accessToken, body);
+    }
+    public static synchronized JsonElement clanRequestElement(String method, String path, String body) throws Exception {
+        if (accessToken == null) throw new SecurityException("Sign in to your Alpha Account first.");
+        HttpURLConnection connection = open(method, path, accessToken);
+        connection.setDoOutput(true);
+        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("Content-Length", String.valueOf(bytes.length));
+        if ("POST".equals(method) || "PATCH".equals(method)) connection.setRequestProperty("Prefer", "return=representation");
+        OutputStream output = connection.getOutputStream();
+        try { output.write(bytes); } finally { output.close(); }
+        return new JsonParser().parse(readResponse(connection));
+    }
 
     /** Loads the public server-owned Easter Egg configuration and applies it to the local runtime cache. */
     public static synchronized JsonObject synchronizeGlobalEasterEggSettings() throws Exception {
