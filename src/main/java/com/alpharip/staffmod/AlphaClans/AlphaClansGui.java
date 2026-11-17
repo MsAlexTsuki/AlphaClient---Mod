@@ -34,7 +34,7 @@ public final class AlphaClansGui extends GuiScreen {
         panelWidth=Math.min(620,Math.max(320,width-24));
         panelHeight=Math.min(410,Math.max(270,height-24));
         left=(width-panelWidth)/2; top=(height-panelHeight)/2;
-        bodyTop=top+91; footerTop=top+panelHeight-58;
+        bodyTop=top+91; footerTop=top+panelHeight-64;
 
         AlphaClanService.Snapshot s=AlphaClanService.INSTANCE.getSnapshot();
         String clanId=AlphaClanService.str(s.clan,"id");
@@ -319,7 +319,6 @@ public final class AlphaClansGui extends GuiScreen {
             drawSection("CLAN IDENTITY",left+16,bodyTop+18);
             drawString(fontRendererObj,"CLAN NAME",left+panelWidth/2-146,bodyTop+49,0xFFE6E8ED);
             drawString(fontRendererObj,"TAG",left+panelWidth/2+68,bodyTop+49,0xFFE6E8ED);
-            drawCenteredString(fontRendererObj,"Only the owner can change clan identity and visibility.",width/2,bodyTop+124,0xFF9299A6);
             if(name!=null)name.drawTextBox(); if(tag!=null)tag.drawTextBox();
         } else if(tab==TAB_INVITES&&s.clan==null) {
             drawSection("PENDING INVITATIONS",left+16,bodyTop);
