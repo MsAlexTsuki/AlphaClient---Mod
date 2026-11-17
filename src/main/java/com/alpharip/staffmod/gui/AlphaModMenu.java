@@ -495,6 +495,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             if (!PermissionService.hasAccess(targetCategory.getRequiredRank())) {
                 selectedCategory = AlphaModule.Category.DONATOR;
                 selectedModuleId = "";
+                scrollOffset = 0;
                 initGui();
                 return;
             }
@@ -507,6 +508,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             }
             selectedCategory = targetCategory;
             selectedModuleId = "";
+            scrollOffset = 0;
             initGui();
             return;
         }
@@ -528,6 +530,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             if (categoryAccess) {
                 selectedCategory = category;
                 selectedModuleId = "";
+                scrollOffset = 0;
             }
 } else if (button.id >= MODULE_BASE) {
             List<AlphaModule> modules = getFilteredModules();
@@ -623,7 +626,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 }
             }
         }
-        scrollOffset = 0;
         initGui();
     }
 
