@@ -95,14 +95,12 @@ public final class RankViewerRenderer {
         int clanLabelWidth = clanLabel == null ? 0 : minecraft.fontRendererObj.getStringWidth(clanLabel);
         int totalWidth = Math.max(nameRowWidth, clanLabelWidth);
         int nameColor = getRelationshipNameColor(minecraft, player, rank);
-        // Vanilla 1.8.9 makes sneaking name tags translucent. Apply the same fade
-        // to the local F5 name and badge without changing their position.
+        // Match vanilla 1.8.9 sneaking nametag transparency (alpha 0x20).
+        // Preserve the original text and clan-tag colors; only reduce their opacity.
         boolean sneaking = player != null && player.isSneaking();
-        // While sneaking, darken the name itself to the same translucent black
-        // used by the nametag panel, so it does not remain readable through blocks.
-        float sneakAlpha = sneaking ? 0.25F : 1.0F;
+        float sneakAlpha = sneaking ? 0.125F : 1.0F;
         if (sneaking) {
-            nameColor = 0x40000000;
+            nameColor = withAlpha(nameColor, sneakAlpha);
         }
 
         // Capture the state that this renderer changes. World rendering and the vanilla HUD
@@ -154,7 +152,7 @@ public final class RankViewerRenderer {
             int top = clanLabel == null ? -1 : -11;
             int bottom = BADGE_SIZE + 1;
             // Vanilla sneaking nametags use a 25%-opaque black background.
-            int panelColor = sneaking ? 0x40000000 : 0x10000000;
+            int panelColor = sneaking ? 0x20000000 : 0x10000000;
             int borderColor = sneaking ? 0x40000000 : 0x18000000;
             Gui.drawRect(left, top, right, bottom, panelColor);
             Gui.drawRect(left, top, right, top + 1, borderColor);
@@ -163,7 +161,7 @@ public final class RankViewerRenderer {
             Gui.drawRect(right - 1, top, right, bottom, borderColor);
 
             if (clanLabel != null) {
-                int clanColor = sneaking ? 0x40000000 : 0xFFFFD866;
+                int clanColor = sneaking ? withAlpha(0xFFFFD866, sneakAlpha) : 0xFFFFD866;
                 minecraft.fontRendererObj.drawStringWithShadow(
                         clanLabel, -clanLabelWidth / 2, -10, clanColor);
             }
@@ -174,7 +172,7 @@ public final class RankViewerRenderer {
                     minecraft.getTextureManager().bindTexture(rank.texture());
                     GlStateManager.enableTexture2D();
                     if (sneaking) {
-                        GlStateManager.color(0.0F, 0.0F, 0.0F, sneakAlpha);
+                        GlStateManager.color(1.0F, 1.0F, 1.0F, sneakAlpha);
                     } else {
                         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                     }
