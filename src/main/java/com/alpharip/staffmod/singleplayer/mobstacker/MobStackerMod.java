@@ -11,7 +11,7 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -276,14 +276,53 @@ public final class MobStackerMod {
     }
 
     /**
-     * Vanilla's client ray trace only reports an entity when it is the visible
-     * hit target; a block between the player and the mob therefore prevents
-     * the Mob Stacker label from being shown.
+     * Finds the entity under the crosshair without stopping the ray at blocks.
+     * This keeps the label target-only while allowing it to be seen through walls.
      */
     private static boolean isLookedAtByPlayer(Minecraft minecraft, Entity entity) {
-        return minecraft.objectMouseOver != null
-                && minecraft.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY
-                && minecraft.objectMouseOver.entityHit == entity;
+        if (minecraft.thePlayer == null || minecraft.theWorld == null) {
+            return false;
+        }
+
+        Vec3 start = minecraft.thePlayer.getPositionEyes(1.0F);
+        Vec3 look = minecraft.thePlayer.getLook(1.0F);
+        double reach = minecraft.playerController.getBlockReachDistance();
+        Vec3 end = start.addVector(look.xCoord * reach, look.yCoord * reach,
+                look.zCoord * reach);
+
+        AxisAlignedBB searchArea = new AxisAlignedBB(
+                Math.min(start.xCoord, end.xCoord),
+                Math.min(start.yCoord, end.yCoord),
+                Math.min(start.zCoord, end.zCoord),
+                Math.max(start.xCoord, end.xCoord),
+                Math.max(start.yCoord, end.yCoord),
+                Math.max(start.zCoord, end.zCoord)
+        ).expand(1.0D, 1.0D, 1.0D);
+
+        Entity lookedAt = null;
+        double closestHit = reach * reach;
+        List<Entity> candidates = minecraft.theWorld.getEntitiesWithinAABB(Entity.class, searchArea);
+        for (Entity candidate : candidates) {
+            if (candidate == minecraft.thePlayer || !candidate.canBeCollidedWith()
+                    || candidate.isDead) {
+                continue;
+            }
+
+            float border = candidate.getCollisionBorderSize();
+            AxisAlignedBB hitBox = candidate.getEntityBoundingBox().expand(border, border, border);
+            MovingObjectPosition intercept = hitBox.calculateIntercept(start, end);
+            if (intercept == null) {
+                continue;
+            }
+
+            double hitDistance = start.squareDistanceTo(intercept.hitVec);
+            if (hitDistance < closestHit) {
+                closestHit = hitDistance;
+                lookedAt = candidate;
+            }
+        }
+
+        return lookedAt == entity;
     }
 
     /**
@@ -332,8 +371,8 @@ public final class MobStackerMod {
                     1.0F, 0.0F, 0.0F);
             GlStateManager.scale(-0.026666668F, -0.026666668F, 0.026666668F);
             GlStateManager.disableLighting();
-            GlStateManager.enableDepth();
-            GlStateManager.depthMask(true);
+            GlStateManager.disableDepth();
+            GlStateManager.depthMask(false);
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 
