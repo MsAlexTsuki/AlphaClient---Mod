@@ -17,7 +17,7 @@ public final class AlphaClansGui extends GuiScreen {
     private static final int TAB_BROWSER=1, TAB_CLAN=2, TAB_INVITES=3, TAB_REQUESTS=4, TAB_CHAT=5, TAB_SETTINGS=6;
     private static final int BACK=10, SELECT_BASE=100, CREATE=200, OPEN_CREATE=201, CANCEL_CREATE=202;
     private static final int JOIN=203, INVITE=204, SEND=205, LEAVE=206, DISBAND=207;
-    private static final int ACCEPT=208, DECLINE=209, KICK=210, ROLE=211, TRANSFER=212, SAVE=213, VIS_PUBLIC=214, VIS_PRIVATE=215;
+    private static final int ACCEPT=208, DECLINE=209, KICK=210, ROLE=211, TRANSFER=212, SAVE=213, VIS_PUBLIC=214, VIS_PRIVATE=215, CLEAR_SELECTION=216;
     private final GuiScreen parent;
     private int tab=TAB_BROWSER, selected=-1, selectedBrowser=-1;
     private int left, top, panelWidth, panelHeight, bodyTop, footerTop;
@@ -91,7 +91,7 @@ public final class AlphaClansGui extends GuiScreen {
                         buttonList.add(new AlphaButton(KICK,left+14,footerTop+10,76,24,"REMOVE"));
                     }
                 }
-                buttonList.add(new AlphaButton(DECLINE,left+panelWidth-94,footerTop+10,80,24,"CLEAR"));
+                buttonList.add(new AlphaButton(CLEAR_SELECTION,left+panelWidth-94,footerTop+10,80,24,"CLEAR"));
             } else {
                 input=field(42,left+14,footerTop+10,150,24);
                 if (s.owner||s.officer) buttonList.add(new AlphaButton(INVITE,left+172,footerTop+10,64,24,"INVITE",true));
@@ -227,6 +227,7 @@ public final class AlphaClansGui extends GuiScreen {
         if(b.id==SEND&&input!=null){AlphaClanService.INSTANCE.sendMessage(input.getText());input.setText("");return;}
         if(b.id==LEAVE){AlphaClanService.INSTANCE.leave();return;}
         if(b.id==DISBAND){AlphaClanService.INSTANCE.disband();return;}
+        if(b.id==CLEAR_SELECTION){selected=-1;initGui();return;}
         if((b.id==ACCEPT||b.id==DECLINE)&&selected>=0) {
             JsonArray rows=tab==TAB_INVITES?s.invites:s.requests;
             if(selected>=rows.size())return;
