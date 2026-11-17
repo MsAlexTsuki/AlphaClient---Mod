@@ -17,7 +17,7 @@ public final class AlphaClansGui extends GuiScreen {
     private static final int TAB_BROWSER=1, TAB_CLAN=2, TAB_INVITES=3, TAB_REQUESTS=4, TAB_CHAT=5, TAB_SETTINGS=6;
     private static final int BACK=10, SELECT_BASE=100, CREATE=200, OPEN_CREATE=201, CANCEL_CREATE=202;
     private static final int JOIN=203, INVITE=204, SEND=205, LEAVE=206, DISBAND=207;
-    private static final int ACCEPT=208, DECLINE=209, KICK=210, ROLE=211, TRANSFER=212, SAVE=213, VIS_PUBLIC=214, VIS_PRIVATE=215, CLEAR_SELECTION=216;
+    private static final int ACCEPT=208, DECLINE=209, KICK=210, ROLE=211, TRANSFER=212, SAVE=213, VIS_PUBLIC=214, VIS_PRIVATE=215;
     private final GuiScreen parent;
     private int tab=TAB_BROWSER, selected=-1, selectedBrowser=-1;
     private int left, top, panelWidth, panelHeight, bodyTop, footerTop;
@@ -91,12 +91,27 @@ public final class AlphaClansGui extends GuiScreen {
                         buttonList.add(new AlphaButton(KICK,left+14,footerTop+10,76,24,"REMOVE"));
                     }
                 }
-                buttonList.add(new AlphaButton(CLEAR_SELECTION,left+panelWidth-94,footerTop+10,80,24,"CLEAR"));
             } else {
-                input=field(42,left+14,footerTop+10,150,24);
-                if (s.owner||s.officer) buttonList.add(new AlphaButton(INVITE,left+172,footerTop+10,64,24,"INVITE",true));
-                buttonList.add(new AlphaButton(LEAVE,left+panelWidth-174,footerTop+10,70,24,"LEAVE"));
-                if (s.owner) buttonList.add(new AlphaButton(DISBAND,left+panelWidth-94,footerTop+10,80,24,"DISBAND"));
+                int actionRight=left+panelWidth-14;
+                if (s.owner) {
+                    int disbandX=actionRight-68;
+                    int leaveX=disbandX-64;
+                    int inviteX=leaveX-62;
+                    int inputWidth=Math.max(78,inviteX-(left+14)-8);
+                    input=field(42,left+14,footerTop+10,inputWidth,24);
+                    buttonList.add(new AlphaButton(INVITE,inviteX,footerTop+10,56,24,"INVITE",true));
+                    buttonList.add(new AlphaButton(LEAVE,leaveX,footerTop+10,58,24,"LEAVE"));
+                    buttonList.add(new AlphaButton(DISBAND,disbandX,footerTop+10,68,24,"DISBAND"));
+                } else if (s.officer) {
+                    int leaveX=actionRight-58;
+                    int inviteX=leaveX-62;
+                    int inputWidth=Math.max(90,inviteX-(left+14)-8);
+                    input=field(42,left+14,footerTop+10,inputWidth,24);
+                    buttonList.add(new AlphaButton(INVITE,inviteX,footerTop+10,56,24,"INVITE",true));
+                    buttonList.add(new AlphaButton(LEAVE,leaveX,footerTop+10,58,24,"LEAVE"));
+                } else {
+                    buttonList.add(new AlphaButton(LEAVE,actionRight-58,footerTop+10,58,24,"LEAVE"));
+                }
             }
         } else if (tab==TAB_SETTINGS && s.owner && s.clan!=null) {
             int formLeft=left+panelWidth/2-146;
@@ -227,7 +242,6 @@ public final class AlphaClansGui extends GuiScreen {
         if(b.id==SEND&&input!=null){AlphaClanService.INSTANCE.sendMessage(input.getText());input.setText("");return;}
         if(b.id==LEAVE){AlphaClanService.INSTANCE.leave();return;}
         if(b.id==DISBAND){AlphaClanService.INSTANCE.disband();return;}
-        if(b.id==CLEAR_SELECTION){selected=-1;initGui();return;}
         if((b.id==ACCEPT||b.id==DECLINE)&&selected>=0) {
             JsonArray rows=tab==TAB_INVITES?s.invites:s.requests;
             if(selected>=rows.size())return;
@@ -304,7 +318,7 @@ public final class AlphaClansGui extends GuiScreen {
             drawSection("CLAN IDENTITY",left+16,bodyTop+18);
             drawString(fontRendererObj,"CLAN NAME",left+panelWidth/2-146,bodyTop+49,0xFFE6E8ED);
             drawString(fontRendererObj,"TAG",left+panelWidth/2+68,bodyTop+49,0xFFE6E8ED);
-            drawCenteredString(fontRendererObj,"Only the owner can change clan identity and visibility.",width/2,bodyTop+148,0xFF9299A6);
+            drawCenteredString(fontRendererObj,"Only the owner can change clan identity and visibility.",width/2,bodyTop+140,0xFF9299A6);
             if(name!=null)name.drawTextBox(); if(tag!=null)tag.drawTextBox();
         } else if(tab==TAB_INVITES&&s.clan==null) {
             drawSection("PENDING INVITATIONS",left+16,bodyTop);
