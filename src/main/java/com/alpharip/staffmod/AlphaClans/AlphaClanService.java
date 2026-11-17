@@ -20,11 +20,13 @@ public final class AlphaClanService {
     private volatile Snapshot snapshot = new Snapshot();
     private volatile long lastRefresh;
     private volatile String realtimeClan;
+    private volatile long lastPresenceHeartbeat;
 
     private AlphaClanService() {}
     public Snapshot getSnapshot() { return snapshot; }
     public void onSignedOut() {
         realtimeClan = null;
+        lastPresenceHeartbeat = 0L;
         ClanRealtimeClient.INSTANCE.disconnect();
         Snapshot value = new Snapshot();
         value.status = "Sign in to your Alpha Account to use AlphaClans.";
@@ -59,6 +61,7 @@ public final class AlphaClanService {
 
     private Snapshot load() throws Exception {
         Snapshot s = new Snapshot();
+        boolean presenceAvailable = true;
         if (!SupabaseCommunityService.isSignedIn()) { s.status = "Sign in to your Alpha Account to use AlphaClans."; return s; }
         String uid = SupabaseCommunityService.getSignedInUserId();
         if (uid == null) throw new IllegalStateException("Alpha profile not found.");
@@ -70,8 +73,23 @@ public final class AlphaClanService {
             JsonArray clans = SupabaseCommunityService.clanRequestArray("GET",
                     "/rest/v1/clans?select=id,name,tag,description,visibility,owner_id&id=eq." + enc(clanId) + "&limit=1");
             if (clans.size() > 0) s.clan = clans.get(0).getAsJsonObject();
-            s.members = SupabaseCommunityService.clanRequestArray("GET",
-                    "/rest/v1/clan_members?select=profile_id,role,joined_at,profiles(username,display_name)&clan_id=eq." + enc(clanId) + "&order=joined_at.asc");
+            try {
+                long now = System.currentTimeMillis();
+                if (now - lastPresenceHeartbeat >= 30000L) {
+                    SupabaseCommunityService.clanRequestElement("POST",
+                            "/rest/v1/rpc/clan_presence_heartbeat", "{}");
+                    lastPresenceHeartbeat = now;
+                }
+                s.members = SupabaseCommunityService.clanRequestArray("GET",
+                        "/rest/v1/clan_members?select=profile_id,role,joined_at,profiles(username,display_name),clan_presence(online,last_seen_at)&clan_id=eq."
+                                + enc(clanId) + "&order=joined_at.asc");
+            } catch (Exception presenceError) {
+                presenceAvailable = false;
+                lastPresenceHeartbeat = System.currentTimeMillis();
+                s.members = SupabaseCommunityService.clanRequestArray("GET",
+                        "/rest/v1/clan_members?select=profile_id,role,joined_at,profiles(username,display_name)&clan_id=eq."
+                                + enc(clanId) + "&order=joined_at.asc");
+            }
             s.messages = SupabaseCommunityService.clanRequestArray("GET",
                     "/rest/v1/clan_messages?select=id,sender_id,body,created_at,profiles(username,display_name)&clan_id=eq." + enc(clanId) + "&order=created_at.desc&limit=100");
             s.requests = SupabaseCommunityService.clanRequestArray("GET",
@@ -92,7 +110,8 @@ public final class AlphaClanService {
         s.invites = SupabaseCommunityService.clanRequestArray("GET",
                 "/rest/v1/clan_invites?select=id,clan_id,expires_at,clans(name,tag)&target_profile_id=eq." + enc(uid)
                         + "&expires_at=gt." + enc(java.time.Instant.now().toString()) + "&order=created_at.desc");
-        s.status = s.clan == null ? "Browse public and private clans or create one." : "Clan loaded.";
+        s.status = s.clan == null ? "Browse public and private clans or create one."
+                : (presenceAvailable ? "Clan loaded." : "Clan loaded. Presence data is unavailable.");
         return s;
     }
 
