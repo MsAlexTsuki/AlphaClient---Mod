@@ -40,7 +40,7 @@ public final class AlphaClansGui extends GuiScreen {
         String clanId=AlphaClanService.str(s.clan,"id");
         if (clanId!=null && tab==TAB_BROWSER) tab=TAB_CLAN;
         if (clanId==null && (tab==TAB_CLAN || tab==TAB_CHAT || tab==TAB_SETTINGS || tab==TAB_REQUESTS)) tab=TAB_BROWSER;
-        if (s.clan!=null) {
+        if (s.clan!=null && (observedClanId==null || !clanId.equals(observedClanId))) {
             String visibility=AlphaClanService.str(s.clan,"visibility");
             privateClan="private".equalsIgnoreCase(visibility);
         }
@@ -60,15 +60,15 @@ public final class AlphaClansGui extends GuiScreen {
         if (tab==TAB_BROWSER && s.clan==null) {
             if (creatingClan) {
                 int formLeft=left+(panelWidth-292)/2;
-                name=field(40,formLeft,bodyTop+72,204,24);
-                tag=field(41,formLeft+216,bodyTop+72,76,24);
+                name=field(40,formLeft,bodyTop+58,204,24);
+                tag=field(41,formLeft+216,bodyTop+58,76,24);
                 int choiceWidth=112, choiceGap=10, choiceLeft=(width-(choiceWidth*2+choiceGap))/2;
-                buttonList.add(new AlphaButton(VIS_PUBLIC,choiceLeft,bodyTop+128,choiceWidth,24,"PUBLIC",!privateClan,!privateClan));
-                buttonList.add(new AlphaButton(VIS_PRIVATE,choiceLeft+choiceWidth+choiceGap,bodyTop+128,choiceWidth,24,"PRIVATE",privateClan,privateClan));
+                buttonList.add(new AlphaButton(VIS_PUBLIC,choiceLeft,bodyTop+96,choiceWidth,24,"PUBLIC",!privateClan,!privateClan));
+                buttonList.add(new AlphaButton(VIS_PRIVATE,choiceLeft+choiceWidth+choiceGap,bodyTop+96,choiceWidth,24,"PRIVATE",privateClan,privateClan));
                 buttonList.add(new AlphaButton(CANCEL_CREATE,left+panelWidth-204,footerTop+10,86,24,"CANCEL"));
                 buttonList.add(new AlphaButton(CREATE,left+panelWidth-108,footerTop+10,96,24,"CREATE",true));
             } else {
-                addRows(s.browser,bodyTop+18,Math.max(1,(footerTop-bodyTop-26)/26),true);
+                addRows(s.browser,bodyTop+18,Math.max(1,(footerTop-bodyTop-26)/25),true);
                 if (selectedBrowser>=0 && selectedBrowser<s.browser.size())
                     buttonList.add(new AlphaButton(JOIN,left+14,footerTop+10,136,24,
                             "JOIN / REQUEST",true));
@@ -100,10 +100,10 @@ public final class AlphaClansGui extends GuiScreen {
             }
         } else if (tab==TAB_SETTINGS && s.owner && s.clan!=null) {
             int formLeft=left+panelWidth/2-146;
-            name=field(43,formLeft,bodyTop+76,202,24); name.setText(AlphaClanService.str(s.clan,"name"));
-            tag=field(44,formLeft+214,bodyTop+76,78,24); tag.setText(AlphaClanService.str(s.clan,"tag"));
-            buttonList.add(new AlphaButton(VIS_PUBLIC,formLeft,bodyTop+138,136,24,"PUBLIC",!privateClan,!privateClan));
-            buttonList.add(new AlphaButton(VIS_PRIVATE,formLeft+146,bodyTop+138,136,24,"PRIVATE",privateClan,privateClan));
+            name=field(43,formLeft,bodyTop+64,202,24); name.setText(AlphaClanService.str(s.clan,"name"));
+            tag=field(44,formLeft+214,bodyTop+64,78,24); tag.setText(AlphaClanService.str(s.clan,"tag"));
+            buttonList.add(new AlphaButton(VIS_PUBLIC,formLeft,bodyTop+112,136,24,"PUBLIC",!privateClan,!privateClan));
+            buttonList.add(new AlphaButton(VIS_PRIVATE,formLeft+146,bodyTop+112,136,24,"PRIVATE",privateClan,privateClan));
             buttonList.add(new AlphaButton(SAVE,left+panelWidth-116,footerTop+10,102,24,"SAVE",true));
         } else if (tab==TAB_INVITES && s.clan==null) {
             addRows(s.invites,bodyTop+18,Math.max(1,(footerTop-bodyTop-26)/26),false);
@@ -277,14 +277,14 @@ public final class AlphaClansGui extends GuiScreen {
         if(tab==TAB_BROWSER&&s.clan==null) {
             if(creatingClan) {
                 drawSection("CREATE YOUR CLAN",bodyTop+18);
-                drawCenteredString(fontRendererObj,"Choose a unique name and a 2-3 letter tag.",width/2,bodyTop+40,0xFF9299A6);
+                drawCenteredString(fontRendererObj,"Choose a unique name and a 2-3 letter tag.",width/2,bodyTop+34,0xFF9299A6);
                 int formLeft=left+(panelWidth-292)/2;
-                drawString(fontRendererObj,"CLAN NAME",formLeft,bodyTop+61,0xFFE6E8ED);
-                drawString(fontRendererObj,"CLAN TAG",formLeft+216,bodyTop+61,0xFFE6E8ED);
-                drawCenteredString(fontRendererObj,"WHO CAN JOIN?",width/2,bodyTop+112,0xFFE6E8ED);
+                drawString(fontRendererObj,"CLAN NAME",formLeft,bodyTop+47,0xFFE6E8ED);
+                drawString(fontRendererObj,"CLAN TAG",formLeft+216,bodyTop+47,0xFFE6E8ED);
+                drawCenteredString(fontRendererObj,"WHO CAN JOIN?",width/2,bodyTop+82,0xFFE6E8ED);
                 drawCenteredString(fontRendererObj,privateClan
                         ?"Private clans appear in the directory; requests need approval."
-                        :"Public clans can be joined immediately.",width/2,bodyTop+164,0xFF9299A6);
+                        :"Public clans can be joined immediately.",width/2,bodyTop+126,0xFF9299A6);
                 if(name!=null)name.drawTextBox(); if(tag!=null)tag.drawTextBox();
             } else {
                 drawSection("CLAN DIRECTORY",left+16,bodyTop);
@@ -301,10 +301,10 @@ public final class AlphaClansGui extends GuiScreen {
             drawMemberRows(s.members,bodyTop+84);
             if(input!=null)input.drawTextBox();
         } else if(tab==TAB_SETTINGS&&s.owner&&s.clan!=null) {
-            drawSection("CLAN IDENTITY",left+16,bodyTop+26);
-            drawString(fontRendererObj,"CLAN NAME",left+panelWidth/2-146,bodyTop+55,0xFFE6E8ED);
-            drawString(fontRendererObj,"TAG",left+panelWidth/2+68,bodyTop+55,0xFFE6E8ED);
-            drawCenteredString(fontRendererObj,"Only the owner can change clan identity and visibility.",width/2,bodyTop+184,0xFF9299A6);
+            drawSection("CLAN IDENTITY",left+16,bodyTop+18);
+            drawString(fontRendererObj,"CLAN NAME",left+panelWidth/2-146,bodyTop+49,0xFFE6E8ED);
+            drawString(fontRendererObj,"TAG",left+panelWidth/2+68,bodyTop+49,0xFFE6E8ED);
+            drawCenteredString(fontRendererObj,"Only the owner can change clan identity and visibility.",width/2,bodyTop+148,0xFF9299A6);
             if(name!=null)name.drawTextBox(); if(tag!=null)tag.drawTextBox();
         } else if(tab==TAB_INVITES&&s.clan==null) {
             drawSection("PENDING INVITATIONS",left+16,bodyTop);
