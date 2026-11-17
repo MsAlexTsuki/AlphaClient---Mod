@@ -88,7 +88,8 @@ public final class AlphaClanService {
 
     public void create(String name, String tag, boolean isPrivate) {
         action("Clan created.", () -> {
-            JsonObject p = new JsonObject(); p.addProperty("p_name", name); p.addProperty("p_tag", tag);
+            validateClanIdentity(name, tag);
+            JsonObject p = new JsonObject(); p.addProperty("p_name", name.trim()); p.addProperty("p_tag", tag.trim().toUpperCase(java.util.Locale.ROOT));
             p.addProperty("p_description", ""); p.addProperty("p_visibility", isPrivate ? "private" : "public");
             rpc("create_clan", p);
         });
@@ -117,9 +118,19 @@ public final class AlphaClanService {
     public void transfer(String id) { action("Clan ownership transferred.", () -> rpcValue("transfer_clan_ownership", "p_target_profile_id", id)); }
     public void disband() { action("Clan disbanded.", () -> rpcValue("disband_clan", "p_clan_id", clanId())); }
     public void updateSettings(String name, String tag, String description, boolean isPrivate) { action("Clan settings updated.", () -> {
-        JsonObject p = new JsonObject(); p.addProperty("p_clan_id", clanId()); p.addProperty("p_name", name); p.addProperty("p_tag", tag);
+        validateClanIdentity(name, tag);
+        JsonObject p = new JsonObject(); p.addProperty("p_clan_id", clanId()); p.addProperty("p_name", name.trim()); p.addProperty("p_tag", tag.trim().toUpperCase(java.util.Locale.ROOT));
         p.addProperty("p_description", description == null ? "" : description); p.addProperty("p_visibility", isPrivate ? "private" : "public"); rpc("update_clan_settings", p);
     }); }
+
+    private static void validateClanIdentity(String name, String tag) {
+        String cleanName = name == null ? "" : name.trim();
+        String cleanTag = tag == null ? "" : tag.trim();
+        if (cleanName.length() < 3 || cleanName.length() > 24)
+            throw new IllegalArgumentException("Clan names must contain 3 to 24 characters.");
+        if (!cleanTag.matches("[A-Za-z]{2,3}"))
+            throw new IllegalArgumentException("Clan tags must contain 2 to 3 letters.");
+    }
 
     private String clanId() {
         String id = str(snapshot.clan, "id"); if (id == null) throw new IllegalStateException("You are not in a clan."); return id;
