@@ -3,14 +3,15 @@ import net.minecraft.client.Minecraft;import net.minecraft.client.gui.GuiButton;
 import java.io.IOException;import java.text.SimpleDateFormat;import java.util.*;
 /** Standalone local crash-history screen. Not wired into AlphaClient navigation. */
 public final class CrashReporterScreen extends GuiScreen {
- private final GuiScreen parent;private final CrashReporterController controller;private String status="Loading crash history...";private int page=0;
- private static final int PAGE_SIZE=7;
- public CrashReporterScreen(GuiScreen p,CrashReportManager m,CrashAnalyzer a,CrashExportService e){parent=p;controller=new CrashReporterController(m,a,e);}
+ private final GuiScreen parent;private final CrashReporterController controller;private final CrashAnalyzer analyzer;
+ private String status="Loading crash history...";private int page=0;private static final int PAGE_SIZE=7;
+ public CrashReporterScreen(GuiScreen p,CrashReportManager m,CrashAnalyzer a,CrashExportService e){parent=p;analyzer=a;controller=new CrashReporterController(m,a,e);}
  @Override public void initGui(){
-  buttonList.clear();int y=height-34,w=72,g=5,total=w*5+g*4,x=(width-total)/2;
+  buttonList.clear();int y=height-34,w=64,g=4,total=w*6+g*5,x=(width-total)/2;
   buttonList.add(new GuiButton(1,x,y,w,20,"Previous"));buttonList.add(new GuiButton(2,x+w+g,y,w,20,"Next"));
-  buttonList.add(new GuiButton(3,x+2*(w+g),y,w,20,"Refresh"));buttonList.add(new GuiButton(4,x+3*(w+g),y,w,20,"Export"));
-  buttonList.add(new GuiButton(5,x+4*(w+g),y,w,20,"Delete"));buttonList.add(new GuiButton(6,width-72,8,64,18,"Done"));refresh();
+  buttonList.add(new GuiButton(3,x+2*(w+g),y,w,20,"Refresh"));buttonList.add(new GuiButton(4,x+3*(w+g),y,w,20,"Details"));
+  buttonList.add(new GuiButton(5,x+4*(w+g),y,w,20,"Export"));buttonList.add(new GuiButton(6,x+5*(w+g),y,w,20,"Delete"));
+  buttonList.add(new GuiButton(7,width-72,8,64,18,"Done"));refresh();
  }
  private void refresh(){try{controller.refresh();status=controller.getReports().size()+" report(s) stored locally.";}catch(IOException e){status="History read failed: "+e.getMessage();}}
  @Override protected void actionPerformed(GuiButton b){
@@ -18,9 +19,10 @@ public final class CrashReporterScreen extends GuiScreen {
    if(b.id==1)page=Math.max(0,page-1);
    else if(b.id==2)page=Math.min(Math.max(0,(controller.getReports().size()-1)/PAGE_SIZE),page+1);
    else if(b.id==3){refresh();page=0;}
-   else if(b.id==4){java.io.File f=controller.exportSelected();status=f==null?"Select a report first.":"Exported "+f.getName();}
-   else if(b.id==5){controller.deleteSelected();refresh();page=0;}
-   else if(b.id==6){Minecraft.getMinecraft().displayGuiScreen(parent);return;}
+   else if(b.id==4){CrashReport r=controller.getSelected();if(r==null)status="Select a report first.";else Minecraft.getMinecraft().displayGuiScreen(new CrashReportDetailsScreen(this,r,analyzer));}
+   else if(b.id==5){java.io.File f=controller.exportSelected();status=f==null?"Select a report first.":"Exported "+f.getName();}
+   else if(b.id==6){controller.deleteSelected();refresh();page=0;}
+   else if(b.id==7){Minecraft.getMinecraft().displayGuiScreen(parent);return;}
   }catch(IOException e){status="Operation failed: "+e.getMessage();}
  }
  @Override protected void mouseClicked(int mx,int my,int button)throws IOException{
@@ -37,8 +39,6 @@ public final class CrashReporterScreen extends GuiScreen {
    String meta=r.getCategory()+" | "+new SimpleDateFormat("dd-MM HH:mm",Locale.ROOT).format(new Date(r.getTimestamp()));
    drawString(fontRendererObj,trim(meta,28),20,y+14,0xFFADB4C0);drawString(fontRendererObj,r.getSeverity().name(),width-94,y+8,0xFFE0A35A);
   }
-  CrashReport selected=controller.getSelected();if(selected!=null){drawString(fontRendererObj,"Selected: "+trim(selected.getExceptionType(),45),16,height-55,0xFFE4E6EA);
-   CrashAnalysisResult a=controller.analyzeSelected();if(a!=null)drawString(fontRendererObj,trim(a.getSummary(),Math.max(20,(width-32)/6)),16,height-45,0xFFBFC5D0);}
   super.drawScreen(mx,my,partial);
  }
  private static String trim(String s,int n){if(s==null)return "";return s.length()<=n?s:s.substring(0,Math.max(0,n-3))+"...";}
