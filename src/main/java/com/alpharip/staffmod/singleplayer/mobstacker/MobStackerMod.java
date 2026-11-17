@@ -339,15 +339,4 @@ public final class MobStackerMod {
             GL11.glPopAttrib();
         }
     }
-    /**
-     * Suppress vanilla labels for all living entities while Mob Stacker is
-     * enabled, then draw the replacement label only for the mob under the crosshair.
-     */
-    @SubscribeEvent
-    public void onMobNameTagPre(RenderLivingEvent.Specials.Pre event) {
-        if (event.entity instanceof EntityLiving && isClientMobStackerEnabled()) {
-            event.setCanceled(true);
-        }
-    }
-
 }
