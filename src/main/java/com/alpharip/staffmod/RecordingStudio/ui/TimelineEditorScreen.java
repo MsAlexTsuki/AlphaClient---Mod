@@ -45,7 +45,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         add(7, left + 98, y, "Set Speed");
         add(8, left + 196, y, "Remove Clip");
         y += 24;
-        buttonList.add(new GuiButton(9, width / 2 - 50, y, 100, 20, "Back"));
+        buttonList.add(new AlphaStudioButton(9, width / 2 - 50, y, 100, 20, "Back", true));
         syncSelection();
     }
 
@@ -55,7 +55,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         return f;
     }
     private void add(int id, int x, int y, String label) {
-        buttonList.add(new GuiButton(id, x, y, 94, 20, label));
+        buttonList.add(new AlphaStudioButton(id, x, y, 94, 20, label));
     }
 
     private List<TimelineTrack> tracks() { return timeline.getTracks(); }
@@ -199,7 +199,10 @@ public final class TimelineEditorScreen extends GuiScreen {
     }
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        drawCenteredString(fontRendererObj, "RECORDING STUDIO TIMELINE", width / 2, 18, 0xFFC83D);
+        net.minecraft.client.gui.Gui.drawRect(width / 2 - 165, 10, width / 2 + 165, height - 8, 0xE8101010);
+        net.minecraft.client.gui.Gui.drawRect(width / 2 - 165, 10, width / 2 + 165, 12, 0xFFFFC83D);
+        drawCenteredString(fontRendererObj, "ALPHA CLIENT  /  RECORDING STUDIO", width / 2, 20, 0xFFAAAAAA);
+        drawCenteredString(fontRendererObj, "TIMELINE EDITOR", width / 2, 34, 0xFFFFC83D);
         TimelineTrack track = selectedTrack();
         TimelineClip clip = selectedClip();
         drawString(fontRendererObj, "Duration: " + timeline.duration() + " ms", width / 2 - 145, 34, 0xFFFFFF);
@@ -213,7 +216,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         startField.drawTextBox();
         durationField.drawTextBox();
         speedField.drawTextBox();
-        drawCenteredString(fontRendererObj, status, width / 2, height - 16, 0xBBBBBB);
+        drawCenteredString(fontRendererObj, status, width / 2, height - 18, 0xFFFFC83D);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 }
