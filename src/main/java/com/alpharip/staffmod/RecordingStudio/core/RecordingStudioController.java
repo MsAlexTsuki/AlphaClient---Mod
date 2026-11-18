@@ -412,8 +412,12 @@ public final class RecordingStudioController {
             return;
         }
         String id = "scene-" + java.util.UUID.randomUUID().toString();
-        RecordingStudioScene scene = RecordingStudioScene.createDefault(id,
-                "Scene " + (timeline.getScenes().size() + 1));
+        int sceneNumber = 1;
+        String sceneName;
+        do {
+            sceneName = "Scene " + sceneNumber++;
+        } while (isSceneNameUsed(sceneName, null));
+        RecordingStudioScene scene = RecordingStudioScene.createDefault(id, sceneName);
         timeline.addScene(scene);
         timeline.setActiveScene(scene.getId());
         persistSceneChange("Created " + scene.getName());
@@ -430,12 +434,26 @@ public final class RecordingStudioController {
             status = "No active scene";
             return;
         }
+        String requestedName = name == null ? "" : name.trim();
+        if (isSceneNameUsed(requestedName, scene.getId())) {
+            status = "A scene with that name already exists";
+            return;
+        }
         try {
-            scene.setName(name);
+            scene.setName(requestedName);
             persistSceneChange("Scene renamed to " + scene.getName());
         } catch (IllegalArgumentException invalid) {
             status = invalid.getMessage();
         }
+    }
+
+    private boolean isSceneNameUsed(String name, String excludedSceneId) {
+        if (name == null || name.trim().isEmpty()) return false;
+        for (RecordingStudioScene scene : timeline.getScenes()) {
+            if (excludedSceneId != null && excludedSceneId.equals(scene.getId())) continue;
+            if (scene.getName().equalsIgnoreCase(name.trim())) return true;
+        }
+        return false;
     }
 
     public synchronized void removeActiveScene() {
