@@ -52,10 +52,14 @@ public final class BuildTimelapseRuntime {
                 studio.getController(),
                 new FileCameraPathStore(new File(minecraft.mcDataDir, "buildtimelapse/camera-paths")));
         RecordingStudioModuleRegistry.register(recordingModule);
-
-        MinecraftForge.EVENT_BUS.register(tickHandler);
-        MinecraftForge.EVENT_BUS.register(this);
         started = true;
+        try {
+            MinecraftForge.EVENT_BUS.register(tickHandler);
+            MinecraftForge.EVENT_BUS.register(this);
+        } catch (RuntimeException registrationFailure) {
+            shutdown();
+            throw registrationFailure;
+        }
     }
 
     private synchronized void registerBlockEvents() {
@@ -77,9 +81,9 @@ public final class BuildTimelapseRuntime {
         if (minecraft.theWorld == null || minecraft.thePlayer == null) {
             throw new IllegalStateException("Build Timelapse Studio can only open inside a loaded world");
         }
-        start();
-        registerBlockEvents();
         try {
+            start();
+            registerBlockEvents();
             minecraft.displayGuiScreen(new BuildTimelapseStudioScreen(controller, model, this));
         } catch (RuntimeException failure) {
             shutdown();
@@ -90,9 +94,14 @@ public final class BuildTimelapseRuntime {
     /** Releases the Build Timelapse camera and block tracker but keeps the module adapter registered. */
     public synchronized void closeStudio() {
         if (closed || !started) return;
-        studio.getController().stop();
-        restoreEffects();
-        unregisterBlockEvents();
+        try {
+            studio.getController().stop();
+        } catch (RuntimeException ignored) {
+            // Always release block tracking and restore the local effects snapshot.
+        } finally {
+            restoreEffects();
+            unregisterBlockEvents();
+        }
     }
 
     @SubscribeEvent
