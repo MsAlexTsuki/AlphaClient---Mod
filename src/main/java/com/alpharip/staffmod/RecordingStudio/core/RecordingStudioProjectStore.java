@@ -111,6 +111,33 @@ public final class RecordingStudioProjectStore {
         return RecordingProject.load(directory, id);
     }
 
+
+    /** Returns true when a previous process left an active-session marker behind. */
+    public synchronized boolean hasRecoveryMarker(String projectId) throws IOException {
+        validateId(projectId);
+        return new File(directory, projectId + ".active").isFile();
+    }
+
+    /** Persist an active marker so an unclean process exit can be detected next time. */
+    public synchronized void markRecordingActive(RecordingProject project) throws IOException {
+        if (project == null) throw new IllegalArgumentException("Project is required");
+        Properties data = new Properties();
+        data.setProperty("format", "1");
+        data.setProperty("projectId", project.getId());
+        data.setProperty("projectName", project.getName());
+        data.setProperty("markedAt", Long.toString(System.currentTimeMillis()));
+        writeAtomically(data, new File(directory, project.getId() + ".active"));
+    }
+
+    /** Remove the marker only after the final project checkpoint has been saved. */
+    public synchronized void clearRecordingActive(String projectId) throws IOException {
+        validateId(projectId);
+        File marker = new File(directory, projectId + ".active");
+        if (marker.exists() && !marker.delete()) {
+            throw new IOException("Cannot clear Recording Studio recovery marker");
+        }
+    }
+
     public synchronized void delete(String id) throws IOException {
         validateId(id);
         File metadata = new File(directory, id + ".recording");
