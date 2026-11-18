@@ -70,17 +70,25 @@ public final class CaptureService {
     public void tick(final long now) {
         final long index;
         final CaptureSettings snapshot;
+        final boolean indexLimitReached;
         synchronized (this) {
             if (closed || !running || paused || now < nextAt) return;
             if (sequence.get() > 99999999L) {
                 running = false;
-                notifyFailure(sequence.get(), new IOException("Build Timelapse frame index limit reached"));
-                return;
+                index = sequence.get();
+                snapshot = null;
+                indexLimitReached = true;
+            } else {
+                long interval = settings.getInterval();
+                nextAt = now > Long.MAX_VALUE - interval ? Long.MAX_VALUE : now + interval;
+                index = sequence.getAndIncrement();
+                snapshot = settings.copy();
+                indexLimitReached = false;
             }
-            long interval = settings.getInterval();
-            nextAt = now > Long.MAX_VALUE - interval ? Long.MAX_VALUE : now + interval;
-            index = sequence.getAndIncrement();
-            snapshot = settings.copy();
+        }
+        if (indexLimitReached) {
+            notifyFailure(index, new IOException("Build Timelapse frame index limit reached"));
+            return;
         }
         try {
             worker.execute(new Runnable() {
