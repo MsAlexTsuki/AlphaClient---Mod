@@ -10,14 +10,15 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 - Build-specific block tracking, activity analytics, build-area bounds and milestones.
 - Camera pose, path, waypoint, interpolation, preset, orbit and controller contracts are now defined in Recording Studio; Build Timelapse controllers and its Minecraft camera bridge consume those shared contracts.
 - Tick-driven interval screenshot scheduler, bounded background queue, local capture manifest option and native-resolution Minecraft framebuffer PNG adapter.
+- Optional Recording Studio module adapter: the Module panel can list saved Build Timelapse camera paths, position the shared camera at the first waypoint, and let Recording Studio drive path playback while capturing the framebuffer.
 - Cinematic effects profile, fades, speed ramps and time/weather/HUD adapter contract.
 - MP4/GIF/image-sequence settings and FFmpeg encoder; GIF export uses a two-pass palette generation and palette-use workflow; export queue supports cancellation.
 - Minecraft 1.8.9 Studio GUI and Forge client runtime lifecycle.
 - Supabase placeholder only; no network, upload, telemetry or authentication.
 
 ## Remaining integration / feature work
-1. Recording Studio does not yet own the camera runtime lifecycle, camera editor screen or camera-path UI/storage flow; these remain connected through the Build Timelapse UI.
-2. Camera path persistence is still stored under the legacy Build Timelapse directory; migration to Recording Studio storage is pending.
+1. The Recording Studio adapter is registered when BuildTimelapseRuntime starts; the host/client entry point still needs to initialize that runtime so the Module option is available without opening Build Timelapse first.
+2. Camera path persistence remains under the Build Timelapse directory; Recording Studio reads the existing saved paths without migrating or duplicating them.
 3. Construct and inject the Minecraft framebuffer adapter in the client-side composition root.
 4. Custom capture resolutions require a scaling/render-target implementation.
 5. First-person hand hiding and camera roll require dedicated renderer hooks.

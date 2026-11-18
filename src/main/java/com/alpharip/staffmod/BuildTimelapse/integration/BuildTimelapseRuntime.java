@@ -4,11 +4,15 @@ import com.alpharip.staffmod.BuildTimelapse.BuildTimelapse;
 import com.alpharip.staffmod.BuildTimelapse.ui.BuildTimelapseStudioScreen;
 import com.alpharip.staffmod.BuildTimelapse.ui.StudioController;
 import com.alpharip.staffmod.BuildTimelapse.ui.StudioScreenModel;
+import com.alpharip.staffmod.RecordingStudio.camera.FileCameraPathStore;
+import com.alpharip.staffmod.RecordingStudio.module.RecordingStudioModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import java.io.File;
 
 /**
  * Owns Forge event registration for one Build Timelapse session.
@@ -18,6 +22,7 @@ public final class BuildTimelapseRuntime {
     private final BuildTimelapse studio;
     private final BuildTimelapseClientTickHandler tickHandler;
     private final ForgeMinecraftBlockEventBridge blockEvents = new ForgeMinecraftBlockEventBridge();
+    private BuildTimelapseRecordingModuleAdapter recordingModule;
     private boolean started;
     private boolean closed;
 
@@ -36,6 +41,16 @@ public final class BuildTimelapseRuntime {
     public synchronized void start() {
         if (closed) throw new IllegalStateException("Build Timelapse runtime is shut down");
         if (started) return;
+
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null || minecraft.mcDataDir == null) {
+            throw new IllegalStateException("Minecraft client storage is unavailable");
+        }
+        recordingModule = new BuildTimelapseRecordingModuleAdapter(
+                studio.getController(),
+                new FileCameraPathStore(new File(minecraft.mcDataDir, "buildtimelapse/camera-paths")));
+        RecordingStudioModuleRegistry.register(recordingModule);
+
         MinecraftForge.EVENT_BUS.register(tickHandler);
         MinecraftForge.EVENT_BUS.register(this);
         blockEvents.register();
@@ -71,8 +86,8 @@ public final class BuildTimelapseRuntime {
     }
 
     private boolean minecraftWorldUnavailable() {
-        Minecraft mc = Minecraft.getMinecraft();
-        return mc == null || mc.theWorld == null || mc.thePlayer == null;
+        Minecraft minecraft = Minecraft.getMinecraft();
+        return minecraft == null || minecraft.theWorld == null || minecraft.thePlayer == null;
     }
 
     public synchronized boolean isStarted() {
@@ -82,6 +97,10 @@ public final class BuildTimelapseRuntime {
     public synchronized void shutdown() {
         if (closed) return;
         closed = true;
+        if (recordingModule != null) {
+            RecordingStudioModuleRegistry.unregister(recordingModule);
+            recordingModule = null;
+        }
         if (started) {
             MinecraftForge.EVENT_BUS.unregister(tickHandler);
             MinecraftForge.EVENT_BUS.unregister(blockEvents);

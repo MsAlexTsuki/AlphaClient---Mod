@@ -1,12 +1,296 @@
 package com.alpharip.staffmod.RecordingStudio.integration;
-import com.alpharip.staffmod.RecordingStudio.camera.CameraController;import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;import com.alpharip.staffmod.RecordingStudio.ui.RecordingStudioScreen;import net.minecraft.client.Minecraft;import net.minecraftforge.common.MinecraftForge;import net.minecraftforge.event.world.WorldEvent;import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import com.alpharip.staffmod.RecordingStudio.camera.CameraController;
+import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
+import com.alpharip.staffmod.RecordingStudio.module.RecordingStudioModule;
+import com.alpharip.staffmod.RecordingStudio.module.RecordingStudioModuleRegistry;
+import com.alpharip.staffmod.RecordingStudio.ui.RecordingStudioScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /** Independent Forge lifecycle for manual recording and the standalone camera. */
 public final class RecordingStudioRuntime {
- private final RecordingStudioController controller;private CameraController camera;private CameraWorldOverlay overlay;private boolean started,closed;
- public RecordingStudioRuntime(RecordingStudioController c){if(c==null)throw new IllegalArgumentException("controller");controller=c;}
- public synchronized void open(Minecraft mc){if(mc==null||mc.theWorld==null||mc.thePlayer==null)throw new IllegalStateException("Recording Studio can only open inside a loaded world");if(closed)throw new IllegalStateException("Recording Studio runtime is shut down");if(!started){camera=new CameraController(new MinecraftIndependentCameraBridge(mc));overlay=new CameraWorldOverlay(camera);MinecraftForge.EVENT_BUS.register(this);MinecraftForge.EVENT_BUS.register(overlay);started=true;}mc.displayGuiScreen(new RecordingStudioScreen(controller,this));}
- public synchronized CameraController getCameraController(){if(!started||camera==null)throw new IllegalStateException("Recording Studio camera runtime is not started");return camera;}
- @SubscribeEvent public void onClientTick(TickEvent.ClientTickEvent e){if(e.phase!=TickEvent.Phase.END)return;Minecraft mc=Minecraft.getMinecraft();if(mc==null||mc.theWorld==null||mc.thePlayer==null){shutdown();return;}controller.tick(System.currentTimeMillis());if(camera!=null)try{camera.tick(System.currentTimeMillis());}catch(Exception failure){try{camera.deactivate();}catch(Exception ignored){} }}
- @SubscribeEvent public void onWorldUnload(WorldEvent.Unload e){if(e.world!=null&&e.world.isRemote)shutdown();}
- public synchronized void shutdown(){if(closed)return;closed=true;if(started){MinecraftForge.EVENT_BUS.unregister(this);MinecraftForge.EVENT_BUS.unregister(overlay);}if(camera!=null)try{camera.deactivate();}catch(Exception ignored){}started=false;controller.shutdown();}
+    private final RecordingStudioController controller;
+    private CameraController camera;
+    private CameraWorldOverlay overlay;
+    private boolean started;
+    private boolean closed;
+    private String selectedModuleId = "normal_gameplay";
+    private String selectedOptionId;
+    private String moduleStatus = "Using the current Minecraft camera.";
+
+    public RecordingStudioRuntime(RecordingStudioController controller) {
+        if (controller == null) throw new IllegalArgumentException("controller");
+        this.controller = controller;
+    }
+
+    public synchronized void open(Minecraft minecraft) {
+        if (minecraft == null || minecraft.theWorld == null || minecraft.thePlayer == null) {
+            throw new IllegalStateException("Recording Studio can only open inside a loaded world");
+        }
+        if (closed) throw new IllegalStateException("Recording Studio runtime is shut down");
+        if (!started) {
+            camera = new CameraController(new MinecraftIndependentCameraBridge(minecraft));
+            overlay = new CameraWorldOverlay(camera);
+            MinecraftForge.EVENT_BUS.register(this);
+            MinecraftForge.EVENT_BUS.register(overlay);
+            started = true;
+        }
+        minecraft.displayGuiScreen(new RecordingStudioScreen(controller, this));
+    }
+
+    public synchronized CameraController getCameraController() {
+        if (!started || camera == null) {
+            throw new IllegalStateException("Recording Studio camera runtime is not started");
+        }
+        return camera;
+    }
+
+    public synchronized List<String> getModuleIds() {
+        List<String> ids = new ArrayList<String>();
+        ids.add("normal_gameplay");
+        ids.add("build_timelapse");
+        for (RecordingStudioModule module : RecordingStudioModuleRegistry.getAll()) {
+            if (!ids.contains(module.getId())) ids.add(module.getId());
+        }
+        return Collections.unmodifiableList(ids);
+    }
+
+    public synchronized String getModuleDisplayName(String id) {
+        if ("normal_gameplay".equals(id)) return "Normal Gameplay";
+        if ("build_timelapse".equals(id)) return "Build Timelapse";
+        RecordingStudioModule module = RecordingStudioModuleRegistry.get(id);
+        return module == null ? id : module.getDisplayName();
+    }
+
+    public synchronized String getSelectedModuleId() { return selectedModuleId; }
+
+    public synchronized String getSelectedOptionId() {
+        return selectedOptionId == null ? "" : selectedOptionId;
+    }
+
+    public synchronized List<String> getSelectedModuleOptions() {
+        RecordingStudioModule module = selectedModule();
+        if (module == null) return Collections.emptyList();
+        try {
+            return module.getOptions();
+        } catch (RuntimeException failure) {
+            moduleStatus = "Could not read module options: " + failure.getMessage();
+            return Collections.emptyList();
+        }
+    }
+
+    public synchronized String getSelectedModuleStatus() {
+        if ("normal_gameplay".equals(selectedModuleId)) return "Using the current Minecraft camera.";
+        RecordingStudioModule module = selectedModule();
+        if (module == null) {
+            return "Module runtime is not initialized. Start the module runtime first.";
+        }
+        if (moduleStatus.startsWith("Module setup failed")
+                || moduleStatus.startsWith("Module runtime is not initialized")
+                || moduleStatus.startsWith("No saved camera paths")
+                || moduleStatus.startsWith("Stop the recording")
+                || moduleStatus.startsWith("The selected module")
+                || moduleStatus.startsWith("Module cleanup failed")) {
+            return moduleStatus;
+        }
+        return module.getStatus();
+    }
+
+    public synchronized void selectNextModule() {
+        if (controller.getCapture().isRecording() || controller.getCapture().isPaused()) {
+            moduleStatus = "Stop the recording before changing modules.";
+            return;
+        }
+        List<String> ids = getModuleIds();
+        int index = ids.indexOf(selectedModuleId);
+        String next = ids.get((index + 1 + ids.size()) % ids.size());
+        selectModule(next);
+    }
+
+    public synchronized void selectModule(String id) {
+        if (controller.getCapture().isRecording() || controller.getCapture().isPaused()) {
+            moduleStatus = "Stop the recording before changing modules.";
+            return;
+        }
+        if (!stopSelectedModule()) return;
+
+        selectedModuleId = id == null ? "normal_gameplay" : id;
+        selectedOptionId = null;
+        if ("normal_gameplay".equals(selectedModuleId)) {
+            moduleStatus = "Using the current Minecraft camera.";
+            return;
+        }
+
+        RecordingStudioModule module = RecordingStudioModuleRegistry.get(selectedModuleId);
+        if (module == null) {
+            moduleStatus = "Module runtime is not initialized. Open the module once, then return to Recording Studio.";
+            return;
+        }
+        if (!module.isAvailable()) {
+            moduleStatus = module.getDisplayName() + " is currently unavailable.";
+            return;
+        }
+
+        List<String> options = module.getOptions();
+        if (options == null || options.isEmpty()) {
+            moduleStatus = "No saved camera paths. Create a path in the Build Timelapse Camera Editor first.";
+            return;
+        }
+        selectOption(options.get(0));
+    }
+
+    public synchronized void selectNextModuleOption() {
+        if (controller.getCapture().isRecording() || controller.getCapture().isPaused()) {
+            moduleStatus = "Stop the recording before changing the module option.";
+            return;
+        }
+        RecordingStudioModule module = selectedModule();
+        if (module == null) {
+            moduleStatus = "The selected module is not initialized.";
+            return;
+        }
+        List<String> options = module.getOptions();
+        if (options == null || options.isEmpty()) {
+            moduleStatus = "No saved options are available for this module.";
+            return;
+        }
+        int index = options.indexOf(selectedOptionId);
+        selectOption(options.get((index + 1 + options.size()) % options.size()));
+    }
+
+    private void selectOption(String optionId) {
+        RecordingStudioModule module = selectedModule();
+        if (module == null) return;
+        try {
+            module.onRecordingStop();
+            module.prepare(optionId);
+            selectedOptionId = optionId;
+            moduleStatus = module.getStatus();
+        } catch (Exception failure) {
+            selectedOptionId = optionId;
+            moduleStatus = "Module setup failed: " + failure.getMessage();
+        }
+    }
+
+    public synchronized void startRecording() {
+        RecordingStudioModule module = selectedModule();
+        if (!"normal_gameplay".equals(selectedModuleId) && module == null) {
+            moduleStatus = "Module runtime is not initialized. Recording was not started.";
+            return;
+        }
+        if (module != null && !module.isAvailable()) {
+            moduleStatus = module.getDisplayName() + " is unavailable. Recording was not started.";
+            return;
+        }
+        try {
+            if (module != null) module.onRecordingStart(System.currentTimeMillis());
+            controller.start();
+            if (!controller.getCapture().isRecording() && module != null) module.onRecordingStop();
+        } catch (Exception failure) {
+            if (module != null) {
+                try { module.onRecordingStop(); }
+                catch (Exception cleanup) { failure.addSuppressed(cleanup); }
+            }
+            moduleStatus = "Could not start module recording: " + failure.getMessage();
+        }
+    }
+
+    public synchronized void pauseRecording() {
+        if (!controller.getCapture().isRecording()) return;
+        RecordingStudioModule module = selectedModule();
+        try {
+            if (module != null) module.onRecordingPause(System.currentTimeMillis());
+        } catch (Exception failure) {
+            moduleStatus = "Module pause failed: " + failure.getMessage();
+        }
+        controller.pause();
+    }
+
+    public synchronized void resumeRecording() {
+        if (!controller.getCapture().isPaused()) return;
+        RecordingStudioModule module = selectedModule();
+        try {
+            if (module != null) module.onRecordingResume(System.currentTimeMillis());
+            controller.resume();
+            if (!controller.getCapture().isRecording() && module != null) {
+                module.onRecordingPause(System.currentTimeMillis());
+            }
+        } catch (Exception failure) {
+            moduleStatus = "Module resume failed: " + failure.getMessage();
+        }
+    }
+
+    public synchronized void stopRecording() {
+        controller.stop();
+        RecordingStudioModule module = selectedModule();
+        if (module != null) {
+            try { module.onRecordingStop(); }
+            catch (Exception failure) { moduleStatus = "Module stop failed: " + failure.getMessage(); }
+        }
+    }
+
+    private RecordingStudioModule selectedModule() {
+        if ("normal_gameplay".equals(selectedModuleId)) return null;
+        return RecordingStudioModuleRegistry.get(selectedModuleId);
+    }
+
+    private boolean stopSelectedModule() {
+        RecordingStudioModule module = selectedModule();
+        if (module == null) return true;
+        try {
+            module.onRecordingStop();
+            return true;
+        } catch (Exception failure) {
+            moduleStatus = "Module cleanup failed: " + failure.getMessage();
+            return false;
+        }
+    }
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null || minecraft.theWorld == null || minecraft.thePlayer == null) {
+            shutdown();
+            return;
+        }
+        controller.tick(System.currentTimeMillis());
+        if ("normal_gameplay".equals(selectedModuleId) && camera != null) {
+            try { camera.tick(System.currentTimeMillis()); }
+            catch (Exception failure) {
+                try { camera.deactivate(); }
+                catch (Exception ignored) { }
+                moduleStatus = "Studio camera stopped: " + failure.getMessage();
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onWorldUnload(WorldEvent.Unload event) {
+        if (event.world != null && event.world.isRemote) shutdown();
+    }
+
+    public synchronized void shutdown() {
+        if (closed) return;
+        closed = true;
+        stopSelectedModule();
+        if (started) {
+            MinecraftForge.EVENT_BUS.unregister(this);
+            MinecraftForge.EVENT_BUS.unregister(overlay);
+        }
+        if (camera != null) {
+            try { camera.deactivate(); }
+            catch (Exception ignored) { }
+        }
+        started = false;
+        controller.shutdown();
+    }
 }

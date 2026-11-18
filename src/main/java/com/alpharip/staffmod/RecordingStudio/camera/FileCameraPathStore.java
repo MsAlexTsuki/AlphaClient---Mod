@@ -1,11 +1,151 @@
 package com.alpharip.staffmod.RecordingStudio.camera;
-import java.io.*;import java.nio.file.*;import java.util.*;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Properties;
+
 /** Local, versioned camera-path persistence. No cloud or network operations. */
 public final class FileCameraPathStore implements CameraPathStore {
- private final File root;public FileCameraPathStore(File root){if(root==null)throw new IllegalArgumentException("root");this.root=root;}
- public void save(String id,CameraPath path)throws IOException{validate(id);if(path==null)throw new IllegalArgumentException("path");ensureRoot();Properties p=new Properties();p.setProperty("format","1");p.setProperty("name",path.getName());List<CameraWaypoint>w=path.getWaypoints();p.setProperty("count",Integer.toString(w.size()));for(int i=0;i<w.size();i++){CameraWaypoint q=w.get(i);String k="point."+i+".";CameraPose v=q.getPose();p.setProperty(k+"id",q.getId());p.setProperty(k+"x",Double.toString(v.x));p.setProperty(k+"y",Double.toString(v.y));p.setProperty(k+"z",Double.toString(v.z));p.setProperty(k+"yaw",Float.toString(v.yaw));p.setProperty(k+"pitch",Float.toString(v.pitch));p.setProperty(k+"roll",Float.toString(v.roll));p.setProperty(k+"fov",Float.toString(v.fov));p.setProperty(k+"duration",Long.toString(q.getDuration()));p.setProperty(k+"hold",Long.toString(q.getHold()));p.setProperty(k+"easing",q.getEasing());}File tmp=new File(root,id+".tmp"),dst=file(id);try(OutputStream out=new BufferedOutputStream(new FileOutputStream(tmp))){p.store(out,"Recording Studio camera path");}try{Files.move(tmp.toPath(),dst.toPath(),StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);}catch(AtomicMoveNotSupportedException e){Files.move(tmp.toPath(),dst.toPath(),StandardCopyOption.REPLACE_EXISTING);}finally{if(tmp.exists())tmp.deleteOnExit();}}
- public CameraPath load(String id)throws IOException{validate(id);File f=file(id);if(!f.isFile())throw new FileNotFoundException(f.toString());Properties p=new Properties();try(InputStream in=new BufferedInputStream(new FileInputStream(f))){p.load(in);}try{if(!"1".equals(p.getProperty("format")))throw new IOException("Unsupported camera path format");CameraPath path=new CameraPath(required(p,"name"));int count=Integer.parseInt(required(p,"count"));if(count<0||count>10000)throw new IOException("Invalid waypoint count");for(int i=0;i<count;i++){String k="point."+i+".";CameraPose pose=new CameraPose(Double.parseDouble(required(p,k+"x")),Double.parseDouble(required(p,k+"y")),Double.parseDouble(required(p,k+"z")),Float.parseFloat(required(p,k+"yaw")),Float.parseFloat(required(p,k+"pitch")),Float.parseFloat(required(p,k+"roll")),Float.parseFloat(required(p,k+"fov")));path.add(new CameraWaypoint(required(p,k+"id"),pose,Long.parseLong(required(p,k+"duration")),Long.parseLong(required(p,k+"hold")),required(p,k+"easing")));}return path;}catch(IllegalArgumentException e){throw new IOException("Invalid camera path data: "+id,e);}}
- public boolean delete(String id)throws IOException{validate(id);File f=file(id);return !f.exists()||f.delete();}
- private void ensureRoot()throws IOException{if((!root.exists()&&!root.mkdirs())||!root.isDirectory())throw new IOException("Cannot create camera path directory");}private File file(String id){return new File(root,id+".btpath");}
- private static void validate(String id)throws IOException{if(id==null||!id.matches("[A-Za-z0-9_-]{1,80}"))throw new IOException("Invalid camera path id");}private static String required(Properties p,String k)throws IOException{String v=p.getProperty(k);if(v==null)throw new IOException("Missing camera path property: "+k);return v;}
+    private final File root;
+
+    public FileCameraPathStore(File root) {
+        if (root == null) throw new IllegalArgumentException("root");
+        this.root = root;
+    }
+
+    public void save(String id, CameraPath path) throws IOException {
+        validate(id);
+        if (path == null) throw new IllegalArgumentException("path");
+        ensureRoot();
+
+        Properties data = new Properties();
+        data.setProperty("format", "1");
+        data.setProperty("name", path.getName());
+        List<CameraWaypoint> points = path.getWaypoints();
+        data.setProperty("count", Integer.toString(points.size()));
+        for (int i = 0; i < points.size(); i++) {
+            CameraWaypoint point = points.get(i);
+            String key = "point." + i + ".";
+            CameraPose pose = point.getPose();
+            data.setProperty(key + "id", point.getId());
+            data.setProperty(key + "x", Double.toString(pose.x));
+            data.setProperty(key + "y", Double.toString(pose.y));
+            data.setProperty(key + "z", Double.toString(pose.z));
+            data.setProperty(key + "yaw", Float.toString(pose.yaw));
+            data.setProperty(key + "pitch", Float.toString(pose.pitch));
+            data.setProperty(key + "roll", Float.toString(pose.roll));
+            data.setProperty(key + "fov", Float.toString(pose.fov));
+            data.setProperty(key + "duration", Long.toString(point.getDuration()));
+            data.setProperty(key + "hold", Long.toString(point.getHold()));
+            data.setProperty(key + "easing", point.getEasing());
+        }
+
+        File temporary = new File(root, id + ".tmp");
+        File destination = file(id);
+        try (OutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
+            data.store(output, "Recording Studio camera path");
+        }
+        try {
+            Files.move(temporary.toPath(), destination.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException unsupported) {
+            Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            if (temporary.exists()) temporary.deleteOnExit();
+        }
+    }
+
+    public CameraPath load(String id) throws IOException {
+        validate(id);
+        File source = file(id);
+        if (!source.isFile()) throw new FileNotFoundException(source.toString());
+
+        Properties data = new Properties();
+        try (InputStream input = new BufferedInputStream(new FileInputStream(source))) {
+            data.load(input);
+        }
+        try {
+            if (!"1".equals(data.getProperty("format"))) throw new IOException("Unsupported camera path format");
+            CameraPath path = new CameraPath(required(data, "name"));
+            int count = Integer.parseInt(required(data, "count"));
+            if (count < 0 || count > 10000) throw new IOException("Invalid waypoint count");
+            for (int i = 0; i < count; i++) {
+                String key = "point." + i + ".";
+                CameraPose pose = new CameraPose(
+                        Double.parseDouble(required(data, key + "x")),
+                        Double.parseDouble(required(data, key + "y")),
+                        Double.parseDouble(required(data, key + "z")),
+                        Float.parseFloat(required(data, key + "yaw")),
+                        Float.parseFloat(required(data, key + "pitch")),
+                        Float.parseFloat(required(data, key + "roll")),
+                        Float.parseFloat(required(data, key + "fov")));
+                path.add(new CameraWaypoint(required(data, key + "id"), pose,
+                        Long.parseLong(required(data, key + "duration")),
+                        Long.parseLong(required(data, key + "hold")),
+                        required(data, key + "easing")));
+            }
+            return path;
+        } catch (IllegalArgumentException invalid) {
+            throw new IOException("Invalid camera path data: " + id, invalid);
+        }
+    }
+
+    public List<String> listIds() {
+        if (!root.isDirectory()) return Collections.emptyList();
+        File[] files = root.listFiles();
+        if (files == null) return Collections.emptyList();
+
+        List<String> ids = new ArrayList<String>();
+        for (File candidate : files) {
+            String name = candidate.getName();
+            if (candidate.isFile() && name.endsWith(".btpath")) {
+                String id = name.substring(0, name.length() - ".btpath".length());
+                if (id.matches("[A-Za-z0-9_-]{1,80}")) ids.add(id);
+            }
+        }
+        Collections.sort(ids, new Comparator<String>() {
+            public int compare(String first, String second) { return first.compareToIgnoreCase(second); }
+        });
+        return Collections.unmodifiableList(ids);
+    }
+
+    public boolean delete(String id) throws IOException {
+        validate(id);
+        File source = file(id);
+        return !source.exists() || source.delete();
+    }
+
+    private void ensureRoot() throws IOException {
+        if ((!root.exists() && !root.mkdirs()) || !root.isDirectory()) {
+            throw new IOException("Cannot create camera path directory");
+        }
+    }
+
+    private File file(String id) { return new File(root, id + ".btpath"); }
+
+    private static void validate(String id) throws IOException {
+        if (id == null || !id.matches("[A-Za-z0-9_-]{1,80}")) {
+            throw new IOException("Invalid camera path id");
+        }
+    }
+
+    private static String required(Properties data, String key) throws IOException {
+        String value = data.getProperty(key);
+        if (value == null) throw new IOException("Missing camera path property: " + key);
+        return value;
+    }
 }
