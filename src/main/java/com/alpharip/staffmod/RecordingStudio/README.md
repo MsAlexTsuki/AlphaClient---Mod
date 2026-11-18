@@ -21,5 +21,5 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Camera path interpolation and render-thread behavior have not been compiled or tested in Minecraft.
 - Capture uses native framebuffer resolution and performs readback and PNG writing synchronously on the client thread.
 - Audio, crash recovery, disk retention, effects and video/GIF export migration are not included yet.
-- Client entry-point/module/keybind registration is intentionally unchanged.
+- Registered in the AlphaClient Forge entry point as the `/recordingstudio` client command; no keybind or module-menu entry has been added.
 - No build configuration is present in this repository snapshot; compilation and in-game behavior have not been verified.
