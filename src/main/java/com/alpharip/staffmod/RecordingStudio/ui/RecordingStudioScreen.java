@@ -2,6 +2,8 @@ package com.alpharip.staffmod.RecordingStudio.ui;
 
 import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
+import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene;
+import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -53,6 +55,10 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(15, 18, 198, 126, "Change Module", true);
         add(16, 18, 222, 126, "Next Camera Path");
         add(17, 18, 246, 126, runtime.isCameraPreviewVisible() ? "HUD Preview: ON" : "HUD Preview: OFF");
+        add(19, 18, 84, 126, "Next Scene");
+        add(20, 18, 106, 126, "New Scene", true);
+        add(21, 18, 270, 126, "Toggle Game Capture");
+        add(22, 18, 294, 126, "Toggle Microphone");
 
         GuiButton cameraButton = findButton(6);
         if (cameraButton != null) cameraButton.enabled = "normal_gameplay".equals(runtime.getSelectedModuleId());
@@ -129,6 +135,22 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 18:
                 controller.selectNextMicrophone();
                 break;
+            case 19:
+                controller.selectNextScene();
+                initGui();
+                break;
+            case 20:
+                controller.createScene();
+                initGui();
+                break;
+            case 21:
+                controller.toggleSceneSource(RecordingStudioSource.Type.GAME_CAPTURE);
+                initGui();
+                break;
+            case 22:
+                controller.toggleSceneSource(RecordingStudioSource.Type.MICROPHONE);
+                initGui();
+                break;
             default: break;
         }
     }
@@ -173,9 +195,11 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawCenteredString(fontRendererObj, "ALPHA CLIENT  /  RECORDING STUDIO", width / 2, 16, 0xFFAAAAAA);
         drawCenteredString(fontRendererObj, controller.getProject().getName(), width / 2, 31, 0xFFFFC83D);
 
-        drawString(fontRendererObj, "SCENES", 20, 59, 0xFFFFC83D);
-        drawString(fontRendererObj, "> Main Scene", 20, 78, 0xFFFFFFFF);
-        drawString(fontRendererObj, "MODULE", 20, 122, 0xFFFFC83D);
+        RecordingStudioScene activeScene = controller.getActiveScene();
+        drawString(fontRendererObj, "SCENES  (" + controller.getTimeline().getScenes().size() + ")", 20, 59, 0xFFFFC83D);
+        drawString(fontRendererObj, "> " + compact(activeScene == null ? "None" : activeScene.getName(), 20),
+                20, 78, 0xFFFFFFFF);
+        drawString(fontRendererObj, "MODULE", 20, 132, 0xFFFFC83D);
         drawString(fontRendererObj, compact(runtime.getModuleDisplayName(runtime.getSelectedModuleId()), 19),
                 20, 143, 0xFFFFFFFF);
         drawString(fontRendererObj, "Option: " + compact(runtime.getSelectedOptionId().isEmpty()
@@ -198,11 +222,19 @@ public final class RecordingStudioScreen extends GuiScreen {
                 previewLeft + 12, previewBottom - 14, 0xFFBBBBBB);
 
         drawString(fontRendererObj, "SOURCES", right + 8, 59, 0xFFFFC83D);
-        drawString(fontRendererObj, "Minecraft framebuffer", right + 8, 78, 0xFFE0E0E0);
-        drawString(fontRendererObj, "Active camera view", right + 8, 94, 0xFFBBBBBB);
-        drawString(fontRendererObj, "Microphone input", right + 8, 110, 0xFFBBBBBB);
+        int sourceY = 78;
+        if (activeScene != null) {
+            for (RecordingStudioSource source : activeScene.getSources()) {
+                drawString(fontRendererObj, compact(source.getName(), 17) + ": "
+                        + (source.isEnabled() ? "ON" : "OFF"), right + 8, sourceY,
+                        source.isEnabled() ? 0xFFE0E0E0 : 0xFF888888);
+                sourceY += 16;
+            }
+        }
+        drawString(fontRendererObj, "View: " + (runtime.hasExternalCamera() ? "External camera" : "Player"),
+                right + 8, 112, 0xFFBBBBBB);
         drawString(fontRendererObj, "Input: " + compact(controller.getMicrophoneSelectionName(), 18),
-                right + 8, 126, 0xFFBBBBBB);
+                right + 8, 128, 0xFFBBBBBB);
         drawString(fontRendererObj, "AUDIO MIXER", right + 8, 145, 0xFFFFC83D);
         drawString(fontRendererObj, controller.getAudioStatus(), right + 8, 164, 0xFFE0E0E0);
         drawString(fontRendererObj, "Game audio: not captured", right + 8, 181, 0xFF888888);
