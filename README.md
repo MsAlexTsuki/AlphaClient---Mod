@@ -33,39 +33,62 @@ Recording Studio is designed as a standalone manual recording workspace. It can 
 - Full scene/source creation and management are not implemented; the current screen still contains placeholder scene/source labels.
 - Game audio capture is not implemented. The audio service currently handles microphone capture only.
 - Timeline editing and export behavior still require further implementation and validation.
+- The prototype does not yet contain a verified production bootstrap for constructing all recording services and their Minecraft framebuffer writer.
 - No full Forge build or in-game test has been completed for the current prototype changes. Do not treat the preview as verified until it is compiled and tested in Minecraft.
 
 ## Integration checklist for development
 
-Do not integrate this prototype automatically. When it is time to integrate, use this checklist and inspect the current development code before editing it.
+Do not integrate this prototype automatically. These are the concrete integration tasks identified from the current source layout. The development branch itself remains unchanged.
 
-1. **Bring in the source packages**
-   - com.alpharip.staffmod.RecordingStudio
-   - The required com.alpharip.staffmod.BuildTimelapse implementation and its integration adapter.
-   - Preserve existing production classes and entrypoints. Do not replace the production AlphaClient entrypoint with a prototype entrypoint.
-2. **Create the recording services in the production client lifecycle**
-   - Construct a RecordingProject.
-   - Provide a RecordingCaptureService.FrameWriter that captures the Minecraft framebuffer on the client thread and writes PNG frames.
-   - Construct RecordingCaptureService and RecordingStudioController with the project's local storage directory and timeline.
-   - Keep all OpenGL/framebuffer reads on the Minecraft client thread.
-3. **Initialize the Build Timelapse adapter**
-   - Create one BuildTimelapseRuntime for the loaded world.
-   - Call BuildTimelapseRuntime.start() once after the client world is available. This registers the Build Timelapse camera-path adapter in RecordingStudioModuleRegistry.
-   - Shut the runtime down when that world unloads. Do not create duplicate runtimes or duplicate Forge event registrations.
-4. **Expose the Recording Studio entry point**
-   - Create one RecordingStudioRuntime for the recording controller during the client/world lifecycle.
-   - Open it through the intended AlphaClient command or UI entry point by calling RecordingStudioRuntime.open(Minecraft.getMinecraft()) while a world and player are loaded.
-   - Ensure the runtime is shut down exactly once when the Studio session ends or the world unloads.
-5. **Validate the integration**
-   - Confirm the selected Build Timelapse path is listed and can be prepared.
-   - Confirm the external camera state is reported by the module adapter.
-   - Confirm the HUD preview appears only for an active external camera, can be toggled without stopping capture, and supports dragging/resizing.
-   - Confirm normal gameplay recording does not show the external-camera preview.
-   - Build with the production ForgeGradle setup and perform the required in-game checks.
+### Production files that will need integration changes
 
-### Integration items that must be resolved against development
+1. `src/main/java/com/alpharip/alphaclient/AlphaClient.java`
+   - Add lifecycle ownership for the Recording Studio controller/runtime and the Build Timelapse runtime.
+   - Add world-load/world-unload handling so each runtime is created once per world and shut down once when that world unloads.
+   - Add a client-thread helper that opens the Recording Studio runtime for the current world.
+   - The existing `initialize(FMLInitializationEvent)` method is the central client initialization point. Do not construct a camera runtime before a world and player are available.
+2. `src/main/java/com/alpharip/alphaclient/AlphaClientCommand.java`
+   - Add a `recordingstudio` route that calls the client helper from AlphaClient.
+   - Keep command handling on the Minecraft client thread.
+3. `AlphaClient.registerClientCommands()` in AlphaClient.java
+   - Add the `recordingstudio` command name to the existing command registration list.
 
-The exact production entrypoint, command/UI registration point, project-storage path, and concrete Minecraft framebuffer writer must be identified from the current development branch during integration. They are intentionally not guessed or modified from this prototype branch.
+### New integration code that must be created
+
+1. **Minecraft framebuffer writer**
+   - Create a client-only implementation of `RecordingCaptureService.FrameWriter`, for example `RecordingStudio/integration/MinecraftFramebufferFrameWriter.java`.
+   - Capture the framebuffer on the Minecraft client thread and return RGBA frame data.
+   - Write the captured frames to the supplied output files.
+   - Do not read OpenGL state from the asynchronous encoder thread.
+2. **Recording Studio bootstrap**
+   - Create a small bootstrap/factory that constructs a `RecordingProject`, `RecordingCaptureSettings`, `RecordingCaptureService`, `Timeline`, and `RecordingStudioController`.
+   - Choose and document the final local project directory during integration; the prototype currently does not establish a production storage path.
+3. **Build Timelapse runtime construction**
+   - Build the existing Build Timelapse service graph and pass it to `BuildTimelapseRuntime`.
+   - Start one runtime after the world and player are available. Its `start()` method registers the Build Timelapse recording adapter with `RecordingStudioModuleRegistry`.
+   - Shut it down on world unload. Avoid duplicate runtime instances and duplicate Forge event registrations.
+
+### Runtime wiring sequence
+
+1. On world load, create the Build Timelapse runtime and the Recording Studio services/runtime.
+2. Start the Build Timelapse runtime once so its module adapter is registered.
+3. When `/recordingstudio` is used, call `RecordingStudioRuntime.open(Minecraft.getMinecraft())`.
+4. On world unload, shut down both runtimes and release camera/Forge event registrations.
+5. Keep the Recording Studio session lifecycle explicit: closing its main screen currently shuts down the runtime and stops an active recording.
+
+### Integration validation
+
+- Confirm the selected Build Timelapse path is listed and can be prepared.
+- Confirm the external camera state is reported by the module adapter.
+- Confirm the HUD preview appears only for an active external camera, can be toggled without stopping capture, and supports dragging/resizing.
+- Confirm normal gameplay recording does not show the external-camera preview.
+- Build with the production ForgeGradle setup and perform the required in-game checks.
+
+### Items that still require a source decision
+
+- The exact world-load/world-unload event ownership and the Build Timelapse service graph must be matched to the current production lifecycle.
+- The concrete framebuffer writer and final recording storage directory must be implemented/selected.
+- The production command must be wired without replacing or overwriting the existing AlphaClient entrypoint.
 
 ## Launcher
 
