@@ -3,19 +3,19 @@
 Modular Java 8 prototype foundation for Minecraft 1.8.9 / Forge 11.15.1.2318.
 
 ## Included
-- Project/session lifecycle, local project metadata and timeline-marker persistence.
-- Independent camera runtime contract, camera modes (free/orbit/follow/fixed/path/drone), poses, orbit rig, named waypoints and smooth interpolation.
-- Timed screenshot service with serial worker, interval/resolution/HUD preferences, capture callbacks and frame metadata.
-- Timeline marker and duration model.
-- Block place/remove event model, activity tracker and build-area bounds.
-- Cinematic effects profile, fades, speed ramps, time/weather/HUD adapter contract.
-- MP4/GIF/image-sequence export settings, queue and external FFmpeg encoder.
-- Studio screen view model/controller foundation.
+- Project/session lifecycle and local project metadata plus timeline-marker persistence.
+- Independent camera runtime contract, free/orbit/follow/fixed/path/drone modes, poses, orbit rig, named presets, path waypoints and smooth interpolation.
+- Timed screenshot service with serial worker, interval/resolution/HUD preferences, callbacks and frame metadata.
+- Multi-track timeline clips, clip speed, markers and duration calculation.
+- Block place/remove event model, activity tracker, build-area bounds and configurable placement milestones.
+- Cinematic effects profile, fades, speed ramps and time/weather/HUD adapter contract.
+- MP4/GIF/image-sequence settings, export queue and external FFmpeg encoder.
+- Studio view model/controller foundation.
 - Minecraft camera, screenshot and block-event integration interfaces.
-- Supabase placeholder; no network, upload, telemetry or authentication.
+- Supabase placeholder only; no network, upload, telemetry or authentication.
 
 ## Integration still required
-1. Implement `MinecraftCameraBridge` with a client-only camera entity or Mixin. Preserve and restore the original render-view entity on every exit path. Never move the player or alter player motion/input.
+1. Implement `MinecraftCameraBridge` with a client-only camera entity or Mixin. Preserve/restore the original render-view entity on every exit path. Never move the player or alter player motion/input.
 2. Implement `MinecraftScreenshotBridge` on Minecraft's render thread. Marshal framebuffer work from the capture worker to the render thread and restore HUD/hand visibility in a finally block.
 3. Connect Forge block place/break events; ignore cancelled, duplicate and remote-world changes.
 4. Build the actual Minecraft 1.8.9 `GuiScreen` around the view models; this package deliberately has no Minecraft/Forge imports.
