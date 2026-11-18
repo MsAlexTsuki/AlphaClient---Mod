@@ -7,6 +7,7 @@ import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 
 import java.io.IOException;
 
@@ -15,6 +16,7 @@ public final class RecordingStudioScreen extends GuiScreen {
     private final RecordingStudioController controller;
     private final RecordingStudioRuntime runtime;
     private boolean navigating;
+    private GuiTextField sceneNameField;
 
     public RecordingStudioScreen(RecordingStudioController controller, RecordingStudioRuntime runtime) {
         if (controller == null || runtime == null) throw new IllegalArgumentException();
@@ -28,6 +30,11 @@ public final class RecordingStudioScreen extends GuiScreen {
     public void initGui() {
         navigating = false;
         buttonList.clear();
+
+        RecordingStudioScene activeScene = controller.getActiveScene();
+        sceneNameField = new GuiTextField(30, fontRendererObj, 18, 140, 126, 18);
+        sceneNameField.setMaxStringLength(32);
+        sceneNameField.setText(activeScene == null ? "" : activeScene.getName());
 
         int rightX = width - 184;
         int buttonWidth = 78;
@@ -52,13 +59,17 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(14, rightX + 8, rightY + row * 7, buttonWidth, "Storage");
         add(18, rightX + 8 + buttonWidth + gap, rightY + row * 7, buttonWidth, "Next Mic");
 
-        add(15, 18, 198, 126, "Change Module", true);
-        add(16, 18, 222, 126, "Next Camera Path");
-        add(17, 18, 246, 126, runtime.isCameraPreviewVisible() ? "HUD Preview: ON" : "HUD Preview: OFF");
         add(19, 18, 84, 126, "Next Scene");
         add(20, 18, 106, 126, "New Scene", true);
-        add(21, 18, 270, 126, "Toggle Game Capture");
-        add(22, 18, 294, 126, "Toggle Microphone");
+        add(23, 18, 162, 126, "Rename Scene");
+        add(24, 18, 184, 126, "Remove Scene");
+        add(15, 18, 282, 126, "Change Module", true);
+        add(16, 18, 306, 126, "Next Camera Path");
+        add(17, 18, 330, 126, runtime.isCameraPreviewVisible() ? "HUD Preview: ON" : "HUD Preview: OFF");
+        add(21, 18, 354, 126, "Toggle Game Capture");
+        add(22, 18, 378, 126, "Toggle Microphone");
+        add(25, 18, 402, 126, "Remove Game Source");
+        add(26, 18, 426, 126, "Remove Mic Source");
 
         GuiButton cameraButton = findButton(6);
         if (cameraButton != null) cameraButton.enabled = "normal_gameplay".equals(runtime.getSelectedModuleId());
@@ -151,6 +162,22 @@ public final class RecordingStudioScreen extends GuiScreen {
                 controller.toggleSceneSource(RecordingStudioSource.Type.MICROPHONE);
                 initGui();
                 break;
+            case 23:
+                controller.renameActiveScene(sceneNameField.getText());
+                initGui();
+                break;
+            case 24:
+                controller.removeActiveScene();
+                initGui();
+                break;
+            case 25:
+                controller.removeSceneSource(RecordingStudioSource.Type.GAME_CAPTURE);
+                initGui();
+                break;
+            case 26:
+                controller.removeSceneSource(RecordingStudioSource.Type.MICROPHONE);
+                initGui();
+                break;
             default: break;
         }
     }
@@ -158,7 +185,14 @@ public final class RecordingStudioScreen extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == 1) { mc.displayGuiScreen(null); return; }
+        if (sceneNameField != null) sceneNameField.textboxKeyTyped(typedChar, keyCode);
         super.keyTyped(typedChar, keyCode);
+    }
+
+    @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+        if (sceneNameField != null) sceneNameField.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -199,12 +233,14 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, "SCENES  (" + controller.getTimeline().getScenes().size() + ")", 20, 59, 0xFFFFC83D);
         drawString(fontRendererObj, "> " + compact(activeScene == null ? "None" : activeScene.getName(), 20),
                 20, 78, 0xFFFFFFFF);
-        drawString(fontRendererObj, "MODULE", 20, 132, 0xFFFFC83D);
+        drawString(fontRendererObj, "Scene name", 20, 130, 0xFFBBBBBB);
+        if (sceneNameField != null) sceneNameField.drawTextBox();
+        drawString(fontRendererObj, "MODULE", 20, 210, 0xFFFFC83D);
         drawString(fontRendererObj, compact(runtime.getModuleDisplayName(runtime.getSelectedModuleId()), 19),
-                20, 143, 0xFFFFFFFF);
+                20, 229, 0xFFFFFFFF);
         drawString(fontRendererObj, "Option: " + compact(runtime.getSelectedOptionId().isEmpty()
-                ? "Default" : runtime.getSelectedOptionId(), 14), 20, 161, 0xFFBBBBBB);
-        drawString(fontRendererObj, compact(runtime.getSelectedModuleStatus(), 22), 20, 181, 0xFFAAAAAA);
+                ? "Default" : runtime.getSelectedOptionId(), 14), 20, 247, 0xFFBBBBBB);
+        drawString(fontRendererObj, compact(runtime.getSelectedModuleStatus(), 22), 20, 265, 0xFFAAAAAA);
 
         drawCenteredString(fontRendererObj, "LIVE PREVIEW", (previewLeft + previewRight) / 2,
                 previewTop + 10, 0xFFFFC83D);
