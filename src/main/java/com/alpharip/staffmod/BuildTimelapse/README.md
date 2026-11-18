@@ -7,7 +7,7 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 - Timeline marker, multi-track and clip persistence (including clip speed); format 2 remains backward-readable for format 1 projects.
 - Independent camera runtime contract, free/orbit/follow/fixed/path/drone modes, validated poses, orbit rig, named presets, timed waypoints, holds, easing and time-based path interpolation.
 - Local versioned camera-path persistence through CameraPathStore / FileCameraPathStore, with Camera Editor save/load controls and path-ID validation.
-- Tick-driven interval screenshot scheduler with a bounded background queue, per-frame settings snapshots, failure callbacks and a local CSV capture-manifest listener.
+- Tick-driven interval screenshot scheduler with a bounded background queue, per-frame settings snapshots, failure callbacks and optional local CSV capture-manifest wiring through the BuildTimelapse composition root.
 - MinecraftScreenshotCaptureBackend marshals framebuffer work through MinecraftRenderThreadExecutor and restores the previous HUD/hand visibility in finally.
 - Build place/remove event model, activity tracker, build-area bounds and placement milestones.
 - Cinematic effects profile, fades, speed ramps and time/weather/HUD adapter contract.
@@ -20,7 +20,7 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 ## Required runtime adapters / integration
 1. Implement MinecraftCameraBridge with a client-only camera entity or Mixin. It must preserve/restore Minecraft's original render-view entity on every exit path. Never move the player or alter player motion/input.
 2. Implement MinecraftScreenshotBridge using Minecraft 1.8.9 HUD/render settings and framebuffer/ScreenShotHelper APIs, then inject it into MinecraftScreenshotCaptureBackend with MinecraftRenderThreadExecutor.
-3. Attach a CaptureManifest to CaptureService.setListener(...) to persist frame and failure metadata as local CSV.
+3. Supply a local CaptureManifest to the BuildTimelapse composition root to attach frame and failure metadata logging to CaptureService.
 4. Register BuildTimelapseClientTickHandler on the Forge event bus while the studio is active, and unregister it when the studio shuts down.
 5. Connect Forge block place/break events; ignore cancelled, duplicate and remote-world changes.
 6. Register/open BuildTimelapseStudioScreen from the intended client-side entry point and inject the configured project services.
