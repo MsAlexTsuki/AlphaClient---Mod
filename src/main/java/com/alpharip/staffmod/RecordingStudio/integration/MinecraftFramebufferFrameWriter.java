@@ -3,9 +3,10 @@ package com.alpharip.staffmod.RecordingStudio.integration;
 import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL30;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -42,17 +43,17 @@ public final class MinecraftFramebufferFrameWriter implements RecordingCaptureSe
 
         ByteBuffer pixels = BufferUtils.createByteBuffer((int) byteCount);
         byte[] rgba = new byte[(int) byteCount];
-        int previousFramebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+        int previousFramebuffer = GL11.glGetInteger(OpenGlHelper.GL_FRAMEBUFFER_BINDING);
         java.nio.IntBuffer previousViewport = BufferUtils.createIntBuffer(4);
         GL11.glGetInteger(GL11.GL_VIEWPORT, previousViewport);
-        framebuffer.bindFramebuffer(true);
         try {
+            framebuffer.bindFramebuffer(true);
             GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
             pixels.position(0);
             pixels.get(rgba);
         } finally {
-            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, previousFramebuffer);
-            GL11.glViewport(previousViewport.get(0), previousViewport.get(1),
+            OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, previousFramebuffer);
+            GlStateManager.viewport(previousViewport.get(0), previousViewport.get(1),
                     previousViewport.get(2), previousViewport.get(3));
         }
         return new RecordingCaptureService.FrameData(width, height, rgba);
