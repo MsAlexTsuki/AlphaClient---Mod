@@ -13,6 +13,8 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Manual recording controller and independent Forge runtime.
 - Explicit microphone recording controls; PCM 44.1 kHz, 16-bit mono WAV files are written on a dedicated audio thread.
 - Completed microphone recordings are added as clips to the standalone Audio timeline track and persisted with the project.
+- Background MP4 and GIF export from ordered captured PNG frames, with cancellation and temporary-output cleanup.
+- MP4 export includes saved Audio timeline clips, delayed to their timeline positions and mixed when multiple clips exist; GIF output is silent.
 - Microphone capture stops when video recording is paused or stopped; a new audio clip can be started after video recording resumes.
 - Minecraft framebuffer capture backend reading OpenGL pixels on the client thread and converting/writing PNG frames asynchronously on a dedicated worker.
 - Bounded encoder queue (one active write plus up to eight queued frames) with dropped-frame accounting when the queue is full.
@@ -34,7 +36,9 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Camera roll is not applied by the Minecraft render-view adapter.
 - Camera path interpolation and render-thread behavior have not been compiled or tested in Minecraft.
 - Capture uses native framebuffer resolution. OpenGL framebuffer readback remains on the Minecraft client thread; PNG conversion and disk writing run asynchronously.
-- Disk retention, effects and video/GIF export migration are not included yet.
+- FFmpeg must be installed separately and available as `ffmpeg` on PATH for MP4/GIF export.
+- Export currently uses 30 FPS and captured native resolution (MP4 is padded to even dimensions); custom export settings, percentage progress and GIF audio are not included yet.
+- Disk retention and effects/filters are not included yet.
 - Audio capture uses the system's default microphone input. Device selection, live monitoring, audio mixing and automatic microphone restart after a video pause are not included yet.
 - Crash recovery is currently checkpoint-based: it detects an uncleanly interrupted session and preserves previously written frames for continuation; it does not reconstruct a frame that was still being captured or encoded at the moment of the crash.
 - Registered in the AlphaClient Forge entry point as the `/recordingstudio` client command; no keybind or module-menu entry has been added.
