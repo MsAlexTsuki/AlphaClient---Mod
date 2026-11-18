@@ -1,5 +1,5 @@
 package com.alpharip.staffmod.BuildTimelapse;
-import com.alpharip.staffmod.BuildTimelapse.core.*;import com.alpharip.staffmod.BuildTimelapse.camera.*;import com.alpharip.staffmod.BuildTimelapse.capture.*;import com.alpharip.staffmod.RecordingStudio.timeline.*;import com.alpharip.staffmod.BuildTimelapse.analytics.*;import com.alpharip.staffmod.BuildTimelapse.effects.*;import com.alpharip.staffmod.BuildTimelapse.export.*;
+import com.alpharip.staffmod.BuildTimelapse.core.*;import com.alpharip.staffmod.RecordingStudio.camera.*;import com.alpharip.staffmod.BuildTimelapse.capture.*;import com.alpharip.staffmod.RecordingStudio.timeline.*;import com.alpharip.staffmod.BuildTimelapse.analytics.*;import com.alpharip.staffmod.BuildTimelapse.effects.*;import com.alpharip.staffmod.BuildTimelapse.export.*;
 import java.io.File;
 import java.io.IOException;
 /** Composition root for the independent studio services. Runtime adapters are injected. */
