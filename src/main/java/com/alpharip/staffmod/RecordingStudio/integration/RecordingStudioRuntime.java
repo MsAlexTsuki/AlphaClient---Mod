@@ -51,6 +51,8 @@ public final class RecordingStudioRuntime {
         minecraft.displayGuiScreen(new RecordingStudioScreen(controller, this));
     }
 
+    public synchronized boolean isClosed() { return closed; }
+
     public synchronized CameraController getCameraController() {
         if (!started || camera == null) {
             throw new IllegalStateException("Recording Studio camera runtime is not started");
