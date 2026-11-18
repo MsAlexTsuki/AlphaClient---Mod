@@ -94,6 +94,13 @@ import com.alpharip.staffmod.AutoTool.AutoToolMod;
 import com.alpharip.staffmod.InventorySearch.InventorySearchCommand;
 import com.alpharip.staffmod.InventorySearch.InventorySearchMod;
 import com.alpharip.staffmod.AnvilCost.AnvilCostTooltipHandler;
+import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureService;
+import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureSettings;
+import com.alpharip.staffmod.RecordingStudio.core.RecordingProject;
+import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
+import com.alpharip.staffmod.RecordingStudio.integration.MinecraftFramebufferFrameWriter;
+import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
+import com.alpharip.staffmod.RecordingStudio.command.RecordingStudioCommand;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -152,6 +159,7 @@ public final class AlphaClient {
         MinecraftForge.EVENT_BUS.register(new DeveloperDiagnostics());
         MinecraftForge.EVENT_BUS.register(new DeveloperDebugOverlay());
         registerClientCommands();
+        ClientCommandHandler.instance.registerCommand(new RecordingStudioCommand());
         ClientCommandHandler.instance.registerCommand(new CommandPaletteCommand());
         ClientCommandHandler.instance.registerCommand(new BlockPlacementPreviewCommand());
         ClientCommandHandler.instance.registerCommand(new AutoToolCommand());
