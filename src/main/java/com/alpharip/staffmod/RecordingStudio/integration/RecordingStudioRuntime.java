@@ -35,7 +35,7 @@ public final class RecordingStudioRuntime {
     }
 
     public synchronized void open(Minecraft minecraft) {
-        if (minecraft == null || minecraft.theWorld == null || minecraft.thePlayer == null) {
+        if (minecraft == null || minecraft.theWorld == null) {
             throw new IllegalStateException("Recording Studio can only open inside a loaded world");
         }
         if (closed) throw new IllegalStateException("Recording Studio runtime is shut down");
@@ -282,6 +282,7 @@ public final class RecordingStudioRuntime {
             if (module != null) module.onRecordingPause(System.currentTimeMillis());
         } catch (Exception failure) {
             moduleStatus = "Module pause failed: " + failure.getMessage();
+            return;
         }
         controller.pause();
     }
@@ -357,7 +358,7 @@ public final class RecordingStudioRuntime {
     public void onWorldRender(RenderWorldLastEvent event) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft != null && minecraft.gameSettings != null
-                && minecraft.gameSettings.hideGUI && minecraft.currentScreen == null) {
+                && minecraft.gameSettings.hideGUI) {
             controller.captureFrameTick(System.currentTimeMillis());
         }
     }
