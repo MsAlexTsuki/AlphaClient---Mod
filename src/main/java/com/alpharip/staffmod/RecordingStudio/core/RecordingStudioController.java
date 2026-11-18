@@ -279,6 +279,41 @@ public final class RecordingStudioController {
         }
     }
 
+    /** Refreshes the detected input list and falls back safely if the selected device was unplugged. */
+    public synchronized void refreshMicrophones() {
+        ensureOpen();
+        if (audioCapture.isRecording() || audioCapture.isFinalizing()) {
+            status = "Stop microphone capture before refreshing input devices";
+            return;
+        }
+
+        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
+                RecordingAudioCaptureService.getAvailableMicrophones();
+        String selected = project.getMicrophoneDeviceKey();
+        if (selected == null || selected.isEmpty()) {
+            microphoneSelectionName = "System Default";
+            status = "Microphone list refreshed: " + devices.size() + " input device(s) detected";
+            return;
+        }
+
+        for (RecordingAudioCaptureService.MicrophoneDevice device : devices) {
+            if (device.getKey().equals(selected)) {
+                microphoneSelectionName = device.getName();
+                status = "Microphone list refreshed: " + microphoneSelectionName;
+                return;
+            }
+        }
+
+        project.setMicrophoneDeviceKey("");
+        microphoneSelectionName = "System Default";
+        try {
+            projectStore.save(project, timeline);
+            status = "Selected microphone is unavailable; switched to System Default";
+        } catch (IOException failure) {
+            status = "Selected microphone is unavailable; fallback could not be saved: " + failure.getMessage();
+        }
+    }
+
     public synchronized String getMicrophoneSelectionName() {
         return microphoneSelectionName;
     }
