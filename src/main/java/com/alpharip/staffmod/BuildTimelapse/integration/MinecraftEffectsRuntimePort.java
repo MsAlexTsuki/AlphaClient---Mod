@@ -20,6 +20,7 @@ public final class MinecraftEffectsRuntimePort implements EffectsRuntimePort {
     private boolean originalThundering;
     private int originalRainTime;
     private int originalThunderTime;
+    private int originalCleanWeatherTime;
     private float originalRainStrength;
     private float originalThunderStrength;
     private boolean weatherCaptured;
@@ -60,6 +61,7 @@ public final class MinecraftEffectsRuntimePort implements EffectsRuntimePort {
             originalThundering = info.isThundering();
             originalRainTime = info.getRainTime();
             originalThunderTime = info.getThunderTime();
+            originalCleanWeatherTime = info.getCleanWeatherTime();
             originalRainStrength = snapshotWorld.getRainStrength(1.0F);
             originalThunderStrength = snapshotWorld.getThunderStrength(1.0F);
             weatherCaptured = true;
@@ -98,6 +100,7 @@ public final class MinecraftEffectsRuntimePort implements EffectsRuntimePort {
                 info.setThundering(originalThundering);
                 info.setRainTime(originalRainTime);
                 info.setThunderTime(originalThunderTime);
+                info.setCleanWeatherTime(originalCleanWeatherTime);
                 snapshotWorld.setRainStrength(originalRainStrength);
                 snapshotWorld.setThunderStrength(originalThunderStrength);
             }
