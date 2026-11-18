@@ -1,9 +1,9 @@
-# Recording Studio — Standalone Module
+# Recording Studio — Alpha Client Addon
 
-Independent general-purpose Minecraft 1.8.9 / Forge recording module.
+Optional general-purpose recording feature packaged in the Alpha Recording Studio addon for Alpha Client (Minecraft 1.8.9 / Forge). Alpha Client is required; Alpha Client does not require this addon.
 
 ## Included
-- Standalone Recording Studio project model with local metadata persistence.
+- Recording Studio project model with local metadata persistence.
 - Local project catalog with list, create and open commands (`/recordingstudio list`, `/recordingstudio create <name>`, `/recordingstudio open <project-id>`).
 - Atomic timeline persistence for tracks, clips, playback speeds and timeline markers; saved projects can restore their timeline after reopening.
 - Project metadata and timeline are saved from the Studio Save Project control and automatically on Studio shutdown/world unload; recording start, pause and resume also create recovery checkpoints.
@@ -11,7 +11,7 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - An atomic per-project active-session marker is retained while a recording is in progress and cleared only after a successful final checkpoint and completion of all accepted frame and microphone-audio writes; reopening a project with a leftover marker reports an interrupted session while preserving existing frame files.
 - Stopping a session keeps its recovery marker while frame or microphone writes are pending; the marker is cleared after finalization, including through a background finalizer during Studio shutdown.
 - Existing frame filenames are scanned before recording resumes so a reopened project appends frames instead of overwriting earlier captures.
-- Manual recording controller and independent Forge runtime.
+- Manual recording controller and Recording Studio-owned Forge runtime.
 - OBS-inspired AlphaClient workspace with a live Minecraft viewport and dedicated Scenes, Sources, Module, Audio Mixer, Controls and Timeline panels.
 - Persisted scene management with create, rename, remove and cycle controls; the final remaining scene is protected from deletion.
 - Built-in per-scene Minecraft Capture and Microphone sources with enable/disable, remove and reorder controls. Select a source in the Sources panel, then move it up or down; the order is saved with the scene. Disabling or removing microphone capture stops an active microphone session. Scene selection, scene edits and Game Capture source changes are locked during active or paused recording so captured frame timing cannot silently become discontinuous.
@@ -56,5 +56,5 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Microphone input can be selected from detected Java Sound capture devices or set to the system default; the selected device is saved with the project. The Refresh Mic control re-enumerates devices and switches to the system default if the saved input has been unplugged. Live microphone monitoring is not included. Game audio capture is not implemented.
 - Crash recovery is currently checkpoint-based: it detects an uncleanly interrupted session and preserves previously written frames for continuation; it does not reconstruct a frame or microphone audio that was still being captured or encoded at the moment of the crash. Active-time recovery typically loses up to about one second since the last checkpoint under normal tick operation; a longer client stall can increase that gap.
 - Scene sources currently cover the built-in Minecraft framebuffer and microphone inputs. Arbitrary media sources, filters and independent per-scene audio-device overrides are not implemented.
-- The client entry point still needs to register the Recording Studio command and initialize the Build Timelapse runtime/module adapter; no keybind or top-level module-menu entry has been added.
+- The Alpha Recording Studio addon entry point registers the Recording Studio command. Build Timelapse runtime initialization and its module adapter are not yet connected to the addon; no keybind or top-level module-menu entry has been added.
 - The mod-ideas branch contains an isolated ForgeGradle build setup, but the current Recording Studio changes have not been compiled or verified in-game.
