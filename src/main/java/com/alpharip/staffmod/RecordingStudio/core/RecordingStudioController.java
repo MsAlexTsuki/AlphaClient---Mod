@@ -81,7 +81,15 @@ public final class RecordingStudioController {
         status = "Stopped";
     }
 
-    public synchronized void adjustCaptureInterval(long deltaMillis) {\n        ensureOpen();\n        long current = capture.getIntervalMillis();\n        long adjusted = Math.max(100L, Math.min(60000L, current + deltaMillis));\n        capture.setIntervalMillis(adjusted);\n        status = "Capture interval: " + adjusted + " ms";\n    }\n\n    public synchronized void tick(long now) {
+    public synchronized void adjustCaptureInterval(long deltaMillis) {
+        ensureOpen();
+        long current = capture.getIntervalMillis();
+        long adjusted = Math.max(100L, Math.min(60000L, current + deltaMillis));
+        capture.setIntervalMillis(adjusted);
+        status = "Capture interval: " + adjusted + " ms";
+    }
+
+    public synchronized void tick(long now) {
         if (!closed) {
             capture.tick(now);
         }
