@@ -35,23 +35,49 @@ public final class FfmpegVideoEncoder implements VideoEncoder {
         }
 
         String input = new File(frames, "frame-%08d.png").getAbsolutePath();
-        if (settings.getFormat() == ExportSettings.Format.GIF) {
-            encodeOptimizedGif(input, output, parent, settings);
-        } else if (settings.getFormat() == ExportSettings.Format.MP4) {
-            List<String> command = baseCommand(input, settings);
-            Collections.addAll(command, "-vf",
-                    "scale=" + settings.getWidth() + ":" + settings.getHeight()
-                            + ":force_original_aspect_ratio=decrease,pad="
-                            + settings.getWidth() + ":" + settings.getHeight() + ":(ow-iw)/2:(oh-ih)/2",
-                    "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", output.getAbsolutePath());
-            run(command, "MP4 export");
-        } else {
-            throw new UnsupportedOperationException("Unsupported export format");
+        File partial = createPartialOutput(output);
+        try {
+            if (settings.getFormat() == ExportSettings.Format.GIF) {
+                encodeOptimizedGif(input, partial, parent, settings);
+            } else if (settings.getFormat() == ExportSettings.Format.MP4) {
+                List<String> command = baseCommand(input, settings);
+                Collections.addAll(command, "-vf",
+                        "scale=" + settings.getWidth() + ":" + settings.getHeight()
+                                + ":force_original_aspect_ratio=decrease,pad="
+                                + settings.getWidth() + ":" + settings.getHeight() + ":(ow-iw)/2:(oh-ih)/2",
+                        "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                        "-y", partial.getAbsolutePath());
+                run(command, "MP4 export");
+            } else {
+                throw new UnsupportedOperationException("Unsupported export format");
+            }
+
+            if (!partial.isFile() || partial.length() == 0) {
+                throw new IOException("FFmpeg did not create a valid temporary output file");
+            }
+            try {
+                Files.move(partial.toPath(), output.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(partial.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            if (partial.exists() && !partial.delete()) partial.deleteOnExit();
         }
 
         if (!output.isFile() || output.length() == 0) {
             throw new IOException("FFmpeg did not create a valid output file");
         }
+    }
+
+    private static File createPartialOutput(File output) {
+        File parent = output.getAbsoluteFile().getParentFile();
+        String name = output.getName();
+        int extension = name.lastIndexOf('.');
+        String partialName = extension > 0
+                ? name.substring(0, extension) + ".partial" + name.substring(extension)
+                : name + ".partial";
+        return new File(parent, partialName);
     }
 
     private void encodeOptimizedGif(String input, File output, File parent, ExportSettings settings)
