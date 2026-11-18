@@ -445,7 +445,6 @@ public final class RecordingStudioController {
     private void persistSceneChange(String successStatus) {
         try {
             projectStore.save(project, timeline);
-            if (status.equals("Microphone stopped because it is disabled in the active scene")) return;
             status = successStatus;
         } catch (IOException failure) {
             status = successStatus + "; could not save scene settings: " + failure.getMessage();
