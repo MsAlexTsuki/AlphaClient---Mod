@@ -127,7 +127,7 @@ public final class CaptureService {
         if (closed) return;
         stop();
         closed = true;
-        worker.shutdown();
+        worker.shutdownNow();
     }
 
     private void initializeSequence() throws IOException {
