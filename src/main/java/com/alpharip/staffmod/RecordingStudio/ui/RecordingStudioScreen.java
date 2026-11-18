@@ -244,7 +244,8 @@ public final class RecordingStudioScreen extends GuiScreen {
 
         drawCenteredString(fontRendererObj, "LIVE PREVIEW", (previewLeft + previewRight) / 2,
                 previewTop + 10, 0xFFFFC83D);
-        drawString(fontRendererObj, "Scene: Main Scene", previewLeft + 12, previewTop + 28, 0xFFE0E0E0);
+        drawString(fontRendererObj, "Scene: " + compact(activeScene == null ? "None" : activeScene.getName(), 24),
+                previewLeft + 12, previewTop + 28, 0xFFE0E0E0);
         drawString(fontRendererObj, "Module: " + runtime.getModuleDisplayName(runtime.getSelectedModuleId()),
                 previewLeft + 12, previewTop + 42, 0xFFE0E0E0);
         drawString(fontRendererObj, "SESSION  " + controller.getStatus(),
