@@ -61,7 +61,13 @@ public final class RecordingStudioRuntime {
     public synchronized boolean hasExternalCamera() {
         if (camera != null && camera.isActive()) return true;
         RecordingStudioModule module = selectedModule();
-        return module != null && module.isExternalCameraActive();
+        if (module == null) return false;
+        try {
+            return module.isExternalCameraActive();
+        } catch (RuntimeException failure) {
+            moduleStatus = "Could not read external camera state: " + failure.getMessage();
+            return false;
+        }
     }
 
     public synchronized void toggleCameraPreview() {
@@ -90,7 +96,14 @@ public final class RecordingStudioRuntime {
         if ("normal_gameplay".equals(id)) return "Normal Gameplay";
         if ("build_timelapse".equals(id)) return "Build Timelapse";
         RecordingStudioModule module = RecordingStudioModuleRegistry.get(id);
-        return module == null ? id : module.getDisplayName();
+        if (module == null) return id;
+        try {
+            String name = module.getDisplayName();
+            return name == null || name.trim().isEmpty() ? id : name;
+        } catch (RuntimeException failure) {
+            moduleStatus = "Could not read module name: " + failure.getMessage();
+            return id;
+        }
     }
 
     public synchronized String getSelectedModuleId() { return selectedModuleId; }
@@ -126,7 +139,11 @@ public final class RecordingStudioRuntime {
                 || moduleStatus.startsWith("Module cleanup failed")) {
             return moduleStatus;
         }
-        return module.getStatus();
+        try {
+            return module.getStatus();
+        } catch (RuntimeException failure) {
+            return "Module status unavailable: " + failure.getMessage();
+        }
     }
 
     public synchronized void selectNextModule() {
@@ -159,17 +176,21 @@ public final class RecordingStudioRuntime {
             moduleStatus = "Module runtime is not initialized. Open the module once, then return to Recording Studio.";
             return;
         }
-        if (!module.isAvailable()) {
-            moduleStatus = module.getDisplayName() + " is currently unavailable.";
-            return;
-        }
+        try {
+            if (!module.isAvailable()) {
+                moduleStatus = module.getDisplayName() + " is currently unavailable.";
+                return;
+            }
 
-        List<String> options = module.getOptions();
-        if (options == null || options.isEmpty()) {
-            moduleStatus = "No saved camera paths. Create a path in the Build Timelapse Camera Editor first.";
-            return;
+            List<String> options = module.getOptions();
+            if (options == null || options.isEmpty()) {
+                moduleStatus = "No saved camera paths. Create a path in the Build Timelapse Camera Editor first.";
+                return;
+            }
+            selectOption(options.get(0));
+        } catch (RuntimeException failure) {
+            moduleStatus = "Could not prepare module: " + failure.getMessage();
         }
-        selectOption(options.get(0));
     }
 
     public synchronized void selectNextModuleOption() {
@@ -182,13 +203,17 @@ public final class RecordingStudioRuntime {
             moduleStatus = "The selected module is not initialized.";
             return;
         }
-        List<String> options = module.getOptions();
-        if (options == null || options.isEmpty()) {
-            moduleStatus = "No saved options are available for this module.";
-            return;
+        try {
+            List<String> options = module.getOptions();
+            if (options == null || options.isEmpty()) {
+                moduleStatus = "No saved options are available for this module.";
+                return;
+            }
+            int index = options.indexOf(selectedOptionId);
+            selectOption(options.get((index + 1 + options.size()) % options.size()));
+        } catch (RuntimeException failure) {
+            moduleStatus = "Could not read module options: " + failure.getMessage();
         }
-        int index = options.indexOf(selectedOptionId);
-        selectOption(options.get((index + 1 + options.size()) % options.size()));
     }
 
     private void selectOption(String optionId) {
@@ -213,9 +238,16 @@ public final class RecordingStudioRuntime {
             moduleStatus = "Module runtime is not initialized. Recording was not started.";
             return;
         }
-        if (module != null && !module.isAvailable()) {
-            moduleStatus = module.getDisplayName() + " is unavailable. Recording was not started.";
-            return;
+        if (module != null) {
+            try {
+                if (!module.isAvailable()) {
+                    moduleStatus = module.getDisplayName() + " is unavailable. Recording was not started.";
+                    return;
+                }
+            } catch (RuntimeException failure) {
+                moduleStatus = "Could not check module availability: " + failure.getMessage();
+                return;
+            }
         }
         try {
             if (module != null) module.onRecordingStart(System.currentTimeMillis());
