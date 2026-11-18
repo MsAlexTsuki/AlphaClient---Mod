@@ -132,7 +132,8 @@ public final class MinecraftIndependentCameraBridge implements MinecraftCameraBr
     }
 
     private static void applyPose(EntityOtherPlayerMP entity, CameraPose pose) {
-        entity.setPositionAndRotation(pose.x, pose.y, pose.z, pose.yaw, pose.pitch);
+        double entityY = pose.y - entity.getEyeHeight();
+        entity.setPositionAndRotation(pose.x, entityY, pose.z, pose.yaw, pose.pitch);
         entity.prevPosX = entity.lastTickPosX = entity.posX;
         entity.prevPosY = entity.lastTickPosY = entity.posY;
         entity.prevPosZ = entity.lastTickPosZ = entity.posZ;
