@@ -6,13 +6,14 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 
 /**
- * Standalone Forge entry point for Alpha Recording Studio.
- * Recording Studio remains separate from the AlphaClient mod lifecycle.
+ * Forge entry point for the optional Alpha Recording Studio addon.
+ * Alpha Client is the required core mod; Alpha Client itself does not depend on this addon.
  */
 @Mod(
         modid = AlphaRecordingStudio.MOD_ID,
         name = AlphaRecordingStudio.NAME,
         version = AlphaRecordingStudio.VERSION,
+        dependencies = "required-after:alphaclient",
         clientSideOnly = true,
         acceptedMinecraftVersions = "[1.8.9]"
 )
