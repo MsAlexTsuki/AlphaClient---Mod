@@ -1,5 +1,6 @@
 package com.alpharip.staffmod.BuildTimelapse.export;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 /** Single-job export queue with cooperative process cancellation through thread interruption. */
 public final class ExportQueue {
  private final ExecutorService executor=Executors.newSingleThreadExecutor(new ThreadFactory(){public Thread newThread(Runnable r){Thread t=new Thread(r,"Alpha-BuildTimelapse-Export");t.setDaemon(true);return t;}});
@@ -9,8 +10,15 @@ public final class ExportQueue {
   if(closed)throw new IllegalStateException("Export queue is shut down");
   if(busy)throw new IllegalStateException("Export busy");
   busy=true;
-  current=new FutureTask<Void>(new Callable<Void>(){public Void call()throws Exception{encoder.encode(job);return null;}}){
-   @Override protected void done(){synchronized(ExportQueue.this){busy=false;if(current==this)current=null;}}
+  final AtomicBoolean started=new AtomicBoolean(false);
+  current=new FutureTask<Void>(new Callable<Void>(){public Void call()throws Exception{
+   started.set(true);
+   try{encoder.encode(job);return null;}
+   finally{synchronized(ExportQueue.this){busy=false;if(current==ExportQueue.this.current)current=null;}}
+  }}){
+   @Override protected void done(){
+    if(!started.get())synchronized(ExportQueue.this){busy=false;if(current==this)current=null;}
+   }
   };
   try{executor.execute(current);return current;}catch(RuntimeException ex){current.cancel(false);throw ex;}
  }
