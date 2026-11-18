@@ -57,16 +57,18 @@ public final class FileCameraPathStore implements CameraPathStore {
 
         File temporary = new File(root, id + "." + UUID.randomUUID().toString() + ".tmp");
         File destination = file(id);
-        try (OutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
-            data.store(output, "Recording Studio camera path");
-        }
         try {
-            Files.move(temporary.toPath(), destination.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException unsupported) {
-            Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            try (OutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
+                data.store(output, "Recording Studio camera path");
+            }
+            try {
+                Files.move(temporary.toPath(), destination.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
         } finally {
-            if (temporary.exists()) temporary.deleteOnExit();
+            if (temporary.exists() && !temporary.delete()) temporary.deleteOnExit();
         }
     }
 
