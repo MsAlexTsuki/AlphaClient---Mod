@@ -43,11 +43,18 @@ public final class ClanTagCache {
 
     private static final class Entry {
         final String tag;
+        final String color;
         final long expiresAt;
-        Entry(String tag, long expiresAt) {
+        Entry(String tag, String color, long expiresAt) {
             this.tag = tag;
+            this.color = color;
             this.expiresAt = expiresAt;
         }
+    }
+    private static final class TagData {
+        final String tag;
+        final String color;
+        TagData(String tag, String color) { this.tag=tag; this.color=color; }
     }
 
     private final ConcurrentMap<UUID, Entry> cache = new ConcurrentHashMap<UUID, Entry>();
@@ -95,6 +102,18 @@ public final class ClanTagCache {
         return entry == null || entry.expiresAt <= now ? null : entry.tag;
     }
 
+    /** Returns the cached standard clan-tag color without performing network I/O. */
+    public String getColor(UUID uuid) {
+        if (uuid == null) return null;
+        long now = System.currentTimeMillis();
+        Entry entry = cache.get(uuid);
+        if (entry == null || entry.expiresAt <= now) {
+            get(uuid);
+            return null;
+        }
+        return entry.color;
+    }
+
     private void flush() {
         List<UUID> batch = new ArrayList<UUID>(BATCH_SIZE);
         Iterator<UUID> iterator = pending.iterator();
@@ -109,10 +128,12 @@ public final class ClanTagCache {
 
         long now = System.currentTimeMillis();
         try {
-            Map<UUID, String> found = fetch(batch);
+            Map<UUID, TagData> found = fetch(batch);
             for (UUID uuid : batch) {
-                String tag = found.get(uuid);
-                cache.put(uuid, new Entry(tag, now + (tag == null ? MISS_TTL_MS : TTL_MS)));
+                TagData data = found.get(uuid);
+                String tag = data == null ? null : data.tag;
+                String color = data == null ? null : data.color;
+                cache.put(uuid, new Entry(tag, color, now + (tag == null ? MISS_TTL_MS : TTL_MS)));
                 retryAfter.remove(uuid);
             }
         } catch (Exception exception) {
@@ -124,14 +145,14 @@ public final class ClanTagCache {
         }
     }
 
-    private Map<UUID, String> fetch(List<UUID> uuids) throws IOException {
+    private Map<UUID, TagData> fetch(List<UUID> uuids) throws IOException {
         JsonArray input = new JsonArray();
         for (UUID uuid : uuids) input.add(new JsonPrimitive(uuid.toString()));
         JsonObject body = new JsonObject();
         body.add("uuids", input);
 
         HttpURLConnection connection = (HttpURLConnection) new URL(
-                SUPABASE_URL + "/rest/v1/rpc/get_public_clan_tags"
+                SUPABASE_URL + "/rest/v1/rpc/get_public_clan_tag_styles"
         ).openConnection();
         connection.setRequestMethod("POST");
         connection.setConnectTimeout(5000);
@@ -163,7 +184,7 @@ public final class ClanTagCache {
             try {
                 JsonElement parsed = new JsonParser().parse(reader);
                 if (!parsed.isJsonArray()) throw new IOException("Clan-tag lookup returned an invalid payload.");
-                Map<UUID, String> result = new HashMap<UUID, String>();
+                Map<UUID, TagData> result = new HashMap<UUID, TagData>();
                 for (JsonElement element : parsed.getAsJsonArray()) {
                     if (!element.isJsonObject()) continue;
                     JsonObject row = element.getAsJsonObject();
@@ -171,8 +192,10 @@ public final class ClanTagCache {
                             || !row.has("clan_tag") || row.get("clan_tag").isJsonNull()) continue;
                     try {
                         String tag = row.get("clan_tag").getAsString();
-                        if (tag.matches("[A-Z0-9]{2,5}")) {
-                            result.put(UUID.fromString(row.get("mc_uuid").getAsString()), tag);
+                        String color = row.has("tag_color") && !row.get("tag_color").isJsonNull()
+                                ? row.get("tag_color").getAsString().toLowerCase(java.util.Locale.ROOT) : "yellow";
+                        if (tag.matches("[A-Z0-9]{2,5}") && isAllowedColor(color)) {
+                            result.put(UUID.fromString(row.get("mc_uuid").getAsString()), new TagData(tag, color));
                         }
                     } catch (IllegalArgumentException ignored) {
                         // Ignore malformed rows instead of failing the entire lookup batch.
@@ -185,5 +208,12 @@ public final class ClanTagCache {
         } finally {
             connection.disconnect();
         }
+    }
+
+    private static boolean isAllowedColor(String color) {
+        String[] allowed = {"black","dark_blue","dark_green","dark_aqua","dark_red","dark_purple","gold","gray",
+                "dark_gray","blue","green","aqua","red","light_purple","yellow","white"};
+        for (String value : allowed) if (value.equals(color)) return true;
+        return false;
     }
 }
