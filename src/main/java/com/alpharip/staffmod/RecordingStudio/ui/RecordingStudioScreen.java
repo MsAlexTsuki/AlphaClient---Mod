@@ -58,6 +58,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(13, rightX + 8 + buttonWidth + gap, rightY + row * 6, buttonWidth, "Cancel");
         add(14, rightX + 8, rightY + row * 7, buttonWidth, "Storage");
         add(18, rightX + 8 + buttonWidth + gap, rightY + row * 7, buttonWidth, "Next Mic");
+        add(27, rightX + 8, rightY + row * 7, buttonWidth, "Refresh Mic");
 
         add(19, 18, 84, 126, "Next Scene");
         add(20, 18, 106, 126, "New Scene", true);
@@ -145,6 +146,9 @@ public final class RecordingStudioScreen extends GuiScreen {
                 break;
             case 18:
                 controller.selectNextMicrophone();
+                break;
+            case 27:
+                controller.refreshMicrophones();
                 break;
             case 19:
                 controller.selectNextScene();
