@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.BuildTimelapse.ui;import com.alpharip.staffmod.BuildTimelapse.camera.*;public final class PreviewController {private final CameraPathInterpolator interpolator=new CameraPathInterpolator();public CameraPose sample(CameraPath path,double progress){return interpolator.sample(path,progress);}}

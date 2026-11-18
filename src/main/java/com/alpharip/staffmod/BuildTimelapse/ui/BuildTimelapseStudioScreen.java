@@ -1,0 +1,9 @@
+package com.alpharip.staffmod.BuildTimelapse.ui;
+import net.minecraft.client.gui.GuiButton;import net.minecraft.client.gui.GuiScreen;import java.io.IOException;
+/** Minecraft 1.8.9 GUI entry point. Open it from the client with Minecraft.displayGuiScreen(...). */
+public final class BuildTimelapseStudioScreen extends GuiScreen {private final StudioController controller;private final StudioScreenModel model;
+ public BuildTimelapseStudioScreen(StudioController c,StudioScreenModel m){if(c==null||m==null)throw new IllegalArgumentException();controller=c;model=m;}
+ @Override public void initGui(){buttonList.clear();int w=120,x=width/2-w/2,y=height/2-35;buttonList.add(new GuiButton(0,x,y,w,20,"Start Recording"));buttonList.add(new GuiButton(1,x,y+24,w,20,"Pause"));buttonList.add(new GuiButton(2,x,y+48,w,20,"Resume"));buttonList.add(new GuiButton(3,x,y+72,w,20,"Stop"));buttonList.add(new GuiButton(4,x-130,y+24,110,20,"Camera"));buttonList.add(new GuiButton(5,x+140,y+24,110,20,"Timeline"));buttonList.add(new GuiButton(6,x,y+104,w,20,"Save Project"));}
+ @Override protected void actionPerformed(GuiButton b)throws IOException{if(b.id==0)controller.start();else if(b.id==1)controller.pause();else if(b.id==2)controller.resume();else if(b.id==3)controller.stop();else if(b.id==4)model.setTab("CAMERA");else if(b.id==5)model.setTab("TIMELINE");else if(b.id==6)controller.save();}
+ @Override public void drawScreen(int mouseX,int mouseY,float partialTicks){drawDefaultBackground();drawCenteredString(fontRendererObj,"BUILD TIMELAPSE STUDIO",width/2,24,0xFFC83D);drawCenteredString(fontRendererObj,model.getProject()==null?"No project selected":model.getProject().getName(),width/2,42,0xFFFFFF);drawCenteredString(fontRendererObj,"Status: "+model.getStatus()+"   |   View: "+model.getTab(),width/2,height/2+100,0xBBBBBB);super.drawScreen(mouseX,mouseY,partialTicks);}
+}
