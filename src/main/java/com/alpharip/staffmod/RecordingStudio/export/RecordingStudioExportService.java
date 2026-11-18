@@ -50,7 +50,10 @@ public final class RecordingStudioExportService {
         if (Double.isNaN(fps) || Double.isInfinite(fps) || fps <= 0.0 || fps > 240.0) throw new IllegalArgumentException("FPS must be greater than 0 and at most 240");
         if (worker != null && worker.isAlive()) throw new IllegalStateException("An export is already running");
         File[] frames = listFrames();
-        if (frames.length == 0) throw new IOException("No captured PNG frames found");
+        List<TimelineClip> videoClips = getVideoClips();
+        if (frames.length == 0 && videoClips.isEmpty()) {
+            throw new IOException("No captured frames or video timeline clips available");
+        }
         if ((!outputDirectory.exists() && !outputDirectory.mkdirs()) || !outputDirectory.isDirectory()) {
             throw new IOException("Cannot create export directory");
         }
@@ -59,7 +62,8 @@ public final class RecordingStudioExportService {
                 "recording-" + System.currentTimeMillis() + (format == Format.MP4 ? ".mp4" : ".gif"));
         cancelled = false;
         progressPercent = 0;
-        status = "Exporting " + format.name() + " (0%) — " + frames.length + " frames";
+        status = "Exporting " + format.name() + " (0%) — "
+                + (frames.length > 0 ? frames.length + " captured frames" : videoClips.size() + " video clips");
         worker = new Thread(new Runnable() {
             public void run() {
                 export(format, fps, command, output, settings);
@@ -90,31 +94,55 @@ public final class RecordingStudioExportService {
         File palette = null;
         try {
             File[] frames = listFrames();
-            if (frames.length == 0) throw new IOException("No captured PNG frames found");
-            BufferedImage first = ImageIO.read(frames[0]);
-            if (first == null) throw new IOException("Cannot read the first captured PNG frame");
-            String input = new File(framesDirectory, "frame-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].png").getAbsolutePath().replace(File.separatorChar, '/');
+            boolean hasCapturedFrames = frames.length > 0;
+            BufferedImage first = hasCapturedFrames ? ImageIO.read(frames[0]) : null;
+            if (hasCapturedFrames && first == null) {
+                throw new IOException("Cannot read the first captured PNG frame");
+            }
+            String input = hasCapturedFrames
+                    ? new File(framesDirectory, "frame-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].png")
+                            .getAbsolutePath().replace(File.separatorChar, '/')
+                    : null;
 
             List<TimelineClip> videoClips = getVideoClips();
             List<TimelineClip> audioClips = format == Format.MP4 ? getAudioClips() : Collections.<TimelineClip>emptyList();
             List<File> videoSources = new ArrayList<File>();
             List<Integer> videoInputIndexes = new ArrayList<Integer>();
+            int nextVideoInputIndex = hasCapturedFrames ? 1 : 0;
             for (TimelineClip clip : videoClips) {
                 if ("@capture".equals(clip.getSource())) {
+                    if (!hasCapturedFrames) {
+                        throw new IOException("The @capture timeline clip has no captured PNG frames");
+                    }
                     videoInputIndexes.add(0);
                 } else {
                     File source = new File(clip.getSource());
                     if (!source.isFile()) throw new FileNotFoundException("Video timeline source not found: " + source);
                     videoSources.add(source);
-                    videoInputIndexes.add(videoSources.size());
+                    videoInputIndexes.add(nextVideoInputIndex++);
                 }
             }
+            if (!hasCapturedFrames && videoSources.isEmpty()) {
+                throw new IOException("No captured frames or valid external video clips available");
+            }
 
-            long frameDurationMillis = Math.max(1L, (long) Math.ceil(frames.length * 1000.0 / fps));
+            int canvasWidth;
+            int canvasHeight;
+            if (hasCapturedFrames) {
+                canvasWidth = first.getWidth();
+                canvasHeight = first.getHeight();
+            } else {
+                int[] sourceSize = probeVideoSize(videoSources.get(0), executable);
+                canvasWidth = sourceSize[0];
+                canvasHeight = sourceSize[1];
+            }
+
+            long frameDurationMillis = hasCapturedFrames
+                    ? Math.max(1L, (long) Math.ceil(frames.length * 1000.0 / fps)) : 0L;
             long videoDurationMillis = videoClips.isEmpty()
                     ? frameDurationMillis : getTrackEnd(videoClips);
             long outputDurationMillis = Math.max(videoDurationMillis, getTrackEnd(audioClips));
-            int[] outputSize = settings.getResolution().fit(first.getWidth(), first.getHeight());
+            int[] outputSize = settings.getResolution().fit(canvasWidth, canvasHeight);
             int outputWidth = outputSize[0];
             int outputHeight = outputSize[1];
             String videoFilter = buildVideoFilter(videoClips, videoInputIndexes, outputWidth,
@@ -133,7 +161,8 @@ public final class RecordingStudioExportService {
                     command.add(audio.getAbsolutePath());
                 }
 
-                String audioFilter = buildAudioFilter(audioClips, 1 + videoSources.size());
+                String audioFilter = buildAudioFilter(audioClips,
+                        (hasCapturedFrames ? 1 : 0) + videoSources.size());
                 String filter = videoFilter;
                 if (!audioFilter.isEmpty()) filter = filter.isEmpty() ? audioFilter : filter + ";" + audioFilter;
                 if (!filter.isEmpty()) {
@@ -220,9 +249,60 @@ public final class RecordingStudioExportService {
 
     private List<String> baseCommand(String executable, String input, double fps) {
         List<String> command = new ArrayList<String>();
-        Collections.addAll(command, executable, "-hide_banner", "-loglevel", "error",
-                "-framerate", formatRate(fps), "-pattern_type", "glob", "-i", input);
+        Collections.addAll(command, executable, "-hide_banner", "-loglevel", "error");
+        if (input != null) {
+            Collections.addAll(command, "-framerate", formatRate(fps),
+                    "-pattern_type", "glob", "-i", input);
+        }
         return command;
+    }
+
+    /**
+     * Reads the first external video's dimensions when no captured PNG frame exists.
+     * FFprobe is expected beside FFmpeg, or available separately on PATH.
+     */
+    private static int[] probeVideoSize(File source, String ffmpegExecutable) throws Exception {
+        File ffmpegFile = new File(ffmpegExecutable);
+        String ffmpegName = ffmpegFile.getName();
+        String lowerName = ffmpegName.toLowerCase(Locale.ROOT);
+        String probeName = lowerName.startsWith("ffmpeg")
+                ? "ffprobe" + ffmpegName.substring("ffmpeg".length())
+                : "ffprobe";
+        String probeExecutable = ffmpegFile.getParentFile() == null
+                ? probeName : new File(ffmpegFile.getParentFile(), probeName).getPath();
+
+        Process probe = new ProcessBuilder(probeExecutable, "-v", "error",
+                "-select_streams", "v:0", "-show_entries", "stream=width,height",
+                "-of", "csv=s=x:p=0", source.getAbsolutePath())
+                .redirectErrorStream(true).start();
+        StringBuilder output = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(probe.getInputStream(), "UTF-8"));
+        try {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (output.length() > 0) output.append(' ');
+                output.append(line.trim());
+            }
+        } finally {
+            reader.close();
+        }
+        int exit = probe.waitFor();
+        if (exit != 0) {
+            throw new IOException("FFprobe could not read video dimensions for " + source
+                    + " (exit " + exit + "): " + output);
+        }
+        String[] dimensions = output.toString().trim().split("x");
+        if (dimensions.length != 2) {
+            throw new IOException("FFprobe returned invalid video dimensions for " + source + ": " + output);
+        }
+        try {
+            int width = Integer.parseInt(dimensions[0].trim());
+            int height = Integer.parseInt(dimensions[1].trim());
+            if (width < 1 || height < 1) throw new NumberFormatException("Non-positive dimensions");
+            return new int[] { width, height };
+        } catch (NumberFormatException invalid) {
+            throw new IOException("FFprobe returned invalid video dimensions for " + source + ": " + output);
+        }
     }
 
     private static String formatRate(double fps) {
