@@ -23,6 +23,7 @@ public final class RecordingProject {
     private long stoppedAt;
     private long elapsedMillis;
     private long captureIntervalMillis = 1000L;
+    private String microphoneDeviceKey = "";
     private long segmentStartedAt;
     private boolean recording;
 
@@ -100,6 +101,11 @@ public final class RecordingProject {
         captureIntervalMillis = value;
     }
 
+    public synchronized String getMicrophoneDeviceKey() { return microphoneDeviceKey; }
+    public synchronized void setMicrophoneDeviceKey(String value) {
+        microphoneDeviceKey = value == null ? "" : value.trim();
+    }
+
     /** Elapsed active recording time; paused periods are excluded. */
     public synchronized long getElapsedMillis(long now) {
         if (!recording || segmentStartedAt <= 0L || now <= segmentStartedAt) return elapsedMillis;
@@ -121,6 +127,7 @@ public final class RecordingProject {
         properties.setProperty("stoppedAt", Long.toString(stoppedAt));
         properties.setProperty("elapsedMillis", Long.toString(elapsedMillis));
         properties.setProperty("captureIntervalMillis", Long.toString(captureIntervalMillis));
+        properties.setProperty("microphoneDeviceKey", microphoneDeviceKey);
         properties.setProperty("recording", Boolean.toString(recording));
 
         File temporary = new File(directory, id + ".tmp");
@@ -157,6 +164,7 @@ public final class RecordingProject {
             project.stoppedAt = Long.parseLong(properties.getProperty("stoppedAt", "0"));
             project.elapsedMillis = Math.max(0L, Long.parseLong(properties.getProperty("elapsedMillis", "0")));
             project.setCaptureIntervalMillis(Long.parseLong(properties.getProperty("captureIntervalMillis", "1000")));
+            project.setMicrophoneDeviceKey(properties.getProperty("microphoneDeviceKey", ""));
             project.recording = Boolean.parseBoolean(properties.getProperty("recording", "false"));
             project.segmentStartedAt = 0L;
             return project;
