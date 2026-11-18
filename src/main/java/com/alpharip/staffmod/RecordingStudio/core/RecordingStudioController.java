@@ -192,7 +192,7 @@ public final class RecordingStudioController {
         try {
             long timelineStart = project.getElapsedMillis(System.currentTimeMillis());
             audioCapture.start(audioDirectory, "audio-" + java.util.UUID.randomUUID().toString() + ".wav",
-                    timelineStart);
+                    timelineStart, project.getMicrophoneDeviceKey());
             status = "Microphone recording";
         } catch (Exception failure) {
             status = "Cannot start microphone: " + failure.getMessage();
@@ -202,6 +202,52 @@ public final class RecordingStudioController {
     public synchronized void stopAudioCapture() {
         audioCapture.stop();
         if (audioCapture.isFinalizing()) status = "Finalizing microphone audio";
+    }
+
+    /** Cycles between the operating-system default and detected microphone inputs. */
+    public synchronized void selectNextMicrophone() {
+        ensureOpen();
+        if (audioCapture.isRecording() || audioCapture.isFinalizing()) {
+            status = "Stop microphone capture before changing the input device";
+            return;
+        }
+        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
+                RecordingAudioCaptureService.getAvailableMicrophones();
+        String current = project.getMicrophoneDeviceKey();
+        int currentIndex = -1;
+        for (int i = 0; i < devices.size(); i++) {
+            if (devices.get(i).getKey().equals(current)) { currentIndex = i; break; }
+        }
+        String next;
+        if (devices.isEmpty()) {
+            next = "";
+            status = "No selectable microphone inputs detected; using system default";
+        } else if (currentIndex < 0) {
+            next = devices.get(0).getKey();
+            status = "Microphone selected: " + devices.get(0).getName();
+        } else if (currentIndex + 1 >= devices.size()) {
+            next = "";
+            status = "Microphone selected: System Default";
+        } else {
+            next = devices.get(currentIndex + 1).getKey();
+            status = "Microphone selected: " + devices.get(currentIndex + 1).getName();
+        }
+        project.setMicrophoneDeviceKey(next);
+        try {
+            projectStore.save(project, timeline);
+        } catch (IOException failure) {
+            status = "Microphone changed but project settings could not be saved: " + failure.getMessage();
+        }
+    }
+
+    public synchronized String getMicrophoneSelectionName() {
+        String selected = project.getMicrophoneDeviceKey();
+        if (selected.isEmpty()) return "System Default";
+        for (RecordingAudioCaptureService.MicrophoneDevice device
+                : RecordingAudioCaptureService.getAvailableMicrophones()) {
+            if (device.getKey().equals(selected)) return device.getName();
+        }
+        return "Unavailable";
     }
 
     public synchronized String getAudioStatus() {
