@@ -7,6 +7,7 @@ import com.alpharip.staffmod.RecordingStudio.module.RecordingStudioModuleRegistr
 import com.alpharip.staffmod.RecordingStudio.ui.RecordingStudioScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -295,6 +296,13 @@ public final class RecordingStudioRuntime {
                 catch (Exception ignored) { }
                 moduleStatus = "Studio camera stopped: " + failure.getMessage();
             }
+        }
+    }
+
+    @SubscribeEvent
+    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
+        if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
+            controller.captureFrameTick(System.currentTimeMillis());
         }
     }
 
