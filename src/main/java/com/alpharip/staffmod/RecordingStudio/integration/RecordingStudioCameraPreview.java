@@ -93,7 +93,7 @@ public final class RecordingStudioCameraPreview {
 
         if (event.getButton() == 0 && event.isButtonstate()) {
             if (inside(mouseX, mouseY, x, y, width, height)) {
-                event.setCanceled(true);
+                if (event.isCancelable()) event.setCanceled(true);
                 if (inside(mouseX, mouseY, x + width - 14, y + height - 14, 14, 14)) {
                     resizing = true;
                     dragging = false;
