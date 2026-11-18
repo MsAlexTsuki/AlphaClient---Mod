@@ -101,7 +101,9 @@ public final class RecordingStudioRuntime {
         RecordingStudioModule module = selectedModule();
         if (module == null) return Collections.emptyList();
         try {
-            return module.getOptions();
+            List<String> options = module.getOptions();
+            if (options == null || options.isEmpty()) return Collections.emptyList();
+            return Collections.unmodifiableList(new ArrayList<String>(options));
         } catch (RuntimeException failure) {
             moduleStatus = "Could not read module options: " + failure.getMessage();
             return Collections.emptyList();
@@ -196,7 +198,9 @@ public final class RecordingStudioRuntime {
             selectedOptionId = optionId;
             moduleStatus = module.getStatus();
         } catch (Exception failure) {
-            selectedOptionId = optionId;
+            selectedOptionId = null;
+            try { module.onRecordingStop(); }
+            catch (Exception cleanup) { failure.addSuppressed(cleanup); }
             moduleStatus = "Module setup failed: " + failure.getMessage();
         }
     }
