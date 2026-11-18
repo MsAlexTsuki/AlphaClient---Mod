@@ -16,7 +16,8 @@ import java.io.File;
 
 /**
  * Owns Forge event registration for one Build Timelapse session.
- * Call openStudio from the client entry point; closing the root screen shuts it down.
+ * The runtime remains available for the current world after its Studio screen closes,
+ * allowing Recording Studio to use the registered camera-path adapter.
  */
 public final class BuildTimelapseRuntime {
     private final BuildTimelapse studio;
@@ -71,6 +72,12 @@ public final class BuildTimelapseRuntime {
             shutdown();
             throw failure;
         }
+    }
+
+    /** Releases the Build Timelapse camera when its screen closes but keeps its module adapter registered. */
+    public synchronized void closeStudio() {
+        if (closed || !started) return;
+        studio.getController().stop();
     }
 
     @SubscribeEvent

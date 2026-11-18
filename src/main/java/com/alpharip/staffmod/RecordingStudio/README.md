@@ -38,7 +38,8 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - No Build Timelapse imports, build-event listeners, Supabase calls or network services inside Recording Studio.
 
 ## Current limitations
-- The Build Timelapse module option is registered when BuildTimelapseRuntime starts. The current prototype still has no connected client composition root, so that runtime must be initialized by the host/client entry point before the option becomes available.
+- The Build Timelapse module option is registered when BuildTimelapseRuntime starts. Closing its Studio screen releases its camera but keeps the adapter registered until the current world unloads, so Recording Studio can select it in the same world session.
+- The host/client entry point still needs to initialize BuildTimelapseRuntime; until then the Build Timelapse option reports that its runtime is not initialized.
 - Build Timelapse camera paths remain stored under `buildtimelapse/camera-paths/`; the Recording Studio Module panel reads those saved paths. Path creation/editing remains in the Build Timelapse Camera Editor.
 - If a separate Build Timelapse recording is already active, Recording Studio will not take ownership of its camera.
 - The in-game marker is a debug visualization, not a full 3D camera model.
