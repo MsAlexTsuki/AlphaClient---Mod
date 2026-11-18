@@ -45,7 +45,7 @@ public final class AlphaClansGui extends GuiScreen {
             privateClan="private".equalsIgnoreCase(visibility);
         }
 
-        buttonList.add(new AlphaButton(BACK,left+12,top+12,54,20,"BACK"));
+        buttonList.add(new AlphaButton(BACK,left+panelWidth-66,top+12,54,20,"BACK"));
         List<Integer> tabs=availableTabs(s);
         if (!tabs.contains(tab)) tab=tabs.get(0);
         int gap=4, usable=panelWidth-28;
