@@ -1,6 +1,8 @@
 package com.alpharip.staffmod.RecordingStudio.core;
 
 import com.alpharip.staffmod.RecordingStudio.timeline.*;
+import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene;
+import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource;
 import java.io.*;
 import java.util.*;
 
@@ -42,6 +44,26 @@ public final class RecordingStudioProjectStore {
                 data.setProperty(cp + "speed", Double.toString(clip.getSpeed()));
             }
         }
+        List<RecordingStudioScene> scenes = timeline.getScenes();
+        data.setProperty("scene.count", Integer.toString(scenes.size()));
+        data.setProperty("activeSceneId", timeline.getActiveSceneId());
+        for (int i = 0; i < scenes.size(); i++) {
+            RecordingStudioScene scene = scenes.get(i);
+            String prefix = "scene." + i + ".";
+            data.setProperty(prefix + "id", scene.getId());
+            data.setProperty(prefix + "name", scene.getName());
+            List<RecordingStudioSource> sources = scene.getSources();
+            data.setProperty(prefix + "source.count", Integer.toString(sources.size()));
+            for (int j = 0; j < sources.size(); j++) {
+                RecordingStudioSource source = sources.get(j);
+                String sourcePrefix = prefix + "source." + j + ".";
+                data.setProperty(sourcePrefix + "id", source.getId());
+                data.setProperty(sourcePrefix + "name", source.getName());
+                data.setProperty(sourcePrefix + "type", source.getType().name());
+                data.setProperty(sourcePrefix + "enabled", Boolean.toString(source.isEnabled()));
+            }
+        }
+
         List<TimelineMarker> markers = timeline.getMarkers();
         data.setProperty("marker.count", Integer.toString(markers.size()));
         for (int i = 0; i < markers.size(); i++) {
@@ -64,7 +86,7 @@ public final class RecordingStudioProjectStore {
         }
         if (!"1".equals(data.getProperty("format"))) throw new IOException("Unsupported timeline format");
         try {
-            Timeline timeline = new Timeline();
+            Timeline timeline = new Timeline(false);
             int trackCount = count(data, "track.count");
             for (int i = 0; i < trackCount; i++) {
                 String prefix = "track." + i + ".";
@@ -79,6 +101,38 @@ public final class RecordingStudioProjectStore {
                 }
                 timeline.addTrack(track);
             }
+            String savedSceneCount = data.getProperty("scene.count");
+            if (savedSceneCount == null) {
+                timeline.addScene(RecordingStudioScene.createDefault("main", "Main Scene"));
+            } else {
+                int sceneCount = count(data, "scene.count");
+                for (int i = 0; i < sceneCount; i++) {
+                    String prefix = "scene." + i + ".";
+                    RecordingStudioScene scene = new RecordingStudioScene(
+                            required(data, prefix + "id"), required(data, prefix + "name"));
+                    int sourceCount = count(data, prefix + "source.count");
+                    for (int j = 0; j < sourceCount; j++) {
+                        String sourcePrefix = prefix + "source." + j + ".";
+                        String enabledValue = required(data, sourcePrefix + "enabled");
+                        if (!"true".equalsIgnoreCase(enabledValue) && !"false".equalsIgnoreCase(enabledValue)) {
+                            throw new IOException("Invalid scene source enabled value");
+                        }
+                        scene.addSource(new RecordingStudioSource(
+                                required(data, sourcePrefix + "id"),
+                                required(data, sourcePrefix + "name"),
+                                RecordingStudioSource.Type.valueOf(required(data, sourcePrefix + "type")),
+                                Boolean.parseBoolean(enabledValue)));
+                    }
+                    timeline.addScene(scene);
+                }
+                if (sceneCount == 0) timeline.addScene(RecordingStudioScene.createDefault("main", "Main Scene"));
+                String activeSceneId = data.getProperty("activeSceneId");
+                if (activeSceneId != null && !activeSceneId.trim().isEmpty()
+                        && !timeline.setActiveScene(activeSceneId)) {
+                    throw new IOException("Saved active scene does not exist");
+                }
+            }
+
             int markerCount = count(data, "marker.count");
             for (int i = 0; i < markerCount; i++) {
                 String prefix = "marker." + i + ".";
