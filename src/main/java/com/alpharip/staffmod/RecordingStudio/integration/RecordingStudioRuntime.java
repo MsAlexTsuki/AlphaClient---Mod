@@ -20,6 +20,7 @@ public final class RecordingStudioRuntime {
     private final RecordingStudioController controller;
     private CameraController camera;
     private CameraWorldOverlay overlay;
+    private RecordingStudioCameraPreview cameraPreview;
     private boolean started;
     private boolean closed;
     private String selectedModuleId = "normal_gameplay";
@@ -39,8 +40,10 @@ public final class RecordingStudioRuntime {
         if (!started) {
             camera = new CameraController(new MinecraftIndependentCameraBridge(minecraft));
             overlay = new CameraWorldOverlay(camera);
+            cameraPreview = new RecordingStudioCameraPreview(this);
             MinecraftForge.EVENT_BUS.register(this);
             MinecraftForge.EVENT_BUS.register(overlay);
+            MinecraftForge.EVENT_BUS.register(cameraPreview);
             started = true;
         }
         minecraft.displayGuiScreen(new RecordingStudioScreen(controller, this));
@@ -51,6 +54,24 @@ public final class RecordingStudioRuntime {
             throw new IllegalStateException("Recording Studio camera runtime is not started");
         }
         return camera;
+    }
+
+    public synchronized boolean hasExternalCamera() {
+        if (camera != null && camera.isActive()) return true;
+        RecordingStudioModule module = selectedModule();
+        return module != null && module.isExternalCameraActive();
+    }
+
+    public synchronized void toggleCameraPreview() {
+        if (cameraPreview != null) cameraPreview.toggle();
+    }
+
+    public synchronized boolean isCameraPreviewVisible() {
+        return cameraPreview != null && cameraPreview.isVisible();
+    }
+
+    public synchronized void drawCameraPreview() {
+        if (cameraPreview != null) cameraPreview.drawPreview();
     }
 
     public synchronized List<String> getModuleIds() {
@@ -285,7 +306,9 @@ public final class RecordingStudioRuntime {
         if (started) {
             MinecraftForge.EVENT_BUS.unregister(this);
             MinecraftForge.EVENT_BUS.unregister(overlay);
+            MinecraftForge.EVENT_BUS.unregister(cameraPreview);
         }
+        if (cameraPreview != null) cameraPreview.dispose();
         if (camera != null) {
             try { camera.deactivate(); }
             catch (Exception ignored) { }
