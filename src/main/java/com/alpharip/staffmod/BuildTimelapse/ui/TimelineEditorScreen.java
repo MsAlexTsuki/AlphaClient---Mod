@@ -89,7 +89,9 @@ public final class TimelineEditorScreen extends GuiScreen {
         }
         if (clip == null) {
             selectedClipId = null;
-            sourceField.setText("");
+            if (startField.getText().trim().isEmpty()) startField.setText("0");
+            if (durationField.getText().trim().isEmpty()) durationField.setText("1000");
+            if (speedField.getText().trim().isEmpty()) speedField.setText("1.0");
             return;
         }
         selectedClipId = clip.getId();
