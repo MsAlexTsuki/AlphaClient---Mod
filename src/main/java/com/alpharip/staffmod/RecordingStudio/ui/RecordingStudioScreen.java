@@ -17,6 +17,7 @@ public final class RecordingStudioScreen extends GuiScreen {
     private final RecordingStudioRuntime runtime;
     private boolean navigating;
     private GuiTextField sceneNameField;
+    private String selectedSourceId;
 
     public RecordingStudioScreen(RecordingStudioController controller, RecordingStudioRuntime runtime) {
         if (controller == null || runtime == null) throw new IllegalArgumentException();
@@ -32,6 +33,10 @@ public final class RecordingStudioScreen extends GuiScreen {
         buttonList.clear();
 
         RecordingStudioScene activeScene = controller.getActiveScene();
+        if (activeScene == null || activeScene.findSource(selectedSourceId) == null) {
+            selectedSourceId = activeScene == null || activeScene.getSources().isEmpty()
+                    ? null : activeScene.getSources().get(0).getId();
+        }
         sceneNameField = new GuiTextField(30, fontRendererObj, 18, 140, 126, 18);
         sceneNameField.setMaxStringLength(32);
         sceneNameField.setText(activeScene == null ? "" : activeScene.getName());
@@ -59,6 +64,8 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(14, rightX + 8, rightY + row * 7, buttonWidth, "Storage");
         add(18, rightX + 8 + buttonWidth + gap, rightY + row * 7, buttonWidth, "Next Mic");
         add(27, 18, 450, 126, "Refresh Mic");
+        add(28, rightX + 8, rightY - 35, buttonWidth, "Source Up");
+        add(29, rightX + 8 + buttonWidth + gap, rightY - 35, buttonWidth, "Source Down");
 
         add(19, 18, 84, 126, "Next Scene");
         add(20, 18, 106, 126, "New Scene", true);
@@ -150,6 +157,14 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 27:
                 controller.refreshMicrophones();
                 break;
+            case 28:
+                if (selectedSourceId != null) controller.moveActiveSceneSource(selectedSourceId, -1);
+                initGui();
+                break;
+            case 29:
+                if (selectedSourceId != null) controller.moveActiveSceneSource(selectedSourceId, 1);
+                initGui();
+                break;
             case 19:
                 controller.selectNextScene();
                 initGui();
@@ -197,6 +212,16 @@ public final class RecordingStudioScreen extends GuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         if (sceneNameField != null) sceneNameField.mouseClicked(mouseX, mouseY, mouseButton);
+        int sourcePanelLeft = width - 176;
+        int sourcePanelRight = width - 18;
+        if (mouseX >= sourcePanelLeft && mouseX <= sourcePanelRight && mouseY >= 74) {
+            RecordingStudioScene scene = controller.getActiveScene();
+            if (scene != null) {
+                int index = (mouseY - 74) / 16;
+                java.util.List<RecordingStudioSource> sources = scene.getSources();
+                if (index >= 0 && index < sources.size()) selectedSourceId = sources.get(index).getId();
+            }
+        }
     }
 
     @Override
@@ -266,9 +291,11 @@ public final class RecordingStudioScreen extends GuiScreen {
         int sourceY = 78;
         if (activeScene != null) {
             for (RecordingStudioSource source : activeScene.getSources()) {
-                drawString(fontRendererObj, compact(source.getName(), 17) + ": "
+                boolean selected = source.getId().equals(selectedSourceId);
+                if (selected) Gui.drawRect(right + 5, sourceY - 2, rightRight - 5, sourceY + 12, 0x884B3A12);
+                drawString(fontRendererObj, (selected ? "> " : "  ") + compact(source.getName(), 15) + ": "
                         + (source.isEnabled() ? "ON" : "OFF"), right + 8, sourceY,
-                        source.isEnabled() ? 0xFFE0E0E0 : 0xFF888888);
+                        selected ? 0xFFFFD65A : source.isEnabled() ? 0xFFE0E0E0 : 0xFF888888);
                 sourceY += 16;
             }
         }
