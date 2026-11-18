@@ -103,7 +103,7 @@ public final class RecordingCaptureService {
         return recording && paused;
     }
 
-    public synchronized boolean isCapturing() {
+    public synchronized long getIntervalMillis() {\n        return settings.getIntervalMillis();\n    }\n\n    public synchronized void setIntervalMillis(long intervalMillis) {\n        ensureOpen();\n        settings.setIntervalMillis(intervalMillis);\n    }\n\n    public synchronized boolean isCapturing() {
         return capturing;
     }
 
