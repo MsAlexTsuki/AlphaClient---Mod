@@ -2,6 +2,8 @@ package com.alpharip.staffmod.BuildTimelapse.capture;
 
 import com.alpharip.staffmod.BuildTimelapse.integration.MinecraftScreenshotBridge;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.shader.Framebuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -11,6 +13,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /**
  * Minecraft 1.8.9 framebuffer adapter.
@@ -77,10 +83,13 @@ public final class MinecraftFramebufferScreenshotBridge implements MinecraftScre
     public void captureFramebuffer(File output, int width, int height) throws Exception {
         requireRenderThread();
         if (output == null) throw new IllegalArgumentException("output");
-        if (width != minecraft.displayWidth || height != minecraft.displayHeight) {
+        if (width < 1 || height < 1 || width != minecraft.displayWidth || height != minecraft.displayHeight) {
             throw new UnsupportedOperationException(
                     "The framebuffer adapter currently supports native display resolution only");
         }
+
+        long byteCount = (long) width * (long) height * 4L;
+        if (byteCount > Integer.MAX_VALUE) throw new IOException("Framebuffer dimensions exceed the supported image size");
 
         Framebuffer framebuffer = minecraft.getFramebuffer();
         if (framebuffer == null || framebuffer.framebufferWidth != width
@@ -88,9 +97,22 @@ public final class MinecraftFramebufferScreenshotBridge implements MinecraftScre
             throw new IOException("Minecraft main framebuffer dimensions do not match the display");
         }
 
-        ByteBuffer pixels = BufferUtils.createByteBuffer(width * height * 4);
-        framebuffer.bindFramebuffer(true);
-        GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
+        ByteBuffer pixels = BufferUtils.createByteBuffer((int) byteCount);
+        boolean framebufferSupported = OpenGlHelper.isFramebufferEnabled();
+        int previousFramebuffer = framebufferSupported ? GL11.glGetInteger(0x8CA6) : 0;
+        IntBuffer previousViewport = BufferUtils.createIntBuffer(4);
+        GL11.glGetInteger(GL11.GL_VIEWPORT, previousViewport);
+        try {
+            framebuffer.bindFramebuffer(true);
+            GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
+            pixels.position(0);
+        } finally {
+            if (framebufferSupported) {
+                OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, previousFramebuffer);
+            }
+            GlStateManager.viewport(previousViewport.get(0), previousViewport.get(1),
+                    previousViewport.get(2), previousViewport.get(3));
+        }
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         for (int y = 0; y < height; y++) {
@@ -109,8 +131,19 @@ public final class MinecraftFramebufferScreenshotBridge implements MinecraftScre
         if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
             throw new IOException("Cannot create screenshot directory: " + parent);
         }
-        if (!ImageIO.write(image, "png", output)) {
-            throw new IOException("No PNG writer is available");
+        File temporary = new File(parent == null ? new File(".") : parent, output.getName() + ".tmp");
+        try {
+            if (!ImageIO.write(image, "png", temporary)) {
+                throw new IOException("No PNG writer is available");
+            }
+            try {
+                Files.move(temporary.toPath(), output.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporary.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            if (temporary.exists() && !temporary.delete()) temporary.deleteOnExit();
         }
     }
 }
