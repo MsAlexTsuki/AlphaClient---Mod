@@ -137,7 +137,22 @@ public final class RecordingCaptureService {
         closed = true;
     }
 
-    private void initializeNextFileIndex() {\n        if (nextFileIndex != 0L) return;\n        File[] existing = directory.listFiles();\n        if (existing == null) return;\n        for (File file : existing) {\n            String name = file.getName();\n            if (!name.startsWith("frame-") || !name.endsWith(".png")) continue;\n            String number = name.substring(6, name.length() - 4);\n            try {\n                long index = Long.parseLong(number);\n                if (index >= nextFileIndex && index < Long.MAX_VALUE) nextFileIndex = index + 1L;\n            } catch (NumberFormatException ignored) { }\n        }\n    }\n\n    private void ensureOpen() {
+    private void initializeNextFileIndex() {
+        if (nextFileIndex != 0L) return;
+        File[] existing = directory.listFiles();
+        if (existing == null) return;
+        for (File file : existing) {
+            String name = file.getName();
+            if (!name.startsWith("frame-") || !name.endsWith(".png")) continue;
+            String number = name.substring(6, name.length() - 4);
+            try {
+                long index = Long.parseLong(number);
+                if (index >= nextFileIndex && index < Long.MAX_VALUE) nextFileIndex = index + 1L;
+            } catch (NumberFormatException ignored) { }
+        }
+    }
+
+    private void ensureOpen() {
         if (closed) {
             throw new IllegalStateException("Recording capture service is shut down");
         }
