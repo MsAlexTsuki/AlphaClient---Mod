@@ -92,21 +92,25 @@ public final class RecordingStudioCameraPreview {
                 - event.getY() * resolution.getScaledHeight() / minecraft.displayHeight - 1;
 
         if (event.getButton() == 0 && event.isButtonstate()) {
-            if (inside(mouseX, mouseY, x + width - 14, y + height - 14, 14, 14)) {
-                resizing = true;
-                dragging = false;
-                dragOffsetX = mouseX;
-                dragOffsetY = mouseY;
-            } else if (inside(mouseX, mouseY, x, y, width, HEADER_HEIGHT)) {
-                dragging = true;
-                resizing = false;
-                dragOffsetX = mouseX - x;
-                dragOffsetY = mouseY - y;
+            if (inside(mouseX, mouseY, x, y, width, height)) {
+                event.setCanceled(true);
+                if (inside(mouseX, mouseY, x + width - 14, y + height - 14, 14, 14)) {
+                    resizing = true;
+                    dragging = false;
+                    dragOffsetX = mouseX;
+                    dragOffsetY = mouseY;
+                } else if (inside(mouseX, mouseY, x, y, width, HEADER_HEIGHT)) {
+                    dragging = true;
+                    resizing = false;
+                    dragOffsetX = mouseX - x;
+                    dragOffsetY = mouseY - y;
+                }
             }
             return;
         }
 
         if (event.getButton() == 0 && !event.isButtonstate()) {
+            if (dragging || resizing) event.setCanceled(true);
             dragging = false;
             resizing = false;
             return;
@@ -119,9 +123,11 @@ public final class RecordingStudioCameraPreview {
         }
 
         if (dragging) {
+            event.setCanceled(true);
             x = clamp(mouseX - dragOffsetX, 0, Math.max(0, resolution.getScaledWidth() - width));
             y = clamp(mouseY - dragOffsetY, 0, Math.max(0, resolution.getScaledHeight() - height));
         } else if (resizing) {
+            event.setCanceled(true);
             int deltaX = mouseX - dragOffsetX;
             int deltaY = mouseY - dragOffsetY;
             width = clamp(width + deltaX, MIN_WIDTH, Math.max(MIN_WIDTH, resolution.getScaledWidth() - x));
