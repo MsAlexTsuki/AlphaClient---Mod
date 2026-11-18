@@ -10,6 +10,6 @@ public final class CameraController {
  public synchronized void resumePath(long now){if(path!=null&&pathPausedAt!=0){long paused=Math.max(0,now-pathPausedAt);pathStart=pathStart>Long.MAX_VALUE-paused?Long.MAX_VALUE:pathStart+paused;pathPausedAt=0;}}
  public synchronized void tick(long now)throws Exception{if(!active||path==null||pathPausedAt!=0)return;long elapsed=now<=pathStart?0:now-pathStart;setPose(interpolator.sampleAt(path,elapsed));if(elapsed>=path.duration()){path=null;mode=CameraMode.FREE;}}
  public synchronized void stopPath(){path=null;pathPausedAt=0;if(mode==CameraMode.PATH)mode=CameraMode.FREE;}
- public synchronized void deactivate()throws Exception{try{if(active)runtime.deactivate();}finally{active=false;stopPath();}}
+ public synchronized void deactivate()throws Exception{if(active)runtime.deactivate();active=false;stopPath();}
  public synchronized boolean isActive(){return active;}
 }
