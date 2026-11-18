@@ -180,7 +180,7 @@ public final class RecordingCaptureService {
         long existingFrameCount = 0L;
         for (File file : existing) {
             String name = file.getName();
-            if (!name.startsWith("frame-") || !name.endsWith(".png")) continue;
+            if (!file.isFile() || !name.matches("frame-[0-9]{8}\\.png")) continue;
             String number = name.substring(6, name.length() - 4);
             try {
                 long index = Long.parseLong(number);
