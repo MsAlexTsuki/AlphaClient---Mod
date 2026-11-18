@@ -69,13 +69,19 @@ public final class RecordingProject {
         if (startedAt != 0L) stoppedAt = now;
     }
 
-    /** Restores elapsed active time after an unclean exit, using the persisted active marker. */
-    public synchronized void recoverInterruptedSession(long now, long markedAt) {
+    /** Restores the last persisted checkpoint after an unclean exit without counting application downtime. */
+    public synchronized void recoverInterruptedSession(long now) {
         if (!recording) return;
-        if (markedAt > 0L && now > markedAt) addElapsed(now - markedAt);
         recording = false;
         segmentStartedAt = 0L;
         stoppedAt = now;
+    }
+
+    /** Commits active elapsed time while keeping the recording session active. */
+    public synchronized void checkpoint(long now) {
+        if (!recording || segmentStartedAt <= 0L) return;
+        addElapsed(Math.max(0L, now - segmentStartedAt));
+        segmentStartedAt = now;
     }
 
     public String getId() { return id; }
