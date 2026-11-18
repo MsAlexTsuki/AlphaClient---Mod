@@ -40,11 +40,16 @@ public final class MinecraftFramebufferFrameWriter implements RecordingCaptureSe
         }
 
         ByteBuffer pixels = BufferUtils.createByteBuffer((int) byteCount);
-        framebuffer.bindFramebuffer(true);
-        GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
         byte[] rgba = new byte[(int) byteCount];
-        pixels.position(0);
-        pixels.get(rgba);
+        framebuffer.bindFramebuffer(true);
+        try {
+            GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
+            pixels.position(0);
+            pixels.get(rgba);
+        } finally {
+            // Do not leave the capture framebuffer bound for Minecraft's next render pass.
+            framebuffer.unbindFramebuffer();
+        }
         return new RecordingCaptureService.FrameData(width, height, rgba);
     }
 
