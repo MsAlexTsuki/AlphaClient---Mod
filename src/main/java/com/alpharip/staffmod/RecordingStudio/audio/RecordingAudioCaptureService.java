@@ -5,17 +5,33 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
+import javax.sound.sampled.Mixer;
 import javax.sound.sampled.TargetDataLine;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /** Explicit microphone capture service that writes standalone PCM WAV files off the client thread. */
 public final class RecordingAudioCaptureService {
     public interface Listener {
         void onAudioSaved(File file, long timelineStartMillis, long durationMillis);
         void onAudioFailed(String message);
+    }
+
+    public static final class MicrophoneDevice {
+        private final Mixer.Info info;
+
+        private MicrophoneDevice(Mixer.Info info) { this.info = info; }
+
+        public String getName() { return info.getName(); }
+
+        public String getKey() {
+            return info.getName() + "|" + info.getVendor() + "|" + info.getDescription() + "|" + info.getVersion();
+        }
     }
 
     private static final AudioFormat FORMAT = new AudioFormat(44100.0F, 16, 1, true, false);
@@ -33,7 +49,29 @@ public final class RecordingAudioCaptureService {
         this.listener = listener;
     }
 
+    /** Lists mixers that advertise support for microphone capture using the Studio PCM format. */
+    public static List<MicrophoneDevice> getAvailableMicrophones() {
+        List<MicrophoneDevice> devices = new ArrayList<MicrophoneDevice>();
+        DataLine.Info lineInfo = new DataLine.Info(TargetDataLine.class, FORMAT);
+        for (Mixer.Info info : AudioSystem.getMixerInfo()) {
+            try {
+                if (AudioSystem.getMixer(info).isLineSupported(lineInfo)) {
+                    devices.add(new MicrophoneDevice(info));
+                }
+            } catch (RuntimeException ignored) {
+                // A device can disappear while the operating system's mixer list is being read.
+            }
+        }
+        return Collections.unmodifiableList(devices);
+    }
+
     public synchronized void start(File directory, String fileName, long timelineStartMillis) throws Exception {
+        start(directory, fileName, timelineStartMillis, "");
+    }
+
+    /** An empty device key uses the operating system's default microphone. */
+    public synchronized void start(File directory, String fileName, long timelineStartMillis,
+                                   String microphoneDeviceKey) throws Exception {
         if (recording || writerThread != null && writerThread.isAlive()) {
             throw new IllegalStateException("An audio recording is already active or finalizing");
         }
@@ -44,8 +82,20 @@ public final class RecordingAudioCaptureService {
             throw new IOException("Cannot create audio output directory");
         }
 
-        DataLine.Info info = new DataLine.Info(TargetDataLine.class, FORMAT);
-        TargetDataLine openedLine = (TargetDataLine) AudioSystem.getLine(info);
+        DataLine.Info lineInfo = new DataLine.Info(TargetDataLine.class, FORMAT);
+        TargetDataLine openedLine;
+        if (microphoneDeviceKey == null || microphoneDeviceKey.trim().isEmpty()) {
+            openedLine = (TargetDataLine) AudioSystem.getLine(lineInfo);
+        } else {
+            openedLine = null;
+            for (MicrophoneDevice device : getAvailableMicrophones()) {
+                if (device.getKey().equals(microphoneDeviceKey)) {
+                    openedLine = (TargetDataLine) AudioSystem.getMixer(device.info).getLine(lineInfo);
+                    break;
+                }
+            }
+            if (openedLine == null) throw new IOException("Selected microphone is no longer available");
+        }
         openedLine.open(FORMAT);
         File output = new File(directory, fileName);
         File temp = new File(directory, fileName + ".tmp");
