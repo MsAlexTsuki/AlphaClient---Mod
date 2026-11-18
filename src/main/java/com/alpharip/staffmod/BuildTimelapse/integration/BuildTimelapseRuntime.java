@@ -108,7 +108,7 @@ public final class BuildTimelapseRuntime {
 
     private boolean minecraftWorldUnavailable() {
         Minecraft minecraft = Minecraft.getMinecraft();
-        return minecraft == null || minecraft.theWorld == null || minecraft.thePlayer == null;
+        return minecraft == null || minecraft.theWorld == null;
     }
 
     public synchronized boolean isStarted() {
