@@ -108,12 +108,12 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 3: runtime.stopRecording(); break;
             case 4:
                 navigating = true;
-                mc.displayGuiScreen(new TimelineEditorScreen(this, controller.getTimeline()));
+                mc.displayGuiScreen(new TimelineEditorScreen(this, controller.getTimeline(), runtime));
                 break;
             case 5: controller.save(); break;
             case 6:
                 navigating = true;
-                mc.displayGuiScreen(new CameraEditorScreen(this, runtime.getCameraController(), mc.mcDataDir));
+                mc.displayGuiScreen(new CameraEditorScreen(this, runtime.getCameraController(), mc.mcDataDir, runtime));
                 break;
             case 7: controller.adjustCaptureInterval(-100L); break;
             case 8: controller.adjustCaptureInterval(100L); break;
@@ -129,7 +129,7 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 14:
                 navigating = true;
                 controller.getStorageUsage().refreshAsync();
-                mc.displayGuiScreen(new RecordingStudioStorageScreen(this, controller.getStorageUsage()));
+                mc.displayGuiScreen(new RecordingStudioStorageScreen(this, controller.getStorageUsage(), runtime));
                 break;
             case 15:
                 runtime.selectNextModule();
