@@ -166,10 +166,10 @@ public final class RecordingStudioCameraPreview {
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
             GL11.glBegin(GL11.GL_QUADS);
-            GL11.glTexCoord2f(0.0F, 1.0F); GL11.glVertex3f(imageX, imageY + imageHeight, 0.0F);
-            GL11.glTexCoord2f(1.0F, 1.0F); GL11.glVertex3f(imageX + imageWidth, imageY + imageHeight, 0.0F);
-            GL11.glTexCoord2f(1.0F, 0.0F); GL11.glVertex3f(imageX + imageWidth, imageY, 0.0F);
-            GL11.glTexCoord2f(0.0F, 0.0F); GL11.glVertex3f(imageX, imageY, 0.0F);
+            GL11.glTexCoord2f(0.0F, 0.0F); GL11.glVertex3f(imageX, imageY + imageHeight, 0.0F);
+            GL11.glTexCoord2f(1.0F, 0.0F); GL11.glVertex3f(imageX + imageWidth, imageY + imageHeight, 0.0F);
+            GL11.glTexCoord2f(1.0F, 1.0F); GL11.glVertex3f(imageX + imageWidth, imageY, 0.0F);
+            GL11.glTexCoord2f(0.0F, 1.0F); GL11.glVertex3f(imageX, imageY, 0.0F);
             GL11.glEnd();
         } finally {
             GL11.glPopMatrix();
@@ -190,14 +190,19 @@ public final class RecordingStudioCameraPreview {
     private void ensureTexture(int requestedWidth, int requestedHeight) {
         if (textureId != -1 && textureWidth == requestedWidth && textureHeight == requestedHeight) return;
         dispose();
-        textureId = GL11.glGenTextures();
-        textureWidth = requestedWidth;
-        textureHeight = requestedHeight;
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8,
-                textureWidth, textureHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (java.nio.ByteBuffer) null);
+        GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
+        try {
+            textureId = GL11.glGenTextures();
+            textureWidth = requestedWidth;
+            textureHeight = requestedHeight;
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8,
+                    textureWidth, textureHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (java.nio.ByteBuffer) null);
+        } finally {
+            GL11.glPopAttrib();
+        }
     }
 
     private static boolean inside(int mouseX, int mouseY, int left, int top, int width, int height) {
