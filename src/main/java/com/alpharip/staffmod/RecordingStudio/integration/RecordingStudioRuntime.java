@@ -8,6 +8,7 @@ import com.alpharip.staffmod.RecordingStudio.ui.RecordingStudioScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -302,6 +303,16 @@ public final class RecordingStudioRuntime {
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
+            controller.captureFrameTick(System.currentTimeMillis());
+        }
+    }
+
+    /** Fallback for the Minecraft hide-GUI setting, which suppresses overlay events. */
+    @SubscribeEvent
+    public void onWorldRender(RenderWorldLastEvent event) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft != null && minecraft.gameSettings != null
+                && minecraft.gameSettings.hideGUI && minecraft.currentScreen == null) {
             controller.captureFrameTick(System.currentTimeMillis());
         }
     }
