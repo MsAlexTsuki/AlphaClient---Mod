@@ -54,6 +54,19 @@ public final class RecordingStudioScene {
         return false;
     }
 
+    /** Moves a source one position without changing its identity or enabled state. */
+    public synchronized boolean moveSource(String sourceId, int direction) {
+        if (sourceId == null || (direction != -1 && direction != 1)) return false;
+        for (int i = 0; i < sources.size(); i++) {
+            if (!sources.get(i).getId().equals(sourceId)) continue;
+            int target = i + direction;
+            if (target < 0 || target >= sources.size()) return false;
+            Collections.swap(sources, i, target);
+            return true;
+        }
+        return false;
+    }
+
     public synchronized RecordingStudioSource findSource(String sourceId) {
         if (sourceId == null) return null;
         for (RecordingStudioSource source : sources) {
