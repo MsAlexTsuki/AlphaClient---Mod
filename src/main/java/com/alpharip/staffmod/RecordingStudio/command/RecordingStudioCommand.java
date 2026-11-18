@@ -71,15 +71,15 @@ public final class RecordingStudioCommand extends CommandBase {
                 return;
             }
 
-            File output = new File(new File(root, "recordings"), project.getId() + "/frames");
-            RecordingCaptureService capture = new RecordingCaptureService(
-                    new MinecraftFramebufferFrameWriter(mc), new RecordingCaptureSettings(), output);
             RecordingStudioRuntime runtime;
             if (activeRuntime != null && !activeRuntime.isClosed()
                     && project.getId().equals(activeProjectId)) {
                 runtime = activeRuntime;
             } else {
                 if (activeRuntime != null && !activeRuntime.isClosed()) activeRuntime.shutdown();
+                File output = new File(new File(root, "recordings"), project.getId() + "/frames");
+                RecordingCaptureService capture = new RecordingCaptureService(
+                        new MinecraftFramebufferFrameWriter(mc), new RecordingCaptureSettings(), output);
                 RecordingStudioController controller =
                         new RecordingStudioController(project, capture, projects, timeline);
                 runtime = new RecordingStudioRuntime(controller);
