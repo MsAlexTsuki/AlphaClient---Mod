@@ -20,6 +20,8 @@ public final class MinecraftIndependentCameraBridge implements MinecraftCameraBr
     private Entity originalRenderViewEntity;
     private EntityOtherPlayerMP cameraEntity;
     private World cameraWorld;
+    private float originalFov;
+    private boolean originalFovCaptured;
 
     public MinecraftIndependentCameraBridge(Minecraft minecraft) {
         if (minecraft == null) throw new IllegalArgumentException("minecraft");
@@ -60,6 +62,10 @@ public final class MinecraftIndependentCameraBridge implements MinecraftCameraBr
         if (original == null) original = minecraft.thePlayer;
         originalRenderViewEntity = original;
         cameraWorld = minecraft.theWorld;
+        if (minecraft.gameSettings != null) {
+            originalFov = minecraft.gameSettings.fovSetting;
+            originalFovCaptured = true;
+        }
 
         try {
             GameProfile profile = new GameProfile(UUID.randomUUID(), "AlphaBuildCamera");
@@ -68,6 +74,7 @@ public final class MinecraftIndependentCameraBridge implements MinecraftCameraBr
             created.motionX = created.motionY = created.motionZ = 0.0D;
             created.setInvisible(true);
             applyPose(created, pose);
+            applyFov(pose);
             cameraEntity = created;
             minecraft.setRenderViewEntity(created);
         } catch (Throwable failure) {
@@ -79,6 +86,7 @@ public final class MinecraftIndependentCameraBridge implements MinecraftCameraBr
                 cameraEntity = null;
                 cameraWorld = null;
                 originalRenderViewEntity = null;
+                restoreFov();
             }
             if (failure instanceof Exception) throw (Exception) failure;
             if (failure instanceof Error) throw (Error) failure;
@@ -100,6 +108,20 @@ public final class MinecraftIndependentCameraBridge implements MinecraftCameraBr
             throw new IllegalStateException("Render-view ownership changed while camera was active");
         }
         applyPose(cameraEntity, pose);
+        applyFov(pose);
+    }
+
+    private void applyFov(CameraPose pose) {
+        if (minecraft.gameSettings != null) {
+            minecraft.gameSettings.fovSetting = Math.max(1.0F, Math.min(179.0F, pose.fov));
+        }
+    }
+
+    private void restoreFov() {
+        if (originalFovCaptured && minecraft.gameSettings != null) {
+            minecraft.gameSettings.fovSetting = originalFov;
+        }
+        originalFovCaptured = false;
     }
 
     private static void applyPose(EntityOtherPlayerMP entity, CameraPose pose) {
@@ -127,6 +149,7 @@ public final class MinecraftIndependentCameraBridge implements MinecraftCameraBr
                 minecraft.setRenderViewEntity(minecraft.thePlayer);
             }
         } finally {
+            restoreFov();
             cameraEntity = null;
             cameraWorld = null;
             originalRenderViewEntity = null;

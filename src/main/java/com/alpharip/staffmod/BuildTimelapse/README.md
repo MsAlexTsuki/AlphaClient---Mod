@@ -32,7 +32,7 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 ## Limitations
 - Camera activation fails when the client world is unavailable. The bridge does not silently fall back to moving or controlling the player.
 - The screenshot backend provides render-thread dispatch and state restoration, but the low-level Minecraft framebuffer bridge still has to be implemented and injected.
-- Camera paths can now be saved and loaded locally from the Camera Editor; this does not implement the actual Minecraft camera runtime.
+- Camera roll is not yet applied by the Minecraft renderer; it requires a dedicated render hook. Camera FOV is applied temporarily and the user's previous FOV is restored when the camera is deactivated.
 - FFmpeg must be installed separately; no binary is bundled. MP4 is silent and GIF encoding is a basic path.
 - World time/weather/HUD effects require an adapter that snapshots and restores original settings.
 - No startup/menu/module/keybind registration or Alpha Launcher changes.
