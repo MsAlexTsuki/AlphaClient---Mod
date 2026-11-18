@@ -72,7 +72,13 @@ public final class RecordingStudioCommand extends CommandBase {
             RecordingCaptureService capture = new RecordingCaptureService(
                     new MinecraftFramebufferFrameWriter(mc), new RecordingCaptureSettings(), output);
             RecordingStudioController controller = new RecordingStudioController(project, capture, projects, timeline);
-            new RecordingStudioRuntime(controller).open(mc);
+            RecordingStudioRuntime runtime = new RecordingStudioRuntime(controller);
+            try {
+                runtime.open(mc);
+            } catch (RuntimeException failure) {
+                runtime.shutdown();
+                throw failure;
+            }
         } catch (IOException | RuntimeException failure) {
             sender.addChatMessage(new ChatComponentText("§6[Recording Studio] §fCould not open: " + failure.getMessage()));
         }
