@@ -33,7 +33,7 @@ Recording Studio is designed as a standalone manual recording workspace. It can 
 - Full scene/source creation and management are not implemented; the current screen still contains placeholder scene/source labels.
 - Game audio capture is not implemented. The audio service handles microphone capture only; users can select a detected input device or use the system default, and the selection is stored per Recording Studio project.
 - Video timeline clip start positions, durations and playback speeds are applied during MP4 and GIF export. The automatically created `@capture` clip references the recorded PNG sequence; additional video clips use file paths. At least one captured PNG frame is still required to establish the export canvas. Audio timeline clip timing and playback speed are applied during MP4 export.
-- The prototype does not yet contain a verified production bootstrap for constructing all recording services and their Minecraft framebuffer writer.
+- The prototype does not yet contain a verified production bootstrap for constructing and owning all recording services. The Minecraft framebuffer writer is implemented under `RecordingStudio/integration/`.
 - No full Forge build or in-game test has been completed for the current prototype changes. Do not treat the preview as verified until it is compiled and tested in Minecraft.
 
 ## Integration checklist for development
@@ -56,10 +56,9 @@ Do not integrate this prototype automatically. These are the concrete integratio
 ### New integration code that must be created
 
 1. **Minecraft framebuffer writer**
-   - Create a client-only implementation of `RecordingCaptureService.FrameWriter`, for example `RecordingStudio/integration/MinecraftFramebufferFrameWriter.java`.
-   - Capture the framebuffer on the Minecraft client thread and return RGBA frame data.
-   - Write the captured frames to the supplied output files.
-   - Do not read OpenGL state from the asynchronous encoder thread.
+   - Port the existing `RecordingStudio/integration/MinecraftFramebufferFrameWriter.java` implementation from `mod-ideas` into `development`.
+   - Preserve the client-thread OpenGL readback, restoration of the previously bound framebuffer and viewport, and asynchronous PNG file writing.
+   - Keep the capture trigger on `RenderGameOverlayEvent.Post` with `ElementType.ALL`, before the active `GuiScreen` is drawn, so the Studio window is not recorded.
 2. **Recording Studio bootstrap**
    - Create a small bootstrap/factory that constructs a `RecordingProject`, `RecordingCaptureSettings`, `RecordingCaptureService`, `Timeline`, and `RecordingStudioController`.
    - Choose and document the final local project directory during integration; the prototype currently does not establish a production storage path.
