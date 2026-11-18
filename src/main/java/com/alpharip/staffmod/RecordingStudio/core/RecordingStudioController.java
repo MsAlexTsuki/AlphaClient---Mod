@@ -169,6 +169,7 @@ public final class RecordingStudioController {
         long now = System.currentTimeMillis();
         capture.stop();
         project.stop(now);
+        updateCapturedVideoClip(project.getElapsedMillis(now));
         try {
             projectStore.save(project, timeline);
             if (capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing()) {
@@ -180,6 +181,29 @@ public final class RecordingStudioController {
             }
         } catch (IOException failure) {
             status = "Stopped; recovery marker retained: " + failure.getMessage();
+        }
+    }
+
+    /** Keeps the captured frame sequence editable as the default Video-track clip. */
+    private void updateCapturedVideoClip(long durationMillis) {
+        if (capture.getFrameCount() + capture.getPendingFrameCount() <= 0L) return;
+        TimelineTrack videoTrack = null;
+        for (TimelineTrack track : timeline.getTracks()) {
+            if ("video".equals(track.getId())) { videoTrack = track; break; }
+        }
+        if (videoTrack == null) {
+            videoTrack = new TimelineTrack("video", "Video");
+            timeline.addTrack(videoTrack);
+        }
+        TimelineClip captured = null;
+        for (TimelineClip clip : videoTrack.getClips()) {
+            if ("@capture".equals(clip.getSource())) { captured = clip; break; }
+        }
+        long safeDuration = Math.max(1L, durationMillis);
+        if (captured == null) {
+            videoTrack.add(new TimelineClip("captured-footage", "@capture", 0L, safeDuration));
+        } else {
+            captured.setDuration(safeDuration);
         }
     }
 
