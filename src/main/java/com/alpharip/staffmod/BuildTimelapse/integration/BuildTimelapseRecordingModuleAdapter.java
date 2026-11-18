@@ -108,4 +108,9 @@ public final class BuildTimelapseRecordingModuleAdapter implements RecordingStud
         if (controller.getCamera().getMode() == CameraMode.PATH) return "Build Timelapse camera path is running";
         return "Build Timelapse camera positioned at the selected path";
     }
+
+    @Override
+    public synchronized boolean isExternalCameraActive() {
+        return controller.getCamera().isActive();
+    }
 }
