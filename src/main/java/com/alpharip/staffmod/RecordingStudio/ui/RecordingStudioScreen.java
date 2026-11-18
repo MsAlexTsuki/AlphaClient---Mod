@@ -84,7 +84,7 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 13: controller.cancelExport(); break;
             case 14:
                 navigating = true;
-                controller.getStorageUsage().refresh();
+                controller.getStorageUsage().refreshAsync();
                 mc.displayGuiScreen(new RecordingStudioStorageScreen(this, controller.getStorageUsage()));
                 break;
             default: break;
