@@ -29,6 +29,15 @@ public final class RecordingStudioStorageScreen extends GuiScreen {
         else if (button.id == 1) mc.displayGuiScreen(parent);
     }
 
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (keyCode == 1) {
+            mc.displayGuiScreen(parent);
+            return;
+        }
+        super.keyTyped(typedChar, keyCode);
+    }
+
     private void row(String label, long bytes, int count, int y) {
         int left = width / 2 - 145;
         Gui.drawRect(left, y - 5, left + 290, y + 24, 0xFF242424);
