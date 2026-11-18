@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
 /** Local, versioned camera-path persistence. No cloud or network operations. */
 public final class FileCameraPathStore implements CameraPathStore {
@@ -54,7 +55,7 @@ public final class FileCameraPathStore implements CameraPathStore {
             data.setProperty(key + "easing", point.getEasing());
         }
 
-        File temporary = new File(root, id + ".tmp");
+        File temporary = new File(root, id + "." + UUID.randomUUID().toString() + ".tmp");
         File destination = file(id);
         try (OutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
             data.store(output, "Recording Studio camera path");
