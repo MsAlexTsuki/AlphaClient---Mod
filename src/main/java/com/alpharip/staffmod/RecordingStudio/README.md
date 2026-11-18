@@ -3,7 +3,7 @@
 Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 
 ## Included
-- Standalone Recording Studio project model with local metadata persistence.
+- Standalone Recording Studio project model with local metadata persistence.\n- Local project catalog with list, create and open commands (`/recordingstudio list`, `/recordingstudio create <name>`, `/recordingstudio open <project-id>`).\n- Atomic timeline persistence for tracks, clips, playback speeds and timeline markers; saved projects can restore their timeline after reopening.
 - Manual recording controller and independent Forge runtime.
 - Minecraft framebuffer capture backend writing ordered PNG frames.
 - Start, pause, resume, stop and save controls in a dedicated Studio screen.
