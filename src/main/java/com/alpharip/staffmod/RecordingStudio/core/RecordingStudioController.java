@@ -22,6 +22,7 @@ public final class RecordingStudioController {
     private boolean closed;
     private boolean sessionStartedInThisRuntime;
     private long lastRecoveryCheckpointAt;
+    private String microphoneSelectionName = "System Default";
     private String status = "Ready";
 
     public RecordingStudioController(RecordingProject project, RecordingCaptureService capture, File projectDirectory) {
@@ -34,6 +35,7 @@ public final class RecordingStudioController {
             throw new IllegalArgumentException("Project, capture service, project directory and timeline are required");
         }
         this.project = project;
+        this.microphoneSelectionName = resolveMicrophoneName(project.getMicrophoneDeviceKey());
         this.capture = capture;
         this.capture.setIntervalMillis(project.getCaptureIntervalMillis());
         this.timeline = timeline;
@@ -245,16 +247,20 @@ public final class RecordingStudioController {
         String next;
         if (devices.isEmpty()) {
             next = "";
+            microphoneSelectionName = "System Default";
             status = "No selectable microphone inputs detected; using system default";
         } else if (currentIndex < 0) {
             next = devices.get(0).getKey();
-            status = "Microphone selected: " + devices.get(0).getName();
+            microphoneSelectionName = devices.get(0).getName();
+            status = "Microphone selected: " + microphoneSelectionName;
         } else if (currentIndex + 1 >= devices.size()) {
             next = "";
+            microphoneSelectionName = "System Default";
             status = "Microphone selected: System Default";
         } else {
             next = devices.get(currentIndex + 1).getKey();
-            status = "Microphone selected: " + devices.get(currentIndex + 1).getName();
+            microphoneSelectionName = devices.get(currentIndex + 1).getName();
+            status = "Microphone selected: " + microphoneSelectionName;
         }
         project.setMicrophoneDeviceKey(next);
         try {
@@ -265,8 +271,11 @@ public final class RecordingStudioController {
     }
 
     public synchronized String getMicrophoneSelectionName() {
-        String selected = project.getMicrophoneDeviceKey();
-        if (selected.isEmpty()) return "System Default";
+        return microphoneSelectionName;
+    }
+
+    private static String resolveMicrophoneName(String selected) {
+        if (selected == null || selected.isEmpty()) return "System Default";
         for (RecordingAudioCaptureService.MicrophoneDevice device
                 : RecordingAudioCaptureService.getAvailableMicrophones()) {
             if (device.getKey().equals(selected)) return device.getName();
