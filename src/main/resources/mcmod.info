@@ -1,15 +1,14 @@
 [
   {
-    "modid": "alphaclient",
-    "name": "Alpha Client",
-    "description": "AlphaClient for Minecraft 1.8.9, with a custom client UI and modular feature framework.",
+    "modid": "alpharecordingstudio",
+    "name": "Alpha Recording Studio",
+    "description": "Recording Studio and Build Timelapse recording tools for Minecraft 1.8.9.",
     "version": "${version}",
     "mcversion": "${mcversion}",
     "url": "https://alpha.rip",
     "updateUrl": "",
     "authorList": ["MsAlexTsuki", "Sem"],
-    "credits": "Alpha.Rip community",
-    "logoFile": "assets/alphastaffmod/logo.png",
+    "credits": "Alpha.Rip",
     "screenshots": [],
     "dependencies": []
   }

@@ -1,3 +1,0 @@
-package com.alpharip.staffmod.staffops.ideas;
-/** Builds an encoded Minecraft Wiki search URL for a keybind-triggered lookup. */
-public class WikiShortcut {public String searchUrl(String query){if(query==null||query.trim().isEmpty())throw new IllegalArgumentException();try{return "https://minecraft.wiki/w/Special:Search?search="+java.net.URLEncoder.encode(query.trim(),"UTF-8");}catch(java.io.UnsupportedEncodingException e){throw new IllegalStateException(e);}}}

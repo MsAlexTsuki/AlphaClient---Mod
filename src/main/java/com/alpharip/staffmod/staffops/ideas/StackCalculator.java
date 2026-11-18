@@ -1,3 +1,0 @@
-package com.alpharip.staffmod.staffops.ideas;
-/** Converts item counts into stacks. */
-public class StackCalculator { public static final class Result {public final long stacks;public final int remainder;private Result(long s,int r){stacks=s;remainder=r;}public String toString(){return stacks+" stack(s) + "+remainder+" item(s)";}} public Result calculate(long amount,int stackSize){if(amount<0||stackSize<1)throw new IllegalArgumentException();return new Result(amount/stackSize,(int)(amount%stackSize));} }
