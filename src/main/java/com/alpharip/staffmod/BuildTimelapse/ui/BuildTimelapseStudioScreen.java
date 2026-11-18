@@ -1,4 +1,5 @@
 package com.alpharip.staffmod.BuildTimelapse.ui;
+import com.alpharip.staffmod.RecordingStudio.ui.TimelineEditorScreen;
 import net.minecraft.client.gui.GuiButton;import net.minecraft.client.gui.GuiScreen;import java.io.IOException;
 public final class BuildTimelapseStudioScreen extends GuiScreen {
  private final StudioController controller;private final StudioScreenModel model;private final com.alpharip.staffmod.BuildTimelapse.integration.BuildTimelapseRuntime runtime;private boolean navigating;
