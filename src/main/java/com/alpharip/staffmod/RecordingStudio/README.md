@@ -14,7 +14,7 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Manual recording controller and independent Forge runtime.
 - OBS-inspired AlphaClient workspace with a live Minecraft viewport and dedicated Scenes, Sources, Module, Audio Mixer, Controls and Timeline panels.
 - Persisted scene management with create, rename, remove and cycle controls; the final remaining scene is protected from deletion.
-- Built-in per-scene Minecraft Capture and Microphone sources with enable/disable and remove controls. Disabling microphone capture stops an active microphone session; disabling game capture pauses new frame acquisition without stopping the project timer.
+- Built-in per-scene Minecraft Capture and Microphone sources with enable/disable and remove controls. Disabling or removing microphone capture stops an active microphone session. Scene selection, scene edits and Game Capture source changes are locked during active or paused recording so captured frame timing cannot silently become discontinuous.
 - Module panel with Normal Gameplay and Build Timelapse choices; optional module adapters can expose additional recording workflows without adding feature-module imports to Recording Studio.
 - Build Timelapse adapter exposes saved Build Timelapse camera paths in the Module panel. Selecting a path positions the shared Build Timelapse camera at its first waypoint; recording starts path playback and captures the moving camera view. Pausing and resuming the recording also pauses and resumes that path.
 - Explicit microphone recording controls with selectable detected input devices or the operating-system default; the selection is saved per project. PCM 44.1 kHz, 16-bit mono WAV files are written on a dedicated audio thread.
