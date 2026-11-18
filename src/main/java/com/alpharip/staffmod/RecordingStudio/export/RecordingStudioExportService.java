@@ -101,15 +101,16 @@ public final class RecordingStudioExportService {
                     command.add("-filter_complex");
                     command.add(filter);
                 }
+                String videoDuration = String.format(Locale.ROOT, "%.3f", frames.length / (double) fps);
                 Collections.addAll(command, "-map", "0:v:0", "-vf",
                         "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264",
-                        "-pix_fmt", "yuv420p", "-movflags", "+faststart");
+                        "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-t", videoDuration);
                 if (audioClips.isEmpty()) {
                     command.add("-an");
                 } else {
                     command.add("-map");
                     command.add(audioClips.size() == 1 ? "[a0]" : "[aout]");
-                    Collections.addAll(command, "-c:a", "aac", "-b:a", "192k", "-shortest");
+                    Collections.addAll(command, "-c:a", "aac", "-b:a", "192k");
                 }
                 command.add("-y");
                 command.add(partial.getAbsolutePath());
