@@ -162,6 +162,12 @@ public final class RecordingCaptureService {
         encoder.shutdown();
     }
 
+    /** Waits for already accepted frame writes; intended for a non-client finalizer thread. */
+    public boolean awaitPendingWrites(long timeout, TimeUnit unit) throws InterruptedException {
+        encoder.shutdown();
+        return encoder.awaitTermination(timeout, unit);
+    }
+
     private void initializeNextFileIndex() {
         if (nextFileIndex != 0L) return;
         File[] existing = directory.listFiles();
