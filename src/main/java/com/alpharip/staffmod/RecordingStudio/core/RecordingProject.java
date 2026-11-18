@@ -134,10 +134,10 @@ public final class RecordingProject {
 
         File temporary = new File(directory, id + "." + UUID.randomUUID().toString() + ".tmp");
         File destination = new File(directory, id + ".recording");
-        try (OutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
-            properties.store(output, "Alpha Recording Studio project");
-        }
         try {
+            try (OutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
+                properties.store(output, "Alpha Recording Studio project");
+            }
             try {
                 Files.move(temporary.toPath(), destination.toPath(),
                         StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
