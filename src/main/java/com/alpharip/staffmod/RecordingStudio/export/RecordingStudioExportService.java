@@ -8,6 +8,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
@@ -29,6 +31,7 @@ public final class RecordingStudioExportService {
     private volatile String status = "Export idle";
     private volatile Process process;
     private volatile boolean cancelled;
+    private volatile int progressPercent;
     private Thread worker;
 
     public RecordingStudioExportService(File framesDirectory, File outputDirectory, Timeline timeline) {
@@ -53,7 +56,8 @@ public final class RecordingStudioExportService {
         final File output = new File(outputDirectory,
                 "recording-" + System.currentTimeMillis() + (format == Format.MP4 ? ".mp4" : ".gif"));
         cancelled = false;
-        status = "Exporting " + format.name() + " (" + frames.length + " frames)";
+        progressPercent = 0;
+        status = "Exporting " + format.name() + " (0%) — " + frames.length + " frames";
         worker = new Thread(new Runnable() {
             public void run() {
                 export(format, fps, command, output);
@@ -74,6 +78,7 @@ public final class RecordingStudioExportService {
 
     public synchronized boolean isRunning() { return worker != null && worker.isAlive(); }
     public String getStatus() { return status; }
+    public int getProgressPercent() { return progressPercent; }
 
     private void export(Format format, double fps, String executable, File output) {
         String extension = format == Format.MP4 ? ".mp4" : ".gif";
@@ -148,7 +153,7 @@ public final class RecordingStudioExportService {
                 }
                 command.add("-y");
                 command.add(partial.getAbsolutePath());
-                run(command, "MP4 export");
+                run(command, "MP4 export", outputDurationMillis, 0, 100);
             } else {
                 palette = File.createTempFile("alpha-recording-palette-", ".png", outputDirectory);
                 List<String> paletteCommand = baseCommand(executable, input, fps);
@@ -164,7 +169,7 @@ public final class RecordingStudioExportService {
                             videoFilter + ";[vout]palettegen=stats_mode=diff[palette]",
                             "-map", "[palette]", "-frames:v", "1", "-y", palette.getAbsolutePath());
                 }
-                run(paletteCommand, "GIF palette generation");
+                run(paletteCommand, "GIF palette generation", outputDurationMillis, 0, 5);
 
                 List<String> gifCommand = baseCommand(executable, input, fps);
                 for (File source : videoSources) {
@@ -185,13 +190,14 @@ public final class RecordingStudioExportService {
                             "-map", "[vfinal]", "-t", seconds(outputDurationMillis),
                             "-y", partial.getAbsolutePath());
                 }
-                run(gifCommand, "GIF export");
+                run(gifCommand, "GIF export", outputDurationMillis, 5, 95);
             }
 
             if (cancelled || Thread.currentThread().isInterrupted()) throw new InterruptedException("Export cancelled");
             if (!partial.isFile() || partial.length() == 0L) throw new IOException("FFmpeg did not create a valid export");
             Files.move(partial.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            status = "Export complete: " + output.getAbsolutePath();
+            progressPercent = 100;
+            status = "Export complete (100%): " + output.getAbsolutePath();
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();
             status = "Export cancelled";
@@ -365,23 +371,56 @@ public final class RecordingStudioExportService {
         return frames;
     }
 
-    private void run(List<String> command, String operation) throws Exception {
+    private void run(List<String> command, String operation, long durationMillis,
+                     int progressStart, int progressRange) throws Exception {
         if (cancelled || Thread.currentThread().isInterrupted()) throw new InterruptedException("Export cancelled");
         File logFile = File.createTempFile("alpha-recording-export-", ".log", outputDirectory);
         Process active = null;
         try {
-            active = new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(logFile).start();
+            List<String> progressCommand = new ArrayList<String>(command);
+            int outputPosition = progressCommand.size() - 1;
+            progressCommand.add(outputPosition, "-progress");
+            progressCommand.add(outputPosition + 1, "pipe:1");
+            progressCommand.add(outputPosition + 2, "-nostats");
+            active = new ProcessBuilder(progressCommand).redirectError(logFile).start();
             process = active;
+            BufferedReader progressReader = new BufferedReader(new InputStreamReader(active.getInputStream(), "UTF-8"));
             int exit;
             try {
+                String line;
+                long latestTimeMillis = 0L;
+                while ((line = progressReader.readLine()) != null) {
+                    if (line.startsWith("out_time_us=") || line.startsWith("out_time_ms=")) {
+                        int separator = line.indexOf('=');
+                        try {
+                            long microseconds = Long.parseLong(line.substring(separator + 1).trim());
+                            latestTimeMillis = Math.max(0L, microseconds / 1000L);
+                            if (durationMillis > 0L && progressRange > 0) {
+                                int stageProgress = (int) Math.min(progressRange,
+                                        (latestTimeMillis * (long) progressRange) / durationMillis);
+                                int overall = Math.min(99, progressStart + stageProgress);
+                                progressPercent = Math.max(progressPercent, overall);
+                                status = operation + " (" + progressPercent + "%)";
+                            }
+                        } catch (NumberFormatException ignored) {
+                            // Ignore malformed or unavailable FFmpeg progress values.
+                        }
+                    }
+                }
                 exit = active.waitFor();
             } catch (InterruptedException interrupted) {
                 terminate(active);
                 Thread.currentThread().interrupt();
                 throw new InterruptedException(operation + " cancelled");
+            } finally {
+                try { progressReader.close(); } catch (IOException ignored) { }
             }
             if (cancelled) throw new InterruptedException("Export cancelled");
             if (exit != 0) throw new IOException(operation + " failed (exit " + exit + "): " + readTail(logFile, 10000));
+            if (progressRange > 0) {
+                progressPercent = Math.max(progressPercent, Math.min(99, progressStart + progressRange));
+                status = operation + " (" + progressPercent + "%)";
+            }
         } finally {
             process = null;
             if (active != null && active.isAlive()) terminate(active);
