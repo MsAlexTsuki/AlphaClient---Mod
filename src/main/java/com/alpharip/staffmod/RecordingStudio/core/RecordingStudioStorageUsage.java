@@ -15,14 +15,46 @@ public final class RecordingStudioStorageUsage {
     private int audioCount;
     private int exportCount;
     private boolean readable = true;
+    private volatile boolean scanning;
+    private volatile String scanError;
 
     public RecordingStudioStorageUsage(File recordingStudioRoot) {
         if (recordingStudioRoot == null) throw new IllegalArgumentException("Recording Studio root is required");
         root = recordingStudioRoot;
-        refresh();
+        refreshAsync();
+    }
+
+    public void refreshAsync() {
+        synchronized (this) {
+            if (scanning) return;
+            scanning = true;
+            scanError = null;
+        }
+        Thread worker = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    refreshSnapshot();
+                } catch (RuntimeException failure) {
+                    scanError = failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
+                } finally {
+                    scanning = false;
+                }
+            }
+        }, "Alpha-RecordingStudio-StorageScan");
+        worker.setDaemon(true);
+        worker.start();
     }
 
     public synchronized void refresh() {
+        scanning = true;
+        try {
+            refreshSnapshot();
+        } finally {
+            scanning = false;
+        }
+    }
+
+    private synchronized void refreshSnapshot() {
         totalBytes = projectBytes = frameBytes = audioBytes = exportBytes = 0L;
         projectCount = frameCount = audioCount = exportCount = 0;
         readable = true;
@@ -93,6 +125,8 @@ public final class RecordingStudioStorageUsage {
     public synchronized int getAudioCount() { return audioCount; }
     public synchronized int getExportCount() { return exportCount; }
     public synchronized boolean isReadable() { return readable; }
+    public boolean isScanning() { return scanning; }
+    public String getScanError() { return scanError; }
     public synchronized String getRootPath() { return root.getAbsolutePath(); }
 
     public static String formatBytes(long bytes) {
