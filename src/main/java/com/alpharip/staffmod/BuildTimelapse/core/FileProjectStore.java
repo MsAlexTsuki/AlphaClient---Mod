@@ -1,5 +1,5 @@
 package com.alpharip.staffmod.BuildTimelapse.core;
-import com.alpharip.staffmod.BuildTimelapse.timeline.*;import java.io.*;import java.nio.file.*;import java.util.*;
+import com.alpharip.staffmod.RecordingStudio.timeline.*;import java.io.*;import java.nio.file.*;import java.util.*;
 /** Local-only project metadata, timeline markers and clip-track persistence. */
 public final class FileProjectStore implements ProjectStore {
  private static final int MAX_ITEMS=100000;private final File root;
