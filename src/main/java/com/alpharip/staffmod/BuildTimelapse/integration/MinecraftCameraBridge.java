@@ -1,1 +1,8 @@
-package com.alpharip.staffmod.BuildTimelapse.integration; import com.alpharip.staffmod.RecordingStudio.camera.CameraPose;\nimport com.alpharip.staffmod.RecordingStudio.camera.CameraRuntimePort; /** Client-only render-view adapter. Restore renderViewEntity; never mutate player position, rotation, motion or input. */ public interface MinecraftCameraBridge extends CameraRuntimePort {Object getOriginalRenderViewEntity();}
+package com.alpharip.staffmod.BuildTimelapse.integration;
+
+import com.alpharip.staffmod.RecordingStudio.camera.CameraRuntimePort;
+
+/** Client-only render-view adapter. Restore renderViewEntity; never mutate player position, rotation, motion or input. */
+public interface MinecraftCameraBridge extends CameraRuntimePort {
+    Object getOriginalRenderViewEntity();
+}
