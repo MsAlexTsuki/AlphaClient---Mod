@@ -150,7 +150,7 @@ public final class RecordingStudioExportService {
     private List<String> baseCommand(String executable, String input, double fps) {
         List<String> command = new ArrayList<String>();
         Collections.addAll(command, executable, "-hide_banner", "-loglevel", "error",
-                "-framerate", Integer.toString(fps), "-pattern_type", "glob", "-i", input);
+                "-framerate", formatRate(fps), "-pattern_type", "glob", "-i", input);
         return command;
     }
 
