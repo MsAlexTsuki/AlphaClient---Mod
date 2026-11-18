@@ -205,9 +205,9 @@ public final class TimelineEditorScreen extends GuiScreen {
         drawCenteredString(fontRendererObj, "TIMELINE EDITOR", width / 2, 34, 0xFFFFC83D);
         TimelineTrack track = selectedTrack();
         TimelineClip clip = selectedClip();
-        drawString(fontRendererObj, "Duration: " + timeline.duration() + " ms", width / 2 - 145, 34, 0xFFFFFF);
-        drawString(fontRendererObj, "Track: " + (track == null ? "None" : track.getName()), width / 2 - 145, 48, 0xBBBBBB);
-        drawString(fontRendererObj, "Clip: " + (clip == null ? "None" : clip.getId()), width / 2 - 145, 62, 0xBBBBBB);
+        drawString(fontRendererObj, "Duration: " + timeline.duration() + " ms", width / 2 - 145, 52, 0xFFFFFF);
+        drawString(fontRendererObj, "Track: " + (track == null ? "None" : track.getName()), width / 2 - 145, 66, 0xBBBBBB);
+        drawString(fontRendererObj, "Clip: " + (clip == null ? "None" : clip.getId()), width / 2 - 145, 80, 0xBBBBBB);
         drawString(fontRendererObj, "Source", width / 2 - 145, height / 2 - 101, 0xFFFFFF);
         drawString(fontRendererObj, "Start (ms)", width / 2 - 145, height / 2 - 61, 0xFFFFFF);
         drawString(fontRendererObj, "Duration (ms)", width / 2 - 41, height / 2 - 61, 0xFFFFFF);
