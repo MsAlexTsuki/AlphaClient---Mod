@@ -411,6 +411,48 @@ public final class RecordingStudioController {
         persistSceneChange("Created " + scene.getName());
     }
 
+    public synchronized void renameActiveScene(String name) {
+        ensureOpen();
+        RecordingStudioScene scene = timeline.getActiveScene();
+        if (scene == null) {
+            status = "No active scene";
+            return;
+        }
+        try {
+            scene.setName(name);
+            persistSceneChange("Scene renamed to " + scene.getName());
+        } catch (IllegalArgumentException invalid) {
+            status = invalid.getMessage();
+        }
+    }
+
+    public synchronized void removeActiveScene() {
+        ensureOpen();
+        RecordingStudioScene scene = timeline.getActiveScene();
+        if (scene == null || !timeline.removeScene(scene.getId())) {
+            status = "The last remaining scene cannot be removed";
+            return;
+        }
+        stopMicrophoneIfSceneDisablesIt();
+        persistSceneChange("Scene removed");
+    }
+
+    public synchronized void removeSceneSource(RecordingStudioSource.Type type) {
+        ensureOpen();
+        RecordingStudioScene scene = timeline.getActiveScene();
+        if (scene == null) {
+            status = "No active scene";
+            return;
+        }
+        RecordingStudioSource source = scene.findSource(type);
+        if (source == null || !scene.removeSource(source.getId())) {
+            status = "Source is not present in the active scene";
+            return;
+        }
+        if (type == RecordingStudioSource.Type.MICROPHONE) audioCapture.stop();
+        persistSceneChange(source.getName() + " removed from " + scene.getName());
+    }
+
     public synchronized void toggleSceneSource(RecordingStudioSource.Type type) {
         ensureOpen();
         if (type == null) throw new IllegalArgumentException("Source type is required");
