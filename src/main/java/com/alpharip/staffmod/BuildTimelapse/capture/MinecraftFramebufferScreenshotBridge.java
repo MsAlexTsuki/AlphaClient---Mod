@@ -19,12 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 /**
- * Minecraft 1.8.9 framebuffer adapter.
- *
- * Captures the already-rendered main framebuffer on the client/render thread.
- * HUD visibility is controlled through GameSettings.hideGUI. Hand suppression
- * requires a renderer hook and is deliberately rejected instead of being
- * reported as successful when no such hook is installed.
+ * Minecraft 1.8.9 framebuffer adapter. OpenGL readback runs on the render thread;
+ * image conversion and PNG disk output can run on a capture worker.
  */
 public final class MinecraftFramebufferScreenshotBridge implements MinecraftScreenshotBridge {
     private final Minecraft minecraft;
@@ -80,9 +76,8 @@ public final class MinecraftFramebufferScreenshotBridge implements MinecraftScre
     }
 
     @Override
-    public void captureFramebuffer(File output, int width, int height) throws Exception {
+    public byte[] readFramebufferPixels(int width, int height) throws Exception {
         requireRenderThread();
-        if (output == null) throw new IllegalArgumentException("output");
         if (width < 1 || height < 1 || width != minecraft.displayWidth || height != minecraft.displayHeight) {
             throw new UnsupportedOperationException(
                     "The framebuffer adapter currently supports native display resolution only");
@@ -106,6 +101,9 @@ public final class MinecraftFramebufferScreenshotBridge implements MinecraftScre
             framebuffer.bindFramebuffer(true);
             GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
             pixels.position(0);
+            byte[] result = new byte[(int) byteCount];
+            pixels.get(result);
+            return result;
         } finally {
             if (framebufferSupported) {
                 OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, previousFramebuffer);
@@ -113,16 +111,25 @@ public final class MinecraftFramebufferScreenshotBridge implements MinecraftScre
             GlStateManager.viewport(previousViewport.get(0), previousViewport.get(1),
                     previousViewport.get(2), previousViewport.get(3));
         }
+    }
+
+    @Override
+    public void writePng(File output, int width, int height, byte[] rgbaPixels) throws Exception {
+        if (output == null || rgbaPixels == null) throw new IllegalArgumentException("output/pixels");
+        long expected = (long) width * (long) height * 4L;
+        if (width < 1 || height < 1 || expected > Integer.MAX_VALUE || rgbaPixels.length != (int) expected) {
+            throw new IOException("Framebuffer pixel data has invalid dimensions");
+        }
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         for (int y = 0; y < height; y++) {
             int sourceY = height - 1 - y;
             for (int x = 0; x < width; x++) {
                 int offset = (sourceY * width + x) * 4;
-                int red = pixels.get(offset) & 255;
-                int green = pixels.get(offset + 1) & 255;
-                int blue = pixels.get(offset + 2) & 255;
-                int alpha = pixels.get(offset + 3) & 255;
+                int red = rgbaPixels[offset] & 255;
+                int green = rgbaPixels[offset + 1] & 255;
+                int blue = rgbaPixels[offset + 2] & 255;
+                int alpha = rgbaPixels[offset + 3] & 255;
                 image.setRGB(x, y, (alpha << 24) | (red << 16) | (green << 8) | blue);
             }
         }
@@ -133,9 +140,7 @@ public final class MinecraftFramebufferScreenshotBridge implements MinecraftScre
         }
         File temporary = new File(parent == null ? new File(".") : parent, output.getName() + ".tmp");
         try {
-            if (!ImageIO.write(image, "png", temporary)) {
-                throw new IOException("No PNG writer is available");
-            }
+            if (!ImageIO.write(image, "png", temporary)) throw new IOException("No PNG writer is available");
             try {
                 Files.move(temporary.toPath(), output.toPath(),
                         StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
@@ -145,5 +150,10 @@ public final class MinecraftFramebufferScreenshotBridge implements MinecraftScre
         } finally {
             if (temporary.exists() && !temporary.delete()) temporary.deleteOnExit();
         }
+    }
+
+    @Override
+    public void captureFramebuffer(File output, int width, int height) throws Exception {
+        writePng(output, width, height, readFramebufferPixels(width, height));
     }
 }
