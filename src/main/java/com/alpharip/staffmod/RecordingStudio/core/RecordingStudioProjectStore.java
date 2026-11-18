@@ -229,7 +229,8 @@ public final class RecordingStudioProjectStore {
     }
 
     private static void writeAtomically(Properties data, File destination) throws IOException {
-        File temp = new File(destination.getParentFile(), destination.getName() + ".tmp");
+        File temp = new File(destination.getParentFile(),
+                destination.getName() + "." + UUID.randomUUID().toString() + ".tmp");
         try {
             try (OutputStream out = new BufferedOutputStream(new FileOutputStream(temp))) {
                 data.store(out, "Alpha Recording Studio timeline");
