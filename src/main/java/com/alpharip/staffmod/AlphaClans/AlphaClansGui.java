@@ -18,10 +18,14 @@ public final class AlphaClansGui extends GuiScreen {
     private static final int BACK=10, SELECT_BASE=100, CREATE=200, OPEN_CREATE=201, CANCEL_CREATE=202;
     private static final int JOIN=203, INVITE=204, SEND=205, LEAVE=206, DISBAND=207;
     private static final int ACCEPT=208, DECLINE=209, KICK=210, ROLE=211, TRANSFER=212, SAVE=213, VIS_PUBLIC=214, VIS_PRIVATE=215;
+    private static final int COLOR_PREV=216, COLOR_NEXT=217, SAVE_COLOR=218;
+    private static final String[] TAG_COLORS={"black","dark_blue","dark_green","dark_aqua","dark_red","dark_purple","gold","gray",
+            "dark_gray","blue","green","aqua","red","light_purple","yellow","white"};
     private final GuiScreen parent;
     private int tab=TAB_BROWSER, selected=-1, selectedBrowser=-1;
     private int left, top, panelWidth, panelHeight, bodyTop, footerTop;
     private boolean privateClan, creatingClan;
+    private int tagColorIndex=14;
     private GuiTextField name, tag, input;
     private Object renderedSnapshot;
     private String observedClanId;
@@ -43,6 +47,9 @@ public final class AlphaClansGui extends GuiScreen {
         if (s.clan!=null && (observedClanId==null || !clanId.equals(observedClanId))) {
             String visibility=AlphaClanService.str(s.clan,"visibility");
             privateClan="private".equalsIgnoreCase(visibility);
+            String savedColor=AlphaClanService.str(s.clan,"tag_color");
+            tagColorIndex=14;
+            if(savedColor!=null) for(int i=0;i<TAG_COLORS.length;i++) if(TAG_COLORS[i].equals(savedColor)) { tagColorIndex=i; break; }
         }
 
         buttonList.add(new AlphaButton(BACK,left+panelWidth-66,top+12,54,20,"BACK"));
@@ -120,6 +127,9 @@ public final class AlphaClansGui extends GuiScreen {
             tag=field(44,formLeft+214,bodyTop+64,78,24); tag.setText(AlphaClanService.str(s.clan,"tag"));
             buttonList.add(new AlphaButton(VIS_PUBLIC,formLeft,bodyTop+112,136,24,"PUBLIC",!privateClan,!privateClan));
             buttonList.add(new AlphaButton(VIS_PRIVATE,formLeft+146,bodyTop+112,136,24,"PRIVATE",privateClan,privateClan));
+            buttonList.add(new AlphaButton(COLOR_PREV,left+panelWidth/2-112,bodyTop+178,28,24,"<"));
+            buttonList.add(new AlphaButton(COLOR_NEXT,left+panelWidth/2+84,bodyTop+178,28,24,">"));
+            buttonList.add(new AlphaButton(SAVE_COLOR,left+panelWidth-226,footerTop+10,102,24,"SAVE COLOR",true));
             buttonList.add(new AlphaButton(SAVE,left+panelWidth-116,footerTop+10,102,24,"SAVE",true));
         } else if (tab==TAB_INVITES && s.clan==null) {
             addRows(s.invites,bodyTop+18,Math.max(1,(footerTop-bodyTop-26)/25),false);
@@ -283,6 +293,9 @@ public final class AlphaClansGui extends GuiScreen {
             if(b.id==ROLE)AlphaClanService.INSTANCE.setRole(id,!"officer".equalsIgnoreCase(value(m,"role")));
             if(b.id==TRANSFER)AlphaClanService.INSTANCE.transfer(id);
         }
+        if(b.id==COLOR_PREV) { tagColorIndex=(tagColorIndex+TAG_COLORS.length-1)%TAG_COLORS.length; initGui(); return; }
+        if(b.id==COLOR_NEXT) { tagColorIndex=(tagColorIndex+1)%TAG_COLORS.length; initGui(); return; }
+        if(b.id==SAVE_COLOR&&s.clan!=null) { AlphaClanService.INSTANCE.setTagColor(TAG_COLORS[tagColorIndex]); return; }
         if(b.id==SAVE&&name!=null&&tag!=null&&s.clan!=null)
             AlphaClanService.INSTANCE.updateSettings(name.getText(),tag.getText(),value(s.clan,"description"),privateClan);
     }
@@ -344,6 +357,10 @@ public final class AlphaClansGui extends GuiScreen {
             drawString(fontRendererObj,"CLAN NAME",left+panelWidth/2-146,bodyTop+49,0xFFE6E8ED);
             drawString(fontRendererObj,"TAG",left+panelWidth/2+68,bodyTop+49,0xFFE6E8ED);
             if(name!=null)name.drawTextBox(); if(tag!=null)tag.drawTextBox();
+            drawSection("CLAN TAG COLOR",left+panelWidth/2-112,bodyTop+154);
+            int colorLeft=left+panelWidth/2-76;
+            drawRect(colorLeft,bodyTop+179,colorLeft+16,bodyTop+195,tagColorArgb());
+            drawCenteredString(fontRendererObj,TAG_COLORS[tagColorIndex].replace('_',' ').toUpperCase(),left+panelWidth/2+8,bodyTop+185,0xFFE6E8ED);
         } else if(tab==TAB_INVITES&&s.clan==null) {
             drawSection("PENDING INVITATIONS",left+16,bodyTop);
             drawGenericRows(s.invites,bodyTop+18,2);
@@ -382,6 +399,11 @@ public final class AlphaClansGui extends GuiScreen {
             case TAB_SETTINGS:return "Manage your clan identity";
             default:return "";
         }
+    }
+    private int tagColorArgb() {
+        int[] colors={0xFF000000,0xFF0000AA,0xFF00AA00,0xFF00AAAA,0xFFAA0000,0xFFAA00AA,0xFFFFAA00,0xFFAAAAAA,
+                0xFF555555,0xFF5555FF,0xFF55FF55,0xFF55FFFF,0xFFFF5555,0xFFFF55FF,0xFFFFFF55,0xFFFFFFFF};
+        return colors[Math.max(0,Math.min(TAG_COLORS.length-1,tagColorIndex))];
     }
     private void drawSection(String text,int y){drawSection(text,left+16,y);}
     private void drawSection(String text,int x,int y){fontRendererObj.drawString(text,x,y,0xFFFFD866);}
