@@ -41,6 +41,7 @@ public final class RankViewerRenderer {
 
         AlphaRank rank = RankCache.INSTANCE.get(player.getUniqueID());
         String clanTag = ClanTagCache.INSTANCE.get(player.getUniqueID());
+        String clanTagColor = ClanTagCache.INSTANCE.getColor(player.getUniqueID());
         if (rank == null && clanTag == null) return;
 
         // Replace the vanilla player nametag when either a public Alpha rank badge
@@ -51,7 +52,7 @@ public final class RankViewerRenderer {
         drawNameWithBadge(minecraft, player, rank, clanTag, player.getName(), event.x,
                 event.y + player.height + 0.5D, event.z,
                 minecraft.getRenderManager().playerViewY,
-                minecraft.getRenderManager().playerViewX, 0.026666668F);
+                minecraft.getRenderManager().playerViewX, 0.026666668F, clanTagColor);
     }
 
     @SubscribeEvent
@@ -79,15 +80,16 @@ public final class RankViewerRenderer {
         // Clan tags are independent and remain visible above the local player in third person.
         AlphaRank rank = showLocalRankBadge ? SupabaseCommunityService.getSignedInDisplayRank() : null;
         String clanTag = ClanTagCache.INSTANCE.get(player.getUniqueID());
+        String clanTagColor = ClanTagCache.INSTANCE.getColor(player.getUniqueID());
         if (rank == null && clanTag == null) return;
         drawNameWithBadge(minecraft, player, rank, clanTag, player.getName(), x,
                 y + player.height + 0.5D - (player.isSneaking() ? 0.25D : 0.0D), z,
-                renderManager.playerViewY, renderManager.playerViewX, 0.026666668F);
+                renderManager.playerViewY, renderManager.playerViewX, 0.026666668F, clanTagColor);
     }
 
     private void drawNameWithBadge(Minecraft minecraft, EntityPlayer player, AlphaRank rank, String clanTag, String name,
                                    double x, double y, double z,
-                                   float playerViewY, float playerViewX, float scale) {
+                                   float playerViewY, float playerViewX, float scale, String clanTagColorName) {
         int nameWidth = minecraft.fontRendererObj.getStringWidth(name);
         int badgeWidth = rank == null ? 0 : BADGE_SIZE + BADGE_GAP;
         int nameRowWidth = nameWidth + badgeWidth;
@@ -161,7 +163,8 @@ public final class RankViewerRenderer {
             Gui.drawRect(right - 1, top, right, bottom, borderColor);
 
             if (clanLabel != null) {
-                int clanColor = sneaking ? withAlpha(0xFFFFD866, sneakAlpha) : 0xFFFFD866;
+                int baseClanColor = getClanTagArgb(clanTagColorName);
+                int clanColor = sneaking ? withAlpha(baseClanColor, sneakAlpha) : baseClanColor;
                 minecraft.fontRendererObj.drawStringWithShadow(
                         clanLabel, -clanLabelWidth / 2, -10, clanColor);
             }
@@ -242,6 +245,16 @@ public final class RankViewerRenderer {
         int originalAlpha = (color >>> 24) & 0xFF;
         int alpha = Math.max(0, Math.min(255, Math.round(originalAlpha * alphaMultiplier)));
         return (color & 0x00FFFFFF) | (alpha << 24);
+    }
+
+    private static int getClanTagArgb(String colorName) {
+        if (colorName == null) return 0xFFFFD866;
+        String[] names = {"black","dark_blue","dark_green","dark_aqua","dark_red","dark_purple","gold","gray",
+                "dark_gray","blue","green","aqua","red","light_purple","yellow","white"};
+        int[] colors = {0x000000,0x0000AA,0x00AA00,0x00AAAA,0xAA0000,0xAA00AA,0xFFAA00,0xAAAAAA,
+                0x555555,0x5555FF,0x55FF55,0x55FFFF,0xFF5555,0xFF55FF,0xFFFF55,0xFFFFFF};
+        for (int i=0;i<names.length;i++) if(names[i].equals(colorName)) return 0xFF000000 | colors[i];
+        return 0xFFFFD866;
     }
 
     private static int getFormattingColor(EnumChatFormatting format) {
