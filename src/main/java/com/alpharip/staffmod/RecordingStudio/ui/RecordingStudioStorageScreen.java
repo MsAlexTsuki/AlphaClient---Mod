@@ -25,7 +25,7 @@ public final class RecordingStudioStorageScreen extends GuiScreen {
     }
 
     @Override protected void actionPerformed(net.minecraft.client.gui.GuiButton button) {
-        if (button.id == 0) usage.refresh();
+        if (button.id == 0) usage.refreshAsync();
         else if (button.id == 1) mc.displayGuiScreen(parent);
     }
 
@@ -46,17 +46,18 @@ public final class RecordingStudioStorageScreen extends GuiScreen {
         drawCenteredString(fontRendererObj, "RECORDING STUDIO  /  STORAGE", width / 2, 34, 0xFFFFC83D);
         drawCenteredString(fontRendererObj, RecordingStudioStorageUsage.formatBytes(usage.getTotalBytes()),
                 width / 2, 62, 0xFFFFFFFF);
-        drawCenteredString(fontRendererObj, "TOTAL LOCAL STORAGE", width / 2, 75, 0xFFAAAAAA);
+        drawCenteredString(fontRendererObj, "TRACKED STUDIO DATA", width / 2, 75, 0xFFAAAAAA);
         row("Projects", usage.getProjectBytes(), usage.getProjectCount(), 108);
         row("Video frames", usage.getFrameBytes(), usage.getFrameCount(), 143);
         row("Microphone audio", usage.getAudioBytes(), usage.getAudioCount(), 178);
         row("Exports", usage.getExportBytes(), usage.getExportCount(), 213);
-        drawCenteredString(fontRendererObj, usage.isReadable()
-                ? "Storage scan complete" : "Some folders could not be read",
+        drawCenteredString(fontRendererObj, usage.isScanning() ? "Scanning storage..."
+                : usage.getScanError() != null ? "Storage scan failed: " + usage.getScanError()
+                : usage.isReadable() ? "Storage scan complete" : "Some folders could not be read",
                 width / 2, 254, usage.isReadable() ? 0xFFB9B9B9 : 0xFFFFB45C);
         drawCenteredString(fontRendererObj, "Location: " + usage.getRootPath(),
                 width / 2, 270, 0xFF888888);
-        drawCenteredString(fontRendererObj, "Read-only overview  •  No files are removed automatically",
+        drawCenteredString(fontRendererObj, "Read-only overview  |  No files are removed automatically",
                 width / 2, 287, 0xFF888888);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
