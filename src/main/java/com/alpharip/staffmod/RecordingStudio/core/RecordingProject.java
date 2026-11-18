@@ -22,6 +22,7 @@ public final class RecordingProject {
     private long startedAt;
     private long stoppedAt;
     private long elapsedMillis;
+    private long captureIntervalMillis = 1000L;
     private long segmentStartedAt;
     private boolean recording;
 
@@ -87,6 +88,11 @@ public final class RecordingProject {
     public synchronized long getStartedAt() { return startedAt; }
     public synchronized long getStoppedAt() { return stoppedAt; }
     public synchronized boolean isRecording() { return recording; }
+    public synchronized long getCaptureIntervalMillis() { return captureIntervalMillis; }
+    public synchronized void setCaptureIntervalMillis(long value) {
+        if (value < 100L || value > 60000L) throw new IllegalArgumentException("Capture interval must be 100..60000 ms");
+        captureIntervalMillis = value;
+    }
 
     /** Elapsed active recording time; paused periods are excluded. */
     public synchronized long getElapsedMillis(long now) {
@@ -108,6 +114,7 @@ public final class RecordingProject {
         properties.setProperty("startedAt", Long.toString(startedAt));
         properties.setProperty("stoppedAt", Long.toString(stoppedAt));
         properties.setProperty("elapsedMillis", Long.toString(elapsedMillis));
+        properties.setProperty("captureIntervalMillis", Long.toString(captureIntervalMillis));
         properties.setProperty("recording", Boolean.toString(recording));
 
         File temporary = new File(directory, id + ".tmp");
@@ -143,6 +150,7 @@ public final class RecordingProject {
             project.startedAt = Long.parseLong(properties.getProperty("startedAt", "0"));
             project.stoppedAt = Long.parseLong(properties.getProperty("stoppedAt", "0"));
             project.elapsedMillis = Math.max(0L, Long.parseLong(properties.getProperty("elapsedMillis", "0")));
+            project.setCaptureIntervalMillis(Long.parseLong(properties.getProperty("captureIntervalMillis", "1000")));
             project.recording = Boolean.parseBoolean(properties.getProperty("recording", "false"));
             project.segmentStartedAt = 0L;
             return project;
