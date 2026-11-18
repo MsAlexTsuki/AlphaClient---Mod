@@ -52,6 +52,7 @@ public final class RecordingStudioController {
                                     file.getAbsolutePath(), startMillis, durationMillis));
                         }
                         projectStore.save(project, timeline);
+                        finishRecoveryMarkerIfIdle();
                         status = "Audio saved to timeline";
                     } catch (IOException | RuntimeException failure) {
                         status = "Audio saved; timeline update failed: " + failure.getMessage();
@@ -61,6 +62,8 @@ public final class RecordingStudioController {
             public void onAudioFailed(String message) {
                 synchronized (RecordingStudioController.this) {
                     status = "Audio capture failed: " + message;
+                    try { finishRecoveryMarkerIfIdle(); }
+                    catch (IOException failure) { status += " — Recovery marker retained: " + failure.getMessage(); }
                 }
             }
         });
@@ -145,7 +148,7 @@ public final class RecordingStudioController {
         project.stop(now);
         try {
             projectStore.save(project, timeline);
-            if (capture.getPendingFrameCount() == 0) {
+            if (capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing()) {
                 projectStore.clearRecordingActive(project.getId());
                 sessionStartedInThisRuntime = false;
                 status = "Stopped — project checkpoint saved";
@@ -195,7 +198,7 @@ public final class RecordingStudioController {
         if (closed) return;
         capture.tick(now);
         if (sessionStartedInThisRuntime && !capture.isRecording() && !capture.isPaused()
-                && capture.getPendingFrameCount() == 0) {
+                && capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing()) {
             try {
                 projectStore.clearRecordingActive(project.getId());
                 sessionStartedInThisRuntime = false;
@@ -203,6 +206,14 @@ public final class RecordingStudioController {
             } catch (IOException failure) {
                 status = "Stopped; recovery marker retained: " + failure.getMessage();
             }
+        }
+    }
+
+    private void finishRecoveryMarkerIfIdle() throws IOException {
+        if (sessionStartedInThisRuntime && !capture.isRecording() && !capture.isPaused()
+                && capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing()) {
+            projectStore.clearRecordingActive(project.getId());
+            sessionStartedInThisRuntime = false;
         }
     }
 
@@ -227,7 +238,8 @@ public final class RecordingStudioController {
         stop();
         try {
             projectStore.save(project, timeline);
-            if (sessionStartedInThisRuntime && capture.getPendingFrameCount() == 0) {
+            if (sessionStartedInThisRuntime && capture.getPendingFrameCount() == 0
+                    && !audioCapture.isFinalizing()) {
                 projectStore.clearRecordingActive(project.getId());
                 sessionStartedInThisRuntime = false;
             }
