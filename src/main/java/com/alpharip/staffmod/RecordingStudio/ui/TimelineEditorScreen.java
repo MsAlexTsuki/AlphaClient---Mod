@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.RecordingStudio.ui;
 
 import com.alpharip.staffmod.RecordingStudio.timeline.*;
+import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -11,15 +12,17 @@ import java.util.UUID;
 public final class TimelineEditorScreen extends GuiScreen {
     private final GuiScreen parent;
     private final Timeline timeline;
+    private final RecordingStudioRuntime runtime;
     private GuiTextField sourceField, startField, durationField, speedField;
     private int trackIndex, clipIndex;
     private String selectedClipId;
     private String status = "Select a track or create a clip";
 
-    public TimelineEditorScreen(GuiScreen parent, Timeline timeline) {
-        if (parent == null || timeline == null) throw new IllegalArgumentException();
+    public TimelineEditorScreen(GuiScreen parent, Timeline timeline, RecordingStudioRuntime runtime) {
+        if (parent == null || timeline == null || runtime == null) throw new IllegalArgumentException();
         this.parent = parent;
         this.timeline = timeline;
+        this.runtime = runtime;
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }
@@ -218,5 +221,6 @@ public final class TimelineEditorScreen extends GuiScreen {
         speedField.drawTextBox();
         drawCenteredString(fontRendererObj, status, width / 2, height - 18, 0xFFFFC83D);
         super.drawScreen(mouseX, mouseY, partialTicks);
+        runtime.drawCameraPreview();
     }
 }
