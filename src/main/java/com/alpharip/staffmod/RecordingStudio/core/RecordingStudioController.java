@@ -13,6 +13,7 @@ public final class RecordingStudioController {
     private final Timeline timeline;
     private final RecordingStudioProjectStore projectStore;
     private boolean closed;
+    private boolean sessionStartedInThisRuntime;
     private String status = "Ready";
 
     public RecordingStudioController(RecordingProject project, RecordingCaptureService capture, File projectDirectory) {
@@ -60,6 +61,7 @@ public final class RecordingStudioController {
             project.start(now);
             projectStore.save(project, timeline);
             projectStore.markRecordingActive(project);
+            sessionStartedInThisRuntime = true;
             status = "Recording";
         } catch (IOException failure) {
             capture.stop();
@@ -106,8 +108,13 @@ public final class RecordingStudioController {
         project.stop(now);
         try {
             projectStore.save(project, timeline);
-            projectStore.clearRecordingActive(project.getId());
-            status = "Stopped — project checkpoint saved";
+            if (capture.getPendingFrameCount() == 0) {
+                projectStore.clearRecordingActive(project.getId());
+                sessionStartedInThisRuntime = false;
+                status = "Stopped — project checkpoint saved";
+            } else {
+                status = "Stopped — waiting for pending frame writes";
+            }
         } catch (IOException failure) {
             status = "Stopped; recovery marker retained: " + failure.getMessage();
         }
@@ -121,7 +128,18 @@ public final class RecordingStudioController {
     }
 
     public synchronized void tick(long now) {
-        if (!closed) capture.tick(now);
+        if (closed) return;
+        capture.tick(now);
+        if (sessionStartedInThisRuntime && !capture.isRecording() && !capture.isPaused()
+                && capture.getPendingFrameCount() == 0) {
+            try {
+                projectStore.clearRecordingActive(project.getId());
+                sessionStartedInThisRuntime = false;
+                status = "Stopped — project checkpoint saved";
+            } catch (IOException failure) {
+                status = "Stopped; recovery marker retained: " + failure.getMessage();
+            }
+        }
     }
 
     public synchronized void save() throws IOException {
@@ -144,12 +162,36 @@ public final class RecordingStudioController {
         stop();
         try {
             projectStore.save(project, timeline);
-            projectStore.clearRecordingActive(project.getId());
+            if (sessionStartedInThisRuntime && capture.getPendingFrameCount() == 0) {
+                projectStore.clearRecordingActive(project.getId());
+                sessionStartedInThisRuntime = false;
+            }
             status = "Project and timeline saved";
         } catch (IOException failure) {
             status = "Shutdown save failed; recovery marker retained: " + failure.getMessage();
         }
         capture.shutdown();
+        if (sessionStartedInThisRuntime) {
+            final RecordingCaptureService pendingCapture = capture;
+            final RecordingStudioProjectStore pendingStore = projectStore;
+            final String projectId = project.getId();
+            Thread finalizer = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        while (!pendingCapture.awaitPendingWrites(1L, java.util.concurrent.TimeUnit.MINUTES)) {
+                            // Keep the recovery marker until all accepted frame writes have completed.
+                        }
+                        pendingStore.clearRecordingActive(projectId);
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt();
+                    } catch (IOException ignored) {
+                        // Retain the marker when final cleanup cannot be confirmed.
+                    }
+                }
+            }, "Alpha-RecordingStudio-RecoveryFinalizer");
+            finalizer.setDaemon(true);
+            finalizer.start();
+        }
         closed = true;
     }
 
