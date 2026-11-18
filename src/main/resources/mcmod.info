@@ -2,7 +2,7 @@
   {
     "modid": "alpharecordingstudio",
     "name": "Alpha Recording Studio",
-    "description": "Recording Studio and Build Timelapse recording tools for Minecraft 1.8.9.",
+    "description": "Optional Alpha Client addon containing Recording Studio and Build Timelapse tools for Minecraft 1.8.9.",
     "version": "${version}",
     "mcversion": "${mcversion}",
     "url": "https://alpha.rip",
@@ -10,6 +10,6 @@
     "authorList": ["MsAlexTsuki", "Sem"],
     "credits": "Alpha.Rip",
     "screenshots": [],
-    "dependencies": []
+    "dependencies": ["required-after:alphaclient"]
   }
 ]
