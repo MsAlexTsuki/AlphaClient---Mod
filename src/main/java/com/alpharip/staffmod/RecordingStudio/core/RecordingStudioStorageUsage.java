@@ -30,10 +30,21 @@ public final class RecordingStudioStorageUsage {
         File recordings = new File(root, "recordings");
         File exports = new File(root, "exports");
         projectBytes = scan(projects, 0);
-        frameBytes = scan(new File(recordings, "frames"), 1);
-        audioBytes = scan(new File(recordings, "audio"), 2);
+        frameBytes = scanRecordingCategory(recordings, "frames", 1);
+        audioBytes = scanRecordingCategory(recordings, "audio", 2);
         exportBytes = scan(exports, 3);
         totalBytes = safeAdd(safeAdd(projectBytes, frameBytes), safeAdd(audioBytes, exportBytes));
+    }
+
+    private long scanRecordingCategory(File recordings, String folderName, int category) {
+        if (!recordings.isDirectory()) return 0L;
+        File[] projects = recordings.listFiles();
+        if (projects == null) { readable = false; return 0L; }
+        long size = 0L;
+        for (File project : projects) {
+            if (project.isDirectory()) size = safeAdd(size, scan(new File(project, folderName), category));
+        }
+        return size;
     }
 
     private long scan(File file, int category) {
