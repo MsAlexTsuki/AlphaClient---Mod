@@ -14,7 +14,7 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Manual recording controller and independent Forge runtime.
 - Explicit microphone recording controls; PCM 44.1 kHz, 16-bit mono WAV files are written on a dedicated audio thread.
 - Completed microphone recordings are added as clips to the standalone Audio timeline track and persisted with the project.
-- Background MP4 and GIF export from ordered captured PNG frames, with cancellation and temporary-output cleanup.
+- Background MP4 and GIF export from ordered captured PNG frames, with cancellation and temporary-output cleanup; files are stored under `recordingstudio/exports/<project-id>/`.
 - MP4 export includes saved Audio timeline clips, delayed to their timeline positions and mixed when multiple clips exist; GIF output is silent.
 - Microphone capture stops when video recording is paused or stopped; a new audio clip can be started after video recording resumes.
 - Minecraft framebuffer capture backend reading OpenGL pixels on the client thread and converting/writing PNG frames asynchronously on a dedicated worker.
