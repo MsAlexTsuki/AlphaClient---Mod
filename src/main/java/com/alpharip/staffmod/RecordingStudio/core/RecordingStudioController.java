@@ -385,6 +385,10 @@ public final class RecordingStudioController {
 
     public synchronized void selectNextScene() {
         ensureOpen();
+        if (capture.isRecording() || capture.isPaused()) {
+            status = "Stop recording before changing scenes";
+            return;
+        }
         java.util.List<RecordingStudioScene> scenes = timeline.getScenes();
         if (scenes.isEmpty()) {
             status = "No scenes are available";
@@ -403,6 +407,10 @@ public final class RecordingStudioController {
 
     public synchronized void createScene() {
         ensureOpen();
+        if (capture.isRecording() || capture.isPaused()) {
+            status = "Stop recording before creating a scene";
+            return;
+        }
         String id = "scene-" + java.util.UUID.randomUUID().toString();
         RecordingStudioScene scene = RecordingStudioScene.createDefault(id,
                 "Scene " + (timeline.getScenes().size() + 1));
@@ -413,6 +421,10 @@ public final class RecordingStudioController {
 
     public synchronized void renameActiveScene(String name) {
         ensureOpen();
+        if (capture.isRecording() || capture.isPaused()) {
+            status = "Stop recording before renaming a scene";
+            return;
+        }
         RecordingStudioScene scene = timeline.getActiveScene();
         if (scene == null) {
             status = "No active scene";
@@ -428,6 +440,10 @@ public final class RecordingStudioController {
 
     public synchronized void removeActiveScene() {
         ensureOpen();
+        if (capture.isRecording() || capture.isPaused()) {
+            status = "Stop recording before removing a scene";
+            return;
+        }
         RecordingStudioScene scene = timeline.getActiveScene();
         if (scene == null || !timeline.removeScene(scene.getId())) {
             status = "The last remaining scene cannot be removed";
@@ -439,6 +455,11 @@ public final class RecordingStudioController {
 
     public synchronized void removeSceneSource(RecordingStudioSource.Type type) {
         ensureOpen();
+        if (type == RecordingStudioSource.Type.GAME_CAPTURE
+                && (capture.isRecording() || capture.isPaused())) {
+            status = "Stop recording before removing the Game Capture source";
+            return;
+        }
         RecordingStudioScene scene = timeline.getActiveScene();
         if (scene == null) {
             status = "No active scene";
@@ -456,6 +477,11 @@ public final class RecordingStudioController {
     public synchronized void toggleSceneSource(RecordingStudioSource.Type type) {
         ensureOpen();
         if (type == null) throw new IllegalArgumentException("Source type is required");
+        if (type == RecordingStudioSource.Type.GAME_CAPTURE
+                && (capture.isRecording() || capture.isPaused())) {
+            status = "Stop recording before changing the Game Capture source";
+            return;
+        }
         RecordingStudioScene scene = timeline.getActiveScene();
         if (scene == null) {
             status = "No active scene";
