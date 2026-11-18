@@ -40,6 +40,7 @@ public final class RecordingCaptureService {
         if ((!directory.exists() && !directory.mkdirs()) || !directory.isDirectory()) {
             throw new IOException("Cannot create recording output directory");
         }
+        initializeNextFileIndex();
         recording = true;
         paused = false;
         nextAt = now;
