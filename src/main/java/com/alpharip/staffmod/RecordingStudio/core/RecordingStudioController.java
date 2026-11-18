@@ -11,7 +11,7 @@ public final class RecordingStudioController {
     private final RecordingProject project;
     private final RecordingCaptureService capture;
     private final File projectDirectory;
-    private final Timeline timeline = new Timeline();
+    private final Timeline timeline;\n    private final RecordingStudioProjectStore projectStore;
     private boolean closed;
     private String status = "Ready";
 
@@ -26,7 +26,7 @@ public final class RecordingStudioController {
         timeline.addTrack(new TimelineTrack("audio", "Audio"));
     }
 
-    public synchronized void start() {
+    public RecordingStudioController(RecordingProject project, RecordingCaptureService capture, File projectDirectory, Timeline timeline) {\n        if (project == null || capture == null || projectDirectory == null || timeline == null) {\n            throw new IllegalArgumentException("Project, capture service, project directory and timeline are required");\n        }\n        this.project = project;\n        this.capture = capture;\n        this.projectDirectory = projectDirectory;\n        this.timeline = timeline;\n        this.projectStore = new RecordingStudioProjectStore(projectDirectory);\n    }\n\n    private static Timeline defaultTimeline() {\n        Timeline value = new Timeline();\n        value.addTrack(new TimelineTrack("video", "Video"));\n        value.addTrack(new TimelineTrack("audio", "Audio"));\n        return value;\n    }\n\n    public synchronized void start() {
         ensureOpen();
         if (capture.isRecording()) {
             status = "Recording";
