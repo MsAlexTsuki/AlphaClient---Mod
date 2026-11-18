@@ -6,7 +6,7 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 - Project/session lifecycle and local project metadata persistence with validated project IDs, bounded collection reads and atomic file replacement.
 - Timeline marker, multi-track and clip persistence (including clip speed); format 2 remains backward-readable for format 1 projects.
 - Independent camera runtime contract, free/orbit/follow/fixed/path/drone modes, validated poses, orbit rig, named presets, timed waypoints, holds, easing and time-based path interpolation.
-- Local versioned camera-path persistence through CameraPathStore / FileCameraPathStore.
+- Local versioned camera-path persistence through CameraPathStore / FileCameraPathStore, with Camera Editor save/load controls and path-ID validation.
 - Tick-driven interval screenshot scheduler with a bounded background queue, per-frame settings snapshots, failure callbacks and a local CSV capture-manifest listener.
 - MinecraftScreenshotCaptureBackend marshals framebuffer work through MinecraftRenderThreadExecutor and restores the previous HUD/hand visibility in finally.
 - Build place/remove event model, activity tracker, build-area bounds and placement milestones.
@@ -24,14 +24,15 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 4. Register BuildTimelapseClientTickHandler on the Forge event bus while the studio is active, and unregister it when the studio shuts down.
 5. Connect Forge block place/break events; ignore cancelled, duplicate and remote-world changes.
 6. Register/open BuildTimelapseStudioScreen from the intended client-side entry point and inject the configured project services.
-7. Persisted camera paths are available through FileCameraPathStore; the UI still needs path save/load controls. Effects profiles and export jobs still need project-level persistence.
+7. Effects profiles and export jobs still need project-level persistence.
 8. The timeline editor currently creates tracks and manual markers; detailed clip editing, trimming and drag/drop are not implemented.
 9. Complete GIF palette optimization, optional audio muxing, export cancellation/resume, disk retention and crash recovery.
 10. Add module registration, keybinds and optional Supabase/cloud features only during intended integration.
 
 ## Limitations
 - Camera activation deliberately fails until a safe camera bridge is provided; recording does not silently fall back to moving or controlling the player.
-- The screenshot backend now provides render-thread dispatch and state restoration, but the low-level Minecraft framebuffer bridge still has to be implemented and injected.
+- The screenshot backend provides render-thread dispatch and state restoration, but the low-level Minecraft framebuffer bridge still has to be implemented and injected.
+- Camera paths can now be saved and loaded locally from the Camera Editor; this does not implement the actual Minecraft camera runtime.
 - FFmpeg must be installed separately; no binary is bundled. MP4 is silent and GIF encoding is a basic path.
 - World time/weather/HUD effects require an adapter that snapshots and restores original settings.
 - No startup/menu/module/keybind registration or Alpha Launcher changes.
