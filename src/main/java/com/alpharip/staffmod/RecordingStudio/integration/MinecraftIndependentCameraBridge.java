@@ -1,0 +1,19 @@
+package com.alpharip.staffmod.RecordingStudio.integration;
+import com.alpharip.staffmod.RecordingStudio.camera.CameraPose;
+import net.minecraft.client.Minecraft;import net.minecraft.client.entity.EntityOtherPlayerMP;import net.minecraft.entity.Entity;import net.minecraft.world.World;import net.minecraftforge.fml.relauncher.Side;import net.minecraftforge.fml.relauncher.SideOnly;import com.mojang.authlib.GameProfile;import java.util.UUID;
+/** A client-only render-view entity. It is not spawned into the world and never controls the real player. */
+@SideOnly(Side.CLIENT)
+public final class MinecraftIndependentCameraBridge implements MinecraftCameraBridge {
+ private final Minecraft mc;private Entity original;private EntityOtherPlayerMP camera;private World world;private float oldFov;private boolean fovCaptured;
+ public MinecraftIndependentCameraBridge(Minecraft mc){if(mc==null)throw new IllegalArgumentException("minecraft");this.mc=mc;}
+ public boolean isAvailable(){return mc.theWorld!=null&&mc.thePlayer!=null&&mc.theWorld.isRemote;}
+ public CameraPose getInitialPose(){if(!isAvailable())return CameraPose.origin();return new CameraPose(mc.thePlayer.posX,mc.thePlayer.posY+mc.thePlayer.getEyeHeight(),mc.thePlayer.posZ,mc.thePlayer.rotationYaw,mc.thePlayer.rotationPitch,0,70);}
+ public Object getOriginalRenderViewEntity(){return original;}
+ public void activate(CameraPose pose)throws Exception{checkThread();if(pose==null||!isAvailable())throw new IllegalStateException("Minecraft world is unavailable");if(camera!=null){apply(pose);return;}Entity previous=mc.getRenderViewEntity();original=previous==null?mc.thePlayer:previous;world=mc.theWorld;if(mc.gameSettings!=null){oldFov=mc.gameSettings.fovSetting;fovCaptured=true;}try{EntityOtherPlayerMP created=new EntityOtherPlayerMP(world,new GameProfile(UUID.randomUUID(),"AlphaRecordingCamera"));created.noClip=true;created.motionX=created.motionY=created.motionZ=0;created.setInvisible(true);applyPose(created,pose);applyFov(pose);camera=created;mc.setRenderViewEntity(created);}catch(Throwable failure){try{mc.setRenderViewEntity(original);}catch(Throwable restore){failure.addSuppressed(restore);}finally{camera=null;world=null;original=null;restoreFov();}if(failure instanceof Exception)throw(Exception)failure;if(failure instanceof Error)throw(Error)failure;throw new RuntimeException(failure);}}
+ public void apply(CameraPose pose)throws Exception{checkThread();if(pose==null||camera==null||world==null)throw new IllegalStateException("Recording camera is not active");if(mc.theWorld!=world||mc.getRenderViewEntity()!=camera)throw new IllegalStateException("Recording camera lost render-view ownership");applyPose(camera,pose);applyFov(pose);}
+ private static void applyPose(EntityOtherPlayerMP e,CameraPose p){e.setPositionAndRotation(p.x,p.y,p.z,p.yaw,p.pitch);e.prevPosX=e.lastTickPosX=e.posX;e.prevPosY=e.lastTickPosY=e.posY;e.prevPosZ=e.lastTickPosZ=e.posZ;e.prevRotationYaw=e.rotationYaw;e.prevRotationPitch=e.rotationPitch;e.setRotationYawHead(p.yaw);e.motionX=e.motionY=e.motionZ=0;}
+ private void applyFov(CameraPose p){if(mc.gameSettings!=null)mc.gameSettings.fovSetting=Math.max(1,Math.min(179,p.fov));}
+ private void restoreFov(){if(fovCaptured&&mc.gameSettings!=null)mc.gameSettings.fovSetting=oldFov;fovCaptured=false;}
+ public void deactivate()throws Exception{checkThread();Entity restore=original;try{if(restore!=null){if(mc.theWorld==null||restore.getEntityWorld()!=mc.theWorld)restore=mc.thePlayer;if(restore!=null)mc.setRenderViewEntity(restore);}else if(mc.thePlayer!=null)mc.setRenderViewEntity(mc.thePlayer);}finally{restoreFov();camera=null;world=null;original=null;}}
+ private void checkThread(){if(!mc.isCallingFromMinecraftThread())throw new IllegalStateException("Camera must run on Minecraft client thread");}
+}
