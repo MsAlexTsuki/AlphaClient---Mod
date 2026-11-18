@@ -1,6 +1,6 @@
 package com.alpharip.staffmod.BuildTimelapse.ui;
 
-import com.alpharip.staffmod.BuildTimelapse.camera.*;
+import com.alpharip.staffmod.RecordingStudio.camera.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
