@@ -38,6 +38,9 @@ public final class RecordingStudioScene {
         if (findSource(source.getId()) != null) {
             throw new IllegalArgumentException("Duplicate source ID: " + source.getId());
         }
+        if (findSource(source.getType()) != null) {
+            throw new IllegalArgumentException("A source of type " + source.getType() + " already exists in this scene");
+        }
         sources.add(source);
     }
 
