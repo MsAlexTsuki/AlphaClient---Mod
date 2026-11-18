@@ -85,7 +85,7 @@ public final class AlphaClanService {
             JsonObject member = membership.get(0).getAsJsonObject();
             String clanId = str(member, "clan_id");
             JsonArray clans = SupabaseCommunityService.clanRequestArray("GET",
-                    "/rest/v1/clans?select=id,name,tag,description,visibility,owner_id&id=eq." + enc(clanId) + "&limit=1");
+                    "/rest/v1/clans?select=id,name,tag,tag_color,description,visibility,owner_id&id=eq." + enc(clanId) + "&limit=1");
             if (clans.size() > 0) s.clan = clans.get(0).getAsJsonObject();
             try {
                 heartbeatPresence();
@@ -154,6 +154,15 @@ public final class AlphaClanService {
     }); }
     public void transfer(String id) { action("Clan ownership transferred.", () -> rpcValue("transfer_clan_ownership", "p_target_profile_id", id)); }
     public void disband() { action("Clan disbanded.", () -> rpcValue("disband_clan", "p_clan_id", clanId())); }
+    public void setTagColor(String color) { action("Clan tag color updated.", () -> {
+        String[] allowed = {"black","dark_blue","dark_green","dark_aqua","dark_red","dark_purple","gold","gray",
+                "dark_gray","blue","green","aqua","red","light_purple","yellow","white"};
+        boolean valid = false;
+        for (String value : allowed) if (value.equals(color)) { valid = true; break; }
+        if (!valid) throw new IllegalArgumentException("Choose one of the standard Minecraft colors.");
+        JsonObject p = new JsonObject(); p.addProperty("p_tag_color", color);
+        rpc("set_clan_tag_color", p);
+    }); }
     public void updateSettings(String name, String tag, String description, boolean isPrivate) { action("Clan settings updated.", () -> {
         validateClanIdentity(name, tag);
         JsonObject p = new JsonObject(); p.addProperty("p_clan_id", clanId()); p.addProperty("p_name", name.trim()); p.addProperty("p_tag", tag.trim().toUpperCase(java.util.Locale.ROOT));
