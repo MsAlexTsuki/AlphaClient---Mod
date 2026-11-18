@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.BuildTimelapse.integration; import com.alpharip.staffmod.BuildTimelapse.analytics.BlockChangeEvent; public interface MinecraftBlockEventBridge {void setListener(Listener listener);interface Listener{void onBlockChanged(BlockChangeEvent event);}}

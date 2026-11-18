@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.BuildTimelapse.integration; import com.alpharip.staffmod.BuildTimelapse.camera.*; /** Client-only render-view adapter. Restore renderViewEntity; never mutate player position, rotation, motion or input. */ public interface MinecraftCameraBridge extends CameraRuntimePort {Object getOriginalRenderViewEntity();}

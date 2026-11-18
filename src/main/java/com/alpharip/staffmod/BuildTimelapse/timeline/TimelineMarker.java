@@ -1,0 +1,2 @@
+package com.alpharip.staffmod.BuildTimelapse.timeline;
+public final class TimelineMarker {private final long time;private final String label;private final TimelineMarkerKind kind;public TimelineMarker(long t,String l,TimelineMarkerKind k){if(t<0||l==null||l.trim().isEmpty()||k==null)throw new IllegalArgumentException();time=t;label=l.trim();kind=k;}public long getTimeMillis(){return time;}public String getLabel(){return label;}public TimelineMarkerKind getKind(){return kind;}}

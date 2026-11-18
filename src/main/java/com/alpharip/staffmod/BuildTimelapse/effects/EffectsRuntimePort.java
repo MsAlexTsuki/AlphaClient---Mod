@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.BuildTimelapse.effects; public interface EffectsRuntimePort {void setWorldTime(long t)throws Exception;void setWeather(String w,float s)throws Exception;void setHudVisible(boolean v)throws Exception;void restoreOriginalSettings()throws Exception;}

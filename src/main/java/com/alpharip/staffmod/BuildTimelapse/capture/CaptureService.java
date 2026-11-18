@@ -1,0 +1,9 @@
+package com.alpharip.staffmod.BuildTimelapse.capture;
+import java.io.*;import java.util.concurrent.*;import java.util.concurrent.atomic.AtomicLong;
+public final class CaptureService {private final CaptureBackend backend;private final CaptureSettings settings;private final File dir;private final ExecutorService worker=Executors.newSingleThreadExecutor();private final AtomicLong sequence=new AtomicLong();private volatile boolean running,paused;private long nextAt;private CaptureListener listener;
+ public CaptureService(CaptureBackend b,CaptureSettings s,File d){if(b==null||s==null||d==null)throw new IllegalArgumentException();backend=b;settings=s;dir=d;}public synchronized void setListener(CaptureListener l){listener=l;}
+ public synchronized void start(){if(running)return;if(!dir.exists()&&!dir.mkdirs())throw new IllegalStateException("Cannot create frame directory");running=true;paused=false;nextAt=System.currentTimeMillis();}
+ public synchronized void pause(){paused=true;}public synchronized void resume(){if(running){paused=false;nextAt=System.currentTimeMillis();}}public synchronized void stop(){running=false;paused=false;}
+ public void tick(final long now){if(!running||paused||now<nextAt)return; synchronized(this){if(now<nextAt||paused||!running)return;nextAt=now+settings.getInterval();}final long i=sequence.getAndIncrement();worker.submit(new Runnable(){public void run(){try{CaptureFrame f=backend.capture(i,now,new File(dir,String.format(java.util.Locale.ROOT,"frame-%08d.png",i)),settings);CaptureListener l=listener;if(l!=null)l.onCaptured(f);}catch(Throwable e){CaptureListener l=listener;if(l!=null)l.onFailure(i,e);}}});}
+ public boolean isRunning(){return running;}public boolean isPaused(){return paused;}public long count(){return sequence.get();}public void shutdown(){stop();worker.shutdown();}
+}
