@@ -20,6 +20,9 @@ import java.util.List;
 
 /** In-game entry point for the standalone Recording Studio prototype. */
 public final class RecordingStudioCommand extends CommandBase {
+    private static RecordingStudioRuntime activeRuntime;
+    private static String activeProjectId;
+
     public String getCommandName() { return "recordingstudio"; }
     public String getCommandUsage(ICommandSender sender) {
         return "/recordingstudio [list|create <name>|open <project-id>]";
@@ -71,12 +74,26 @@ public final class RecordingStudioCommand extends CommandBase {
             File output = new File(new File(root, "recordings"), project.getId() + "/frames");
             RecordingCaptureService capture = new RecordingCaptureService(
                     new MinecraftFramebufferFrameWriter(mc), new RecordingCaptureSettings(), output);
-            RecordingStudioController controller = new RecordingStudioController(project, capture, projects, timeline);
-            RecordingStudioRuntime runtime = new RecordingStudioRuntime(controller);
+            RecordingStudioRuntime runtime;
+            if (activeRuntime != null && !activeRuntime.isClosed()
+                    && project.getId().equals(activeProjectId)) {
+                runtime = activeRuntime;
+            } else {
+                if (activeRuntime != null && !activeRuntime.isClosed()) activeRuntime.shutdown();
+                RecordingStudioController controller =
+                        new RecordingStudioController(project, capture, projects, timeline);
+                runtime = new RecordingStudioRuntime(controller);
+                activeRuntime = runtime;
+                activeProjectId = project.getId();
+            }
             try {
                 runtime.open(mc);
             } catch (RuntimeException failure) {
                 runtime.shutdown();
+                if (activeRuntime == runtime) {
+                    activeRuntime = null;
+                    activeProjectId = null;
+                }
                 throw failure;
             }
         } catch (IOException | RuntimeException failure) {
