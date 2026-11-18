@@ -2,12 +2,12 @@ package com.alpharip.staffmod.BuildTimelapse.camera;
 import java.util.*;
 /** Time-based path sampling. Waypoint hold time is followed by travel to the next point. */
 public final class CameraPathInterpolator {
- public CameraPose sample(CameraPath path,double progress){if(path==null)throw new IllegalArgumentException("path");long duration=path.duration();return sampleAt(path,(long)(Math.max(0,Math.min(1,progress))*duration));}
- public CameraPose sampleAt(CameraPath path,long elapsed){List<CameraWaypoint>w=path.getWaypoints();if(w.isEmpty())return CameraPose.origin();if(w.size()==1)return w.get(0).getPose();long remaining=Math.max(0,elapsed);
-  for(int i=0;i<w.size()-1;i++){CameraWaypoint current=w.get(i),next=w.get(i+1);if(remaining<current.getHold())return current.getPose();remaining-=current.getHold();long travel=current.getDuration();if(travel<=0){if(remaining==0)return next.getPose();}else if(remaining<travel){double t=(double)remaining/travel;t=ease(current.getEasing(),t);return interpolate(current.getPose(),next.getPose(),t);}remaining-=travel;}
+ public CameraPose sample(CameraPath path,double progress){if(path==null)throw new IllegalArgumentException("path");if(Double.isNaN(progress))progress=0;if(Double.isInfinite(progress))progress=progress>0?1:0;long duration=path.duration();return sampleAt(path,(long)(Math.max(0,Math.min(1,progress))*duration));}
+ public CameraPose sampleAt(CameraPath path,long elapsed){if(path==null)throw new IllegalArgumentException("path");List<CameraWaypoint>w=path.getWaypoints();if(w.isEmpty())return CameraPose.origin();if(w.size()==1)return w.get(0).getPose();long remaining=Math.max(0,elapsed);
+  for(int i=0;i<w.size()-1;i++){CameraWaypoint current=w.get(i),next=w.get(i+1);if(remaining<current.getHold())return current.getPose();remaining-=current.getHold();long travel=current.getDuration();if(travel>0&&remaining<travel){double t=(double)remaining/(double)travel;return interpolate(current.getPose(),next.getPose(),ease(current.getEasing(),t));}if(travel>0)remaining-=travel;}
   return w.get(w.size()-1).getPose();
  }
- private double ease(String mode,double t){if("LINEAR".equalsIgnoreCase(mode))return t;if("EASE_IN".equalsIgnoreCase(mode))return t*t;if("EASE_OUT".equalsIgnoreCase(mode))return 1-(1-t)*(1-t);if("EASE_IN_OUT".equalsIgnoreCase(mode)||"SMOOTH".equalsIgnoreCase(mode))return t*t*(3-2*t);return t;}
+ private double ease(String mode,double t){if("LINEAR".equals(mode))return t;if("EASE_IN".equals(mode))return t*t;if("EASE_OUT".equals(mode))return 1-(1-t)*(1-t);if("EASE_IN_OUT".equals(mode)||"SMOOTH".equals(mode))return t*t*(3-2*t);return t;}
  private CameraPose interpolate(CameraPose a,CameraPose b,double t){return new CameraPose(l(a.x,b.x,t),l(a.y,b.y,t),l(a.z,b.z,t),angle(a.yaw,b.yaw,t),(float)l(a.pitch,b.pitch,t),(float)l(a.roll,b.roll,t),(float)l(a.fov,b.fov,t));}
  private double l(double a,double b,double t){return a+(b-a)*t;}private float angle(float a,float b,double t){return(float)(a+(((b-a+540)%360)-180)*t);}
 }

@@ -1,2 +1,8 @@
 package com.alpharip.staffmod.BuildTimelapse.camera;
-public final class OrbitCamera {private double radius=12,height=4,phase;private float speed=8;public void configure(double r,double h,float s){if(r<=0||s<0)throw new IllegalArgumentException();radius=r;height=h;speed=s;}public CameraPose pose(double x,double y,double z,long elapsed){double a=phase+Math.toRadians(elapsed*speed/1000d);return new CameraPose(x+Math.cos(a)*radius,y+height,z+Math.sin(a)*radius,(float)(Math.toDegrees(a)+90),12,0,70);}public void setPhase(double p){phase=p;}}
+public final class OrbitCamera {
+ private double radius=12,height=4,phase;private float speed=8;
+ public synchronized void configure(double r,double h,float s){if(!finite(r)||!finite(h)||!finite(s)||r<=0||s<0)throw new IllegalArgumentException("Invalid orbit configuration");radius=r;height=h;speed=s;}
+ public synchronized CameraPose pose(double x,double y,double z,long elapsed){if(!finite(x)||!finite(y)||!finite(z))throw new IllegalArgumentException("Invalid orbit target");double a=phase+Math.toRadians(((double)elapsed)*speed/1000d);return new CameraPose(x+Math.cos(a)*radius,y+height,z+Math.sin(a)*radius,(float)(Math.toDegrees(a)+90),12,0,70);}
+ public synchronized void setPhase(double p){if(!finite(p))throw new IllegalArgumentException("Invalid phase");phase=p;}
+ private static boolean finite(double v){return !Double.isNaN(v)&&!Double.isInfinite(v);}
+}

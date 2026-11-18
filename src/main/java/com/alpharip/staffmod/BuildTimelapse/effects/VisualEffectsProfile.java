@@ -1,1 +1,6 @@
-package com.alpharip.staffmod.BuildTimelapse.effects; public final class VisualEffectsProfile {private boolean hideHud=true,hideHand=true,hideParticles;private float fov=70;public boolean isHideHud(){return hideHud;}public void setHideHud(boolean v){hideHud=v;}public boolean isHideHand(){return hideHand;}public void setHideHand(boolean v){hideHand=v;}public boolean isHideParticles(){return hideParticles;}public void setHideParticles(boolean v){hideParticles=v;}public float getFov(){return fov;}public void setFov(float v){if(v<1||v>179)throw new IllegalArgumentException();fov=v;}}
+package com.alpharip.staffmod.BuildTimelapse.effects;
+public final class VisualEffectsProfile {
+ private boolean hideHud=true,hideHand=true,hideParticles;private float fov=70;
+ public boolean isHideHud(){return hideHud;}public void setHideHud(boolean v){hideHud=v;}public boolean isHideHand(){return hideHand;}public void setHideHand(boolean v){hideHand=v;}public boolean isHideParticles(){return hideParticles;}public void setHideParticles(boolean v){hideParticles=v;}
+ public float getFov(){return fov;}public void setFov(float v){if(Float.isNaN(v)||Float.isInfinite(v)||v<1||v>179)throw new IllegalArgumentException();fov=v;}
+}
