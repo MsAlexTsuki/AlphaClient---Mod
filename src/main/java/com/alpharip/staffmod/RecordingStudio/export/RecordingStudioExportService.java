@@ -82,13 +82,41 @@ public final class RecordingStudioExportService {
         File palette = null;
         try {
             File[] frames = listFrames();
+            if (frames.length == 0) throw new IOException("No captured PNG frames found");
             BufferedImage first = ImageIO.read(frames[0]);
             if (first == null) throw new IOException("Cannot read the first captured PNG frame");
             String input = new File(framesDirectory, "frame-*.png").getAbsolutePath().replace(File.separatorChar, '/');
 
+            List<TimelineClip> videoClips = getVideoClips();
+            List<TimelineClip> audioClips = format == Format.MP4 ? getAudioClips() : Collections.<TimelineClip>emptyList();
+            List<File> videoSources = new ArrayList<File>();
+            List<Integer> videoInputIndexes = new ArrayList<Integer>();
+            for (TimelineClip clip : videoClips) {
+                if ("@capture".equals(clip.getSource())) {
+                    videoInputIndexes.add(0);
+                } else {
+                    File source = new File(clip.getSource());
+                    if (!source.isFile()) throw new FileNotFoundException("Video timeline source not found: " + source);
+                    videoSources.add(source);
+                    videoInputIndexes.add(videoSources.size());
+                }
+            }
+
+            long frameDurationMillis = Math.max(1L, (long) Math.ceil(frames.length * 1000.0 / fps));
+            long videoDurationMillis = videoClips.isEmpty()
+                    ? frameDurationMillis : getTrackEnd(videoClips);
+            long outputDurationMillis = Math.max(videoDurationMillis, getTrackEnd(audioClips));
+            int outputWidth = first.getWidth() + (first.getWidth() & 1);
+            int outputHeight = first.getHeight() + (first.getHeight() & 1);
+            String videoFilter = buildVideoFilter(videoClips, videoInputIndexes, outputWidth,
+                    outputHeight, fps, outputDurationMillis);
+
             if (format == Format.MP4) {
                 List<String> command = baseCommand(executable, input, fps);
-                List<TimelineClip> audioClips = getAudioClips();
+                for (File source : videoSources) {
+                    command.add("-i");
+                    command.add(source.getAbsolutePath());
+                }
                 for (TimelineClip clip : audioClips) {
                     File audio = new File(clip.getSource());
                     if (!audio.isFile()) throw new FileNotFoundException("Audio timeline source not found: " + audio);
@@ -96,15 +124,21 @@ public final class RecordingStudioExportService {
                     command.add(audio.getAbsolutePath());
                 }
 
-                String filter = buildAudioFilter(audioClips);
+                String audioFilter = buildAudioFilter(audioClips, 1 + videoSources.size());
+                String filter = videoFilter;
+                if (!audioFilter.isEmpty()) filter = filter.isEmpty() ? audioFilter : filter + ";" + audioFilter;
                 if (!filter.isEmpty()) {
                     command.add("-filter_complex");
                     command.add(filter);
                 }
-                String videoDuration = String.format(Locale.ROOT, "%.3f", frames.length / fps);
-                Collections.addAll(command, "-map", "0:v:0", "-vf",
-                        "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264",
-                        "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-t", videoDuration);
+                if (videoFilter.isEmpty()) {
+                    Collections.addAll(command, "-map", "0:v:0", "-vf",
+                            "pad=ceil(iw/2)*2:ceil(ih/2)*2");
+                } else {
+                    Collections.addAll(command, "-map", "[vout]");
+                }
+                Collections.addAll(command, "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                        "-movflags", "+faststart", "-t", seconds(outputDurationMillis));
                 if (audioClips.isEmpty()) {
                     command.add("-an");
                 } else {
@@ -118,16 +152,39 @@ public final class RecordingStudioExportService {
             } else {
                 palette = File.createTempFile("alpha-recording-palette-", ".png", outputDirectory);
                 List<String> paletteCommand = baseCommand(executable, input, fps);
-                Collections.addAll(paletteCommand, "-vf",
-                        "palettegen=stats_mode=diff", "-frames:v", "1", "-y", palette.getAbsolutePath());
+                for (File source : videoSources) {
+                    paletteCommand.add("-i");
+                    paletteCommand.add(source.getAbsolutePath());
+                }
+                if (videoFilter.isEmpty()) {
+                    Collections.addAll(paletteCommand, "-vf", "palettegen=stats_mode=diff",
+                            "-frames:v", "1", "-y", palette.getAbsolutePath());
+                } else {
+                    Collections.addAll(paletteCommand, "-filter_complex",
+                            videoFilter + ";[vout]palettegen=stats_mode=diff[palette]",
+                            "-map", "[palette]", "-frames:v", "1", "-y", palette.getAbsolutePath());
+                }
                 run(paletteCommand, "GIF palette generation");
 
-                List<String> gifCommand = new ArrayList<String>();
-                Collections.addAll(gifCommand, executable, "-hide_banner", "-loglevel", "error",
-                        "-framerate", formatRate(fps), "-pattern_type", "glob", "-i", input,
-                        "-i", palette.getAbsolutePath(), "-lavfi",
-                        "fps=" + formatRate(fps) + "[x];[x][1:v]paletteuse=dither=sierra2_4a",
-                        "-y", partial.getAbsolutePath());
+                List<String> gifCommand = baseCommand(executable, input, fps);
+                for (File source : videoSources) {
+                    gifCommand.add("-i");
+                    gifCommand.add(source.getAbsolutePath());
+                }
+                gifCommand.add("-i");
+                gifCommand.add(palette.getAbsolutePath());
+                if (videoFilter.isEmpty()) {
+                    Collections.addAll(gifCommand, "-lavfi",
+                            "fps=" + formatRate(fps) + "[x];[x][" + (1 + videoSources.size())
+                                    + ":v]paletteuse=dither=sierra2_4a",
+                            "-t", seconds(outputDurationMillis), "-y", partial.getAbsolutePath());
+                } else {
+                    Collections.addAll(gifCommand, "-filter_complex",
+                            videoFilter + ";[vout][" + (1 + videoSources.size())
+                                    + ":v]paletteuse=dither=sierra2_4a[vfinal]",
+                            "-map", "[vfinal]", "-t", seconds(outputDurationMillis),
+                            "-y", partial.getAbsolutePath());
+                }
                 run(gifCommand, "GIF export");
             }
 
@@ -171,7 +228,75 @@ public final class RecordingStudioExportService {
         return Collections.emptyList();
     }
 
-    private String buildAudioFilter(List<TimelineClip> clips) {
+    private List<TimelineClip> getVideoClips() {
+        for (TimelineTrack track : timeline.getTracks()) {
+            if ("video".equals(track.getId())) {
+                List<TimelineClip> valid = new ArrayList<TimelineClip>();
+                for (TimelineClip clip : track.getClips()) {
+                    if (clip.getDuration() > 0L) valid.add(clip);
+                }
+                Collections.sort(valid, new Comparator<TimelineClip>() {
+                    public int compare(TimelineClip left, TimelineClip right) {
+                        boolean leftCapture = "@capture".equals(left.getSource());
+                        boolean rightCapture = "@capture".equals(right.getSource());
+                        if (leftCapture != rightCapture) return leftCapture ? -1 : 1;
+                        return Long.compare(left.getStart(), right.getStart());
+                    }
+                });
+                return valid;
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    private static long getTrackEnd(List<TimelineClip> clips) {
+        long end = 0L;
+        for (TimelineClip clip : clips) end = Math.max(end, clip.getEnd());
+        return end;
+    }
+
+    /**
+     * Composes video-track clips over a black timeline background. The reserved @capture
+     * source maps to the project's captured PNG sequence; other sources are FFmpeg video inputs.
+     */
+    private static String buildVideoFilter(List<TimelineClip> clips, List<Integer> inputIndexes,
+                                            int width, int height, double fps, long durationMillis) {
+        if (clips.isEmpty()) return "";
+        String rate = formatRate(fps);
+        StringBuilder filter = new StringBuilder();
+        filter.append("color=c=black:s=").append(width).append('x').append(height)
+                .append(":r=").append(rate).append(":d=").append(seconds(durationMillis)).append("[vbase]");
+        String currentBase = "[vbase]";
+        for (int i = 0; i < clips.size(); i++) {
+            TimelineClip clip = clips.get(i);
+            double speed = clip.getSpeed();
+            double sourceDuration = clip.getDuration() * speed;
+            long start = clip.getStart();
+            long end = clip.getEnd();
+            String clipLabel = "[vclip" + i + "]";
+            String nextBase = "[vbase" + (i + 1) + "]";
+            filter.append(";[").append(inputIndexes.get(i)).append(":v:0]")
+                    .append("trim=duration=").append(seconds(sourceDuration))
+                    .append(",setpts=(PTS-STARTPTS)/")
+                    .append(String.format(Locale.ROOT, "%.6f", speed))
+                    .append(",fps=").append(rate)
+                    .append(",scale=").append(width).append(':').append(height)
+                    .append(":force_original_aspect_ratio=decrease")
+                    .append(",pad=").append(width).append(':').append(height)
+                    .append(":(ow-iw)/2:(oh-ih)/2:black,setsar=1")
+                    .append(",setpts=PTS+").append(seconds(start)).append("/TB")
+                    .append(clipLabel);
+            filter.append(';').append(currentBase).append(clipLabel)
+                    .append("overlay=eof_action=pass:shortest=0:enable='between(t,")
+                    .append(seconds(start)).append(',').append(seconds(end)).append(")'")
+                    .append(nextBase);
+            currentBase = nextBase;
+        }
+        filter.append(';').append(currentBase).append("format=yuv420p[vout]");
+        return filter.toString();
+    }
+
+    private String buildAudioFilter(List<TimelineClip> clips, int firstInputIndex) {
         if (clips.isEmpty()) return "";
         StringBuilder filter = new StringBuilder();
         for (int i = 0; i < clips.size(); i++) {
@@ -182,7 +307,7 @@ public final class RecordingStudioExportService {
             double sourceDuration = timelineDuration * speed;
 
             if (i > 0) filter.append(';');
-            filter.append('[').append(i + 1).append(":a]")
+            filter.append('[').append(firstInputIndex + i).append(":a]")
                     .append("atrim=duration=").append(seconds(sourceDuration))
                     .append(",asetpts=PTS-STARTPTS");
 
