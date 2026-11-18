@@ -10,6 +10,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /**
  * Reads OpenGL pixels on the Minecraft client thread and encodes/writes PNGs
@@ -70,6 +73,16 @@ public final class MinecraftFramebufferFrameWriter implements RecordingCaptureSe
         if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
             throw new IOException("Cannot create frame output directory");
         }
-        if (!ImageIO.write(image, "png", output)) throw new IOException("PNG writer is unavailable");
+        File temporary = new File(parent == null ? new File(".") : parent, output.getName() + ".tmp");
+        try {
+            if (!ImageIO.write(image, "png", temporary)) throw new IOException("PNG writer is unavailable");
+            try {
+                Files.move(temporary.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporary.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            if (temporary.exists() && !temporary.delete()) temporary.deleteOnExit();
+        }
     }
 }
