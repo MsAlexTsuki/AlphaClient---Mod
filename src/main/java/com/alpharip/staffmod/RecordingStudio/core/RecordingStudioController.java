@@ -1,8 +1,10 @@
 package com.alpharip.staffmod.RecordingStudio.core;
 
+import com.alpharip.staffmod.RecordingStudio.audio.RecordingAudioCaptureService;
 import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureService;
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack;
+import com.alpharip.staffmod.RecordingStudio.timeline.TimelineClip;
 import java.io.File;
 import java.io.IOException;
 
@@ -12,6 +14,8 @@ public final class RecordingStudioController {
     private final RecordingCaptureService capture;
     private final Timeline timeline;
     private final RecordingStudioProjectStore projectStore;
+    private final RecordingAudioCaptureService audioCapture;
+    private final File audioDirectory;
     private boolean closed;
     private boolean sessionStartedInThisRuntime;
     private String status = "Ready";
@@ -29,6 +33,37 @@ public final class RecordingStudioController {
         this.capture = capture;
         this.timeline = timeline;
         this.projectStore = new RecordingStudioProjectStore(projectDirectory);
+        File recordingRoot = projectDirectory.getParentFile() == null ? projectDirectory : projectDirectory.getParentFile();
+        this.audioDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/audio");
+        this.audioCapture = new RecordingAudioCaptureService(new RecordingAudioCaptureService.Listener() {
+            public void onAudioSaved(File file, long startMillis, long durationMillis) {
+                synchronized (RecordingStudioController.this) {
+                    try {
+                        TimelineTrack audioTrack = null;
+                        for (TimelineTrack track : timeline.getTracks()) {
+                            if ("audio".equals(track.getId())) { audioTrack = track; break; }
+                        }
+                        if (audioTrack == null) {
+                            audioTrack = new TimelineTrack("audio", "Audio");
+                            timeline.addTrack(audioTrack);
+                        }
+                        if (durationMillis > 0L) {
+                            audioTrack.add(new TimelineClip("audio-" + java.util.UUID.randomUUID().toString(),
+                                    file.getAbsolutePath(), startMillis, durationMillis));
+                        }
+                        projectStore.save(project, timeline);
+                        status = "Audio saved to timeline";
+                    } catch (IOException | RuntimeException failure) {
+                        status = "Audio saved; timeline update failed: " + failure.getMessage();
+                    }
+                }
+            }
+            public void onAudioFailed(String message) {
+                synchronized (RecordingStudioController.this) {
+                    status = "Audio capture failed: " + message;
+                }
+            }
+        });
         try {
             if (this.projectStore.hasRecoveryMarker(project.getId())) {
                 status = "Interrupted session detected; existing frames are available";
@@ -73,6 +108,7 @@ public final class RecordingStudioController {
     public synchronized void pause() {
         ensureOpen();
         if (!capture.isRecording()) return;
+        audioCapture.stop();
         long now = System.currentTimeMillis();
         capture.pause();
         project.pause(now);
@@ -103,6 +139,7 @@ public final class RecordingStudioController {
 
     public synchronized void stop() {
         if (closed || (!capture.isRecording() && !capture.isPaused())) return;
+        audioCapture.stop();
         long now = System.currentTimeMillis();
         capture.stop();
         project.stop(now);
@@ -118,6 +155,33 @@ public final class RecordingStudioController {
         } catch (IOException failure) {
             status = "Stopped; recovery marker retained: " + failure.getMessage();
         }
+    }
+
+    public synchronized void startAudioCapture() {
+        ensureOpen();
+        if (!capture.isRecording()) {
+            status = "Start video recording before capturing audio";
+            return;
+        }
+        try {
+            long timelineStart = Math.max(0L, System.currentTimeMillis() - project.getStartedAt());
+            audioCapture.start(audioDirectory, "audio-" + java.util.UUID.randomUUID().toString() + ".wav",
+                    timelineStart);
+            status = "Microphone recording";
+        } catch (Exception failure) {
+            status = "Cannot start microphone: " + failure.getMessage();
+        }
+    }
+
+    public synchronized void stopAudioCapture() {
+        audioCapture.stop();
+        if (audioCapture.isFinalizing()) status = "Finalizing microphone audio";
+    }
+
+    public synchronized String getAudioStatus() {
+        if (audioCapture.isRecording()) return "Microphone: Recording";
+        if (audioCapture.isFinalizing()) return "Microphone: Finalizing";
+        return "Microphone: Idle";
     }
 
     public synchronized void adjustCaptureInterval(long deltaMillis) {
@@ -151,6 +215,7 @@ public final class RecordingStudioController {
     public Timeline getTimeline() { return timeline; }
     public RecordingProject getProject() { return project; }
     public RecordingCaptureService getCapture() { return capture; }
+    public RecordingAudioCaptureService getAudioCapture() { return audioCapture; }
 
     public synchronized String getStatus() {
         String error = capture.getLastError();
@@ -171,15 +236,20 @@ public final class RecordingStudioController {
             status = "Shutdown save failed; recovery marker retained: " + failure.getMessage();
         }
         capture.shutdown();
-        if (sessionStartedInThisRuntime) {
+        if (sessionStartedInThisRuntime || audioCapture.isFinalizing()) {
             final RecordingCaptureService pendingCapture = capture;
             final RecordingStudioProjectStore pendingStore = projectStore;
             final String projectId = project.getId();
+            final RecordingAudioCaptureService audioCapture = this.audioCapture;
             Thread finalizer = new Thread(new Runnable() {
                 public void run() {
                     try {
+                        audioCapture.awaitCompletion();
                         while (!pendingCapture.awaitPendingWrites(1L, java.util.concurrent.TimeUnit.MINUTES)) {
                             // Keep the recovery marker until all accepted frame writes have completed.
+                        }
+                        synchronized (RecordingStudioController.this) {
+                            projectStore.save(project, timeline);
                         }
                         pendingStore.clearRecordingActive(projectId);
                     } catch (InterruptedException interrupted) {
