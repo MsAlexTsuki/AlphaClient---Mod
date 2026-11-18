@@ -21,7 +21,7 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Background MP4 and GIF export from ordered captured PNG frames, with cancellation and temporary-output cleanup; files are stored under `recordingstudio/exports/<project-id>/`.
 - MP4 export includes saved Audio timeline clips, delayed to their timeline positions and mixed when multiple clips exist; GIF output is silent.
 - Microphone capture stops when video recording is paused or stopped; a new audio clip can be started after video recording resumes.
-- Minecraft framebuffer capture backend reading OpenGL pixels on the client thread and converting/writing PNG frames asynchronously on a dedicated worker.
+- Minecraft framebuffer capture backend scheduled at the end of the HUD render pass, before the current GuiScreen is drawn, so the Recording Studio window itself is excluded from gameplay footage. OpenGL framebuffer readback runs on the client thread; the previous framebuffer binding and viewport are restored immediately, while PNG conversion and disk writes run asynchronously on a dedicated worker.
 - Bounded encoder queue (one active write plus up to eight queued frames) with dropped-frame accounting when the queue is full.
 - Atomic PNG file replacement so interrupted writes do not leave partially written final frame files.
 - Live pending-write counter; accepted frame writes drain without blocking the Minecraft client thread during shutdown.
