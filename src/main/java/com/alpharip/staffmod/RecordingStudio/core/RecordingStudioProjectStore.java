@@ -13,6 +13,11 @@ public final class RecordingStudioProjectStore {
         this.directory = directory;
     }
 
+    public synchronized void saveProject(RecordingProject project) throws IOException {
+        if (project == null) throw new IllegalArgumentException("Project is required");
+        project.save(directory);
+    }
+
     public synchronized void save(RecordingProject project, Timeline timeline) throws IOException {
         if (project == null || timeline == null) throw new IllegalArgumentException("Project and timeline are required");
         project.save(directory);
@@ -116,22 +121,6 @@ public final class RecordingStudioProjectStore {
     public synchronized boolean hasRecoveryMarker(String projectId) throws IOException {
         validateId(projectId);
         return new File(directory, projectId + ".active").isFile();
-    }
-
-    /** Reads the timestamp of the last active recording checkpoint. */
-    public synchronized long getRecoveryMarkedAt(String projectId) throws IOException {
-        validateId(projectId);
-        File marker = new File(directory, projectId + ".active");
-        if (!marker.isFile()) return 0L;
-        Properties data = new Properties();
-        try (InputStream input = new BufferedInputStream(new FileInputStream(marker))) {
-            data.load(input);
-        }
-        try {
-            return Math.max(0L, Long.parseLong(data.getProperty("markedAt", "0")));
-        } catch (NumberFormatException invalid) {
-            throw new IOException("Invalid Recording Studio recovery marker", invalid);
-        }
     }
 
     /** Persist an active marker so an unclean process exit can be detected next time. */
