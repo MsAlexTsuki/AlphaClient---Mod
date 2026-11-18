@@ -506,6 +506,25 @@ public final class RecordingStudioController {
         persistSceneChange("Scene removed");
     }
 
+    /** Reorders a source in the active scene and persists the new source order. */
+    public synchronized void moveActiveSceneSource(String sourceId, int direction) {
+        ensureOpen();
+        if (capture.isRecording() || capture.isPaused()) {
+            status = "Stop recording before reordering scene sources";
+            return;
+        }
+        RecordingStudioScene scene = timeline.getActiveScene();
+        if (scene == null) {
+            status = "No active scene";
+            return;
+        }
+        if (!scene.moveSource(sourceId, direction)) {
+            status = "Source cannot be moved further in that direction";
+            return;
+        }
+        persistSceneChange("Source order updated");
+    }
+
     public synchronized void removeSceneSource(RecordingStudioSource.Type type) {
         ensureOpen();
         if (type == RecordingStudioSource.Type.GAME_CAPTURE
