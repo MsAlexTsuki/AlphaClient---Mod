@@ -43,8 +43,10 @@ public final class RecordingStudioExportService {
         this.timeline = timeline;
     }
 
-    public synchronized void start(final Format format, final double fps, final String executable) throws IOException {
+    public synchronized void start(final Format format, final double fps, final String executable,
+                                   final RecordingStudioExportSettings settings) throws IOException {
         if (format == null) throw new IllegalArgumentException("Export format is required");
+        if (settings == null) throw new IllegalArgumentException("Export settings are required");
         if (Double.isNaN(fps) || Double.isInfinite(fps) || fps <= 0.0 || fps > 240.0) throw new IllegalArgumentException("FPS must be greater than 0 and at most 240");
         if (worker != null && worker.isAlive()) throw new IllegalStateException("An export is already running");
         File[] frames = listFrames();
@@ -60,7 +62,7 @@ public final class RecordingStudioExportService {
         status = "Exporting " + format.name() + " (0%) — " + frames.length + " frames";
         worker = new Thread(new Runnable() {
             public void run() {
-                export(format, fps, command, output);
+                export(format, fps, command, output, settings);
             }
         }, "Alpha-RecordingStudio-Export");
         worker.setDaemon(true);
@@ -80,7 +82,8 @@ public final class RecordingStudioExportService {
     public String getStatus() { return status; }
     public int getProgressPercent() { return progressPercent; }
 
-    private void export(Format format, double fps, String executable, File output) {
+    private void export(Format format, double fps, String executable, File output,
+                       RecordingStudioExportSettings settings) {
         String extension = format == Format.MP4 ? ".mp4" : ".gif";
         String base = output.getName().substring(0, output.getName().length() - extension.length());
         File partial = new File(outputDirectory, base + ".partial" + extension);
@@ -111,8 +114,9 @@ public final class RecordingStudioExportService {
             long videoDurationMillis = videoClips.isEmpty()
                     ? frameDurationMillis : getTrackEnd(videoClips);
             long outputDurationMillis = Math.max(videoDurationMillis, getTrackEnd(audioClips));
-            int outputWidth = first.getWidth() + (first.getWidth() & 1);
-            int outputHeight = first.getHeight() + (first.getHeight() & 1);
+            int[] outputSize = settings.getResolution().fit(first.getWidth(), first.getHeight());
+            int outputWidth = outputSize[0];
+            int outputHeight = outputSize[1];
             String videoFilter = buildVideoFilter(videoClips, videoInputIndexes, outputWidth,
                     outputHeight, fps, outputDurationMillis);
 
@@ -138,18 +142,20 @@ public final class RecordingStudioExportService {
                 }
                 if (videoFilter.isEmpty()) {
                     Collections.addAll(command, "-map", "0:v:0", "-vf",
-                            "pad=ceil(iw/2)*2:ceil(ih/2)*2");
+                            "scale=" + outputWidth + ":" + outputHeight + ":flags=lanczos");
                 } else {
                     Collections.addAll(command, "-map", "[vout]");
                 }
-                Collections.addAll(command, "-c:v", "libx264", "-pix_fmt", "yuv420p",
-                        "-movflags", "+faststart", "-t", seconds(outputDurationMillis));
+                Collections.addAll(command, "-c:v", "libx264", "-profile:v", "high", "-preset", "medium",
+                        "-crf", Integer.toString(settings.getQuality().getCrf()), "-pix_fmt", "yuv420p",
+                        "-bf", "2", "-g", Integer.toString(Math.max(1, (int) Math.round(fps / 2.0))),
+                        "-flags", "+cgop", "-movflags", "+faststart", "-t", seconds(outputDurationMillis));
                 if (audioClips.isEmpty()) {
                     command.add("-an");
                 } else {
                     command.add("-map");
                     command.add(audioClips.size() == 1 ? "[a0]" : "[aout]");
-                    Collections.addAll(command, "-c:a", "aac", "-b:a", "192k");
+                    Collections.addAll(command, "-c:a", "aac", "-b:a", "192k", "-ar", "48000");
                 }
                 command.add("-y");
                 command.add(partial.getAbsolutePath());
@@ -162,7 +168,8 @@ public final class RecordingStudioExportService {
                     paletteCommand.add(source.getAbsolutePath());
                 }
                 if (videoFilter.isEmpty()) {
-                    Collections.addAll(paletteCommand, "-vf", "palettegen=stats_mode=diff",
+                    Collections.addAll(paletteCommand, "-vf", "scale=" + outputWidth + ":" + outputHeight
+                                    + ":flags=lanczos,palettegen=stats_mode=diff",
                             "-frames:v", "1", "-y", palette.getAbsolutePath());
                 } else {
                     Collections.addAll(paletteCommand, "-filter_complex",
@@ -180,7 +187,8 @@ public final class RecordingStudioExportService {
                 gifCommand.add(palette.getAbsolutePath());
                 if (videoFilter.isEmpty()) {
                     Collections.addAll(gifCommand, "-lavfi",
-                            "fps=" + formatRate(fps) + "[x];[x][" + (1 + videoSources.size())
+                            "fps=" + formatRate(fps) + ",scale=" + outputWidth + ":" + outputHeight
+                                    + ":flags=lanczos[x];[x][" + (1 + videoSources.size())
                                     + ":v]paletteuse=dither=sierra2_4a",
                             "-t", seconds(outputDurationMillis), "-y", partial.getAbsolutePath());
                 } else {
