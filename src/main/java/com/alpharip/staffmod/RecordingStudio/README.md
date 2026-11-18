@@ -9,7 +9,9 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Project metadata and timeline are saved from the Studio Save Project control and automatically on Studio shutdown/world unload.
 - Existing frame filenames are scanned before recording resumes so a reopened project appends frames instead of overwriting earlier captures.
 - Manual recording controller and independent Forge runtime.
-- Minecraft framebuffer capture backend reading OpenGL pixels on the client thread and converting/writing PNG frames asynchronously on a dedicated worker.\n- Bounded encoder queue (one active write plus up to eight queued frames) with dropped-frame accounting when the queue is full.\n- Live pending-write counter; accepted frame writes drain without blocking the Minecraft client thread during shutdown.
+- Minecraft framebuffer capture backend reading OpenGL pixels on the client thread and converting/writing PNG frames asynchronously on a dedicated worker.
+- Bounded encoder queue (one active write plus up to eight queued frames) with dropped-frame accounting when the queue is full.
+- Live pending-write counter; accepted frame writes drain without blocking the Minecraft client thread during shutdown.
 - Start, pause, resume, stop and save controls in a dedicated Studio screen.
 - Adjustable capture interval in 100 ms steps, bounded to 100–60000 ms.
 - Separate successful-frame and failed-frame counters; failed writes do not inflate the saved-frame count.
