@@ -650,6 +650,7 @@ public final class RecordingStudioController {
         } catch (IOException failure) {
             status = "Shutdown save failed; recovery marker retained: " + failure.getMessage();
         }
+        exportService.cancel();
         capture.shutdown();
         if (sessionStartedInThisRuntime || audioCapture.isFinalizing()) {
             final RecordingCaptureService pendingCapture = capture;
