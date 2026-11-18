@@ -94,8 +94,8 @@ public final class RecordingCaptureService {
         synchronized (this) {
             if (closed || !recording || paused || capturing || now < nextAt) return;
             if (nextFileIndex == Long.MAX_VALUE) {
-                recording = false;
-                lastError = "Recording frame index limit reached";
+                nextAt = Long.MAX_VALUE;
+                lastError = "Recording frame index limit reached; stop this session before starting another";
                 return;
             }
             long interval = settings.getIntervalMillis();
