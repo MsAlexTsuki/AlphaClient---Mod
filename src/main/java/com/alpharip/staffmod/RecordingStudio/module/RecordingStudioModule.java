@@ -17,4 +17,9 @@ public interface RecordingStudioModule {
     void onRecordingResume(long now) throws Exception;
     void onRecordingStop() throws Exception;
     String getStatus();
+
+    /** True while this module owns an external camera view that can be previewed in the HUD. */
+    default boolean isExternalCameraActive() {
+        return false;
+    }
 }
