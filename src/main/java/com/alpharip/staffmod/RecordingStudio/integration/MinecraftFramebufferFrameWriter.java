@@ -1,7 +1,75 @@
 package com.alpharip.staffmod.RecordingStudio.integration;
-import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureService;import net.minecraft.client.Minecraft;import net.minecraft.client.shader.Framebuffer;import org.lwjgl.BufferUtils;import org.lwjgl.opengl.GL11;import javax.imageio.ImageIO;import java.awt.image.BufferedImage;import java.io.*;import java.nio.ByteBuffer;
-/** Captures the current Minecraft 1.8.9 main framebuffer as PNG on the client thread. */
+
+import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureService;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.shader.Framebuffer;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+/**
+ * Reads OpenGL pixels on the Minecraft client thread and encodes/writes PNGs
+ * on RecordingCaptureService's background worker.
+ */
 public final class MinecraftFramebufferFrameWriter implements RecordingCaptureService.FrameWriter {
- private final Minecraft minecraft;public MinecraftFramebufferFrameWriter(Minecraft m){if(m==null)throw new IllegalArgumentException("minecraft");minecraft=m;}
- public void capture(File output)throws Exception{if(!minecraft.isCallingFromMinecraftThread())throw new IllegalStateException("Framebuffer capture must run on the Minecraft client thread");if(output==null)throw new IllegalArgumentException("output");int w=minecraft.displayWidth,h=minecraft.displayHeight;Framebuffer fb=minecraft.getFramebuffer();if(w<1||h<1||fb==null||fb.framebufferWidth!=w||fb.framebufferHeight!=h)throw new IOException("Minecraft framebuffer dimensions are unavailable or inconsistent");ByteBuffer pixels=BufferUtils.createByteBuffer(w*h*4);fb.bindFramebuffer(true);GL11.glReadPixels(0,0,w,h,GL11.GL_RGBA,GL11.GL_UNSIGNED_BYTE,pixels);BufferedImage image=new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);for(int y=0;y<h;y++){int sy=h-1-y;for(int x=0;x<w;x++){int o=(sy*w+x)*4;int r=pixels.get(o)&255,g=pixels.get(o+1)&255,b=pixels.get(o+2)&255,a=pixels.get(o+3)&255;image.setRGB(x,y,(a<<24)|(r<<16)|(g<<8)|b);}}File parent=output.getParentFile();if(parent!=null&&!parent.isDirectory()&&!parent.mkdirs())throw new IOException("Cannot create frame output directory");if(!ImageIO.write(image,"png",output))throw new IOException("PNG writer is unavailable");}
+    private final Minecraft minecraft;
+
+    public MinecraftFramebufferFrameWriter(Minecraft minecraft) {
+        if (minecraft == null) throw new IllegalArgumentException("minecraft");
+        this.minecraft = minecraft;
+    }
+
+    public RecordingCaptureService.FrameData captureFrame() throws Exception {
+        if (!minecraft.isCallingFromMinecraftThread()) {
+            throw new IllegalStateException("Framebuffer capture must run on the Minecraft client thread");
+        }
+        int width = minecraft.displayWidth;
+        int height = minecraft.displayHeight;
+        Framebuffer framebuffer = minecraft.getFramebuffer();
+        long byteCount = (long) width * (long) height * 4L;
+        if (width < 1 || height < 1 || byteCount > Integer.MAX_VALUE || framebuffer == null
+                || framebuffer.framebufferWidth != width || framebuffer.framebufferHeight != height) {
+            throw new IOException("Minecraft framebuffer dimensions are unavailable or inconsistent");
+        }
+
+        ByteBuffer pixels = BufferUtils.createByteBuffer((int) byteCount);
+        framebuffer.bindFramebuffer(true);
+        GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
+        byte[] rgba = new byte[(int) byteCount];
+        pixels.position(0);
+        pixels.get(rgba);
+        return new RecordingCaptureService.FrameData(width, height, rgba);
+    }
+
+    public void writeFrame(RecordingCaptureService.FrameData frame, File output) throws Exception {
+        if (frame == null || output == null) throw new IllegalArgumentException("Frame and output are required");
+        int width = frame.getWidth();
+        int height = frame.getHeight();
+        byte[] rgba = frame.getRgba();
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        int[] row = new int[width];
+        for (int y = 0; y < height; y++) {
+            int sourceY = height - 1 - y;
+            int offset = sourceY * width * 4;
+            for (int x = 0; x < width; x++) {
+                int pixel = offset + x * 4;
+                int red = rgba[pixel] & 255;
+                int green = rgba[pixel + 1] & 255;
+                int blue = rgba[pixel + 2] & 255;
+                int alpha = rgba[pixel + 3] & 255;
+                row[x] = (alpha << 24) | (red << 16) | (green << 8) | blue;
+            }
+            image.setRGB(0, y, width, 1, row, 0, width);
+        }
+
+        File parent = output.getParentFile();
+        if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+            throw new IOException("Cannot create frame output directory");
+        }
+        if (!ImageIO.write(image, "png", output)) throw new IOException("PNG writer is unavailable");
+    }
 }
