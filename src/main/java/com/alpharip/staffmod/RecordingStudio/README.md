@@ -7,13 +7,15 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Manual recording controller and independent Forge runtime.
 - Minecraft framebuffer capture backend writing ordered PNG frames.
 - Start, pause, resume, stop and save controls in a dedicated Studio screen.
-- Loaded projects do not automatically resume a recording.
-- No Build Timelapse imports, build-event listeners, Supabase calls or network services.
+- Shared general-purpose timeline, marker and clip/track models.
+- A feature-neutral timeline editor owned by Recording Studio.
+- Build Timelapse consumes the shared Recording Studio timeline model and editor; the dependency is one-way.
+- No Build Timelapse imports, build-event listeners, Supabase calls or network services inside Recording Studio.
 
 ## Current limitations
-- This is the independent manual frame-capture foundation, not yet feature parity with the existing Build Timelapse editing pipeline.
-- Capture uses native Minecraft framebuffer resolution and performs readback and PNG writing synchronously on the client thread.
-- Audio, timeline editing, camera-path editing, effects, video/GIF encoding, export queue UI, crash recovery and disk retention are not included yet.
-- The client entry point must construct RecordingStudioRuntime with a RecordingStudioController and call open(Minecraft.getMinecraft()); module/keybind registration is intentionally not changed here.
-- The existing Build Timelapse implementation is unchanged and remains separate.
+- Camera-path editing, effects and video/GIF export have not yet been migrated.
+- Capture uses native framebuffer resolution and performs readback and PNG writing synchronously on the client thread.
+- Audio, crash recovery and disk retention are not included yet.
+- Client entry-point/module/keybind registration is intentionally unchanged.
+- Build Timelapse still owns its build-specific camera, capture, effects and export implementations; these are next migration stages.
 - No build configuration is present in this repository snapshot; compilation and in-game behavior have not been verified.
