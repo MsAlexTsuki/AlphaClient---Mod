@@ -84,18 +84,16 @@ public final class RecordingStudioExportService {
             File[] frames = listFrames();
             BufferedImage first = ImageIO.read(frames[0]);
             if (first == null) throw new IOException("Cannot read the first captured PNG frame");
-            String input = new File(framesDirectory, "frame-*.png").getAbsolutePath().replace('\\\\', '/');
+            String input = new File(framesDirectory, "frame-*.png").getAbsolutePath().replace(File.separatorChar, '/');
 
             if (format == Format.MP4) {
                 List<String> command = baseCommand(executable, input, fps);
                 List<TimelineClip> audioClips = getAudioClips();
-                List<String> audioLabels = new ArrayList<String>();
                 for (TimelineClip clip : audioClips) {
                     File audio = new File(clip.getSource());
                     if (!audio.isFile()) throw new FileNotFoundException("Audio timeline source not found: " + audio);
                     command.add("-i");
                     command.add(audio.getAbsolutePath());
-                    audioLabels.add("[" + audioLabels.size() + ":a]");
                 }
 
                 String filter = buildAudioFilter(audioClips);
@@ -127,7 +125,7 @@ public final class RecordingStudioExportService {
                 Collections.addAll(gifCommand, executable, "-hide_banner", "-loglevel", "error",
                         "-framerate", Integer.toString(fps), "-pattern_type", "glob", "-i", input,
                         "-i", palette.getAbsolutePath(), "-lavfi",
-                        "fps=" + fps + ",[0:v]split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=sierra2_4a",
+                        "fps=" + fps + "[x];[x][1:v]paletteuse=dither=sierra2_4a",
                         "-y", partial.getAbsolutePath());
                 run(gifCommand, "GIF export");
             }
@@ -157,7 +155,13 @@ public final class RecordingStudioExportService {
 
     private List<TimelineClip> getAudioClips() {
         for (TimelineTrack track : timeline.getTracks()) {
-            if ("audio".equals(track.getId())) return track.getClips();
+            if ("audio".equals(track.getId())) {
+                List<TimelineClip> valid = new ArrayList<TimelineClip>();
+                for (TimelineClip clip : track.getClips()) {
+                    if (clip.getDuration() > 0L) valid.add(clip);
+                }
+                return valid;
+            }
         }
         return Collections.emptyList();
     }
@@ -172,7 +176,7 @@ public final class RecordingStudioExportService {
             if (i > 0) filter.append(';');
             filter.append('[').append(i + 1).append(":a]")
                     .append("atrim=duration=").append(String.format(Locale.ROOT, "%.3f", duration / 1000.0))
-                    .append(",asetpts=PTS-STARTPTS,adelay=").append(delay).append(":all=1[a").append(i).append(']');
+                    .append(",asetpts=PTS-STARTPTS,adelay=delays=").append(delay).append(":all=1[a").append(i).append(']');
         }
         if (clips.size() > 1) {
             filter.append(';');
