@@ -335,7 +335,6 @@ public final class RecordingStudioController {
 
     public synchronized void tick(long now) {
         if (closed) return;
-        capture.tick(now);
         if (capture.isRecording() && now - lastRecoveryCheckpointAt >= 1000L) {
             try {
                 project.checkpoint(now);
@@ -356,6 +355,12 @@ public final class RecordingStudioController {
                 status = "Stopped; recovery marker retained: " + failure.getMessage();
             }
         }
+    }
+
+    /** Must be invoked from the Minecraft render/HUD event on the client thread. */
+    public synchronized void captureFrameTick(long now) {
+        if (closed) return;
+        capture.tick(now);
     }
 
     private void finishRecoveryMarkerIfIdle() throws IOException {
