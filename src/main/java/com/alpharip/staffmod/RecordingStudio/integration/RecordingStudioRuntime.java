@@ -290,13 +290,21 @@ public final class RecordingStudioRuntime {
     public synchronized void resumeRecording() {
         if (!controller.getCapture().isPaused()) return;
         RecordingStudioModule module = selectedModule();
+        boolean moduleResumed = false;
         try {
-            if (module != null) module.onRecordingResume(System.currentTimeMillis());
+            if (module != null) {
+                module.onRecordingResume(System.currentTimeMillis());
+                moduleResumed = true;
+            }
             controller.resume();
             if (!controller.getCapture().isRecording() && module != null) {
                 module.onRecordingPause(System.currentTimeMillis());
             }
         } catch (Exception failure) {
+            if (moduleResumed && module != null) {
+                try { module.onRecordingPause(System.currentTimeMillis()); }
+                catch (Exception rollbackFailure) { failure.addSuppressed(rollbackFailure); }
+            }
             moduleStatus = "Module resume failed: " + failure.getMessage();
         }
     }
