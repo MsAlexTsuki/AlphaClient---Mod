@@ -9,7 +9,7 @@ Modular Build Timelapse module packaged inside the optional Alpha Recording Stud
 - Local versioned export-job metadata persistence per project; loading metadata does not automatically execute jobs.
 - Build-specific block tracking, activity analytics, build-area bounds and milestones.
 - Camera pose, path, waypoint, interpolation, preset, orbit and controller contracts are now defined in Recording Studio; Build Timelapse controllers and its Minecraft camera bridge consume those shared contracts.
-- Tick-driven interval screenshot scheduler, bounded background queue, local capture manifest option and native-resolution Minecraft framebuffer PNG adapter.
+- Tick-driven interval screenshot scheduler, bounded background queue, local capture manifest option and native-resolution Minecraft framebuffer PNG adapter. Capture waits for the correct render event: after world rendering when the HUD is hidden, or after the HUD when it is visible; pending captures are cancelled on world unload.
 - Optional Recording Studio module adapter: the Module panel can list saved Build Timelapse camera paths, position the shared camera at the first waypoint, and let Recording Studio drive path playback while capturing the framebuffer.
 - Cinematic effects profile, fades, speed ramps and time/weather/HUD adapter contract.
 - MP4/GIF/image-sequence settings and FFmpeg encoder; GIF export uses a two-pass palette generation and palette-use workflow; export queue supports cancellation.
@@ -26,7 +26,7 @@ Modular Build Timelapse module packaged inside the optional Alpha Recording Stud
 6. In-game camera, capture, cancellation and timeline GUI validation remains outstanding.
 
 ## Limitations
-- Framebuffer access must run on the Minecraft client/render thread and currently supports native display resolution. The adapter restores the previous framebuffer binding and viewport and writes PNG frames through a temporary file before replacing the destination.
+- Framebuffer access must run on the Minecraft client/render thread and currently supports native display resolution. The adapter restores the previous framebuffer binding and viewport and writes PNG frames through a temporary file before replacing the destination. Unsupported hand-hiding and custom-resolution controls are disabled in the capture settings screen.
 - The independent camera does not move/control the real player; hand hiding and camera roll are unsupported. The render-view bridge restores the previous view only while it still owns the render-view entity, and preserves a later external FOV change.
 - FFmpeg must be installed separately; MP4 is silent and GIF encoding remains basic.
 - A Minecraft effects adapter now snapshots and restores world time, weather and HUD visibility. The current Build Timelapse screen does not yet expose effect controls or automatically apply a saved effects profile.
