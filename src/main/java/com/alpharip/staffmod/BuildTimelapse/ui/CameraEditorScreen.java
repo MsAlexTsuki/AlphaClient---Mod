@@ -30,6 +30,7 @@ public final class CameraEditorScreen extends GuiScreen {
 
     @Override
     public void initGui() {
+        String previousPathId = pathId == null ? "studio-camera" : pathId.getText();
         buttonList.clear();
         int x = width / 2 - 150;
         int y = height / 2 - 80;
@@ -52,7 +53,7 @@ public final class CameraEditorScreen extends GuiScreen {
 
         pathId = new GuiTextField(16, fontRendererObj, width / 2 - 150, y + 170, 145, 20);
         pathId.setMaxStringLength(80);
-        pathId.setText("studio-camera");
+        pathId.setText(previousPathId == null || previousPathId.trim().isEmpty() ? "studio-camera" : previousPathId);
         buttonList.add(new GuiButton(16, width / 2 + 5, y + 170, 70, 20, "Save"));
         buttonList.add(new GuiButton(17, width / 2 + 80, y + 170, 70, 20, "Load"));
     }
@@ -119,7 +120,7 @@ public final class CameraEditorScreen extends GuiScreen {
         else if (b.id == 11) adjust(0, 0, 0, 0, 10, 0);
         else if (b.id == 12) {
             path.add(new CameraWaypoint(
-                "point-" + path.getWaypoints().size(), camera.getPose(), 2000, 500, "SMOOTH"
+                "point-" + java.util.UUID.randomUUID().toString(), camera.getPose(), 2000, 500, "SMOOTH"
             ));
             status = "Waypoint added: " + path.getWaypoints().size();
         } else if (b.id == 13) {
