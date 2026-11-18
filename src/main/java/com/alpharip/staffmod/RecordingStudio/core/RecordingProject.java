@@ -132,7 +132,7 @@ public final class RecordingProject {
         properties.setProperty("microphoneDeviceKey", microphoneDeviceKey);
         properties.setProperty("recording", Boolean.toString(recording));
 
-        File temporary = new File(directory, id + ".tmp");
+        File temporary = new File(directory, id + "." + UUID.randomUUID().toString() + ".tmp");
         File destination = new File(directory, id + ".recording");
         try (OutputStream output = new BufferedOutputStream(new FileOutputStream(temporary))) {
             properties.store(output, "Alpha Recording Studio project");
