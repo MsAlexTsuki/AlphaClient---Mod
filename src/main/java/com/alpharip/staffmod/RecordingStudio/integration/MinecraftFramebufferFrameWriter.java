@@ -43,7 +43,9 @@ public final class MinecraftFramebufferFrameWriter implements RecordingCaptureSe
 
         ByteBuffer pixels = BufferUtils.createByteBuffer((int) byteCount);
         byte[] rgba = new byte[(int) byteCount];
-        int previousFramebuffer = GL11.glGetInteger(OpenGlHelper.GL_FRAMEBUFFER_BINDING);
+        boolean framebufferSupported = OpenGlHelper.isFramebufferEnabled();
+        // GL_FRAMEBUFFER_BINDING is 0x8CA6 in both EXT and ARB framebuffer APIs.
+        int previousFramebuffer = framebufferSupported ? GL11.glGetInteger(0x8CA6) : 0;
         java.nio.IntBuffer previousViewport = BufferUtils.createIntBuffer(4);
         GL11.glGetInteger(GL11.GL_VIEWPORT, previousViewport);
         try {
@@ -52,7 +54,9 @@ public final class MinecraftFramebufferFrameWriter implements RecordingCaptureSe
             pixels.position(0);
             pixels.get(rgba);
         } finally {
-            OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, previousFramebuffer);
+            if (framebufferSupported) {
+                OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, previousFramebuffer);
+            }
             GlStateManager.viewport(previousViewport.get(0), previousViewport.get(1),
                     previousViewport.get(2), previousViewport.get(3));
         }
