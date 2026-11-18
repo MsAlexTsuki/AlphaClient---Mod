@@ -48,6 +48,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(12, rightX + 8, rightY + row * 6, buttonWidth, "GIF");
         add(13, rightX + 8 + buttonWidth + gap, rightY + row * 6, buttonWidth, "Cancel");
         add(14, rightX + 8, rightY + row * 7, buttonWidth, "Storage");
+        add(18, rightX + 8 + buttonWidth + gap, rightY + row * 7, buttonWidth, "Next Mic");
 
         add(15, 18, 198, 126, "Change Module", true);
         add(16, 18, 222, 126, "Next Camera Path");
@@ -125,6 +126,9 @@ public final class RecordingStudioScreen extends GuiScreen {
                 runtime.toggleCameraPreview();
                 initGui();
                 break;
+            case 18:
+                controller.selectNextMicrophone();
+                break;
             default: break;
         }
     }
@@ -197,6 +201,8 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, "Minecraft framebuffer", right + 8, 78, 0xFFE0E0E0);
         drawString(fontRendererObj, "Active camera view", right + 8, 94, 0xFFBBBBBB);
         drawString(fontRendererObj, "Microphone input", right + 8, 110, 0xFFBBBBBB);
+        drawString(fontRendererObj, "Input: " + compact(controller.getMicrophoneSelectionName(), 18),
+                right + 8, 126, 0xFFBBBBBB);
         drawString(fontRendererObj, "AUDIO MIXER", right + 8, 145, 0xFFFFC83D);
         drawString(fontRendererObj, controller.getAudioStatus(), right + 8, 164, 0xFFE0E0E0);
         drawString(fontRendererObj, "Game audio: not captured", right + 8, 181, 0xFF888888);
