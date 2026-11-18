@@ -31,7 +31,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         buttonList.clear();
         int left = width / 2 - 145;
         sourceField = new GuiTextField(0, fontRendererObj, left, height / 2 - 88, 290, 18);
-        sourceField.setMaxStringLength(180);
+        sourceField.setMaxStringLength(512);
         startField = field(1, left, height / 2 - 48, 82);
         durationField = field(2, left + 104, height / 2 - 48, 82);
         speedField = field(3, left + 208, height / 2 - 48, 82);
@@ -80,7 +80,9 @@ public final class TimelineEditorScreen extends GuiScreen {
             }
         }
         clipIndex = Math.max(0, Math.min(clipIndex, clips.size() - 1));
-        return clips.get(clipIndex);
+        TimelineClip fallback = clips.get(clipIndex);
+        selectedClipId = fallback.getId();
+        return fallback;
     }
     private void syncSelection() {
         TimelineTrack track = selectedTrack();
@@ -119,7 +121,7 @@ public final class TimelineEditorScreen extends GuiScreen {
                 throw new NumberFormatException();
             return value;
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Speed must be between 0 and 100");
+            throw new IllegalArgumentException("Speed must be greater than 0 and at most 100");
         }
     }
 
