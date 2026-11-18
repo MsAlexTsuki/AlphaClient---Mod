@@ -35,7 +35,7 @@ public final class RecordingStudioRuntime {
     }
 
     public synchronized void open(Minecraft minecraft) {
-        if (minecraft == null || minecraft.theWorld == null) {
+        if (minecraft == null || minecraft.theWorld == null || minecraft.thePlayer == null) {
             throw new IllegalStateException("Recording Studio can only open inside a loaded world");
         }
         if (closed) throw new IllegalStateException("Recording Studio runtime is shut down");
@@ -339,7 +339,7 @@ public final class RecordingStudioRuntime {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null || minecraft.theWorld == null || minecraft.thePlayer == null) {
+        if (minecraft == null || minecraft.theWorld == null) {
             shutdown();
             return;
         }
