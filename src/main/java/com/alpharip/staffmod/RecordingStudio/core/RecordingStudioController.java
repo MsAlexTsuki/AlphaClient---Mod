@@ -15,6 +15,7 @@ public final class RecordingStudioController {
     private final RecordingCaptureService capture;
     private final Timeline timeline;
     private final RecordingStudioProjectStore projectStore;
+    private final RecordingStudioStorageUsage storageUsage;
     private final RecordingAudioCaptureService audioCapture;
     private final File audioDirectory;
     private final RecordingStudioExportService exportService;
@@ -38,6 +39,7 @@ public final class RecordingStudioController {
         this.timeline = timeline;
         this.projectStore = new RecordingStudioProjectStore(projectDirectory);
         File recordingRoot = projectDirectory.getParentFile() == null ? projectDirectory : projectDirectory.getParentFile();
+        this.storageUsage = new RecordingStudioStorageUsage(recordingRoot);
         this.audioDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/audio");
         File framesDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/frames");
         File exportDirectory = new File(new File(recordingRoot, "exports"), project.getId());
@@ -296,6 +298,7 @@ public final class RecordingStudioController {
     public RecordingProject getProject() { return project; }
     public RecordingCaptureService getCapture() { return capture; }
     public RecordingAudioCaptureService getAudioCapture() { return audioCapture; }
+    public RecordingStudioStorageUsage getStorageUsage() { return storageUsage; }
 
     public synchronized String getStatus() {
         String error = capture.getLastError();
