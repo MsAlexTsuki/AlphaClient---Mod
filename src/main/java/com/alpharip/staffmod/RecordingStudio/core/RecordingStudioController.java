@@ -58,7 +58,11 @@ public final class RecordingStudioController {
                             audioTrack.add(new TimelineClip("audio-" + java.util.UUID.randomUUID().toString(),
                                     file.getAbsolutePath(), startMillis, durationMillis));
                         }
-                        if (project.isRecording()) project.checkpoint(System.currentTimeMillis());
+                        if (project.isRecording()) {
+                            long checkpointAt = System.currentTimeMillis();
+                            project.checkpoint(checkpointAt);
+                            lastRecoveryCheckpointAt = checkpointAt;
+                        }
                         projectStore.save(project, timeline);
                         finishRecoveryMarkerIfIdle();
                         status = "Audio saved to timeline";
@@ -248,6 +252,16 @@ public final class RecordingStudioController {
     public synchronized void tick(long now) {
         if (closed) return;
         capture.tick(now);
+        if (capture.isRecording() && now - lastRecoveryCheckpointAt >= 1000L) {
+            try {
+                project.checkpoint(now);
+                projectStore.saveProject(project);
+                projectStore.markRecordingActive(project);
+                lastRecoveryCheckpointAt = now;
+            } catch (IOException failure) {
+                status = "Recovery checkpoint failed: " + failure.getMessage();
+            }
+        }
         if (sessionStartedInThisRuntime && !capture.isRecording() && !capture.isPaused()
                 && capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing()) {
             try {
