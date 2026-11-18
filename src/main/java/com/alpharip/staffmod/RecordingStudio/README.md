@@ -7,8 +7,9 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Local project catalog with list, create and open commands (`/recordingstudio list`, `/recordingstudio create <name>`, `/recordingstudio open <project-id>`).
 - Atomic timeline persistence for tracks, clips, playback speeds and timeline markers; saved projects can restore their timeline after reopening.
 - Project metadata and timeline are saved from the Studio Save Project control and automatically on Studio shutdown/world unload; recording start, pause and resume also create recovery checkpoints.
+- Project metadata preserves elapsed active recording time (excluding pauses) and the capture interval; interrupted-session recovery uses the active marker timestamp to restore elapsed time.
 - An atomic per-project active-session marker is retained while a recording is in progress and cleared only after a successful final checkpoint and completion of all accepted frame and microphone-audio writes; reopening a project with a leftover marker reports an interrupted session while preserving existing frame files.
-- Stopping a session keeps its recovery marker while queued PNG writes are pending; the marker is cleared after the queue drains, including through a background finalizer during Studio shutdown.
+- Stopping a session keeps its recovery marker while frame or microphone writes are pending; the marker is cleared after finalization, including through a background finalizer during Studio shutdown.
 - Existing frame filenames are scanned before recording resumes so a reopened project appends frames instead of overwriting earlier captures.
 - Manual recording controller and independent Forge runtime.
 - Explicit microphone recording controls; PCM 44.1 kHz, 16-bit mono WAV files are written on a dedicated audio thread.
@@ -37,7 +38,7 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Camera path interpolation and render-thread behavior have not been compiled or tested in Minecraft.
 - Capture uses native framebuffer resolution. OpenGL framebuffer readback remains on the Minecraft client thread; PNG conversion and disk writing run asynchronously.
 - FFmpeg must be installed separately and available as `ffmpeg` on PATH for MP4/GIF export.
-- Export derives its nominal FPS from the capture interval and uses captured native resolution (MP4 is padded to even dimensions). Changing the capture interval during a session can make audio synchronization approximate; custom export settings, percentage progress and GIF audio are not included yet.
+- Export derives its nominal FPS from the capture interval and uses captured native resolution (MP4 is padded to even dimensions). Changing the capture interval during a project recording can make audio synchronization approximate; custom export settings, percentage progress and GIF audio are not included yet.
 - Disk retention and effects/filters are not included yet.
 - Audio capture uses the system's default microphone input. Device selection, live monitoring and automatic microphone restart after a video pause are not included yet.
 - Crash recovery is currently checkpoint-based: it detects an uncleanly interrupted session and preserves previously written frames for continuation; it does not reconstruct a frame that was still being captured or encoded at the moment of the crash.
