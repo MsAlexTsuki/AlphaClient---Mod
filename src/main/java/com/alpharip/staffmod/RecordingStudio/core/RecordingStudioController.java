@@ -28,6 +28,13 @@ public final class RecordingStudioController {
         this.capture = capture;
         this.timeline = timeline;
         this.projectStore = new RecordingStudioProjectStore(projectDirectory);
+        try {
+            if (this.projectStore.hasRecoveryMarker(project.getId())) {
+                status = "Interrupted session detected; existing frames are available";
+            }
+        } catch (IOException failure) {
+            status = "Recovery check failed: " + failure.getMessage();
+        }
     }
 
     private static Timeline defaultTimeline() {
@@ -51,8 +58,12 @@ public final class RecordingStudioController {
             long now = System.currentTimeMillis();
             capture.start(now);
             project.start(now);
+            projectStore.save(project, timeline);
+            projectStore.markRecordingActive(project);
             status = "Recording";
         } catch (IOException failure) {
+            capture.stop();
+            project.stop(System.currentTimeMillis());
             status = "Cannot start: " + failure.getMessage();
         }
     }
@@ -63,7 +74,12 @@ public final class RecordingStudioController {
         long now = System.currentTimeMillis();
         capture.pause();
         project.pause(now);
-        status = "Paused";
+        try {
+            projectStore.save(project, timeline);
+            status = "Paused — recovery checkpoint saved";
+        } catch (IOException failure) {
+            status = "Pause checkpoint failed: " + failure.getMessage();
+        }
     }
 
     public synchronized void resume() {
@@ -72,7 +88,15 @@ public final class RecordingStudioController {
         long now = System.currentTimeMillis();
         capture.resume(now);
         project.resume(now);
-        status = "Recording";
+        try {
+            projectStore.save(project, timeline);
+            projectStore.markRecordingActive(project);
+            status = "Recording";
+        } catch (IOException failure) {
+            capture.pause();
+            project.pause(System.currentTimeMillis());
+            status = "Resume checkpoint failed: " + failure.getMessage();
+        }
     }
 
     public synchronized void stop() {
@@ -80,7 +104,13 @@ public final class RecordingStudioController {
         long now = System.currentTimeMillis();
         capture.stop();
         project.stop(now);
-        status = "Stopped";
+        try {
+            projectStore.save(project, timeline);
+            projectStore.clearRecordingActive(project.getId());
+            status = "Stopped — project checkpoint saved";
+        } catch (IOException failure) {
+            status = "Stopped; recovery marker retained: " + failure.getMessage();
+        }
     }
 
     public synchronized void adjustCaptureInterval(long deltaMillis) {
@@ -114,9 +144,10 @@ public final class RecordingStudioController {
         stop();
         try {
             projectStore.save(project, timeline);
+            projectStore.clearRecordingActive(project.getId());
             status = "Project and timeline saved";
         } catch (IOException failure) {
-            status = "Shutdown save failed: " + failure.getMessage();
+            status = "Shutdown save failed; recovery marker retained: " + failure.getMessage();
         }
         capture.shutdown();
         closed = true;
