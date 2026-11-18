@@ -9,6 +9,7 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 - Local versioned camera-path persistence through CameraPathStore / FileCameraPathStore, with Camera Editor save/load controls and path-ID validation.
 - Tick-driven interval screenshot scheduler with a bounded background queue, per-frame settings snapshots, failure callbacks and optional local CSV capture-manifest wiring through the BuildTimelapse composition root.
 - MinecraftScreenshotCaptureBackend marshals framebuffer work through MinecraftRenderThreadExecutor and restores the previous HUD/hand visibility in finally.
+- Concrete Minecraft 1.8.9 framebuffer adapter using the main framebuffer, OpenGL pixel readback and PNG output at native display resolution.
 - Build place/remove event model, activity tracker, build-area bounds and placement milestones.
 - Cinematic effects profile, fades, speed ramps and time/weather/HUD adapter contract.
 - MP4/GIF/image-sequence settings, export queue and external FFmpeg encoder with MP4 dimension validation.
@@ -18,20 +19,22 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 - Supabase placeholder only; no network, upload, telemetry or authentication.
 
 ## Required runtime adapters / integration
-1. The client-only camera bridge now swaps Minecraft's render-view entity to an unspawned camera entity and restores the original render-view entity on shutdown. In-game validation is still required, including world transitions and failure cleanup.
-2. Implement MinecraftScreenshotBridge using Minecraft 1.8.9 HUD/render settings and framebuffer/ScreenShotHelper APIs, then inject it into MinecraftScreenshotCaptureBackend with MinecraftRenderThreadExecutor.
-3. Supply a local CaptureManifest to the BuildTimelapse composition root to attach frame and failure metadata logging to CaptureService.
-4. BuildTimelapseRuntime now registers/unregisters the client tick handler and Forge block-event bridge for the studio session. The client entry point must construct the runtime and call openStudio(...).
-5. ForgeMinecraftBlockEventBridge now records player block placements, multi-place snapshots and breaks from non-remote integrated-world events; cancelled events are ignored.
-6. Register/open BuildTimelapseStudioScreen from the intended client-side entry point and inject the configured project services.
-7. Effects profiles and export jobs still need project-level persistence.
-8. The timeline editor currently creates tracks and manual markers; detailed clip editing, trimming and drag/drop are not implemented.
-9. Complete GIF palette optimization, optional audio muxing, export cancellation/resume, disk retention and crash recovery.
-10. Add module registration, keybinds and optional Supabase/cloud features only during intended integration.
+1. The client-only camera bridge swaps Minecraft's render-view entity to an unspawned camera entity and restores the original render-view entity on shutdown. In-game validation is still required, including world transitions and failure cleanup.
+2. Construct MinecraftFramebufferScreenshotBridge with the active Minecraft instance, then inject it into MinecraftScreenshotCaptureBackend with MinecraftRenderThreadExecutor.
+3. Frame capture currently supports native display resolution. Custom output dimensions require a scaling/render-target implementation.
+4. HUD visibility is controlled through GameSettings.hideGUI. Hiding the first-person hand is not implemented; requesting it fails explicitly until a dedicated renderer hook is added.
+5. Supply a local CaptureManifest to the BuildTimelapse composition root to attach frame and failure metadata logging to CaptureService.
+6. BuildTimelapseRuntime registers/unregisters the client tick handler and Forge block-event bridge for the studio session. The client entry point must construct the runtime and call openStudio(...).
+7. ForgeMinecraftBlockEventBridge records player block placements, multi-place snapshots and breaks from non-remote integrated-world events; cancelled events are ignored.
+8. Register/open BuildTimelapseStudioScreen from the intended client-side entry point and inject the configured project services.
+9. Effects profiles and export jobs still need project-level persistence.
+10. The timeline editor currently creates tracks and manual markers; detailed clip editing, trimming and drag/drop are not implemented.
+11. Complete GIF palette optimization, optional audio muxing, export cancellation/resume, disk retention and crash recovery.
+12. Add module registration, keybinds and optional Supabase/cloud features only during intended integration.
 
 ## Limitations
 - Camera activation fails when the client world is unavailable. The bridge does not silently fall back to moving or controlling the player.
-- The screenshot backend provides render-thread dispatch and state restoration, but the low-level Minecraft framebuffer bridge still has to be implemented and injected.
+- The framebuffer adapter must run on the Minecraft client/render thread and captures the most recently rendered main framebuffer.
 - Camera roll is not yet applied by the Minecraft renderer; it requires a dedicated render hook. Camera FOV is applied temporarily and the user's previous FOV is restored when the camera is deactivated.
 - FFmpeg must be installed separately; no binary is bundled. MP4 is silent and GIF encoding is a basic path.
 - World time/weather/HUD effects require an adapter that snapshots and restores original settings.
