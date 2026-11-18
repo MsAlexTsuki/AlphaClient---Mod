@@ -1,13 +1,126 @@
 package com.alpharip.staffmod.RecordingStudio.ui;
-import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;import net.minecraft.client.gui.*;import java.io.IOException;
-/** Standalone Recording Studio screen for manual Minecraft recordings. */
+
+import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
+import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import java.io.IOException;
+
+/** Standalone manual recording dashboard with AlphaClient dark-and-gold styling. */
 public final class RecordingStudioScreen extends GuiScreen {
- private final RecordingStudioController controller;private final RecordingStudioRuntime runtime;private boolean navigating;
- public RecordingStudioScreen(RecordingStudioController c,RecordingStudioRuntime r){if(c==null||r==null)throw new IllegalArgumentException();controller=c;runtime=r;}
- public boolean doesGuiPauseGame(){return false;}
- public void initGui(){navigating=false;buttonList.clear();int x=width/2,y=height/2-100;buttonList.add(new GuiButton(0,x-125,y,120,20,"Start Recording"));buttonList.add(new GuiButton(1,x+5,y,120,20,"Pause"));buttonList.add(new GuiButton(2,x-125,y+25,120,20,"Resume"));buttonList.add(new GuiButton(3,x+5,y+25,120,20,"Stop"));buttonList.add(new GuiButton(4,x-125,y+58,120,20,"Timeline"));buttonList.add(new GuiButton(5,x+5,y+58,120,20,"Save Project"));buttonList.add(new GuiButton(6,x-125,y+88,250,20,"Camera Editor / View Camera"));buttonList.add(new GuiButton(7,x-125,y+113,120,20,"Interval - 100 ms"));buttonList.add(new GuiButton(8,x+5,y+113,120,20,"Interval + 100 ms"));buttonList.add(new GuiButton(9,x-125,y+143,120,20,"Start Audio"));buttonList.add(new GuiButton(10,x+5,y+143,120,20,"Stop Audio"));buttonList.add(new GuiButton(11,x-125,y+173,120,20,"Export MP4"));buttonList.add(new GuiButton(12,x+5,y+173,120,20,"Export GIF"));buttonList.add(new GuiButton(13,x-125,y+198,250,20,"Cancel Export"));}
- protected void actionPerformed(GuiButton b)throws IOException{switch(b.id){case 0:controller.start();break;case 1:controller.pause();break;case 2:controller.resume();break;case 3:controller.stop();break;case 4:navigating=true;mc.displayGuiScreen(new TimelineEditorScreen(this,controller.getTimeline()));break;case 5:controller.save();break;case 6:navigating=true;mc.displayGuiScreen(new CameraEditorScreen(this,runtime.getCameraController(),mc.mcDataDir));break;case 7:controller.adjustCaptureInterval(-100L);break;case 8:controller.adjustCaptureInterval(100L);break;case 9:controller.startAudioCapture();break;case 10:controller.stopAudioCapture();break;case 11:controller.startExport(com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportService.Format.MP4);break;case 12:controller.startExport(com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportService.Format.GIF);break;case 13:controller.cancelExport();break;default:break;}}
- protected void keyTyped(char c,int k)throws IOException{if(k==1){mc.displayGuiScreen(null);return;}super.keyTyped(c,k);}
- public void onGuiClosed(){if(!navigating)runtime.shutdown();}
- public void drawScreen(int mx,int my,float pt){drawDefaultBackground();drawCenteredString(fontRendererObj,"RECORDING STUDIO",width/2,24,0xFFC83D);drawCenteredString(fontRendererObj,controller.getProject().getName(),width/2,42,0xFFFFFF);drawCenteredString(fontRendererObj,"Status: "+controller.getStatus(),width/2,height/2+145,0xBBBBBB);drawCenteredString(fontRendererObj,"Frames saved: "+controller.getCapture().getFrameCount()+" | Pending: "+controller.getCapture().getPendingFrameCount()+" | Failed: "+controller.getCapture().getFailedFrameCount(),width/2,height/2+159,0xBBBBBB);drawCenteredString(fontRendererObj,"Timeline duration: "+controller.getTimeline().duration()+" ms | Capture interval: "+controller.getCapture().getIntervalMillis()+" ms",width/2,height/2+173,0xBBBBBB);drawCenteredString(fontRendererObj,controller.getAudioStatus(),width/2,height/2+187,0xBBBBBB);drawCenteredString(fontRendererObj,controller.getExportStatus(),width/2,height/2+201,0xBBBBBB);super.drawScreen(mx,my,pt);}
+    private final RecordingStudioController controller;
+    private final RecordingStudioRuntime runtime;
+    private boolean navigating;
+
+    public RecordingStudioScreen(RecordingStudioController controller, RecordingStudioRuntime runtime) {
+        if (controller == null || runtime == null) throw new IllegalArgumentException();
+        this.controller = controller;
+        this.runtime = runtime;
+    }
+
+    @Override public boolean doesGuiPauseGame() { return false; }
+
+    @Override public void initGui() {
+        navigating = false;
+        buttonList.clear();
+        int center = width / 2;
+        int left = center - 130;
+        int right = center + 6;
+        int y = 82;
+        add(0, left, y, 124, "Start Recording", true);
+        add(1, right, y, 124, "Pause");
+        y += 24;
+        add(2, left, y, 124, "Resume");
+        add(3, right, y, 124, "Stop");
+        y += 24;
+        add(4, left, y, 124, "Timeline");
+        add(5, right, y, 124, "Save Project");
+        y += 24;
+        add(6, left, y, 260, "Camera Editor / View Camera");
+        y += 24;
+        add(7, left, y, 124, "Interval - 100 ms");
+        add(8, right, y, 124, "Interval + 100 ms");
+        y += 24;
+        add(9, left, y, 124, "Start Audio");
+        add(10, right, y, 124, "Stop Audio");
+        y += 24;
+        add(11, left, y, 124, "Export MP4", true);
+        add(12, right, y, 124, "Export GIF");
+        y += 24;
+        add(13, left, y, 124, "Cancel Export");
+        add(14, right, y, 124, "Storage Usage");
+    }
+
+    private void add(int id, int x, int y, int w, String label) {
+        add(id, x, y, w, label, false);
+    }
+
+    private void add(int id, int x, int y, int w, String label, boolean accent) {
+        buttonList.add(new AlphaStudioButton(id, x, y, w, 20, label, accent));
+    }
+
+    @Override protected void actionPerformed(GuiButton button) throws IOException {
+        switch (button.id) {
+            case 0: controller.start(); break;
+            case 1: controller.pause(); break;
+            case 2: controller.resume(); break;
+            case 3: controller.stop(); break;
+            case 4:
+                navigating = true;
+                mc.displayGuiScreen(new TimelineEditorScreen(this, controller.getTimeline()));
+                break;
+            case 5: controller.save(); break;
+            case 6:
+                navigating = true;
+                mc.displayGuiScreen(new CameraEditorScreen(this, runtime.getCameraController(), mc.mcDataDir));
+                break;
+            case 7: controller.adjustCaptureInterval(-100L); break;
+            case 8: controller.adjustCaptureInterval(100L); break;
+            case 9: controller.startAudioCapture(); break;
+            case 10: controller.stopAudioCapture(); break;
+            case 11: controller.startExport(com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportService.Format.MP4); break;
+            case 12: controller.startExport(com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportService.Format.GIF); break;
+            case 13: controller.cancelExport(); break;
+            case 14:
+                navigating = true;
+                controller.getStorageUsage().refresh();
+                mc.displayGuiScreen(new RecordingStudioStorageScreen(this, controller.getStorageUsage()));
+                break;
+            default: break;
+        }
+    }
+
+    @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (keyCode == 1) { mc.displayGuiScreen(null); return; }
+        super.keyTyped(typedChar, keyCode);
+    }
+
+    @Override public void onGuiClosed() {
+        if (!navigating) runtime.shutdown();
+    }
+
+    @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawDefaultBackground();
+        int left = width / 2 - 160;
+        int top = 16;
+        Gui.drawRect(left, top, left + 320, height - 14, 0xE8101010);
+        Gui.drawRect(left, top, left + 320, top + 2, 0xFFFFC83D);
+        drawCenteredString(fontRendererObj, "ALPHA CLIENT", width / 2, 27, 0xFFAAAAAA);
+        drawCenteredString(fontRendererObj, "RECORDING STUDIO", width / 2, 42, 0xFFFFC83D);
+        drawCenteredString(fontRendererObj, controller.getProject().getName(), width / 2, 59, 0xFFFFFFFF);
+
+        drawCenteredString(fontRendererObj, "SESSION  " + controller.getStatus(),
+                width / 2, height - 111, 0xFFE0E0E0);
+        drawCenteredString(fontRendererObj, "Frames  " + controller.getCapture().getFrameCount()
+                        + " saved  /  " + controller.getCapture().getPendingFrameCount()
+                        + " pending  /  " + controller.getCapture().getFailedFrameCount() + " failed",
+                width / 2, height - 96, 0xFFB8B8B8);
+        drawCenteredString(fontRendererObj, "Timeline  " + controller.getTimeline().duration()
+                        + " ms     Capture interval  " + controller.getCapture().getIntervalMillis() + " ms",
+                width / 2, height - 81, 0xFFB8B8B8);
+        drawCenteredString(fontRendererObj, controller.getAudioStatus(), width / 2, height - 66, 0xFFB8B8B8);
+        drawCenteredString(fontRendererObj, controller.getExportStatus(), width / 2, height - 51, 0xFFFFC83D);
+        super.drawScreen(mouseX, mouseY, partialTicks);
+    }
 }
