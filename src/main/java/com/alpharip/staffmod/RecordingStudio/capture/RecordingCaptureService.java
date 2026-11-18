@@ -93,7 +93,7 @@ public final class RecordingCaptureService {
         final File output;
         synchronized (this) {
             if (closed || !recording || paused || capturing || now < nextAt) return;
-            if (nextFileIndex == Long.MAX_VALUE) {
+            if (nextFileIndex > 99999999L) {
                 nextAt = Long.MAX_VALUE;
                 lastError = "Recording frame index limit reached; stop this session before starting another";
                 return;
@@ -185,7 +185,7 @@ public final class RecordingCaptureService {
             try {
                 long index = Long.parseLong(number);
                 existingFrameCount++;
-                if (index == Long.MAX_VALUE) throw new IOException("Recording frame index limit reached");
+                if (index >= 99999999L) throw new IOException("Recording frame index limit reached");
                 if (index >= nextFileIndex) nextFileIndex = index + 1L;
             } catch (NumberFormatException ignored) { }
         }
