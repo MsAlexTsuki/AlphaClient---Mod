@@ -22,6 +22,8 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Atomic PNG file replacement so interrupted writes do not leave partially written final frame files.
 - Live pending-write counter; accepted frame writes drain without blocking the Minecraft client thread during shutdown.
 - Start, pause, resume, stop and save controls in a dedicated Studio screen.
+- AlphaClient dark-and-gold styling across the main dashboard, timeline editor, camera editor and storage overview, with consistent custom buttons and panel layout.
+- Read-only storage overview for project metadata, captured video frames, microphone audio and exported media; users can refresh the scan without changing or deleting files.
 - Adjustable capture interval in 100 ms steps, bounded to 100–60000 ms.
 - Separate successful-frame and failed-frame counters; failed writes do not inflate the saved-frame count.
 - Shared general-purpose timeline, marker and clip/track models and editor.
@@ -39,7 +41,7 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Capture uses native framebuffer resolution. OpenGL framebuffer readback remains on the Minecraft client thread; PNG conversion and disk writing run asynchronously.
 - FFmpeg must be installed separately and available as `ffmpeg` on PATH for MP4/GIF export.
 - Export derives its frame rate from the capture interval (including sub-1 FPS rates) and uses captured native resolution (MP4 is padded to even dimensions). The exporter currently encodes the ordered frame sequence; edits to Video-track clips and clip-speed changes are not applied yet. Changing the capture interval between recording segments in the same project can make audio synchronization approximate; custom export settings, percentage progress and GIF audio are not included yet.
-- Disk retention and effects/filters are not included yet.
+- Automatic disk retention, cleanup policies and effects/filters are not included; the storage screen is informational only and never deletes files.
 - Audio capture uses the system's default microphone input. Device selection, live monitoring and automatic microphone restart after a video pause are not included yet.
 - Crash recovery is currently checkpoint-based: it detects an uncleanly interrupted session and preserves previously written frames for continuation; it does not reconstruct a frame or microphone audio that was still being captured or encoded at the moment of the crash. Active-time recovery typically loses up to about one second since the last checkpoint under normal tick operation; a longer client stall can increase that gap.
 - Registered in the AlphaClient Forge entry point as the `/recordingstudio` client command; no keybind or module-menu entry has been added.
