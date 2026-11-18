@@ -85,7 +85,7 @@ public final class RecordingStudioExportService {
             if (frames.length == 0) throw new IOException("No captured PNG frames found");
             BufferedImage first = ImageIO.read(frames[0]);
             if (first == null) throw new IOException("Cannot read the first captured PNG frame");
-            String input = new File(framesDirectory, "frame-*.png").getAbsolutePath().replace(File.separatorChar, '/');
+            String input = new File(framesDirectory, "frame-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].png").getAbsolutePath().replace(File.separatorChar, '/');
 
             List<TimelineClip> videoClips = getVideoClips();
             List<TimelineClip> audioClips = format == Format.MP4 ? getAudioClips() : Collections.<TimelineClip>emptyList();
