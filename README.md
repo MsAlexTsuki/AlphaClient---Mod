@@ -17,6 +17,8 @@ Recording Studio is designed as a standalone manual recording workspace. It can 
 ### Implemented in this prototype
 
 - OBS-inspired Recording Studio screen with recording controls, module selection, timeline entry point, audio controls, export controls and storage view.
+- Basic scene management with create, rename, remove and selection controls. Built-in Minecraft Capture and Microphone sources can be enabled, disabled and removed per scene. Scene changes and Game Capture source edits are locked during recording to preserve frame timing.
+- Frame capture runs at the end of the HUD render pass before the active GuiScreen is drawn; it falls back to the world-render event when Minecraft hides the HUD. OpenGL framebuffer binding and viewport state are restored after capture.
 - Normal Gameplay and Build Timelapse module choices.
 - A module adapter contract so Recording Studio does not need to depend directly on each feature module.
 - Build Timelapse camera-path discovery and playback integration through BuildTimelapseRecordingModuleAdapter.
@@ -30,7 +32,7 @@ Recording Studio is designed as a standalone manual recording workspace. It can 
 ### Known limitations / not verified
 
 - The preview is a copy of the currently rendered external-camera view. The current camera bridge changes Minecraft's global render-view entity; it does not preserve the player's normal view and render a second camera independently.
-- Basic scene management is implemented with create, rename, remove and selection controls. Built-in Minecraft Capture and Microphone sources can be enabled, disabled and removed per scene. Arbitrary file/device sources, source reordering and filters are still missing.
+- Arbitrary file/device sources, source reordering and filters are still missing.
 - Game audio capture is not implemented. The audio service handles microphone capture only; users can select a detected input device or use the system default, and the selection is stored per Recording Studio project.
 - Video timeline clip start positions, durations and playback speeds are applied during MP4 and GIF export. The automatically created `@capture` clip references the recorded PNG sequence; additional video clips use file paths. At least one captured PNG frame is still required to establish the export canvas. Audio timeline clip timing and playback speed are applied during MP4 export.
 - The prototype does not yet contain a verified production bootstrap for constructing and owning all recording services. The Minecraft framebuffer writer is implemented under `RecordingStudio/integration/`.
@@ -58,7 +60,7 @@ Do not integrate this prototype automatically. These are the concrete integratio
 1. **Minecraft framebuffer writer**
    - Port the existing `RecordingStudio/integration/MinecraftFramebufferFrameWriter.java` implementation from `mod-ideas` into `development`.
    - Preserve the client-thread OpenGL readback, restoration of the previously bound framebuffer and viewport, and asynchronous PNG file writing.
-   - Keep the capture trigger on `RenderGameOverlayEvent.Post` with `ElementType.ALL`, before the active `GuiScreen` is drawn, so the Studio window is not recorded.
+   - Keep the capture trigger on `RenderGameOverlayEvent.Post` with `ElementType.ALL`, before the active `GuiScreen` is drawn, so the Studio window is not recorded; preserve the `RenderWorldLastEvent` fallback for hidden-HUD mode.
 2. **Recording Studio bootstrap**
    - Create a small bootstrap/factory that constructs a `RecordingProject`, `RecordingCaptureSettings`, `RecordingCaptureService`, `Timeline`, and `RecordingStudioController`.
    - Choose and document the final local project directory during integration; the prototype currently does not establish a production storage path.
@@ -86,7 +88,7 @@ Do not integrate this prototype automatically. These are the concrete integratio
 ### Items that still require a source decision
 
 - The exact world-load/world-unload event ownership and the Build Timelapse service graph must be matched to the current production lifecycle.
-- The concrete framebuffer writer and final recording storage directory must be implemented/selected.
+- The existing prototype framebuffer writer must be ported into the production branch, and the final recording storage directory must be selected.
 - The production command must be wired without replacing or overwriting the existing AlphaClient entrypoint.
 
 ## Launcher
