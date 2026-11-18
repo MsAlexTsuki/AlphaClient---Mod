@@ -43,10 +43,15 @@ public final class RecordingStudioRuntime {
             camera = new CameraController(new MinecraftIndependentCameraBridge(minecraft));
             overlay = new CameraWorldOverlay(camera);
             cameraPreview = new RecordingStudioCameraPreview(this);
-            MinecraftForge.EVENT_BUS.register(this);
-            MinecraftForge.EVENT_BUS.register(overlay);
-            MinecraftForge.EVENT_BUS.register(cameraPreview);
             started = true;
+            try {
+                MinecraftForge.EVENT_BUS.register(this);
+                MinecraftForge.EVENT_BUS.register(overlay);
+                MinecraftForge.EVENT_BUS.register(cameraPreview);
+            } catch (RuntimeException registrationFailure) {
+                shutdown();
+                throw registrationFailure;
+            }
         }
         minecraft.displayGuiScreen(new RecordingStudioScreen(controller, this));
     }
