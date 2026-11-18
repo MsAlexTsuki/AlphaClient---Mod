@@ -51,9 +51,16 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
                 throw new IOException("Timed out waiting for the Minecraft render event");
             }
             if (pending.getFailure() != null) throw pending.getFailure();
-            CaptureFrame frame = pending.getFrame();
-            if (frame == null) throw new IOException("Minecraft render event produced no capture frame");
-            return frame;
+            byte[] pixels = pending.getPixels();
+            if (pixels == null) throw new IOException("Minecraft render event produced no framebuffer pixels");
+            int width = pending.getWidth();
+            int height = pending.getHeight();
+            bridge.writePng(output, width, height, pixels);
+            if (!output.isFile() || output.length() == 0L) {
+                throw new IOException("Framebuffer adapter did not write a PNG frame");
+            }
+            return new CaptureFrame(index, timestamp, output.getAbsolutePath(),
+                    width, height, output.length());
         } catch (InterruptedException interrupted) {
             try { pending.cancel(); }
             catch (Exception cleanup) { interrupted.addSuppressed(cleanup); }
@@ -73,7 +80,9 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
         private final CaptureSettings settings;
         private final CountDownLatch completed = new CountDownLatch(1);
         private final AtomicBoolean finished = new AtomicBoolean();
-        private volatile CaptureFrame frame;
+        private volatile byte[] pixels;
+        private volatile int width;
+        private volatile int height;
         private volatile Exception failure;
         private boolean oldHud;
         private boolean oldHand;
@@ -151,14 +160,9 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
         private void captureNow() {
             if (!finished.compareAndSet(false, true)) return;
             try {
-                int width = bridge.getDisplayWidth();
-                int height = bridge.getDisplayHeight();
-                bridge.captureFramebuffer(output, width, height);
-                if (!output.isFile() || output.length() == 0L) {
-                    throw new IOException("Framebuffer adapter did not write a PNG frame");
-                }
-                frame = new CaptureFrame(index, timestamp, output.getAbsolutePath(),
-                        width, height, output.length());
+                width = bridge.getDisplayWidth();
+                height = bridge.getDisplayHeight();
+                pixels = bridge.readFramebufferPixels(width, height);
             } catch (Exception captureFailure) {
                 failure = captureFailure;
             } finally {
@@ -214,7 +218,9 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
             });
         }
 
-        private CaptureFrame getFrame() { return frame; }
+        private byte[] getPixels() { return pixels; }
+        private int getWidth() { return width; }
+        private int getHeight() { return height; }
         private Exception getFailure() { return failure; }
     }
 }
