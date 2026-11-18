@@ -32,7 +32,9 @@ public final class RecordingProject {
     }
 
     private RecordingProject(String id, String name, long createdAt) {
-        if (blank(id) || blank(name)) throw new IllegalArgumentException("Project id and name are required");
+        if (blank(id) || !id.matches("[A-Za-z0-9_-]{1,80}") || blank(name)) {
+            throw new IllegalArgumentException("Project id and name are required");
+        }
         this.id = id;
         this.name = name.trim();
         this.createdAt = createdAt;
@@ -158,7 +160,9 @@ public final class RecordingProject {
             throw new IOException("Unsupported Recording Studio project format");
         }
         try {
-            RecordingProject project = new RecordingProject(properties.getProperty("id"),
+            String storedId = properties.getProperty("id");
+            if (!id.equals(storedId)) throw new IOException("Project metadata ID does not match the requested project");
+            RecordingProject project = new RecordingProject(storedId,
                     properties.getProperty("name"), Long.parseLong(properties.getProperty("createdAt")));
             project.startedAt = Long.parseLong(properties.getProperty("startedAt", "0"));
             project.stoppedAt = Long.parseLong(properties.getProperty("stoppedAt", "0"));
