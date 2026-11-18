@@ -158,13 +158,8 @@ public final class RecordingCaptureService {
             stop();
             closed = true;
         }
+        // Drain already accepted frames without blocking the Minecraft client thread.
         encoder.shutdown();
-        try {
-            if (!encoder.awaitTermination(10L, TimeUnit.SECONDS)) encoder.shutdownNow();
-        } catch (InterruptedException interrupted) {
-            encoder.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
     }
 
     private void initializeNextFileIndex() {
