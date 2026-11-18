@@ -46,8 +46,16 @@ public final class BuildTimelapseRuntime {
         if (minecraft == null || controller == null || model == null) {
             throw new IllegalArgumentException("minecraft/controller/model");
         }
+        if (minecraft.theWorld == null || minecraft.thePlayer == null) {
+            throw new IllegalStateException("Build Timelapse Studio can only open inside a loaded world");
+        }
         start();
-        minecraft.displayGuiScreen(new BuildTimelapseStudioScreen(controller, model, this));
+        try {
+            minecraft.displayGuiScreen(new BuildTimelapseStudioScreen(controller, model, this));
+        } catch (RuntimeException failure) {
+            shutdown();
+            throw failure;
+        }
     }
 
     @SubscribeEvent

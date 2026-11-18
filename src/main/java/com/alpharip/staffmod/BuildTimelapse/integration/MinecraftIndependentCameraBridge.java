@@ -70,17 +70,19 @@ public final class MinecraftIndependentCameraBridge implements MinecraftCameraBr
             applyPose(created, pose);
             cameraEntity = created;
             minecraft.setRenderViewEntity(created);
-        } catch (Exception failure) {
+        } catch (Throwable failure) {
             try {
                 minecraft.setRenderViewEntity(originalRenderViewEntity);
-            } catch (Exception restoreFailure) {
+            } catch (Throwable restoreFailure) {
                 failure.addSuppressed(restoreFailure);
             } finally {
                 cameraEntity = null;
                 cameraWorld = null;
                 originalRenderViewEntity = null;
             }
-            throw failure;
+            if (failure instanceof Exception) throw (Exception) failure;
+            if (failure instanceof Error) throw (Error) failure;
+            throw new RuntimeException(failure);
         }
     }
 
