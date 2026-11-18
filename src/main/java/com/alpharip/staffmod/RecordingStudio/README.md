@@ -38,7 +38,7 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Camera path interpolation and render-thread behavior have not been compiled or tested in Minecraft.
 - Capture uses native framebuffer resolution. OpenGL framebuffer readback remains on the Minecraft client thread; PNG conversion and disk writing run asynchronously.
 - FFmpeg must be installed separately and available as `ffmpeg` on PATH for MP4/GIF export.
-- Export derives its nominal FPS from the capture interval and uses captured native resolution (MP4 is padded to even dimensions). Changing the capture interval during a project recording can make audio synchronization approximate; custom export settings, percentage progress and GIF audio are not included yet.
+- Export derives its frame rate from the capture interval (including sub-1 FPS rates) and uses captured native resolution (MP4 is padded to even dimensions). Changing the capture interval during a project recording can make audio synchronization approximate; custom export settings, percentage progress and GIF audio are not included yet.
 - Disk retention and effects/filters are not included yet.
 - Audio capture uses the system's default microphone input. Device selection, live monitoring and automatic microphone restart after a video pause are not included yet.
 - Crash recovery is currently checkpoint-based: it detects an uncleanly interrupted session and preserves previously written frames for continuation; it does not reconstruct a frame or microphone audio that was still being captured or encoded at the moment of the crash. Active-time recovery may lose up to approximately one second since the last checkpoint.
