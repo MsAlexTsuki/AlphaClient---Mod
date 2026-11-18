@@ -23,6 +23,7 @@ public final class RecordingStudioController {
     private final RecordingStudioExportService exportService;
     private boolean closed;
     private boolean sessionStartedInThisRuntime;
+    private boolean resumeMicrophoneAfterPause;
     private long lastRecoveryCheckpointAt;
     private String microphoneSelectionName = "System Default";
     private String status = "Ready";
@@ -134,6 +135,7 @@ public final class RecordingStudioController {
     public synchronized void pause() {
         ensureOpen();
         if (!capture.isRecording()) return;
+        resumeMicrophoneAfterPause = audioCapture.isRecording();
         audioCapture.stop();
         long now = System.currentTimeMillis();
         capture.pause();
@@ -169,6 +171,7 @@ public final class RecordingStudioController {
 
     public synchronized void stop() {
         if (closed || (!capture.isRecording() && !capture.isPaused())) return;
+        resumeMicrophoneAfterPause = false;
         audioCapture.stop();
         long now = System.currentTimeMillis();
         capture.stop();
@@ -213,6 +216,7 @@ public final class RecordingStudioController {
 
     public synchronized void startAudioCapture() {
         ensureOpen();
+        resumeMicrophoneAfterPause = false;
         if (!capture.isRecording()) {
             status = "Start video recording before capturing audio";
             return;
@@ -235,6 +239,7 @@ public final class RecordingStudioController {
     }
 
     public synchronized void stopAudioCapture() {
+        resumeMicrophoneAfterPause = false;
         audioCapture.stop();
         if (audioCapture.isFinalizing()) status = "Finalizing microphone audio";
     }
@@ -383,6 +388,11 @@ public final class RecordingStudioController {
 
     public synchronized void tick(long now) {
         if (closed) return;
+        if (resumeMicrophoneAfterPause && capture.isRecording()
+                && !audioCapture.isRecording() && !audioCapture.isFinalizing()) {
+            resumeMicrophoneAfterPause = false;
+            startAudioCapture();
+        }
         if (capture.isRecording() && now - lastRecoveryCheckpointAt >= 1000L) {
             try {
                 project.checkpoint(now);
@@ -542,7 +552,10 @@ public final class RecordingStudioController {
             status = "Source is not present in the active scene";
             return;
         }
-        if (type == RecordingStudioSource.Type.MICROPHONE) audioCapture.stop();
+        if (type == RecordingStudioSource.Type.MICROPHONE) {
+            resumeMicrophoneAfterPause = false;
+            audioCapture.stop();
+        }
         persistSceneChange(source.getName() + " removed from " + scene.getName());
     }
 
@@ -568,7 +581,10 @@ public final class RecordingStudioController {
         } else {
             source.setEnabled(!source.isEnabled());
         }
-        if (type == RecordingStudioSource.Type.MICROPHONE && !source.isEnabled()) audioCapture.stop();
+        if (type == RecordingStudioSource.Type.MICROPHONE && !source.isEnabled()) {
+            resumeMicrophoneAfterPause = false;
+            audioCapture.stop();
+        }
         persistSceneChange(source.getName() + (source.isEnabled() ? " enabled" : " disabled"));
     }
 
