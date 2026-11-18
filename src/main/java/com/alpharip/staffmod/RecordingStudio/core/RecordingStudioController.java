@@ -136,8 +136,8 @@ public final class RecordingStudioController {
         project.pause(now);
         try {
             projectStore.save(project, timeline);
-            projectStore.clearRecordingActive(project.getId());
-            sessionStartedInThisRuntime = false;
+            // Keep the active marker while paused: queued frame/audio writes may still be finalizing.
+            // A crash during this period must remain detectable on the next project open.
             status = "Paused — recovery checkpoint saved";
         } catch (IOException failure) {
             status = "Pause checkpoint failed: " + failure.getMessage();
