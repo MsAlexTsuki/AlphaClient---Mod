@@ -1,17 +1,21 @@
 # Alpha Recording Studio
 
-Standalone Minecraft 1.8.9 / Forge sister mod containing the Recording Studio and Build Timelapse recording code.
+Alpha Recording Studio is an optional sister mod (addon) for Alpha Client on Minecraft 1.8.9 / Forge.
+
+**Alpha Client is required. Alpha Client does not require Alpha Recording Studio.** Players can run Alpha Client without this addon; installing the addon adds the Recording Studio and Build Timelapse recording tools.
 
 ## Included code
 
 - The complete `RecordingStudio` package: project storage, capture, microphone audio, camera, timeline, scenes, export, UI and in-game command.
 - The complete `BuildTimelapse` package: build activity tracking, capture, camera paths, effects, export, timeline, UI and the Recording Studio adapter.
 - Shared camera and timeline types used by both recording systems.
-- A separate Forge mod entry point and mod metadata for `alpharecordingstudio`.
+- A dedicated Forge addon entry point and mod metadata. Forge declares `alphaclient` as a required dependency of `alpharecordingstudio`.
 
-## Launch
+## Installation and launch
 
-Install the Alpha Recording Studio mod for Minecraft 1.8.9 Forge and use `/recordingstudio` inside a loaded world.
+Install Alpha Client first, then install Alpha Recording Studio alongside it in the same Minecraft 1.8.9 Forge instance. Forge will not load Alpha Recording Studio when Alpha Client is absent.
+
+Use `/recordingstudio` inside a loaded world to open the Recording Studio.
 
 ## Build
 
@@ -19,8 +23,8 @@ Use the included Gradle wrapper with the ForgeGradle 2.1 build configuration.
 
 ## Notes
 
-- This branch contains only the Recording Studio and Build Timelapse source packages plus the standalone mod/build files.
-- No AlphaClient source, launcher source, Supabase project files or unrelated client modules are included.
-- Build Timelapse's existing UI/runtime composition has been retained as source; its independent launch/initialization path still requires verification in this standalone mod.
+- This branch contains the Recording Studio and Build Timelapse source packages plus the addon build files.
+- No AlphaClient core source, launcher source, Supabase project files or unrelated client modules are included.
+- Build Timelapse's existing UI/runtime composition is retained as source; its independent launch/initialization path still requires implementation and verification in this addon.
 - FFmpeg and FFprobe are external requirements for the applicable export workflows.
-- This extraction has not yet been compiled or tested in Minecraft.
+- The addon dependency metadata and source layout have not yet been compiled or tested in Minecraft.
