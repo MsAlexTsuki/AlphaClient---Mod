@@ -6,6 +6,8 @@ import com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportService
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineClip;
+import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene;
+import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource;
 import java.io.File;
 import java.io.IOException;
 
@@ -215,6 +217,13 @@ public final class RecordingStudioController {
             status = "Start video recording before capturing audio";
             return;
         }
+        RecordingStudioScene activeScene = timeline.getActiveScene();
+        RecordingStudioSource microphoneSource = activeScene == null ? null
+                : activeScene.findSource(RecordingStudioSource.Type.MICROPHONE);
+        if (microphoneSource == null || !microphoneSource.isEnabled()) {
+            status = "Enable the Microphone source in the active scene first";
+            return;
+        }
         try {
             long timelineStart = project.getElapsedMillis(System.currentTimeMillis());
             audioCapture.start(audioDirectory, "audio-" + java.util.UUID.randomUUID().toString() + ".wav",
@@ -286,7 +295,11 @@ public final class RecordingStudioController {
     public synchronized String getAudioStatus() {
         if (audioCapture.isRecording()) return "Microphone: Recording";
         if (audioCapture.isFinalizing()) return "Microphone: Finalizing";
-        return "Microphone: Idle";
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource microphone = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.MICROPHONE);
+        return microphone == null || !microphone.isEnabled()
+                ? "Microphone: Disabled" : "Microphone: Idle";
     }
 
     public synchronized void startExport(RecordingStudioExportService.Format format) {
@@ -360,7 +373,83 @@ public final class RecordingStudioController {
     /** Must be invoked from the Minecraft render/HUD event on the client thread. */
     public synchronized void captureFrameTick(long now) {
         if (closed) return;
-        capture.tick(now);
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource gameCapture = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.GAME_CAPTURE);
+        if (gameCapture != null && gameCapture.isEnabled()) capture.tick(now);
+    }
+
+    public synchronized RecordingStudioScene getActiveScene() {
+        return timeline.getActiveScene();
+    }
+
+    public synchronized void selectNextScene() {
+        ensureOpen();
+        java.util.List<RecordingStudioScene> scenes = timeline.getScenes();
+        if (scenes.isEmpty()) {
+            status = "No scenes are available";
+            return;
+        }
+        int current = -1;
+        String activeId = timeline.getActiveSceneId();
+        for (int i = 0; i < scenes.size(); i++) {
+            if (scenes.get(i).getId().equals(activeId)) { current = i; break; }
+        }
+        RecordingStudioScene next = scenes.get((current + 1 + scenes.size()) % scenes.size());
+        timeline.setActiveScene(next.getId());
+        stopMicrophoneIfSceneDisablesIt();
+        persistSceneChange("Active scene: " + next.getName());
+    }
+
+    public synchronized void createScene() {
+        ensureOpen();
+        String id = "scene-" + java.util.UUID.randomUUID().toString();
+        RecordingStudioScene scene = RecordingStudioScene.createDefault(id,
+                "Scene " + (timeline.getScenes().size() + 1));
+        timeline.addScene(scene);
+        timeline.setActiveScene(scene.getId());
+        persistSceneChange("Created " + scene.getName());
+    }
+
+    public synchronized void toggleSceneSource(RecordingStudioSource.Type type) {
+        ensureOpen();
+        if (type == null) throw new IllegalArgumentException("Source type is required");
+        RecordingStudioScene scene = timeline.getActiveScene();
+        if (scene == null) {
+            status = "No active scene";
+            return;
+        }
+        RecordingStudioSource source = scene.findSource(type);
+        if (source == null) {
+            String id = type == RecordingStudioSource.Type.GAME_CAPTURE ? "game-capture" : "microphone";
+            String name = type == RecordingStudioSource.Type.GAME_CAPTURE ? "Minecraft Capture" : "Microphone";
+            source = new RecordingStudioSource(id, name, type, true);
+            scene.addSource(source);
+        } else {
+            source.setEnabled(!source.isEnabled());
+        }
+        if (type == RecordingStudioSource.Type.MICROPHONE && !source.isEnabled()) audioCapture.stop();
+        persistSceneChange(source.getName() + (source.isEnabled() ? " enabled" : " disabled"));
+    }
+
+    private void stopMicrophoneIfSceneDisablesIt() {
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource microphone = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.MICROPHONE);
+        if ((microphone == null || !microphone.isEnabled()) && audioCapture.isRecording()) {
+            audioCapture.stop();
+            status = "Microphone stopped because it is disabled in the active scene";
+        }
+    }
+
+    private void persistSceneChange(String successStatus) {
+        try {
+            projectStore.save(project, timeline);
+            if (status.equals("Microphone stopped because it is disabled in the active scene")) return;
+            status = successStatus;
+        } catch (IOException failure) {
+            status = successStatus + "; could not save scene settings: " + failure.getMessage();
+        }
     }
 
     private void finishRecoveryMarkerIfIdle() throws IOException {
