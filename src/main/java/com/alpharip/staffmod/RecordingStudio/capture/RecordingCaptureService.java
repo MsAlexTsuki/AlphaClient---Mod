@@ -93,6 +93,11 @@ public final class RecordingCaptureService {
         final File output;
         synchronized (this) {
             if (closed || !recording || paused || capturing || now < nextAt) return;
+            if (nextFileIndex == Long.MAX_VALUE) {
+                recording = false;
+                lastError = "Recording frame index limit reached";
+                return;
+            }
             long interval = settings.getIntervalMillis();
             nextAt = now > Long.MAX_VALUE - interval ? Long.MAX_VALUE : now + interval;
             output = new File(directory, String.format(Locale.ROOT, "frame-%08d.png", nextFileIndex++));
@@ -168,10 +173,10 @@ public final class RecordingCaptureService {
         return encoder.awaitTermination(timeout, unit);
     }
 
-    private void initializeNextFileIndex() {
+    private void initializeNextFileIndex() throws IOException {
         if (nextFileIndex != 0L) return;
         File[] existing = directory.listFiles();
-        if (existing == null) return;
+        if (existing == null) throw new IOException("Cannot inspect existing frame files; refusing to risk overwriting them");
         long existingFrameCount = 0L;
         for (File file : existing) {
             String name = file.getName();
@@ -180,7 +185,8 @@ public final class RecordingCaptureService {
             try {
                 long index = Long.parseLong(number);
                 existingFrameCount++;
-                if (index >= nextFileIndex && index < Long.MAX_VALUE) nextFileIndex = index + 1L;
+                if (index == Long.MAX_VALUE) throw new IOException("Recording frame index limit reached");
+                if (index >= nextFileIndex) nextFileIndex = index + 1L;
             } catch (NumberFormatException ignored) { }
         }
         capturedFrames = existingFrameCount;
