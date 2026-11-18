@@ -123,9 +123,12 @@ public final class RecordingAudioCaptureService {
             line = null;
             temporaryFile = null;
             destinationFile = null;
-            writerThread = null;
         }
-        if (failureMessage == null) listener.onAudioSaved(output, startMillis, durationMillis);
-        else listener.onAudioFailed(failureMessage);
+        try {
+            if (failureMessage == null) listener.onAudioSaved(output, startMillis, durationMillis);
+            else listener.onAudioFailed(failureMessage);
+        } finally {
+            synchronized (this) { writerThread = null; }
+        }
     }
 }
