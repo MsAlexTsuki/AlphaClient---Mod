@@ -219,8 +219,7 @@ public final class RecordingStudioController {
             return;
         }
         try {
-            int exportFps = Math.max(1, Math.min(240,
-                    (int) Math.round(1000.0 / capture.getIntervalMillis())));
+            double exportFps = 1000.0 / capture.getIntervalMillis();
             exportService.start(format, exportFps, "ffmpeg");
             status = format.name() + " export started";
         } catch (IOException | RuntimeException failure) {
