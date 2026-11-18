@@ -1,0 +1,98 @@
+package com.alpharip.staffmod.RecordingStudio.core;
+
+import java.io.File;
+
+/** Read-only disk usage snapshot for Recording Studio data. */
+public final class RecordingStudioStorageUsage {
+    private final File root;
+    private long totalBytes;
+    private long projectBytes;
+    private long frameBytes;
+    private long audioBytes;
+    private long exportBytes;
+    private int projectCount;
+    private int frameCount;
+    private int audioCount;
+    private int exportCount;
+    private boolean readable = true;
+
+    public RecordingStudioStorageUsage(File recordingStudioRoot) {
+        if (recordingStudioRoot == null) throw new IllegalArgumentException("Recording Studio root is required");
+        root = recordingStudioRoot;
+        refresh();
+    }
+
+    public synchronized void refresh() {
+        totalBytes = projectBytes = frameBytes = audioBytes = exportBytes = 0L;
+        projectCount = frameCount = audioCount = exportCount = 0;
+        readable = true;
+        File projects = new File(root, "projects");
+        File recordings = new File(root, "recordings");
+        File exports = new File(root, "exports");
+        projectBytes = scan(projects, 0);
+        frameBytes = scan(new File(recordings, "frames"), 1);
+        audioBytes = scan(new File(recordings, "audio"), 2);
+        exportBytes = scan(exports, 3);
+        totalBytes = safeAdd(safeAdd(projectBytes, frameBytes), safeAdd(audioBytes, exportBytes));
+    }
+
+    private long scan(File file, int category) {
+        if (!file.exists()) return 0L;
+        if (!file.isDirectory()) {
+            if (file.isFile()) {
+                count(category);
+                return Math.max(0L, file.length());
+            }
+            return 0L;
+        }
+        File[] children = file.listFiles();
+        if (children == null) {
+            readable = false;
+            return 0L;
+        }
+        long size = 0L;
+        for (File child : children) {
+            if (child.isDirectory()) size = safeAdd(size, scan(child, category));
+            else if (child.isFile()) {
+                count(category);
+                size = safeAdd(size, Math.max(0L, child.length()));
+            }
+        }
+        return size;
+    }
+
+    private void count(int category) {
+        if (category == 0) projectCount++;
+        else if (category == 1) frameCount++;
+        else if (category == 2) audioCount++;
+        else if (category == 3) exportCount++;
+    }
+
+    private static long safeAdd(long a, long b) {
+        return a > Long.MAX_VALUE - b ? Long.MAX_VALUE : a + b;
+    }
+
+    public synchronized long getTotalBytes() { return totalBytes; }
+    public synchronized long getProjectBytes() { return projectBytes; }
+    public synchronized long getFrameBytes() { return frameBytes; }
+    public synchronized long getAudioBytes() { return audioBytes; }
+    public synchronized long getExportBytes() { return exportBytes; }
+    public synchronized int getProjectCount() { return projectCount; }
+    public synchronized int getFrameCount() { return frameCount; }
+    public synchronized int getAudioCount() { return audioCount; }
+    public synchronized int getExportCount() { return exportCount; }
+    public synchronized boolean isReadable() { return readable; }
+    public synchronized String getRootPath() { return root.getAbsolutePath(); }
+
+    public static String formatBytes(long bytes) {
+        if (bytes < 1024L) return bytes + " B";
+        double value = bytes;
+        String[] units = {"KB", "MB", "GB", "TB"};
+        int unit = -1;
+        do {
+            value /= 1024.0;
+            unit++;
+        } while (value >= 1024.0 && unit < units.length - 1);
+        return String.format(java.util.Locale.ROOT, "%.2f %s", value, units[unit]);
+    }
+}
