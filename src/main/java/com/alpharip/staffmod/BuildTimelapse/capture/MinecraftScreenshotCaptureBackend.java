@@ -4,6 +4,7 @@ import com.alpharip.staffmod.BuildTimelapse.integration.MinecraftScreenshotBridg
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.io.File;
@@ -131,6 +132,20 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
             if (!settings.isHideHud() && event.type == RenderGameOverlayEvent.ElementType.ALL) {
                 captureNow();
             }
+        }
+
+        @SubscribeEvent
+        public void onWorldUnload(WorldEvent.Unload event) {
+            if (event.world != null && event.world.isRemote) {
+                failCapture(new IOException("World unloaded before the frame could be captured"));
+            }
+        }
+
+        private void failCapture(Exception captureFailure) {
+            if (!finished.compareAndSet(false, true)) return;
+            failure = captureFailure;
+            cleanupOnRenderThread();
+            completed.countDown();
         }
 
         private void captureNow() {
