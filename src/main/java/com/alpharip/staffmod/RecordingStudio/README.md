@@ -11,6 +11,9 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Stopping a session keeps its recovery marker while queued PNG writes are pending; the marker is cleared after the queue drains, including through a background finalizer during Studio shutdown.
 - Existing frame filenames are scanned before recording resumes so a reopened project appends frames instead of overwriting earlier captures.
 - Manual recording controller and independent Forge runtime.
+- Explicit microphone recording controls; PCM 44.1 kHz, 16-bit mono WAV files are written on a dedicated audio thread.
+- Completed microphone recordings are added as clips to the standalone Audio timeline track and persisted with the project.
+- Microphone capture stops when video recording is paused or stopped; a new audio clip can be started after video recording resumes.
 - Minecraft framebuffer capture backend reading OpenGL pixels on the client thread and converting/writing PNG frames asynchronously on a dedicated worker.
 - Bounded encoder queue (one active write plus up to eight queued frames) with dropped-frame accounting when the queue is full.
 - Atomic PNG file replacement so interrupted writes do not leave partially written final frame files.
@@ -31,7 +34,8 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Camera roll is not applied by the Minecraft render-view adapter.
 - Camera path interpolation and render-thread behavior have not been compiled or tested in Minecraft.
 - Capture uses native framebuffer resolution. OpenGL framebuffer readback remains on the Minecraft client thread; PNG conversion and disk writing run asynchronously.
-- Audio capture, disk retention, effects and video/GIF export migration are not included yet.
+- Disk retention, effects and video/GIF export migration are not included yet.
+- Audio capture uses the system's default microphone input. Device selection, live monitoring, audio mixing and automatic microphone restart after a video pause are not included yet.
 - Crash recovery is currently checkpoint-based: it detects an uncleanly interrupted session and preserves previously written frames for continuation; it does not reconstruct a frame that was still being captured or encoded at the moment of the crash.
 - Registered in the AlphaClient Forge entry point as the `/recordingstudio` client command; no keybind or module-menu entry has been added.
 - No build configuration is present in this repository snapshot; compilation and in-game behavior have not been verified.
