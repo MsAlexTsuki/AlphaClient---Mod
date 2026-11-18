@@ -142,15 +142,18 @@ public final class RecordingCaptureService {
         if (nextFileIndex != 0L) return;
         File[] existing = directory.listFiles();
         if (existing == null) return;
+        long existingFrameCount = 0L;
         for (File file : existing) {
             String name = file.getName();
             if (!name.startsWith("frame-") || !name.endsWith(".png")) continue;
             String number = name.substring(6, name.length() - 4);
             try {
                 long index = Long.parseLong(number);
+                existingFrameCount++;
                 if (index >= nextFileIndex && index < Long.MAX_VALUE) nextFileIndex = index + 1L;
             } catch (NumberFormatException ignored) { }
         }
+        capturedFrames = existingFrameCount;
     }
 
     private void ensureOpen() {
