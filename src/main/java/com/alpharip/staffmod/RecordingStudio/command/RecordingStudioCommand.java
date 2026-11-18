@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-/** In-game entry point for the standalone Recording Studio prototype. */
+/** In-game entry point for the Recording Studio feature bundled in the Alpha Recording Studio addon. */
 public final class RecordingStudioCommand extends CommandBase {
     private static RecordingStudioRuntime activeRuntime;
     private static String activeProjectId;
