@@ -40,9 +40,9 @@ public final class RecordingStudioExportService {
         this.timeline = timeline;
     }
 
-    public synchronized void start(final Format format, final int fps, final String executable) throws IOException {
+    public synchronized void start(final Format format, final double fps, final String executable) throws IOException {
         if (format == null) throw new IllegalArgumentException("Export format is required");
-        if (fps < 1 || fps > 240) throw new IllegalArgumentException("FPS must be between 1 and 240");
+        if (Double.isNaN(fps) || Double.isInfinite(fps) || fps <= 0.0 || fps > 240.0) throw new IllegalArgumentException("FPS must be greater than 0 and at most 240");
         if (worker != null && worker.isAlive()) throw new IllegalStateException("An export is already running");
         File[] frames = listFrames();
         if (frames.length == 0) throw new IOException("No captured PNG frames found");
@@ -75,7 +75,7 @@ public final class RecordingStudioExportService {
     public synchronized boolean isRunning() { return worker != null && worker.isAlive(); }
     public String getStatus() { return status; }
 
-    private void export(Format format, int fps, String executable, File output) {
+    private void export(Format format, double fps, String executable, File output) {
         String extension = format == Format.MP4 ? ".mp4" : ".gif";
         String base = output.getName().substring(0, output.getName().length() - extension.length());
         File partial = new File(outputDirectory, base + ".partial" + extension);
@@ -101,7 +101,7 @@ public final class RecordingStudioExportService {
                     command.add("-filter_complex");
                     command.add(filter);
                 }
-                String videoDuration = String.format(Locale.ROOT, "%.3f", frames.length / (double) fps);
+                String videoDuration = String.format(Locale.ROOT, "%.3f", frames.length / fps);
                 Collections.addAll(command, "-map", "0:v:0", "-vf",
                         "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264",
                         "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-t", videoDuration);
@@ -124,9 +124,9 @@ public final class RecordingStudioExportService {
 
                 List<String> gifCommand = new ArrayList<String>();
                 Collections.addAll(gifCommand, executable, "-hide_banner", "-loglevel", "error",
-                        "-framerate", Integer.toString(fps), "-pattern_type", "glob", "-i", input,
+                        "-framerate", formatRate(fps), "-pattern_type", "glob", "-i", input,
                         "-i", palette.getAbsolutePath(), "-lavfi",
-                        "fps=" + fps + "[x];[x][1:v]paletteuse=dither=sierra2_4a",
+                        "fps=" + formatRate(fps) + "[x];[x][1:v]paletteuse=dither=sierra2_4a",
                         "-y", partial.getAbsolutePath());
                 run(gifCommand, "GIF export");
             }
@@ -147,11 +147,15 @@ public final class RecordingStudioExportService {
         }
     }
 
-    private List<String> baseCommand(String executable, String input, int fps) {
+    private List<String> baseCommand(String executable, String input, double fps) {
         List<String> command = new ArrayList<String>();
         Collections.addAll(command, executable, "-hide_banner", "-loglevel", "error",
                 "-framerate", Integer.toString(fps), "-pattern_type", "glob", "-i", input);
         return command;
+    }
+
+    private static String formatRate(double fps) {
+        return String.format(Locale.ROOT, "%.6f", fps);
     }
 
     private List<TimelineClip> getAudioClips() {
