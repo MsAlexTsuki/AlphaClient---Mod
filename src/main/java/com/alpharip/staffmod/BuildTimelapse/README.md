@@ -11,7 +11,7 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 - Tick-driven interval screenshot scheduler, bounded background queue, local capture manifest option and native-resolution Minecraft framebuffer PNG adapter.
 - Build placement/removal event tracking, activity tracker, build-area bounds and milestones.
 - Cinematic effects profile, fades, speed ramps and time/weather/HUD adapter contract.
-- MP4/GIF/image-sequence settings and FFmpeg encoder; export queue supports cancellation by interrupting the active job and terminating FFmpeg.
+- MP4/GIF/image-sequence settings and FFmpeg encoder; GIF export uses a two-pass palette generation and palette-use workflow for improved color quantization; export queue supports cancellation by interrupting the active job and terminating FFmpeg.
 - Minecraft 1.8.9 Studio GUI and Forge client runtime lifecycle.
 - Supabase placeholder only; no network, upload, telemetry or authentication.
 
@@ -21,7 +21,7 @@ Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 3. First-person hand hiding and camera roll require dedicated renderer hooks.
 4. The client entry point must construct BuildTimelapseRuntime and call openStudio(...); module/keybind registration is not connected.
 5. Export retry/resume and crash recovery are not implemented.
-6. Complete GIF palette optimization, optional audio muxing, disk retention and export progress UI.
+6. Optional audio muxing, disk retention and export progress UI.
 7. In-game camera, capture, cancellation and timeline GUI validation remains outstanding.
 
 ## Limitations
