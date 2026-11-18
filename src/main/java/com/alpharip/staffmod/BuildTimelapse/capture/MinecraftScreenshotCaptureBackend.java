@@ -36,7 +36,7 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
             throw new IllegalArgumentException("output/settings");
         }
 
-        final PendingCapture pending = new PendingCapture(index, timestamp, output, settings);
+        final PendingCapture pending = new PendingCapture(index, timestamp, settings);
         try {
             executor.call(new java.util.concurrent.Callable<Void>() {
                 @Override
@@ -76,7 +76,6 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
     public final class PendingCapture {
         private final long index;
         private final long timestamp;
-        private final File output;
         private final CaptureSettings settings;
         private final CountDownLatch completed = new CountDownLatch(1);
         private final AtomicBoolean finished = new AtomicBoolean();
@@ -90,10 +89,9 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
         private boolean oldHandCaptured;
         private volatile boolean registered;
 
-        private PendingCapture(long index, long timestamp, File output, CaptureSettings settings) {
+        private PendingCapture(long index, long timestamp, CaptureSettings settings) {
             this.index = index;
             this.timestamp = timestamp;
-            this.output = output;
             this.settings = settings;
         }
 
@@ -120,13 +118,11 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
             try {
                 bridge.setHudHidden(settings.isHideHud());
                 bridge.setHandHidden(settings.isHideHand());
-                MinecraftForge.EVENT_BUS.register(this);
                 registered = true;
+                MinecraftForge.EVENT_BUS.register(this);
             } catch (Exception setupFailure) {
-                try { bridge.setHandHidden(oldHand); }
-                catch (Exception cleanup) { setupFailure.addSuppressed(cleanup); }
-                try { bridge.setHudHidden(oldHud); }
-                catch (Exception cleanup) { setupFailure.addSuppressed(cleanup); }
+                cleanupOnRenderThread();
+                if (failure != null) setupFailure.addSuppressed(failure);
                 throw setupFailure;
             }
         }
