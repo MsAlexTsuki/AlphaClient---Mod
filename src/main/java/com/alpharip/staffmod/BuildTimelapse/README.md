@@ -2,31 +2,32 @@
 
 Modular Java prototype for Minecraft 1.8.9 / Forge 11.15.1.2318.
 
-## Included
-- Project/session lifecycle and local project metadata plus timeline-marker persistence.
-- Independent camera runtime contract, free/orbit/follow/fixed/path/drone modes, poses, orbit rig, named presets, path waypoints and smooth interpolation.
-- Timed screenshot service with serial worker, interval/resolution/HUD preferences, callbacks and frame metadata.
-- Multi-track timeline clips, clip speed, markers, duration and playback-oriented UI model.
-- Block place/remove event model, activity tracker, build-area bounds and configurable placement milestones.
+## Implemented prototype foundations
+- Project/session lifecycle and local project metadata persistence.
+- Timeline marker, multi-track and clip persistence (including clip speed); format 2 remains backward-readable for format 1 projects.
+- Independent camera runtime contract, free/orbit/follow/fixed/path/drone modes, poses, orbit rig, named presets, timed waypoints, holds, easing and time-based path interpolation.
+- Tick-driven interval screenshot scheduler with a bounded background queue, per-frame settings snapshots, failure callbacks and local CSV capture manifest.
+- Build place/remove event model, activity tracker, build-area bounds and placement milestones.
 - Cinematic effects profile, fades, speed ramps and time/weather/HUD adapter contract.
 - MP4/GIF/image-sequence settings, export queue and external FFmpeg encoder.
-- Minecraft 1.8.9 Studio GuiScreen entry point, controller and camera/timeline view models.
-- Minecraft camera, screenshot and block-event integration interfaces.
-- Supabase placeholder; no network, upload, telemetry or authentication.
+- Minecraft 1.8.9 Studio GUI entry point, controller and camera/timeline view models.
+- Forge client-tick handler that advances camera paths and schedules capture.
+- Supabase placeholder only; no network, upload, telemetry or authentication.
 
-## Integration still required
-1. Implement `MinecraftCameraBridge` with a client-only camera entity or Mixin. Preserve and restore the original render-view entity on every exit path. Never move the player or alter player motion/input.
-2. Implement `MinecraftScreenshotBridge` on Minecraft's render thread. Marshal framebuffer work from the capture worker to the render thread and restore HUD/hand visibility in a finally block.
-3. Connect Forge block place/break events; ignore cancelled, duplicate and remote-world changes.
-4. Register/open `BuildTimelapseStudioScreen` from the intended client-side entry point and connect its controller to the configured project services. The screen currently provides the primary recording controls; dedicated camera/timeline editors still need their detailed widgets.
-5. Extend persistence for camera paths, full timeline tracks, capture manifests, effects and export jobs. Current store saves project metadata and timeline markers; `loadTimeline` restores marker data. PNG frames remain separate.
-6. Complete GIF palette optimization, optional audio muxing, cancellation/resume, disk retention and crash recovery.
-7. Add imports, module registration, keybinds, settings and optional Supabase/cloud features only during intended integration work.
+## Required runtime adapters / integration
+1. Implement `MinecraftCameraBridge` with a client-only camera entity or Mixin. It must preserve/restore Minecraft's original render-view entity on every exit path. Never move the player or alter player motion/input.
+2. Implement `MinecraftScreenshotBridge` on Minecraft's render thread. The capture worker must marshal framebuffer work onto the render thread and restore HUD/hand visibility in a finally block. The bounded queue drops overloaded frames with a failure callback rather than allowing unbounded memory growth.
+3. Register `BuildTimelapseClientTickHandler` on the Forge event bus while the studio is active, and unregister it when the studio shuts down.
+4. Connect Forge block place/break events; ignore cancelled, duplicate and remote-world changes.
+5. Register/open `BuildTimelapseStudioScreen` from the intended client-side entry point and connect its controller to the configured project services. The screen currently provides primary recording controls; detailed camera/timeline editor widgets are still not implemented.
+6. Persist camera paths, capture manifests, effects and export jobs; project metadata and timeline markers/tracks/clips are persisted, while frame PNGs and the CSV manifest are separate files.
+7. Complete GIF palette optimization, optional audio muxing, cancellation/resume, disk retention and crash recovery.
+8. Add module registration, keybinds, settings and optional Supabase/cloud features only during intended integration.
 
 ## Limitations
-- Camera is inert until a safe client camera bridge is implemented. Player coordinates/motion are not changed.
-- Capture requires a Minecraft screenshot/framebuffer adapter; no Minecraft API is called from the worker thread.
-- FFmpeg must be installed separately; no binary is bundled. MP4 is silent; GIF encoding is a basic path.
+- Camera activation deliberately fails until a safe camera bridge is provided; recording does not silently fall back to moving or controlling the player.
+- Capture requires a Minecraft screenshot/framebuffer adapter; no Minecraft API is called directly from the capture worker.
+- FFmpeg must be installed separately; no binary is bundled. MP4 is silent and GIF encoding is a basic path.
 - World time/weather/HUD effects require an adapter that snapshots and restores original settings.
 - No startup/menu/module/keybind registration or Alpha Launcher changes.
 - No Gradle wrapper/build configuration is present in this repository snapshot; no repository-native build was run.
