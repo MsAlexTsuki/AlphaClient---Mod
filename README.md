@@ -30,7 +30,7 @@ Recording Studio is designed as a standalone manual recording workspace. It can 
 ### Known limitations / not verified
 
 - The preview is a copy of the currently rendered external-camera view. The current camera bridge changes Minecraft's global render-view entity; it does not preserve the player's normal view and render a second camera independently.
-- Full scene/source creation and management are not implemented; the current screen still contains placeholder scene/source labels.
+- Basic scene management is implemented with create, rename, remove and selection controls. Built-in Minecraft Capture and Microphone sources can be enabled, disabled and removed per scene. Arbitrary file/device sources, source reordering and filters are still missing.
 - Game audio capture is not implemented. The audio service handles microphone capture only; users can select a detected input device or use the system default, and the selection is stored per Recording Studio project.
 - Video timeline clip start positions, durations and playback speeds are applied during MP4 and GIF export. The automatically created `@capture` clip references the recorded PNG sequence; additional video clips use file paths. At least one captured PNG frame is still required to establish the export canvas. Audio timeline clip timing and playback speed are applied during MP4 export.
 - The prototype does not yet contain a verified production bootstrap for constructing and owning all recording services. The Minecraft framebuffer writer is implemented under `RecordingStudio/integration/`.
