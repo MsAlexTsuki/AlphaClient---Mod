@@ -174,7 +174,7 @@ public final class RecordingStudioController {
                 sessionStartedInThisRuntime = false;
                 status = "Stopped — project checkpoint saved";
             } else {
-                status = "Stopped — waiting for pending frame writes";
+                status = "Stopped — waiting for pending media writes";
             }
         } catch (IOException failure) {
             status = "Stopped; recovery marker retained: " + failure.getMessage();
@@ -228,6 +228,10 @@ public final class RecordingStudioController {
     }
 
     public synchronized void cancelExport() {
+        if (!exportService.isRunning()) {
+            status = "No export is running";
+            return;
+        }
         exportService.cancel();
         status = "Export cancellation requested";
     }
