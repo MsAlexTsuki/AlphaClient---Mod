@@ -1,10 +1,14 @@
 package com.alpharip.staffmod.RecordingStudio.core;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 /** Read-only disk usage snapshot for Recording Studio data. */
 public final class RecordingStudioStorageUsage {
     private final File root;
+    private final Set<String> visitedDirectories = new HashSet<String>();
     private long totalBytes;
     private long projectBytes;
     private long frameBytes;
@@ -59,6 +63,7 @@ public final class RecordingStudioStorageUsage {
         totalBytes = projectBytes = frameBytes = audioBytes = exportBytes = 0L;
         projectCount = frameCount = audioCount = exportCount = 0;
         readable = true;
+        visitedDirectories.clear();
         File projects = new File(root, "projects");
         File recordings = new File(root, "recordings");
         File exports = new File(root, "exports");
@@ -87,6 +92,13 @@ public final class RecordingStudioStorageUsage {
                 count(category);
                 return Math.max(0L, file.length());
             }
+            return 0L;
+        }
+        try {
+            String canonicalPath = file.getCanonicalPath();
+            if (!visitedDirectories.add(canonicalPath)) return 0L;
+        } catch (IOException failure) {
+            readable = false;
             return 0L;
         }
         File[] children = file.listFiles();
