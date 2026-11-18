@@ -356,7 +356,8 @@ public final class RecordingStudioExportService {
 
     private File[] listFrames() throws IOException {
         if (!framesDirectory.isDirectory()) throw new FileNotFoundException("Frame directory not found: " + framesDirectory);
-        File[] frames = framesDirectory.listFiles((dir, name) -> name.matches("frame-[0-9]{8}\\.png")\n                && new File(dir, name).isFile());
+        File[] frames = framesDirectory.listFiles((dir, name) -> name.matches("frame-[0-9]{8}\\.png")
+                && new File(dir, name).isFile());
         if (frames == null) throw new IOException("Cannot read captured frame directory");
         Arrays.sort(frames, new Comparator<File>() {
             public int compare(File left, File right) { return left.getName().compareTo(right.getName()); }
