@@ -20,6 +20,7 @@ public final class RecordingStudioController {
     private final RecordingStudioExportService exportService;
     private boolean closed;
     private boolean sessionStartedInThisRuntime;
+    private long lastRecoveryCheckpointAt;
     private String status = "Ready";
 
     public RecordingStudioController(RecordingProject project, RecordingCaptureService capture, File projectDirectory) {
@@ -57,6 +58,7 @@ public final class RecordingStudioController {
                             audioTrack.add(new TimelineClip("audio-" + java.util.UUID.randomUUID().toString(),
                                     file.getAbsolutePath(), startMillis, durationMillis));
                         }
+                        if (project.isRecording()) project.checkpoint(System.currentTimeMillis());
                         projectStore.save(project, timeline);
                         finishRecoveryMarkerIfIdle();
                         status = "Audio saved to timeline";
@@ -76,8 +78,7 @@ public final class RecordingStudioController {
         try {
             boolean recoveryMarker = this.projectStore.hasRecoveryMarker(project.getId());
             if (recoveryMarker || project.isRecording()) {
-                long markedAt = recoveryMarker ? this.projectStore.getRecoveryMarkedAt(project.getId()) : 0L;
-                project.recoverInterruptedSession(System.currentTimeMillis(), markedAt);
+                project.recoverInterruptedSession(System.currentTimeMillis());
                 this.projectStore.save(project, timeline);
                 if (recoveryMarker) this.projectStore.clearRecordingActive(project.getId());
                 status = "Interrupted session recovered; existing frames are available";
@@ -111,6 +112,7 @@ public final class RecordingStudioController {
             projectStore.save(project, timeline);
             projectStore.markRecordingActive(project);
             sessionStartedInThisRuntime = true;
+            lastRecoveryCheckpointAt = now;
             status = "Recording";
         } catch (IOException failure) {
             capture.stop();
@@ -146,6 +148,7 @@ public final class RecordingStudioController {
             projectStore.save(project, timeline);
             projectStore.markRecordingActive(project);
             sessionStartedInThisRuntime = true;
+            lastRecoveryCheckpointAt = now;
             status = "Recording";
         } catch (IOException failure) {
             capture.pause();
@@ -233,6 +236,7 @@ public final class RecordingStudioController {
         long adjusted = Math.max(100L, Math.min(60000L, capture.getIntervalMillis() + deltaMillis));
         capture.setIntervalMillis(adjusted);
         project.setCaptureIntervalMillis(adjusted);
+        if (project.isRecording()) project.checkpoint(System.currentTimeMillis());
         try {
             projectStore.save(project, timeline);
             status = "Capture interval saved: " + adjusted + " ms";
@@ -266,6 +270,7 @@ public final class RecordingStudioController {
 
     public synchronized void save() throws IOException {
         ensureOpen();
+        if (project.isRecording()) project.checkpoint(System.currentTimeMillis());
         projectStore.save(project, timeline);
         status = "Project and timeline saved";
     }
