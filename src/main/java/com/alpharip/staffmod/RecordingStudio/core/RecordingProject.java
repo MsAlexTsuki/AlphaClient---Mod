@@ -1,0 +1,17 @@
+package com.alpharip.staffmod.RecordingStudio.core;
+import java.io.*;import java.nio.file.*;import java.util.Properties;import java.util.UUID;
+/** Standalone local Recording Studio project. No Build Timelapse types are used. */
+public final class RecordingProject {
+ private final String id;private String name;private final long createdAt;private long startedAt,stoppedAt;private boolean recording;
+ public RecordingProject(String name){this(UUID.randomUUID().toString(),name,System.currentTimeMillis());}
+ private RecordingProject(String id,String name,long createdAt){if(blank(id)||blank(name))throw new IllegalArgumentException("Project id and name are required");this.id=id;this.name=name.trim();this.createdAt=createdAt;}
+ public synchronized void start(long now){if(recording)return;if(startedAt==0L)startedAt=now;stoppedAt=0L;recording=true;}
+ public synchronized void pause(long now){if(recording){recording=false;stoppedAt=now;}}
+ public synchronized void resume(long now){if(!recording){recording=true;stoppedAt=0L;}}
+ public synchronized void stop(long now){if(startedAt!=0L){recording=false;stoppedAt=now;}}
+ public String getId(){return id;}public synchronized String getName(){return name;}public synchronized void setName(String v){if(blank(v))throw new IllegalArgumentException("Project name is required");name=v.trim();}
+ public long getCreatedAt(){return createdAt;}public synchronized long getStartedAt(){return startedAt;}public synchronized long getStoppedAt(){return stoppedAt;}public synchronized boolean isRecording(){return recording;}
+ public synchronized void save(File dir)throws IOException{if(dir==null)throw new IllegalArgumentException("directory");if((!dir.exists()&&!dir.mkdirs())||!dir.isDirectory())throw new IOException("Cannot create Recording Studio project directory");Properties p=new Properties();p.setProperty("format","1");p.setProperty("id",id);p.setProperty("name",name);p.setProperty("createdAt",Long.toString(createdAt));p.setProperty("startedAt",Long.toString(startedAt));p.setProperty("stoppedAt",Long.toString(stoppedAt));File tmp=new File(dir,id+".tmp"),dst=new File(dir,id+".recording");try(OutputStream out=new BufferedOutputStream(new FileOutputStream(tmp))){p.store(out,"Alpha Recording Studio project");}try{try{Files.move(tmp.toPath(),dst.toPath(),StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);}catch(AtomicMoveNotSupportedException e){Files.move(tmp.toPath(),dst.toPath(),StandardCopyOption.REPLACE_EXISTING);}}finally{if(tmp.exists()&&!tmp.delete())tmp.deleteOnExit();}}
+ public static RecordingProject load(File dir,String id)throws IOException{if(blank(id)||!id.matches("[A-Za-z0-9_-]{1,80}"))throw new IOException("Invalid project id");Properties p=new Properties();try(InputStream in=new BufferedInputStream(new FileInputStream(new File(dir,id+".recording")))){p.load(in);}if(!"1".equals(p.getProperty("format")))throw new IOException("Unsupported Recording Studio project format");try{RecordingProject v=new RecordingProject(p.getProperty("id"),p.getProperty("name"),Long.parseLong(p.getProperty("createdAt")));v.startedAt=Long.parseLong(p.getProperty("startedAt","0"));v.stoppedAt=Long.parseLong(p.getProperty("stoppedAt","0"));v.recording=false;return v;}catch(RuntimeException e){throw new IOException("Invalid Recording Studio project metadata",e);}}
+ private static boolean blank(String s){return s==null||s.trim().isEmpty();}
+}
