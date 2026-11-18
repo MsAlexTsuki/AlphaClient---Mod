@@ -96,7 +96,12 @@ public final class RecordingAudioCaptureService {
             }
             if (openedLine == null) throw new IOException("Selected microphone is no longer available");
         }
-        openedLine.open(FORMAT);
+        try {
+            openedLine.open(FORMAT);
+        } catch (Exception failure) {
+            try { openedLine.close(); } catch (RuntimeException ignored) { }
+            throw failure;
+        }
         File output = new File(directory, fileName);
         File temp = new File(directory, fileName + ".tmp");
         if (output.exists() || temp.exists()) {
