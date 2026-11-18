@@ -217,7 +217,7 @@ public final class RecordingStudioExportService {
                 if (videoFilter.isEmpty()) {
                     Collections.addAll(gifCommand, "-lavfi",
                             "fps=" + formatRate(fps) + ",scale=" + outputWidth + ":" + outputHeight
-                                    + ":flags=lanczos[x];[x][" + (1 + videoSources.size())
+                                    + ":flags=lanczos[x];[x][" + ((hasCapturedFrames ? 1 : 0) + videoSources.size())
                                     + ":v]paletteuse=dither=sierra2_4a",
                             "-t", seconds(outputDurationMillis), "-y", partial.getAbsolutePath());
                 } else {
@@ -449,7 +449,8 @@ public final class RecordingStudioExportService {
     }
 
     private File[] listFrames() throws IOException {
-        if (!framesDirectory.isDirectory()) throw new FileNotFoundException("Frame directory not found: " + framesDirectory);
+        if (!framesDirectory.exists()) return new File[0];
+        if (!framesDirectory.isDirectory()) throw new FileNotFoundException("Frame path is not a directory: " + framesDirectory);
         File[] frames = framesDirectory.listFiles((dir, name) -> name.matches("frame-[0-9]{8}\\.png")
                 && new File(dir, name).isFile());
         if (frames == null) throw new IOException("Cannot read captured frame directory");
