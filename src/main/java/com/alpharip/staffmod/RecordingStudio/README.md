@@ -43,7 +43,7 @@ Optional general-purpose recording feature packaged in the Alpha Recording Studi
 
 ## Current limitations
 - The Build Timelapse module option is registered when BuildTimelapseRuntime starts. Closing its Studio screen releases its camera but keeps the adapter registered until the current world unloads, so Recording Studio can select it in the same world session.
-- The host/client entry point still needs to initialize BuildTimelapseRuntime; until then the Build Timelapse option reports that its runtime is not initialized.
+- The Alpha Recording Studio Forge entry point initializes BuildTimelapseRuntime on client-world load and registers its camera-path adapter before Recording Studio opens. `/buildtimelapse` opens the separate workspace; no keybind or top-level module-menu entry is registered.
 - Build Timelapse camera paths remain stored under `buildtimelapse/camera-paths/`; the Recording Studio Module panel reads those saved paths. Path creation/editing remains in the Build Timelapse Camera Editor.
 - If a separate Build Timelapse recording is already active, Recording Studio will not take ownership of its camera.
 - The in-game marker is a debug visualization, not a full 3D camera model.
