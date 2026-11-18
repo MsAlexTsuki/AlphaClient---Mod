@@ -51,6 +51,7 @@ public final class RecordingStudioScreen extends GuiScreen {
 
         add(15, 18, 198, 126, "Change Module", true);
         add(16, 18, 222, 126, "Next Camera Path");
+        add(17, 18, 246, 126, runtime.isCameraPreviewVisible() ? "HUD Preview: ON" : "HUD Preview: OFF");
 
         GuiButton cameraButton = findButton(6);
         if (cameraButton != null) cameraButton.enabled = "normal_gameplay".equals(runtime.getSelectedModuleId());
@@ -118,6 +119,10 @@ public final class RecordingStudioScreen extends GuiScreen {
                 break;
             case 16:
                 runtime.selectNextModuleOption();
+                initGui();
+                break;
+            case 17:
+                runtime.toggleCameraPreview();
                 initGui();
                 break;
             default: break;
@@ -204,5 +209,6 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, controller.getExportStatus(), previewLeft + 10, height - 34, 0xFFFFC83D);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
+        runtime.drawCameraPreview();
     }
 }
