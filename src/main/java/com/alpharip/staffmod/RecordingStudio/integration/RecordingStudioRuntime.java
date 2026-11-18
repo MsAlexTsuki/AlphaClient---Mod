@@ -134,9 +134,11 @@ public final class RecordingStudioRuntime {
         if (moduleStatus.startsWith("Module setup failed")
                 || moduleStatus.startsWith("Module runtime is not initialized")
                 || moduleStatus.startsWith("No saved camera paths")
+                || moduleStatus.startsWith("No saved options")
                 || moduleStatus.startsWith("Stop the recording")
                 || moduleStatus.startsWith("The selected module")
-                || moduleStatus.startsWith("Module cleanup failed")) {
+                || moduleStatus.startsWith("Module cleanup failed")
+                || moduleStatus.startsWith("Could not")) {
             return moduleStatus;
         }
         try {
@@ -187,7 +189,7 @@ public final class RecordingStudioRuntime {
         }
         try {
             if (!module.isAvailable()) {
-                moduleStatus = module.getDisplayName() + " is currently unavailable.";
+                moduleStatus = "The selected module " + module.getDisplayName() + " is currently unavailable.";
                 return;
             }
 
@@ -250,7 +252,7 @@ public final class RecordingStudioRuntime {
         if (module != null) {
             try {
                 if (!module.isAvailable()) {
-                    moduleStatus = module.getDisplayName() + " is unavailable. Recording was not started.";
+                    moduleStatus = "The selected module " + module.getDisplayName() + " is unavailable. Recording was not started.";
                     return;
                 }
             } catch (RuntimeException failure) {
