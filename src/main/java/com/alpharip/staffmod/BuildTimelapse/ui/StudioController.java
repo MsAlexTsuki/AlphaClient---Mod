@@ -1,5 +1,5 @@
 package com.alpharip.staffmod.BuildTimelapse.ui;
-import com.alpharip.staffmod.BuildTimelapse.core.BuildTimelapseController;import com.alpharip.staffmod.BuildTimelapse.camera.CameraController;import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;import com.alpharip.staffmod.BuildTimelapse.capture.CaptureSettings;import com.alpharip.staffmod.BuildTimelapse.core.BuildTimelapseProject;
+import com.alpharip.staffmod.BuildTimelapse.core.BuildTimelapseController;import com.alpharip.staffmod.RecordingStudio.camera.CameraController;import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;import com.alpharip.staffmod.BuildTimelapse.capture.CaptureSettings;import com.alpharip.staffmod.BuildTimelapse.core.BuildTimelapseProject;
 public final class StudioController {
  private final BuildTimelapseController c;private final StudioScreenModel m;
  public StudioController(BuildTimelapseController c,StudioScreenModel m){if(c==null||m==null)throw new IllegalArgumentException();this.c=c;this.m=m;m.setProject(c.getProject());}
