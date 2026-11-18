@@ -76,6 +76,8 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
         private volatile Exception failure;
         private boolean oldHud;
         private boolean oldHand;
+        private boolean oldHudCaptured;
+        private boolean oldHandCaptured;
         private volatile boolean registered;
 
         private PendingCapture(long index, long timestamp, File output, CaptureSettings settings) {
@@ -87,7 +89,9 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
 
         private void prepare() throws Exception {
             oldHud = bridge.isHudHidden();
+            oldHudCaptured = true;
             oldHand = bridge.isHandHidden();
+            oldHandCaptured = true;
 
             int nativeWidth = bridge.getDisplayWidth();
             int nativeHeight = bridge.getDisplayHeight();
@@ -153,15 +157,23 @@ public final class MinecraftScreenshotCaptureBackend implements CaptureBackend {
                 MinecraftForge.EVENT_BUS.unregister(this);
                 registered = false;
             }
-            try {
-                bridge.setHandHidden(oldHand);
-            } catch (Exception restoreHandFailure) {
-                recordCleanupFailure(restoreHandFailure);
+            if (oldHandCaptured) {
+                try {
+                    bridge.setHandHidden(oldHand);
+                } catch (Exception restoreHandFailure) {
+                    recordCleanupFailure(restoreHandFailure);
+                } finally {
+                    oldHandCaptured = false;
+                }
             }
-            try {
-                bridge.setHudHidden(oldHud);
-            } catch (Exception restoreHudFailure) {
-                recordCleanupFailure(restoreHudFailure);
+            if (oldHudCaptured) {
+                try {
+                    bridge.setHudHidden(oldHud);
+                } catch (Exception restoreHudFailure) {
+                    recordCleanupFailure(restoreHudFailure);
+                } finally {
+                    oldHudCaptured = false;
+                }
             }
         }
 
