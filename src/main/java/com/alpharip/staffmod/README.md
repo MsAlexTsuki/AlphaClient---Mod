@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Current verified inventory: **578 Java files** across **46 folders**, plus 1 Java file directly in the package root.
+- Current verified inventory: **585 Java files** across **47 folders**, plus 1 Java file directly in the package root.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -1528,3 +1528,20 @@ Folder: `cases/caseescalationtimer/`.
 **Current status:** The prototype data model, configurable warning window, deadline calculations, pause/resume handling, local notification events, local JSON persistence, and basic GUI are present in source. The warning window is disabled by default because no approved Alpha threshold was supplied.
 
 **Still missing / not verified:** The prototype does not fetch case data, assign staff, define Alpha escalation rules, deliver native toast/chat notifications, or connect to a server. Resolved state can be set through the API but is not yet exposed as a GUI action. No rank/permission checks, StaffMods registration, or live module integration are included. No Supabase integration is used. Compilation and Minecraft 1.8.9 / Forge 11.15.1.2318 runtime behavior have not been verified.
+
+
+## Minecraft Window AlphaClient
+
+Folder: `MinecraftWindowAlphaClient/` (a sibling of `staffops/`).
+
+- **MinecraftWindowAlphaClient.java** — Standalone prototype entry point. Resolves the installed AlphaClient JAR version and asks the controller to apply the formatted title. It is not registered with AlphaClient Core or the live module menu.
+- **AlphaClientJarVersionResolver.java** — Reads the AlphaClient version from package implementation metadata, then falls back to the running JAR manifest. If neither source provides a version, it returns `Unknown`; it does not invent or hardcode a release number.
+- **MinecraftWindowTitleFormatter.java** — Formats the requested title as `AlphaClient <JAR version> + Forge 1.8.9`. The `1.8.9` suffix is the requested Minecraft/Forge target label; no separate Forge build number is shown.
+- **MinecraftWindowTitleController.java** — Applies the title only when enabled and avoids sending the same title repeatedly.
+- **MinecraftWindowTitleSettings.java** — Holds the local enabled setting. A settings GUI and persistence are not included.
+- **MinecraftWindowTitleTarget.java** — Defines the boundary for setting the native window title.
+- **LwjglWindowTitleTarget.java** — Uses LWJGL 2 `Display.setTitle` when the display has been created.
+
+**Current status:** The standalone title formatter, JAR-version lookup, enable setting, controller, and LWJGL 2 target adapter are present in source. The intended example is `AlphaClient 0.5.XX + Forge 1.8.9`, with the AlphaClient version read from the actual installed JAR metadata.
+
+**Still missing / not verified:** Automatic invocation at the correct Minecraft display lifecycle point, module/menu registration, settings persistence or GUI, and compile/runtime verification. The prototype has not been built or tested in Minecraft 1.8.9 / Forge 11.15.1.2318. The version resolver returns `Unknown` if the packaged JAR does not contain readable version metadata. No AlphaClient Core, `development`, Alpha Launcher, or Supabase integration is included.
