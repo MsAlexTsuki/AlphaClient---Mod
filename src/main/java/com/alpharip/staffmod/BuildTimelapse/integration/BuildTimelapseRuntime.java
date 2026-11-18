@@ -140,7 +140,11 @@ public final class BuildTimelapseRuntime {
         }
         blockEvents.setListener(null);
         restoreEffects();
-        studio.getController().shutdown();
+        try {
+            studio.getController().shutdown();
+        } finally {
+            studio.getExports().shutdown();
+        }
     }
 
     private void restoreEffects() {
