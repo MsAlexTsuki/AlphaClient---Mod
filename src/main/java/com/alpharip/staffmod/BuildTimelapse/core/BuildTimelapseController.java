@@ -1,5 +1,5 @@
 package com.alpharip.staffmod.BuildTimelapse.core;
-import com.alpharip.staffmod.BuildTimelapse.camera.CameraController;import com.alpharip.staffmod.BuildTimelapse.capture.CaptureService;import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;import java.io.IOException;
+import com.alpharip.staffmod.RecordingStudio.camera.CameraController;import com.alpharip.staffmod.BuildTimelapse.capture.CaptureService;import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;import java.io.IOException;
 /** Coordinates project, camera and interval capture. tick() must be called once per client tick. */
 public final class BuildTimelapseController {
  private final BuildTimelapseProject p;private final CameraController camera;private final CaptureService capture;private final Timeline timeline;private final ProjectStore store;private boolean active,closed;private volatile String lastFailure;
