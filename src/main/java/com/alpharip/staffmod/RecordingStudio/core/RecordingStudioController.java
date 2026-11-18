@@ -112,6 +112,12 @@ public final class RecordingStudioController {
     public synchronized void shutdown() {
         if (closed) return;
         stop();
+        try {
+            projectStore.save(project, timeline);
+            status = "Project and timeline saved";
+        } catch (IOException failure) {
+            status = "Shutdown save failed: " + failure.getMessage();
+        }
         capture.shutdown();
         closed = true;
     }
