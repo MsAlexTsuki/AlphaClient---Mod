@@ -1,6 +1,6 @@
 package com.alpharip.staffmod.BuildTimelapse.integration;
 
-import com.alpharip.staffmod.BuildTimelapse.camera.CameraPose;
+import com.alpharip.staffmod.RecordingStudio.camera.CameraPose;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.entity.Entity;
