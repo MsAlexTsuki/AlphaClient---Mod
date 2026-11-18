@@ -177,11 +177,22 @@ public final class RecordingStudioExportService {
         for (int i = 0; i < clips.size(); i++) {
             TimelineClip clip = clips.get(i);
             long delay = Math.max(0L, clip.getStart());
-            long duration = Math.max(0L, clip.getDuration());
+            long timelineDuration = Math.max(0L, clip.getDuration());
+            double speed = clip.getSpeed();
+            double sourceDuration = timelineDuration * speed;
+
             if (i > 0) filter.append(';');
             filter.append('[').append(i + 1).append(":a]")
-                    .append("atrim=duration=").append(String.format(Locale.ROOT, "%.3f", duration / 1000.0))
-                    .append(",asetpts=PTS-STARTPTS,adelay=delays=").append(delay).append(":all=1[a").append(i).append(']');
+                    .append("atrim=duration=").append(seconds(sourceDuration))
+                    .append(",asetpts=PTS-STARTPTS");
+
+            String tempoFilters = buildAtempoFilters(speed);
+            if (!tempoFilters.isEmpty()) filter.append(',').append(tempoFilters);
+
+            // Clip duration is timeline time. Speed changes how much source audio is
+            // consumed, while padding/trimming keeps the clip's timeline length stable.
+            filter.append(",apad,atrim=duration=").append(seconds(timelineDuration))
+                    .append(",adelay=delays=").append(delay).append(":all=1[a").append(i).append(']');
         }
         if (clips.size() > 1) {
             filter.append(';');
@@ -190,6 +201,32 @@ public final class RecordingStudioExportService {
                     .append(":duration=longest:dropout_transition=0[aout]");
         }
         return filter.toString();
+    }
+
+    private static String buildAtempoFilters(double speed) {
+        StringBuilder filters = new StringBuilder();
+        double remaining = speed;
+        while (remaining > 2.0) {
+            appendFilter(filters, "atempo=2.0");
+            remaining /= 2.0;
+        }
+        while (remaining < 0.5) {
+            appendFilter(filters, "atempo=0.5");
+            remaining /= 0.5;
+        }
+        if (Math.abs(remaining - 1.0) > 0.000001) {
+            appendFilter(filters, "atempo=" + String.format(Locale.ROOT, "%.6f", remaining));
+        }
+        return filters.toString();
+    }
+
+    private static void appendFilter(StringBuilder filters, String value) {
+        if (filters.length() > 0) filters.append(',');
+        filters.append(value);
+    }
+
+    private static String seconds(double millis) {
+        return String.format(Locale.ROOT, "%.6f", millis / 1000.0);
     }
 
     private File[] listFrames() throws IOException {
