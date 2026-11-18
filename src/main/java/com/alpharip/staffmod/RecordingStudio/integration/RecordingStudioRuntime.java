@@ -164,7 +164,16 @@ public final class RecordingStudioRuntime {
         }
         if (!stopSelectedModule()) return;
 
-        selectedModuleId = id == null ? "normal_gameplay" : id;
+        String targetModuleId = id == null ? "normal_gameplay" : id;
+        if (!"normal_gameplay".equals(targetModuleId) && camera != null && camera.isActive()) {
+            try {
+                camera.deactivate();
+            } catch (Exception failure) {
+                moduleStatus = "Could not release the standalone camera: " + failure.getMessage();
+                return;
+            }
+        }
+        selectedModuleId = targetModuleId;
         selectedOptionId = null;
         if ("normal_gameplay".equals(selectedModuleId)) {
             moduleStatus = "Using the current Minecraft camera.";
