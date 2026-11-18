@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "alphaclient",
+    "name": "Alpha Client",
+    "description": "AlphaClient for Minecraft 1.8.9, with a custom client UI and modular feature framework.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://alpha.rip",
+    "updateUrl": "",
+    "authorList": ["MsAlexTsuki", "Sem"],
+    "credits": "Alpha.Rip community",
+    "logoFile": "assets/alphastaffmod/logo.png",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
