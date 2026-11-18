@@ -86,6 +86,13 @@ public final class RecordingAudioCaptureService {
     public synchronized boolean isRecording() { return recording; }
     public synchronized boolean isFinalizing() { return writerThread != null && writerThread.isAlive() && !recording; }
 
+    /** Waits for the WAV writer and completion callback; call from a non-client thread. */
+    public void awaitCompletion() throws InterruptedException {
+        Thread worker;
+        synchronized (this) { worker = writerThread; }
+        if (worker != null && worker != Thread.currentThread()) worker.join();
+    }
+
     private void captureToWave(TargetDataLine captureLine, File temp, File output, long startMillis) {
         String failureMessage = null;
         long bytesWritten = 0L;
@@ -96,7 +103,7 @@ public final class RecordingAudioCaptureService {
             } finally {
                 try { input.close(); } catch (IOException ignored) { }
             }
-            if (bytesWritten <= 0L) throw new IOException("No microphone audio was captured");
+            if (bytesWritten <= 44L) throw new IOException("No microphone audio was captured");
             try {
                 Files.move(temp.toPath(), output.toPath(), StandardCopyOption.ATOMIC_MOVE);
             } catch (java.nio.file.AtomicMoveNotSupportedException unsupported) {
@@ -107,9 +114,10 @@ public final class RecordingAudioCaptureService {
             if (temp.exists() && !temp.delete()) temp.deleteOnExit();
         }
 
+        long dataBytes = failureMessage == null ? Math.max(0L, output.length() - 44L) : 0L;
         long frameSize = FORMAT.getFrameSize();
-        long durationMillis = bytesWritten <= 0L ? 0L
-                : (bytesWritten / frameSize) * 1000L / (long) FORMAT.getSampleRate();
+        long durationMillis = dataBytes <= 0L ? 0L
+                : (dataBytes / frameSize) * 1000L / (long) FORMAT.getSampleRate();
         synchronized (this) {
             recording = false;
             line = null;
