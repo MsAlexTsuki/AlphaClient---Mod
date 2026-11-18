@@ -9,7 +9,8 @@ public final class BuildTimelapseController {
  public synchronized void resume(){if(!active){if(!camera.isActive())throw new IllegalStateException("Camera is not active; restart the recording session");p.resume(System.currentTimeMillis());capture.resume();active=true;}}
  public synchronized void tick(long now){if(!camera.isActive())return;try{camera.tick(now);if(active)capture.tick(now);}catch(Exception failure){lastFailure=failure.toString();try{stop();}catch(RuntimeException cleanup){lastFailure=lastFailure+"; cleanup: "+cleanup;}}}
  public synchronized void stop(){capture.stop();p.stop(System.currentTimeMillis());camera.stopPath();try{camera.deactivate();}catch(Exception e){lastFailure="Camera cleanup failed: "+e;}finally{active=false;}}
- public synchronized void save()throws IOException{store.save(p,timeline);}public synchronized boolean isActive(){return active;}public String getLastFailure(){return lastFailure;}
+ public synchronized void save()throws IOException{store.save(p,timeline);}public synchronized boolean isActive(){return active;}public synchronized String getLastFailure(){return lastFailure;}
+ public CameraController getCamera(){return camera;}public Timeline getTimeline(){return timeline;}public CaptureService getCapture(){return capture;}public BuildTimelapseProject getProject(){return p;}
  public synchronized void shutdown(){try{stop();}finally{capture.shutdown();}}
 }
 
