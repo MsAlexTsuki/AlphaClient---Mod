@@ -82,7 +82,7 @@ public final class MinecraftIndependentCameraBridge implements MinecraftCameraBr
             minecraft.setRenderViewEntity(created);
         } catch (Throwable failure) {
             try {
-                if (minecraft.getRenderViewEntity() == cameraEntity || cameraEntity == null) {
+                if (cameraEntity != null && minecraft.getRenderViewEntity() == cameraEntity) {
                     minecraft.setRenderViewEntity(originalRenderViewEntity);
                 }
             } catch (Throwable restoreFailure) {
