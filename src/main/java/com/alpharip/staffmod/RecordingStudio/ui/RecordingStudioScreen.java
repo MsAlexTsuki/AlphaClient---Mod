@@ -64,8 +64,8 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(14, rightX + 8, rightY + row * 7, buttonWidth, "Storage");
         add(18, rightX + 8 + buttonWidth + gap, rightY + row * 7, buttonWidth, "Next Mic");
         add(27, 18, 450, 126, "Refresh Mic");
-        add(28, rightX + 8, rightY - 35, buttonWidth, "Source Up");
-        add(29, rightX + 8 + buttonWidth + gap, rightY - 35, buttonWidth, "Source Down");
+        add(28, rightX + 8, 198, buttonWidth, "Source Up");
+        add(29, rightX + 8 + buttonWidth + gap, 198, buttonWidth, "Source Down");
 
         add(19, 18, 84, 126, "Next Scene");
         add(20, 18, 106, 126, "New Scene", true);
