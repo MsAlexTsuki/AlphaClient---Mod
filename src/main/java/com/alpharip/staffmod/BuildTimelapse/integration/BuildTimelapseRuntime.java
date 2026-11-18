@@ -25,6 +25,7 @@ public final class BuildTimelapseRuntime {
     private final ForgeMinecraftBlockEventBridge blockEvents = new ForgeMinecraftBlockEventBridge();
     private BuildTimelapseRecordingModuleAdapter recordingModule;
     private boolean started;
+    private boolean blockEventsRegistered;
     private boolean closed;
 
     public BuildTimelapseRuntime(BuildTimelapse studio) {
@@ -54,8 +55,19 @@ public final class BuildTimelapseRuntime {
 
         MinecraftForge.EVENT_BUS.register(tickHandler);
         MinecraftForge.EVENT_BUS.register(this);
-        blockEvents.register();
         started = true;
+    }
+
+    private synchronized void registerBlockEvents() {
+        if (!started || blockEventsRegistered) return;
+        MinecraftForge.EVENT_BUS.register(blockEvents);
+        blockEventsRegistered = true;
+    }
+
+    private synchronized void unregisterBlockEvents() {
+        if (!blockEventsRegistered) return;
+        MinecraftForge.EVENT_BUS.unregister(blockEvents);
+        blockEventsRegistered = false;
     }
 
     public void openStudio(Minecraft minecraft, StudioController controller, StudioScreenModel model) {
@@ -66,6 +78,7 @@ public final class BuildTimelapseRuntime {
             throw new IllegalStateException("Build Timelapse Studio can only open inside a loaded world");
         }
         start();
+        registerBlockEvents();
         try {
             minecraft.displayGuiScreen(new BuildTimelapseStudioScreen(controller, model, this));
         } catch (RuntimeException failure) {
@@ -74,10 +87,11 @@ public final class BuildTimelapseRuntime {
         }
     }
 
-    /** Releases the Build Timelapse camera when its screen closes but keeps its module adapter registered. */
+    /** Releases the Build Timelapse camera and block tracker but keeps the module adapter registered. */
     public synchronized void closeStudio() {
         if (closed || !started) return;
         studio.getController().stop();
+        unregisterBlockEvents();
     }
 
     @SubscribeEvent
@@ -108,9 +122,9 @@ public final class BuildTimelapseRuntime {
             RecordingStudioModuleRegistry.unregister(recordingModule);
             recordingModule = null;
         }
+        unregisterBlockEvents();
         if (started) {
             MinecraftForge.EVENT_BUS.unregister(tickHandler);
-            MinecraftForge.EVENT_BUS.unregister(blockEvents);
             MinecraftForge.EVENT_BUS.unregister(this);
             started = false;
         }
