@@ -6,7 +6,8 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Standalone Recording Studio project model with local metadata persistence.
 - Local project catalog with list, create and open commands (`/recordingstudio list`, `/recordingstudio create <name>`, `/recordingstudio open <project-id>`).
 - Atomic timeline persistence for tracks, clips, playback speeds and timeline markers; saved projects can restore their timeline after reopening.
-- Project metadata and timeline are saved from the Studio Save Project control and automatically on Studio shutdown/world unload.
+- Project metadata and timeline are saved from the Studio Save Project control and automatically on Studio shutdown/world unload; recording start, pause and resume also create recovery checkpoints.
+- An atomic per-project active-session marker is retained while a recording is in progress and cleared only after a successful final checkpoint; reopening a project with a leftover marker reports an interrupted session while preserving existing frame files.
 - Existing frame filenames are scanned before recording resumes so a reopened project appends frames instead of overwriting earlier captures.
 - Manual recording controller and independent Forge runtime.
 - Minecraft framebuffer capture backend reading OpenGL pixels on the client thread and converting/writing PNG frames asynchronously on a dedicated worker.
@@ -29,6 +30,7 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Camera roll is not applied by the Minecraft render-view adapter.
 - Camera path interpolation and render-thread behavior have not been compiled or tested in Minecraft.
 - Capture uses native framebuffer resolution. OpenGL framebuffer readback remains on the Minecraft client thread; PNG conversion and disk writing run asynchronously.
-- Audio, crash recovery, disk retention, effects and video/GIF export migration are not included yet.
+- Audio capture, disk retention, effects and video/GIF export migration are not included yet.
+- Crash recovery is currently checkpoint-based: it detects an uncleanly interrupted session and preserves previously written frames for continuation; it does not reconstruct a frame that was still being captured or encoded at the moment of the crash.
 - Registered in the AlphaClient Forge entry point as the `/recordingstudio` client command; no keybind or module-menu entry has been added.
 - No build configuration is present in this repository snapshot; compilation and in-game behavior have not been verified.
