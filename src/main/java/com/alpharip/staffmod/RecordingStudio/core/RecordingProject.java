@@ -150,6 +150,7 @@ public final class RecordingProject {
     }
 
     public static RecordingProject load(File directory, String id) throws IOException {
+        if (directory == null) throw new IOException("Project directory is required");
         if (blank(id) || !id.matches("[A-Za-z0-9_-]{1,80}")) throw new IOException("Invalid project id");
         Properties properties = new Properties();
         try (InputStream input = new BufferedInputStream(
