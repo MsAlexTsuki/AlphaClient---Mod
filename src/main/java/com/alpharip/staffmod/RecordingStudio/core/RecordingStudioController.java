@@ -73,8 +73,13 @@ public final class RecordingStudioController {
             }
         });
         try {
-            if (this.projectStore.hasRecoveryMarker(project.getId())) {
-                status = "Interrupted session detected; existing frames are available";
+            boolean recoveryMarker = this.projectStore.hasRecoveryMarker(project.getId());
+            if (recoveryMarker || project.isRecording()) {
+                long markedAt = recoveryMarker ? this.projectStore.getRecoveryMarkedAt(project.getId()) : 0L;
+                project.recoverInterruptedSession(System.currentTimeMillis(), markedAt);
+                this.projectStore.save(project, timeline);
+                if (recoveryMarker) this.projectStore.clearRecordingActive(project.getId());
+                status = "Interrupted session recovered; existing frames are available";
             }
         } catch (IOException failure) {
             status = "Recovery check failed: " + failure.getMessage();
@@ -122,6 +127,8 @@ public final class RecordingStudioController {
         project.pause(now);
         try {
             projectStore.save(project, timeline);
+            projectStore.clearRecordingActive(project.getId());
+            sessionStartedInThisRuntime = false;
             status = "Paused — recovery checkpoint saved";
         } catch (IOException failure) {
             status = "Pause checkpoint failed: " + failure.getMessage();
@@ -137,6 +144,7 @@ public final class RecordingStudioController {
         try {
             projectStore.save(project, timeline);
             projectStore.markRecordingActive(project);
+            sessionStartedInThisRuntime = true;
             status = "Recording";
         } catch (IOException failure) {
             capture.pause();
@@ -172,7 +180,7 @@ public final class RecordingStudioController {
             return;
         }
         try {
-            long timelineStart = Math.max(0L, System.currentTimeMillis() - project.getStartedAt());
+            long timelineStart = project.getElapsedMillis(System.currentTimeMillis());
             audioCapture.start(audioDirectory, "audio-" + java.util.UUID.randomUUID().toString() + ".wav",
                     timelineStart);
             status = "Microphone recording";
