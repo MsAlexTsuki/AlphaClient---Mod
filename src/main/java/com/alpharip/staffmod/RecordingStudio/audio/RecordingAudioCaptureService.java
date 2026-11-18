@@ -109,19 +109,33 @@ public final class RecordingAudioCaptureService {
         this.temporaryFile = temp;
         this.timelineStartMillis = Math.max(0L, timelineStartMillis);
         this.recording = true;
-        openedLine.start();
 
         final TargetDataLine captureLine = openedLine;
         final File captureTemp = temp;
         final File captureOutput = output;
         final long captureStart = this.timelineStartMillis;
-        writerThread = new Thread(new Runnable() {
-            public void run() {
-                captureToWave(captureLine, captureTemp, captureOutput, captureStart);
-            }
-        }, "Alpha-RecordingStudio-Audio");
-        writerThread.setDaemon(true);
-        writerThread.start();
+        try {
+            openedLine.start();
+            Thread worker = new Thread(new Runnable() {
+                public void run() {
+                    captureToWave(captureLine, captureTemp, captureOutput, captureStart);
+                }
+            }, "Alpha-RecordingStudio-Audio");
+            worker.setDaemon(true);
+            writerThread = worker;
+            worker.start();
+        } catch (Throwable failure) {
+            recording = false;
+            line = null;
+            writerThread = null;
+            temporaryFile = null;
+            destinationFile = null;
+            try { openedLine.stop(); } catch (RuntimeException ignored) { }
+            try { openedLine.close(); } catch (RuntimeException ignored) { }
+            if (temp.exists() && !temp.delete()) temp.deleteOnExit();
+            if (failure instanceof Exception) throw (Exception) failure;
+            throw (Error) failure;
+        }
     }
 
     public synchronized void stop() {
