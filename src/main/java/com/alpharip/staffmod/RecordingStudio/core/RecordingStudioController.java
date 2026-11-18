@@ -2,6 +2,7 @@ package com.alpharip.staffmod.RecordingStudio.core;
 
 import com.alpharip.staffmod.RecordingStudio.audio.RecordingAudioCaptureService;
 import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureService;
+import com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportService;
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineClip;
@@ -16,6 +17,7 @@ public final class RecordingStudioController {
     private final RecordingStudioProjectStore projectStore;
     private final RecordingAudioCaptureService audioCapture;
     private final File audioDirectory;
+    private final RecordingStudioExportService exportService;
     private boolean closed;
     private boolean sessionStartedInThisRuntime;
     private String status = "Ready";
@@ -35,6 +37,9 @@ public final class RecordingStudioController {
         this.projectStore = new RecordingStudioProjectStore(projectDirectory);
         File recordingRoot = projectDirectory.getParentFile() == null ? projectDirectory : projectDirectory.getParentFile();
         this.audioDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/audio");
+        File framesDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/frames");
+        File exportDirectory = new File(new File(recordingRoot, "exports"), project.getId());
+        this.exportService = new RecordingStudioExportService(framesDirectory, exportDirectory, timeline);
         this.audioCapture = new RecordingAudioCaptureService(new RecordingAudioCaptureService.Listener() {
             public void onAudioSaved(File file, long startMillis, long durationMillis) {
                 synchronized (RecordingStudioController.this) {
@@ -186,6 +191,31 @@ public final class RecordingStudioController {
         if (audioCapture.isFinalizing()) return "Microphone: Finalizing";
         return "Microphone: Idle";
     }
+
+    public synchronized void startExport(RecordingStudioExportService.Format format) {
+        ensureOpen();
+        if (capture.isRecording() || capture.isPaused()) {
+            status = "Stop recording before exporting";
+            return;
+        }
+        if (capture.getPendingFrameCount() > 0 || audioCapture.isFinalizing()) {
+            status = "Wait for pending frame and audio writes before exporting";
+            return;
+        }
+        try {
+            exportService.start(format, 30, "ffmpeg");
+            status = format.name() + " export started";
+        } catch (IOException | RuntimeException failure) {
+            status = "Cannot start export: " + failure.getMessage();
+        }
+    }
+
+    public synchronized void cancelExport() {
+        exportService.cancel();
+        status = "Export cancellation requested";
+    }
+
+    public synchronized String getExportStatus() { return exportService.getStatus(); }
 
     public synchronized void adjustCaptureInterval(long deltaMillis) {
         ensureOpen();
