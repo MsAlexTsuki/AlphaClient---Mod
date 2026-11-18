@@ -21,6 +21,8 @@ public final class RecordingStudioController {
     private final RecordingAudioCaptureService audioCapture;
     private final File audioDirectory;
     private final RecordingStudioExportService exportService;
+    private final com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportSettings exportSettings =
+            new com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportSettings();
     private boolean closed;
     private boolean sessionStartedInThisRuntime;
     private boolean resumeMicrophoneAfterPause;
@@ -354,7 +356,7 @@ public final class RecordingStudioController {
         }
         try {
             double exportFps = 1000.0 / capture.getIntervalMillis();
-            exportService.start(format, exportFps, "ffmpeg");
+            exportService.start(format, exportFps, "ffmpeg", exportSettings);
             status = format.name() + " export started";
         } catch (IOException | RuntimeException failure) {
             status = "Cannot start export: " + failure.getMessage();
@@ -371,6 +373,7 @@ public final class RecordingStudioController {
     }
 
     public synchronized String getExportStatus() { return exportService.getStatus(); }
+    public synchronized com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportSettings getExportSettings() { return exportSettings; }
 
     public synchronized void adjustCaptureInterval(long deltaMillis) {
         ensureOpen();
