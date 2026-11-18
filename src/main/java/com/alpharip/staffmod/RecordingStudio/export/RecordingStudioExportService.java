@@ -222,7 +222,7 @@ public final class RecordingStudioExportService {
                             "-t", seconds(outputDurationMillis), "-y", partial.getAbsolutePath());
                 } else {
                     Collections.addAll(gifCommand, "-filter_complex",
-                            videoFilter + ";[vout][" + (1 + videoSources.size())
+                            videoFilter + ";[vout][" + ((hasCapturedFrames ? 1 : 0) + videoSources.size())
                                     + ":v]paletteuse=dither=sierra2_4a[vfinal]",
                             "-map", "[vfinal]", "-t", seconds(outputDurationMillis),
                             "-y", partial.getAbsolutePath());
