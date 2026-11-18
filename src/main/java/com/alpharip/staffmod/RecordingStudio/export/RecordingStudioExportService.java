@@ -149,13 +149,13 @@ public final class RecordingStudioExportService {
                 Collections.addAll(command, "-c:v", "libx264", "-profile:v", "high", "-preset", "medium",
                         "-crf", Integer.toString(settings.getQuality().getCrf()), "-pix_fmt", "yuv420p",
                         "-bf", "2", "-g", Integer.toString(Math.max(1, (int) Math.round(fps / 2.0))),
-                        "-flags", "+cgop", "-movflags", "+faststart", "-t", seconds(outputDurationMillis));
+                        "-flags", "+cgop", "-use_editlist", "0", "-movflags", "+faststart", "-t", seconds(outputDurationMillis));
                 if (audioClips.isEmpty()) {
                     command.add("-an");
                 } else {
                     command.add("-map");
                     command.add(audioClips.size() == 1 ? "[a0]" : "[aout]");
-                    Collections.addAll(command, "-c:a", "aac", "-b:a", "192k", "-ar", "48000");
+                    Collections.addAll(command, "-c:a", "aac", "-profile:a", "aac_low", "-b:a", "192k", "-ar", "48000");
                 }
                 command.add("-y");
                 command.add(partial.getAbsolutePath());
