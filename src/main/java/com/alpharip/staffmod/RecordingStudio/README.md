@@ -13,6 +13,8 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Existing frame filenames are scanned before recording resumes so a reopened project appends frames instead of overwriting earlier captures.
 - Manual recording controller and independent Forge runtime.
 - OBS-inspired AlphaClient workspace with a live Minecraft viewport and dedicated Scenes, Sources, Module, Audio Mixer, Controls and Timeline panels.
+- Persisted scene management with create, rename, remove and cycle controls; the final remaining scene is protected from deletion.
+- Built-in per-scene Minecraft Capture and Microphone sources with enable/disable and remove controls. Disabling microphone capture stops an active microphone session; disabling game capture pauses new frame acquisition without stopping the project timer.
 - Module panel with Normal Gameplay and Build Timelapse choices; optional module adapters can expose additional recording workflows without adding feature-module imports to Recording Studio.
 - Build Timelapse adapter exposes saved Build Timelapse camera paths in the Module panel. Selecting a path positions the shared Build Timelapse camera at its first waypoint; recording starts path playback and captures the moving camera view. Pausing and resuming the recording also pauses and resumes that path.
 - Explicit microphone recording controls with selectable detected input devices or the operating-system default; the selection is saved per project. PCM 44.1 kHz, 16-bit mono WAV files are written on a dedicated audio thread.
@@ -52,5 +54,6 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Automatic disk retention, cleanup policies and effects/filters are not included; the storage screen is informational only and never deletes files.
 - Microphone input can be selected from detected Java Sound capture devices or set to the system default; the selected device is saved with the project. Device hot-plug refresh beyond cycling the current device list, live monitoring and automatic microphone restart after a video pause are not included. Game audio capture is not implemented.
 - Crash recovery is currently checkpoint-based: it detects an uncleanly interrupted session and preserves previously written frames for continuation; it does not reconstruct a frame or microphone audio that was still being captured or encoded at the moment of the crash. Active-time recovery typically loses up to about one second since the last checkpoint under normal tick operation; a longer client stall can increase that gap.
+- Scene sources currently cover the built-in Minecraft framebuffer and microphone inputs. Arbitrary media sources, source reordering, filters and independent per-scene audio-device overrides are not implemented.
 - The client entry point still needs to register the Recording Studio command and initialize the Build Timelapse runtime/module adapter; no keybind or top-level module-menu entry has been added.
-- No build configuration is present in this repository snapshot; compilation and in-game behavior have not been verified.
+- The mod-ideas branch contains an isolated ForgeGradle build setup, but the current Recording Studio changes have not been compiled or verified in-game.
