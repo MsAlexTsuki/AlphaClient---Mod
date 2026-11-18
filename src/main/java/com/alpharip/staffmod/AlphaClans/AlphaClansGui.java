@@ -210,11 +210,29 @@ public final class AlphaClansGui extends GuiScreen {
             } else if(observedClanId!=null && newClanId==null) {
                 tab=TAB_BROWSER; creatingClan=false; selected=-1; selectedBrowser=-1;
             }
-            String n=name==null?"":name.getText(), t=tag==null?"":tag.getText(), v=input==null?"":input.getText();
+            boolean hadName=name!=null, hadTag=tag!=null, hadInput=input!=null;
+            String n=hadName?name.getText():"", t=hadTag?tag.getText():"", v=hadInput?input.getText():"";
+            boolean nameFocused=hadName&&name.isFocused(), tagFocused=hadTag&&tag.isFocused();
+            boolean inputFocused=hadInput&&input.isFocused();
+            int nameCursor=hadName?name.getCursorPosition():0;
+            int tagCursor=hadTag?tag.getCursorPosition():0;
+            int inputCursor=hadInput?input.getCursorPosition():0;
             initGui();
-            if(name!=null && !n.isEmpty()) name.setText(n);
-            if(tag!=null && !t.isEmpty()) tag.setText(t);
-            if(input!=null) input.setText(v);
+            if(hadName&&name!=null) {
+                name.setText(n);
+                name.setCursorPosition(Math.min(nameCursor,n.length()));
+                name.setFocused(nameFocused);
+            }
+            if(hadTag&&tag!=null) {
+                tag.setText(t);
+                tag.setCursorPosition(Math.min(tagCursor,t.length()));
+                tag.setFocused(tagFocused);
+            }
+            if(hadInput&&input!=null) {
+                input.setText(v);
+                input.setCursorPosition(Math.min(inputCursor,v.length()));
+                input.setFocused(inputFocused);
+            }
         }
     }
     @Override protected void actionPerformed(GuiButton b)throws IOException {
