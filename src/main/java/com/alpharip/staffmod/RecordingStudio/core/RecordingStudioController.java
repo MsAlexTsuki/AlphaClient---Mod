@@ -33,6 +33,7 @@ public final class RecordingStudioController {
         }
         this.project = project;
         this.capture = capture;
+        this.capture.setIntervalMillis(project.getCaptureIntervalMillis());
         this.timeline = timeline;
         this.projectStore = new RecordingStudioProjectStore(projectDirectory);
         File recordingRoot = projectDirectory.getParentFile() == null ? projectDirectory : projectDirectory.getParentFile();
@@ -231,7 +232,13 @@ public final class RecordingStudioController {
         ensureOpen();
         long adjusted = Math.max(100L, Math.min(60000L, capture.getIntervalMillis() + deltaMillis));
         capture.setIntervalMillis(adjusted);
-        status = "Capture interval: " + adjusted + " ms";
+        project.setCaptureIntervalMillis(adjusted);
+        try {
+            projectStore.save(project, timeline);
+            status = "Capture interval saved: " + adjusted + " ms";
+        } catch (IOException failure) {
+            status = "Capture interval changed but could not be saved: " + failure.getMessage();
+        }
     }
 
     public synchronized void tick(long now) {
