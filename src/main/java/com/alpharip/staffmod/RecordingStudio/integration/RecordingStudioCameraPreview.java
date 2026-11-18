@@ -110,7 +110,7 @@ public final class RecordingStudioCameraPreview {
         }
 
         if (event.getButton() == 0 && !event.isButtonstate()) {
-            if (dragging || resizing) event.setCanceled(true);
+            if ((dragging || resizing) && event.isCancelable()) event.setCanceled(true);
             dragging = false;
             resizing = false;
             return;
@@ -123,11 +123,11 @@ public final class RecordingStudioCameraPreview {
         }
 
         if (dragging) {
-            event.setCanceled(true);
+            if (event.isCancelable()) event.setCanceled(true);
             x = clamp(mouseX - dragOffsetX, 0, Math.max(0, resolution.getScaledWidth() - width));
             y = clamp(mouseY - dragOffsetY, 0, Math.max(0, resolution.getScaledHeight() - height));
         } else if (resizing) {
-            event.setCanceled(true);
+            if (event.isCancelable()) event.setCanceled(true);
             int deltaX = mouseX - dragOffsetX;
             int deltaY = mouseY - dragOffsetY;
             width = clamp(width + deltaX, MIN_WIDTH, Math.max(MIN_WIDTH, resolution.getScaledWidth() - x));
