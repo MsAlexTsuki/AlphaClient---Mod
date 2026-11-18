@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.RecordingStudio.ui;
 
 import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioStorageUsage;
+import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
@@ -9,11 +10,14 @@ import java.io.IOException;
 public final class RecordingStudioStorageScreen extends GuiScreen {
     private final GuiScreen parent;
     private final RecordingStudioStorageUsage usage;
+    private final RecordingStudioRuntime runtime;
 
-    public RecordingStudioStorageScreen(GuiScreen parent, RecordingStudioStorageUsage usage) {
-        if (parent == null || usage == null) throw new IllegalArgumentException();
+    public RecordingStudioStorageScreen(GuiScreen parent, RecordingStudioStorageUsage usage,
+                                         RecordingStudioRuntime runtime) {
+        if (parent == null || usage == null || runtime == null) throw new IllegalArgumentException();
         this.parent = parent;
         this.usage = usage;
+        this.runtime = runtime;
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }
@@ -69,5 +73,6 @@ public final class RecordingStudioStorageScreen extends GuiScreen {
         drawCenteredString(fontRendererObj, "Read-only overview  |  No files are removed automatically",
                 width / 2, 287, 0xFF888888);
         super.drawScreen(mouseX, mouseY, partialTicks);
+        runtime.drawCameraPreview();
     }
 }
