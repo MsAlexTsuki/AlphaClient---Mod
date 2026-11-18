@@ -91,6 +91,7 @@ public final class BuildTimelapseRuntime {
     public synchronized void closeStudio() {
         if (closed || !started) return;
         studio.getController().stop();
+        restoreEffects();
         unregisterBlockEvents();
     }
 
@@ -129,6 +130,15 @@ public final class BuildTimelapseRuntime {
             started = false;
         }
         blockEvents.setListener(null);
+        restoreEffects();
         studio.getController().shutdown();
+    }
+
+    private void restoreEffects() {
+        try {
+            studio.getEffects().restore();
+        } catch (Exception ignored) {
+            // Preserve runtime shutdown even if a world is already unloading.
+        }
     }
 }
