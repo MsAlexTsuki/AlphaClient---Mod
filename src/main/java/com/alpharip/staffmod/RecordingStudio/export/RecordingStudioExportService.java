@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -232,7 +233,12 @@ public final class RecordingStudioExportService {
 
             if (cancelled || Thread.currentThread().isInterrupted()) throw new InterruptedException("Export cancelled");
             if (!partial.isFile() || partial.length() == 0L) throw new IOException("FFmpeg did not create a valid export");
-            Files.move(partial.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            try {
+                Files.move(partial.toPath(), output.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(partial.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
             progressPercent = 100;
             status = "Export complete (100%): " + output.getAbsolutePath();
         } catch (InterruptedException interrupted) {
