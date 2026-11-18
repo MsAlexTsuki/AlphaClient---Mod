@@ -1,6 +1,5 @@
 package com.alpharip.staffmod.RecordingStudio.integration;
 
-import com.alpharip.staffmod.RecordingStudio.ui.AlphaStudioButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
@@ -149,7 +148,7 @@ public final class RecordingStudioCameraPreview {
         Gui.drawRect(x, y + height - 1, x + width, y + height, 0xFF777777);
         Gui.drawRect(x, y, x + 1, y + height, 0xFF777777);
         Gui.drawRect(x + width - 1, y, x + width, y + height, 0xFF777777);
-        Gui.drawString(minecraft.fontRendererObj, "CAMERA PREVIEW  -  drag / resize",
+        minecraft.fontRendererObj.drawString("CAMERA PREVIEW  -  drag / resize",
                 x + 5, y + 4, 0xFFFFC83D);
 
         int imageX = x + 3;
