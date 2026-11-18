@@ -7,6 +7,8 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - Manual recording controller and independent Forge runtime.
 - Minecraft framebuffer capture backend writing ordered PNG frames.
 - Start, pause, resume, stop and save controls in a dedicated Studio screen.
+- Adjustable capture interval in 100 ms steps, bounded to 100–60000 ms.
+- Separate successful-frame and failed-frame counters; failed writes do not inflate the saved-frame count.
 - Shared general-purpose timeline, marker and clip/track models and editor.
 - Shared camera pose, modes, paths, waypoints, interpolation, presets, orbit calculations and local path persistence.
 - Recording Studio-owned Minecraft render-view camera adapter. It uses an unspawned render-view entity and does not move or control the real player.
@@ -19,7 +21,7 @@ Independent general-purpose Minecraft 1.8.9 / Forge recording module.
 - The in-game marker is a debug visualization, not a full 3D camera model.
 - Camera roll is not applied by the Minecraft render-view adapter.
 - Camera path interpolation and render-thread behavior have not been compiled or tested in Minecraft.
-- Capture uses native framebuffer resolution and performs readback and PNG writing synchronously on the client thread.
+- Capture uses native framebuffer resolution and performs framebuffer readback and PNG writing synchronously on the client thread.
 - Audio, crash recovery, disk retention, effects and video/GIF export migration are not included yet.
 - Registered in the AlphaClient Forge entry point as the `/recordingstudio` client command; no keybind or module-menu entry has been added.
 - No build configuration is present in this repository snapshot; compilation and in-game behavior have not been verified.
