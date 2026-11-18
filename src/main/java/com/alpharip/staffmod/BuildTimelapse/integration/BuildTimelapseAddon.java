@@ -84,7 +84,8 @@ public final class BuildTimelapseAddon {
         try {
             nextRuntime.start();
         } catch (RuntimeException failure) {
-            studio.getController().shutdown();
+            try { nextRuntime.shutdown(); }
+            catch (RuntimeException cleanup) { failure.addSuppressed(cleanup); }
             throw failure;
         }
 
