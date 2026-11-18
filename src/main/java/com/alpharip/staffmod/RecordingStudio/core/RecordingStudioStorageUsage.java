@@ -47,6 +47,7 @@ public final class RecordingStudioStorageUsage {
 
     public synchronized void refresh() {
         scanning = true;
+        scanError = null;
         try {
             refreshSnapshot();
         } finally {
