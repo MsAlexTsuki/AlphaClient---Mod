@@ -1,21 +1,71 @@
 buildscript {
     repositories {
-        mavenCentral()
-        maven { url = "https://files.minecraftforge.net/maven" }
+        jcenter()
+        maven {
+            name = "forge"
+            url = "https://files.minecraftforge.net/maven"
+        }
     }
+
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'idea'
+
+/*
+ * ==========================================
+ * BUILD NUMBER
+ * ==========================================
+ *
+ * The build number is incremented when the
+ * Gradle task "build" is requested.
+ */
+
+def versionFile = file("buildnumber.txt")
+
+if (!versionFile.exists()) {
+    versionFile.text = "0"
+}
+
+def currentBuildNumber = Integer.parseInt(
+        versionFile.text.trim()
+)
+
+/*
+ * ==========================================
+ * MOD VERSION
+ * ==========================================
+ *
+ * Uses the same version calculation as Alpha
+ * Client while keeping an independent counter.
+ */
+
+def versionMinor
+def versionPatch
+
+if (currentBuildNumber <= 100) {
+    versionMinor = 1
+    versionPatch = currentBuildNumber
+} else {
+    def postInitialBuild = currentBuildNumber - 101
+
+    versionMinor = 2 + (postInitialBuild / 101).intValue()
+    versionPatch = postInitialBuild % 101
+}
+
+version = "0." + versionMinor + "." + versionPatch
 
 group = "com.alpharip.alpharecordingstudio"
-version = "0.1.0"
 archivesBaseName = "AlphaRecordingStudio"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+/*
+ * ==========================================
+ * MINECRAFT / FORGE
+ * ==========================================
+ */
 
 minecraft {
     version = "1.8.9-11.15.1.2318-1.8.9"
@@ -24,6 +74,23 @@ minecraft {
     makeObfSourceJar = false
 }
 
+/*
+ * ==========================================
+ * JAVA
+ * ==========================================
+ */
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+compileJava.options.encoding = 'UTF-8'
+
+/*
+ * ==========================================
+ * REPOSITORIES / DEPENDENCIES
+ * ==========================================
+ */
+
 repositories {
     mavenCentral()
 }
@@ -31,17 +98,116 @@ repositories {
 dependencies {
 }
 
+/*
+ * ==========================================
+ * GENERATED BUILD INFO
+ * ==========================================
+ *
+ * Generates BuildInfo.java with the same
+ * version used by mcmod.info and the Forge mod.
+ */
+
+def generatedVersionDir = file(
+        "$buildDir/generated/sources/version/java"
+)
+
+sourceSets.main.java.srcDir generatedVersionDir
+
+task generateBuildInfo {
+    inputs.property("version", project.version)
+    outputs.dir generatedVersionDir
+
+    doLast {
+        def packageDir = new File(
+                generatedVersionDir,
+                "com/alpharip/staffmod"
+        )
+
+        packageDir.mkdirs()
+
+        def buildInfoFile = new File(
+                packageDir,
+                "BuildInfo.java"
+        )
+
+        buildInfoFile.text = """
+package com.alpharip.staffmod;
+
+public final class BuildInfo {
+    public static final String VERSION = "${project.version}";
+
+    private BuildInfo() {
+    }
+}
+"""
+    }
+}
+
+compileJava.dependsOn generateBuildInfo
+
+/*
+ * ==========================================
+ * INTELLIJ
+ * ==========================================
+ */
+
+idea {
+    module {
+        sourceDirs += generatedVersionDir
+        excludeDirs -= generatedVersionDir
+        generatedSourceDirs += generatedVersionDir
+    }
+}
+
+/*
+ * ==========================================
+ * PROCESS RESOURCES
+ * ==========================================
+ */
+
 processResources {
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property("version", project.version)
+    inputs.property("mcversion", project.minecraft.version)
 
     from(sourceSets.main.resources.srcDirs) {
         include "mcmod.info"
-        expand "version": project.version, "mcversion": project.minecraft.version
+
+        expand(
+                "version": project.version,
+                "mcversion": project.minecraft.version
+        )
     }
+
     from(sourceSets.main.resources.srcDirs) {
         exclude "mcmod.info"
     }
 }
 
+/*
+ * ==========================================
+ * PRODUCTION JAR REOBFUSCATION
+ * ==========================================
+ */
+
 jar.finalizedBy('reobfJar')
+
+/*
+ * ==========================================
+ * BUILD NUMBER INCREMENT
+ * ==========================================
+ *
+ * Increments the independent Recording Studio
+ * build number when the "build" task is requested.
+ */
+
+gradle.taskGraph.whenReady { taskGraph ->
+    def isBuild = taskGraph.allTasks.any {
+        it.name == "build"
+    }
+
+    if (isBuild) {
+        def nextBuildNumber = currentBuildNumber + 1
+
+        versionFile.text = nextBuildNumber.toString()
+    }
+}
