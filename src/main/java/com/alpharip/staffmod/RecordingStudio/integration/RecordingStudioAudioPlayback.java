@@ -53,7 +53,7 @@ public final class RecordingStudioAudioPlayback {
         String signature = signature(clips);
         if (!signature.equals(requestedSignature)) {
             requestedSignature = signature;
-            stopLoaded();
+            closeLoaded();
             status = clips.isEmpty() ? "No audio clips" : "Loading audio clips...";
             if (!clips.isEmpty()) {
                 final List<TimelineClip> snapshot = new ArrayList<TimelineClip>(clips);
@@ -102,12 +102,14 @@ public final class RecordingStudioAudioPlayback {
 
         if (!playing) {
             stopLoaded();
+            if (status.startsWith("Playing")) status = "Audio ready (" + loaded.size() + " clip(s))";
             return;
         }
 
         boolean active = false;
         for (LoadedClip clip : loaded) {
-            long clipEnd = clip.startMillis + clip.durationMillis;
+            long clipEnd = clip.durationMillis > Long.MAX_VALUE - clip.startMillis
+                    ? Long.MAX_VALUE : clip.startMillis + clip.durationMillis;
             if (positionMillis < clip.startMillis || positionMillis >= clipEnd) {
                 if (clip.audio.isRunning()) clip.audio.stop();
                 continue;
@@ -126,6 +128,12 @@ public final class RecordingStudioAudioPlayback {
         else if (!active && !loaded.isEmpty() && status.startsWith("Playing")) status = "Audio ready (" + loaded.size() + " clip(s))";
     }
 
+    public synchronized void pause() {
+        if (closed) return;
+        stopLoaded();
+        if (status.startsWith("Playing")) status = "Audio paused";
+    }
+
     public synchronized String getStatus() {
         return status;
     }
@@ -134,8 +142,13 @@ public final class RecordingStudioAudioPlayback {
         if (closed) return;
         closed = true;
         loader.shutdownNow();
-        stopLoaded();
+        closeLoaded();
         requestedSignature = "";
+    }
+
+    private void closeLoaded() {
+        closeAll(loaded);
+        loaded = Collections.emptyList();
     }
 
     private void stopLoaded() {
