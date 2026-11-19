@@ -57,9 +57,8 @@ public final class CustomEnchantmentTableHooks {
 
         CustomEnchantment selected = candidates.get(random.nextInt(candidates.size()));
         int level = 1 + random.nextInt(selected.getMaxLevel());
-        List<EnchantmentData> result = new ArrayList<EnchantmentData>(vanilla);
-        if (result.isEmpty()) result.add(new EnchantmentData(selected, level));
-        else result.set(random.nextInt(result.size()), new EnchantmentData(selected, level));
+        List<EnchantmentData> result = new ArrayList<EnchantmentData>();
+        result.add(new EnchantmentData(selected, level));
         return result;
     }
 
