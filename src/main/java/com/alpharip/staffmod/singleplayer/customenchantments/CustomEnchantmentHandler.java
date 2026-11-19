@@ -52,7 +52,7 @@ public final class CustomEnchantmentHandler {
 
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
-        if (event == null || event.entityLiving == null || !CustomEnchantmentAccess.isAvailable()) return;
+        if (event == null || event.entityLiving == null || event.entityLiving.worldObj.isRemote || !CustomEnchantmentAccess.isAvailable()) return;
         Entity source = event.source == null ? null : event.source.getEntity();
 
         if (source instanceof EntityPlayer && event.source != null && event.source.isProjectile()) {
@@ -248,8 +248,9 @@ public final class CustomEnchantmentHandler {
 
     @SubscribeEvent
     public void onArrowSpawn(EntityJoinWorldEvent event) {
-        if (event == null || event.world.isRemote || !CustomEnchantmentAccess.isAvailable()) return;
+        if (event == null || !CustomEnchantmentAccess.isAvailable()) return;
         if (event.entity instanceof EntityItem) {
+            if (event.world.isRemote) return;
             EntityItem item = (EntityItem) event.entity;
             ItemStack stack = item.getEntityItem();
             if (stack != null && stack.hasTagCompound()
