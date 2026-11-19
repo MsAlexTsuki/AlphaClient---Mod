@@ -362,6 +362,11 @@ public final class RecordingStudioScreen extends GuiScreen {
                 previewLeft + 10, height - 62, 0xFFBBBBBB);
         drawString(fontRendererObj, controller.getExportStatus(), previewLeft + 10, height - 34, 0xFFFFC83D);
 
+        GuiButton reviewButton = findButton(32);
+        if (reviewButton != null) reviewButton.displayString = playbackMode ? "Live" : "Review";
+        GuiButton playButton = findButton(34);
+        if (playButton != null) playButton.displayString = playback.isPlaying() ? "Pause" : "Play";
+
         super.drawScreen(mouseX, mouseY, partialTicks);
         if (playbackMode) {
             playback.draw(mc, previewLeft + 6, previewTop + 48,
