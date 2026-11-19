@@ -2,6 +2,7 @@ package com.alpharip.staffmod.RecordingStudio.ui;
 
 import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
+import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioPlayback;
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene;
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource;
 import com.alpharip.staffmod.RecordingStudio.settings.RecordingStudioPreferences;
@@ -16,6 +17,8 @@ import java.io.IOException;
 public final class RecordingStudioScreen extends GuiScreen {
     private final RecordingStudioController controller;
     private final RecordingStudioRuntime runtime;
+    private final RecordingStudioPlayback playback;
+    private boolean playbackMode;
     private boolean navigating;
     private GuiTextField sceneNameField;
     private String selectedSourceId;
@@ -24,6 +27,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         if (controller == null || runtime == null) throw new IllegalArgumentException();
         this.controller = controller;
         this.runtime = runtime;
+        this.playback = new RecordingStudioPlayback(controller.getFramesDirectory());
         RecordingStudioPreferences preferences = RecordingStudioPreferences.load(
                 net.minecraft.client.Minecraft.getMinecraft().mcDataDir);
         controller.getExportSettings().setResolution(preferences.getResolution());
@@ -85,6 +89,13 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(25, 18, 402, 126, "Remove Game Source");
         add(26, 18, 426, 126, "Remove Mic Source");
 
+        int playbackX = width - 190 - 184;
+        int playbackY = height - 83;
+        add(32, playbackX, playbackY, 43, "Review");
+        add(33, playbackX + 46, playbackY, 43, "Prev");
+        add(34, playbackX + 92, playbackY, 43, "Play");
+        add(35, playbackX + 138, playbackY, 43, "Next");
+
         GuiButton cameraButton = findButton(6);
         if (cameraButton != null) cameraButton.enabled = "normal_gameplay".equals(runtime.getSelectedModuleId());
         GuiButton pathButton = findButton(16);
@@ -116,16 +127,22 @@ public final class RecordingStudioScreen extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         switch (button.id) {
-            case 0: runtime.startRecording(); break;
+            case 0:
+                playback.pause();
+                playbackMode = false;
+                runtime.startRecording();
+                break;
             case 1: runtime.pauseRecording(); break;
             case 2: runtime.resumeRecording(); break;
             case 3: runtime.stopRecording(); break;
             case 4:
+                playback.pause();
                 navigating = true;
                 mc.displayGuiScreen(new TimelineEditorScreen(this, controller.getTimeline(), runtime));
                 break;
             case 5: controller.save(); break;
             case 6:
+                playback.pause();
                 navigating = true;
                 mc.displayGuiScreen(new CameraEditorScreen(this, runtime.getCameraController(), mc.mcDataDir, runtime));
                 break;
@@ -141,13 +158,33 @@ public final class RecordingStudioScreen extends GuiScreen {
                 break;
             case 13: controller.cancelExport(); break;
             case 31:
+                playback.pause();
                 navigating = true;
                 mc.displayGuiScreen(new RecordingStudioSettingsScreen(this, controller));
                 break;
             case 14:
+                playback.pause();
                 navigating = true;
                 controller.getStorageUsage().refreshAsync();
                 mc.displayGuiScreen(new RecordingStudioStorageScreen(this, controller.getStorageUsage(), runtime));
+                break;
+            case 32:
+                playback.pause();
+                playback.refreshFrames();
+                playbackMode = true;
+                break;
+            case 33:
+                playbackMode = true;
+                playback.step(-1);
+                break;
+            case 34:
+                playbackMode = true;
+                if (controller.getCapture().getPendingFrameCount() == 0) playback.refreshFrames();
+                playback.togglePlayback();
+                break;
+            case 35:
+                playbackMode = true;
+                playback.step(1);
                 break;
             case 15:
                 runtime.selectNextModule();
@@ -236,7 +273,10 @@ public final class RecordingStudioScreen extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        if (!navigating) runtime.shutdown();
+        if (!navigating) {
+            playback.close(mc);
+            runtime.shutdown();
+        }
     }
 
     @Override
@@ -281,9 +321,9 @@ public final class RecordingStudioScreen extends GuiScreen {
                 ? "Default" : runtime.getSelectedOptionId(), 14), 20, 247, 0xFFBBBBBB);
         drawString(fontRendererObj, compact(runtime.getSelectedModuleStatus(), 22), 20, 265, 0xFFAAAAAA);
 
-        drawCenteredString(fontRendererObj, "LIVE PREVIEW", (previewLeft + previewRight) / 2,
-                previewTop + 10, 0xFFFFC83D);
-        drawString(fontRendererObj, "LIVE GAME VIEW",
+        drawCenteredString(fontRendererObj, playbackMode ? "RECORDED PLAYBACK" : "LIVE PREVIEW",
+                (previewLeft + previewRight) / 2, previewTop + 10, 0xFFFFC83D);
+        drawString(fontRendererObj, playbackMode ? "RECORDED GAME VIEW" : "LIVE GAME VIEW",
                 previewLeft + 12, previewTop + 28, 0xFFE0E0E0);
         drawString(fontRendererObj, "SESSION  " + controller.getStatus(),
                 previewLeft + 12, previewBottom - 42, 0xFFFFFFFF);
@@ -323,8 +363,15 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, controller.getExportStatus(), previewLeft + 10, height - 34, 0xFFFFC83D);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
-        runtime.drawLiveViewport(previewLeft + 6, previewTop + 48,
-                previewRight - previewLeft - 12, previewBottom - previewTop - 96);
-        runtime.drawCameraPreview();
+        if (playbackMode) {
+            playback.draw(mc, previewLeft + 6, previewTop + 48,
+                    previewRight - previewLeft - 12, previewBottom - previewTop - 96,
+                    controller.getCapture().getIntervalMillis(),
+                    controller.getCapture().getPendingFrameCount());
+        } else {
+            runtime.drawLiveViewport(previewLeft + 6, previewTop + 48,
+                    previewRight - previewLeft - 12, previewBottom - previewTop - 96);
+            runtime.drawCameraPreview();
+        }
     }
 }
