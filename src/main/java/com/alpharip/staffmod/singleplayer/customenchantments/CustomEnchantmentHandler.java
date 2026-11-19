@@ -5,6 +5,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.FurnaceRecipes;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraftforge.event.world.BlockEvent;
+import java.util.Iterator;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
@@ -57,7 +61,7 @@ public final class CustomEnchantmentHandler {
                 stacks = Math.min(10, stacks + 1);
                 data.setInteger("AlphaRageStacks", stacks);
                 data.setLong("AlphaRageLastHit", now);
-                event.amount *= 1.0F + Math.min(1.0F, stacks * .05F * rage / 5.0F);
+                event.amount *= 1.0F + Math.min(1.0F, stacks * .05F * rage);
             }
 
             int doubleStrike = level(weapon, CustomEnchantments.DOUBLE_STRIKE);
@@ -132,6 +136,68 @@ public final class CustomEnchantmentHandler {
                 event.entityPlayer.entityDropItem(stack, 0.0F);
         }
         data.removeTag(SOULBOUND_KEY);
+    }
+
+
+    @SubscribeEvent
+    public void onHarvestDrops(BlockEvent.HarvestDropsEvent event) {
+        if (event == null || event.harvester == null || event.drops == null
+                || !CustomEnchantmentAccess.isAvailable() || event.world.isRemote) return;
+        EntityPlayer player = event.harvester;
+        ItemStack tool = player.getHeldItem();
+        int autoSmelt = level(tool, CustomEnchantments.AUTO_SMELT);
+        int telepathy = level(tool, CustomEnchantments.TELEPATHY);
+        if (autoSmelt <= 0 && telepathy <= 0) return;
+
+        if (autoSmelt > 0 && !event.isSilkTouching) {
+            for (int i = 0; i < event.drops.size(); i++) {
+                ItemStack drop = event.drops.get(i);
+                if (drop == null) continue;
+                ItemStack smelted = FurnaceRecipes.instance().getSmeltingResult(drop);
+                if (smelted == null) continue;
+                ItemStack replacement = smelted.copy();
+                replacement.stackSize = smelted.stackSize * drop.stackSize;
+                event.drops.set(i, replacement);
+            }
+        }
+
+        if (telepathy > 0) {
+            for (int i = event.drops.size() - 1; i >= 0; i--) {
+                ItemStack drop = event.drops.get(i);
+                if (drop == null) { event.drops.remove(i); continue; }
+                ItemStack remainder = drop.copy();
+                player.inventory.addItemStackToInventory(remainder);
+                if (remainder.stackSize <= 0) event.drops.remove(i);
+                else event.drops.set(i, remainder);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void attractDroppedItems(TickEvent.PlayerTickEvent event) {
+        if (event == null || event.phase != TickEvent.Phase.END || event.player == null
+                || event.player.worldObj.isRemote || !CustomEnchantmentAccess.isAvailable()) return;
+        EntityPlayer player = event.player;
+        int magnetic = level(player.getHeldItem(), CustomEnchantments.MAGNETIC);
+        int magnet = level(player.getCurrentArmor(0), CustomEnchantments.MAGNET);
+        int autoPickup = level(player.getCurrentArmor(0), CustomEnchantments.AUTO_PICKUP);
+        int range = Math.max(magnetic > 0 ? magnetic * 4 : 0,
+                Math.max(magnet > 0 ? magnet * 4 : 0, autoPickup > 0 ? autoPickup * 4 : 0));
+        if (range <= 0) return;
+        java.util.List<EntityItem> items = player.worldObj.getEntitiesWithinAABB(EntityItem.class,
+                player.getEntityBoundingBox().expand(range, range, range));
+        for (EntityItem item : items) {
+            if (item == null || item.isDead) continue;
+            double dx = player.posX - item.posX;
+            double dy = player.posY + player.getEyeHeight() * .5D - item.posY;
+            double dz = player.posZ - item.posZ;
+            double distanceSq = dx * dx + dy * dy + dz * dz;
+            if (distanceSq < .25D) continue;
+            double scale = .08D / Math.max(.5D, Math.sqrt(distanceSq));
+            item.motionX += dx * scale;
+            item.motionY += dy * scale;
+            item.motionZ += dz * scale;
+        }
     }
 
     private static int level(ItemStack stack, net.minecraft.enchantment.Enchantment enchantment) {
