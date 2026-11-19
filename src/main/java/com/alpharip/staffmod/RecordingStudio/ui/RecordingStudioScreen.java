@@ -204,6 +204,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                     playback.step(-1);
                 } else if (hasExternalVideoClips()) {
                     externalReviewPlaying = false;
+                    audioPlayback.pause();
                     externalReviewPositionMillis = Math.max(0L, externalReviewPositionMillis - 1000L);
                 }
                 break;
@@ -225,6 +226,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                     playback.step(1);
                 } else if (hasExternalVideoClips()) {
                     externalReviewPlaying = false;
+                    audioPlayback.pause();
                     externalReviewPositionMillis = Math.min(controller.getTimeline().duration(),
                             externalReviewPositionMillis + 1000L);
                 }
