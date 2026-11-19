@@ -29,6 +29,18 @@ public final class RecordingStudioCommand extends CommandBase {
     }
     public int getRequiredPermissionLevel() { return 0; }
 
+    /** Public entry point used by Alpha Client's optional-addon shortcut. */
+    public static void openFromClient() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.thePlayer == null) return;
+        try {
+            new RecordingStudioCommand().processCommand(mc.thePlayer, new String[0]);
+        } catch (CommandException failure) {
+            mc.thePlayer.addChatMessage(new ChatComponentText(
+                    "§6[Recording Studio] §fCould not open: " + failure.getMessage()));
+        }
+    }
+
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || mc.thePlayer == null) {
