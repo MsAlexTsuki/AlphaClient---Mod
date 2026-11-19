@@ -3,7 +3,6 @@ package com.alpharip.staffmod.singleplayer.customenchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.BlockContainer;
@@ -26,6 +25,7 @@ import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.ArrowLooseEvent;
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
@@ -40,7 +40,6 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerPickupXpEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import java.util.Random;
@@ -154,8 +153,7 @@ public final class CustomEnchantmentHandler {
 
     @SubscribeEvent
     public void onUnderwaterBreakSpeed(PlayerEvent.BreakSpeed event) {
-        if (event == null || event.entityPlayer == null || event.entityPlayer.worldObj.isRemote
-                || !CustomEnchantmentAccess.isAvailable()
+        if (event == null || event.entityPlayer == null || !CustomEnchantmentAccess.isAvailable()
                 || !event.entityPlayer.isInsideOfMaterial(Material.water)) return;
         int aqua = EnchantmentHelper.getEnchantmentLevel(Enchantment.aquaAffinity.effectId,
                 event.entityPlayer.getCurrentArmor(3));
