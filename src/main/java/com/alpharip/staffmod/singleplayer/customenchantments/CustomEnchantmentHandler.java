@@ -77,7 +77,7 @@ public final class CustomEnchantmentHandler {
             if (projectile instanceof EntityArrow) {
                 NBTTagCompound arrowData = projectile.getEntityData();
                 int infinity = arrowData.getInteger("AlphaInfinity");
-                if (infinity > 1) event.amount *= 1.0F + .10F * (infinity - 1);
+                if (infinity > 1) event.ammount *= 1.0F + .10F * (infinity - 1);
                 int venomShot = arrowData.getInteger("AlphaVenomShot");
                 if (venomShot > 0)
                     event.entityLiving.addPotionEffect(new PotionEffect(Potion.poison.id,
@@ -100,13 +100,13 @@ public final class CustomEnchantmentHandler {
             NBTTagCompound data = attacker.getEntityData();
             if (data.getBoolean("AlphaDoubleStrikeFollowup")) {
                 data.removeTag("AlphaDoubleStrikeFollowup");
-                event.amount *= .75F;
+                event.ammount *= .75F;
             } else {
             ItemStack weapon = attacker.getHeldItem();
             int lifesteal = level(weapon, CustomEnchantments.LIFESTEAL);
             int execute = level(weapon, CustomEnchantments.EXECUTE);
             if (execute > 0 && event.entityLiving.getHealth() <= event.entityLiving.getMaxHealth() * .30F)
-                event.amount *= 1.0F + .20F * execute;
+                event.ammount *= 1.0F + .20F * execute;
             int venom = level(weapon, CustomEnchantments.VENOM);
             if (venom > 0)
                 event.entityLiving.addPotionEffect(new PotionEffect(Potion.poison.id, 40 + venom * 30,
@@ -120,12 +120,12 @@ public final class CustomEnchantmentHandler {
                 stacks = Math.min(10, stacks + 1);
                 data.setInteger("AlphaRageStacks", stacks);
                 data.setLong("AlphaRageLastHit", now);
-                event.amount *= 1.0F + Math.min(1.0F, stacks * .02F * rage);
+                event.ammount *= 1.0F + Math.min(1.0F, stacks * .02F * rage);
             }
 
             if (lifesteal > 0) {
                 float[] heal = {0F, .10F, .15F, .20F, .25F, .35F};
-                attacker.heal(event.amount * heal[Math.min(lifesteal, 5)]);
+                attacker.heal(event.ammount * heal[Math.min(lifesteal, 5)]);
             }
 
             int doubleStrike = level(weapon, CustomEnchantments.DOUBLE_STRIKE);
