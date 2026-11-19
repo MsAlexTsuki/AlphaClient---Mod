@@ -56,6 +56,8 @@ public final class CustomEnchantments {
 
     private static CustomEnchantment add(String key, CustomEnchantment.Target target,
                                          CustomEnchantment.Rarity rarity, int maxLevel) {
+        while (nextId < 256 && Enchantment.REGISTRY.getObjectById(nextId) != null) nextId++;
+        if (nextId >= 256) throw new IllegalStateException("No free enchantment IDs remain in the AlphaClient range.");
         int id = nextId++;
         CustomEnchantment enchantment = new CustomEnchantment(id, key, target, rarity, maxLevel);
         Enchantment.REGISTRY.register(id, new ResourceLocation("alphaclient", key), enchantment);
