@@ -51,22 +51,22 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
     }
 
     private void addSettingButtons() {
-        int left = 150;
-        int right = width - 18;
-        int colWidth = Math.max(250, (right - left - 18) / 2);
+        int contentX = 164;
+        int colWidth = Math.max(250, (width - 340) / 2);
+        int controlRight = contentX + colWidth - 12;
         if (selectedCategory == RECORDING) {
-            addSmall(200, left + colWidth - 84, 111, 38, "-100");
-            addSmall(201, left + colWidth - 42, 111, 38, "+100");
+            addSmall(200, controlRight - 80, 111, 38, "-100");
+            addSmall(201, controlRight - 38, 111, 38, "+100");
             if (preferences.isAdvancedMode()) {
-                addSmall(202, left + colWidth - 84, 165, 38, "-1s");
-                addSmall(203, left + colWidth - 42, 165, 38, "+1s");
+                addSmall(202, controlRight - 80, 165, 38, "-1s");
+                addSmall(203, controlRight - 38, 165, 38, "+1s");
             }
         } else if (selectedCategory == EXPORT) {
-            addSmall(210, left + colWidth - 112, 111, 104, "CHANGE");
-            addSmall(211, left + colWidth - 112, 165, 104, "CHANGE");
+            addSmall(210, controlRight - 104, 111, 104, "CHANGE");
+            addSmall(211, controlRight - 104, 165, 104, "CHANGE");
         } else if (selectedCategory == AUDIO) {
-            addSmall(220, left + colWidth - 112, 111, 104, "NEXT DEVICE");
-            addSmall(221, left + colWidth - 112, 165, 104, "REFRESH");
+            addSmall(220, controlRight - 104, 111, 104, "NEXT DEVICE");
+            addSmall(221, controlRight - 104, 165, 104, "REFRESH");
         }
     }
 
@@ -134,6 +134,23 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
                 || value.toLowerCase(java.util.Locale.ROOT).contains(search.trim().toLowerCase(java.util.Locale.ROOT));
     }
 
+    private void applySearchVisibility() {
+        for (Object item : buttonList) {
+            GuiButton control = (GuiButton) item;
+            if (control.id == 200 || control.id == 201) control.visible = matches("Capture interval");
+            else if (control.id == 202 || control.id == 203) {
+                control.visible = preferences.isAdvancedMode() && matches("Capture interval range");
+            } else if (control.id == 210) control.visible = matches("Output resolution");
+            else if (control.id == 211) control.visible = matches("Encoding quality");
+            else if (control.id == 220 || control.id == 221) control.visible = matches("Microphone input");
+        }
+    }
+
+    private String compactValue(String value) {
+        if (value == null) return "";
+        return value.length() <= 24 ? value : value.substring(0, 21) + "...";
+    }
+
     private void section(String title, int x, int y, int width) {
         drawString(fontRendererObj, title.toUpperCase(java.util.Locale.ROOT), x, y, 0xFFFFC83D);
         Gui.drawRect(x, y + 12, x + width, y + 13, 0xFF414141);
@@ -144,8 +161,9 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
         drawString(fontRendererObj, title, x, y, 0xFFE8E8E8);
         drawString(fontRendererObj, description, x, y + 11, 0xFF888888);
         if (value != null) {
-            int valueWidth = fontRendererObj.getStringWidth(value);
-            drawString(fontRendererObj, value, controlRight - valueWidth, y, 0xFFFFD65A);
+            String compact = compactValue(value);
+            int valueWidth = fontRendererObj.getStringWidth(compact);
+            drawString(fontRendererObj, compact, controlRight - valueWidth, y, 0xFFFFD65A);
         }
     }
 
@@ -159,6 +177,7 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
         Gui.drawRect(10, 48, 136, 50, 0xFFFFC83D);
         Gui.drawRect(145, 45, width - 10, 47, 0xFFFFC83D);
 
+        applySearchVisibility();
         drawString(fontRendererObj, "ALPHA CLIENT", 16, 12, 0xFFAAAAAA);
         drawString(fontRendererObj, "/", 93, 12, 0xFF666666);
         drawString(fontRendererObj, "RECORDING STUDIO", 104, 12, 0xFFFFC83D);
