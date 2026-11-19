@@ -180,8 +180,11 @@ public final class RecordingStudioPlayback {
                 status = "Frame " + (ready.index + 1) + " could not be decoded: " + ready.error;
             } else {
                 updateTexture(minecraft, ready.image);
-                status = (playing ? "Playing" : "Playback paused")
-                        + " — Frame " + (ready.index + 1) + " / " + frames.length;
+                if (playing) {
+                    status = "Playing — Frame " + (ready.index + 1) + " / " + frames.length;
+                } else if (!"Playback complete".equals(status)) {
+                    status = "Playback paused — Frame " + (ready.index + 1) + " / " + frames.length;
+                }
             }
         }
 
