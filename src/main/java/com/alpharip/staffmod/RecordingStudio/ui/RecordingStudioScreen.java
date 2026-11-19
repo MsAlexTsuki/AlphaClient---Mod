@@ -3,6 +3,7 @@ package com.alpharip.staffmod.RecordingStudio.ui;
 import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioPlayback;
+import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioAudioPlayback;
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene;
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource;
 import com.alpharip.staffmod.RecordingStudio.settings.RecordingStudioPreferences;
@@ -20,6 +21,7 @@ public final class RecordingStudioScreen extends GuiScreen {
     private final RecordingStudioController controller;
     private final RecordingStudioRuntime runtime;
     private final RecordingStudioPlayback playback;
+    private final RecordingStudioAudioPlayback audioPlayback;
     private boolean playbackMode;
     private boolean navigating;
     private GuiTextField sceneNameField;
@@ -30,6 +32,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         this.controller = controller;
         this.runtime = runtime;
         this.playback = new RecordingStudioPlayback(controller.getFramesDirectory());
+        this.audioPlayback = new RecordingStudioAudioPlayback();
         RecordingStudioPreferences preferences = RecordingStudioPreferences.load(
                 net.minecraft.client.Minecraft.getMinecraft().mcDataDir);
         controller.getExportSettings().setResolution(preferences.getResolution());
@@ -131,6 +134,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         switch (button.id) {
             case 0:
                 playback.pause();
+                audioPlayback.pause();
                 playbackMode = false;
                 runtime.startRecording();
                 break;
@@ -139,12 +143,14 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 3: runtime.stopRecording(); break;
             case 4:
                 playback.pause();
+                audioPlayback.pause();
                 navigating = true;
                 mc.displayGuiScreen(new TimelineEditorScreen(this, controller.getTimeline(), runtime));
                 break;
             case 5: controller.save(); break;
             case 6:
                 playback.pause();
+                audioPlayback.pause();
                 navigating = true;
                 mc.displayGuiScreen(new CameraEditorScreen(this, runtime.getCameraController(), mc.mcDataDir, runtime));
                 break;
@@ -161,17 +167,20 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 13: controller.cancelExport(); break;
             case 31:
                 playback.pause();
+                audioPlayback.pause();
                 navigating = true;
                 mc.displayGuiScreen(new RecordingStudioSettingsScreen(this, controller));
                 break;
             case 14:
                 playback.pause();
+                audioPlayback.pause();
                 navigating = true;
                 controller.getStorageUsage().refreshAsync();
                 mc.displayGuiScreen(new RecordingStudioStorageScreen(this, controller.getStorageUsage(), runtime));
                 break;
             case 32:
                 playback.pause();
+                audioPlayback.pause();
                 if (playbackMode) {
                     playbackMode = false;
                 } else {
@@ -298,6 +307,7 @@ public final class RecordingStudioScreen extends GuiScreen {
     @Override
     public void onGuiClosed() {
         if (!navigating) {
+            audioPlayback.close();
             playback.close(mc);
             runtime.shutdown();
         }
@@ -429,7 +439,9 @@ public final class RecordingStudioScreen extends GuiScreen {
                 right + 8, 128, 0xFFBBBBBB);
         drawString(fontRendererObj, "AUDIO MIXER", right + 8, 145, 0xFFFFC83D);
         drawString(fontRendererObj, controller.getAudioStatus(), right + 8, 164, 0xFFE0E0E0);
-        drawString(fontRendererObj, "Game audio: not captured", right + 8, 181, 0xFF888888);
+        drawString(fontRendererObj, compact("Review: " + audioPlayback.getStatus(), 24),
+                right + 8, 181, 0xFFBBBBBB);
+        drawString(fontRendererObj, "Game audio: not captured", right + 8, 198, 0xFF888888);
         drawString(fontRendererObj, "CONTROLS", right + 8, 242, 0xFFFFC83D);
 
         int timelineTop = height - 130;
@@ -443,6 +455,8 @@ public final class RecordingStudioScreen extends GuiScreen {
                 : controller.getProject().getElapsedMillis(System.currentTimeMillis());
         long timelineDuration = Math.max(1L,
                 Math.max(controller.getTimeline().duration(), playheadMillis));
+        audioPlayback.update(controller.getTimeline(), playheadMillis,
+                playbackMode && playback.isPlaying());
         int timelineBarLeft = previewLeft + 58;
         int timelineBarRight = previewRight - 10;
         drawTimelineTrack("video", "VIDEO", height - 99, 0xFFC88F20,
