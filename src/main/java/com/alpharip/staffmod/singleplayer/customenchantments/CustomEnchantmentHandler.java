@@ -196,8 +196,18 @@ public final class CustomEnchantmentHandler {
 
     @SubscribeEvent
     public void onArrowSpawn(EntityJoinWorldEvent event) {
-        if (event == null || !(event.entity instanceof EntityArrow) || event.world.isRemote
-                || !CustomEnchantmentAccess.isAvailable()) return;
+        if (event == null || event.world.isRemote || !CustomEnchantmentAccess.isAvailable()) return;
+        if (event.entity instanceof EntityItem) {
+            EntityItem item = (EntityItem) event.entity;
+            ItemStack stack = item.getEntityItem();
+            if (stack != null && stack.hasTagCompound()
+                    && stack.getTagCompound().getBoolean("AlphaMagneticDrop")) {
+                item.getEntityData().setBoolean("AlphaMagneticDrop", true);
+                stack.getTagCompound().removeTag("AlphaMagneticDrop");
+            }
+            return;
+        }
+        if (!(event.entity instanceof EntityArrow)) return;
         EntityArrow arrow = (EntityArrow) event.entity;
         if (!(arrow.shootingEntity instanceof EntityPlayer)) return;
         EntityPlayer shooter = (EntityPlayer) arrow.shootingEntity;
@@ -319,7 +329,16 @@ public final class CustomEnchantmentHandler {
         ItemStack tool = player.getHeldItem();
         int autoSmelt = level(tool, CustomEnchantments.AUTO_SMELT);
         int telepathy = level(tool, CustomEnchantments.TELEPATHY);
-        if (autoSmelt <= 0 && telepathy <= 0) return;
+        int magnetic = level(tool, CustomEnchantments.MAGNETIC);
+        if (autoSmelt <= 0 && telepathy <= 0 && magnetic <= 0) return;
+
+        if (magnetic > 0) {
+            for (ItemStack drop : event.drops) {
+                if (drop == null) continue;
+                if (!drop.hasTagCompound()) drop.setTagCompound(new NBTTagCompound());
+                drop.getTagCompound().setBoolean("AlphaMagneticDrop", true);
+            }
+        }
 
         if (autoSmelt > 0 && !event.isSilkTouching) {
             for (int i = 0; i < event.drops.size(); i++) {
@@ -360,6 +379,8 @@ public final class CustomEnchantmentHandler {
                 player.getEntityBoundingBox().expand(range, range, range));
         for (EntityItem item : items) {
             if (item == null || item.isDead) continue;
+            if (magnetic > 0 && magnet <= 0 && autoPickup <= 0
+                    && !item.getEntityData().getBoolean("AlphaMagneticDrop")) continue;
             double dx = player.posX - item.posX;
             double dy = player.posY + player.getEyeHeight() * .5D - item.posY;
             double dz = player.posZ - item.posZ;
