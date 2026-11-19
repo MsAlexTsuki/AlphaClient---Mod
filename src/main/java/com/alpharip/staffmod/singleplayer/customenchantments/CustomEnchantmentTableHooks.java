@@ -106,9 +106,10 @@ public final class CustomEnchantmentTableHooks {
 
 
     private static boolean conflictsWithItem(ItemStack stack, CustomEnchantment candidate) {
-        Map<Enchantment, Integer> existing = net.minecraft.enchantment.EnchantmentHelper.getEnchantments(stack);
+        Map<Integer, Integer> existing = net.minecraft.enchantment.EnchantmentHelper.getEnchantments(stack);
         if (existing == null) return false;
-        for (Enchantment enchantment : existing.keySet()) {
+        for (Integer enchantmentId : existing.keySet()) {
+            Enchantment enchantment = enchantmentId == null ? null : Enchantment.getEnchantmentById(enchantmentId);
             if (enchantment != null && (!enchantment.canApplyTogether(candidate)
                     || !candidate.canApplyTogether(enchantment))) return true;
         }
