@@ -21,7 +21,11 @@ public final class RecordingStudioAddonBridge {
 
     public static void open(Minecraft minecraft) {
         if (minecraft == null || minecraft.thePlayer == null || minecraft.theWorld == null) return;
-        if (!isAvailable()) return;
+        if (!isAvailable()) {
+            minecraft.thePlayer.addChatMessage(new ChatComponentText(
+                    "§6[Recording Studio] §fThe Recording Studio addon is not loaded."));
+            return;
+        }
 
         try {
             Class<?> commandClass = Class.forName(ENTRY_POINT, true,
