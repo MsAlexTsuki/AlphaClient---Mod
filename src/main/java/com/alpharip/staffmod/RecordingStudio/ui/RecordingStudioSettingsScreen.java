@@ -52,7 +52,7 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
 
     private void addSettingButtons() {
         int contentX = 164;
-        int colWidth = Math.max(250, (width - 340) / 2);
+        int colWidth = Math.max(320, width - 200);
         int controlRight = contentX + colWidth - 12;
         if (selectedCategory == RECORDING) {
             addSmall(200, controlRight - 80, 111, 38, "-100");
