@@ -36,8 +36,10 @@ public final class CustomEnchantmentTableTransformer implements IClassTransforme
                     hook.add(new InsnNode(Opcodes.DUP));
                     hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
                     hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
+                    hook.add(new VarInsnNode(Opcodes.ILOAD, 2));
+                    hook.add(new VarInsnNode(Opcodes.ILOAD, 3));
                     hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK, "replaceOne",
-                            "(Ljava/util/List;Ljava/lang/Object;Lnet/minecraft/item/ItemStack;)Ljava/util/List;", false));
+                            "(Ljava/util/List;Ljava/lang/Object;Lnet/minecraft/item/ItemStack;II)Ljava/util/List;", false));
                     method.instructions.insertBefore(instruction, hook);
                     changed = true;
                 }

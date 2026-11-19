@@ -14,11 +14,15 @@ public final class CustomEnchantmentTableHooks {
     private CustomEnchantmentTableHooks() { }
 
     public static List<EnchantmentData> replaceOne(List<EnchantmentData> vanilla,
-                                                    Object containerObject, ItemStack tableStack) {
+                                                    Object containerObject, ItemStack tableStack,
+                                                    int enchantSlot, int enchantLevel) {
         if (vanilla == null || !(containerObject instanceof ContainerEnchantment)
                 || !CustomEnchantmentAccess.isAvailable() || tableStack == null
                 || !CustomEnchantments.isRegistered()) return vanilla;
-        if (RANDOM.nextInt(100) >= 10) return vanilla;
+        long seed = 31L * System.identityHashCode(containerObject) + 17L * tableStack.hashCode()
+                + 131L * enchantSlot + 977L * enchantLevel;
+        Random random = new Random(seed);
+        if (random.nextInt(100) >= 10) return vanilla;
 
         List<CustomEnchantment> eligible = new ArrayList<CustomEnchantment>();
         for (Enchantment enchantment : Enchantment.REGISTRY) {
@@ -28,7 +32,7 @@ public final class CustomEnchantmentTableHooks {
         }
         if (eligible.isEmpty()) return vanilla;
 
-        int roll = RANDOM.nextInt(100);
+        int roll = random.nextInt(100);
         CustomEnchantment.Rarity rarity = roll < 55 ? CustomEnchantment.Rarity.UNCOMMON
                 : roll < 85 ? CustomEnchantment.Rarity.RARE : CustomEnchantment.Rarity.LEGENDARY;
         List<CustomEnchantment> candidates = new ArrayList<CustomEnchantment>();
@@ -36,11 +40,11 @@ public final class CustomEnchantmentTableHooks {
             if (enchantment.getRarity() == rarity) candidates.add(enchantment);
         if (candidates.isEmpty()) candidates = eligible;
 
-        CustomEnchantment selected = candidates.get(RANDOM.nextInt(candidates.size()));
-        int level = 1 + RANDOM.nextInt(selected.getMaxLevel());
+        CustomEnchantment selected = candidates.get(random.nextInt(candidates.size()));
+        int level = 1 + random.nextInt(selected.getMaxLevel());
         List<EnchantmentData> result = new ArrayList<EnchantmentData>(vanilla);
         if (result.isEmpty()) result.add(new EnchantmentData(selected, level));
-        else result.set(RANDOM.nextInt(result.size()), new EnchantmentData(selected, level));
+        else result.set(random.nextInt(result.size()), new EnchantmentData(selected, level));
         return result;
     }
 
