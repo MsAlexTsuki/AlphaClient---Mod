@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 
 /** Plays supported audio timeline clips in sync with the Studio review playhead. */
 public final class RecordingStudioAudioPlayback {
+    private static final long MAX_AUDIO_BYTES = 64L * 1024L * 1024L;
     private static final class LoadedClip {
         final String id;
         final long startMillis;
@@ -70,6 +71,10 @@ public final class RecordingStudioAudioPlayback {
                             File source = new File(clip.getSource());
                             if (!source.isFile()) {
                                 failure = "Audio file is missing: " + source.getName();
+                                continue;
+                            }
+                            if (source.length() > MAX_AUDIO_BYTES) {
+                                failure = "Audio clip exceeds the 64 MB preview limit";
                                 continue;
                             }
                             try {
