@@ -4,6 +4,9 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnumEnchantmentType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
+import net.minecraft.item.ItemAxe;
+import net.minecraft.item.ItemPickaxe;
+import net.minecraft.item.ItemSpade;
 import net.minecraft.item.ItemBook;
 import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
@@ -23,7 +26,7 @@ public final class CustomEnchantment extends Enchantment {
     }
 
     public enum Target {
-        SWORD, BOW, TOOL, ARMOR, HELMET, BOOTS, CHESTPLATE_LEGGINGS, ANY_EQUIPMENT
+        SWORD, BOW, TOOL, PICKAXE, AXE, SHOVEL, MINING_TOOL, COMBAT_AND_MINING, ARMOR, HELMET, BOOTS, CHESTPLATE_LEGGINGS, ANY_EQUIPMENT
     }
 
     private final String key;
@@ -44,7 +47,8 @@ public final class CustomEnchantment extends Enchantment {
         switch (target) {
             case SWORD: return EnumEnchantmentType.WEAPON;
             case BOW: return EnumEnchantmentType.BOW;
-            case TOOL: return EnumEnchantmentType.DIGGER;
+            case TOOL: case PICKAXE: case AXE: case SHOVEL: case MINING_TOOL: return EnumEnchantmentType.DIGGER;
+            case COMBAT_AND_MINING: return EnumEnchantmentType.ALL;
             case HELMET: return EnumEnchantmentType.ARMOR_HEAD;
             case BOOTS: return EnumEnchantmentType.ARMOR_FEET;
             case CHESTPLATE_LEGGINGS: return EnumEnchantmentType.ARMOR;
@@ -77,6 +81,13 @@ public final class CustomEnchantment extends Enchantment {
             case SWORD: return item instanceof ItemSword;
             case BOW: return item instanceof ItemBow;
             case TOOL: return item instanceof ItemTool;
+            case PICKAXE: return item instanceof ItemPickaxe;
+            case AXE: return item instanceof ItemAxe;
+            case SHOVEL: return item instanceof ItemSpade;
+            case MINING_TOOL: return item instanceof ItemPickaxe || item instanceof ItemAxe || item instanceof ItemSpade;
+            case COMBAT_AND_MINING:
+                return item instanceof ItemSword || item instanceof ItemBow
+                        || item instanceof ItemPickaxe || item instanceof ItemAxe || item instanceof ItemSpade;
             case ARMOR: return item instanceof ItemArmor;
             case HELMET: return item instanceof ItemArmor && ((ItemArmor) item).armorType == 0;
             case BOOTS: return item instanceof ItemArmor && ((ItemArmor) item).armorType == 3;

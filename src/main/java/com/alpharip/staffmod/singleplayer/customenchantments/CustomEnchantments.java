@@ -38,15 +38,15 @@ public final class CustomEnchantments {
         THORNS_PLUS = add("thorns_plus", CustomEnchantment.Target.ARMOR, CustomEnchantment.Rarity.RARE, 5);
         NIGHT_VISION = add("night_vision", CustomEnchantment.Target.HELMET, CustomEnchantment.Rarity.UNCOMMON, 1);
 
-        VEIN_MINER = add("vein_miner", CustomEnchantment.Target.TOOL, CustomEnchantment.Rarity.RARE, 3);
-        AUTO_SMELT = add("auto_smelt", CustomEnchantment.Target.TOOL, CustomEnchantment.Rarity.RARE, 1);
-        TREE_FELLER = add("tree_feller", CustomEnchantment.Target.TOOL, CustomEnchantment.Rarity.RARE, 3);
-        MAGNETIC = add("magnetic", CustomEnchantment.Target.TOOL, CustomEnchantment.Rarity.UNCOMMON, 3);
-        EXCAVATOR = add("excavator", CustomEnchantment.Target.TOOL, CustomEnchantment.Rarity.LEGENDARY, 3);
-        TELEPATHY = add("telepathy", CustomEnchantment.Target.TOOL, CustomEnchantment.Rarity.UNCOMMON, 1);
-        EXPERIENCE = add("experience", CustomEnchantment.Target.ANY_EQUIPMENT, CustomEnchantment.Rarity.UNCOMMON, 5);
+        VEIN_MINER = add("vein_miner", CustomEnchantment.Target.PICKAXE, CustomEnchantment.Rarity.RARE, 3);
+        AUTO_SMELT = add("auto_smelt", CustomEnchantment.Target.PICKAXE, CustomEnchantment.Rarity.RARE, 1);
+        TREE_FELLER = add("tree_feller", CustomEnchantment.Target.AXE, CustomEnchantment.Rarity.RARE, 3);
+        MAGNETIC = add("magnetic", CustomEnchantment.Target.MINING_TOOL, CustomEnchantment.Rarity.UNCOMMON, 3);
+        EXCAVATOR = add("excavator", CustomEnchantment.Target.SHOVEL, CustomEnchantment.Rarity.LEGENDARY, 3);
+        TELEPATHY = add("telepathy", CustomEnchantment.Target.MINING_TOOL, CustomEnchantment.Rarity.UNCOMMON, 1);
+        EXPERIENCE = add("experience", CustomEnchantment.Target.COMBAT_AND_MINING, CustomEnchantment.Rarity.UNCOMMON, 5);
         MAGNET = add("magnet", CustomEnchantment.Target.BOOTS, CustomEnchantment.Rarity.UNCOMMON, 3);
-        HASTE = add("haste", CustomEnchantment.Target.TOOL, CustomEnchantment.Rarity.RARE, 3);
+        HASTE = add("haste", CustomEnchantment.Target.MINING_TOOL, CustomEnchantment.Rarity.RARE, 3);
         AUTO_PICKUP = add("auto_pickup", CustomEnchantment.Target.BOOTS, CustomEnchantment.Rarity.UNCOMMON, 3);
         SOULBOUND = add("soulbound", CustomEnchantment.Target.ANY_EQUIPMENT, CustomEnchantment.Rarity.LEGENDARY, 1);
 
