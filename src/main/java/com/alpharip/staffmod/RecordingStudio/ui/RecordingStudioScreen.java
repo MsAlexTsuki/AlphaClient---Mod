@@ -4,6 +4,7 @@ import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioPlayback;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioAudioPlayback;
+import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioExternalVideoPreview;
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene;
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource;
 import com.alpharip.staffmod.RecordingStudio.settings.RecordingStudioPreferences;
@@ -22,6 +23,7 @@ public final class RecordingStudioScreen extends GuiScreen {
     private final RecordingStudioRuntime runtime;
     private final RecordingStudioPlayback playback;
     private final RecordingStudioAudioPlayback audioPlayback;
+    private final RecordingStudioExternalVideoPreview externalVideoPreview;
     private boolean playbackMode;
     private boolean navigating;
     private GuiTextField sceneNameField;
@@ -33,6 +35,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         this.runtime = runtime;
         this.playback = new RecordingStudioPlayback(controller.getFramesDirectory());
         this.audioPlayback = new RecordingStudioAudioPlayback();
+        this.externalVideoPreview = new RecordingStudioExternalVideoPreview();
         RecordingStudioPreferences preferences = RecordingStudioPreferences.load(
                 net.minecraft.client.Minecraft.getMinecraft().mcDataDir);
         controller.getExportSettings().setResolution(preferences.getResolution());
@@ -308,6 +311,7 @@ public final class RecordingStudioScreen extends GuiScreen {
     public void onGuiClosed() {
         if (!navigating) {
             audioPlayback.close();
+            externalVideoPreview.close(mc);
             playback.close(mc);
             runtime.shutdown();
         }
@@ -441,7 +445,9 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, controller.getAudioStatus(), right + 8, 164, 0xFFE0E0E0);
         drawString(fontRendererObj, compact("Review: " + audioPlayback.getStatus(), 24),
                 right + 8, 181, 0xFFBBBBBB);
-        drawString(fontRendererObj, "Game audio: not captured", right + 8, 198, 0xFF888888);
+        drawString(fontRendererObj, compact("Video: " + externalVideoPreview.getStatus(), 24),
+                right + 8, 198, 0xFFBBBBBB);
+        drawString(fontRendererObj, "Game audio: not captured", right + 8, 215, 0xFF888888);
         drawString(fontRendererObj, "CONTROLS", right + 8, 242, 0xFFFFC83D);
 
         int timelineTop = height - 130;
@@ -457,6 +463,8 @@ public final class RecordingStudioScreen extends GuiScreen {
                 Math.max(controller.getTimeline().duration(), playheadMillis));
         audioPlayback.update(controller.getTimeline(), playheadMillis,
                 playbackMode && playback.isPlaying());
+        boolean externalVideoActive = playbackMode
+                && externalVideoPreview.update(controller.getTimeline(), playheadMillis);
         int timelineBarLeft = previewLeft + 58;
         int timelineBarRight = previewRight - 10;
         drawTimelineTrack("video", "VIDEO", height - 99, 0xFFC88F20,
@@ -493,10 +501,15 @@ public final class RecordingStudioScreen extends GuiScreen {
 
         super.drawScreen(mouseX, mouseY, partialTicks);
         if (playbackMode) {
-            playback.draw(mc, previewLeft + 6, previewTop + 48,
-                    previewRight - previewLeft - 12, previewBottom - previewTop - 96,
-                    controller.getCapture().getIntervalMillis(),
-                    controller.getCapture().getPendingFrameCount());
+            if (externalVideoActive) {
+                externalVideoPreview.draw(mc, previewLeft + 6, previewTop + 48,
+                        previewRight - previewLeft - 12, previewBottom - previewTop - 96);
+            } else {
+                playback.draw(mc, previewLeft + 6, previewTop + 48,
+                        previewRight - previewLeft - 12, previewBottom - previewTop - 96,
+                        controller.getCapture().getIntervalMillis(),
+                        controller.getCapture().getPendingFrameCount());
+            }
         } else {
             runtime.drawLiveViewport(previewLeft + 6, previewTop + 48,
                     previewRight - previewLeft - 12, previewBottom - previewTop - 96);
