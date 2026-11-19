@@ -74,6 +74,7 @@ public final class CustomEnchantment extends Enchantment {
 
     @Override
     public boolean canApply(ItemStack stack) {
+        if (CustomEnchantmentTableHooks.isVanillaGeneration()) return false;
         if (stack == null || stack.getItem() == null) return false;
         Item item = stack.getItem();
         if (item instanceof ItemBook) return true;
