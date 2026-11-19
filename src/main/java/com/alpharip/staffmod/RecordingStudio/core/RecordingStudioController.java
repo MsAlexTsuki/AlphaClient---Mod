@@ -20,6 +20,7 @@ public final class RecordingStudioController {
     private final RecordingStudioStorageUsage storageUsage;
     private final RecordingAudioCaptureService audioCapture;
     private final File audioDirectory;
+    private final File framesDirectory;
     private final RecordingStudioExportService exportService;
     private final com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportSettings exportSettings =
             new com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportSettings();
@@ -48,7 +49,7 @@ public final class RecordingStudioController {
         File recordingRoot = projectDirectory.getParentFile() == null ? projectDirectory : projectDirectory.getParentFile();
         this.storageUsage = new RecordingStudioStorageUsage(recordingRoot);
         this.audioDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/audio");
-        File framesDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/frames");
+        this.framesDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/frames");
         File exportDirectory = new File(new File(recordingRoot, "exports"), project.getId());
         this.exportService = new RecordingStudioExportService(framesDirectory, exportDirectory, timeline);
         this.audioCapture = new RecordingAudioCaptureService(new RecordingAudioCaptureService.Listener() {
@@ -630,6 +631,7 @@ public final class RecordingStudioController {
     public RecordingCaptureService getCapture() { return capture; }
     public RecordingAudioCaptureService getAudioCapture() { return audioCapture; }
     public RecordingStudioStorageUsage getStorageUsage() { return storageUsage; }
+    public File getFramesDirectory() { return framesDirectory; }
 
     public synchronized String getStatus() {
         String error = capture.getLastError();
