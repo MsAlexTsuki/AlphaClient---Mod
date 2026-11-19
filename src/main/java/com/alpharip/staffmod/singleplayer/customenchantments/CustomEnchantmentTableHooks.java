@@ -22,7 +22,10 @@ public final class CustomEnchantmentTableHooks {
         long seed = 31L * container.xpSeed + 17L * tableStack.hashCode()
                 + 131L * enchantSlot + 977L * enchantLevel;
         java.util.Random random = new java.util.Random(seed);
-        if (random.nextInt(100) >= 10) return vanilla;
+        if (random.nextInt(100) >= 10) {
+            upgradeVanillaLevel(vanilla, random, enchantLevel);
+            return vanilla;
+        }
 
         List<CustomEnchantment> eligible = new ArrayList<CustomEnchantment>();
         for (CustomEnchantment custom : CustomEnchantments.getAll()) {
@@ -58,6 +61,45 @@ public final class CustomEnchantmentTableHooks {
         if (result.isEmpty()) result.add(new EnchantmentData(selected, level));
         else result.set(random.nextInt(result.size()), new EnchantmentData(selected, level));
         return result;
+    }
+
+
+    private static void upgradeVanillaLevel(List<EnchantmentData> results,
+                                            java.util.Random random, int tablePower) {
+        if (results == null || results.isEmpty() || tablePower < 20
+                || random.nextInt(100) >= 25) return;
+        List<Integer> eligible = new ArrayList<Integer>();
+        for (int i = 0; i < results.size(); i++) {
+            Enchantment enchantment = results.get(i).enchantmentobj;
+            int vanillaMax = vanillaMaximum(enchantment);
+            if (vanillaMax > 0 && enchantment.getMaxLevel() > vanillaMax) eligible.add(i);
+        }
+        if (eligible.isEmpty()) return;
+        int index = eligible.get(random.nextInt(eligible.size()));
+        EnchantmentData current = results.get(index);
+        int vanillaMax = vanillaMaximum(current.enchantmentobj);
+        int extendedMax = current.enchantmentobj.getMaxLevel();
+        int extraLevels = Math.min(extendedMax - vanillaMax, 1 + (tablePower - 20) / 2);
+        if (extraLevels <= 0) return;
+        int level = vanillaMax + 1 + random.nextInt(extraLevels);
+        results.set(index, new EnchantmentData(current.enchantmentobj, level));
+    }
+
+    private static int vanillaMaximum(Enchantment enchantment) {
+        if (enchantment == Enchantment.sharpness || enchantment == Enchantment.smite
+                || enchantment == Enchantment.baneOfArthropods || enchantment == Enchantment.efficiency
+                || enchantment == Enchantment.power) return 5;
+        if (enchantment == Enchantment.protection || enchantment == Enchantment.fireProtection
+                || enchantment == Enchantment.blastProtection || enchantment == Enchantment.projectileProtection
+                || enchantment == Enchantment.featherFalling) return 4;
+        if (enchantment == Enchantment.unbreaking || enchantment == Enchantment.fortune
+                || enchantment == Enchantment.looting || enchantment == Enchantment.respiration
+                || enchantment == Enchantment.depthStrider) return 3;
+        if (enchantment == Enchantment.punch || enchantment == Enchantment.fireAspect
+                || enchantment == Enchantment.knockback) return 2;
+        if (enchantment == Enchantment.flame || enchantment == Enchantment.infinity
+                || enchantment == Enchantment.aquaAffinity || enchantment == Enchantment.silkTouch) return 1;
+        return 0;
     }
 
     private static boolean conflicts(List<EnchantmentData> existing, Enchantment candidate) {
