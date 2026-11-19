@@ -394,9 +394,8 @@ public final class CustomEnchantmentHandler {
         int autoSmelt = level(tool, CustomEnchantments.AUTO_SMELT);
         int telepathy = level(tool, CustomEnchantments.TELEPATHY);
         int magnetic = level(tool, CustomEnchantments.MAGNETIC);
-        if (autoSmelt <= 0 && telepathy <= 0 && magnetic <= 0) return;
-
         int silkTouch = level(tool, Enchantment.silkTouch);
+        if (autoSmelt <= 0 && telepathy <= 0 && magnetic <= 0 && silkTouch <= 1) return;
         if (event.isSilkTouching && silkTouch > 1) {
             List<ItemStack> duplicates = new java.util.ArrayList<ItemStack>();
             float chance = .20F * (silkTouch - 1);
@@ -459,12 +458,12 @@ public final class CustomEnchantmentHandler {
             double dy = player.posY + player.getEyeHeight() * .5D - item.posY;
             double dz = player.posZ - item.posZ;
             double distanceSq = dx * dx + dy * dy + dz * dz;
-            if (distanceSq < .25D) continue;
+            if (autoPickup > 0 && distanceSq <= 2.25D) item.onCollideWithPlayer(player);
+            if (item.isDead || distanceSq < .25D) continue;
             double scale = .08D / Math.max(.5D, Math.sqrt(distanceSq));
             item.motionX += dx * scale;
             item.motionY += dy * scale;
             item.motionZ += dz * scale;
-            if (autoPickup > 0 && distanceSq <= 2.25D) item.onCollideWithPlayer(player);
         }
     }
 
