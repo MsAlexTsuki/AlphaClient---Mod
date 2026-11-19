@@ -86,9 +86,7 @@ public final class CustomEnchantmentHandler {
             if (data.getBoolean("AlphaDoubleStrikeFollowup")) {
                 data.removeTag("AlphaDoubleStrikeFollowup");
                 event.amount *= .75F;
-                return;
-            }
-
+            } else {
             ItemStack weapon = attacker.getHeldItem();
             int lifesteal = level(weapon, CustomEnchantments.LIFESTEAL);
             if (lifesteal > 0) {
@@ -120,6 +118,7 @@ public final class CustomEnchantmentHandler {
                 data.setBoolean("AlphaDoubleStrikeFollowup", true);
                 attacker.attackTargetEntityWithCurrentItem(event.entityLiving);
                 data.removeTag("AlphaDoubleStrikeFollowup");
+            }
             }
         }
 
