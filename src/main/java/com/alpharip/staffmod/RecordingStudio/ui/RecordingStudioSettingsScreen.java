@@ -44,7 +44,7 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
         buttonList.add(new AlphaStudioButton(10, width - 112, 18, 96, 17,
                 preferences.isAdvancedMode() ? "ADVANCED" : "BASIC", preferences.isAdvancedMode()));
         buttonList.add(new AlphaStudioButton(11, width - 112, height - 31, 96, 17, "BACK"));
-        searchField = new GuiTextField(50, fontRendererObj, 150, 49, Math.max(120, width - 286), 17);
+        searchField = new GuiTextField(50, fontRendererObj, 150, 49, Math.max(120, width - 410), 17);
         searchField.setMaxStringLength(48);
         searchField.setText(search);
         addSettingButtons();
@@ -62,8 +62,8 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
                 addSmall(203, controlRight - 38, 165, 38, "+1s");
             }
         } else if (selectedCategory == EXPORT) {
-            addSmall(210, controlRight - 104, 111, 104, "CHANGE");
-            addSmall(211, controlRight - 104, 165, 104, "CHANGE");
+            addSmall(210, controlRight - 104, 111, 104, controller.getExportSettings().getResolution().getLabel());
+            addSmall(211, controlRight - 104, 165, 104, controller.getExportSettings().getQuality().getLabel());
         } else if (selectedCategory == AUDIO) {
             addSmall(220, controlRight - 104, 111, 104, "NEXT DEVICE");
             addSmall(221, controlRight - 104, 165, 104, "REFRESH");
@@ -215,9 +215,9 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
         } else if (selectedCategory == EXPORT) {
             section("Export", x, 82, colWidth);
             setting("Output resolution", "Downscales only and preserves the source aspect ratio.",
-                    controller.getExportSettings().getResolution().getLabel(), x, 108, controlRight - 118);
+                    null, x, 108, controlRight - 118);
             setting("Encoding quality", "H.264 quality preset; lower CRF produces larger files.",
-                    controller.getExportSettings().getQuality().getLabel(), x, 162, controlRight - 118);
+                    null, x, 162, controlRight - 118);
             if (preferences.isAdvancedMode()) {
                 setting("Frame rate", "Uses the source capture interval; no forced conversion.",
                         "Source", x, 216, controlRight);
