@@ -233,6 +233,10 @@ public final class RecordingStudioPlayback {
 
     public synchronized boolean isPlaying() { return playing; }
     public synchronized int getFrameCount() { return frames.length; }
+    public synchronized int getCurrentFrameIndex() { return frameIndex; }
+    public synchronized long getPositionMillis(long frameIntervalMillis) {
+        return Math.max(0L, (long) frameIndex * Math.max(1L, frameIntervalMillis));
+    }
 
     public synchronized void close(Minecraft minecraft) {
         if (closed) return;
