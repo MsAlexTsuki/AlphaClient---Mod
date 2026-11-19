@@ -29,10 +29,14 @@ public final class CustomEnchantmentTableTransformer implements IClassTransforme
             boolean changed = false;
             for (MethodNode method : node.methods) {
                 if (!method.desc.startsWith("(L") || !method.desc.endsWith(";II)Ljava/util/List;")) continue;
+                InsnList begin = new InsnList();
+                begin.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK, "beginVanillaGeneration", "()V", false));
+                method.instructions.insertBefore(method.instructions.getFirst(), begin);
                 AbstractInsnNode[] instructions = method.instructions.toArray();
                 for (AbstractInsnNode instruction : instructions) {
                     if (instruction.getOpcode() != Opcodes.ARETURN) continue;
                     InsnList hook = new InsnList();
+                    hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK, "endVanillaGeneration", "()V", false));
                     hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
                     hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
                     hook.add(new VarInsnNode(Opcodes.ILOAD, 2));
