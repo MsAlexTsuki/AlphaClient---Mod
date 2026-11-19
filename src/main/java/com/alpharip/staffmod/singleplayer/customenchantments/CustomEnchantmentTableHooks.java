@@ -6,11 +6,9 @@ import net.minecraft.inventory.ContainerEnchantment;
 import net.minecraft.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /** Applies the agreed 90/10 vanilla/custom roll split to the normal table result. */
 public final class CustomEnchantmentTableHooks {
-    private static final Random RANDOM = new Random();
     private CustomEnchantmentTableHooks() { }
 
     public static List<EnchantmentData> replaceOne(List<EnchantmentData> vanilla,
@@ -19,9 +17,10 @@ public final class CustomEnchantmentTableHooks {
         if (vanilla == null || !(containerObject instanceof ContainerEnchantment)
                 || !CustomEnchantmentAccess.isAvailable() || tableStack == null
                 || !CustomEnchantments.isRegistered()) return vanilla;
-        long seed = 31L * System.identityHashCode(containerObject) + 17L * tableStack.hashCode()
+        ContainerEnchantment container = (ContainerEnchantment) containerObject;
+        long seed = 31L * container.xpSeed + 17L * tableStack.hashCode()
                 + 131L * enchantSlot + 977L * enchantLevel;
-        Random random = new Random(seed);
+        java.util.Random random = new java.util.Random(seed);
         if (random.nextInt(100) >= 10) return vanilla;
 
         List<CustomEnchantment> eligible = new ArrayList<CustomEnchantment>();
@@ -32,13 +31,27 @@ public final class CustomEnchantmentTableHooks {
         }
         if (eligible.isEmpty()) return vanilla;
 
-        int roll = random.nextInt(100);
-        CustomEnchantment.Rarity rarity = roll < 55 ? CustomEnchantment.Rarity.UNCOMMON
-                : roll < 85 ? CustomEnchantment.Rarity.RARE : CustomEnchantment.Rarity.LEGENDARY;
+        List<CustomEnchantment.Rarity> availableRarities = new ArrayList<CustomEnchantment.Rarity>();
+        int totalRarityWeight = 0;
+        for (CustomEnchantment.Rarity rarity : CustomEnchantment.Rarity.values()) {
+            boolean available = false;
+            for (CustomEnchantment enchantment : eligible) {
+                if (enchantment.getRarity() == rarity) { available = true; break; }
+            }
+            if (available) {
+                availableRarities.add(rarity);
+                totalRarityWeight += rarity.weight;
+            }
+        }
+        int rarityRoll = random.nextInt(totalRarityWeight);
+        CustomEnchantment.Rarity selectedRarity = availableRarities.get(0);
+        for (CustomEnchantment.Rarity rarity : availableRarities) {
+            if (rarityRoll < rarity.weight) { selectedRarity = rarity; break; }
+            rarityRoll -= rarity.weight;
+        }
         List<CustomEnchantment> candidates = new ArrayList<CustomEnchantment>();
         for (CustomEnchantment enchantment : eligible)
-            if (enchantment.getRarity() == rarity) candidates.add(enchantment);
-        if (candidates.isEmpty()) candidates = eligible;
+            if (enchantment.getRarity() == selectedRarity) candidates.add(enchantment);
 
         CustomEnchantment selected = candidates.get(random.nextInt(candidates.size()));
         int level = 1 + random.nextInt(selected.getMaxLevel());
