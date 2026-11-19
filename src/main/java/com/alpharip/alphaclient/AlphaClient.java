@@ -89,6 +89,7 @@ import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -134,7 +135,6 @@ public final class AlphaClient {
         instance = this;
         System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
         InventorySearchSettings.load();
-        CustomEnchantments.register();
         MinecraftForge.EVENT_BUS.register(new CustomEnchantmentHandler());
 
         MinecraftForge.EVENT_BUS.register(this);
@@ -248,6 +248,13 @@ public final class AlphaClient {
         ClientRegistry.registerKeyBinding(openPixelGardenKey);
         syncBhopKeyBindingVisibility();
         System.out.println("[AlphaClient] Core initialized. Access: " + PermissionService.getStatusText());
+    }
+
+
+    @Mod.EventHandler
+    public void postInitialize(FMLPostInitializationEvent event) {
+        CustomEnchantments.register();
+        System.out.println("[AlphaClient] Registered Singleplayer custom enchantments.");
     }
 
     public static void openGuiFromCommand(GuiScreen screen) { pendingCommandGui = screen; }
