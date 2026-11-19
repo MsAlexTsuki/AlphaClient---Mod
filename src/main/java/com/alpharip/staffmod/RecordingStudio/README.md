@@ -12,7 +12,7 @@ Optional general-purpose recording feature packaged in the Alpha Recording Studi
 - Stopping a session keeps its recovery marker while frame or microphone writes are pending; the marker is cleared after finalization, including through a background finalizer during Studio shutdown.
 - Existing frame filenames are scanned before recording resumes so a reopened project appends frames instead of overwriting earlier captures.
 - Manual recording controller and Recording Studio-owned Forge runtime.
-- OBS-inspired AlphaClient workspace with a live Minecraft viewport and dedicated Scenes, Sources, Module, Audio Mixer, Controls and Timeline panels.
+- OBS-inspired AlphaClient workspace with a live Minecraft viewport, dedicated Scenes, Sources, Module, Audio Mixer and Controls panels, plus visible Video and Audio timeline tracks with clip positions and a recording playhead.
 - Persisted scene management with create, rename, remove and cycle controls; the final remaining scene is protected from deletion.
 - Built-in per-scene Minecraft Capture and Microphone sources with enable/disable, remove and reorder controls. Select a source in the Sources panel, then move it up or down; the order is saved with the scene. Disabling or removing microphone capture stops an active microphone session. Scene selection, scene edits and Game Capture source changes are locked during active or paused recording so captured frame timing cannot silently become discontinuous.
 - Module panel with Normal Gameplay and Build Timelapse choices; optional module adapters can expose additional recording workflows without adding feature-module imports to Recording Studio.
