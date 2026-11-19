@@ -23,19 +23,19 @@ public final class CustomEnchantments {
         if (registered) return;
         LIFESTEAL = add("lifesteal", CustomEnchantment.Target.SWORD, CustomEnchantment.Rarity.RARE, 5);
         EXECUTE = add("execute", CustomEnchantment.Target.SWORD, CustomEnchantment.Rarity.LEGENDARY, 5);
-        VENOM = add("venom", CustomEnchantment.Target.SWORD, CustomEnchantment.Rarity.RARE, 5);
+        VENOM = add("venom", CustomEnchantment.Target.SWORD, CustomEnchantment.Rarity.UNCOMMON, 5);
         RAGE = add("rage", CustomEnchantment.Target.SWORD, CustomEnchantment.Rarity.LEGENDARY, 5);
         DOUBLE_STRIKE = add("double_strike", CustomEnchantment.Target.SWORD, CustomEnchantment.Rarity.RARE, 3);
 
         EXPLOSIVE = add("explosive", CustomEnchantment.Target.BOW, CustomEnchantment.Rarity.LEGENDARY, 5);
         PIERCING = add("piercing", CustomEnchantment.Target.BOW, CustomEnchantment.Rarity.RARE, 5);
-        VENOM_SHOT = add("venom_shot", CustomEnchantment.Target.BOW, CustomEnchantment.Rarity.RARE, 5);
+        VENOM_SHOT = add("venom_shot", CustomEnchantment.Target.BOW, CustomEnchantment.Rarity.UNCOMMON, 5);
         MULTISHOT = add("multishot", CustomEnchantment.Target.BOW, CustomEnchantment.Rarity.LEGENDARY, 3);
 
         DODGE = add("dodge", CustomEnchantment.Target.CHESTPLATE_LEGGINGS, CustomEnchantment.Rarity.LEGENDARY, 5);
         REJUVENATION = add("rejuvenation", CustomEnchantment.Target.ARMOR, CustomEnchantment.Rarity.RARE, 5);
         SPEED = add("speed", CustomEnchantment.Target.BOOTS, CustomEnchantment.Rarity.RARE, 3);
-        THORNS_PLUS = add("thorns_plus", CustomEnchantment.Target.ARMOR, CustomEnchantment.Rarity.RARE, 5);
+        THORNS_PLUS = add("thorns_plus", CustomEnchantment.Target.ARMOR, CustomEnchantment.Rarity.UNCOMMON, 5);
         NIGHT_VISION = add("night_vision", CustomEnchantment.Target.HELMET, CustomEnchantment.Rarity.UNCOMMON, 1);
 
         VEIN_MINER = add("vein_miner", CustomEnchantment.Target.PICKAXE, CustomEnchantment.Rarity.RARE, 3);
