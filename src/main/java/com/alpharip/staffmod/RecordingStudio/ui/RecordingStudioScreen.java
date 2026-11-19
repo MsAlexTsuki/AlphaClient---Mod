@@ -275,6 +275,24 @@ public final class RecordingStudioScreen extends GuiScreen {
                 if (index >= 0 && index < sources.size()) selectedSourceId = sources.get(index).getId();
             }
         }
+
+        boolean mediaReady = !controller.getCapture().isRecording()
+                && !controller.getCapture().isPaused()
+                && controller.getCapture().getPendingFrameCount() == 0;
+        int timelineBarLeft = 218;
+        int timelineBarRight = width - 200;
+        int videoTrackTop = height - 99;
+        int videoTrackBottom = videoTrackTop + 11;
+        if (mouseButton == 0 && mediaReady && mouseY >= videoTrackTop && mouseY <= videoTrackBottom
+                && mouseX >= timelineBarLeft && mouseX < timelineBarRight) {
+            if (!playbackMode) {
+                playback.refreshFrames();
+                playbackMode = true;
+            }
+            double position = (mouseX - timelineBarLeft) / (double) Math.max(1, timelineBarRight - timelineBarLeft);
+            int targetFrame = (int) Math.round(position * Math.max(0, playback.getFrameCount() - 1));
+            playback.seekToFrame(targetFrame);
+        }
     }
 
     @Override
