@@ -89,6 +89,10 @@ public final class RecordingStudioRuntime {
         if (cameraPreview != null) cameraPreview.drawPreview();
     }
 
+    public synchronized void drawLiveViewport(int x, int y, int width, int height) {
+        if (cameraPreview != null) cameraPreview.drawLiveViewport(x, y, width, height);
+    }
+
     public synchronized List<String> getModuleIds() {
         List<String> ids = new ArrayList<String>();
         ids.add("normal_gameplay");
