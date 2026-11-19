@@ -42,10 +42,8 @@ public final class CustomEnchantmentTableHooks {
         long seed = 31L * container.xpSeed + 17L * stackSeed
                 + 131L * enchantSlot + 977L * enchantLevel;
         java.util.Random random = new java.util.Random(seed);
-        if (random.nextInt(100) >= 10) {
-            upgradeVanillaLevel(vanilla, random, enchantLevel);
-            return vanilla;
-        }
+        upgradeVanillaLevel(vanilla, random, enchantLevel);
+        if (random.nextInt(100) >= 10) return vanilla;
 
         List<CustomEnchantment> eligible = new ArrayList<CustomEnchantment>();
         for (CustomEnchantment custom : CustomEnchantments.getAll()) {
@@ -66,7 +64,7 @@ public final class CustomEnchantmentTableHooks {
 
         CustomEnchantment selected = candidates.get(random.nextInt(candidates.size()));
         int level = 1 + random.nextInt(selected.getMaxLevel());
-        List<EnchantmentData> result = new ArrayList<EnchantmentData>();
+        List<EnchantmentData> result = new ArrayList<EnchantmentData>(vanilla);
         result.add(new EnchantmentData(selected, level));
         return result;
     }
