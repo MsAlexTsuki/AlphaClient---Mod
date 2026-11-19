@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /** User-level Recording Studio preferences, stored separately from individual projects. */
 public final class RecordingStudioPreferences {
@@ -70,8 +73,12 @@ public final class RecordingStudioPreferences {
             output.getFD().sync();
             output.close();
             output = null;
-            if (target.exists() && !target.delete()) throw new java.io.IOException("Cannot replace preferences file");
-            if (!temporary.renameTo(target)) throw new java.io.IOException("Cannot move preferences file into place");
+            try {
+                Files.move(temporary.toPath(), target.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (Exception ignored) {
             // Preferences are non-critical; the current session remains usable.
             if (temporary.exists() && !temporary.delete()) temporary.deleteOnExit();
