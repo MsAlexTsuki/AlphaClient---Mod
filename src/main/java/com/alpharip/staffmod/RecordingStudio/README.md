@@ -29,7 +29,7 @@ Optional general-purpose recording feature packaged in the Alpha Recording Studi
 - Bounded encoder queue (one active write plus up to eight queued frames) with dropped-frame accounting when the queue is full.
 - Atomic PNG file replacement so interrupted writes do not leave partially written final frame files.
 - Live pending-write counter; accepted frame writes drain without blocking the Minecraft client thread during shutdown.
-- Start, pause, resume, stop and save controls in a dedicated Studio screen.
+- REC, pause, resume, stop and save controls in the dedicated Studio screen, with a visible recording state and elapsed-time indicator.
 - AlphaClient dark-and-gold styling across the main dashboard, timeline editor, camera editor and storage overview, with consistent custom buttons and panel layout.
 - Read-only storage overview for project metadata, captured video frames, microphone audio and exported media; users can refresh the scan without changing or deleting files.
 - Adjustable capture interval in 100 ms steps, bounded to 100–60000 ms.
