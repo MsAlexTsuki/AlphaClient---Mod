@@ -58,7 +58,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         int gap = 4;
         int row = 23;
 
-        add(0, rightX + 8, rightY, buttonWidth, "Start", true);
+        add(0, rightX + 8, rightY, buttonWidth, "REC", true);
         add(1, rightX + 8 + buttonWidth + gap, rightY, buttonWidth, "Pause");
         add(2, rightX + 8, rightY + row, buttonWidth, "Resume");
         add(3, rightX + 8 + buttonWidth + gap, rightY + row, buttonWidth, "Stop");
@@ -285,6 +285,14 @@ public final class RecordingStudioScreen extends GuiScreen {
         }
     }
 
+    private static String formatRecordingTime(long millis) {
+        long totalSeconds = Math.max(0L, millis) / 1000L;
+        long hours = totalSeconds / 3600L;
+        long minutes = (totalSeconds / 60L) % 60L;
+        long seconds = totalSeconds % 60L;
+        return String.format(java.util.Locale.ROOT, "%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
     private void drawTimelineTrack(String trackId, String label, int y, int color,
                                    int barLeft, int barRight, long totalDuration) {
         drawString(fontRendererObj, label, 170, y + 1, 0xFFBBBBBB);
@@ -362,6 +370,17 @@ public final class RecordingStudioScreen extends GuiScreen {
 
         drawCenteredString(fontRendererObj, playbackMode ? "RECORDED PLAYBACK" : "LIVE PREVIEW",
                 (previewLeft + previewRight) / 2, previewTop + 10, 0xFFFFC83D);
+        if (playbackMode) {
+            drawString(fontRendererObj, "PLAYBACK", previewRight - 62, previewTop + 10, 0xFFFFD65A);
+        } else {
+            boolean recording = controller.getCapture().isRecording();
+            boolean paused = controller.getCapture().isPaused();
+            long elapsed = controller.getProject().getElapsedMillis(System.currentTimeMillis());
+            String state = recording ? "REC" : paused ? "PAUSED" : elapsed > 0L ? "STOPPED" : "READY";
+            int stateColor = recording ? 0xFFFF5555 : paused ? 0xFFFFD65A : 0xFFAAAAAA;
+            drawString(fontRendererObj, state + "  " + formatRecordingTime(elapsed),
+                    previewRight - 130, previewTop + 10, stateColor);
+        }
         drawString(fontRendererObj, playbackMode ? "RECORDED GAME VIEW" : "LIVE GAME VIEW",
                 previewLeft + 12, previewTop + 28, 0xFFE0E0E0);
         drawString(fontRendererObj, "SESSION  " + controller.getStatus(),
