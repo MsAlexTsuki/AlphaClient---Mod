@@ -33,7 +33,6 @@ public final class CustomEnchantmentTableTransformer implements IClassTransforme
                 for (AbstractInsnNode instruction : instructions) {
                     if (instruction.getOpcode() != Opcodes.ARETURN) continue;
                     InsnList hook = new InsnList();
-                    hook.add(new InsnNode(Opcodes.DUP));
                     hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
                     hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
                     hook.add(new VarInsnNode(Opcodes.ILOAD, 2));
