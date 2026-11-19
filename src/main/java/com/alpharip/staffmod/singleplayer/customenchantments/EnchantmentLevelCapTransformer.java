@@ -8,6 +8,11 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.IntInsnNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.VarInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 /** Extends vanilla enchantment caps while retaining each enchantment's own effect formula. */
@@ -43,14 +48,35 @@ public final class EnchantmentLevelCapTransformer implements IClassTransformer {
             for (MethodNode method : node.methods) {
                 if (!( "getMaxLevel".equals(method.name) || "func_77325_b".equals(method.name) || "b".equals(method.name))
                         || !"()I".equals(method.desc)) continue;
+
+                if ("EnchantmentLootBonus".equals(simpleName)) {
+                    LabelNode extendedLevel = new LabelNode();
+                    LabelNode originalLevel = new LabelNode();
+                    InsnList guard = new InsnList();
+                    guard.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    guard.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/enchantment/Enchantment", "effectId", "I"));
+                    guard.add(new IntInsnNode(Opcodes.BIPUSH, 21));
+                    guard.add(new JumpInsnNode(Opcodes.IF_ICMPEQ, extendedLevel));
+                    guard.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    guard.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/enchantment/Enchantment", "effectId", "I"));
+                    guard.add(new IntInsnNode(Opcodes.BIPUSH, 35));
+                    guard.add(new JumpInsnNode(Opcodes.IF_ICMPEQ, extendedLevel));
+                    guard.add(new JumpInsnNode(Opcodes.GOTO, originalLevel));
+                    guard.add(extendedLevel);
+                    guard.add(new IntInsnNode(Opcodes.BIPUSH, cap));
+                    guard.add(new InsnNode(Opcodes.IRETURN));
+                    guard.add(originalLevel);
+                    method.instructions.insertBefore(method.instructions.getFirst(), guard);
+                    changed = true;
+                    continue;
+                }
+
                 for (AbstractInsnNode instruction : method.instructions.toArray()) {
                     if (instruction.getOpcode() != Opcodes.IRETURN) continue;
                     InsnList replacement = new InsnList();
                     replacement.add(new InsnNode(Opcodes.POP));
                     if (cap >= 0 && cap <= 5) replacement.add(new InsnNode(Opcodes.ICONST_0 + cap));
-                    else {
-                        replacement.add(new org.objectweb.asm.tree.IntInsnNode(Opcodes.BIPUSH, cap));
-                    }
+                    else replacement.add(new IntInsnNode(Opcodes.BIPUSH, cap));
                     method.instructions.insertBefore(instruction, replacement);
                     changed = true;
                 }
