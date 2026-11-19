@@ -104,10 +104,6 @@ public final class CustomEnchantmentHandler {
             } else {
             ItemStack weapon = attacker.getHeldItem();
             int lifesteal = level(weapon, CustomEnchantments.LIFESTEAL);
-            if (lifesteal > 0) {
-                float[] heal = {0F, .10F, .15F, .20F, .25F, .35F};
-                attacker.heal(event.amount * heal[Math.min(lifesteal, 5)]);
-            }
             int execute = level(weapon, CustomEnchantments.EXECUTE);
             if (execute > 0 && event.entityLiving.getHealth() <= event.entityLiving.getMaxHealth() * .30F)
                 event.amount *= 1.0F + .20F * execute;
@@ -125,6 +121,11 @@ public final class CustomEnchantmentHandler {
                 data.setInteger("AlphaRageStacks", stacks);
                 data.setLong("AlphaRageLastHit", now);
                 event.amount *= 1.0F + Math.min(1.0F, stacks * .02F * rage);
+            }
+
+            if (lifesteal > 0) {
+                float[] heal = {0F, .10F, .15F, .20F, .25F, .35F};
+                attacker.heal(event.amount * heal[Math.min(lifesteal, 5)]);
             }
 
             int doubleStrike = level(weapon, CustomEnchantments.DOUBLE_STRIKE);
