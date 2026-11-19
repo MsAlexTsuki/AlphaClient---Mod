@@ -67,7 +67,7 @@ public final class RecordingStudioPlayback {
             return;
         }
         File[] found = framesDirectory.listFiles((directory, name) ->
-                name.matches("frame-[0-9]{8}\\\\.png") && new File(directory, name).isFile());
+                name.matches("frame-[0-9]{8}\\.png") && new File(directory, name).isFile());
         if (found == null) {
             status = "Cannot read captured frame directory";
             return;
