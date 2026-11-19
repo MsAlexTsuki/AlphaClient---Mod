@@ -416,10 +416,23 @@ public final class RecordingStudioScreen extends GuiScreen {
                 previewLeft + 10, height - 54, 0xFFBBBBBB);
         drawString(fontRendererObj, controller.getExportStatus(), previewLeft + 10, height - 34, 0xFFFFC83D);
 
+        boolean recordingActive = controller.getCapture().isRecording()
+                || controller.getCapture().isPaused();
+        boolean mediaReady = !recordingActive && controller.getCapture().getPendingFrameCount() == 0;
         GuiButton reviewButton = findButton(32);
-        if (reviewButton != null) reviewButton.displayString = playbackMode ? "Live" : "Review";
+        if (reviewButton != null) {
+            reviewButton.displayString = playbackMode ? "Live" : "Review";
+            reviewButton.enabled = mediaReady;
+        }
+        GuiButton previousButton = findButton(33);
+        if (previousButton != null) previousButton.enabled = mediaReady && playback.getFrameCount() > 0;
         GuiButton playButton = findButton(34);
-        if (playButton != null) playButton.displayString = playback.isPlaying() ? "Pause" : "Play";
+        if (playButton != null) {
+            playButton.displayString = playback.isPlaying() ? "Pause" : "Play";
+            playButton.enabled = mediaReady && playback.getFrameCount() > 0;
+        }
+        GuiButton nextButton = findButton(35);
+        if (nextButton != null) nextButton.enabled = mediaReady && playback.getFrameCount() > 0;
 
         super.drawScreen(mouseX, mouseY, partialTicks);
         if (playbackMode) {
