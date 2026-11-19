@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.singleplayer.customenchantments;
 
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockDirt;
@@ -61,6 +62,9 @@ public final class CustomEnchantmentHandler {
                 if (venomShot > 0)
                     event.entityLiving.addPotionEffect(new PotionEffect(Potion.poison.id,
                             40 + venomShot * 30, Math.max(0, (venomShot - 3) / 2)));
+                int flame = arrowData.getInteger("AlphaFlame");
+                if (flame > 0 && !(event.entityLiving instanceof net.minecraft.entity.monster.EntityEnderman))
+                    event.entityLiving.setFire(5 * flame);
                 int explosive = arrowData.getInteger("AlphaExplosive");
                 if (explosive > 0 && !arrowData.getBoolean("AlphaExplosiveTriggered")) {
                     arrowData.setBoolean("AlphaExplosiveTriggered", true);
@@ -117,9 +121,15 @@ public final class CustomEnchantmentHandler {
         if (event.entityLiving instanceof EntityPlayer) {
             EntityPlayer defender = (EntityPlayer) event.entityLiving;
             int dodge = maxArmorLevel(defender, CustomEnchantments.DODGE);
-            if (dodge > 0 && RANDOM.nextFloat() < .08F * dodge) {
-                event.setCanceled(true);
-                return;
+            if (dodge > 0) {
+                NBTTagCompound dodgeData = defender.getEntityData();
+                long now = defender.worldObj.getTotalWorldTime();
+                long lastDodge = dodgeData.getLong("AlphaDodgeLast");
+                if (now - lastDodge >= 40L && RANDOM.nextFloat() < .08F * dodge) {
+                    dodgeData.setLong("AlphaDodgeLast", now);
+                    event.setCanceled(true);
+                    return;
+                }
             }
             int thorns = maxArmorLevel(defender, CustomEnchantments.THORNS_PLUS);
             if (thorns > 0 && source instanceof EntityLivingBase && source != defender
@@ -205,6 +215,13 @@ public final class CustomEnchantmentHandler {
         for (int i = 0; i < totalArrows - 1; i++) {
             EntityArrow extra = new EntityArrow(event.entityPlayer.worldObj, event.entityPlayer, velocity);
             extra.canBePickedUp = 0;
+            int power = EnchantmentHelper.getEnchantmentLevel(Enchantment.power.effectId, event.bow);
+            if (power > 0) extra.setDamage(extra.getDamage() + power * .5D + .5D);
+            int punch = EnchantmentHelper.getEnchantmentLevel(Enchantment.punch.effectId, event.bow);
+            if (punch > 0) extra.setKnockbackStrength(punch);
+            int flame = EnchantmentHelper.getEnchantmentLevel(Enchantment.flame.effectId, event.bow);
+            if (flame > 0) extra.setFire(100);
+            if (charge >= 1.0F) extra.setIsCritical(true);
             double offset = (i - (totalArrows - 2) / 2.0D) * spread;
             float yaw = event.entityPlayer.rotationYaw * (float)Math.PI / 180.0F;
             extra.motionX += -Math.cos(yaw) * offset;
@@ -236,6 +253,7 @@ public final class CustomEnchantmentHandler {
         data.setInteger("AlphaVenomShot", level(bow, CustomEnchantments.VENOM_SHOT));
         data.setInteger("AlphaExplosive", level(bow, CustomEnchantments.EXPLOSIVE));
         data.setInteger("AlphaPiercing", level(bow, CustomEnchantments.PIERCING));
+        data.setInteger("AlphaFlame", EnchantmentHelper.getEnchantmentLevel(Enchantment.flame.effectId, bow));
     }
 
     @SubscribeEvent
@@ -261,7 +279,7 @@ public final class CustomEnchantmentHandler {
             breakConnected(event.world, player, tool, origin, block,
                     block.getMetaFromState(event.state), limit, false);
         } else if (tree > 0 && block.isWood(event.world, origin)) {
-            int limit = tree == 1 ? 16 : tree == 2 ? 32 : 64;
+            int limit = tree == 1 ? 15 : tree == 2 ? 31 : 63;
             breakConnected(event.world, player, tool, origin, block, -1, limit, true);
         } else if (excavator > 0 && isExcavatorBlock(block, event.world, origin)) {
             int width = excavator == 1 ? 3 : excavator == 2 ? 5 : 7;
@@ -351,14 +369,6 @@ public final class CustomEnchantmentHandler {
         int magnetic = level(tool, CustomEnchantments.MAGNETIC);
         if (autoSmelt <= 0 && telepathy <= 0 && magnetic <= 0) return;
 
-        if (magnetic > 0) {
-            for (ItemStack drop : event.drops) {
-                if (drop == null) continue;
-                if (!drop.hasTagCompound()) drop.setTagCompound(new NBTTagCompound());
-                drop.getTagCompound().setBoolean("AlphaMagneticDrop", true);
-            }
-        }
-
         if (autoSmelt > 0 && !event.isSilkTouching) {
             for (int i = 0; i < event.drops.size(); i++) {
                 ItemStack drop = event.drops.get(i);
@@ -381,6 +391,14 @@ public final class CustomEnchantmentHandler {
                 else event.drops.set(i, remainder);
             }
         }
+
+        if (magnetic > 0) {
+            for (ItemStack drop : event.drops) {
+                if (drop == null) continue;
+                if (!drop.hasTagCompound()) drop.setTagCompound(new NBTTagCompound());
+                drop.getTagCompound().setBoolean("AlphaMagneticDrop", true);
+            }
+        }
     }
 
     @SubscribeEvent
@@ -391,8 +409,8 @@ public final class CustomEnchantmentHandler {
         int magnetic = level(player.getHeldItem(), CustomEnchantments.MAGNETIC);
         int magnet = level(player.getCurrentArmor(0), CustomEnchantments.MAGNET);
         int autoPickup = level(player.getCurrentArmor(0), CustomEnchantments.AUTO_PICKUP);
-        int range = Math.max(magnetic > 0 ? magnetic * 4 : 0,
-                Math.max(magnet > 0 ? magnet * 4 : 0, autoPickup > 0 ? autoPickup * 4 : 0));
+        int range = Math.max(rangeForLevel(magnetic),
+                Math.max(rangeForLevel(magnet), rangeForLevel(autoPickup)));
         if (range <= 0) return;
         java.util.List<EntityItem> items = player.worldObj.getEntitiesWithinAABB(EntityItem.class,
                 player.getEntityBoundingBox().expand(range, range, range));
@@ -411,6 +429,10 @@ public final class CustomEnchantmentHandler {
             item.motionZ += dz * scale;
             if (autoPickup > 0 && distanceSq <= 2.25D) item.onCollideWithPlayer(player);
         }
+    }
+
+    private static int rangeForLevel(int level) {
+        return level <= 0 ? 0 : level == 1 ? 4 : level == 2 ? 8 : 16;
     }
 
     private static int level(ItemStack stack, net.minecraft.enchantment.Enchantment enchantment) {
