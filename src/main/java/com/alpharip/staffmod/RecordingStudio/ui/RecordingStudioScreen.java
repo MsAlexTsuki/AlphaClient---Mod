@@ -172,8 +172,12 @@ public final class RecordingStudioScreen extends GuiScreen {
                 break;
             case 32:
                 playback.pause();
-                playback.refreshFrames();
-                playbackMode = true;
+                if (playbackMode) {
+                    playbackMode = false;
+                } else {
+                    playback.refreshFrames();
+                    playbackMode = true;
+                }
                 break;
             case 33:
                 playbackMode = true;
