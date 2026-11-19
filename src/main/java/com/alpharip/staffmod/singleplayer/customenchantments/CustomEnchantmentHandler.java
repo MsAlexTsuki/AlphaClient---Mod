@@ -281,6 +281,7 @@ public final class CustomEnchantmentHandler {
         if (bow == null) return;
         NBTTagCompound data = arrow.getEntityData();
         data.setInteger("AlphaVenomShot", level(bow, CustomEnchantments.VENOM_SHOT));
+        data.setInteger("AlphaInfinity", EnchantmentHelper.getEnchantmentLevel(Enchantment.infinity.effectId, bow));
         data.setInteger("AlphaExplosive", level(bow, CustomEnchantments.EXPLOSIVE));
         data.setInteger("AlphaPiercing", level(bow, CustomEnchantments.PIERCING));
         data.setInteger("AlphaFlame", EnchantmentHelper.getEnchantmentLevel(Enchantment.flame.effectId, bow));
