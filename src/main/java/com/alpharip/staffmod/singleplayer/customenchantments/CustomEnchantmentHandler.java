@@ -15,6 +15,7 @@ import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
+import net.minecraftforge.event.entity.player.PlayerPickupXpEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -121,6 +122,15 @@ public final class CustomEnchantmentHandler {
         applyPotion(player, Potion.moveSpeed, level(player.getCurrentArmor(0), CustomEnchantments.SPEED), 40);
         applyPotion(player, Potion.nightVision, level(player.getCurrentArmor(3), CustomEnchantments.NIGHT_VISION), 260);
         applyPotion(player, Potion.digSpeed, level(player.getHeldItem(), CustomEnchantments.HASTE), 40);
+    }
+
+
+    @SubscribeEvent
+    public void onPickupExperience(PlayerPickupXpEvent event) {
+        if (event == null || event.entityPlayer == null || event.orb == null
+                || !CustomEnchantmentAccess.isAvailable()) return;
+        int level = level(event.entityPlayer.getHeldItem(), CustomEnchantments.EXPERIENCE);
+        if (level > 0) event.orb.xpValue += Math.round(event.orb.xpValue * (level * .20F));
     }
 
     @SubscribeEvent
@@ -359,6 +369,7 @@ public final class CustomEnchantmentHandler {
             item.motionX += dx * scale;
             item.motionY += dy * scale;
             item.motionZ += dz * scale;
+            if (autoPickup > 0 && distanceSq <= 2.25D) item.onCollideWithPlayer(player);
         }
     }
 
