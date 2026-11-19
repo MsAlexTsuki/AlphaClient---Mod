@@ -25,6 +25,9 @@ public final class RecordingStudioScreen extends GuiScreen {
     private final RecordingStudioAudioPlayback audioPlayback;
     private final RecordingStudioExternalVideoPreview externalVideoPreview;
     private boolean playbackMode;
+    private boolean externalReviewPlaying;
+    private long externalReviewPositionMillis;
+    private long externalReviewLastTick;
     private boolean navigating;
     private GuiTextField sceneNameField;
     private String selectedSourceId;
@@ -184,25 +187,47 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 32:
                 playback.pause();
                 audioPlayback.pause();
+                externalReviewPlaying = false;
                 if (playbackMode) {
                     playbackMode = false;
                 } else {
                     playback.refreshFrames();
                     playbackMode = true;
+                    externalReviewPositionMillis = 0L;
+                    externalReviewLastTick = System.currentTimeMillis();
                 }
                 break;
             case 33:
                 playbackMode = true;
-                playback.step(-1);
+                if (playback.getFrameCount() > 0) {
+                    externalReviewPlaying = false;
+                    playback.step(-1);
+                } else if (hasExternalVideoClips()) {
+                    externalReviewPlaying = false;
+                    externalReviewPositionMillis = Math.max(0L, externalReviewPositionMillis - 1000L);
+                }
                 break;
             case 34:
                 playbackMode = true;
                 if (controller.getCapture().getPendingFrameCount() == 0) playback.refreshFrames();
-                playback.togglePlayback();
+                if (playback.getFrameCount() > 0) {
+                    externalReviewPlaying = false;
+                    playback.togglePlayback();
+                } else if (hasExternalVideoClips()) {
+                    externalReviewPlaying = !externalReviewPlaying;
+                    externalReviewLastTick = System.currentTimeMillis();
+                }
                 break;
             case 35:
                 playbackMode = true;
-                playback.step(1);
+                if (playback.getFrameCount() > 0) {
+                    externalReviewPlaying = false;
+                    playback.step(1);
+                } else if (hasExternalVideoClips()) {
+                    externalReviewPlaying = false;
+                    externalReviewPositionMillis = Math.min(controller.getTimeline().duration(),
+                            externalReviewPositionMillis + 1000L);
+                }
                 break;
             case 15:
                 runtime.selectNextModule();
@@ -302,8 +327,16 @@ public final class RecordingStudioScreen extends GuiScreen {
                 playbackMode = true;
             }
             double position = (mouseX - timelineBarLeft) / (double) Math.max(1, timelineBarRight - timelineBarLeft);
-            int targetFrame = (int) Math.round(position * Math.max(0, playback.getFrameCount() - 1));
-            playback.seekToFrame(targetFrame);
+            if (playback.getFrameCount() == 0 && hasExternalVideoClips()) {
+                externalReviewPlaying = false;
+                externalReviewPositionMillis = Math.round(position * controller.getTimeline().duration());
+                externalReviewLastTick = System.currentTimeMillis();
+                audioPlayback.pause();
+            } else {
+                externalReviewPlaying = false;
+                int targetFrame = (int) Math.round(position * Math.max(0, playback.getFrameCount() - 1));
+                playback.seekToFrame(targetFrame);
+            }
         }
     }
 
@@ -315,6 +348,16 @@ public final class RecordingStudioScreen extends GuiScreen {
             playback.close(mc);
             runtime.shutdown();
         }
+    }
+
+    private boolean hasExternalVideoClips() {
+        for (TimelineTrack track : controller.getTimeline().getTracks()) {
+            if (!"video".equals(track.getId())) continue;
+            for (TimelineClip clip : track.getClips()) {
+                if (!"@capture".equals(clip.getSource()) && clip.getDuration() > 0L) return true;
+            }
+        }
+        return false;
     }
 
     private static String formatRecordingTime(long millis) {
@@ -456,13 +499,25 @@ public final class RecordingStudioScreen extends GuiScreen {
         Gui.drawRect(previewLeft, timelineTop, previewRight, timelineTop + 2, 0xFFFFC83D);
         drawString(fontRendererObj, "TIMELINE", previewLeft + 10, height - 120, 0xFFFFC83D);
 
+        long now = System.currentTimeMillis();
+        if (playbackMode && playback.getFrameCount() == 0 && externalReviewPlaying) {
+            long delta = Math.max(0L, Math.min(250L, now - externalReviewLastTick));
+            externalReviewPositionMillis += delta;
+            externalReviewLastTick = now;
+            if (externalReviewPositionMillis >= controller.getTimeline().duration()) {
+                externalReviewPositionMillis = controller.getTimeline().duration();
+                externalReviewPlaying = false;
+            }
+        }
         long playheadMillis = playbackMode
-                ? playback.getPositionMillis(controller.getCapture().getIntervalMillis())
-                : controller.getProject().getElapsedMillis(System.currentTimeMillis());
+                ? (playback.getFrameCount() > 0
+                    ? playback.getPositionMillis(controller.getCapture().getIntervalMillis())
+                    : externalReviewPositionMillis)
+                : controller.getProject().getElapsedMillis(now);
         long timelineDuration = Math.max(1L,
                 Math.max(controller.getTimeline().duration(), playheadMillis));
         audioPlayback.update(controller.getTimeline(), playheadMillis,
-                playbackMode && playback.isPlaying());
+                playbackMode && (playback.isPlaying() || externalReviewPlaying));
         boolean externalVideoActive = playbackMode
                 && externalVideoPreview.update(controller.getTimeline(), playheadMillis);
         int timelineBarLeft = previewLeft + 58;
@@ -490,14 +545,17 @@ public final class RecordingStudioScreen extends GuiScreen {
             reviewButton.enabled = mediaReady;
         }
         GuiButton previousButton = findButton(33);
-        if (previousButton != null) previousButton.enabled = mediaReady && playback.getFrameCount() > 0;
+        if (previousButton != null) previousButton.enabled = mediaReady
+                && (playback.getFrameCount() > 0 || hasExternalVideoClips());
         GuiButton playButton = findButton(34);
         if (playButton != null) {
-            playButton.displayString = playback.isPlaying() ? "Pause" : "Play";
-            playButton.enabled = mediaReady && playback.getFrameCount() > 0;
+            boolean playingReview = playback.isPlaying() || externalReviewPlaying;
+            playButton.displayString = playingReview ? "Pause" : "Play";
+            playButton.enabled = mediaReady && (playback.getFrameCount() > 0 || hasExternalVideoClips());
         }
         GuiButton nextButton = findButton(35);
-        if (nextButton != null) nextButton.enabled = mediaReady && playback.getFrameCount() > 0;
+        if (nextButton != null) nextButton.enabled = mediaReady
+                && (playback.getFrameCount() > 0 || hasExternalVideoClips());
 
         super.drawScreen(mouseX, mouseY, partialTicks);
         if (playbackMode) {
