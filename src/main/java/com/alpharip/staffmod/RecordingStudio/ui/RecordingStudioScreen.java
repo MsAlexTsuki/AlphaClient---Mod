@@ -305,6 +305,13 @@ public final class RecordingStudioScreen extends GuiScreen {
                 }
             }
         }
+        if ("video".equals(trackId)
+                && (controller.getCapture().isRecording() || controller.getCapture().isPaused())) {
+            long activeDuration = controller.getProject().getElapsedMillis(System.currentTimeMillis());
+            int activeRight = barLeft + (int) Math.ceil(
+                    Math.max(0L, Math.min(totalDuration, activeDuration)) / (double) totalDuration * barWidth);
+            if (activeRight > barLeft) Gui.drawRect(barLeft, y + 1, activeRight, y + 10, color);
+        }
     }
 
     @Override
