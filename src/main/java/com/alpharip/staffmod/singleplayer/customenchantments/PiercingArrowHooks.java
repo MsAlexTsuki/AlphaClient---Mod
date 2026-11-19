@@ -10,6 +10,7 @@ public final class PiercingArrowHooks {
     public static void handleEntityImpact(Object arrowObject) {
         if (!(arrowObject instanceof EntityArrow)) return;
         EntityArrow arrow = (EntityArrow) arrowObject;
+        if (arrow.worldObj.isRemote) return;
         NBTTagCompound data = arrow.getEntityData();
         int level = data.getInteger("AlphaPiercing");
         if (level <= 0) {
