@@ -57,6 +57,21 @@ public final class CustomEnchantmentHandler {
         if (event == null || event.entityLiving == null || event.entityLiving.worldObj.isRemote || !CustomEnchantmentAccess.isAvailable()) return;
         Entity source = event.source == null ? null : event.source.getEntity();
 
+        if (event.entityLiving instanceof EntityPlayer) {
+            EntityPlayer defender = (EntityPlayer) event.entityLiving;
+            int dodge = maxArmorLevel(defender, CustomEnchantments.DODGE);
+            if (dodge > 0) {
+                NBTTagCompound dodgeData = defender.getEntityData();
+                long now = defender.worldObj.getTotalWorldTime();
+                long lastDodge = dodgeData.getLong("AlphaDodgeLast");
+                if (now - lastDodge >= 40L && RANDOM.nextFloat() < .08F * dodge) {
+                    dodgeData.setLong("AlphaDodgeLast", now);
+                    event.setCanceled(true);
+                    return;
+                }
+            }
+        }
+
         if (source instanceof EntityPlayer && event.source != null && event.source.isProjectile()) {
             Entity projectile = event.source.getSourceOfDamage();
             if (projectile instanceof EntityArrow) {
@@ -124,17 +139,6 @@ public final class CustomEnchantmentHandler {
 
         if (event.entityLiving instanceof EntityPlayer) {
             EntityPlayer defender = (EntityPlayer) event.entityLiving;
-            int dodge = maxArmorLevel(defender, CustomEnchantments.DODGE);
-            if (dodge > 0) {
-                NBTTagCompound dodgeData = defender.getEntityData();
-                long now = defender.worldObj.getTotalWorldTime();
-                long lastDodge = dodgeData.getLong("AlphaDodgeLast");
-                if (now - lastDodge >= 40L && RANDOM.nextFloat() < .08F * dodge) {
-                    dodgeData.setLong("AlphaDodgeLast", now);
-                    event.setCanceled(true);
-                    return;
-                }
-            }
             int thorns = maxArmorLevel(defender, CustomEnchantments.THORNS_PLUS);
             boolean reflectedDamage = source instanceof EntityLivingBase
                     && source.getEntityData().getBoolean("AlphaThornsPlusProc");
