@@ -66,6 +66,8 @@ public final class RecordingStudioExportSettings {
 
     public Resolution getResolution() { return resolution; }
     public Quality getQuality() { return quality; }
+    public void setResolution(Resolution value) { if (value != null) resolution = value; }
+    public void setQuality(Quality value) { if (value != null) quality = value; }
     public void cycleResolution() { resolution = resolution.next(); }
     public void cycleQuality() { quality = quality.next(); }
 }
