@@ -92,6 +92,7 @@ public final class RecordingStudioPlayback {
             playing = false;
             return;
         }
+        if (!playing && frameIndex >= frames.length - 1) frameIndex = 0;
         playing = !playing;
         lastFrameAt = System.currentTimeMillis();
         if (playing) requestFrame(frameIndex);
@@ -160,9 +161,16 @@ public final class RecordingStudioPlayback {
             long interval = Math.max(100L, frameIntervalMillis);
             if (now - lastFrameAt >= interval) {
                 long steps = Math.max(1L, (now - lastFrameAt) / interval);
-                frameIndex = (int) ((frameIndex + steps) % frames.length);
-                lastFrameAt += steps * interval;
-                requestFrame(frameIndex);
+                long nextIndex = frameIndex + steps;
+                if (nextIndex >= frames.length) {
+                    frameIndex = frames.length - 1;
+                    playing = false;
+                    status = "Playback complete";
+                } else {
+                    frameIndex = (int) nextIndex;
+                    lastFrameAt += steps * interval;
+                    requestFrame(frameIndex);
+                }
             }
         }
 
