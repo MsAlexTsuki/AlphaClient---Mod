@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.singleplayer.customenchantments;
 
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -132,9 +133,16 @@ public final class CustomEnchantmentHandler {
                 }
             }
             int thorns = maxArmorLevel(defender, CustomEnchantments.THORNS_PLUS);
+            boolean reflectedDamage = source instanceof EntityLivingBase
+                    && source.getEntityData().getBoolean("AlphaThornsPlusProc");
             if (thorns > 0 && source instanceof EntityLivingBase && source != defender
-                    && RANDOM.nextFloat() < .15F * thorns)
-                ((EntityLivingBase) source).attackEntityFrom(DamageSource.causeThornsDamage(defender), thorns * 2.0F);
+                    && !reflectedDamage && RANDOM.nextFloat() < .15F * thorns) {
+                NBTTagCompound defenderData = defender.getEntityData();
+                defenderData.setBoolean("AlphaThornsPlusProc", true);
+                ((EntityLivingBase) source).attackEntityFrom(
+                        DamageSource.causeThornsDamage(defender), thorns * 2.0F);
+                defenderData.removeTag("AlphaThornsPlusProc");
+            }
         }
     }
 
@@ -159,7 +167,14 @@ public final class CustomEnchantmentHandler {
         if (event == null || event.entityPlayer == null || event.orb == null
                 || !CustomEnchantmentAccess.isAvailable()) return;
         int level = level(event.entityPlayer.getHeldItem(), CustomEnchantments.EXPERIENCE);
-        if (level > 0) event.orb.xpValue += Math.round(event.orb.xpValue * (level * .20F));
+        if (level > 0) {
+            NBTTagCompound data = event.entityPlayer.getEntityData();
+            float remainder = data.getFloat("AlphaExperienceRemainder")
+                    + event.orb.xpValue * (level * .20F);
+            int bonus = (int) remainder;
+            data.setFloat("AlphaExperienceRemainder", remainder - bonus);
+            event.orb.xpValue += bonus;
+        }
     }
 
     @SubscribeEvent
@@ -185,8 +200,9 @@ public final class CustomEnchantmentHandler {
 
     @SubscribeEvent
     public void onPlayerClone(PlayerEvent.Clone event) {
+        Minecraft minecraft = Minecraft.getMinecraft();
         if (event == null || event.original == null || event.entityPlayer == null
-                || !event.wasDeath || !CustomEnchantmentAccess.isAvailable()) return;
+                || !event.wasDeath || minecraft == null || !minecraft.isSingleplayer()) return;
         NBTTagCompound data = event.original.getEntityData();
         if (!data.hasKey(SOULBOUND_KEY)) return;
         NBTTagCompound saved = data.getCompoundTag(SOULBOUND_KEY);
