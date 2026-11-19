@@ -95,8 +95,7 @@ public final class CustomEnchantment extends Enchantment {
                 return item instanceof ItemArmor && (((ItemArmor) item).armorType == 1
                         || ((ItemArmor) item).armorType == 2);
             case ANY_EQUIPMENT:
-                return item instanceof ItemSword || item instanceof ItemBow
-                        || item instanceof ItemTool || item instanceof ItemArmor;
+                return item.isDamageable();
             default: return false;
         }
     }
