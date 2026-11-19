@@ -23,8 +23,15 @@ public final class PiercingArrowHooks {
             return;
         }
         data.setInteger("AlphaPiercingRemaining", remaining - 1);
-        arrow.setPosition(arrow.posX + arrow.motionX * .5D,
-                arrow.posY + arrow.motionY * .5D, arrow.posZ + arrow.motionZ * .5D);
+        double motionLength = Math.sqrt(arrow.motionX * arrow.motionX
+                + arrow.motionY * arrow.motionY + arrow.motionZ * arrow.motionZ);
+        if (motionLength < .001D) {
+            arrow.setDead();
+            return;
+        }
+        arrow.setPosition(arrow.posX + arrow.motionX / motionLength,
+                arrow.posY + arrow.motionY / motionLength,
+                arrow.posZ + arrow.motionZ / motionLength);
         arrow.arrowShake = 0;
     }
 }

@@ -331,7 +331,7 @@ public final class CustomEnchantmentHandler {
                 Block block = state.getBlock();
                 boolean matches = wood ? block.isWood(world, current)
                         : block == originBlock && block.getMetaFromState(state) == metadata;
-                if (!matches || world.getTileEntity(current) != null) continue;
+                if (!matches || world.getTileEntity(current) != null || !tool.canHarvestBlock(block)) continue;
                 if (world.destroyBlock(current, true)) {
                     damageTool(world, player, tool, block, current);
                     broken++;
@@ -356,7 +356,7 @@ public final class CustomEnchantmentHandler {
                             ? origin.add(a, b, 0) : origin.add(0, b, a);
                     if (!world.isBlockLoaded(pos) || world.getTileEntity(pos) != null) continue;
                     Block block = world.getBlockState(pos).getBlock();
-                    if (!isExcavatorBlock(block, world, pos)) continue;
+                    if (!isExcavatorBlock(block, world, pos) || !tool.canHarvestBlock(block)) continue;
                     if (world.destroyBlock(pos, true)) damageTool(world, player, tool, block, pos);
                 }
             }
