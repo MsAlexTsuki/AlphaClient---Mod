@@ -1,9 +1,11 @@
 package com.alpharip.staffmod.singleplayer.customenchantments;
 
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockDirt;
 import net.minecraft.block.BlockSand;
@@ -36,6 +38,7 @@ import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerPickupXpEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -59,6 +62,8 @@ public final class CustomEnchantmentHandler {
             Entity projectile = event.source.getSourceOfDamage();
             if (projectile instanceof EntityArrow) {
                 NBTTagCompound arrowData = projectile.getEntityData();
+                int infinity = arrowData.getInteger("AlphaInfinity");
+                if (infinity > 1) event.amount *= 1.0F + .10F * (infinity - 1);
                 int venomShot = arrowData.getInteger("AlphaVenomShot");
                 if (venomShot > 0)
                     event.entityLiving.addPotionEffect(new PotionEffect(Potion.poison.id,
@@ -144,6 +149,17 @@ public final class CustomEnchantmentHandler {
                 defenderData.removeTag("AlphaThornsPlusProc");
             }
         }
+    }
+
+
+    @SubscribeEvent
+    public void onUnderwaterBreakSpeed(PlayerEvent.BreakSpeed event) {
+        if (event == null || event.entityPlayer == null || event.entityPlayer.worldObj.isRemote
+                || !CustomEnchantmentAccess.isAvailable()
+                || !event.entityPlayer.isInsideOfMaterial(Material.water)) return;
+        int aqua = EnchantmentHelper.getEnchantmentLevel(Enchantment.aquaAffinity.effectId,
+                event.entityPlayer.getCurrentArmor(3));
+        if (aqua > 1) event.newSpeed *= 1.0F + .25F * (aqua - 1);
     }
 
     @SubscribeEvent
@@ -314,7 +330,7 @@ public final class CustomEnchantmentHandler {
             queue.add(origin);
             visited.add(origin);
             int broken = 0;
-            while (!queue.isEmpty() && broken < limit) {
+            while (!queue.isEmpty() && broken < limit && tool.stackSize > 0) {
                 BlockPos current = queue.remove();
                 if (current.equals(origin) || !world.isBlockLoaded(current)) continue;
                 net.minecraft.block.state.IBlockState state = world.getBlockState(current);
@@ -339,7 +355,7 @@ public final class CustomEnchantmentHandler {
         try {
             EnumFacing facing = player.getHorizontalFacing();
             int half = width / 2;
-            for (int a = -half; a <= half; a++) {
+            for (int a = -half; a <= half && tool.stackSize > 0; a++) {
                 for (int b = -half; b <= half; b++) {
                     if (a == 0 && b == 0) continue;
                     BlockPos pos = facing.getAxis() == EnumFacing.Axis.Z
@@ -385,6 +401,16 @@ public final class CustomEnchantmentHandler {
         int telepathy = level(tool, CustomEnchantments.TELEPATHY);
         int magnetic = level(tool, CustomEnchantments.MAGNETIC);
         if (autoSmelt <= 0 && telepathy <= 0 && magnetic <= 0) return;
+
+        int silkTouch = level(tool, Enchantment.silkTouch);
+        if (event.isSilkTouching && silkTouch > 1) {
+            List<ItemStack> duplicates = new java.util.ArrayList<ItemStack>();
+            float chance = .20F * (silkTouch - 1);
+            for (ItemStack drop : event.drops) {
+                if (drop != null && RANDOM.nextFloat() < chance) duplicates.add(drop.copy());
+            }
+            event.drops.addAll(duplicates);
+        }
 
         if (autoSmelt > 0 && !event.isSilkTouching) {
             for (int i = 0; i < event.drops.size(); i++) {
