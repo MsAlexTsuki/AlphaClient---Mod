@@ -21,14 +21,12 @@ public final class RecordingStudioAudioPlayback {
         final String id;
         final long startMillis;
         final long durationMillis;
-        final double speed;
         final Clip audio;
 
         LoadedClip(TimelineClip timelineClip, Clip audio) {
             this.id = timelineClip.getId();
             this.startMillis = timelineClip.getStart();
             this.durationMillis = timelineClip.getDuration();
-            this.speed = timelineClip.getSpeed();
             this.audio = audio;
         }
 
@@ -121,6 +119,10 @@ public final class RecordingStudioAudioPlayback {
             }
             long offsetMillis = Math.max(0L, positionMillis - clip.startMillis);
             long expectedMicros = Math.min(clip.audio.getMicrosecondLength(), offsetMillis * 1000L);
+            if (expectedMicros >= clip.audio.getMicrosecondLength()) {
+                if (clip.audio.isRunning()) clip.audio.stop();
+                continue;
+            }
             long actualMicros = clip.audio.getMicrosecondPosition();
             if (!clip.audio.isRunning() || Math.abs(actualMicros - expectedMicros) > 250000L) {
                 clip.audio.stop();
