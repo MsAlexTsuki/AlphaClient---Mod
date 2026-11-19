@@ -114,6 +114,16 @@ public final class RecordingStudioPlayback {
         requestFrame(frameIndex);
     }
 
+    public synchronized void seekToFrame(int index) {
+        if (closed) return;
+        if (frames.length == 0) refreshFrames();
+        if (frames.length == 0) return;
+        playing = false;
+        frameIndex = Math.max(0, Math.min(frames.length - 1, index));
+        status = "Playback paused";
+        requestFrame(frameIndex);
+    }
+
     private synchronized void requestFrame(final int index) {
         if (closed || index < 0 || index >= frames.length) return;
         requestedFrame = index;
