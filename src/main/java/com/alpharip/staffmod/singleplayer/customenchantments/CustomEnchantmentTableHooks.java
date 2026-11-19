@@ -12,11 +12,12 @@ public final class CustomEnchantmentTableHooks {
     private CustomEnchantmentTableHooks() { }
 
     public static List<EnchantmentData> replaceOne(List<EnchantmentData> vanilla,
-                                                    Object containerObject, ItemStack tableStack,
+                                                    Object containerObject, Object tableStackObject,
                                                     int enchantSlot, int enchantLevel) {
         if (vanilla == null || !(containerObject instanceof ContainerEnchantment)
-                || !CustomEnchantmentAccess.isAvailable() || tableStack == null
+                || !CustomEnchantmentAccess.isAvailable() || !(tableStackObject instanceof ItemStack)
                 || !CustomEnchantments.isRegistered()) return vanilla;
+        ItemStack tableStack = (ItemStack) tableStackObject;
         ContainerEnchantment container = (ContainerEnchantment) containerObject;
         long seed = 31L * container.xpSeed + 17L * tableStack.hashCode()
                 + 131L * enchantSlot + 977L * enchantLevel;

@@ -25,12 +25,14 @@ public final class PiercingArrowTransformer implements IClassTransformer {
             new ClassReader(basicClass).accept(node, 0);
             boolean changed = false;
             for (MethodNode method : node.methods) {
-                if (!"onUpdate".equals(method.name) || !"()V".equals(method.desc)) continue;
+                if (!( "onUpdate".equals(method.name) || "func_70071_h_".equals(method.name) || "h".equals(method.name))
+                        || !"()V".equals(method.desc)) continue;
                 int setDeadCalls = 0;
                 for (AbstractInsnNode instruction : method.instructions.toArray()) {
                     if (!(instruction instanceof MethodInsnNode)) continue;
                     MethodInsnNode call = (MethodInsnNode) instruction;
-                    if (!"setDead".equals(call.name) || !"()V".equals(call.desc)) continue;
+                    if (!( "setDead".equals(call.name) || "func_70106_y".equals(call.name) || "B".equals(call.name))
+                            || !"()V".equals(call.desc)) continue;
                     setDeadCalls++;
                     if (setDeadCalls == 2) {
                         method.instructions.set(instruction, new MethodInsnNode(Opcodes.INVOKESTATIC,

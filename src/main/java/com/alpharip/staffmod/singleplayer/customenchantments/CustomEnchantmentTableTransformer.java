@@ -28,7 +28,7 @@ public final class CustomEnchantmentTableTransformer implements IClassTransforme
             new ClassReader(basicClass).accept(node, 0);
             boolean changed = false;
             for (MethodNode method : node.methods) {
-                if (!"(Lnet/minecraft/item/ItemStack;II)Ljava/util/List;".equals(method.desc)) continue;
+                if (!method.desc.startsWith("(L") || !method.desc.endsWith(";II)Ljava/util/List;")) continue;
                 AbstractInsnNode[] instructions = method.instructions.toArray();
                 for (AbstractInsnNode instruction : instructions) {
                     if (instruction.getOpcode() != Opcodes.ARETURN) continue;
@@ -39,7 +39,7 @@ public final class CustomEnchantmentTableTransformer implements IClassTransforme
                     hook.add(new VarInsnNode(Opcodes.ILOAD, 2));
                     hook.add(new VarInsnNode(Opcodes.ILOAD, 3));
                     hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK, "replaceOne",
-                            "(Ljava/util/List;Ljava/lang/Object;Lnet/minecraft/item/ItemStack;II)Ljava/util/List;", false));
+                            "(Ljava/util/List;Ljava/lang/Object;Ljava/lang/Object;II)Ljava/util/List;", false));
                     method.instructions.insertBefore(instruction, hook);
                     changed = true;
                 }

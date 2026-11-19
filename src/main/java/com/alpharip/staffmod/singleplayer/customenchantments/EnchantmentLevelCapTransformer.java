@@ -41,7 +41,8 @@ public final class EnchantmentLevelCapTransformer implements IClassTransformer {
             new ClassReader(basicClass).accept(node, 0);
             boolean changed = false;
             for (MethodNode method : node.methods) {
-                if (!"getMaxLevel".equals(method.name) || !"()I".equals(method.desc)) continue;
+                if (!( "getMaxLevel".equals(method.name) || "func_77325_b".equals(method.name) || "b".equals(method.name))
+                        || !"()I".equals(method.desc)) continue;
                 for (AbstractInsnNode instruction : method.instructions.toArray()) {
                     if (instruction.getOpcode() != Opcodes.IRETURN) continue;
                     InsnList replacement = new InsnList();
