@@ -6,6 +6,7 @@ import net.minecraft.inventory.ContainerEnchantment;
 import net.minecraft.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** Applies the agreed 90/10 vanilla/custom roll split to the normal table result. */
 public final class CustomEnchantmentTableHooks {
