@@ -67,6 +67,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(28, rightX + 8, 198, buttonWidth, "Source Up");
         add(29, rightX + 8 + buttonWidth + gap, 198, buttonWidth, "Source Down");
         add(30, rightX + 8 + buttonWidth + gap, rightY + row * 8, buttonWidth, "Export Setup");
+        buttonList.add(new AlphaStudioButton(31, width - 94, 10, 78, 17, "Settings"));
 
         add(19, 18, 84, 126, "Next Scene");
         add(20, 18, 106, 126, "New Scene", true);
@@ -138,6 +139,10 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 30:
                 navigating = true;
                 mc.displayGuiScreen(new RecordingStudioExportSettingsScreen(this, controller));
+                break;
+            case 31:
+                navigating = true;
+                mc.displayGuiScreen(new RecordingStudioSettingsScreen(this, controller));
                 break;
             case 14:
                 navigating = true;
