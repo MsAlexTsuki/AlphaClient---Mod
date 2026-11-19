@@ -10,7 +10,23 @@ import java.util.Map;
 
 /** Applies the agreed 90/10 vanilla/custom roll split to the normal table result. */
 public final class CustomEnchantmentTableHooks {
+    private static final ThreadLocal<Boolean> VANILLA_GENERATION = new ThreadLocal<Boolean>() {
+        @Override protected Boolean initialValue() { return Boolean.FALSE; }
+    };
+
     private CustomEnchantmentTableHooks() { }
+
+    public static void beginVanillaGeneration() {
+        VANILLA_GENERATION.set(Boolean.TRUE);
+    }
+
+    public static void endVanillaGeneration() {
+        VANILLA_GENERATION.remove();
+    }
+
+    public static boolean isVanillaGeneration() {
+        return Boolean.TRUE.equals(VANILLA_GENERATION.get());
+    }
 
     public static List<EnchantmentData> replaceOne(List<EnchantmentData> vanilla,
                                                     Object containerObject, Object tableStackObject,
