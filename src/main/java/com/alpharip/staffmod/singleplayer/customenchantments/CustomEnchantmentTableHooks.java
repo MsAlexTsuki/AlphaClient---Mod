@@ -79,7 +79,8 @@ public final class CustomEnchantmentTableHooks {
         EnchantmentData current = results.get(index);
         int vanillaMax = vanillaMaximum(current.enchantmentobj);
         int extendedMax = current.enchantmentobj.getMaxLevel();
-        int extraLevels = Math.min(extendedMax - vanillaMax, 1 + (tablePower - 20) / 2);
+        int levelRange = extendedMax - vanillaMax;
+        int extraLevels = Math.min(levelRange, 1 + ((tablePower - 20) * levelRange) / 10);
         if (extraLevels <= 0) return;
         int level = vanillaMax + 1 + random.nextInt(extraLevels);
         results.set(index, new EnchantmentData(current.enchantmentobj, level));
