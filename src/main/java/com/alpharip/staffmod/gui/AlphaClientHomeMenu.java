@@ -41,9 +41,8 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
         int clanX = (width - 38) / 2;
         int iconY = modsY + modsHeight + 7;
         buttonList.add(new ClanIconButton(CLANS, clanX, iconY));
-        if (RecordingStudioAddonBridge.isAvailable()) {
-            buttonList.add(new RecordingStudioIconButton(RECORDING_STUDIO, clanX + 22, iconY));
-        }
+        // Keep the Recording Studio shortcut visible beside AlphaClans.
+        buttonList.add(new RecordingStudioIconButton(RECORDING_STUDIO, clanX + 22, iconY));
     }
 
     @Override
