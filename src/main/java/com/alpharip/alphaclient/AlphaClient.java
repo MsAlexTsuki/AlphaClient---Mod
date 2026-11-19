@@ -64,6 +64,7 @@ import com.alpharip.staffmod.founderfun.PixelGardenModuleSettings;
 import com.alpharip.staffmod.inventorysearch.InventorySearchMod;
 import com.alpharip.staffmod.inventorysearch.InventorySearchSettings;
 import com.alpharip.staffmod.singleplayer.customenchantments.CustomEnchantments;
+import com.alpharip.staffmod.singleplayer.customenchantments.CustomEnchantmentHandler;
 import com.alpharip.staffmod.singleplayer.worldedit.AlphaWorldEditCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolCommand;
 import com.alpharip.staffmod.singleplayer.autotool.AutoToolMod;
@@ -134,6 +135,7 @@ public final class AlphaClient {
         System.out.println("[AlphaClient] Initializing " + NAME + " v" + VERSION);
         InventorySearchSettings.load();
         CustomEnchantments.register();
+        MinecraftForge.EVENT_BUS.register(new CustomEnchantmentHandler());
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(PixelGardenMessageNotifier.getInstance());
