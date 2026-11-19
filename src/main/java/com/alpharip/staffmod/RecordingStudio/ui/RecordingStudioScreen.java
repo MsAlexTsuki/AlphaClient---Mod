@@ -283,10 +283,8 @@ public final class RecordingStudioScreen extends GuiScreen {
 
         drawCenteredString(fontRendererObj, "LIVE PREVIEW", (previewLeft + previewRight) / 2,
                 previewTop + 10, 0xFFFFC83D);
-        drawString(fontRendererObj, "Scene: " + compact(activeScene == null ? "None" : activeScene.getName(), 24),
+        drawString(fontRendererObj, "LIVE GAME VIEW",
                 previewLeft + 12, previewTop + 28, 0xFFE0E0E0);
-        drawString(fontRendererObj, "Module: " + runtime.getModuleDisplayName(runtime.getSelectedModuleId()),
-                previewLeft + 12, previewTop + 42, 0xFFE0E0E0);
         drawString(fontRendererObj, "SESSION  " + controller.getStatus(),
                 previewLeft + 12, previewBottom - 42, 0xFFFFFFFF);
         drawString(fontRendererObj, "Frames " + controller.getCapture().getFrameCount()
@@ -325,6 +323,8 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, controller.getExportStatus(), previewLeft + 10, height - 34, 0xFFFFC83D);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
+        runtime.drawLiveViewport(previewLeft + 6, previewTop + 48,
+                previewRight - previewLeft - 12, previewBottom - previewTop - 96);
         runtime.drawCameraPreview();
     }
 }
