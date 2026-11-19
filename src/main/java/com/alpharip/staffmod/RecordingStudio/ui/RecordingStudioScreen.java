@@ -66,7 +66,6 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(27, 18, 450, 126, "Refresh Mic");
         add(28, rightX + 8, 198, buttonWidth, "Source Up");
         add(29, rightX + 8 + buttonWidth + gap, 198, buttonWidth, "Source Down");
-        add(30, rightX + 8 + buttonWidth + gap, rightY + row * 8, buttonWidth, "Export Setup");
         buttonList.add(new AlphaStudioButton(31, width - 94, 10, 78, 17, "Settings"));
 
         add(19, 18, 84, 126, "Next Scene");
@@ -136,10 +135,6 @@ public final class RecordingStudioScreen extends GuiScreen {
                 controller.startExport(com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportService.Format.GIF);
                 break;
             case 13: controller.cancelExport(); break;
-            case 30:
-                navigating = true;
-                mc.displayGuiScreen(new RecordingStudioExportSettingsScreen(this, controller));
-                break;
             case 31:
                 navigating = true;
                 mc.displayGuiScreen(new RecordingStudioSettingsScreen(this, controller));
