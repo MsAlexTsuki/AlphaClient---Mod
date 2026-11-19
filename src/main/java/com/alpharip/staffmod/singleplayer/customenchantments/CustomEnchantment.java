@@ -90,6 +90,16 @@ public final class CustomEnchantment extends Enchantment {
         }
     }
 
+    @Override
+    public boolean canApplyTogether(Enchantment other) {
+        if (other instanceof CustomEnchantment) {
+            String otherKey = ((CustomEnchantment) other).getKey();
+            if (("vein_miner".equals(key) && "excavator".equals(otherKey))
+                    || ("excavator".equals(key) && "vein_miner".equals(otherKey))) return false;
+        }
+        return super.canApplyTogether(other);
+    }
+
     public String getKey() { return key; }
     public Target getTarget() { return target; }
     public Rarity getRarity() { return rarity; }
