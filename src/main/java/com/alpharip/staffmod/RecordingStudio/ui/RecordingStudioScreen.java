@@ -6,6 +6,8 @@ import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioPlayback
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene;
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource;
 import com.alpharip.staffmod.RecordingStudio.settings.RecordingStudioPreferences;
+import com.alpharip.staffmod.RecordingStudio.timeline.TimelineClip;
+import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -90,7 +92,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(26, 18, 426, 126, "Remove Mic Source");
 
         int playbackX = width - 190 - 184;
-        int playbackY = height - 83;
+        int playbackY = height - 124;
         add(32, playbackX, playbackY, 43, "Review");
         add(33, playbackX + 46, playbackY, 43, "Prev");
         add(34, playbackX + 92, playbackY, 43, "Play");
@@ -279,6 +281,32 @@ public final class RecordingStudioScreen extends GuiScreen {
         }
     }
 
+    private void drawTimelineTrack(String trackId, String label, int y, int color,
+                                   int barLeft, int barRight, long totalDuration) {
+        drawString(fontRendererObj, label, 170, y + 1, 0xFFBBBBBB);
+        Gui.drawRect(barLeft, y, barRight, y + 11, 0xFF242424);
+        int barWidth = Math.max(1, barRight - barLeft);
+        for (TimelineTrack track : controller.getTimeline().getTracks()) {
+            if (!trackId.equals(track.getId())) continue;
+            for (TimelineClip clip : track.getClips()) {
+                if (clip.getDuration() <= 0L) continue;
+                double startRatio = Math.max(0.0, Math.min(1.0,
+                        clip.getStart() / (double) totalDuration));
+                double endRatio = Math.max(startRatio, Math.min(1.0,
+                        clip.getEnd() / (double) totalDuration));
+                int clipLeft = barLeft + (int) Math.floor(startRatio * barWidth);
+                int clipRight = barLeft + (int) Math.ceil(endRatio * barWidth);
+                clipLeft = Math.max(barLeft, Math.min(barRight - 1, clipLeft));
+                clipRight = Math.max(clipLeft + 1, Math.min(barRight, clipRight));
+                Gui.drawRect(clipLeft, y + 1, clipRight, y + 10, color);
+                if (clipRight - clipLeft > 42) {
+                    String clipLabel = "@capture".equals(clip.getSource()) ? "CAPTURE" : label;
+                    drawString(fontRendererObj, clipLabel, clipLeft + 3, y + 2, 0xFF17130A);
+                }
+            }
+        }
+    }
+
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         Gui.drawRect(0, 0, width, height, 0x66000000);
@@ -292,7 +320,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         int previewLeft = 160;
         int previewRight = width - 190;
         int previewTop = 48;
-        int previewBottom = height - 102;
+        int previewBottom = height - 140;
 
         Gui.drawRect(left, panelTop, leftRight, panelBottom, 0xE8101010);
         Gui.drawRect(left, panelTop, leftRight, panelTop + 2, 0xFFFFC83D);
@@ -356,10 +384,28 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, "Game audio: not captured", right + 8, 181, 0xFF888888);
         drawString(fontRendererObj, "CONTROLS", right + 8, 242, 0xFFFFC83D);
 
-        Gui.drawRect(previewLeft, height - 88, previewRight, height - 47, 0xE8101010);
-        drawString(fontRendererObj, "TIMELINE", previewLeft + 10, height - 78, 0xFFFFC83D);
-        drawString(fontRendererObj, "Video  |  Audio  |  " + controller.getTimeline().duration() + " ms",
-                previewLeft + 10, height - 62, 0xFFBBBBBB);
+        int timelineTop = height - 130;
+        int timelineBottom = height - 43;
+        Gui.drawRect(previewLeft, timelineTop, previewRight, timelineBottom, 0xE8101010);
+        Gui.drawRect(previewLeft, timelineTop, previewRight, timelineTop + 2, 0xFFFFC83D);
+        drawString(fontRendererObj, "TIMELINE", previewLeft + 10, height - 120, 0xFFFFC83D);
+
+        long timelineDuration = Math.max(1L, controller.getTimeline().duration());
+        int timelineBarLeft = previewLeft + 58;
+        int timelineBarRight = previewRight - 10;
+        drawTimelineTrack("video", "VIDEO", height - 99, 0xFFC88F20,
+                timelineBarLeft, timelineBarRight, timelineDuration);
+        drawTimelineTrack("audio", "AUDIO", height - 81, 0xFF4D9B9B,
+                timelineBarLeft, timelineBarRight, timelineDuration);
+
+        long playheadMillis = controller.getProject().getElapsedMillis(System.currentTimeMillis());
+        if (playheadMillis >= 0L && playheadMillis <= timelineDuration) {
+            int playheadX = timelineBarLeft + (int) Math.round(
+                    (playheadMillis / (double) timelineDuration) * (timelineBarRight - timelineBarLeft));
+            Gui.drawRect(playheadX, height - 100, playheadX + 1, height - 69, 0xFFEFEFEF);
+        }
+        drawString(fontRendererObj, "Duration: " + controller.getTimeline().duration() + " ms",
+                previewLeft + 10, height - 54, 0xFFBBBBBB);
         drawString(fontRendererObj, controller.getExportStatus(), previewLeft + 10, height - 34, 0xFFFFC83D);
 
         GuiButton reviewButton = findButton(32);
