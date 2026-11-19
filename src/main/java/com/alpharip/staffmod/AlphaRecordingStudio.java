@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 public final class AlphaRecordingStudio {
     public static final String MOD_ID = "alpharecordingstudio";
     public static final String NAME = "Alpha Recording Studio";
-    public static final String VERSION = "0.1.0";
+    public static final String VERSION = BuildInfo.VERSION;
     private static final Logger LOGGER = LogManager.getLogger(NAME);
 
     @Mod.EventHandler
