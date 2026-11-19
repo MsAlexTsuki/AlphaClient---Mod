@@ -6,6 +6,7 @@ import net.minecraft.inventory.ContainerEnchantment;
 import net.minecraft.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** Applies the agreed 90/10 vanilla/custom roll split to the normal table result. */
 public final class CustomEnchantmentTableHooks {
@@ -29,7 +30,8 @@ public final class CustomEnchantmentTableHooks {
 
         List<CustomEnchantment> eligible = new ArrayList<CustomEnchantment>();
         for (CustomEnchantment custom : CustomEnchantments.getAll()) {
-            if (custom.canApply(tableStack) && !conflicts(vanilla, custom)) eligible.add(custom);
+            if (custom.canApply(tableStack) && !conflicts(vanilla, custom)
+                    && !conflictsWithItem(tableStack, custom)) eligible.add(custom);
         }
         if (eligible.isEmpty()) return vanilla;
 
@@ -100,6 +102,17 @@ public final class CustomEnchantmentTableHooks {
         if (enchantment == Enchantment.flame || enchantment == Enchantment.infinity
                 || enchantment == Enchantment.aquaAffinity || enchantment == Enchantment.silkTouch) return 1;
         return 0;
+    }
+
+
+    private static boolean conflictsWithItem(ItemStack stack, CustomEnchantment candidate) {
+        Map<Enchantment, Integer> existing = net.minecraft.enchantment.EnchantmentHelper.getEnchantments(stack);
+        if (existing == null) return false;
+        for (Enchantment enchantment : existing.keySet()) {
+            if (enchantment != null && (!enchantment.canApplyTogether(candidate)
+                    || !candidate.canApplyTogether(enchantment))) return true;
+        }
+        return false;
     }
 
     private static boolean conflicts(List<EnchantmentData> existing, Enchantment candidate) {
