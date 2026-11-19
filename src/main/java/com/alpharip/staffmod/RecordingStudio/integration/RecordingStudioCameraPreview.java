@@ -11,10 +11,8 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 /**
- * Displays a movable, resizable copy of the active external camera view.
- *
- * The world framebuffer is copied after world rendering and displayed after
- * the normal HUD. This avoids rendering a second Minecraft world pass.
+ * Copies the current Minecraft render view into a reusable texture for the Studio viewport
+ * and optional movable HUD preview. No second world-render pass is required.
  */
 public final class RecordingStudioCameraPreview {
     private static final int HEADER_HEIGHT = 16;
@@ -52,7 +50,7 @@ public final class RecordingStudioCameraPreview {
 
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
-        if (!isVisible() || !runtime.hasExternalCamera()) return;
+        if (runtime.isClosed()) return;
 
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.theWorld == null
@@ -81,7 +79,7 @@ public final class RecordingStudioCameraPreview {
 
     @SubscribeEvent
     public void onMouseInput(MouseEvent event) {
-        if (!isVisible() || !runtime.hasExternalCamera()) return;
+        if (!isVisible()) return;
 
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.displayWidth < 1 || minecraft.displayHeight < 1) return;
@@ -137,9 +135,53 @@ public final class RecordingStudioCameraPreview {
         }
     }
 
+    /** Draws the current Minecraft view inside the main Studio viewport. */
+    public void drawLiveViewport(int x, int y, int width, int height) {
+        if (width <= 0 || height <= 0) return;
+        Gui.drawRect(x, y, x + width, y + height, 0xFF080808);
+        if (textureId == -1 || textureWidth < 1 || textureHeight < 1) {
+            Minecraft minecraft = Minecraft.getMinecraft();
+            if (minecraft != null) {
+                minecraft.fontRendererObj.drawString("Waiting for Minecraft frame...",
+                        x + 8, y + 8, 0xFFBBBBBB);
+            }
+            return;
+        }
+
+        float scale = Math.min((float) width / (float) textureWidth,
+                (float) height / (float) textureHeight);
+        int drawWidth = Math.max(1, Math.round(textureWidth * scale));
+        int drawHeight = Math.max(1, Math.round(textureHeight * scale));
+        int drawX = x + (width - drawWidth) / 2;
+        int drawY = y + (height - drawHeight) / 2;
+        drawTexture(drawX, drawY, drawWidth, drawHeight);
+    }
+
+    private void drawTexture(int x, int y, int width, int height) {
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_TEXTURE_BIT
+                | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_CURRENT_BIT);
+        GL11.glPushMatrix();
+        try {
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+            GL11.glBegin(GL11.GL_QUADS);
+            GL11.glTexCoord2f(0.0F, 0.0F); GL11.glVertex3f(x, y + height, 0.0F);
+            GL11.glTexCoord2f(1.0F, 0.0F); GL11.glVertex3f(x + width, y + height, 0.0F);
+            GL11.glTexCoord2f(1.0F, 1.0F); GL11.glVertex3f(x + width, y, 0.0F);
+            GL11.glTexCoord2f(0.0F, 1.0F); GL11.glVertex3f(x, y, 0.0F);
+            GL11.glEnd();
+        } finally {
+            GL11.glPopMatrix();
+            GL11.glPopAttrib();
+        }
+    }
+
     /** Called by the Studio screen after its own widgets so the preview stays on top. */
     public void drawPreview() {
-        if (!isVisible() || !runtime.hasExternalCamera() || textureId == -1) return;
+        if (!isVisible() || textureId == -1) return;
 
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null) return;
@@ -162,25 +204,7 @@ public final class RecordingStudioCameraPreview {
         int imageWidth = width - 6;
         int imageHeight = height - HEADER_HEIGHT - 6;
 
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_TEXTURE_BIT
-                | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_CURRENT_BIT);
-        GL11.glPushMatrix();
-        try {
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-            GL11.glDisable(GL11.GL_LIGHTING);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-            GL11.glBegin(GL11.GL_QUADS);
-            GL11.glTexCoord2f(0.0F, 0.0F); GL11.glVertex3f(imageX, imageY + imageHeight, 0.0F);
-            GL11.glTexCoord2f(1.0F, 0.0F); GL11.glVertex3f(imageX + imageWidth, imageY + imageHeight, 0.0F);
-            GL11.glTexCoord2f(1.0F, 1.0F); GL11.glVertex3f(imageX + imageWidth, imageY, 0.0F);
-            GL11.glTexCoord2f(0.0F, 1.0F); GL11.glVertex3f(imageX, imageY, 0.0F);
-            GL11.glEnd();
-        } finally {
-            GL11.glPopMatrix();
-            GL11.glPopAttrib();
-        }
+        drawTexture(imageX, imageY, imageWidth, imageHeight);
         Gui.drawRect(x + width - 11, y + height - 11, x + width - 3, y + height - 3, 0xFFFFC83D);
     }
 
