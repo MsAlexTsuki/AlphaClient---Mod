@@ -15,6 +15,7 @@ import java.io.IOException;
 public final class AlphaClientHomeMenu extends HudEditorGui {
     private static final int MODS = 900;
     private static final int CLANS = 901;
+    private static final int RECORDING_STUDIO = 902;
     private static final ResourceLocation LOGO =
             new ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -37,7 +38,12 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
         modsX = (width - modsWidth) / 2;
         modsY = Math.max(84, height / 2 - 4);
         buttonList.add(new AlphaButton(MODS, modsX, modsY, modsWidth, modsHeight, "MODS", true));
-        buttonList.add(new ClanIconButton(CLANS, (width - 38) / 2, modsY + modsHeight + 7));
+        int clanX = (width - 38) / 2;
+        int iconY = modsY + modsHeight + 7;
+        buttonList.add(new ClanIconButton(CLANS, clanX, iconY));
+        if (RecordingStudioAddonBridge.isAvailable()) {
+            buttonList.add(new RecordingStudioIconButton(RECORDING_STUDIO, clanX + 22, iconY));
+        }
     }
 
     @Override
@@ -100,6 +106,37 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
         }
     }
 
+    /** Compact camera-and-record indicator for the optional Recording Studio addon. */
+    private static final class RecordingStudioIconButton extends GuiButton {
+        private static final int SIZE = 18;
+
+        RecordingStudioIconButton(int id, int x, int y) {
+            super(id, x, y, SIZE, SIZE, "");
+        }
+
+        @Override
+        public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+            if (!visible) return;
+            hovered = mouseX >= xPosition && mouseY >= yPosition
+                    && mouseX < xPosition + width && mouseY < yPosition + height;
+            int accent = hovered ? 0xFFFFD866 : 0xFFE6E8ED;
+            if (hovered) {
+                drawRect(xPosition, yPosition, xPosition + width,
+                        yPosition + height, 0x552A2D35);
+            }
+
+            // Pixel-art camera body, lens and recording indicator.
+            int x = xPosition + 2;
+            int y = yPosition + 4;
+            drawRect(x + 1, y + 1, x + 10, y + 9, accent);
+            drawRect(x + 3, y - 1, x + 7, y + 1, accent);
+            drawRect(x + 11, y + 2, x + 15, y + 8, accent);
+            drawRect(x + 3, y + 3, x + 8, y + 7, 0xFF171A21);
+            drawRect(x + 4, y + 4, x + 7, y + 6, accent);
+            drawRect(x + 12, y - 2, x + 15, y + 1, 0xFFFF5A5A);
+        }
+    }
+
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button != null && button.id == MODS) {
@@ -109,6 +146,10 @@ public final class AlphaClientHomeMenu extends HudEditorGui {
         if (button != null && button.id == CLANS) {
             com.alpharip.staffmod.AlphaClans.AlphaClanService.INSTANCE.refresh();
             Minecraft.getMinecraft().displayGuiScreen(new com.alpharip.staffmod.AlphaClans.AlphaClansGui(this));
+            return;
+        }
+        if (button != null && button.id == RECORDING_STUDIO) {
+            RecordingStudioAddonBridge.open(Minecraft.getMinecraft());
             return;
         }
         super.actionPerformed(button);
