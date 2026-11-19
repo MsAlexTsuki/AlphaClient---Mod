@@ -141,6 +141,7 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 0:
                 playback.pause();
                 audioPlayback.pause();
+                externalReviewPlaying = false;
                 playbackMode = false;
                 runtime.startRecording();
                 break;
@@ -150,6 +151,7 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 4:
                 playback.pause();
                 audioPlayback.pause();
+                externalReviewPlaying = false;
                 navigating = true;
                 mc.displayGuiScreen(new TimelineEditorScreen(this, controller.getTimeline(), runtime));
                 break;
@@ -157,6 +159,7 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 6:
                 playback.pause();
                 audioPlayback.pause();
+                externalReviewPlaying = false;
                 navigating = true;
                 mc.displayGuiScreen(new CameraEditorScreen(this, runtime.getCameraController(), mc.mcDataDir, runtime));
                 break;
@@ -174,12 +177,14 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 31:
                 playback.pause();
                 audioPlayback.pause();
+                externalReviewPlaying = false;
                 navigating = true;
                 mc.displayGuiScreen(new RecordingStudioSettingsScreen(this, controller));
                 break;
             case 14:
                 playback.pause();
                 audioPlayback.pause();
+                externalReviewPlaying = false;
                 navigating = true;
                 controller.getStorageUsage().refreshAsync();
                 mc.displayGuiScreen(new RecordingStudioStorageScreen(this, controller.getStorageUsage(), runtime));
