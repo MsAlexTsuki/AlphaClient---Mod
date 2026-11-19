@@ -390,7 +390,9 @@ public final class RecordingStudioScreen extends GuiScreen {
         Gui.drawRect(previewLeft, timelineTop, previewRight, timelineTop + 2, 0xFFFFC83D);
         drawString(fontRendererObj, "TIMELINE", previewLeft + 10, height - 120, 0xFFFFC83D);
 
-        long timelineDuration = Math.max(1L, controller.getTimeline().duration());
+        long playheadMillis = controller.getProject().getElapsedMillis(System.currentTimeMillis());
+        long timelineDuration = Math.max(1L,
+                Math.max(controller.getTimeline().duration(), playheadMillis));
         int timelineBarLeft = previewLeft + 58;
         int timelineBarRight = previewRight - 10;
         drawTimelineTrack("video", "VIDEO", height - 99, 0xFFC88F20,
@@ -398,7 +400,6 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawTimelineTrack("audio", "AUDIO", height - 81, 0xFF4D9B9B,
                 timelineBarLeft, timelineBarRight, timelineDuration);
 
-        long playheadMillis = controller.getProject().getElapsedMillis(System.currentTimeMillis());
         if (playheadMillis >= 0L && playheadMillis <= timelineDuration) {
             int playheadX = timelineBarLeft + (int) Math.round(
                     (playheadMillis / (double) timelineDuration) * (timelineBarRight - timelineBarLeft));
