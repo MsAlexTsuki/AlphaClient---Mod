@@ -6,7 +6,6 @@ import net.minecraft.inventory.ContainerEnchantment;
 import net.minecraft.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /** Applies the agreed 90/10 vanilla/custom roll split to the normal table result. */
 public final class CustomEnchantmentTableHooks {
@@ -35,27 +34,15 @@ public final class CustomEnchantmentTableHooks {
         }
         if (eligible.isEmpty()) return vanilla;
 
-        List<CustomEnchantment.Rarity> availableRarities = new ArrayList<CustomEnchantment.Rarity>();
-        int totalRarityWeight = 0;
-        for (CustomEnchantment.Rarity rarity : CustomEnchantment.Rarity.values()) {
-            boolean available = false;
-            for (CustomEnchantment enchantment : eligible) {
-                if (enchantment.getRarity() == rarity) { available = true; break; }
-            }
-            if (available) {
-                availableRarities.add(rarity);
-                totalRarityWeight += rarity.weight;
-            }
-        }
-        int rarityRoll = random.nextInt(totalRarityWeight);
-        CustomEnchantment.Rarity selectedRarity = availableRarities.get(0);
-        for (CustomEnchantment.Rarity rarity : availableRarities) {
-            if (rarityRoll < rarity.weight) { selectedRarity = rarity; break; }
-            rarityRoll -= rarity.weight;
-        }
+        int rarityRoll = random.nextInt(100);
+        CustomEnchantment.Rarity selectedRarity = rarityRoll < 55
+                ? CustomEnchantment.Rarity.UNCOMMON
+                : rarityRoll < 85 ? CustomEnchantment.Rarity.RARE
+                : CustomEnchantment.Rarity.LEGENDARY;
         List<CustomEnchantment> candidates = new ArrayList<CustomEnchantment>();
         for (CustomEnchantment enchantment : eligible)
             if (enchantment.getRarity() == selectedRarity) candidates.add(enchantment);
+        if (candidates.isEmpty()) return vanilla;
 
         CustomEnchantment selected = candidates.get(random.nextInt(candidates.size()));
         int level = 1 + random.nextInt(selected.getMaxLevel());
