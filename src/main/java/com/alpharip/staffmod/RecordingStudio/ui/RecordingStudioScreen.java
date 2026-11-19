@@ -4,6 +4,7 @@ import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene;
 import com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource;
+import com.alpharip.staffmod.RecordingStudio.settings.RecordingStudioPreferences;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -23,6 +24,10 @@ public final class RecordingStudioScreen extends GuiScreen {
         if (controller == null || runtime == null) throw new IllegalArgumentException();
         this.controller = controller;
         this.runtime = runtime;
+        RecordingStudioPreferences preferences = RecordingStudioPreferences.load(
+                net.minecraft.client.Minecraft.getMinecraft().mcDataDir);
+        controller.getExportSettings().setResolution(preferences.getResolution());
+        controller.getExportSettings().setQuality(preferences.getQuality());
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }
