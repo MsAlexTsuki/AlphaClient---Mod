@@ -59,7 +59,7 @@ public final class EnchantmentLevelCapTransformer implements IClassTransformer {
                     if ("EnchantmentLootBonus".equals(simpleName)) {
                         replacement.add(new VarInsnNode(Opcodes.ALOAD, 0));
                         replacement.add(new FieldInsnNode(Opcodes.GETFIELD,
-                                "net/minecraft/enchantment/Enchantment", "effectId", "I"));
+                                "net/minecraft/enchantment/Enchantment", "field_77352_x", "I"));
                         replacement.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
                                 "com/alpharip/staffmod/singleplayer/customenchantments/EnchantmentLevelCapTransformer",
                                 "lootBonusMaximum", "(I)I", false));
