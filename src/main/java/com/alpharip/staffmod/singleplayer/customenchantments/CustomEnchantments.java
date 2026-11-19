@@ -1,7 +1,6 @@
 package com.alpharip.staffmod.singleplayer.customenchantments;
 
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.util.ResourceLocation;
 
 /**
  * Central registry and rarity catalogue for AlphaClient custom enchantments.
@@ -56,12 +55,21 @@ public final class CustomEnchantments {
 
     private static CustomEnchantment add(String key, CustomEnchantment.Target target,
                                          CustomEnchantment.Rarity rarity, int maxLevel) {
-        while (nextId < 256 && Enchantment.REGISTRY.getObjectById(nextId) != null) nextId++;
+        while (nextId < 256 && Enchantment.getEnchantmentById(nextId) != null) nextId++;
         if (nextId >= 256) throw new IllegalStateException("No free enchantment IDs remain in the AlphaClient range.");
         int id = nextId++;
         CustomEnchantment enchantment = new CustomEnchantment(id, key, target, rarity, maxLevel);
-        Enchantment.REGISTRY.register(id, new ResourceLocation("alphaclient", key), enchantment);
         return enchantment;
+    }
+
+    public static CustomEnchantment[] getAll() {
+        return new CustomEnchantment[] {
+                LIFESTEAL, EXECUTE, VENOM, RAGE, DOUBLE_STRIKE,
+                EXPLOSIVE, PIERCING, VENOM_SHOT, MULTISHOT,
+                DODGE, REJUVENATION, SPEED, THORNS_PLUS, NIGHT_VISION,
+                VEIN_MINER, AUTO_SMELT, TREE_FELLER, MAGNETIC, EXCAVATOR,
+                TELEPATHY, EXPERIENCE, MAGNET, HASTE, AUTO_PICKUP, SOULBOUND
+        };
     }
 
     public static boolean isCustom(Enchantment enchantment) {

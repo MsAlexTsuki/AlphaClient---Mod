@@ -24,9 +24,7 @@ public final class CustomEnchantmentTableHooks {
         if (random.nextInt(100) >= 10) return vanilla;
 
         List<CustomEnchantment> eligible = new ArrayList<CustomEnchantment>();
-        for (Enchantment enchantment : Enchantment.REGISTRY) {
-            if (!(enchantment instanceof CustomEnchantment)) continue;
-            CustomEnchantment custom = (CustomEnchantment) enchantment;
+        for (CustomEnchantment custom : CustomEnchantments.getAll()) {
             if (custom.canApply(tableStack) && !conflicts(vanilla, custom)) eligible.add(custom);
         }
         if (eligible.isEmpty()) return vanilla;
