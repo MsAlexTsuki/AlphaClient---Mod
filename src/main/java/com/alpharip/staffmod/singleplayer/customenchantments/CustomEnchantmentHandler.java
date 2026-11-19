@@ -111,7 +111,7 @@ public final class CustomEnchantmentHandler {
                 stacks = Math.min(10, stacks + 1);
                 data.setInteger("AlphaRageStacks", stacks);
                 data.setLong("AlphaRageLastHit", now);
-                event.amount *= 1.0F + Math.min(1.0F, stacks * .05F * rage);
+                event.amount *= 1.0F + Math.min(1.0F, stacks * .02F * rage);
             }
 
             int doubleStrike = level(weapon, CustomEnchantments.DOUBLE_STRIKE);
@@ -295,10 +295,6 @@ public final class CustomEnchantmentHandler {
         if (player == null || player.capabilities.isCreativeMode) return;
         ItemStack tool = player.getHeldItem();
         if (tool == null || !(tool.getItem() instanceof ItemTool)) return;
-
-        int experience = level(tool, CustomEnchantments.EXPERIENCE);
-        if (experience > 0 && event.state.getBlock() instanceof BlockOre)
-            event.setExpToDrop(event.getExpToDrop() + experience);
 
         int vein = level(tool, CustomEnchantments.VEIN_MINER);
         int tree = level(tool, CustomEnchantments.TREE_FELLER);
