@@ -3,6 +3,7 @@ package com.alpharip.staffmod.singleplayer.customenchantments;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentData;
 import net.minecraft.inventory.ContainerEnchantment;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,9 @@ public final class CustomEnchantmentTableHooks {
                 || !CustomEnchantments.isRegistered()) return vanilla;
         ItemStack tableStack = (ItemStack) tableStackObject;
         ContainerEnchantment container = (ContainerEnchantment) containerObject;
-        long seed = 31L * container.xpSeed + 17L * tableStack.hashCode()
+        long stackSeed = 31L * Item.getIdFromItem(tableStack.getItem())
+                + 17L * tableStack.getItemDamage() + tableStack.stackSize;
+        long seed = 31L * container.xpSeed + 17L * stackSeed
                 + 131L * enchantSlot + 977L * enchantLevel;
         java.util.Random random = new java.util.Random(seed);
         if (random.nextInt(100) >= 10) {
