@@ -9,9 +9,6 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.IntInsnNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.JumpInsnNode;
-import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -21,6 +18,10 @@ public final class EnchantmentLevelCapTransformer implements IClassTransformer {
     private static volatile int patchedMethods;
 
     public static int getPatchedMethodCount() { return patchedMethods; }
+
+    public static int lootBonusMaximum(int effectId) {
+        return effectId == 21 || effectId == 35 ? 10 : 3;
+    }
 
     private static int capFor(String name) {
         if ("EnchantmentDamage".equals(name) || "EnchantmentProtection".equals(name)
@@ -49,34 +50,22 @@ public final class EnchantmentLevelCapTransformer implements IClassTransformer {
                 if (!( "getMaxLevel".equals(method.name) || "func_77325_b".equals(method.name) || "b".equals(method.name))
                         || !"()I".equals(method.desc)) continue;
 
-                if ("EnchantmentLootBonus".equals(simpleName)) {
-                    LabelNode extendedLevel = new LabelNode();
-                    LabelNode originalLevel = new LabelNode();
-                    InsnList guard = new InsnList();
-                    guard.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                    guard.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/enchantment/Enchantment", "effectId", "I"));
-                    guard.add(new IntInsnNode(Opcodes.BIPUSH, 21));
-                    guard.add(new JumpInsnNode(Opcodes.IF_ICMPEQ, extendedLevel));
-                    guard.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                    guard.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/enchantment/Enchantment", "effectId", "I"));
-                    guard.add(new IntInsnNode(Opcodes.BIPUSH, 35));
-                    guard.add(new JumpInsnNode(Opcodes.IF_ICMPEQ, extendedLevel));
-                    guard.add(new JumpInsnNode(Opcodes.GOTO, originalLevel));
-                    guard.add(extendedLevel);
-                    guard.add(new IntInsnNode(Opcodes.BIPUSH, cap));
-                    guard.add(new InsnNode(Opcodes.IRETURN));
-                    guard.add(originalLevel);
-                    method.instructions.insertBefore(method.instructions.getFirst(), guard);
-                    changed = true;
-                    continue;
-                }
-
                 for (AbstractInsnNode instruction : method.instructions.toArray()) {
                     if (instruction.getOpcode() != Opcodes.IRETURN) continue;
                     InsnList replacement = new InsnList();
                     replacement.add(new InsnNode(Opcodes.POP));
-                    if (cap >= 0 && cap <= 5) replacement.add(new InsnNode(Opcodes.ICONST_0 + cap));
-                    else replacement.add(new IntInsnNode(Opcodes.BIPUSH, cap));
+                    if ("EnchantmentLootBonus".equals(simpleName)) {
+                        replacement.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                        replacement.add(new FieldInsnNode(Opcodes.GETFIELD,
+                                "net/minecraft/enchantment/Enchantment", "effectId", "I"));
+                        replacement.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
+                                "com/alpharip/staffmod/singleplayer/customenchantments/EnchantmentLevelCapTransformer",
+                                "lootBonusMaximum", "(I)I", false));
+                    } else if (cap >= 0 && cap <= 5) {
+                        replacement.add(new InsnNode(Opcodes.ICONST_0 + cap));
+                    } else {
+                        replacement.add(new IntInsnNode(Opcodes.BIPUSH, cap));
+                    }
                     method.instructions.insertBefore(instruction, replacement);
                     changed = true;
                 }
