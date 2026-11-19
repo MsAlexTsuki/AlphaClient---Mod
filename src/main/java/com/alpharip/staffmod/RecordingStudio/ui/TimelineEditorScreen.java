@@ -18,8 +18,12 @@ public final class TimelineEditorScreen extends GuiScreen {
     private String selectedClipId;
     private String status = "Select a track or create a clip";
 
+    public TimelineEditorScreen(GuiScreen parent, Timeline timeline) {
+        this(parent, timeline, null);
+    }
+
     public TimelineEditorScreen(GuiScreen parent, Timeline timeline, RecordingStudioRuntime runtime) {
-        if (parent == null || timeline == null || runtime == null) throw new IllegalArgumentException();
+        if (parent == null || timeline == null) throw new IllegalArgumentException();
         this.parent = parent;
         this.timeline = timeline;
         this.runtime = runtime;
@@ -223,6 +227,6 @@ public final class TimelineEditorScreen extends GuiScreen {
         speedField.drawTextBox();
         drawCenteredString(fontRendererObj, status, width / 2, height - 18, 0xFFFFC83D);
         super.drawScreen(mouseX, mouseY, partialTicks);
-        runtime.drawCameraPreview();
+        if (runtime != null) runtime.drawCameraPreview();
     }
 }

@@ -37,14 +37,14 @@ public final class ForgeMinecraftBlockEventBridge implements MinecraftBlockEvent
                     ((BlockEvent.MultiPlaceEvent) event).getReplacedBlockSnapshots();
             for (BlockSnapshot snapshot : snapshots) {
                 if (snapshot != null) {
-                    record(snapshot.getPos(), snapshot.getReplacedBlock(), snapshot.getCurrentBlock());
+                    record(snapshot.pos, snapshot.getReplacedBlock(), snapshot.getCurrentBlock());
                 }
             }
             return;
         }
         BlockSnapshot snapshot = event.blockSnapshot;
         if (snapshot != null) {
-            record(snapshot.getPos(), snapshot.getReplacedBlock(), snapshot.getCurrentBlock());
+            record(snapshot.pos, snapshot.getReplacedBlock(), snapshot.getCurrentBlock());
         }
     }
 

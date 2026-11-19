@@ -87,11 +87,11 @@ public final class RecordingStudioCameraPreview {
         if (minecraft == null || minecraft.displayWidth < 1 || minecraft.displayHeight < 1) return;
 
         ScaledResolution resolution = new ScaledResolution(minecraft);
-        int mouseX = event.getX() * resolution.getScaledWidth() / minecraft.displayWidth;
+        int mouseX = event.x * resolution.getScaledWidth() / minecraft.displayWidth;
         int mouseY = resolution.getScaledHeight()
-                - event.getY() * resolution.getScaledHeight() / minecraft.displayHeight - 1;
+                - event.y * resolution.getScaledHeight() / minecraft.displayHeight - 1;
 
-        if (event.getButton() == 0 && event.isButtonstate()) {
+        if (event.button == 0 && event.buttonstate) {
             if (inside(mouseX, mouseY, x, y, width, height)) {
                 if (event.isCancelable()) event.setCanceled(true);
                 if (inside(mouseX, mouseY, x + width - 14, y + height - 14, 14, 14)) {
@@ -109,7 +109,7 @@ public final class RecordingStudioCameraPreview {
             return;
         }
 
-        if (event.getButton() == 0 && !event.isButtonstate()) {
+        if (event.button == 0 && !event.buttonstate) {
             if ((dragging || resizing) && event.isCancelable()) event.setCanceled(true);
             dragging = false;
             resizing = false;
