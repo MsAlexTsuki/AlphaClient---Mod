@@ -24,13 +24,34 @@ import java.util.Random;
 public final class CustomEnchantmentHandler {
     private static final Random RANDOM = new Random();
     private static final String SOULBOUND_KEY = "AlphaClientSoulboundItems";
+    private static final ThreadLocal<Boolean> BULK_BREAK = new ThreadLocal<Boolean>() {
+        @Override protected Boolean initialValue() { return Boolean.FALSE; }
+    };
 
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
         if (event == null || event.entityLiving == null || !CustomEnchantmentAccess.isAvailable()) return;
         Entity source = event.source == null ? null : event.source.getEntity();
 
-        if (source instanceof EntityPlayer) {
+        if (source instanceof EntityPlayer && event.source != null && event.source.isProjectile()) {
+            Entity projectile = event.source.getSourceOfDamage();
+            if (projectile instanceof EntityArrow) {
+                NBTTagCompound arrowData = projectile.getEntityData();
+                int venomShot = arrowData.getInteger("AlphaVenomShot");
+                if (venomShot > 0)
+                    event.entityLiving.addPotionEffect(new PotionEffect(Potion.poison.id,
+                            40 + venomShot * 30, Math.max(0, (venomShot - 3) / 2)));
+                int explosive = arrowData.getInteger("AlphaExplosive");
+                if (explosive > 0 && !arrowData.getBoolean("AlphaExplosiveTriggered")) {
+                    arrowData.setBoolean("AlphaExplosiveTriggered", true);
+                    float radius = 1.0F + explosive * .5F;
+                    event.entityLiving.worldObj.newExplosion((Entity) source, event.entityLiving.posX,
+                            event.entityLiving.posY, event.entityLiving.posZ, radius, false, false);
+                }
+            }
+        }
+
+        if (source instanceof EntityPlayer && (event.source == null || !event.source.isProjectile())) {
             EntityPlayer attacker = (EntityPlayer) source;
             NBTTagCompound data = attacker.getEntityData();
             if (data.getBoolean("AlphaDoubleStrikeFollowup")) {
@@ -138,6 +159,147 @@ public final class CustomEnchantmentHandler {
         data.removeTag(SOULBOUND_KEY);
     }
 
+
+
+    @SubscribeEvent
+    public void onArrowLoose(ArrowLooseEvent event) {
+        if (event == null || event.entityPlayer == null || event.bow == null
+                || event.entityPlayer.worldObj.isRemote || !CustomEnchantmentAccess.isAvailable()) return;
+        int level = level(event.bow, CustomEnchantments.MULTISHOT);
+        if (level <= 0) return;
+        float charge = event.charge / 20.0F;
+        charge = (charge * charge + charge * 2.0F) / 3.0F;
+        if (charge < .1F) return;
+        float velocity = Math.min(charge, 1.0F) * 2.0F;
+        int totalArrows = level == 1 ? 3 : level == 2 ? 5 : 7;
+        float spread = .12F;
+        for (int i = 0; i < totalArrows - 1; i++) {
+            EntityArrow extra = new EntityArrow(event.entityPlayer.worldObj, event.entityPlayer, velocity);
+            extra.canBePickedUp = 0;
+            double offset = (i - (totalArrows - 2) / 2.0D) * spread;
+            float yaw = event.entityPlayer.rotationYaw * (float)Math.PI / 180.0F;
+            extra.motionX += -Math.cos(yaw) * offset;
+            extra.motionZ += -Math.sin(yaw) * offset;
+            event.entityPlayer.worldObj.spawnEntityInWorld(extra);
+        }
+    }
+
+    @SubscribeEvent
+    public void onArrowSpawn(EntityJoinWorldEvent event) {
+        if (event == null || !(event.entity instanceof EntityArrow) || event.world.isRemote
+                || !CustomEnchantmentAccess.isAvailable()) return;
+        EntityArrow arrow = (EntityArrow) event.entity;
+        if (!(arrow.shootingEntity instanceof EntityPlayer)) return;
+        EntityPlayer shooter = (EntityPlayer) arrow.shootingEntity;
+        ItemStack bow = shooter.getHeldItem();
+        if (bow == null) return;
+        NBTTagCompound data = arrow.getEntityData();
+        data.setInteger("AlphaVenomShot", level(bow, CustomEnchantments.VENOM_SHOT));
+        data.setInteger("AlphaExplosive", level(bow, CustomEnchantments.EXPLOSIVE));
+        data.setInteger("AlphaPiercing", level(bow, CustomEnchantments.PIERCING));
+    }
+
+    @SubscribeEvent
+    public void onBlockBreak(BlockEvent.BreakEvent event) {
+        if (event == null || event.isCanceled() || event.world == null || event.world.isRemote
+                || BULK_BREAK.get() || !CustomEnchantmentAccess.isAvailable()) return;
+        EntityPlayer player = event.getPlayer();
+        if (player == null || player.capabilities.isCreativeMode) return;
+        ItemStack tool = player.getHeldItem();
+        if (tool == null || !(tool.getItem() instanceof ItemTool)) return;
+
+        int experience = level(tool, CustomEnchantments.EXPERIENCE);
+        if (experience > 0 && event.state.getBlock() instanceof BlockOre)
+            event.setExpToDrop(event.getExpToDrop() + experience);
+
+        int vein = level(tool, CustomEnchantments.VEIN_MINER);
+        int tree = level(tool, CustomEnchantments.TREE_FELLER);
+        int excavator = level(tool, CustomEnchantments.EXCAVATOR);
+        BlockPos origin = event.pos;
+        Block block = event.state.getBlock();
+        if (vein > 0 && block instanceof BlockOre) {
+            int limit = vein == 1 ? 4 : vein == 2 ? 8 : 16;
+            breakConnected(event.world, player, tool, origin, block,
+                    block.getMetaFromState(event.state), limit, false);
+        } else if (tree > 0 && block.isWood(event.world, origin)) {
+            int limit = tree == 1 ? 16 : tree == 2 ? 32 : 64;
+            breakConnected(event.world, player, tool, origin, block, -1, limit, true);
+        } else if (excavator > 0 && isExcavatorBlock(block, event.world, origin)) {
+            int width = excavator == 1 ? 3 : excavator == 2 ? 5 : 7;
+            breakExcavatorPlane(event.world, player, tool, origin, width);
+        }
+    }
+
+    private static void breakConnected(World world, EntityPlayer player, ItemStack tool,
+                                       BlockPos origin, Block originBlock, int metadata,
+                                       int limit, boolean wood) {
+        BULK_BREAK.set(Boolean.TRUE);
+        try {
+            Queue<BlockPos> queue = new ArrayDeque<BlockPos>();
+            Set<BlockPos> visited = new HashSet<BlockPos>();
+            queue.add(origin);
+            visited.add(origin);
+            int broken = 0;
+            while (!queue.isEmpty() && broken < limit) {
+                BlockPos current = queue.remove();
+                if (current.equals(origin) || !world.isBlockLoaded(current)) continue;
+                net.minecraft.block.state.IBlockState state = world.getBlockState(current);
+                Block block = state.getBlock();
+                boolean matches = wood ? block.isWood(world, current)
+                        : block == originBlock && block.getMetaFromState(state) == metadata;
+                if (!matches || world.getTileEntity(current) != null) continue;
+                if (world.destroyBlock(current, true)) {
+                    damageTool(world, player, tool, block, current);
+                    broken++;
+                    addNeighbors(queue, visited, current);
+                }
+            }
+        } finally {
+            BULK_BREAK.set(Boolean.FALSE);
+        }
+    }
+
+    private static void breakExcavatorPlane(World world, EntityPlayer player, ItemStack tool,
+                                             BlockPos origin, int width) {
+        BULK_BREAK.set(Boolean.TRUE);
+        try {
+            EnumFacing facing = player.getHorizontalFacing();
+            int half = width / 2;
+            for (int a = -half; a <= half; a++) {
+                for (int b = -half; b <= half; b++) {
+                    if (a == 0 && b == 0) continue;
+                    BlockPos pos = facing.getAxis() == EnumFacing.Axis.Z
+                            ? origin.add(a, b, 0) : origin.add(0, b, a);
+                    if (!world.isBlockLoaded(pos) || world.getTileEntity(pos) != null) continue;
+                    Block block = world.getBlockState(pos).getBlock();
+                    if (!isExcavatorBlock(block, world, pos)) continue;
+                    if (world.destroyBlock(pos, true)) damageTool(world, player, tool, block, pos);
+                }
+            }
+        } finally {
+            BULK_BREAK.set(Boolean.FALSE);
+        }
+    }
+
+    private static boolean isExcavatorBlock(Block block, World world, BlockPos pos) {
+        return block != null && world.getTileEntity(pos) == null
+                && !(block instanceof BlockOre) && !(block instanceof BlockContainer)
+                && (block instanceof BlockDirt || block instanceof BlockSand
+                || block instanceof BlockGravel || block instanceof BlockClay
+                || block instanceof BlockSnow || block instanceof BlockGrass);
+    }
+
+    private static void addNeighbors(Queue<BlockPos> queue, Set<BlockPos> visited, BlockPos pos) {
+        BlockPos[] neighbors = {pos.add(1,0,0), pos.add(-1,0,0), pos.add(0,1,0),
+                pos.add(0,-1,0), pos.add(0,0,1), pos.add(0,0,-1)};
+        for (BlockPos next : neighbors) if (visited.add(next)) queue.add(next);
+    }
+
+    private static void damageTool(World world, EntityPlayer player, ItemStack tool, Block block, BlockPos pos) {
+        if (tool == null || tool.stackSize <= 0 || block.getBlockHardness(world, pos) < 0.0F) return;
+        tool.onBlockDestroyed(world, block, pos, player);
+        if (tool.stackSize <= 0) player.destroyCurrentEquippedItem();
+    }
 
     @SubscribeEvent
     public void onHarvestDrops(BlockEvent.HarvestDropsEvent event) {
