@@ -773,22 +773,23 @@ public final class TimelineEditorScreen extends GuiScreen {
                         && activeClip != null && nextClip != null
                         && !"@capture".equals(activeClip.getSource())
                         && !"@capture".equals(nextClip.getSource());
-                button.enabled = button.id == 17 || button.id == 18
-                        ? transitionSupported : clipEffectsSupported;
+                if (button.id == 14) button.enabled = clipEffectsSupported;
+                if (button.id == 15 || button.id == 16) button.enabled = clipEffectsSupported;
+                if (button.id == 17 || button.id == 18) {
+                    TimelineTransition transition = nextClip == null || activeClip == null ? null
+                            : timeline.getTransition(activeClip.getId(), nextClip.getId());
+                    button.enabled = transitionSupported && (button.id != 18 || transition != null);
+                    if (button.id == 17) button.displayString = "Transition: "
+                            + (transition == null ? "NONE" : transition.getType().name());
+                    if (button.id == 18) button.displayString = "Duration: "
+                            + (transition == null ? "--" : transition.getDurationMillis() + " ms");
+                }
                 if (button.id == 14) button.displayString = "Effect: "
                         + (activeClip == null ? "NONE" : activeClip.getEffect().name());
                 if (button.id == 15) button.displayString = "Fade In: "
                         + (activeClip == null ? 0 : activeClip.getFadeInMillis()) + " ms";
                 if (button.id == 16) button.displayString = "Fade Out: "
                         + (activeClip == null ? 0 : activeClip.getFadeOutMillis()) + " ms";
-                if (button.id == 17 || button.id == 18) {
-                    TimelineTransition transition = nextClip == null || activeClip == null ? null
-                            : timeline.getTransition(activeClip.getId(), nextClip.getId());
-                    if (button.id == 17) button.displayString = "Transition: "
-                            + (transition == null ? "NONE" : transition.getType().name());
-                    if (button.id == 18) button.displayString = "Duration: "
-                            + (transition == null ? 250L : transition.getDurationMillis()) + " ms";
-                }
             }
         }
         sourceField.drawTextBox();
