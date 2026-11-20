@@ -26,11 +26,16 @@ import java.util.Map;
 public final class LootFeedTracker {
     private static final long DROP_WINDOW_MS = 2500L;
     private static final long DISPLAY_DURATION_MS = 8000L;
+    private static final long FADE_DURATION_MS = 350L;
+    private static final int MAX_VISIBLE_GROUPS = 4;
     private static final double DROP_RADIUS_SQUARED = 36.0D;
 
+    // LinkedHashMap iteration keeps the oldest group first and newest group last.
     private final Map<String, LootFeedEntry> entries =
             new LinkedHashMap<String, LootFeedEntry>();
     private final List<PendingKill> pendingKills = new ArrayList<PendingKill>();
+    private LootFeedEntry fadingEntry;
+    private long fadeStartedAt;
 
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {
@@ -52,6 +57,16 @@ public final class LootFeedTracker {
 
         LootFeedEntry entry = entries.get(entityName);
         if (entry == null) {
+            if (entries.size() >= MAX_VISIBLE_GROUPS) {
+                Iterator<Map.Entry<String, LootFeedEntry>> oldest =
+                        entries.entrySet().iterator();
+                if (oldest.hasNext()) {
+                    fadingEntry = oldest.next().getValue();
+                    fadeStartedAt = now;
+                    oldest.remove();
+                }
+            }
+
             entry = new LootFeedEntry(entityName);
             entries.put(entityName, entry);
         }
@@ -134,6 +149,10 @@ public final class LootFeedTracker {
                 entryIterator.remove();
             }
         }
+
+        if (fadingEntry != null && now - fadeStartedAt >= FADE_DURATION_MS) {
+            fadingEntry = null;
+        }
     }
 
     public List<LootFeedEntry> getVisibleEntries() {
@@ -147,6 +166,25 @@ public final class LootFeedTracker {
         }
 
         return Collections.unmodifiableList(visible);
+    }
+
+    public LootFeedEntry getFadingEntry() {
+        prune(System.currentTimeMillis());
+        return fadingEntry != null && !fadingEntry.getDrops().isEmpty()
+                ? fadingEntry : null;
+    }
+
+    public int getFadeAlpha() {
+        if (fadingEntry == null) {
+            return 0;
+        }
+
+        long elapsed = System.currentTimeMillis() - fadeStartedAt;
+        if (elapsed >= FADE_DURATION_MS) {
+            return 0;
+        }
+
+        return (int) (255L * (FADE_DURATION_MS - elapsed) / FADE_DURATION_MS);
     }
 
     private static final class PendingKill {
