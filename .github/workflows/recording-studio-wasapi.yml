@@ -53,6 +53,9 @@ jobs:
           $dll = "build/resources/main/native/windows-x86_64/alpha_wasapi.dll"
           if (!(Test-Path $dll)) { throw "WASAPI DLL was not packaged: $dll" }
 
+      - name: Compile Java 8 addon sources
+        run: .\gradlew.bat compileJava --no-daemon
+
       - name: Upload native bridge build
         uses: actions/upload-artifact@v4
         with:
