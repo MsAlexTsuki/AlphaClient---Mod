@@ -495,7 +495,7 @@ public final class RecordingStudioExportService {
                         .append(":d=").append(seconds(outgoingHalf)).append(":color=black");
             }
             if (incoming != null) {
-                double transitionSeconds = seconds(transitionDuration);
+                String transitionSeconds = seconds(transitionDuration);
                 switch (incoming.getType()) {
                     case CROSS_DISSOLVE:
                         filter.append(",format=rgba,fade=t=in:st=0:d=")
