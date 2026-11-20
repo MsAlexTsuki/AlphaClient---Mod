@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Compact HUD presentation for the most recent kill groups and their drops.
+ * Compact HUD presentation for the oldest-to-newest kill groups and their drops.
  */
 public final class LootFeedHud {
     private static final int PANEL_WIDTH = 170;
@@ -35,7 +35,9 @@ public final class LootFeedHud {
         }
 
         List<LootFeedEntry> entries = tracker.getVisibleEntries();
-        if (entries.isEmpty()) {
+        LootFeedEntry fadingEntry = tracker.getFadingEntry();
+        int fadeAlpha = tracker.getFadeAlpha();
+        if (entries.isEmpty() && fadingEntry == null) {
             return;
         }
 
@@ -46,13 +48,11 @@ public final class LootFeedHud {
         int lineHeight = font.FONT_HEIGHT + 3;
         int height = PADDING * 2 + lineHeight * 2;
 
+        if (fadingEntry != null) {
+            height += getEntryHeight(fadingEntry, lineHeight);
+        }
         for (LootFeedEntry entry : entries) {
-            if (entry.getDrops().isEmpty()) {
-                continue;
-            }
-            height += lineHeight;
-            height += entry.getDrops().size() * lineHeight;
-            height += 3;
+            height += getEntryHeight(entry, lineHeight);
         }
 
         Gui.drawRect(x, y, x + PANEL_WIDTH, y + height, 0xB9000000);
@@ -64,23 +64,47 @@ public final class LootFeedHud {
         font.drawString("LOOT FEED", textX, textY, 0xFFFFC83D);
         textY += lineHeight + 1;
 
-        for (LootFeedEntry entry : entries) {
-            if (entry.getDrops().isEmpty()) {
-                continue;
-            }
-            String heading = entry.getKillCount() + "x " + entry.getEntityName();
-            font.drawString(trimToWidth(font, heading, PANEL_WIDTH - PADDING * 2),
-                    textX, textY, 0xFFFFFFFF);
-            textY += lineHeight;
-
-            for (Map.Entry<String, Integer> drop : entry.getDrops().entrySet()) {
-                String line = "- " + drop.getKey() + ": " + drop.getValue();
-                font.drawString(trimToWidth(font, line, PANEL_WIDTH - PADDING * 2),
-                        textX + 5, textY, 0xFFCCCCCC);
-                textY += lineHeight;
-            }
-            textY += 3;
+        // The evicted oldest group fades at the top while active groups shift up.
+        if (fadingEntry != null) {
+            textY = drawEntry(font, fadingEntry, textX, textY, lineHeight,
+                    fadeAlpha);
         }
+
+        // Tracker order is oldest first, newest last: the newest group is at the bottom.
+        for (LootFeedEntry entry : entries) {
+            textY = drawEntry(font, entry, textX, textY, lineHeight, 255);
+        }
+    }
+
+    private int getEntryHeight(LootFeedEntry entry, int lineHeight) {
+        if (entry.getDrops().isEmpty()) {
+            return 0;
+        }
+        return lineHeight + entry.getDrops().size() * lineHeight + 3;
+    }
+
+    private int drawEntry(FontRenderer font, LootFeedEntry entry, int textX,
+                          int textY, int lineHeight, int alpha) {
+        if (entry.getDrops().isEmpty() || alpha <= 0) {
+            return textY;
+        }
+
+        String heading = entry.getKillCount() + "x " + entry.getEntityName();
+        font.drawString(trimToWidth(font, heading, PANEL_WIDTH - PADDING * 2),
+                textX, textY, withAlpha(0xFFFFFF, alpha));
+        textY += lineHeight;
+
+        for (Map.Entry<String, Integer> drop : entry.getDrops().entrySet()) {
+            String line = "- " + drop.getKey() + ": " + drop.getValue();
+            font.drawString(trimToWidth(font, line, PANEL_WIDTH - PADDING * 2),
+                    textX + 5, textY, withAlpha(0xCCCCCC, alpha));
+            textY += lineHeight;
+        }
+        return textY + 3;
+    }
+
+    private int withAlpha(int rgb, int alpha) {
+        return ((alpha & 0xFF) << 24) | (rgb & 0xFFFFFF);
     }
 
     private String trimToWidth(FontRenderer font, String text, int width) {
