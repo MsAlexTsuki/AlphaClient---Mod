@@ -25,7 +25,7 @@ public final class RecordingStudioCommand extends CommandBase {
 
     public String getCommandName() { return "recordingstudio"; }
     public String getCommandUsage(ICommandSender sender) {
-        return "/recordingstudio [list|new|create <name>|open <project-id>]";
+        return "/recordingstudio [list|new|create <name>|open <project-id>|delete <project-id>]";
     }
     public int getRequiredPermissionLevel() { return 0; }
 
