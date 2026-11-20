@@ -7,6 +7,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.TargetDataLine;
+import javax.sound.sampled.SourceDataLine;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,6 +15,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Arrays;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /** Explicit microphone capture service that writes standalone PCM WAV files off the client thread. */
 public final class RecordingAudioCaptureService {
@@ -43,6 +48,10 @@ public final class RecordingAudioCaptureService {
     private File destinationFile;
     private long timelineStartMillis;
     private boolean recording;
+    private volatile boolean monitoring;
+    private SourceDataLine monitorLine;
+    private Thread monitorThread;
+    private BlockingQueue<byte[]> monitorQueue;
 
     public RecordingAudioCaptureService(Listener listener) {
         if (listener == null) throw new IllegalArgumentException("Audio capture listener is required");
@@ -144,6 +153,7 @@ public final class RecordingAudioCaptureService {
     }
 
     public synchronized void stop() {
+        stopMonitoring();
         if (!recording) return;
         recording = false;
         if (line != null) {
@@ -153,6 +163,84 @@ public final class RecordingAudioCaptureService {
     }
 
     public synchronized boolean isRecording() { return recording; }
+    public synchronized boolean isMonitoring() { return monitoring; }
+
+    /** Mirrors the active microphone capture to the system's default audio output. */
+    public synchronized void startMonitoring() throws Exception {
+        if (!recording || line == null || !line.isOpen()) {
+            throw new IllegalStateException("Start microphone capture before enabling live monitoring");
+        }
+        if (monitoring) return;
+        DataLine.Info outputInfo = new DataLine.Info(SourceDataLine.class, FORMAT);
+        SourceDataLine output = (SourceDataLine) AudioSystem.getLine(outputInfo);
+        try {
+            output.open(FORMAT);
+            output.start();
+        } catch (Exception failure) {
+            try { output.close(); } catch (RuntimeException ignored) { }
+            throw failure;
+        }
+        final BlockingQueue<byte[]> queue = new ArrayBlockingQueue<byte[]>(24);
+        monitorLine = output;
+        monitorQueue = queue;
+        monitoring = true;
+        Thread worker = new Thread(new Runnable() {
+            public void run() { monitorToOutput(output, queue); }
+        }, "Alpha-RecordingStudio-Microphone-Monitor");
+        worker.setDaemon(true);
+        monitorThread = worker;
+        worker.start();
+    }
+
+    public synchronized void stopMonitoring() {
+        monitoring = false;
+        BlockingQueue<byte[]> queue = monitorQueue;
+        if (queue != null) {
+            queue.clear();
+            queue.offer(new byte[0]);
+        }
+        SourceDataLine output = monitorLine;
+        monitorLine = null;
+        monitorQueue = null;
+        monitorThread = null;
+        if (output != null) {
+            try { output.flush(); } catch (RuntimeException ignored) { }
+            try { output.stop(); } catch (RuntimeException ignored) { }
+            try { output.close(); } catch (RuntimeException ignored) { }
+        }
+    }
+
+    private void monitorToOutput(SourceDataLine output, BlockingQueue<byte[]> queue) {
+        try {
+            while (monitoring && output.isOpen()) {
+                byte[] chunk = queue.poll(200L, TimeUnit.MILLISECONDS);
+                if (chunk == null) continue;
+                if (chunk.length == 0) break;
+                output.write(chunk, 0, chunk.length);
+            }
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+        } catch (RuntimeException ignored) {
+            // Monitoring is optional; output-device failures must not interrupt WAV capture.
+        } finally {
+            if (output.isOpen()) {
+                try { output.stop(); } catch (RuntimeException ignored) { }
+                try { output.close(); } catch (RuntimeException ignored) { }
+            }
+        }
+    }
+
+    private void publishMonitorChunk(byte[] bytes, int offset, int length) {
+        BlockingQueue<byte[]> queue;
+        synchronized (this) {
+            if (!monitoring) return;
+            queue = monitorQueue;
+        }
+        if (queue != null && length > 0) {
+            // Monitoring is best-effort and bounded; it must never stall the recording writer.
+            queue.offer(Arrays.copyOfRange(bytes, offset, offset + length));
+        }
+    }
     public synchronized boolean isFinalizing() { return writerThread != null && writerThread.isAlive() && !recording; }
 
     /** Waits for the WAV writer and completion callback; call from a non-client thread. */
@@ -166,7 +254,21 @@ public final class RecordingAudioCaptureService {
         String failureMessage = null;
         long bytesWritten = 0L;
         try {
-            AudioInputStream input = new AudioInputStream(captureLine);
+            java.io.InputStream captureInput = new java.io.InputStream() {
+                public int read() throws IOException {
+                    byte[] one = new byte[1];
+                    int count = read(one, 0, 1);
+                    return count < 0 ? -1 : one[0] & 0xFF;
+                }
+                public int read(byte[] buffer, int offset, int length) throws IOException {
+                    if (!captureLine.isOpen()) return -1;
+                    int count = captureLine.read(buffer, offset, length);
+                    if (count > 0) publishMonitorChunk(buffer, offset, count);
+                    if (count <= 0 && !captureLine.isOpen()) return -1;
+                    return count;
+                }
+            };
+            AudioInputStream input = new AudioInputStream(captureInput, FORMAT, AudioSystem.NOT_SPECIFIED);
             try {
                 bytesWritten = AudioSystem.write(input, AudioFileFormat.Type.WAVE, temp);
             } finally {
@@ -187,6 +289,7 @@ public final class RecordingAudioCaptureService {
         long frameSize = FORMAT.getFrameSize();
         long durationMillis = dataBytes <= 0L ? 0L
                 : (dataBytes / frameSize) * 1000L / (long) FORMAT.getSampleRate();
+        stopMonitoring();
         synchronized (this) {
             recording = false;
             line = null;
