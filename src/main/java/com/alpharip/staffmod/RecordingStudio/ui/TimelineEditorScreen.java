@@ -420,22 +420,6 @@ public final class TimelineEditorScreen extends GuiScreen {
         int span = Math.max(1, right - left);
         List<TimelineTrack> allTracks = tracks();
         int visibleRows = Math.max(0, (bottom - top) / rowHeight);
-        for (TimelineMarker marker : timeline.getMarkers()) {
-            int markerX = left + (int) Math.round(Math.min(scale, marker.getTimeMillis())
-                    / (double) scale * span);
-            if (markerX >= left && markerX <= right) {
-                net.minecraft.client.gui.Gui.drawRect(markerX, top, markerX + 1,
-                        Math.min(bottom, top + visibleRows * rowHeight), 0xFF66D9E8);
-                if (marker == selectedMarker) {
-                    net.minecraft.client.gui.Gui.drawRect(markerX - 2, top - 3, markerX + 3, top + 3, 0xFFFFFFFF);
-                }
-                String markerLabel = marker.getLabel();
-                if (markerLabel.length() > 10) markerLabel = markerLabel.substring(0, 10);
-                drawString(fontRendererObj, markerLabel, Math.min(right - 42, markerX + 3),
-                        top - 10, marker == selectedMarker ? 0xFFFFFFFF : 0xFF66D9E8);
-            }
-        }
-
         for (int i = 0; i < allTracks.size() && i < visibleRows; i++) {
             TimelineTrack currentTrack = allTracks.get(i);
             int rowY = top + i * rowHeight;
@@ -467,6 +451,23 @@ public final class TimelineEditorScreen extends GuiScreen {
                 }
             }
         }
+
+        for (TimelineMarker marker : timeline.getMarkers()) {
+            int markerX = left + (int) Math.round(Math.min(scale, marker.getTimeMillis())
+                    / (double) scale * span);
+            if (markerX >= left && markerX <= right) {
+                net.minecraft.client.gui.Gui.drawRect(markerX, top, markerX + 1,
+                        Math.min(bottom, top + visibleRows * rowHeight), 0xFF66D9E8);
+                if (marker == selectedMarker) {
+                    net.minecraft.client.gui.Gui.drawRect(markerX - 2, top - 3, markerX + 3, top + 3, 0xFFFFFFFF);
+                }
+                String markerLabel = marker.getLabel();
+                if (markerLabel.length() > 10) markerLabel = markerLabel.substring(0, 10);
+                drawString(fontRendererObj, markerLabel, Math.min(right - 42, markerX + 3),
+                        top - 10, marker == selectedMarker ? 0xFFFFFFFF : 0xFF66D9E8);
+            }
+        }
+
     }
 
     private boolean beginTimelineDrag(int mouseX, int mouseY, int mouseButton) {
