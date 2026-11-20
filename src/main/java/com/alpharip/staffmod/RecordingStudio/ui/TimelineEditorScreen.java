@@ -296,8 +296,16 @@ public final class TimelineEditorScreen extends GuiScreen {
                             }
                         }
                         if (!foundNext) {
+                            boolean foundSmaller = false;
                             for (long candidate : durations) {
-                                if (candidate <= maximum) { nextDuration = candidate; break; }
+                                if (candidate <= maximum) {
+                                    nextDuration = candidate;
+                                    foundSmaller = true;
+                                    break;
+                                }
+                            }
+                            if (!foundSmaller) {
+                                throw new IllegalArgumentException("No available transition duration preset fits these clips");
                             }
                         }
                         timeline.setTransition(transitionFrom.getId(), transitionTo.getId(),
@@ -738,7 +746,9 @@ public final class TimelineEditorScreen extends GuiScreen {
                         && activeClip != null && !"@capture".equals(activeClip.getSource());
                 TimelineClip nextClip = nextAdjacentClip(activeTrack, activeClip);
                 boolean transitionSupported = activeTrack != null && "video".equals(activeTrack.getId())
-                        && activeClip != null && nextClip != null;
+                        && activeClip != null && nextClip != null
+                        && !"@capture".equals(activeClip.getSource())
+                        && !"@capture".equals(nextClip.getSource());
                 button.enabled = button.id == 17 || button.id == 18
                         ? transitionSupported : clipEffectsSupported;
                 if (button.id == 14) button.displayString = "Effect: "
