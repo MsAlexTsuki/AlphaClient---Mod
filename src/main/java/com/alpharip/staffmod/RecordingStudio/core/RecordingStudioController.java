@@ -121,7 +121,7 @@ public final class RecordingStudioController {
         }
         try {
             long now = System.currentTimeMillis();
-            capture.start(now);
+            capture.start(now, project.getElapsedMillis(now));
             project.start(now);
             projectStore.save(project, timeline);
             projectStore.markRecordingActive(project);
