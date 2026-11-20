@@ -567,13 +567,18 @@ public final class RecordingStudioController {
     }
 
     public synchronized String getAudioStatus() {
-        if (audioCapture.isRecording()) return "Microphone: Recording";
-        if (audioCapture.isFinalizing()) return "Microphone: Finalizing";
-        if (gameAudioCapture.isRecording()) return "Game audio: Recording";
-        if (gameAudioCapture.isFinalizing()) return "Game audio: Finalizing";
         RecordingStudioSource microphone = getActiveMicrophoneSource();
-        return microphone == null || !microphone.isEnabled()
-                ? "Microphone: Disabled" : "Microphone: Idle";
+        String microphoneStatus = audioCapture.isRecording() ? "Microphone: Recording"
+                : audioCapture.isFinalizing() ? "Microphone: Finalizing"
+                : microphone == null || !microphone.isEnabled() ? "Microphone: Disabled" : "Microphone: Idle";
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource gameAudio = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
+        String gameStatus = gameAudioCapture.isRecording() ? "Game audio: Recording"
+                : gameAudioCapture.isFinalizing() ? "Game audio: Finalizing"
+                : gameAudio == null || !gameAudio.isEnabled() ? "Game audio: Disabled"
+                : "Game audio: " + getGameAudioSelectionName();
+        return microphoneStatus + " | " + gameStatus;
     }
 
     public synchronized void startExport(RecordingStudioExportService.Format format) {
