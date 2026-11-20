@@ -66,10 +66,16 @@ public final class RecordingStudioCommand extends CommandBase {
                     usage(sender);
                     return;
                 }
-                if (activeRuntime != null && !activeRuntime.isClosed()
-                        && args[1].equals(activeProjectId)) {
-                    sender.addChatMessage(new ChatComponentText("§6[Recording Studio] §fClose this project before deleting it."));
-                    return;
+                if (activeRuntime != null && args[1].equals(activeProjectId)) {
+                    if (!activeRuntime.isClosed()) {
+                        sender.addChatMessage(new ChatComponentText("§6[Recording Studio] §fClose this project before deleting it."));
+                        return;
+                    }
+                    if (store.hasRecoveryMarker(args[1])) {
+                        sender.addChatMessage(new ChatComponentText(
+                                "§6[Recording Studio] §fThis project's media is still being finalized. Try deleting it again after finalization."));
+                        return;
+                    }
                 }
                 store.loadProject(args[1]);
                 store.delete(args[1]);
