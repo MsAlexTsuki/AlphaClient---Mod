@@ -26,15 +26,17 @@ public final class RecordingStudioExternalVideoPreview {
         final double sourceSeconds;
         final double fadeFactor;
         final double transitionProgress;
+        final double transitionOpacity;
         final TimelineTransitionType transitionType;
         final com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect effect;
         ClipRequest(File source, double sourceSeconds, double fadeFactor,
-                    double transitionProgress, TimelineTransitionType transitionType,
+                    double transitionProgress, double transitionOpacity, TimelineTransitionType transitionType,
                     com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect effect) {
             this.source = source;
             this.sourceSeconds = sourceSeconds;
             this.fadeFactor = fadeFactor;
             this.transitionProgress = transitionProgress;
+            this.transitionOpacity = transitionOpacity;
             this.transitionType = transitionType;
             this.effect = effect;
         }
@@ -97,18 +99,25 @@ public final class RecordingStudioExternalVideoPreview {
             TimelineTransition incoming = findTransitionTo(timeline, clip);
             TimelineTransition outgoing = findTransitionFrom(timeline, clip);
             double transitionProgress = 1.0D;
+            double transitionOpacity = 1.0D;
             TimelineTransitionType transitionType = null;
             if (incoming != null && positionMillis < clip.getStart()) {
                 long transitionStart = clip.getStart() - incoming.getDurationMillis();
                 transitionProgress = Math.max(0.0D, Math.min(1.0D,
                         (positionMillis - transitionStart) / (double) incoming.getDurationMillis()));
                 transitionType = incoming.getType();
+                if (transitionType == TimelineTransitionType.CROSS_DISSOLVE) {
+                    transitionOpacity = transitionProgress;
+                } else if (transitionType == TimelineTransitionType.DIP_TO_BLACK) {
+                    transitionOpacity = transitionProgress < 0.5D ? 0.0D : 1.0D;
+                }
             }
             keyBuilder.append(clip.getId()).append('|').append(clip.getSource())
                     .append('|').append(clip.getEffect().name())
                     .append("|fade=").append(clip.getFadeInMillis()).append(':').append(clip.getFadeOutMillis())
                     .append("|transition=").append(transitionType).append(':')
-                    .append(String.format(Locale.ROOT, "%.3f", transitionProgress))
+                    .append(String.format(Locale.ROOT, "%.3f", transitionProgress)).append(':')
+                    .append(String.format(Locale.ROOT, "%.3f", transitionOpacity))
                     .append('|').append(previewBucket).append(';');
             File source = new File(clip.getSource());
             if (!source.isFile()) {
@@ -127,18 +136,19 @@ public final class RecordingStudioExternalVideoPreview {
                         (clip.getDuration() - offsetMillis) / (double) clip.getFadeOutMillis());
             }
             if (incoming != null && transitionType == TimelineTransitionType.DIP_TO_BLACK) {
-                fadeFactor *= transitionProgress;
+                fadeFactor *= transitionProgress < 0.5D
+                        ? 0.0D : Math.max(0.0D, Math.min(1.0D, (transitionProgress - 0.5D) * 2.0D));
             }
             if (outgoing != null && outgoing.getType() == TimelineTransitionType.DIP_TO_BLACK) {
                 long transitionStart = clip.getEnd() - outgoing.getDurationMillis();
                 if (positionMillis >= transitionStart && positionMillis < clip.getEnd()) {
                     double progress = (positionMillis - transitionStart) / (double) outgoing.getDurationMillis();
-                    fadeFactor *= 1.0D - Math.max(0.0D, Math.min(1.0D, progress));
+                    fadeFactor *= Math.max(0.0D, 1.0D - Math.min(1.0D, progress * 2.0D));
                 }
             }
             fadeFactor = Math.max(0.0D, Math.min(1.0D, fadeFactor));
             requests.add(new ClipRequest(source, sourceSeconds, fadeFactor,
-                    transitionProgress, transitionType, clip.getEffect()));
+                    transitionProgress, transitionOpacity, transitionType, clip.getEffect()));
         }
 
         String key = keyBuilder.toString();
@@ -227,7 +237,10 @@ public final class RecordingStudioExternalVideoPreview {
                 }
                 if (clip.transitionType == TimelineTransitionType.CROSS_DISSOLVE) {
                     filter.append(",format=rgba,colorchannelmixer=aa=")
-                            .append(String.format(Locale.ROOT, "%.6f", clip.transitionProgress));
+                            .append(String.format(Locale.ROOT, "%.6f", clip.transitionOpacity));
+                } else if (clip.transitionType == TimelineTransitionType.DIP_TO_BLACK) {
+                    filter.append(",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='")
+                            .append(clip.transitionOpacity < 0.5D ? "0" : "255").append("'");
                 } else if (clip.transitionType == TimelineTransitionType.WIPE_LEFT) {
                     filter.append(",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lt(X,W*")
                             .append(String.format(Locale.ROOT, "%.6f", clip.transitionProgress)).append("),255,0)'");
