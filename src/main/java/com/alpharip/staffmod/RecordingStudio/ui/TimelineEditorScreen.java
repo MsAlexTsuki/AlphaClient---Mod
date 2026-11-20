@@ -188,8 +188,10 @@ public final class TimelineEditorScreen extends GuiScreen {
                     if (track == null) throw new IllegalArgumentException("Create a track first");
                     String source = sourceField.getText().trim();
                     if (source.isEmpty()) throw new IllegalArgumentException("Enter a clip source");
+                    long clipDuration = number(durationField, "Duration");
+                    if (clipDuration <= 0L) throw new IllegalArgumentException("Clip duration must be greater than 0 ms");
                     TimelineClip created = new TimelineClip("clip-" + UUID.randomUUID(), source,
-                            number(startField, "Start"), number(durationField, "Duration"));
+                            number(startField, "Start"), clipDuration);
                     created.setSpeed(speed());
                     track.add(created);
                     selectedClipId = created.getId();
@@ -204,7 +206,9 @@ public final class TimelineEditorScreen extends GuiScreen {
                     break;
                 case 6:
                     requireClip(track);
-                    if (!track.trim(selectedClipId, number(startField, "Start"), number(durationField, "Duration")))
+                    long trimmedDuration = number(durationField, "Duration");
+                    if (trimmedDuration <= 0L) throw new IllegalArgumentException("Clip duration must be greater than 0 ms");
+                    if (!track.trim(selectedClipId, number(startField, "Start"), trimmedDuration))
                         throw new IllegalArgumentException("Clip no longer exists");
                     status = "Clip trimmed";
                     syncSelection();
