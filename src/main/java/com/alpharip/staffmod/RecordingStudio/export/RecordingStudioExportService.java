@@ -3,11 +3,14 @@ package com.alpharip.staffmod.RecordingStudio.export;
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineClip;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack;
+import com.alpharip.staffmod.RecordingStudio.capture.RecordingFrameTimestamp;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
@@ -93,6 +96,7 @@ public final class RecordingStudioExportService {
         String base = output.getName().substring(0, output.getName().length() - extension.length());
         File partial = new File(outputDirectory, base + ".partial" + extension);
         File palette = null;
+        File timestampManifest = null;
         try {
             File[] frames = listFrames();
             boolean hasCapturedFrames = frames.length > 0;
@@ -100,10 +104,11 @@ public final class RecordingStudioExportService {
             if (hasCapturedFrames && first == null) {
                 throw new IOException("Cannot read the first captured PNG frame");
             }
-            String input = hasCapturedFrames
-                    ? new File(framesDirectory, "frame-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].png")
-                            .getAbsolutePath().replace(File.separatorChar, '/')
-                    : null;
+            String input = null;
+            if (hasCapturedFrames) {
+                timestampManifest = createTimestampManifest(frames, fps);
+                input = timestampManifest.getAbsolutePath();
+            }
 
             List<TimelineClip> videoClips = getVideoClips();
             List<TimelineClip> audioClips = format == Format.MP4 ? getAudioClips() : Collections.<TimelineClip>emptyList();
@@ -150,7 +155,7 @@ public final class RecordingStudioExportService {
                     outputHeight, fps, outputDurationMillis);
 
             if (format == Format.MP4) {
-                List<String> command = baseCommand(executable, input, fps);
+                List<String> command = baseCommand(executable, input, fps, timestampManifest != null);
                 for (File source : videoSources) {
                     command.add("-i");
                     command.add(source.getAbsolutePath());
@@ -192,7 +197,7 @@ public final class RecordingStudioExportService {
                 run(command, "MP4 export", outputDurationMillis, 0, 100);
             } else {
                 palette = File.createTempFile("alpha-recording-palette-", ".png", outputDirectory);
-                List<String> paletteCommand = baseCommand(executable, input, fps);
+                List<String> paletteCommand = baseCommand(executable, input, fps, timestampManifest != null);
                 for (File source : videoSources) {
                     paletteCommand.add("-i");
                     paletteCommand.add(source.getAbsolutePath());
@@ -208,7 +213,7 @@ public final class RecordingStudioExportService {
                 }
                 run(paletteCommand, "GIF palette generation", outputDurationMillis, 0, 5);
 
-                List<String> gifCommand = baseCommand(executable, input, fps);
+                List<String> gifCommand = baseCommand(executable, input, fps, timestampManifest != null);
                 for (File source : videoSources) {
                     gifCommand.add("-i");
                     gifCommand.add(source.getAbsolutePath());
@@ -249,18 +254,67 @@ public final class RecordingStudioExportService {
         } finally {
             process = null;
             if (palette != null && palette.exists() && !palette.delete()) palette.deleteOnExit();
+            if (timestampManifest != null && timestampManifest.exists() && !timestampManifest.delete()) timestampManifest.deleteOnExit();
             if (partial.exists() && !partial.delete()) partial.deleteOnExit();
         }
     }
 
-    private List<String> baseCommand(String executable, String input, double fps) {
+    private List<String> baseCommand(String executable, String input, double fps, boolean timestampedInput) {
         List<String> command = new ArrayList<String>();
         Collections.addAll(command, executable, "-hide_banner", "-loglevel", "error");
         if (input != null) {
-            Collections.addAll(command, "-framerate", formatRate(fps),
-                    "-pattern_type", "glob", "-i", input);
+            if (timestampedInput) {
+                Collections.addAll(command, "-f", "concat", "-safe", "0", "-i", input);
+            } else {
+                Collections.addAll(command, "-framerate", formatRate(fps),
+                        "-pattern_type", "glob", "-i", input);
+            }
         }
         return command;
+    }
+
+    /** Creates an FFmpeg concat-demuxer input whose per-image durations follow saved active-time timestamps. */
+    private File createTimestampManifest(File[] frames, double fps) throws IOException {
+        File manifest = File.createTempFile("alpha-recording-frames-", ".ffconcat", outputDirectory);
+        long fallbackInterval = Math.max(1L, (long) Math.round(1000.0D / fps));
+        long[] timestamps = new long[frames.length];
+        for (int i = 0; i < frames.length; i++) {
+            long fallback = i > Long.MAX_VALUE / fallbackInterval
+                    ? Long.MAX_VALUE : (long) i * fallbackInterval;
+            timestamps[i] = RecordingFrameTimestamp.read(frames[i], fallback);
+            if (i > 0 && timestamps[i] <= timestamps[i - 1]) {
+                timestamps[i] = timestamps[i - 1] == Long.MAX_VALUE
+                        ? Long.MAX_VALUE : timestamps[i - 1] + 1L;
+            }
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(manifest))) {
+            writer.write("ffconcat version 1.0");
+            writer.newLine();
+            for (int i = 0; i < frames.length; i++) {
+                writer.write("file '");
+                writer.write(escapeConcatPath(frames[i].getAbsolutePath()));
+                writer.write("'");
+                writer.newLine();
+                long duration = i + 1 < frames.length
+                        ? Math.max(1L, timestamps[i + 1] - timestamps[i]) : fallbackInterval;
+                writer.write("duration ");
+                writer.write(seconds(duration));
+                writer.newLine();
+            }
+            // The concat demuxer needs the final image repeated to honor the last duration.
+            writer.write("file '");
+            writer.write(escapeConcatPath(frames[frames.length - 1].getAbsolutePath()));
+            writer.write("'");
+            writer.newLine();
+        } catch (IOException failure) {
+            if (!manifest.delete()) manifest.deleteOnExit();
+            throw failure;
+        }
+        return manifest;
+    }
+
+    private static String escapeConcatPath(String path) {
+        return path.replace("\\", "/").replace("'", "'\\''");
     }
 
     /**
@@ -364,11 +418,30 @@ public final class RecordingStudioExportService {
         if (clips.isEmpty()) return "";
         String rate = formatRate(fps);
         StringBuilder filter = new StringBuilder();
-        filter.append("color=c=black:s=").append(width).append('x').append(height)
-                .append(":r=").append(rate).append(":d=").append(seconds(durationMillis)).append("[vbase]");
+        int captureIndex = -1;
+        for (int i = 0; i < clips.size(); i++) {
+            if ("@capture".equals(clips.get(i).getSource())) { captureIndex = i; break; }
+        }
+        if (captureIndex >= 0) {
+            TimelineClip capture = clips.get(captureIndex);
+            double captureSpeed = capture.getSpeed();
+            filter.append('[').append(inputIndexes.get(captureIndex)).append(":v:0]")
+                    .append("trim=duration=").append(seconds(capture.getDuration() * captureSpeed))
+                    .append(",setpts=(PTS-STARTPTS)/")
+                    .append(String.format(Locale.ROOT, "%.6f", captureSpeed))
+                    .append("+").append(seconds(capture.getStart())).append("/TB")
+                    .append(",scale=").append(width).append(':').append(height)
+                    .append(":force_original_aspect_ratio=decrease")
+                    .append(",pad=").append(width).append(':').append(height)
+                    .append(":(ow-iw)/2:(oh-ih)/2:black,setsar=1[vbase]");
+        } else {
+            filter.append("color=c=black:s=").append(width).append('x').append(height)
+                    .append(":r=").append(rate).append(":d=").append(seconds(durationMillis)).append("[vbase]");
+        }
         String currentBase = "[vbase]";
         for (int i = 0; i < clips.size(); i++) {
             TimelineClip clip = clips.get(i);
+            if ("@capture".equals(clip.getSource())) continue;
             double speed = clip.getSpeed();
             double sourceDuration = clip.getDuration() * speed;
             long start = clip.getStart();
@@ -378,9 +451,9 @@ public final class RecordingStudioExportService {
             filter.append(";[").append(inputIndexes.get(i)).append(":v:0]")
                     .append("trim=duration=").append(seconds(sourceDuration))
                     .append(",setpts=(PTS-STARTPTS)/")
-                    .append(String.format(Locale.ROOT, "%.6f", speed))
-                    .append(",fps=").append(rate)
-                    .append(",scale=").append(width).append(':').append(height)
+                    .append(String.format(Locale.ROOT, "%.6f", speed));
+            if (inputIndexes.get(i) != 0 || captureIndex < 0) filter.append(",fps=").append(rate);
+            filter.append(",scale=").append(width).append(':').append(height)
                     .append(":force_original_aspect_ratio=decrease")
                     .append(",pad=").append(width).append(':').append(height)
                     .append(":(ow-iw)/2:(oh-ih)/2:black,setsar=1");
