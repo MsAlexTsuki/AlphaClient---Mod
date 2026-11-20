@@ -959,10 +959,15 @@ public final class RecordingStudioController {
         RecordingStudioScene scene = timeline.getActiveScene();
         if (scene == null) { status = "No active scene"; return; }
         int count = 1;
-        for (RecordingStudioSource item : scene.getSources()) if (item.getType() == RecordingStudioSource.Type.WEBCAM) count++;
+        boolean hasEnabledVisualSource = false;
+        for (RecordingStudioSource item : scene.getSources()) {
+            if (item.getType() == RecordingStudioSource.Type.WEBCAM) count++;
+            if (isVideoSource(item.getType()) && item.isEnabled()) hasEnabledVisualSource = true;
+        }
         RecordingStudioSource source = new RecordingStudioSource("webcam-" + java.util.UUID.randomUUID().toString(),
                 "Webcam " + count, RecordingStudioSource.Type.WEBCAM, false);
-        source.setTransform(72, 65, 25, 33);
+        source.setTransform(hasEnabledVisualSource ? 72 : 0, hasEnabledVisualSource ? 65 : 0,
+                hasEnabledVisualSource ? 25 : 100, hasEnabledVisualSource ? 33 : 100);
         scene.addSource(source);
         while (scene.moveSource(source.getId(), -1)) { }
         persistSceneChange(source.getName() + " added");
