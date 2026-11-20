@@ -29,6 +29,8 @@ public final class RecordingStudioFrameWriter implements RecordingCaptureService
         if (scene == null) throw new IOException("No active Recording Studio scene");
         java.util.List<Layer> layers = new java.util.ArrayList<Layer>();
         int width = 0, height = 0;
+        boolean hasNonWebcamCanvas = false;
+        java.util.Set<String> activeWebcams = new java.util.HashSet<String>();
         for (RecordingStudioSource source : scene.getSources()) {
             if (!source.isEnabled() || !isVisual(source.getType())) continue;
             RecordingCaptureService.FrameData frame;
@@ -37,14 +39,23 @@ public final class RecordingStudioFrameWriter implements RecordingCaptureService
                 case DESKTOP: frame = DesktopScreenFrameWriter.capturePrimary(); break;
                 case DISPLAY: frame = DesktopScreenFrameWriter.captureDisplay(source.getScreenDeviceId()); break;
                 case WEBCAM:
+                    activeWebcams.add(source.getId());
                     RecordingStudioWebcamCapture webcam = webcams.get(source.getId());
                     if (webcam == null) { webcam = new RecordingStudioWebcamCapture("ffmpeg"); webcams.put(source.getId(), webcam); }
                     frame = webcam.capture(source.getWebcamDeviceName());
                     break;
                 default: continue;
             }
-            if (width == 0) { width = frame.getWidth(); height = frame.getHeight(); }
+            if (width == 0 || (source.getType() != RecordingStudioSource.Type.WEBCAM && !hasNonWebcamCanvas)) {
+                width = frame.getWidth(); height = frame.getHeight();
+                if (source.getType() != RecordingStudioSource.Type.WEBCAM) hasNonWebcamCanvas = true;
+            }
             layers.add(new Layer(source, frame));
+        }
+        java.util.Iterator<Map.Entry<String, RecordingStudioWebcamCapture>> webcamIterator = webcams.entrySet().iterator();
+        while (webcamIterator.hasNext()) {
+            Map.Entry<String, RecordingStudioWebcamCapture> entry = webcamIterator.next();
+            if (!activeWebcams.contains(entry.getKey())) { entry.getValue().close(); webcamIterator.remove(); }
         }
         if (layers.isEmpty()) throw new IOException("Enable at least one visual source in the active scene");
         if (layers.size() == 1) return layers.get(0).frame;
@@ -62,7 +73,8 @@ public final class RecordingStudioFrameWriter implements RecordingCaptureService
         try {
             graphics.setColor(java.awt.Color.BLACK);
             graphics.fillRect(0, 0, width, height);
-            for (Layer layer : layers) {
+            for (int layerIndex = layers.size() - 1; layerIndex >= 0; layerIndex--) {
+                Layer layer = layers.get(layerIndex);
                 RecordingStudioSource s = layer.source;
                 BufferedImage image = toImage(layer.frame);
                 int left = s.getCropLeftPercent() * image.getWidth() / 100;
