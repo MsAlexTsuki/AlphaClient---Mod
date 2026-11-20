@@ -610,6 +610,7 @@ public final class RecordingStudioScreen extends GuiScreen {
 
         int timelineTop = height - 130;
         int timelineBottom = height - 43;
+        boolean externalVideoActive = false;
         if (editingTab) {
         Gui.drawRect(previewLeft, timelineTop, previewRight, timelineBottom, 0xE8101010);
         Gui.drawRect(previewLeft, timelineTop, previewRight, timelineTop + 2, 0xFFFFC83D);
@@ -634,7 +635,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 Math.max(controller.getTimeline().duration(), playheadMillis));
         audioPlayback.update(controller.getTimeline(), playheadMillis,
                 playbackMode && (playback.isPlaying() || externalReviewPlaying));
-        boolean externalVideoActive = playbackMode
+        externalVideoActive = playbackMode
                 && externalVideoPreview.update(controller.getTimeline(), playheadMillis, controller.getCapture().getIntervalMillis());
         int timelineBarLeft = previewLeft + 58;
         int timelineBarRight = previewRight - 10;
