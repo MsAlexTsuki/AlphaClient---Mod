@@ -91,6 +91,9 @@ public final class TimelineEditorScreen extends GuiScreen {
         buttonList.add(new AlphaStudioButton(15, left, y, 143, 20, "Fade In: 0 ms"));
         buttonList.add(new AlphaStudioButton(16, left + 147, y, 143, 20, "Fade Out: 0 ms"));
         y += 22;
+        buttonList.add(new AlphaStudioButton(17, left, y, 143, 20, "Transition: NONE"));
+        buttonList.add(new AlphaStudioButton(18, left + 147, y, 143, 20, "Transition: 250 ms"));
+        y += 22;
         buttonList.add(new AlphaStudioButton(9, width / 2 - 50, y, 100, 20, "Back", true));
         syncSelection();
     }
@@ -246,6 +249,62 @@ public final class TimelineEditorScreen extends GuiScreen {
                     selectedClip().setEffect(effects[(currentEffect.ordinal() + 1) % effects.length]);
                     status = "Clip effect: " + selectedClip().getEffect().name();
                     break;
+                case 17:
+                case 18:
+                    requireClip(track);
+                    if (!"video".equals(track.getId())) {
+                        throw new IllegalArgumentException("Transitions are available on the video track only");
+                    }
+                    TimelineClip transitionFrom = selectedClip();
+                    TimelineClip transitionTo = nextAdjacentClip(track, transitionFrom);
+                    if (transitionTo == null) {
+                        throw new IllegalArgumentException("Select a clip with an immediately adjacent next clip");
+                    }
+                    TimelineTransition existingTransition = timeline.getTransition(
+                            transitionFrom.getId(), transitionTo.getId());
+                    if (button.id == 17) {
+                        if (existingTransition == null) {
+                            timeline.setTransition(transitionFrom.getId(), transitionTo.getId(),
+                                    TimelineTransitionType.CROSS_DISSOLVE,
+                                    Math.min(250L, Math.min(transitionFrom.getDuration(), transitionTo.getDuration())));
+                        } else {
+                            TimelineTransitionType[] types = TimelineTransitionType.values();
+                            int nextIndex = existingTransition.getType().ordinal() + 1;
+                            if (nextIndex >= types.length) {
+                                timeline.removeTransition(transitionFrom.getId(), transitionTo.getId());
+                            } else {
+                                timeline.setTransition(transitionFrom.getId(), transitionTo.getId(),
+                                        types[nextIndex], existingTransition.getDurationMillis());
+                            }
+                        }
+                        TimelineTransition updated = timeline.getTransition(transitionFrom.getId(), transitionTo.getId());
+                        status = updated == null ? "Transition removed"
+                                : "Transition to next clip: " + updated.getType().name();
+                    } else {
+                        if (existingTransition == null) {
+                            throw new IllegalArgumentException("Choose a transition type first");
+                        }
+                        long[] durations = new long[] { 150L, 250L, 500L, 750L, 1000L };
+                        long maximum = Math.min(transitionFrom.getDuration(), transitionTo.getDuration());
+                        long nextDuration = durations[0];
+                        boolean foundNext = false;
+                        for (long candidate : durations) {
+                            if (candidate > existingTransition.getDurationMillis() && candidate <= maximum) {
+                                nextDuration = candidate;
+                                foundNext = true;
+                                break;
+                            }
+                        }
+                        if (!foundNext) {
+                            for (long candidate : durations) {
+                                if (candidate <= maximum) { nextDuration = candidate; break; }
+                            }
+                        }
+                        timeline.setTransition(transitionFrom.getId(), transitionTo.getId(),
+                                existingTransition.getType(), nextDuration);
+                        status = "Transition duration: " + nextDuration + " ms";
+                    }
+                    break;
                 case 15:
                 case 16:
                     requireClip(track);
@@ -265,6 +324,15 @@ public final class TimelineEditorScreen extends GuiScreen {
             status = ex.getMessage();
         }
     }
+    private static TimelineClip nextAdjacentClip(TimelineTrack track, TimelineClip current) {
+        if (track == null || current == null) return null;
+        for (TimelineClip candidate : track.getClips()) {
+            if (candidate.getStart() == current.getEnd()
+                    && !candidate.getId().equals(current.getId())) return candidate;
+        }
+        return null;
+    }
+
     private static long nextFadeDuration(long current, long maximum) {
         long[] values = new long[] { 0L, 100L, 250L, 500L, 1000L };
         for (int i = 0; i < values.length; i++) {
@@ -662,18 +730,31 @@ public final class TimelineEditorScreen extends GuiScreen {
         drawTimeline();
         for (GuiButton button : buttonList) {
             if (button.id == 13) button.displayString = "Kind: " + TimelineMarkerKind.values()[markerKindIndex].name();
-            if (button.id == 14 || button.id == 15 || button.id == 16) {
+            if (button.id == 14 || button.id == 15 || button.id == 16
+                    || button.id == 17 || button.id == 18) {
                 TimelineTrack activeTrack = selectedTrack();
                 TimelineClip activeClip = selectedClip();
-                boolean supported = activeTrack != null && "video".equals(activeTrack.getId())
+                boolean clipEffectsSupported = activeTrack != null && "video".equals(activeTrack.getId())
                         && activeClip != null && !"@capture".equals(activeClip.getSource());
-                button.enabled = supported;
+                TimelineClip nextClip = nextAdjacentClip(activeTrack, activeClip);
+                boolean transitionSupported = activeTrack != null && "video".equals(activeTrack.getId())
+                        && activeClip != null && nextClip != null;
+                button.enabled = button.id == 17 || button.id == 18
+                        ? transitionSupported : clipEffectsSupported;
                 if (button.id == 14) button.displayString = "Effect: "
                         + (activeClip == null ? "NONE" : activeClip.getEffect().name());
                 if (button.id == 15) button.displayString = "Fade In: "
                         + (activeClip == null ? 0 : activeClip.getFadeInMillis()) + " ms";
                 if (button.id == 16) button.displayString = "Fade Out: "
                         + (activeClip == null ? 0 : activeClip.getFadeOutMillis()) + " ms";
+                if (button.id == 17 || button.id == 18) {
+                    TimelineTransition transition = nextClip == null || activeClip == null ? null
+                            : timeline.getTransition(activeClip.getId(), nextClip.getId());
+                    if (button.id == 17) button.displayString = "Transition: "
+                            + (transition == null ? "NONE" : transition.getType().name());
+                    if (button.id == 18) button.displayString = "Duration: "
+                            + (transition == null ? 250L : transition.getDurationMillis()) + " ms";
+                }
             }
         }
         sourceField.drawTextBox();
