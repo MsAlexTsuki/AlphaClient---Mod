@@ -122,7 +122,8 @@ public final class RecordingStudioCleanupService {
         String canonical = file.getCanonicalPath();
         if (!canonical.startsWith(rootPath)) return false;
         String name = file.getName().toLowerCase(java.util.Locale.ROOT);
-        if (name.endsWith(".recording") || name.endsWith(".timeline") || name.endsWith(".active")) return false;
+        if (!(name.endsWith(".png") || name.endsWith(".wav") || name.endsWith(".mp4")
+                || name.endsWith(".gif") || name.endsWith(".time") || name.endsWith(".tmp"))) return false;
         long modified = file.lastModified();
         return modified > 0L && modified <= cutoff;
     }
