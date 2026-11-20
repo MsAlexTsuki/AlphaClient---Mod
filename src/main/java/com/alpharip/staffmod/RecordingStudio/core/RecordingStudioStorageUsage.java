@@ -13,10 +13,12 @@ public final class RecordingStudioStorageUsage {
     private long projectBytes;
     private long frameBytes;
     private long audioBytes;
+    private long gameAudioBytes;
     private long exportBytes;
     private int projectCount;
     private int frameCount;
     private int audioCount;
+    private int gameAudioCount;
     private int exportCount;
     private boolean readable = true;
     private volatile boolean scanning;
@@ -61,7 +63,7 @@ public final class RecordingStudioStorageUsage {
 
     private synchronized void refreshSnapshot() {
         totalBytes = projectBytes = frameBytes = audioBytes = exportBytes = 0L;
-        projectCount = frameCount = audioCount = exportCount = 0;
+        projectCount = frameCount = audioCount = gameAudioCount = exportCount = 0;
         readable = true;
         visitedDirectories.clear();
         File projects = new File(root, "projects");
@@ -70,8 +72,9 @@ public final class RecordingStudioStorageUsage {
         projectBytes = scan(projects, 0);
         frameBytes = scanRecordingCategory(recordings, "frames", 1);
         audioBytes = scanRecordingCategory(recordings, "audio", 2);
+        gameAudioBytes = scanRecordingCategory(recordings, "game-audio", 4);
         exportBytes = scan(exports, 3);
-        totalBytes = safeAdd(safeAdd(projectBytes, frameBytes), safeAdd(audioBytes, exportBytes));
+        totalBytes = safeAdd(safeAdd(projectBytes, frameBytes), safeAdd(safeAdd(audioBytes, gameAudioBytes), exportBytes));
     }
 
     private long scanRecordingCategory(File recordings, String folderName, int category) {
@@ -122,6 +125,7 @@ public final class RecordingStudioStorageUsage {
         else if (category == 1) frameCount++;
         else if (category == 2) audioCount++;
         else if (category == 3) exportCount++;
+        else if (category == 4) gameAudioCount++;
     }
 
     private static long safeAdd(long a, long b) {
@@ -132,10 +136,12 @@ public final class RecordingStudioStorageUsage {
     public synchronized long getProjectBytes() { return projectBytes; }
     public synchronized long getFrameBytes() { return frameBytes; }
     public synchronized long getAudioBytes() { return audioBytes; }
+    public synchronized long getGameAudioBytes() { return gameAudioBytes; }
     public synchronized long getExportBytes() { return exportBytes; }
     public synchronized int getProjectCount() { return projectCount; }
     public synchronized int getFrameCount() { return frameCount; }
     public synchronized int getAudioCount() { return audioCount; }
+    public synchronized int getGameAudioCount() { return gameAudioCount; }
     public synchronized int getExportCount() { return exportCount; }
     public synchronized boolean isReadable() { return readable; }
     public boolean isScanning() { return scanning; }
