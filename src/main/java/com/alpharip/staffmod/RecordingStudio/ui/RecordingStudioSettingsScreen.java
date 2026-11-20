@@ -222,8 +222,8 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
                 setting("Frame rate", "Uses the source capture interval; no forced conversion.",
                         "Source", x, 216, controlRight);
                 setting("Encoder", "Current MP4 encoder profile.", "H.264 High Profile", x, 253, controlRight);
-                setting("Background export", "Exports currently run on a worker but are cancelled when Studio shuts down.",
-                        "Not available", x, 290, controlRight);
+                setting("Background export", "Accepted exports continue after the Studio window closes.",
+                        "Available", x, 290, controlRight);
             }
         } else if (selectedCategory == AUDIO) {
             section("Audio", x, 82, colWidth);
@@ -243,10 +243,12 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
                     Long.toString(controller.getCapture().getFrameCount()), x, 108, controlRight);
             setting("Pending frames", "Frames waiting for disk writes.",
                     Integer.toString(controller.getCapture().getPendingFrameCount()), x, 145, controlRight);
-            setting("Failed frames", "Frame writes that failed.", 
-                    Long.toString(controller.getCapture().getFailedFrameCount()), x, 182, controlRight);
-            setting("Export status", "Current export worker state.", controller.getExportStatus(), x, 219, controlRight);
-            setting("Runtime status", "Recording Studio controller state.", controller.getStatus(), x, 256, controlRight);
+            setting("Dropped frames", "Frames skipped because the encoder queue was full.",
+                    Long.toString(controller.getCapture().getDroppedFrameCount()), x, 182, controlRight);
+            setting("Failed frames", "Framebuffer capture or disk writes that failed.",
+                    Long.toString(controller.getCapture().getFailedFrameCount()), x, 219, controlRight);
+            setting("Export status", "Current export worker state.", controller.getExportStatus(), x, 256, controlRight);
+            setting("Runtime status", "Recording Studio controller state.", controller.getStatus(), x, 293, controlRight);
         }
 
         drawString(fontRendererObj, "Changes are saved automatically.", 154, height - 29, 0xFF777777);
