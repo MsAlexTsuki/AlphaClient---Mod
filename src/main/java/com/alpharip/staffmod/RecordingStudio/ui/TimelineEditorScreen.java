@@ -31,6 +31,16 @@ public final class TimelineEditorScreen extends GuiScreen {
     private volatile String mediaProbeTrackId;
     private volatile long mediaProbeStart;
     private volatile boolean screenClosed;
+    private static final int DRAG_NONE = 0;
+    private static final int DRAG_MOVE = 1;
+    private static final int DRAG_TRIM_LEFT = 2;
+    private static final int DRAG_TRIM_RIGHT = 3;
+    private int dragMode = DRAG_NONE;
+    private TimelineTrack dragTrack;
+    private TimelineClip dragClip;
+    private long dragOriginalStart;
+    private long dragOriginalDuration;
+    private int dragOriginX;
 
     public TimelineEditorScreen(GuiScreen parent, Timeline timeline) {
         this(parent, timeline, null);
@@ -363,8 +373,151 @@ public final class TimelineEditorScreen extends GuiScreen {
         speedField.textboxKeyTyped(c, key);
         super.keyTyped(c, key);
     }
+    private int timelineLeft() { return width / 2 - 145; }
+    private int timelineRight() { return width / 2 + 145; }
+    private int timelineTop() { return height / 2 + 112; }
+    private int timelineRowHeight() { return 25; }
+    private long timelineScale() { return Math.max(10000L, timeline.duration() + 10000L); }
+
+    private long millisAtTimelineX(int x) {
+        int left = timelineLeft();
+        int span = Math.max(1, timelineRight() - left);
+        double ratio = Math.max(0.0D, Math.min(1.0D, (x - left) / (double) span));
+        return Math.max(0L, Math.round(ratio * timelineScale()));
+    }
+
+    private void drawTimeline() {
+        int left = timelineLeft();
+        int right = timelineRight();
+        int top = timelineTop();
+        int rowHeight = timelineRowHeight();
+        int bottom = height - 42;
+        if (top >= bottom) return;
+
+        net.minecraft.client.gui.Gui.drawRect(left - 8, top - 22, right + 8, bottom, 0xCC101010);
+        net.minecraft.client.gui.Gui.drawRect(left - 8, top - 22, right + 8, top - 20, 0xFFFFC83D);
+        drawString(fontRendererObj, "VISUAL TIMELINE  |  Drag clips to move; drag either edge to trim",
+                left - 2, top - 16, 0xFFFFC83D);
+
+        long scale = timelineScale();
+        int span = Math.max(1, right - left);
+        List<TimelineTrack> allTracks = tracks();
+        int visibleRows = Math.max(0, (bottom - top) / rowHeight);
+        for (int i = 0; i < allTracks.size() && i < visibleRows; i++) {
+            TimelineTrack currentTrack = allTracks.get(i);
+            int rowY = top + i * rowHeight;
+            boolean active = i == trackIndex;
+            net.minecraft.client.gui.Gui.drawRect(left, rowY, right, rowY + 19,
+                    active ? 0xFF302719 : 0xFF202020);
+            drawString(fontRendererObj, currentTrack.getName(), left - 2, rowY + 20, 0xFFBBBBBB);
+
+            for (TimelineClip currentClip : currentTrack.getClips()) {
+                if (currentClip.getDuration() <= 0L) continue;
+                int clipLeft = left + (int) Math.floor(
+                        Math.max(0L, currentClip.getStart()) / (double) scale * span);
+                int clipRight = left + (int) Math.ceil(
+                        Math.min(scale, currentClip.getEnd()) / (double) scale * span);
+                clipLeft = Math.max(left, Math.min(right - 1, clipLeft));
+                clipRight = Math.max(clipLeft + 3, Math.min(right, clipRight));
+                boolean selected = currentClip.getId().equals(selectedClipId) && active;
+                int color = selected ? 0xFFFFC83D
+                        : "audio".equals(currentTrack.getId()) ? 0xFF397F83 : 0xFF98701E;
+                net.minecraft.client.gui.Gui.drawRect(clipLeft, rowY + 2, clipRight, rowY + 17, color);
+                if (selected) {
+                    net.minecraft.client.gui.Gui.drawRect(clipLeft, rowY + 1, clipLeft + 2, rowY + 18, 0xFFFFFFFF);
+                    net.minecraft.client.gui.Gui.drawRect(clipRight - 2, rowY + 1, clipRight, rowY + 18, 0xFFFFFFFF);
+                }
+                if (clipRight - clipLeft > 34) {
+                    String label = currentClip.getId();
+                    if (label.length() > 13) label = label.substring(0, 13);
+                    drawString(fontRendererObj, label, clipLeft + 4, rowY + 5, 0xFF17130A);
+                }
+            }
+        }
+    }
+
+    private boolean beginTimelineDrag(int mouseX, int mouseY, int mouseButton) {
+        if (mouseButton != 0) return false;
+        int left = timelineLeft();
+        int right = timelineRight();
+        int top = timelineTop();
+        int rowHeight = timelineRowHeight();
+        int row = (mouseY - top) / rowHeight;
+        if (mouseX < left || mouseX > right || mouseY < top
+                || row < 0 || row >= tracks().size()
+                || mouseY >= top + (row + 1) * rowHeight - 3) return false;
+
+        trackIndex = row;
+        TimelineTrack targetTrack = selectedTrack();
+        if (targetTrack == null) return true;
+        selectedClipId = null;
+        int span = Math.max(1, right - left);
+        long scale = timelineScale();
+        for (TimelineClip candidate : targetTrack.getClips()) {
+            if (candidate.getDuration() <= 0L) continue;
+            int clipLeft = left + (int) Math.floor(candidate.getStart() / (double) scale * span);
+            int clipRight = left + (int) Math.ceil(candidate.getEnd() / (double) scale * span);
+            clipLeft = Math.max(left, Math.min(right - 1, clipLeft));
+            clipRight = Math.max(clipLeft + 3, Math.min(right, clipRight));
+            if (mouseX < clipLeft || mouseX > clipRight) continue;
+
+            selectedClipId = candidate.getId();
+            dragTrack = targetTrack;
+            dragClip = candidate;
+            dragOriginalStart = candidate.getStart();
+            dragOriginalDuration = candidate.getDuration();
+            dragOriginX = mouseX;
+            if (mouseX - clipLeft <= 6) dragMode = DRAG_TRIM_LEFT;
+            else if (clipRight - mouseX <= 6) dragMode = DRAG_TRIM_RIGHT;
+            else dragMode = DRAG_MOVE;
+            syncSelection();
+            status = dragMode == DRAG_MOVE ? "Dragging clip"
+                    : dragMode == DRAG_TRIM_LEFT ? "Trimming clip start" : "Trimming clip end";
+            return true;
+        }
+
+        syncSelection();
+        status = "Track selected";
+        return true;
+    }
+
+    @Override protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton,
+                                             long timeSinceLastClick) {
+        super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+        if (dragMode == DRAG_NONE || dragTrack == null || dragClip == null) return;
+        long delta = Math.round((mouseX - dragOriginX)
+                * (timelineScale() / (double) Math.max(1, timelineRight() - timelineLeft())));
+        try {
+            if (dragMode == DRAG_MOVE) {
+                dragTrack.move(dragClip.getId(), Math.max(0L, dragOriginalStart + delta));
+            } else if (dragMode == DRAG_TRIM_LEFT) {
+                long end = dragOriginalStart + dragOriginalDuration;
+                long newStart = Math.max(0L, Math.min(end - 1L, dragOriginalStart + delta));
+                dragTrack.trim(dragClip.getId(), newStart, end - newStart);
+            } else if (dragMode == DRAG_TRIM_RIGHT) {
+                dragTrack.trim(dragClip.getId(), dragOriginalStart,
+                        Math.max(1L, dragOriginalDuration + delta));
+            }
+            syncSelection();
+        } catch (IllegalArgumentException failure) {
+            status = failure.getMessage();
+        }
+    }
+
+    @Override protected void mouseReleased(int mouseX, int mouseY, int state) {
+        super.mouseReleased(mouseX, mouseY, state);
+        if (dragMode != DRAG_NONE) {
+            status = dragMode == DRAG_MOVE ? "Clip position updated" : "Clip trim updated";
+            syncSelection();
+        }
+        dragMode = DRAG_NONE;
+        dragTrack = null;
+        dragClip = null;
+    }
+
     @Override protected void mouseClicked(int x, int y, int button) throws java.io.IOException {
         super.mouseClicked(x, y, button);
+        if (beginTimelineDrag(x, y, button)) return;
         sourceField.mouseClicked(x, y, button);
         startField.mouseClicked(x, y, button);
         durationField.mouseClicked(x, y, button);
@@ -388,6 +541,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         drawString(fontRendererObj, "Start (ms)", width / 2 - 145, height / 2 - 61, 0xFFFFFF);
         drawString(fontRendererObj, "Duration (ms)", width / 2 - 41, height / 2 - 61, 0xFFFFFF);
         drawString(fontRendererObj, "Speed", width / 2 + 63, height / 2 - 61, 0xFFFFFF);
+        drawTimeline();
         sourceField.drawTextBox();
         startField.drawTextBox();
         durationField.drawTextBox();
