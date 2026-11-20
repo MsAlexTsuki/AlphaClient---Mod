@@ -374,7 +374,7 @@ public final class RecordingStudioRuntime {
         }
         if (activeCamera == null || !activeCamera.isActive() || minecraft == null
                 || event.entity != minecraft.getRenderViewEntity()) return;
-        event.setRoll(activeCamera.getPose().roll);
+        event.roll = activeCamera.getPose().roll;
     }
 
     private boolean usesDesktopCapture() {
