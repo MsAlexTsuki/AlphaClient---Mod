@@ -40,6 +40,7 @@ public final class TimelineEditorScreen extends GuiScreen {
     private TimelineClip dragClip;
     private long dragOriginalStart;
     private long dragOriginalDuration;
+    private long dragScale;
     private int dragOriginX;
 
     public TimelineEditorScreen(GuiScreen parent, Timeline timeline) {
@@ -466,6 +467,7 @@ public final class TimelineEditorScreen extends GuiScreen {
             dragClip = candidate;
             dragOriginalStart = candidate.getStart();
             dragOriginalDuration = candidate.getDuration();
+            dragScale = timelineScale();
             dragOriginX = mouseX;
             if (mouseX - clipLeft <= 6) dragMode = DRAG_TRIM_LEFT;
             else if (clipRight - mouseX <= 6) dragMode = DRAG_TRIM_RIGHT;
@@ -486,7 +488,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
         if (dragMode == DRAG_NONE || dragTrack == null || dragClip == null) return;
         long delta = Math.round((mouseX - dragOriginX)
-                * (timelineScale() / (double) Math.max(1, timelineRight() - timelineLeft())));
+                * (dragScale / (double) Math.max(1, timelineRight() - timelineLeft())));
         try {
             if (dragMode == DRAG_MOVE) {
                 dragTrack.move(dragClip.getId(), Math.max(0L, dragOriginalStart + delta));
