@@ -107,6 +107,14 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(40, 18, 450, 126, "Toggle Game Audio");
         add(41, 18, 474, 126, "Add Webcam", true);
         add(42, 18, 498, 126, "Next Webcam Device");
+        add(43, 18, 522, 126, "Toggle Selected Source");
+        add(44, 18, 546, 126, "Move Source Left");
+        add(45, 18, 570, 126, "Move Source Right");
+        add(46, 18, 594, 126, "Move Source Up");
+        add(47, 18, 618, 126, "Move Source Down");
+        add(48, 18, 642, 126, "Source Size -");
+        add(49, 18, 666, 126, "Source Size +");
+        add(50, 18, 690, 126, "Source Fullscreen");
 
         int playbackX = width - 190 - 184;
         int playbackY = height - 124;
@@ -136,7 +144,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 continue;
             }
             switch (b.id) {
-                case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: case 30: case 39: case 40: case 41: case 42: b.visible = rec; break;
+                case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: case 30: case 39: case 40: case 41: case 42: case 43: case 44: case 45: case 46: case 47: case 48: case 49: case 50: b.visible = rec; break;
                 case 4: case 32: case 33: case 34: case 35: b.visible = edit; break;
                 case 11: case 12: case 13: b.visible = pub; break;
                 default: b.visible = true; break;
@@ -353,6 +361,31 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 42:
                 if (selectedSourceId != null) controller.selectNextWebcamDevice(selectedSourceId);
                 initGui();
+                break;
+            case 43:
+                if (selectedSourceId != null) controller.toggleActiveSceneSource(selectedSourceId);
+                initGui();
+                break;
+            case 44:
+                if (selectedSourceId != null) controller.adjustActiveSceneSource(selectedSourceId, -5, 0, 0);
+                break;
+            case 45:
+                if (selectedSourceId != null) controller.adjustActiveSceneSource(selectedSourceId, 5, 0, 0);
+                break;
+            case 46:
+                if (selectedSourceId != null) controller.adjustActiveSceneSource(selectedSourceId, 0, -5, 0);
+                break;
+            case 47:
+                if (selectedSourceId != null) controller.adjustActiveSceneSource(selectedSourceId, 0, 5, 0);
+                break;
+            case 48:
+                if (selectedSourceId != null) controller.adjustActiveSceneSource(selectedSourceId, 0, 0, -5);
+                break;
+            case 49:
+                if (selectedSourceId != null) controller.adjustActiveSceneSource(selectedSourceId, 0, 0, 5);
+                break;
+            case 50:
+                if (selectedSourceId != null) controller.resetActiveSceneSourceTransform(selectedSourceId);
                 break;
             default: break;
         }
