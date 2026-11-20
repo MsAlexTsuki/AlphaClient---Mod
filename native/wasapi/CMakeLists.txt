@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0091 NEW)
 project(alpha_wasapi LANGUAGES CXX)
 
 if(NOT WIN32)
@@ -11,6 +12,9 @@ add_library(alpha_wasapi SHARED WasapiLoopback.cpp)
 target_include_directories(alpha_wasapi PRIVATE ${JNI_INCLUDE_DIRS})
 target_compile_features(alpha_wasapi PRIVATE cxx_std_17)
 target_compile_definitions(alpha_wasapi PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+if(MSVC)
+    set_property(TARGET alpha_wasapi PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 target_link_libraries(alpha_wasapi PRIVATE ole32 uuid)
 set_target_properties(alpha_wasapi PROPERTIES
     OUTPUT_NAME "alpha_wasapi"
