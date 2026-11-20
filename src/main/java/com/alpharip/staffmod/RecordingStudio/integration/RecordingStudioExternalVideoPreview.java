@@ -21,9 +21,12 @@ public final class RecordingStudioExternalVideoPreview {
     private static final class ClipRequest {
         final File source;
         final double sourceSeconds;
-        ClipRequest(File source, double sourceSeconds) {
+        final com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect effect;
+        ClipRequest(File source, double sourceSeconds,
+                    com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect effect) {
             this.source = source;
             this.sourceSeconds = sourceSeconds;
+            this.effect = effect;
         }
     }
 
@@ -92,7 +95,7 @@ public final class RecordingStudioExternalVideoPreview {
                 status = "External video file not found: " + source.getName();
                 return true;
             }
-            requests.add(new ClipRequest(source, sourceSeconds));
+            requests.add(new ClipRequest(source, sourceSeconds, clip.getEffect()));
         }
 
         String key = keyBuilder.toString();
@@ -171,7 +174,7 @@ public final class RecordingStudioExternalVideoPreview {
                         .append("trim=duration=1,setpts=PTS-STARTPTS,fps=1")
                         .append(",scale=1280:720:force_original_aspect_ratio=decrease")
                         .append(",pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1");
-                String effectFilter = clip.getEffect().getFfmpegFilter();
+                String effectFilter = clip.effect.getFfmpegFilter();
                 if (!effectFilter.isEmpty()) filter.append(',').append(effectFilter);
                 filter.append(clipLabel);
                 filter.append(';').append(currentBase).append(clipLabel)
