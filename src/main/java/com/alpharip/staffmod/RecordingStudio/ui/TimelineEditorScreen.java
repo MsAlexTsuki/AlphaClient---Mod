@@ -36,12 +36,14 @@ public final class TimelineEditorScreen extends GuiScreen {
     private static final int DRAG_MOVE = 1;
     private static final int DRAG_TRIM_LEFT = 2;
     private static final int DRAG_TRIM_RIGHT = 3;
+    private static final int DRAG_MARKER = 4;
     private int dragMode = DRAG_NONE;
     private TimelineTrack dragTrack;
     private TimelineClip dragClip;
     private long dragOriginalStart;
     private long dragOriginalDuration;
     private long dragScale;
+    private long dragMarkerOriginalTime;
     private int dragOriginX;
 
     public TimelineEditorScreen(GuiScreen parent, Timeline timeline) {
@@ -395,6 +397,7 @@ public final class TimelineEditorScreen extends GuiScreen {
     private int timelineTop() { return height / 2 + 112; }
     private int timelineRowHeight() { return 25; }
     private long timelineScale() { return Math.max(10000L, timeline.duration() + 10000L); }
+    private long displayTimelineScale() { return dragMode != DRAG_NONE && dragScale > 0L ? dragScale : timelineScale(); }
 
     private long millisAtTimelineX(int x) {
         int left = timelineLeft();
@@ -416,7 +419,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         drawString(fontRendererObj, "VISUAL TIMELINE  |  Drag clips to move; drag either edge to trim",
                 left - 2, top - 16, 0xFFFFC83D);
 
-        long scale = timelineScale();
+        long scale = displayTimelineScale();
         int span = Math.max(1, right - left);
         List<TimelineTrack> allTracks = tracks();
         int visibleRows = Math.max(0, (bottom - top) / rowHeight);
@@ -487,8 +490,13 @@ public final class TimelineEditorScreen extends GuiScreen {
                     / (double) markerScale * markerSpan);
             if (Math.abs(mouseX - markerX) <= 4) {
                 selectedMarker = marker;
+                selectedClipId = null;
+                dragMode = DRAG_MARKER;
+                dragScale = markerScale;
+                dragOriginX = mouseX;
+                dragMarkerOriginalTime = marker.getTimeMillis();
                 startField.setText(Long.toString(marker.getTimeMillis()));
-                status = "Selected marker: " + marker.getLabel();
+                status = "Dragging marker: " + marker.getLabel();
                 return true;
             }
         }
@@ -534,11 +542,27 @@ public final class TimelineEditorScreen extends GuiScreen {
     @Override protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton,
                                              long timeSinceLastClick) {
         super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
-        if (dragMode == DRAG_NONE || dragTrack == null || dragClip == null) return;
+        if (dragMode == DRAG_NONE) return;
         long delta = Math.round((mouseX - dragOriginX)
                 * (dragScale / (double) Math.max(1, timelineRight() - timelineLeft())));
         try {
-            if (dragMode == DRAG_MOVE) {
+            if (dragMode == DRAG_MARKER) {
+                long targetTime = Math.max(0L, dragMarkerOriginalTime + delta);
+                TimelineMarker previous = selectedMarker;
+                if (timeline.moveMarker(previous, targetTime)) {
+                    for (TimelineMarker marker : timeline.getMarkers()) {
+                        if (marker.getTimeMillis() == targetTime
+                                && marker.getLabel().equals(previous.getLabel())
+                                && marker.getKind() == previous.getKind()) {
+                            selectedMarker = marker;
+                            break;
+                        }
+                    }
+                    startField.setText(Long.toString(targetTime));
+                }
+            } else if (dragTrack == null || dragClip == null) {
+                return;
+            } else if (dragMode == DRAG_MOVE) {
                 dragTrack.move(dragClip.getId(), Math.max(0L, dragOriginalStart + delta));
             } else if (dragMode == DRAG_TRIM_LEFT) {
                 long end = dragOriginalStart + dragOriginalDuration;
@@ -557,8 +581,12 @@ public final class TimelineEditorScreen extends GuiScreen {
     @Override protected void mouseReleased(int mouseX, int mouseY, int state) {
         super.mouseReleased(mouseX, mouseY, state);
         if (dragMode != DRAG_NONE) {
-            status = dragMode == DRAG_MOVE ? "Clip position updated" : "Clip trim updated";
-            syncSelection();
+            if (dragMode == DRAG_MARKER) {
+                status = "Marker position updated";
+            } else {
+                status = dragMode == DRAG_MOVE ? "Clip position updated" : "Clip trim updated";
+                syncSelection();
+            }
         }
         dragMode = DRAG_NONE;
         dragTrack = null;
