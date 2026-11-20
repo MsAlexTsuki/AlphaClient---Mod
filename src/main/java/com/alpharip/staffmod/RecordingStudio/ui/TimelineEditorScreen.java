@@ -22,6 +22,7 @@ public final class TimelineEditorScreen extends GuiScreen {
     private GuiTextField sourceField, startField, durationField, speedField;
     private int trackIndex, clipIndex;
     private String selectedClipId;
+    private TimelineMarker selectedMarker;
     private String status = "Select a track or create a clip";
     private volatile boolean mediaProbePending;
     private volatile boolean mediaProbeComplete;
@@ -78,6 +79,9 @@ public final class TimelineEditorScreen extends GuiScreen {
         add(8, left + 196, y, "Remove Clip");
         y += 24;
         buttonList.add(new AlphaStudioButton(10, left, y, 290, 20, "Import Media", true));
+        y += 22;
+        buttonList.add(new AlphaStudioButton(11, left, y, 140, 20, "Add Marker", true));
+        buttonList.add(new AlphaStudioButton(12, left + 150, y, 140, 20, "Remove Marker", true));
         y += 24;
         buttonList.add(new AlphaStudioButton(9, width / 2 - 50, y, 100, 20, "Back", true));
         syncSelection();
@@ -209,6 +213,18 @@ public final class TimelineEditorScreen extends GuiScreen {
                     break;
                 case 9: mc.displayGuiScreen(parent); return;
                 case 10: importMedia(); break;
+                case 11:
+                    long markerTime = number(startField, "Marker time");
+                    selectedMarker = new TimelineMarker(markerTime, "Marker", TimelineMarkerKind.MANUAL);
+                    timeline.addMarker(selectedMarker);
+                    status = "Marker added at " + markerTime + " ms";
+                    break;
+                case 12:
+                    if (selectedMarker == null || !timeline.removeMarker(selectedMarker))
+                        throw new IllegalArgumentException("Select a timeline marker first");
+                    status = "Marker removed";
+                    selectedMarker = null;
+                    break;
                 default: break;
             }
         } catch (IllegalArgumentException ex) {
@@ -404,6 +420,22 @@ public final class TimelineEditorScreen extends GuiScreen {
         int span = Math.max(1, right - left);
         List<TimelineTrack> allTracks = tracks();
         int visibleRows = Math.max(0, (bottom - top) / rowHeight);
+        for (TimelineMarker marker : timeline.getMarkers()) {
+            int markerX = left + (int) Math.round(Math.min(scale, marker.getTimeMillis())
+                    / (double) scale * span);
+            if (markerX >= left && markerX <= right) {
+                net.minecraft.client.gui.Gui.drawRect(markerX, top, markerX + 1,
+                        Math.min(bottom, top + visibleRows * rowHeight), 0xFF66D9E8);
+                if (marker == selectedMarker) {
+                    net.minecraft.client.gui.Gui.drawRect(markerX - 2, top - 3, markerX + 3, top + 3, 0xFFFFFFFF);
+                }
+                String markerLabel = marker.getLabel();
+                if (markerLabel.length() > 10) markerLabel = markerLabel.substring(0, 10);
+                drawString(fontRendererObj, markerLabel, Math.min(right - 42, markerX + 3),
+                        top - 10, marker == selectedMarker ? 0xFFFFFFFF : 0xFF66D9E8);
+            }
+        }
+
         for (int i = 0; i < allTracks.size() && i < visibleRows; i++) {
             TimelineTrack currentTrack = allTracks.get(i);
             int rowY = top + i * rowHeight;
@@ -445,9 +477,24 @@ public final class TimelineEditorScreen extends GuiScreen {
         int rowHeight = timelineRowHeight();
         int row = (mouseY - top) / rowHeight;
         if (mouseX < left || mouseX > right || mouseY < top
-                || row < 0 || row >= tracks().size()
+                || mouseY >= top + Math.max(1, tracks().size()) * rowHeight) return false;
+
+        long markerScale = timelineScale();
+        int markerSpan = Math.max(1, right - left);
+        for (TimelineMarker marker : timeline.getMarkers()) {
+            int markerX = left + (int) Math.round(Math.min(markerScale, marker.getTimeMillis())
+                    / (double) markerScale * markerSpan);
+            if (Math.abs(mouseX - markerX) <= 4) {
+                selectedMarker = marker;
+                startField.setText(Long.toString(marker.getTimeMillis()));
+                status = "Selected marker: " + marker.getLabel();
+                return true;
+            }
+        }
+        if (row < 0 || row >= tracks().size()
                 || mouseY >= top + (row + 1) * rowHeight - 3) return false;
 
+        selectedMarker = null;
         trackIndex = row;
         TimelineTrack targetTrack = selectedTrack();
         if (targetTrack == null) return true;
