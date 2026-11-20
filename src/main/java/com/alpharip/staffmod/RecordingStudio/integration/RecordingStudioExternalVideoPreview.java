@@ -221,6 +221,7 @@ public final class RecordingStudioExternalVideoPreview {
             String currentBase = "[base]";
             int firstExternalInput = request.capturedFrame == null ? 0 : 1;
             for (int i = 0; i < request.clips.size(); i++) {
+                ClipRequest clip = request.clips.get(i);
                 String clipLabel = "[clip" + i + "]";
                 String nextBase = "[base" + (i + 1) + "]";
                 filter.append(";[").append(firstExternalInput + i).append(":v:0]")
