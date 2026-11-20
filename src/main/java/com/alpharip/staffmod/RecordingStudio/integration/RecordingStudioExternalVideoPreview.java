@@ -56,6 +56,7 @@ public final class RecordingStudioExternalVideoPreview {
     private final File framesDirectory;
     private File[] capturedFrames = new File[0];
     private boolean capturedFramesScanned;
+    private long capturedFramesDirectoryModified = Long.MIN_VALUE;
     private final ExecutorService decoder = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "Alpha-RecordingStudio-ExternalVideoPreview");
         thread.setDaemon(true);
@@ -305,7 +306,9 @@ public final class RecordingStudioExternalVideoPreview {
             break;
         }
         if (captureClip == null) return null;
-        if (!capturedFramesScanned) {
+        long directoryModified = framesDirectory.isDirectory()
+                ? framesDirectory.lastModified() : -1L;
+        if (!capturedFramesScanned || directoryModified != capturedFramesDirectoryModified) {
             File[] found = framesDirectory.listFiles((directory, name) ->
                     name.matches("frame-[0-9]{8}\\.png") && new File(directory, name).isFile());
             if (found == null) found = new File[0];
@@ -314,6 +317,7 @@ public final class RecordingStudioExternalVideoPreview {
             });
             capturedFrames = found;
             capturedFramesScanned = true;
+            capturedFramesDirectoryModified = directoryModified;
         }
         long targetTimestamp = Math.max(0L, positionMillis);
         int low = 0;
