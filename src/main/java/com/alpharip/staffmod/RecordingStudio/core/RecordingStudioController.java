@@ -139,7 +139,9 @@ public final class RecordingStudioController {
             int recoveredFrames = RecordingCaptureService.recoverCompletedTemporaryFrames(this.framesDirectory);
             boolean recoveryMarker = this.projectStore.hasRecoveryMarker(project.getId());
             if (recoveryMarker || project.isRecording() || recoveredFrames > 0) {
-                project.recoverInterruptedSession(System.currentTimeMillis());
+                long recoveryTime = System.currentTimeMillis();
+                project.recoverInterruptedSession(recoveryTime);
+                updateCapturedVideoClip(project.getElapsedMillis(recoveryTime));
                 this.projectStore.save(project, timeline);
                 if (recoveryMarker) this.projectStore.clearRecordingActive(project.getId());
                 status = recoveredFrames > 0
@@ -263,7 +265,9 @@ public final class RecordingStudioController {
 
     /** Keeps the captured frame sequence editable as the default Video-track clip. */
     private void updateCapturedVideoClip(long durationMillis) {
-        if (capture.getFrameCount() + capture.getPendingFrameCount() <= 0L) return;
+        long availableFrames = capture.getFrameCount() + capture.getPendingFrameCount();
+        if (availableFrames <= 0L) availableFrames = countSavedFrameFiles();
+        if (availableFrames <= 0L) return;
         TimelineTrack videoTrack = null;
         for (TimelineTrack track : timeline.getTracks()) {
             if ("video".equals(track.getId())) { videoTrack = track; break; }
@@ -282,6 +286,12 @@ public final class RecordingStudioController {
         } else {
             captured.setDuration(safeDuration);
         }
+    }
+
+    private long countSavedFrameFiles() {
+        File[] files = framesDirectory.listFiles((directory, name) ->
+                name.matches("frame-[0-9]{8}\\.png") && new File(directory, name).isFile());
+        return files == null ? 0L : files.length;
     }
 
     public synchronized void startAudioCapture() {
