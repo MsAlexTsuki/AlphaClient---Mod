@@ -983,8 +983,12 @@ public final class RecordingStudioController {
         source.setEnabled(!source.isEnabled());
         if (source.getType() == RecordingStudioSource.Type.MICROPHONE && !source.isEnabled()) {
             resumeMicrophoneAfterPause = false; audioCapture.stop();
-        } else if (source.getType() == RecordingStudioSource.Type.GAME_AUDIO && !source.isEnabled()) {
-            resumeGameAudioAfterPause = false; gameAudioCapture.stop();
+        } else if (source.getType() == RecordingStudioSource.Type.GAME_AUDIO) {
+            if (!source.isEnabled()) {
+                resumeGameAudioAfterPause = false; gameAudioCapture.stop();
+            } else if (capture.isRecording()) {
+                startGameAudioCapture();
+            }
         }
         persistSceneChange(source.getName() + (source.isEnabled() ? " enabled" : " disabled"));
     }
@@ -1028,7 +1032,7 @@ public final class RecordingStudioController {
                 try {
                     java.util.List<String> devices = com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioWebcamCapture.listDevices("ffmpeg");
                     synchronized (RecordingStudioController.this) {
-                        if (closed) return;
+                        if (closed || capture.isRecording() || capture.isPaused()) return;
                         RecordingStudioScene active = timeline.getActiveScene();
                         RecordingStudioSource selected = active == null || !sceneId.equals(active.getId())
                                 ? null : active.findSource(sourceId);
