@@ -35,6 +35,12 @@ public final class RecordingStudioController {
     private boolean resumeMicrophoneAfterPause;
     private boolean resumeGameAudioAfterPause;
     private long lastRecoveryCheckpointAt;
+    private java.util.List<RecordingAudioCaptureService.MicrophoneDevice> microphoneDevices =
+            java.util.Collections.emptyList();
+    private java.util.List<RecordingAudioCaptureService.MicrophoneDevice> gameAudioDevices =
+            java.util.Collections.emptyList();
+    private java.util.List<DesktopScreenFrameWriter.Display> displayDevices =
+            java.util.Collections.emptyList();
     private String microphoneSelectionName = "System Default";
     private String gameAudioSelectionName = "Windows default output (WASAPI)";
     private String status = "Ready";
@@ -49,6 +55,9 @@ public final class RecordingStudioController {
             throw new IllegalArgumentException("Project, capture service, project directory and timeline are required");
         }
         this.project = project;
+        this.microphoneDevices = RecordingAudioCaptureService.getAvailableMicrophones();
+        this.gameAudioDevices = RecordingAudioCaptureService.getAvailableLoopbackDevices();
+        this.displayDevices = scanAvailableDisplays();
         this.microphoneSelectionName = resolveMicrophoneName(project.getMicrophoneDeviceKey());
         this.capture = capture;
         this.capture.setIntervalMillis(project.getCaptureIntervalMillis());
@@ -375,8 +384,8 @@ public final class RecordingStudioController {
             status = "The active scene has no Game Audio source";
             return;
         }
-        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
-                RecordingAudioCaptureService.getAvailableLoopbackDevices();
+        gameAudioDevices = RecordingAudioCaptureService.getAvailableLoopbackDevices();
+        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices = gameAudioDevices;
         if (devices.isEmpty()) {
             source.setAudioDeviceKey("");
             gameAudioSelectionName = "Windows default output (WASAPI)";
@@ -443,8 +452,7 @@ public final class RecordingStudioController {
         if (source == null) return "No Game Audio source";
         String selected = source.getAudioDeviceKey();
         if (selected == null || selected.isEmpty()) return "Windows default output (WASAPI)";
-        for (RecordingAudioCaptureService.MicrophoneDevice device
-                : RecordingAudioCaptureService.getAvailableLoopbackDevices()) {
+        for (RecordingAudioCaptureService.MicrophoneDevice device : gameAudioDevices) {
             if (device.getKey().equals(selected)) return device.getName() + " (Java Sound)";
         }
         return "Unavailable";
@@ -491,8 +499,8 @@ public final class RecordingStudioController {
             status = "The active scene has no Microphone source";
             return;
         }
-        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
-                RecordingAudioCaptureService.getAvailableMicrophones();
+        microphoneDevices = RecordingAudioCaptureService.getAvailableMicrophones();
+        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices = microphoneDevices;
         String current = microphone.getAudioDeviceKey();
         if ((current == null || current.isEmpty()) && project.getMicrophoneDeviceKey() != null) {
             current = project.getMicrophoneDeviceKey();
@@ -606,8 +614,7 @@ public final class RecordingStudioController {
 
     private static String resolveMicrophoneName(String selected) {
         if (selected == null || selected.isEmpty()) return "System Default";
-        for (RecordingAudioCaptureService.MicrophoneDevice device
-                : RecordingAudioCaptureService.getAvailableMicrophones()) {
+        for (RecordingAudioCaptureService.MicrophoneDevice device : microphoneDevices) {
             if (device.getKey().equals(selected)) return device.getName();
         }
         return "Unavailable";
@@ -732,13 +739,17 @@ public final class RecordingStudioController {
                 || type == RecordingStudioSource.Type.WEBCAM;
     }
 
-    public synchronized java.util.List<DesktopScreenFrameWriter.Display> getAvailableDisplays() {
+    private java.util.List<DesktopScreenFrameWriter.Display> scanAvailableDisplays() {
         java.util.List<DesktopScreenFrameWriter.Display> result =
                 new java.util.ArrayList<DesktopScreenFrameWriter.Display>();
         for (DesktopScreenFrameWriter.Display display : DesktopScreenFrameWriter.getDisplays()) {
             if (!display.isPrimary()) result.add(display);
         }
         return java.util.Collections.unmodifiableList(result);
+    }
+
+    public synchronized java.util.List<DesktopScreenFrameWriter.Display> getAvailableDisplays() {
+        return displayDevices;
     }
 
     public synchronized void selectNextDisplay() {
@@ -776,7 +787,8 @@ public final class RecordingStudioController {
             status = "Stop recording before refreshing displays";
             return;
         }
-        java.util.List<DesktopScreenFrameWriter.Display> displays = getAvailableDisplays();
+        displayDevices = scanAvailableDisplays();
+        java.util.List<DesktopScreenFrameWriter.Display> displays = displayDevices;
         RecordingStudioScene scene = timeline.getActiveScene();
         RecordingStudioSource source = scene == null ? null
                 : scene.findSource(RecordingStudioSource.Type.DISPLAY);
