@@ -48,6 +48,45 @@ Optional general-purpose recording feature packaged in the Alpha Recording Studi
 - Camera paths are stored locally under the Recording Studio data directory.
 - No Build Timelapse imports, build-event listeners, Supabase calls or network services inside Recording Studio.
 
+## Remaining work / roadmap
+
+The items below are **not implemented** unless a status elsewhere in this README explicitly says otherwise. This is the outstanding work list based on the current source and documented limitations; it is not a claim that these features already exist.
+
+### Editing and review
+- [ ] Composite overlapping video clips in the Review preview instead of showing only the clip with the latest start position.
+- [ ] Add a real effects/filters pipeline and expose supported effects in the editor.
+- [ ] Add transitions and clip-level visual controls only after the timeline model, preview and export paths can all represent the same result.
+- [ ] Improve playback timing by storing per-frame timestamps, so variable capture intervals and dropped frames can be represented accurately.
+- [ ] Extend Review audio support beyond the current 64 MB per-clip and 1x-speed restrictions.
+- [ ] Add game-audio capture; currently only microphone input is recorded.
+
+### Recording and media sources
+- [ ] Support arbitrary scene media sources beyond the built-in Minecraft framebuffer and microphone.
+- [ ] Add independent per-scene audio-device overrides.
+- [ ] Add live microphone monitoring.
+- [ ] Improve crash recovery so in-flight frame and microphone data can be recovered where technically possible.
+
+### Export and publishing
+- [ ] Add automatic upload integrations. No platform, authentication flow or upload provider is configured yet; these must be specified before implementation.
+- [ ] Support export jobs continuing after the Studio window closes.
+- [ ] Add an export progress HUD outside the Studio screen.
+- [ ] Add custom capture/export resolutions and additional pipeline controls where supported.
+- [ ] Keep GIF output silent unless a future output format explicitly supports audio.
+
+### Storage and lifecycle
+- [ ] Define configurable disk-retention rules and safe cleanup controls. The current storage view is read-only and does not delete files.
+- [ ] Add a user-confirmed cleanup workflow only after retention rules and protected-file behavior are specified.
+
+### Camera and integration
+- [ ] Apply camera roll in the Minecraft render-view adapter.
+- [ ] Add a keybind or top-level module-menu entry for the addon; currently the documented entry points are the in-game commands.
+- [ ] Compile and verify camera-path interpolation and render-thread behavior in Minecraft.
+
+### Verification and release readiness
+- [ ] Run the included Gradle wrapper build and resolve any compile errors.
+- [ ] Test the addon in Minecraft 1.8.9 / Forge, including recording, pause/resume, recovery, external media import, Review playback, MP4/GIF export and Build Timelapse integration.
+- [ ] Verify that the README matches the behavior observed in the compiled in-game build before release.
+
 ## Current limitations
 - The Build Timelapse module option is registered when BuildTimelapseRuntime starts. Closing its Studio screen releases its camera but keeps the adapter registered until the current world unloads, so Recording Studio can select it in the same world session.
 - The Alpha Recording Studio Forge entry point initializes BuildTimelapseRuntime on client-world load and registers its camera-path adapter before Recording Studio opens. `/buildtimelapse` opens the separate workspace; no keybind or top-level module-menu entry is registered.
