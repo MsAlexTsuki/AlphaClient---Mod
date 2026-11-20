@@ -70,7 +70,20 @@ public final class RecordingCaptureService {
                     Thread thread = new Thread(runnable, "Alpha-RecordingStudio-Encoder");
                     thread.setDaemon(true);
                     return thread;
-                }, new ThreadPoolExecutor.AbortPolicy());
+                }, new ThreadPoolExecutor.AbortPolicy()) {
+            @Override
+            protected void terminated() {
+                try {
+                    if (RecordingCaptureService.this.writer instanceof AutoCloseable) {
+                        ((AutoCloseable) RecordingCaptureService.this.writer).close();
+                    }
+                } catch (Exception ignored) {
+                    // All accepted frames have finished; writer cleanup must not break executor termination.
+                } finally {
+                    super.terminated();
+                }
+            }
+        };
     }
 
     /**
@@ -238,9 +251,6 @@ public final class RecordingCaptureService {
         }
         // Drain already accepted frames without blocking the Minecraft client thread.
         encoder.shutdown();
-        if (writer instanceof AutoCloseable) {
-            try { ((AutoCloseable) writer).close(); } catch (Exception ignored) { }
-        }
     }
 
     /** Waits for already accepted frame writes; intended for a non-client finalizer thread. */
