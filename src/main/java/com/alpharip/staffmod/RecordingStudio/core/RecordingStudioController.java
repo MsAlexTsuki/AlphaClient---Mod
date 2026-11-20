@@ -943,6 +943,13 @@ public final class RecordingStudioController {
             status = "Stop recording before removing a video source"; return;
         }
         if (!scene.removeSource(sourceId)) { status = "Source could not be removed"; return; }
+        if (source.getType() == RecordingStudioSource.Type.MICROPHONE) {
+            resumeMicrophoneAfterPause = false;
+            audioCapture.stop();
+        } else if (source.getType() == RecordingStudioSource.Type.GAME_AUDIO) {
+            resumeGameAudioAfterPause = false;
+            gameAudioCapture.stop();
+        }
         persistSceneChange(source.getName() + " removed from " + scene.getName());
     }
 
@@ -954,7 +961,7 @@ public final class RecordingStudioController {
         int count = 1;
         for (RecordingStudioSource item : scene.getSources()) if (item.getType() == RecordingStudioSource.Type.WEBCAM) count++;
         RecordingStudioSource source = new RecordingStudioSource("webcam-" + java.util.UUID.randomUUID().toString(),
-                "Webcam " + count, RecordingStudioSource.Type.WEBCAM, true);
+                "Webcam " + count, RecordingStudioSource.Type.WEBCAM, false);
         source.setTransform(72, 70, 25, 25);
         scene.addSource(source);
         while (scene.moveSource(source.getId(), -1)) { }
@@ -969,7 +976,16 @@ public final class RecordingStudioController {
         if (isVideoSource(source.getType()) && (capture.isRecording() || capture.isPaused())) {
             status = "Stop recording before changing source visibility"; return;
         }
+        if (source.getType() == RecordingStudioSource.Type.WEBCAM && !source.isEnabled()
+                && (source.getWebcamDeviceName() == null || source.getWebcamDeviceName().isEmpty())) {
+            status = "Select a webcam device before enabling this source"; return;
+        }
         source.setEnabled(!source.isEnabled());
+        if (source.getType() == RecordingStudioSource.Type.MICROPHONE && !source.isEnabled()) {
+            resumeMicrophoneAfterPause = false; audioCapture.stop();
+        } else if (source.getType() == RecordingStudioSource.Type.GAME_AUDIO && !source.isEnabled()) {
+            resumeGameAudioAfterPause = false; gameAudioCapture.stop();
+        }
         persistSceneChange(source.getName() + (source.isEnabled() ? " enabled" : " disabled"));
     }
 
@@ -1024,6 +1040,7 @@ public final class RecordingStudioController {
                         int current = devices.indexOf(selected.getWebcamDeviceName());
                         String next = devices.get((current + 1) % devices.size());
                         selected.setWebcamDeviceName(next);
+                        selected.setEnabled(true);
                         persistSceneChange("Webcam selected: " + next);
                     }
                 } catch (IOException failure) {
