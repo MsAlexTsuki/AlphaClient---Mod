@@ -939,7 +939,11 @@ public final class RecordingStudioController {
             status = "Select a source before removing it";
             return;
         }
-        removeSceneSource(source.getType());
+        if (isVideoSource(source.getType()) && (capture.isRecording() || capture.isPaused())) {
+            status = "Stop recording before removing a video source"; return;
+        }
+        if (!scene.removeSource(sourceId)) { status = "Source could not be removed"; return; }
+        persistSceneChange(source.getName() + " removed from " + scene.getName());
     }
 
     public synchronized void addWebcamSource() {
@@ -953,7 +957,40 @@ public final class RecordingStudioController {
                 "Webcam " + count, RecordingStudioSource.Type.WEBCAM, true);
         source.setTransform(72, 70, 25, 25);
         scene.addSource(source);
+        while (scene.moveSource(source.getId(), -1)) { }
         persistSceneChange(source.getName() + " added");
+    }
+
+    public synchronized void toggleActiveSceneSource(String sourceId) {
+        ensureOpen();
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null : scene.findSource(sourceId);
+        if (source == null) { status = "Select a source first"; return; }
+        if (isVideoSource(source.getType()) && (capture.isRecording() || capture.isPaused())) {
+            status = "Stop recording before changing source visibility"; return;
+        }
+        source.setEnabled(!source.isEnabled());
+        persistSceneChange(source.getName() + (source.isEnabled() ? " enabled" : " disabled"));
+    }
+
+    public synchronized void adjustActiveSceneSource(String sourceId, int dx, int dy, int sizeDelta) {
+        ensureOpen();
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null : scene.findSource(sourceId);
+        if (source == null || !isVideoSource(source.getType())) { status = "Select a visual source first"; return; }
+        source.setTransform(source.getXPercent() + dx, source.getYPercent() + dy,
+                source.getWidthPercent() + sizeDelta, source.getHeightPercent() + sizeDelta);
+        persistSceneChange(source.getName() + " transform updated");
+    }
+
+    public synchronized void resetActiveSceneSourceTransform(String sourceId) {
+        ensureOpen();
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null : scene.findSource(sourceId);
+        if (source == null || !isVideoSource(source.getType())) { status = "Select a visual source first"; return; }
+        source.setTransform(0, 0, 100, 100);
+        source.setCrop(0, 0, 0, 0);
+        persistSceneChange(source.getName() + " reset to full canvas");
     }
 
     public synchronized void selectNextWebcamDevice(String sourceId) {
