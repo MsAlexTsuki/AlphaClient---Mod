@@ -83,6 +83,14 @@ bool isFloatFormat(const WAVEFORMATEX* format) {
 bool supportedFormat(const WAVEFORMATEX* format) {
     if (!format || format->nChannels == 0 || format->nChannels > 8
             || format->nSamplesPerSec < 8000 || format->nSamplesPerSec > 384000) return false;
+    if (format->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+        if (format->cbSize < 22) return false;
+        const WAVEFORMATEXTENSIBLE* extended = reinterpret_cast<const WAVEFORMATEXTENSIBLE*>(format);
+        if (!IsEqualGUID(extended->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)
+                && !IsEqualGUID(extended->SubFormat, KSDATAFORMAT_SUBTYPE_PCM)) return false;
+    } else if (format->wFormatTag != WAVE_FORMAT_IEEE_FLOAT && format->wFormatTag != WAVE_FORMAT_PCM) {
+        return false;
+    }
     const bool floatingPoint = isFloatFormat(format);
     const uint16_t bits = format->wBitsPerSample;
     if (floatingPoint) return bits == 32 || bits == 64;
