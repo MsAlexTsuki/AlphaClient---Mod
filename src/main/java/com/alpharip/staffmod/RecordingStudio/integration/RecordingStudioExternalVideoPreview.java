@@ -121,7 +121,11 @@ public final class RecordingStudioExternalVideoPreview {
             }
             BufferedImage image = null;
             String resultStatus;
-            try { image = decode(request); resultStatus = "External video preview"; }
+            try {
+                image = decode(request);
+                int layerCount = request.clips.size() + (request.capturedFrame == null ? 0 : 1);
+                resultStatus = "External video preview (" + layerCount + " layer(s))";
+            }
             catch (Exception failure) { resultStatus = "External video preview failed: " + failure.getMessage(); }
             synchronized (this) {
                 if (closed) { workerRunning = false; return; }
