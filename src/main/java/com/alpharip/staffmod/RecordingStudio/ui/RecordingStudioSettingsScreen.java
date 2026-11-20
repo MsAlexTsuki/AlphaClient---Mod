@@ -234,8 +234,8 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
             if (preferences.isAdvancedMode()) {
                 setting("Game audio", "Minecraft system/game audio capture is not implemented.",
                         "Not available", x, 216, controlRight);
-                setting("Live monitoring", "Microphone playback monitoring is not implemented.",
-                        "Not available", x, 253, controlRight);
+                setting("Live monitoring", "Mirrors active microphone capture to the system default output.",
+                        controller.getMicrophoneMonitorStatus(), x, 253, controlRight);
             }
         } else if (selectedCategory == DIAGNOSTICS) {
             section("Diagnostics", x, 82, colWidth);
