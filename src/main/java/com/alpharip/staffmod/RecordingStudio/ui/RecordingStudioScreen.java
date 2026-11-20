@@ -115,6 +115,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(48, 18, 642, 126, "Source Size -");
         add(49, 18, 666, 126, "Source Size +");
         add(50, 18, 690, 126, "Source Fullscreen");
+        add(51, 18, 714, 126, "Next Game Input");
 
         int playbackX = width - 190 - 184;
         int playbackY = height - 124;
@@ -144,7 +145,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 continue;
             }
             switch (b.id) {
-                case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: case 30: case 39: case 40: case 41: case 42: case 43: case 44: case 45: case 46: case 47: case 48: case 49: case 50: b.visible = rec; break;
+                case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: case 30: case 39: case 40: case 41: case 42: case 43: case 44: case 45: case 46: case 47: case 48: case 49: case 50: case 51: b.visible = rec; break;
                 case 4: case 32: case 33: case 34: case 35: b.visible = edit; break;
                 case 11: case 12: case 13: b.visible = pub; break;
                 default: b.visible = true; break;
@@ -387,6 +388,10 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 50:
                 if (selectedSourceId != null) controller.resetActiveSceneSourceTransform(selectedSourceId);
                 break;
+            case 51:
+                controller.selectNextGameAudioInput();
+                initGui();
+                break;
             default: break;
         }
     }
@@ -598,7 +603,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 right + 8, 181, 0xFFBBBBBB);
         drawString(fontRendererObj, compact("Video: " + externalVideoPreview.getStatus(), 24),
                 right + 8, 198, 0xFFBBBBBB);
-        drawString(fontRendererObj, "Game output: " + compact(controller.getGameAudioSelectionName(), 17),
+        drawString(fontRendererObj, "Game audio: " + compact(controller.getGameAudioSelectionName(), 17),
                 right + 8, 215, 0xFFBBBBBB);
         drawString(fontRendererObj, "CONTROLS", right + 8, 242, 0xFFFFC83D);
         }
