@@ -263,6 +263,9 @@ public final class RecordingStudioProjectStore {
         File metadata = new File(directory, id + ".recording");
         File timeline = new File(directory, id + ".timeline");
         File active = new File(directory, id + ".active");
+        if (active.exists()) {
+            throw new IOException("Project has an active recovery marker; open it and let recovery finish before deleting it");
+        }
         File recordingStudioRoot = directory.getParentFile();
 
         // Remove project media first and metadata last. If deletion fails partway through,
