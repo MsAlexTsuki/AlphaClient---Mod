@@ -510,7 +510,8 @@ public final class RecordingStudioScreen extends GuiScreen {
                 previewLeft + 12, previewBottom - 42, 0xFFFFFFFF);
         drawString(fontRendererObj, "Frames " + controller.getCapture().getFrameCount()
                 + " saved / " + controller.getCapture().getPendingFrameCount()
-                + " pending / " + controller.getCapture().getFailedFrameCount() + " failed",
+                + " pending / " + controller.getCapture().getDroppedFrameCount() + " dropped / "
+                + controller.getCapture().getFailedFrameCount() + " failed",
                 previewLeft + 12, previewBottom - 28, 0xFFBBBBBB);
         drawString(fontRendererObj, "Timeline " + controller.getTimeline().duration()
                 + " ms  |  Interval " + controller.getCapture().getIntervalMillis() + " ms",
