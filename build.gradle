@@ -233,7 +233,7 @@ if (recordingStudioWindowsHost) {
             throw new GradleException("JAVA_HOME must point to a Java 8 JDK to build the WASAPI bridge")
         }
         commandLine "cmake", "-S", file("native/wasapi").absolutePath,
-                "-B", wasapiBuildDirectory.absolutePath, "-G", "Visual Studio 17 2022", "-A", "x64"
+                "-B", wasapiBuildDirectory.absolutePath, "-G", "Visual Studio 18 2026", "-A", "x64"
     }
 
     task compileWasapiNative(type: Exec) {
