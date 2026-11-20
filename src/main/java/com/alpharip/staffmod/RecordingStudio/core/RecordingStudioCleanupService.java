@@ -64,7 +64,15 @@ public final class RecordingStudioCleanupService {
         int deleted = 0;
         long bytes = 0L;
         for (File file : plan.files) {
-            if (!isSafeCandidate(file, plan.root, rootPath, plan.cutoffMillis)) continue;
+            String relative = file.getCanonicalPath().substring(rootPath.length());
+            int firstSeparator = relative.indexOf(File.separatorChar);
+            int secondSeparator = firstSeparator < 0 ? -1 : relative.indexOf(File.separatorChar, firstSeparator + 1);
+            if (firstSeparator < 0) continue;
+            String category = relative.substring(0, firstSeparator);
+            String projectId = relative.substring(firstSeparator + 1,
+                    secondSeparator < 0 ? relative.length() : secondSeparator);
+            if (!"recordings".equals(category) && !"exports".equals(category)) continue;
+            if (!isSafeCandidate(file, new File(plan.root, "projects"), projectId, rootPath, plan.cutoffMillis)) continue;
             long length = Math.max(0L, file.length());
             if (file.delete()) {
                 deleted++;
@@ -97,15 +105,18 @@ public final class RecordingStudioCleanupService {
             if (Files.isSymbolicLink(child.toPath())) continue;
             if (child.isDirectory()) {
                 scanFiles(child, projects, projectId, rootPath, cutoff, candidates, bytes);
-            } else if (child.isFile() && isSafeCandidate(child, new File(rootPath), rootPath, cutoff)) {
+            } else if (child.isFile() && isSafeCandidate(child, projects, projectId, rootPath, cutoff)) {
                 candidates.add(child);
                 bytes[0] = safeAdd(bytes[0], Math.max(0L, child.length()));
             }
         }
     }
 
-    private static boolean isSafeCandidate(File file, File root, String rootPath, long cutoff) throws IOException {
-        if (file == null || !file.isFile() || Files.isSymbolicLink(file.toPath())) return false;
+    private static boolean isSafeCandidate(File file, File projects, String projectId,
+                                            String rootPath, long cutoff) throws IOException {
+        if (file == null || !projectId.matches("[A-Za-z0-9_-]{1,80}")
+                || isProtectedProject(projects, projectId)
+                || !file.isFile() || Files.isSymbolicLink(file.toPath())) return false;
         String canonical = file.getCanonicalPath();
         if (!canonical.startsWith(rootPath)) return false;
         String name = file.getName().toLowerCase(java.util.Locale.ROOT);
