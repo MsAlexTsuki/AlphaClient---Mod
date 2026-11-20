@@ -11,6 +11,7 @@ public final class Timeline {
     private final List<TimelineMarker> markers = new ArrayList<TimelineMarker>();
     private final List<TimelineTrack> tracks = new ArrayList<TimelineTrack>();
     private final List<RecordingStudioScene> scenes = new ArrayList<RecordingStudioScene>();
+    private final List<TimelineTransition> transitions = new ArrayList<TimelineTransition>();
     private String activeSceneId;
 
     public Timeline() {
@@ -119,6 +120,62 @@ public final class Timeline {
 
     public synchronized List<TimelineTrack> getTracks() {
         return Collections.unmodifiableList(new ArrayList<TimelineTrack>(tracks));
+    }
+
+    public synchronized List<TimelineTransition> getTransitions() {
+        return Collections.unmodifiableList(new ArrayList<TimelineTransition>(transitions));
+    }
+
+    public synchronized TimelineTransition getTransition(String fromClipId, String toClipId) {
+        for (TimelineTransition transition : transitions) {
+            if (transition.getFromClipId().equals(fromClipId)
+                    && transition.getToClipId().equals(toClipId)) return transition;
+        }
+        return null;
+    }
+
+    /** Adds or replaces an explicitly selected transition between exactly adjacent video clips. */
+    public synchronized void setTransition(String fromClipId, String toClipId,
+                                           TimelineTransitionType type, long durationMillis) {
+        TimelineClip from = null;
+        TimelineClip to = null;
+        for (TimelineTrack track : tracks) {
+            if (!"video".equals(track.getId())) continue;
+            for (TimelineClip clip : track.getClips()) {
+                if (clip.getId().equals(fromClipId)) from = clip;
+                if (clip.getId().equals(toClipId)) to = clip;
+            }
+        }
+        if (from == null || to == null || from.getEnd() != to.getStart()) {
+            throw new IllegalArgumentException("Choose two adjacent clips on the video track");
+        }
+        if ("@capture".equals(from.getSource()) || "@capture".equals(to.getSource())) {
+            throw new IllegalArgumentException("Transitions are available between imported video clips only");
+        }
+        if (durationMillis > Math.min(from.getDuration(), to.getDuration())) {
+            throw new IllegalArgumentException("Transition duration cannot exceed either clip");
+        }
+        TimelineTransition replacement = new TimelineTransition(fromClipId, toClipId, type, durationMillis);
+        for (int i = 0; i < transitions.size(); i++) {
+            TimelineTransition existing = transitions.get(i);
+            if (existing.getFromClipId().equals(fromClipId)
+                    || existing.getToClipId().equals(toClipId)) {
+                transitions.remove(i--);
+            }
+        }
+        transitions.add(replacement);
+    }
+
+    public synchronized boolean removeTransition(String fromClipId, String toClipId) {
+        for (int i = 0; i < transitions.size(); i++) {
+            TimelineTransition transition = transitions.get(i);
+            if (transition.getFromClipId().equals(fromClipId)
+                    && transition.getToClipId().equals(toClipId)) {
+                transitions.remove(i);
+                return true;
+            }
+        }
+        return false;
     }
 
     public synchronized long duration() {
