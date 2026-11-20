@@ -7,6 +7,11 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import java.util.List;
 import java.util.UUID;
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /** Timeline editor for track and clip operations; the world continues ticking. */
 public final class TimelineEditorScreen extends GuiScreen {
@@ -51,6 +56,8 @@ public final class TimelineEditorScreen extends GuiScreen {
         add(6, left, y, "Trim Clip");
         add(7, left + 98, y, "Set Speed");
         add(8, left + 196, y, "Remove Clip");
+        y += 24;
+        buttonList.add(new AlphaStudioButton(10, left, y, 290, 20, "Import Media", true));
         y += 24;
         buttonList.add(new AlphaStudioButton(9, width / 2 - 50, y, 100, 20, "Back", true));
         syncSelection();
@@ -181,12 +188,107 @@ public final class TimelineEditorScreen extends GuiScreen {
                     syncSelection();
                     break;
                 case 9: mc.displayGuiScreen(parent); return;
+                case 10: importMedia(); break;
                 default: break;
             }
         } catch (IllegalArgumentException ex) {
             status = ex.getMessage();
         }
     }
+    private void importMedia() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Import media into Recording Studio");
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter(
+                "Video files (MP4, MOV, MKV, AVI, WEBM, M4V, GIF)",
+                "mp4", "mov", "mkv", "avi", "webm", "m4v", "gif", "mpeg", "mpg", "flv", "wmv"));
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter(
+                "Audio files (WAV, MP3, AAC, M4A, OGG, FLAC)",
+                "wav", "mp3", "aac", "m4a", "ogg", "flac", "wma"));
+        int result = chooser.showOpenDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) return;
+
+        File selected = chooser.getSelectedFile();
+        if (selected == null || !selected.isFile()) {
+            status = "Selected media file does not exist";
+            return;
+        }
+        String name = selected.getName().toLowerCase(java.util.Locale.ROOT);
+        boolean audio = name.matches(".*\\.(wav|mp3|aac|m4a|ogg|flac|wma)$");
+        boolean video = name.matches(".*\\.(mp4|mov|mkv|avi|webm|m4v|gif|mpeg|mpg|flv|wmv)$");
+        if (!audio && !video) {
+            status = "Unsupported media type";
+            return;
+        }
+
+        String targetTrackId = audio ? "audio" : "video";
+        int targetIndex = -1;
+        for (int i = 0; i < tracks().size(); i++) {
+            if (targetTrackId.equals(tracks().get(i).getId())) {
+                targetIndex = i;
+                break;
+            }
+        }
+        if (targetIndex < 0) {
+            status = "No " + targetTrackId + " timeline track is available";
+            return;
+        }
+
+        trackIndex = targetIndex;
+        sourceField.setText(selected.getAbsolutePath());
+        try {
+            long durationMillis = probeDurationMillis(selected);
+            if (durationMillis <= 0L) throw new IOException("Media duration is unavailable");
+            TimelineTrack track = selectedTrack();
+            TimelineClip created = new TimelineClip("clip-" + UUID.randomUUID(),
+                    selected.getAbsolutePath(), number(startField, "Start"), durationMillis);
+            created.setSpeed(1.0D);
+            track.add(created);
+            selectedClipId = created.getId();
+            durationField.setText(Long.toString(durationMillis));
+            speedField.setText("1.0");
+            status = (audio ? "Imported audio: " : "Imported video: ") + selected.getName();
+            syncSelection();
+        } catch (Exception failure) {
+            durationField.setText("1000");
+            speedField.setText("1.0");
+            status = "Media selected, but FFprobe could not read its duration. Set Duration (ms) and use Add Clip. " + failure.getMessage();
+        }
+    }
+
+    private static long probeDurationMillis(File media) throws Exception {
+        Process process = new ProcessBuilder("ffprobe", "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                media.getAbsolutePath()).redirectErrorStream(true).start();
+        String output;
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
+            try {
+                StringBuilder value = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (value.length() > 0) value.append(' ');
+                    value.append(line.trim());
+                }
+                output = value.toString();
+            } finally {
+                reader.close();
+            }
+            int exit = process.waitFor();
+            if (exit != 0) throw new IOException("FFprobe exited with code " + exit);
+        } finally {
+            if (process.isAlive()) process.destroyForcibly();
+        }
+        double seconds = Double.parseDouble(output.trim());
+        if (Double.isNaN(seconds) || Double.isInfinite(seconds) || seconds <= 0.0D
+                || seconds > Long.MAX_VALUE / 1000.0D) {
+            throw new IOException("Invalid media duration");
+        }
+        return Math.max(1L, Math.round(seconds * 1000.0D));
+    }
+
     private void requireClip(TimelineTrack track) {
         if (track == null || selectedClip() == null) throw new IllegalArgumentException("Select a clip first");
     }
