@@ -61,6 +61,10 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
                 addSmall(202, controlRight - 80, 165, 38, "-1s");
                 addSmall(203, controlRight - 38, 165, 38, "+1s");
             }
+            addSmall(230, controlRight - 104, 219, 104, "TOGGLE DESKTOP");
+            addSmall(231, controlRight - 104, 273, 104, "TOGGLE DISPLAY");
+            addSmall(232, controlRight - 104, 327, 104, "NEXT DISPLAY");
+            addSmall(233, controlRight - 104, 381, 104, "REFRESH DISPLAYS");
         } else if (selectedCategory == EXPORT) {
             addSmall(210, controlRight - 104, 111, 104, controller.getExportSettings().getResolution().getLabel());
             addSmall(211, controlRight - 104, 165, 104, controller.getExportSettings().getQuality().getLabel());
@@ -109,6 +113,10 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
             case 221: controller.refreshMicrophones(); break;
             case 222: controller.selectNextGameAudioInput(); break;
             case 223: controller.refreshGameAudioInputs(); break;
+            case 230: controller.toggleSceneSource(com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource.Type.DESKTOP); break;
+            case 231: controller.toggleSceneSource(com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource.Type.DISPLAY); break;
+            case 232: controller.selectNextDisplay(); break;
+            case 233: controller.refreshDisplays(); break;
             default: return;
         }
         initGui();
@@ -148,6 +156,9 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
             else if (control.id == 211) control.visible = matches("Encoding quality");
             else if (control.id == 220 || control.id == 221) control.visible = matches("Microphone input");
             else if (control.id == 222 || control.id == 223) control.visible = matches("Game audio input") || matches("loopback");
+            else if (control.id == 230) control.visible = matches("Desktop capture") || matches("primary monitor");
+            else if (control.id == 231) control.visible = matches("Display capture") || matches("additional monitor");
+            else if (control.id == 232 || control.id == 233) control.visible = matches("Display selection") || matches("additional monitor");
         }
     }
 
@@ -217,6 +228,17 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
                 setting("Frame queue", "The capture worker uses a bounded queue; overflow is counted.",
                         "1 active + 8 queued", x, 199, controlRight);
             }
+            com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene activeScene = controller.getActiveScene();
+            com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource desktopSource = activeScene == null ? null
+                    : activeScene.findSource(com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource.Type.DESKTOP);
+            com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource displaySource = activeScene == null ? null
+                    : activeScene.findSource(com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource.Type.DISPLAY);
+            setting("Desktop capture", "Captures the entire primary monitor, including Minecraft and other visible apps.",
+                    desktopSource != null && desktopSource.isEnabled() ? "ON" : "OFF", x, 216, controlRight - 118);
+            setting("Display capture", "Captures one selected additional monitor instead of the primary desktop.",
+                    displaySource != null && displaySource.isEnabled() ? "ON" : "OFF", x, 270, controlRight - 118);
+            setting("Display selection", "Additional monitor assigned to the active scene.",
+                    controller.getDisplaySelectionName(), x, 324, controlRight - 118);
         } else if (selectedCategory == EXPORT) {
             section("Export", x, 82, colWidth);
             setting("Output resolution", "Downscales only and preserves the source aspect ratio.",
