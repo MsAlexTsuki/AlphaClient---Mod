@@ -8,6 +8,7 @@ import com.alpharip.staffmod.RecordingStudio.ui.RecordingStudioScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -361,6 +362,19 @@ public final class RecordingStudioRuntime {
                 moduleStatus = "Studio camera stopped: " + failure.getMessage();
             }
         }
+    }
+
+    /** Applies the saved camera roll only while the Studio-owned render-view camera is active. */
+    @SubscribeEvent
+    public void onCameraSetup(EntityViewRenderEvent.CameraSetup event) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        CameraController activeCamera;
+        synchronized (this) {
+            activeCamera = camera;
+        }
+        if (activeCamera == null || !activeCamera.isActive() || minecraft == null
+                || event.entity != minecraft.getRenderViewEntity()) return;
+        event.setRoll(activeCamera.getPose().roll);
     }
 
     @SubscribeEvent
