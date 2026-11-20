@@ -4,7 +4,8 @@ package com.alpharip.staffmod.RecordingStudio.scene;
 public final class RecordingStudioSource {
     public enum Type {
         GAME_CAPTURE,
-        MICROPHONE
+        MICROPHONE,
+        GAME_AUDIO
     }
 
     private final String id;
@@ -32,7 +33,7 @@ public final class RecordingStudioSource {
     /** Optional per-scene input-device override; an empty key uses the project fallback. */
     public synchronized String getAudioDeviceKey() { return audioDeviceKey; }
     public synchronized void setAudioDeviceKey(String value) {
-        if (type != Type.MICROPHONE) throw new IllegalStateException("Only microphone sources have audio input devices");
+        if (type != Type.MICROPHONE && type != Type.GAME_AUDIO) throw new IllegalStateException("This source does not use an audio input device");
         audioDeviceKey = value == null ? "" : value.trim();
     }
 
