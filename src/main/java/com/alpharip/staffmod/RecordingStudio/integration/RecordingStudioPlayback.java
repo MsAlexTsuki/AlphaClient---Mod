@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ResourceLocation;
+import com.alpharip.staffmod.RecordingStudio.capture.RecordingFrameTimestamp;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -46,6 +47,9 @@ public final class RecordingStudioPlayback {
     private boolean closed;
     private int frameIndex;
     private long lastFrameAt;
+    private long playbackStartWallMillis;
+    private long playbackStartTimestampMillis;
+    private boolean playbackClockNeedsInit;
     private String status = "No captured frames yet";
     private DynamicTexture texture;
     private ResourceLocation textureLocation;
@@ -95,6 +99,7 @@ public final class RecordingStudioPlayback {
         if (!playing && frameIndex >= frames.length - 1) frameIndex = 0;
         playing = !playing;
         lastFrameAt = System.currentTimeMillis();
+        playbackClockNeedsInit = playing;
         if (playing) requestFrame(frameIndex);
         status = playing ? "Playing" : "Playback paused";
     }
@@ -168,19 +173,24 @@ public final class RecordingStudioPlayback {
         if (width <= 0 || height <= 0) return;
         if (playing && frames.length > 0) {
             long now = System.currentTimeMillis();
-            long interval = Math.max(100L, frameIntervalMillis);
-            if (now - lastFrameAt >= interval) {
-                long steps = Math.max(1L, (now - lastFrameAt) / interval);
-                long nextIndex = frameIndex + steps;
-                if (nextIndex >= frames.length) {
-                    frameIndex = frames.length - 1;
-                    playing = false;
-                    status = "Playback complete";
-                } else {
-                    frameIndex = (int) nextIndex;
-                    lastFrameAt += steps * interval;
-                    requestFrame(frameIndex);
-                }
+            long interval = Math.max(1L, frameIntervalMillis);
+            if (playbackClockNeedsInit) {
+                playbackStartWallMillis = now;
+                playbackStartTimestampMillis = timestampAt(frameIndex, interval);
+                playbackClockNeedsInit = false;
+            }
+            long targetTimestamp = playbackStartTimestampMillis
+                    + Math.max(0L, now - playbackStartWallMillis);
+            int targetIndex = findFrameAtOrBefore(targetTimestamp, interval);
+            long lastTimestamp = timestampAt(frames.length - 1, interval);
+            if (targetTimestamp >= lastTimestamp + interval) {
+                frameIndex = frames.length - 1;
+                playing = false;
+                status = "Playback complete";
+            } else if (targetIndex != frameIndex) {
+                frameIndex = targetIndex;
+                lastFrameAt = now;
+                requestFrame(frameIndex);
             }
         }
 
@@ -235,7 +245,30 @@ public final class RecordingStudioPlayback {
     public synchronized int getFrameCount() { return frames.length; }
     public synchronized int getCurrentFrameIndex() { return frameIndex; }
     public synchronized long getPositionMillis(long frameIntervalMillis) {
-        return Math.max(0L, (long) frameIndex * Math.max(1L, frameIntervalMillis));
+        return frames.length == 0 ? 0L : timestampAt(frameIndex, Math.max(1L, frameIntervalMillis));
+    }
+
+    private long timestampAt(int index, long frameIntervalMillis) {
+        if (index < 0 || index >= frames.length) return 0L;
+        long fallback = index > Long.MAX_VALUE / frameIntervalMillis
+                ? Long.MAX_VALUE : index * frameIntervalMillis;
+        return RecordingFrameTimestamp.read(frames[index], fallback);
+    }
+
+    private int findFrameAtOrBefore(long timestampMillis, long frameIntervalMillis) {
+        int low = 0;
+        int high = frames.length - 1;
+        int result = 0;
+        while (low <= high) {
+            int middle = low + (high - low) / 2;
+            if (timestampAt(middle, frameIntervalMillis) <= timestampMillis) {
+                result = middle;
+                low = middle + 1;
+            } else {
+                high = middle - 1;
+            }
+        }
+        return result;
     }
 
     public synchronized void close(Minecraft minecraft) {
