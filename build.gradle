@@ -232,8 +232,14 @@ if (recordingStudioWindowsHost) {
         if (!System.getenv("JAVA_HOME")) {
             throw new GradleException("JAVA_HOME must point to a Java 8 JDK to build the WASAPI bridge")
         }
-        commandLine "cmake", "-S", file("native/wasapi").absolutePath,
-                "-B", wasapiBuildDirectory.absolutePath, "-G", "Visual Studio 18 2026", "-A", "x64"
+        def cmakeArguments = ["cmake", "-S", file("native/wasapi").absolutePath,
+                "-B", wasapiBuildDirectory.absolutePath]
+        def configuredGenerator = System.getenv("ALPHA_WASAPI_CMAKE_GENERATOR")
+        if (configuredGenerator != null && !configuredGenerator.trim().isEmpty()) {
+            cmakeArguments.addAll(["-G", configuredGenerator])
+        }
+        cmakeArguments.addAll(["-A", "x64"])
+        commandLine cmakeArguments
     }
 
     task compileWasapiNative(type: Exec) {
