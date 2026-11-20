@@ -8,6 +8,7 @@ on:
       - "native/wasapi/**"
       - "src/main/java/com/alpharip/staffmod/RecordingStudio/audio/**"
       - "src/main/java/com/alpharip/staffmod/RecordingStudio/core/RecordingStudioController.java"
+      - "src/main/java/com/alpharip/staffmod/RecordingStudio/ui/RecordingStudioScreen.java"
       - "build.gradle"
       - ".github/workflows/recording-studio-wasapi.yml"
   pull_request:
@@ -57,7 +58,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path build/wasapi-java | Out-Null
-          javac -source 1.8 -target 1.8 -d build/wasapi-java src/main/java/com/alpharip/staffmod/RecordingStudio/audio/WasapiNativeBridge.java src/main/java/com/alpharip/staffmod/RecordingStudio/audio/WasapiLoopbackCaptureService.java
+          javac -source 1.8 -target 1.8 -d build/wasapi-java src/main/java/com/alpharip/staffmod/RecordingStudio/audio/RecordingAudioCaptureService.java src/main/java/com/alpharip/staffmod/RecordingStudio/audio/WasapiNativeBridge.java src/main/java/com/alpharip/staffmod/RecordingStudio/audio/WasapiLoopbackCaptureService.java src/main/java/com/alpharip/staffmod/RecordingStudio/audio/GameAudioCaptureService.java
 
       - name: Upload native bridge build
         uses: actions/upload-artifact@v4
