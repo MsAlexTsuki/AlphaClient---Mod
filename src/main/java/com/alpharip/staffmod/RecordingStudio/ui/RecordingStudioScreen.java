@@ -97,25 +97,25 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(20, 18, 106, 126, "New Scene", true);
         add(23, 18, 162, 126, "Rename Scene");
         add(24, 18, 184, 126, "Remove Scene");
-        add(15, 18, 282, 126, "Change Module", true);
-        add(16, 18, 306, 126, "Next Camera Path");
-        add(17, 18, 330, 126, runtime.isCameraPreviewVisible() ? "HUD Preview: ON" : "HUD Preview: OFF");
-        add(21, 18, 354, 126, "Toggle Game Capture");
-        add(22, 18, 378, 126, "Toggle Microphone");
-        add(25, 18, 402, 126, "Remove Game Source");
-        add(26, 18, 426, 126, "Remove Selected Source");
-        add(40, 18, 450, 126, "Toggle Game Audio");
-        add(41, 18, 474, 126, "Add Webcam", true);
-        add(42, 18, 498, 126, "Next Webcam Device");
-        add(43, 18, 522, 126, "Toggle Selected Source");
-        add(44, 18, 546, 126, "Move Source Left");
-        add(45, 18, 570, 126, "Move Source Right");
-        add(46, 18, 594, 126, "Move Source Up");
-        add(47, 18, 618, 126, "Move Source Down");
-        add(48, 18, 642, 126, "Source Size -");
-        add(49, 18, 666, 126, "Source Size +");
-        add(50, 18, 690, 126, "Source Fullscreen");
-        add(51, 18, 714, 126, "Next Game Input");
+        addCompact(15, 0, 0, "Module", true);
+        addCompact(16, 1, 0, "Path");
+        addCompact(17, 0, 1, runtime.isCameraPreviewVisible() ? "HUD: ON" : "HUD: OFF");
+        addCompact(21, 1, 1, "Game");
+        addCompact(22, 0, 2, "Mic");
+        addCompact(25, 1, 2, "Del Game");
+        addCompact(26, 0, 3, "Del Source");
+        addCompact(40, 1, 3, "Game Audio");
+        addCompact(41, 0, 4, "Add Webcam", true);
+        addCompact(42, 1, 4, "Webcam");
+        addCompact(43, 0, 5, "Toggle");
+        addCompact(44, 1, 5, "Left");
+        addCompact(45, 0, 6, "Right");
+        addCompact(46, 1, 6, "Move Up");
+        addCompact(47, 0, 7, "Move Down");
+        addCompact(48, 1, 7, "Size -");
+        addCompact(49, 0, 8, "Size +");
+        addCompact(50, 1, 8, "Full");
+        addCompact(51, 0, 9, "Game Input");
 
         int playbackX = width - 190 - 184;
         int playbackY = height - 124;
@@ -130,6 +130,15 @@ public final class RecordingStudioScreen extends GuiScreen {
         if (pathButton != null) pathButton.enabled = !"normal_gameplay".equals(runtime.getSelectedModuleId())
                 && !runtime.getSelectedModuleOptions().isEmpty();
         updateTabButtonVisibility();
+    }
+
+    private void addCompact(int id, int column, int row, String label) {
+        addCompact(id, column, row, label, false);
+    }
+
+    private void addCompact(int id, int column, int row, String label, boolean accent) {
+        buttonList.add(new AlphaStudioButton(id, 18 + column * 66, 282 + row * 18,
+                62, 16, label, accent));
     }
 
     private void updateTabButtonVisibility() {
