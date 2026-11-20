@@ -83,9 +83,10 @@ public final class TimelineEditorScreen extends GuiScreen {
         y += 24;
         buttonList.add(new AlphaStudioButton(10, left, y, 290, 20, "Import Media", true));
         y += 22;
-        add(11, left, y, "Add Marker");
-        add(12, left + 98, y, "Remove Marker");
-        add(13, left + 196, y, "Kind: MANUAL");
+        buttonList.add(new AlphaStudioButton(11, left, y, 70, 20, "Add Mark"));
+        buttonList.add(new AlphaStudioButton(12, left + 73, y, 70, 20, "Remove"));
+        buttonList.add(new AlphaStudioButton(13, left + 146, y, 70, 20, "Kind: MANUAL"));
+        buttonList.add(new AlphaStudioButton(14, left + 219, y, 70, 20, "Effect: NONE"));
         y += 24;
         buttonList.add(new AlphaStudioButton(9, width / 2 - 50, y, 100, 20, "Back", true));
         syncSelection();
@@ -232,6 +233,15 @@ public final class TimelineEditorScreen extends GuiScreen {
                 case 13:
                     markerKindIndex = (markerKindIndex + 1) % TimelineMarkerKind.values().length;
                     status = "New marker kind: " + TimelineMarkerKind.values()[markerKindIndex].name();
+                    break;
+                case 14:
+                    requireClip(track);
+                    if (!"video".equals(track.getId()) || "@capture".equals(selectedClip().getSource()))
+                        throw new IllegalArgumentException("Effects are available for imported video clips only");
+                    TimelineVideoEffect[] effects = TimelineVideoEffect.values();
+                    TimelineVideoEffect currentEffect = selectedClip().getEffect();
+                    selectedClip().setEffect(effects[(currentEffect.ordinal() + 1) % effects.length]);
+                    status = "Clip effect: " + selectedClip().getEffect().name();
                     break;
                 default: break;
             }
@@ -621,6 +631,13 @@ public final class TimelineEditorScreen extends GuiScreen {
         drawTimeline();
         for (GuiButton button : buttonList) {
             if (button.id == 13) button.displayString = "Kind: " + TimelineMarkerKind.values()[markerKindIndex].name();
+            if (button.id == 14) {
+                TimelineTrack activeTrack = selectedTrack();
+                TimelineClip activeClip = selectedClip();
+                button.enabled = activeTrack != null && "video".equals(activeTrack.getId())
+                        && activeClip != null && !"@capture".equals(activeClip.getSource());
+                button.displayString = "Effect: " + (activeClip == null ? "NONE" : activeClip.getEffect().name());
+            }
         }
         sourceField.drawTextBox();
         startField.drawTextBox();
