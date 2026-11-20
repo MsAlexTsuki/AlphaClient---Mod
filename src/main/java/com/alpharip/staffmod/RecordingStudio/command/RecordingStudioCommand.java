@@ -61,6 +61,21 @@ public final class RecordingStudioCommand extends CommandBase {
                 }
                 return;
             }
+            if ("delete".equals(action)) {
+                if (args.length != 2) {
+                    usage(sender);
+                    return;
+                }
+                if (activeRuntime != null && !activeRuntime.isClosed()
+                        && args[1].equals(activeProjectId)) {
+                    sender.addChatMessage(new ChatComponentText("§6[Recording Studio] §fClose this project before deleting it."));
+                    return;
+                }
+                store.loadProject(args[1]);
+                store.delete(args[1]);
+                sender.addChatMessage(new ChatComponentText("§6[Recording Studio] §fDeleted project " + args[1]));
+                return;
+            }
 
             RecordingProject project;
             Timeline timeline;
@@ -123,14 +138,14 @@ public final class RecordingStudioCommand extends CommandBase {
     }
 
     private static void usage(ICommandSender sender) {
-        sender.addChatMessage(new ChatComponentText("§6[Recording Studio] §fUsage: /recordingstudio [list|new|create <name>|open <project-id>]"));
+        sender.addChatMessage(new ChatComponentText("§6[Recording Studio] §fUsage: /recordingstudio [list|new|create <name>|open <project-id>|delete <project-id>]"));
     }
 
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, net.minecraft.util.BlockPos pos) {
         if (args != null && args.length == 1) {
-            return java.util.Arrays.asList("list", "new", "create", "open");
+            return java.util.Arrays.asList("list", "new", "create", "open", "delete");
         }
-        if (args != null && args.length == 2 && "open".equalsIgnoreCase(args[0])) {
+        if (args != null && args.length == 2 && ("open".equalsIgnoreCase(args[0]) || "delete".equalsIgnoreCase(args[0]))) {
             try {
                 java.util.ArrayList<String> ids = new java.util.ArrayList<String>();
                 File directory = new File(Minecraft.getMinecraft().mcDataDir, "recordingstudio/projects");
