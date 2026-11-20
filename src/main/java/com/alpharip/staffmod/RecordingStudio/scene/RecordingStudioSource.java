@@ -11,6 +11,7 @@ public final class RecordingStudioSource {
     private final String name;
     private final Type type;
     private boolean enabled;
+    private String audioDeviceKey = "";
 
     public RecordingStudioSource(String id, String name, Type type, boolean enabled) {
         if (blank(id) || blank(name) || type == null) {
@@ -27,6 +28,13 @@ public final class RecordingStudioSource {
     public Type getType() { return type; }
     public synchronized boolean isEnabled() { return enabled; }
     public synchronized void setEnabled(boolean value) { enabled = value; }
+
+    /** Optional per-scene input-device override; an empty key uses the project fallback. */
+    public synchronized String getAudioDeviceKey() { return audioDeviceKey; }
+    public synchronized void setAudioDeviceKey(String value) {
+        if (type != Type.MICROPHONE) throw new IllegalStateException("Only microphone sources have audio input devices");
+        audioDeviceKey = value == null ? "" : value.trim();
+    }
 
     private static boolean blank(String value) {
         return value == null || value.trim().isEmpty();
