@@ -98,13 +98,13 @@ public final class RecordingStudioExternalVideoPreview {
                 status = "External video file not found: " + source.getName();
                 return true;
             }
-            double sourceDurationSeconds = clip.getDuration() * clip.getSpeed() / 1000.0D;
-            double fadeInSeconds = clip.getFadeInMillis() * clip.getSpeed() / 1000.0D;
-            double fadeOutSeconds = clip.getFadeOutMillis() * clip.getSpeed() / 1000.0D;
             double fadeFactor = 1.0D;
-            if (fadeInSeconds > 0.0D) fadeFactor = Math.min(fadeFactor, sourceSeconds / fadeInSeconds);
-            if (fadeOutSeconds > 0.0D) {
-                fadeFactor = Math.min(fadeFactor, (sourceDurationSeconds - sourceSeconds) / fadeOutSeconds);
+            if (clip.getFadeInMillis() > 0L) {
+                fadeFactor = Math.min(fadeFactor, offsetMillis / (double) clip.getFadeInMillis());
+            }
+            if (clip.getFadeOutMillis() > 0L) {
+                fadeFactor = Math.min(fadeFactor,
+                        (clip.getDuration() - offsetMillis) / (double) clip.getFadeOutMillis());
             }
             fadeFactor = Math.max(0.0D, Math.min(1.0D, fadeFactor));
             requests.add(new ClipRequest(source, sourceSeconds, fadeFactor, clip.getEffect()));
