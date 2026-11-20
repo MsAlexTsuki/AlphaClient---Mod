@@ -485,10 +485,10 @@ public final class RecordingStudioExportService {
                         .append(":d=").append(seconds(fadeOutMillis)).append(":color=black");
             }
             if (outgoing != null && outgoing.getType() == TimelineTransitionType.DIP_TO_BLACK) {
-                long outgoingDuration = outgoing.getDurationMillis();
+                long outgoingHalf = Math.max(1L, outgoing.getDurationMillis() / 2L);
                 filter.append(",fade=t=out:st=")
-                        .append(seconds(Math.max(0L, clip.getDuration() - outgoingDuration)))
-                        .append(":d=").append(seconds(outgoingDuration)).append(":color=black");
+                        .append(seconds(Math.max(0L, clip.getDuration() - outgoingHalf)))
+                        .append(":d=").append(seconds(outgoingHalf)).append(":color=black");
             }
             if (incoming != null) {
                 double transitionSeconds = seconds(transitionDuration);
@@ -498,8 +498,12 @@ public final class RecordingStudioExportService {
                                 .append(transitionSeconds).append(":alpha=1");
                         break;
                     case DIP_TO_BLACK:
-                        filter.append(",fade=t=in:st=0:d=")
-                                .append(transitionSeconds).append(":color=black");
+                        long incomingHalf = Math.max(1L, transitionDuration / 2L);
+                        filter.append(",fade=t=in:st=").append(seconds(incomingHalf))
+                                .append(":d=").append(seconds(Math.max(1L, transitionDuration - incomingHalf)))
+                                .append(":color=black")
+                                .append(",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(gte(T/")
+                                .append(seconds(1L)).append(",").append(seconds(incomingHalf)).append("),255,0)'");
                         break;
                     case WIPE_LEFT:
                         filter.append(",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lt(X,W*min(1,T/")
