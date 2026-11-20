@@ -138,9 +138,15 @@ public final class LootFeedTracker {
 
     public List<LootFeedEntry> getVisibleEntries() {
         prune(System.currentTimeMillis());
-        return Collections.unmodifiableList(
-                new ArrayList<LootFeedEntry>(entries.values())
-        );
+
+        List<LootFeedEntry> visible = new ArrayList<LootFeedEntry>();
+        for (LootFeedEntry entry : entries.values()) {
+            if (!entry.getDrops().isEmpty()) {
+                visible.add(entry);
+            }
+        }
+
+        return Collections.unmodifiableList(visible);
     }
 
     private static final class PendingKill {
