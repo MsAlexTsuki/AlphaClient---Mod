@@ -962,7 +962,7 @@ public final class RecordingStudioController {
         for (RecordingStudioSource item : scene.getSources()) if (item.getType() == RecordingStudioSource.Type.WEBCAM) count++;
         RecordingStudioSource source = new RecordingStudioSource("webcam-" + java.util.UUID.randomUUID().toString(),
                 "Webcam " + count, RecordingStudioSource.Type.WEBCAM, false);
-        source.setTransform(72, 70, 25, 25);
+        source.setTransform(72, 65, 25, 33);
         scene.addSource(source);
         while (scene.moveSource(source.getId(), -1)) { }
         persistSceneChange(source.getName() + " added");
@@ -998,8 +998,10 @@ public final class RecordingStudioController {
         RecordingStudioScene scene = timeline.getActiveScene();
         RecordingStudioSource source = scene == null ? null : scene.findSource(sourceId);
         if (source == null || !isVideoSource(source.getType())) { status = "Select a visual source first"; return; }
-        source.setTransform(source.getXPercent() + dx, source.getYPercent() + dy,
-                source.getWidthPercent() + sizeDelta, source.getHeightPercent() + sizeDelta);
+        int nextWidth = Math.max(1, source.getWidthPercent() + sizeDelta);
+        double scale = nextWidth / (double) source.getWidthPercent();
+        int nextHeight = Math.max(1, (int) Math.round(source.getHeightPercent() * scale));
+        source.setTransform(source.getXPercent() + dx, source.getYPercent() + dy, nextWidth, nextHeight);
         persistSceneChange(source.getName() + " transform updated");
     }
 
