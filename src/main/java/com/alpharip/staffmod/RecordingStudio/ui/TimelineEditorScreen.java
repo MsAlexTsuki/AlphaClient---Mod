@@ -476,31 +476,31 @@ public final class TimelineEditorScreen extends GuiScreen {
                 "-show_entries", "format=duration",
                 "-of", "default=noprint_wrappers=1:nokey=1",
                 media.getAbsolutePath()).redirectErrorStream(true).start();
-        String output;
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
-            try {
-                StringBuilder value = new StringBuilder();
+            if (!process.waitFor(15L, java.util.concurrent.TimeUnit.SECONDS)) {
+                throw new IOException("FFprobe timed out while reading media duration");
+            }
+            StringBuilder value = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), "UTF-8"))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (value.length() > 0) value.append(' ');
                     value.append(line.trim());
                 }
-                output = value.toString();
-            } finally {
-                reader.close();
             }
-            int exit = process.waitFor();
-            if (exit != 0) throw new IOException("FFprobe exited with code " + exit);
+            if (process.exitValue() != 0) {
+                throw new IOException("FFprobe exited with code " + process.exitValue());
+            }
+            double seconds = Double.parseDouble(value.toString().trim());
+            if (Double.isNaN(seconds) || Double.isInfinite(seconds) || seconds <= 0.0D
+                    || seconds > Long.MAX_VALUE / 1000.0D) {
+                throw new IOException("Invalid media duration");
+            }
+            return Math.max(1L, Math.round(seconds * 1000.0D));
         } finally {
             if (process.isAlive()) process.destroyForcibly();
         }
-        double seconds = Double.parseDouble(output.trim());
-        if (Double.isNaN(seconds) || Double.isInfinite(seconds) || seconds <= 0.0D
-                || seconds > Long.MAX_VALUE / 1000.0D) {
-            throw new IOException("Invalid media duration");
-        }
-        return Math.max(1L, Math.round(seconds * 1000.0D));
     }
 
     private void requireClip(TimelineTrack track) {
