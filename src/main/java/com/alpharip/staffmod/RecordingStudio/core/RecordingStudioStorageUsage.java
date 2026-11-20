@@ -84,6 +84,7 @@ public final class RecordingStudioStorageUsage {
         if (projects == null) { readable = false; return 0L; }
         long size = 0L;
         for (File project : projects) {
+            if (Files.isSymbolicLink(project.toPath())) continue;
             if (project.isDirectory()) size = safeAdd(size, scan(new File(project, folderName), category));
         }
         return size;
