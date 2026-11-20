@@ -993,19 +993,48 @@ public final class RecordingStudioController {
         persistSceneChange(source.getName() + " reset to full canvas");
     }
 
-    public synchronized void selectNextWebcamDevice(String sourceId) {
+    public synchronized void selectNextWebcamDevice(final String sourceId) {
         ensureOpen();
-        RecordingStudioScene scene = timeline.getActiveScene();
+        if (capture.isRecording() || capture.isPaused()) {
+            status = "Stop recording before changing the webcam device";
+            return;
+        }
+        final RecordingStudioScene scene = timeline.getActiveScene();
         RecordingStudioSource source = scene == null ? null : scene.findSource(sourceId);
-        if (source == null || source.getType() != RecordingStudioSource.Type.WEBCAM) { status = "Select a Webcam source first"; return; }
-        try {
-            java.util.List<String> devices = com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioWebcamCapture.listDevices("ffmpeg");
-            if (devices.isEmpty()) { status = "No DirectShow webcam detected; check FFmpeg and camera permissions"; return; }
-            int current = devices.indexOf(source.getWebcamDeviceName());
-            String next = devices.get((current + 1) % devices.size());
-            source.setWebcamDeviceName(next);
-            persistSceneChange("Webcam selected: " + next);
-        } catch (IOException failure) { status = "Cannot enumerate webcams: " + failure.getMessage(); }
+        if (source == null || source.getType() != RecordingStudioSource.Type.WEBCAM) {
+            status = "Select a Webcam source first";
+            return;
+        }
+        final String sceneId = scene.getId();
+        status = "Scanning DirectShow webcam devices...";
+        Thread scanner = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    java.util.List<String> devices = com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioWebcamCapture.listDevices("ffmpeg");
+                    synchronized (RecordingStudioController.this) {
+                        if (closed) return;
+                        RecordingStudioScene active = timeline.getActiveScene();
+                        RecordingStudioSource selected = active == null || !sceneId.equals(active.getId())
+                                ? null : active.findSource(sourceId);
+                        if (selected == null || selected.getType() != RecordingStudioSource.Type.WEBCAM) return;
+                        if (devices.isEmpty()) {
+                            status = "No DirectShow webcam detected; check FFmpeg and camera permissions";
+                            return;
+                        }
+                        int current = devices.indexOf(selected.getWebcamDeviceName());
+                        String next = devices.get((current + 1) % devices.size());
+                        selected.setWebcamDeviceName(next);
+                        persistSceneChange("Webcam selected: " + next);
+                    }
+                } catch (IOException failure) {
+                    synchronized (RecordingStudioController.this) {
+                        if (!closed) status = "Cannot enumerate webcams: " + failure.getMessage();
+                    }
+                }
+            }
+        }, "Alpha-RecordingStudio-Webcam-Discovery");
+        scanner.setDaemon(true);
+        scanner.start();
     }
 
     public synchronized void toggleSceneSource(RecordingStudioSource.Type type) {
