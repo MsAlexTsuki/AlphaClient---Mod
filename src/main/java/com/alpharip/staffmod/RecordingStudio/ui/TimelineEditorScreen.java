@@ -236,8 +236,8 @@ public final class TimelineEditorScreen extends GuiScreen {
                     break;
                 case 14:
                     requireClip(track);
-                    if (!"video".equals(track.getId()))
-                        throw new IllegalArgumentException("Effects are available for video clips only");
+                    if (!"video".equals(track.getId()) || "@capture".equals(selectedClip().getSource()))
+                        throw new IllegalArgumentException("Effects are available for imported video clips only");
                     TimelineVideoEffect[] effects = TimelineVideoEffect.values();
                     TimelineVideoEffect currentEffect = selectedClip().getEffect();
                     selectedClip().setEffect(effects[(currentEffect.ordinal() + 1) % effects.length]);
@@ -635,7 +635,7 @@ public final class TimelineEditorScreen extends GuiScreen {
                 TimelineTrack activeTrack = selectedTrack();
                 TimelineClip activeClip = selectedClip();
                 button.enabled = activeTrack != null && "video".equals(activeTrack.getId())
-                        && activeClip != null;
+                        && activeClip != null && !"@capture".equals(activeClip.getSource());
                 button.displayString = "Effect: " + (activeClip == null ? "NONE" : activeClip.getEffect().name());
             }
         }
