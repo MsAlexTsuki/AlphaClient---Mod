@@ -90,8 +90,8 @@ public final class RecordingStudioAudioPlayback {
                         }
                     } finally {
                         if (output != null) {
-                            output.stop();
-                            output.close();
+                            try { output.stop(); } catch (RuntimeException ignored) { }
+                            try { output.close(); } catch (RuntimeException ignored) { }
                         }
                         line = null;
                         closeQuietly(pcmStream);
@@ -113,9 +113,9 @@ public final class RecordingStudioAudioPlayback {
             SourceDataLine activeLine = line;
             line = null;
             if (activeLine != null) {
-                activeLine.stop();
-                activeLine.flush();
-                activeLine.close();
+                try { activeLine.stop(); } catch (RuntimeException ignored) { }
+                try { activeLine.flush(); } catch (RuntimeException ignored) { }
+                try { activeLine.close(); } catch (RuntimeException ignored) { }
             }
             started = false;
         }
