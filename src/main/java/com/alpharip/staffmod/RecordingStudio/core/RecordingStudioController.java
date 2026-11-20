@@ -15,6 +15,7 @@ import java.io.IOException;
 
 /** Owns a general-purpose recording session independently of any feature module. */
 public final class RecordingStudioController {
+    private static final String SYSTEM_DEFAULT_MICROPHONE = "__ALPHA_SYSTEM_DEFAULT__";
     private final RecordingProject project;
     private final RecordingCaptureService capture;
     private final Timeline timeline;
@@ -296,7 +297,11 @@ public final class RecordingStudioController {
         try {
             long timelineStart = project.getElapsedMillis(System.currentTimeMillis());
             String sceneDeviceKey = microphoneSource.getAudioDeviceKey();
-            if (sceneDeviceKey == null || sceneDeviceKey.isEmpty()) sceneDeviceKey = project.getMicrophoneDeviceKey();
+            if (SYSTEM_DEFAULT_MICROPHONE.equals(sceneDeviceKey)) {
+                sceneDeviceKey = "";
+            } else if (sceneDeviceKey == null || sceneDeviceKey.isEmpty()) {
+                sceneDeviceKey = project.getMicrophoneDeviceKey();
+            }
             audioCapture.start(audioDirectory, "audio-" + java.util.UUID.randomUUID().toString() + ".wav",
                     timelineStart, sceneDeviceKey);
             status = "Microphone recording";
@@ -477,13 +482,14 @@ public final class RecordingStudioController {
         if ((current == null || current.isEmpty()) && project.getMicrophoneDeviceKey() != null) {
             current = project.getMicrophoneDeviceKey();
         }
+        if (SYSTEM_DEFAULT_MICROPHONE.equals(current)) current = "";
         int currentIndex = -1;
         for (int i = 0; i < devices.size(); i++) {
             if (devices.get(i).getKey().equals(current)) { currentIndex = i; break; }
         }
         String next;
         if (devices.isEmpty()) {
-            next = "";
+            next = SYSTEM_DEFAULT_MICROPHONE;
             microphoneSelectionName = "System Default";
             status = "No selectable microphone inputs detected; using system default";
         } else if (currentIndex < 0) {
@@ -491,7 +497,7 @@ public final class RecordingStudioController {
             microphoneSelectionName = devices.get(0).getName();
             status = "Microphone selected for " + timeline.getActiveScene().getName() + ": " + microphoneSelectionName;
         } else if (currentIndex + 1 >= devices.size()) {
-            next = "";
+            next = SYSTEM_DEFAULT_MICROPHONE;
             microphoneSelectionName = "System Default";
             status = "Microphone selected for " + timeline.getActiveScene().getName() + ": System Default";
         } else {
@@ -524,6 +530,11 @@ public final class RecordingStudioController {
         String sceneSelection = microphone.getAudioDeviceKey();
         boolean usingProjectFallback = sceneSelection == null || sceneSelection.isEmpty();
         String selected = usingProjectFallback ? project.getMicrophoneDeviceKey() : sceneSelection;
+        if (SYSTEM_DEFAULT_MICROPHONE.equals(sceneSelection)) {
+            microphoneSelectionName = "System Default";
+            status = "Microphone list refreshed: " + devices.size() + " input device(s) detected";
+            return;
+        }
         if (selected == null || selected.isEmpty()) {
             microphoneSelectionName = "System Default";
             status = "Microphone list refreshed: " + devices.size() + " input device(s) detected";
@@ -568,6 +579,7 @@ public final class RecordingStudioController {
         RecordingStudioSource microphone = getActiveMicrophoneSource();
         if (microphone == null) return "No Microphone source";
         String key = microphone.getAudioDeviceKey();
+        if (SYSTEM_DEFAULT_MICROPHONE.equals(key)) return "System Default";
         if (key == null || key.isEmpty()) key = project.getMicrophoneDeviceKey();
         return resolveMicrophoneName(key);
     }
