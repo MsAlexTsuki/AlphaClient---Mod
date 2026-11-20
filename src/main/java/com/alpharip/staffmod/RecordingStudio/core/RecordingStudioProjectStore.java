@@ -42,6 +42,7 @@ public final class RecordingStudioProjectStore {
                 data.setProperty(cp + "start", Long.toString(clip.getStart()));
                 data.setProperty(cp + "duration", Long.toString(clip.getDuration()));
                 data.setProperty(cp + "speed", Double.toString(clip.getSpeed()));
+                data.setProperty(cp + "effect", clip.getEffect().name());
             }
         }
         List<RecordingStudioScene> scenes = timeline.getScenes();
@@ -97,6 +98,8 @@ public final class RecordingStudioProjectStore {
                     TimelineClip clip = new TimelineClip(required(data, cp + "id"), required(data, cp + "source"),
                             Long.parseLong(required(data, cp + "start")), Long.parseLong(required(data, cp + "duration")));
                     clip.setSpeed(Double.parseDouble(required(data, cp + "speed")));
+                    String savedEffect = data.getProperty(cp + "effect", TimelineVideoEffect.NONE.name());
+                    clip.setEffect(TimelineVideoEffect.valueOf(savedEffect));
                     track.add(clip);
                 }
                 timeline.addTrack(track);
