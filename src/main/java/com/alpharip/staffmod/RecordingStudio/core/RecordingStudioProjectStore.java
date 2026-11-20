@@ -71,6 +71,15 @@ public final class RecordingStudioProjectStore {
                 if (source.getType() == RecordingStudioSource.Type.DISPLAY) {
                     data.setProperty(sourcePrefix + "screenDeviceId", source.getScreenDeviceId());
                 }
+                if (source.getType() == RecordingStudioSource.Type.WEBCAM) data.setProperty(sourcePrefix + "webcamDeviceName", source.getWebcamDeviceName());
+                data.setProperty(sourcePrefix + "xPercent", Integer.toString(source.getXPercent()));
+                data.setProperty(sourcePrefix + "yPercent", Integer.toString(source.getYPercent()));
+                data.setProperty(sourcePrefix + "widthPercent", Integer.toString(source.getWidthPercent()));
+                data.setProperty(sourcePrefix + "heightPercent", Integer.toString(source.getHeightPercent()));
+                data.setProperty(sourcePrefix + "cropLeftPercent", Integer.toString(source.getCropLeftPercent()));
+                data.setProperty(sourcePrefix + "cropTopPercent", Integer.toString(source.getCropTopPercent()));
+                data.setProperty(sourcePrefix + "cropRightPercent", Integer.toString(source.getCropRightPercent()));
+                data.setProperty(sourcePrefix + "cropBottomPercent", Integer.toString(source.getCropBottomPercent()));
             }
         }
 
@@ -163,9 +172,16 @@ public final class RecordingStudioProjectStore {
                                 || source.getType() == RecordingStudioSource.Type.GAME_AUDIO) {
                             source.setAudioDeviceKey(data.getProperty(sourcePrefix + "audioDeviceKey", ""));
                         }
-                        if (source.getType() == RecordingStudioSource.Type.DISPLAY) {
-                            source.setScreenDeviceId(data.getProperty(sourcePrefix + "screenDeviceId", ""));
-                        }
+                        if (source.getType() == RecordingStudioSource.Type.DISPLAY) source.setScreenDeviceId(data.getProperty(sourcePrefix + "screenDeviceId", ""));
+                        if (source.getType() == RecordingStudioSource.Type.WEBCAM) source.setWebcamDeviceName(data.getProperty(sourcePrefix + "webcamDeviceName", ""));
+                        source.setTransform(Integer.parseInt(data.getProperty(sourcePrefix + "xPercent", "0")),
+                                Integer.parseInt(data.getProperty(sourcePrefix + "yPercent", "0")),
+                                Integer.parseInt(data.getProperty(sourcePrefix + "widthPercent", "100")),
+                                Integer.parseInt(data.getProperty(sourcePrefix + "heightPercent", "100")));
+                        source.setCrop(Integer.parseInt(data.getProperty(sourcePrefix + "cropLeftPercent", "0")),
+                                Integer.parseInt(data.getProperty(sourcePrefix + "cropTopPercent", "0")),
+                                Integer.parseInt(data.getProperty(sourcePrefix + "cropRightPercent", "0")),
+                                Integer.parseInt(data.getProperty(sourcePrefix + "cropBottomPercent", "0")));
                         scene.addSource(source);
                     }
                     timeline.addScene(scene);
