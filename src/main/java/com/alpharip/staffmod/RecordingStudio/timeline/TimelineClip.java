@@ -10,8 +10,8 @@ public final class TimelineClip {
     private long fadeOutMillis;
 
     public TimelineClip(String id, String source, long start, long duration) {
-        if (blank(id) || blank(source) || start < 0 || duration < 0) {
-            throw new IllegalArgumentException("clip");
+        if (blank(id) || blank(source) || start < 0 || duration <= 0) {
+            throw new IllegalArgumentException("Clip ID and source are required; start must be non-negative and duration must be positive");
         }
         this.id = id.trim();
         this.source = source.trim();
