@@ -243,8 +243,10 @@ public final class RecordingStudioController {
         }
         try {
             long timelineStart = project.getElapsedMillis(System.currentTimeMillis());
+            String sceneDeviceKey = microphoneSource.getAudioDeviceKey();
+            if (sceneDeviceKey == null || sceneDeviceKey.isEmpty()) sceneDeviceKey = project.getMicrophoneDeviceKey();
             audioCapture.start(audioDirectory, "audio-" + java.util.UUID.randomUUID().toString() + ".wav",
-                    timelineStart, project.getMicrophoneDeviceKey());
+                    timelineStart, sceneDeviceKey);
             status = "Microphone recording";
         } catch (Exception failure) {
             status = "Cannot start microphone: " + failure.getMessage();
@@ -257,16 +259,24 @@ public final class RecordingStudioController {
         if (audioCapture.isFinalizing()) status = "Finalizing microphone audio";
     }
 
-    /** Cycles between the operating-system default and detected microphone inputs. */
+    /** Cycles the active scene's microphone input without changing other scenes. */
     public synchronized void selectNextMicrophone() {
         ensureOpen();
         if (audioCapture.isRecording() || audioCapture.isFinalizing()) {
             status = "Stop microphone capture before changing the input device";
             return;
         }
+        RecordingStudioSource microphone = getActiveMicrophoneSource();
+        if (microphone == null) {
+            status = "The active scene has no Microphone source";
+            return;
+        }
         java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
                 RecordingAudioCaptureService.getAvailableMicrophones();
-        String current = project.getMicrophoneDeviceKey();
+        String current = microphone.getAudioDeviceKey();
+        if ((current == null || current.isEmpty()) && project.getMicrophoneDeviceKey() != null) {
+            current = project.getMicrophoneDeviceKey();
+        }
         int currentIndex = -1;
         for (int i = 0; i < devices.size(); i++) {
             if (devices.get(i).getKey().equals(current)) { currentIndex = i; break; }
@@ -279,41 +289,47 @@ public final class RecordingStudioController {
         } else if (currentIndex < 0) {
             next = devices.get(0).getKey();
             microphoneSelectionName = devices.get(0).getName();
-            status = "Microphone selected: " + microphoneSelectionName;
+            status = "Microphone selected for " + timeline.getActiveScene().getName() + ": " + microphoneSelectionName;
         } else if (currentIndex + 1 >= devices.size()) {
             next = "";
             microphoneSelectionName = "System Default";
-            status = "Microphone selected: System Default";
+            status = "Microphone selected for " + timeline.getActiveScene().getName() + ": System Default";
         } else {
             next = devices.get(currentIndex + 1).getKey();
             microphoneSelectionName = devices.get(currentIndex + 1).getName();
-            status = "Microphone selected: " + microphoneSelectionName;
+            status = "Microphone selected for " + timeline.getActiveScene().getName() + ": " + microphoneSelectionName;
         }
-        project.setMicrophoneDeviceKey(next);
+        microphone.setAudioDeviceKey(next);
         try {
             projectStore.save(project, timeline);
         } catch (IOException failure) {
-            status = "Microphone changed but project settings could not be saved: " + failure.getMessage();
+            status = "Microphone changed but scene settings could not be saved: " + failure.getMessage();
         }
     }
 
-    /** Refreshes the detected input list and falls back safely if the selected device was unplugged. */
+    /** Refreshes the active scene's input and falls back to the system default if it was unplugged. */
     public synchronized void refreshMicrophones() {
         ensureOpen();
         if (audioCapture.isRecording() || audioCapture.isFinalizing()) {
             status = "Stop microphone capture before refreshing input devices";
             return;
         }
-
+        RecordingStudioSource microphone = getActiveMicrophoneSource();
+        if (microphone == null) {
+            status = "The active scene has no Microphone source";
+            return;
+        }
         java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
                 RecordingAudioCaptureService.getAvailableMicrophones();
-        String selected = project.getMicrophoneDeviceKey();
+        String selected = microphone.getAudioDeviceKey();
+        if (selected == null || selected.isEmpty()) {
+            selected = project.getMicrophoneDeviceKey();
+        }
         if (selected == null || selected.isEmpty()) {
             microphoneSelectionName = "System Default";
             status = "Microphone list refreshed: " + devices.size() + " input device(s) detected";
             return;
         }
-
         for (RecordingAudioCaptureService.MicrophoneDevice device : devices) {
             if (device.getKey().equals(selected)) {
                 microphoneSelectionName = device.getName();
@@ -321,19 +337,27 @@ public final class RecordingStudioController {
                 return;
             }
         }
-
-        project.setMicrophoneDeviceKey("");
+        microphone.setAudioDeviceKey("");
         microphoneSelectionName = "System Default";
         try {
             projectStore.save(project, timeline);
-            status = "Selected microphone is unavailable; switched to System Default";
+            status = "Selected microphone is unavailable; active scene switched to System Default";
         } catch (IOException failure) {
             status = "Selected microphone is unavailable; fallback could not be saved: " + failure.getMessage();
         }
     }
 
     public synchronized String getMicrophoneSelectionName() {
-        return microphoneSelectionName;
+        RecordingStudioSource microphone = getActiveMicrophoneSource();
+        if (microphone == null) return "No Microphone source";
+        String key = microphone.getAudioDeviceKey();
+        if (key == null || key.isEmpty()) key = project.getMicrophoneDeviceKey();
+        return resolveMicrophoneName(key);
+    }
+
+    private RecordingStudioSource getActiveMicrophoneSource() {
+        RecordingStudioScene scene = timeline.getActiveScene();
+        return scene == null ? null : scene.findSource(RecordingStudioSource.Type.MICROPHONE);
     }
 
     private static String resolveMicrophoneName(String selected) {
@@ -348,9 +372,7 @@ public final class RecordingStudioController {
     public synchronized String getAudioStatus() {
         if (audioCapture.isRecording()) return "Microphone: Recording";
         if (audioCapture.isFinalizing()) return "Microphone: Finalizing";
-        RecordingStudioScene scene = timeline.getActiveScene();
-        RecordingStudioSource microphone = scene == null ? null
-                : scene.findSource(RecordingStudioSource.Type.MICROPHONE);
+        RecordingStudioSource microphone = getActiveMicrophoneSource();
         return microphone == null || !microphone.isEnabled()
                 ? "Microphone: Disabled" : "Microphone: Idle";
     }
