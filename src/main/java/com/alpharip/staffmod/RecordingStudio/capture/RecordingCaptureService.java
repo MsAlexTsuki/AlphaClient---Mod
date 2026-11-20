@@ -17,6 +17,7 @@ public final class RecordingCaptureService {
     public interface FrameWriter {
         FrameData captureFrame() throws Exception;
         void writeFrame(FrameData frame, File output) throws Exception;
+        default void onCaptureStopped() { }
     }
 
     public static final class FrameData {
@@ -212,6 +213,7 @@ public final class RecordingCaptureService {
     public synchronized void stop() {
         recording = false;
         paused = false;
+        writer.onCaptureStopped();
     }
 
     public synchronized boolean isRecording() { return recording && !paused; }
