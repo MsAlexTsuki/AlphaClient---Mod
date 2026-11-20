@@ -31,14 +31,14 @@ Optional general-purpose recording feature packaged in the Alpha Recording Studi
 - MP4 export includes saved Audio timeline clips, delayed to their timeline positions and mixed when multiple clips exist; GIF output is silent.
 - Microphone capture is split into separate timeline clips when video recording is paused; if microphone capture was active before the pause, a new microphone clip starts automatically after video recording resumes and the previous WAV file has finished finalizing. Manually stopped microphone capture is not restarted.
 - Minecraft framebuffer capture backend scheduled at the end of the HUD render pass, before the current GuiScreen is drawn, so the Recording Studio window itself is excluded from gameplay footage. When Minecraft's hide-GUI setting suppresses overlay events, capture falls back to the world-render event. OpenGL framebuffer readback runs on the client thread; the previous framebuffer binding and viewport are restored immediately, while PNG conversion and disk writes run asynchronously on a dedicated worker.
-- Bounded encoder queue (one active write plus up to eight queued frames) with dropped-frame accounting when the queue is full.
+- Bounded encoder queue (one active write plus up to eight queued frames) with a separate dropped-frame counter when the queue is full.
 - Atomic PNG file replacement so interrupted writes do not leave partially written final frame files.
 - Live pending-write counter; accepted frame writes drain without blocking the Minecraft client thread during shutdown.
 - REC, pause, resume, stop and save controls in the dedicated Studio screen, with a visible recording state and elapsed-time indicator.
 - AlphaClient dark-and-gold styling across the main dashboard, timeline editor, camera editor and storage overview, with consistent custom buttons and panel layout.
 - Read-only storage overview for project metadata, captured video frames, microphone audio and exported media; users can refresh the scan without changing or deleting files.
 - Adjustable capture interval in 100 ms steps, bounded to 100–60000 ms.
-- Separate successful-frame and failed-frame counters; failed writes do not inflate the saved-frame count.
+- Separate saved, pending, dropped and failed frame counters. Queue saturation increments dropped frames; capture or disk-write errors increment failed frames, and failed writes do not inflate the saved-frame count.
 - Shared general-purpose timeline, marker and clip/track models and editor.
 - Visual Timeline Editor with separate media track rows; select and drag clips to reposition them, trim either edge, and add, select, drag or remove timeline markers. Marker categories include Manual, Milestone, Camera Cut, Time Change, Weather Change and Chapter. Manual millisecond-based clip controls remain available alongside visual editing.
 - Non-destructive per-clip effects for imported video: None, Grayscale, Sepia, Brighten, Darken and Contrast. Effect selection is saved with the timeline and applied consistently in the Review preview and MP4/GIF export.
