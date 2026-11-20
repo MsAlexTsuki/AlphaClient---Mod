@@ -386,15 +386,15 @@ public final class RecordingStudioExportService {
                     .append(":(ow-iw)/2:(oh-ih)/2:black,setsar=1");
             String effectFilter = clip.getEffect().getFfmpegFilter();
             if (!effectFilter.isEmpty()) filter.append(',').append(effectFilter);
-            double sourceFadeInMillis = clip.getFadeInMillis() * speed;
-            double sourceFadeOutMillis = clip.getFadeOutMillis() * speed;
-            if (sourceFadeInMillis > 0.0D) {
-                filter.append(",fade=t=in:st=0:d=").append(seconds(sourceFadeInMillis)).append(":color=black");
+            double fadeInMillis = clip.getFadeInMillis();
+            double fadeOutMillis = clip.getFadeOutMillis();
+            if (fadeInMillis > 0.0D) {
+                filter.append(",fade=t=in:st=0:d=").append(seconds(fadeInMillis)).append(":color=black");
             }
-            if (sourceFadeOutMillis > 0.0D) {
+            if (fadeOutMillis > 0.0D) {
                 filter.append(",fade=t=out:st=")
-                        .append(seconds(Math.max(0.0D, sourceDuration - sourceFadeOutMillis)))
-                        .append(":d=").append(seconds(sourceFadeOutMillis)).append(":color=black");
+                        .append(seconds(Math.max(0.0D, clip.getDuration() - fadeOutMillis)))
+                        .append(":d=").append(seconds(fadeOutMillis)).append(":color=black");
             }
             filter.append(",setpts=PTS+").append(seconds(start)).append("/TB")
                     .append(clipLabel);
