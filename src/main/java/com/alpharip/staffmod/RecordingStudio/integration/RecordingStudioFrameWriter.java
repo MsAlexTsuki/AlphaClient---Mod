@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Captures and composites enabled visual sources in scene-list (back-to-front) order. */
+/** Captures and composites enabled visual sources in scene-list (top-to-bottom) order. */
 public final class RecordingStudioFrameWriter implements RecordingCaptureService.FrameWriter, AutoCloseable {
     private final MinecraftFramebufferFrameWriter minecraftWriter;
     private final Timeline timeline;
