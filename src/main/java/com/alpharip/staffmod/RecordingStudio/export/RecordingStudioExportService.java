@@ -342,33 +342,38 @@ public final class RecordingStudioExportService {
                 "-select_streams", "v:0", "-show_entries", "stream=width,height",
                 "-of", "csv=s=x:p=0", source.getAbsolutePath())
                 .redirectErrorStream(true).start();
-        StringBuilder output = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(probe.getInputStream(), "UTF-8"));
         try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (output.length() > 0) output.append(' ');
-                output.append(line.trim());
+            if (!probe.waitFor(15L, java.util.concurrent.TimeUnit.SECONDS)) {
+                throw new IOException("FFprobe timed out while reading video dimensions for " + source);
+            }
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(probe.getInputStream(), "UTF-8"))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (output.length() > 0) output.append(' ');
+                    output.append(line.trim());
+                }
+            }
+            int exit = probe.exitValue();
+            if (exit != 0) {
+                throw new IOException("FFprobe could not read video dimensions for " + source
+                        + " (exit " + exit + "): " + output);
+            }
+            String[] dimensions = output.toString().trim().split("x");
+            if (dimensions.length != 2) {
+                throw new IOException("FFprobe returned invalid video dimensions for " + source + ": " + output);
+            }
+            try {
+                int width = Integer.parseInt(dimensions[0].trim());
+                int height = Integer.parseInt(dimensions[1].trim());
+                if (width < 1 || height < 1) throw new NumberFormatException("Non-positive dimensions");
+                return new int[] { width, height };
+            } catch (NumberFormatException invalid) {
+                throw new IOException("FFprobe returned invalid video dimensions for " + source + ": " + output);
             }
         } finally {
-            reader.close();
-        }
-        int exit = probe.waitFor();
-        if (exit != 0) {
-            throw new IOException("FFprobe could not read video dimensions for " + source
-                    + " (exit " + exit + "): " + output);
-        }
-        String[] dimensions = output.toString().trim().split("x");
-        if (dimensions.length != 2) {
-            throw new IOException("FFprobe returned invalid video dimensions for " + source + ": " + output);
-        }
-        try {
-            int width = Integer.parseInt(dimensions[0].trim());
-            int height = Integer.parseInt(dimensions[1].trim());
-            if (width < 1 || height < 1) throw new NumberFormatException("Non-positive dimensions");
-            return new int[] { width, height };
-        } catch (NumberFormatException invalid) {
-            throw new IOException("FFprobe returned invalid video dimensions for " + source + ": " + output);
+            if (probe.isAlive()) probe.destroyForcibly();
         }
     }
 
