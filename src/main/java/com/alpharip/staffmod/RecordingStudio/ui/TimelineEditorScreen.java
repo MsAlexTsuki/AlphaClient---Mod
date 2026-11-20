@@ -205,6 +205,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         }
     }
     private void importMedia() {
+        if (mediaProbePending) { status = "A media import is already being processed"; return; }
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Import media into Recording Studio");
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -218,7 +219,6 @@ public final class TimelineEditorScreen extends GuiScreen {
         int result = chooser.showOpenDialog(null);
         if (result != JFileChooser.APPROVE_OPTION) return;
 
-        if (mediaProbePending) { status = "A media import is already being processed"; return; }
         File selected = chooser.getSelectedFile();
         if (selected == null || !selected.isFile()) {
             status = "Selected media file does not exist";
