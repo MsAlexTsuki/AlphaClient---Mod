@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.RecordingStudio.core;
 
 import com.alpharip.staffmod.RecordingStudio.audio.RecordingAudioCaptureService;
+import com.alpharip.staffmod.RecordingStudio.integration.DesktopScreenFrameWriter;
 import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureService;
 import com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportService;
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
@@ -665,9 +666,95 @@ public final class RecordingStudioController {
     public synchronized void captureFrameTick(long now) {
         if (closed) return;
         RecordingStudioScene scene = timeline.getActiveScene();
-        RecordingStudioSource gameCapture = scene == null ? null
-                : scene.findSource(RecordingStudioSource.Type.GAME_CAPTURE);
-        if (gameCapture != null && gameCapture.isEnabled()) capture.tick(now);
+        if (scene == null) return;
+        boolean videoEnabled = false;
+        for (RecordingStudioSource source : scene.getSources()) {
+            if (isVideoSource(source.getType()) && source.isEnabled()) {
+                videoEnabled = true;
+                break;
+            }
+        }
+        if (videoEnabled) capture.tick(now);
+    }
+
+    private static boolean isVideoSource(RecordingStudioSource.Type type) {
+        return type == RecordingStudioSource.Type.GAME_CAPTURE
+                || type == RecordingStudioSource.Type.DESKTOP
+                || type == RecordingStudioSource.Type.DISPLAY;
+    }
+
+    public synchronized java.util.List<DesktopScreenFrameWriter.Display> getAvailableDisplays() {
+        java.util.List<DesktopScreenFrameWriter.Display> result =
+                new java.util.ArrayList<DesktopScreenFrameWriter.Display>();
+        for (DesktopScreenFrameWriter.Display display : DesktopScreenFrameWriter.getDisplays()) {
+            if (!display.isPrimary()) result.add(display);
+        }
+        return java.util.Collections.unmodifiableList(result);
+    }
+
+    public synchronized void selectNextDisplay() {
+        ensureOpen();
+        if (capture.isRecording() || capture.isPaused()) {
+            status = "Stop recording before changing the selected display";
+            return;
+        }
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.DISPLAY);
+        if (source == null) {
+            status = "Add a Display source to the active scene first";
+            return;
+        }
+        java.util.List<DesktopScreenFrameWriter.Display> displays = getAvailableDisplays();
+        if (displays.isEmpty()) {
+            source.setScreenDeviceId("");
+            status = "No additional displays detected";
+            persistSceneChange(status);
+            return;
+        }
+        int current = -1;
+        for (int i = 0; i < displays.size(); i++) {
+            if (displays.get(i).getId().equals(source.getScreenDeviceId())) { current = i; break; }
+        }
+        DesktopScreenFrameWriter.Display next = displays.get((current + 1) % displays.size());
+        source.setScreenDeviceId(next.getId());
+        persistSceneChange("Display source selected: " + next.getName());
+    }
+
+    public synchronized void refreshDisplays() {
+        ensureOpen();
+        if (capture.isRecording() || capture.isPaused()) {
+            status = "Stop recording before refreshing displays";
+            return;
+        }
+        java.util.List<DesktopScreenFrameWriter.Display> displays = getAvailableDisplays();
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.DISPLAY);
+        if (source != null && !source.getScreenDeviceId().isEmpty()) {
+            boolean found = false;
+            for (DesktopScreenFrameWriter.Display display : displays) {
+                if (display.getId().equals(source.getScreenDeviceId())) { found = true; break; }
+            }
+            if (!found) {
+                source.setScreenDeviceId("");
+                persistSceneChange("Selected display is unavailable; choose another display");
+                return;
+            }
+        }
+        status = "Displays refreshed: " + displays.size() + " additional display(s) detected";
+    }
+
+    public synchronized String getDisplaySelectionName() {
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.DISPLAY);
+        if (source == null) return "No Display source";
+        if (source.getScreenDeviceId().isEmpty()) return "No display selected";
+        for (DesktopScreenFrameWriter.Display display : getAvailableDisplays()) {
+            if (display.getId().equals(source.getScreenDeviceId())) return display.getName();
+        }
+        return "Unavailable";
     }
 
     public synchronized RecordingStudioScene getActiveScene() {
@@ -783,9 +870,8 @@ public final class RecordingStudioController {
 
     public synchronized void removeSceneSource(RecordingStudioSource.Type type) {
         ensureOpen();
-        if (type == RecordingStudioSource.Type.GAME_CAPTURE
-                && (capture.isRecording() || capture.isPaused())) {
-            status = "Stop recording before removing the Game Capture source";
+        if (isVideoSource(type) && (capture.isRecording() || capture.isPaused())) {
+            status = "Stop recording before removing a video source";
             return;
         }
         RecordingStudioScene scene = timeline.getActiveScene();
@@ -822,9 +908,8 @@ public final class RecordingStudioController {
     public synchronized void toggleSceneSource(RecordingStudioSource.Type type) {
         ensureOpen();
         if (type == null) throw new IllegalArgumentException("Source type is required");
-        if (type == RecordingStudioSource.Type.GAME_CAPTURE
-                && (capture.isRecording() || capture.isPaused())) {
-            status = "Stop recording before changing the Game Capture source";
+        if (isVideoSource(type) && (capture.isRecording() || capture.isPaused())) {
+            status = "Stop recording before changing a video source";
             return;
         }
         RecordingStudioScene scene = timeline.getActiveScene();
@@ -835,13 +920,22 @@ public final class RecordingStudioController {
         RecordingStudioSource source = scene.findSource(type);
         if (source == null) {
             String id = type == RecordingStudioSource.Type.GAME_CAPTURE ? "game-capture"
-                    : type == RecordingStudioSource.Type.GAME_AUDIO ? "game-audio" : "microphone";
+                    : type == RecordingStudioSource.Type.GAME_AUDIO ? "game-audio"
+                    : type == RecordingStudioSource.Type.DESKTOP ? "desktop"
+                    : type == RecordingStudioSource.Type.DISPLAY ? "display" : "microphone";
             String name = type == RecordingStudioSource.Type.GAME_CAPTURE ? "Minecraft Capture"
-                    : type == RecordingStudioSource.Type.GAME_AUDIO ? "Game Audio" : "Microphone";
+                    : type == RecordingStudioSource.Type.GAME_AUDIO ? "Game Audio"
+                    : type == RecordingStudioSource.Type.DESKTOP ? "Desktop" : type == RecordingStudioSource.Type.DISPLAY
+                    ? "Display" : "Microphone";
             source = new RecordingStudioSource(id, name, type, true);
             scene.addSource(source);
         } else {
             source.setEnabled(!source.isEnabled());
+        }
+        if (isVideoSource(type) && source.isEnabled()) {
+            for (RecordingStudioSource other : scene.getSources()) {
+                if (other != source && isVideoSource(other.getType())) other.setEnabled(false);
+            }
         }
         if (type == RecordingStudioSource.Type.MICROPHONE && !source.isEnabled()) {
             resumeMicrophoneAfterPause = false;
