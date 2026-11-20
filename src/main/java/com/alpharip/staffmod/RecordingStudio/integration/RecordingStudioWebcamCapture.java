@@ -15,6 +15,7 @@ public final class RecordingStudioWebcamCapture implements AutoCloseable {
     private volatile boolean closed;
     private Process process;
     private Thread reader;
+    private Thread errorReader;
     private String activeDevice;
 
     public RecordingStudioWebcamCapture(String executable) {
@@ -72,6 +73,17 @@ public final class RecordingStudioWebcamCapture implements AutoCloseable {
         catch (IOException error) { throw new IOException("Cannot start FFmpeg webcam capture: " + error.getMessage(), error); }
         activeDevice = device;
         final Process active = process;
+        errorReader = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    InputStream errors = active.getErrorStream();
+                    byte[] buffer = new byte[1024];
+                    while (errors.read(buffer) >= 0) { /* Drain FFmpeg diagnostics so the video pipe cannot stall. */ }
+                } catch (IOException ignored) { }
+            }
+        }, "Alpha-RecordingStudio-Webcam-Errors");
+        errorReader.setDaemon(true);
+        errorReader.start();
         reader = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -99,8 +111,10 @@ public final class RecordingStudioWebcamCapture implements AutoCloseable {
             try { if (!old.waitFor(250L, TimeUnit.MILLISECONDS)) old.destroyForcibly(); }
             catch (InterruptedException interrupted) { old.destroyForcibly(); Thread.currentThread().interrupt(); }
             try { old.getInputStream().close(); } catch (IOException ignored) { }
+            try { old.getErrorStream().close(); } catch (IOException ignored) { }
         }
         reader = null;
+        errorReader = null;
     }
     public synchronized void close() { closed = true; stopProcess(); }
 }
