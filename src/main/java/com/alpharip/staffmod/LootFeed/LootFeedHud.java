@@ -35,9 +35,8 @@ public final class LootFeedHud {
         }
 
         List<LootFeedEntry> entries = tracker.getVisibleEntries();
-        LootFeedEntry fadingEntry = tracker.getFadingEntry();
-        int fadeAlpha = tracker.getFadeAlpha();
-        if (entries.isEmpty() && fadingEntry == null) {
+        List<LootFeedTracker.FadingEntry> fadingEntries = tracker.getFadingEntries();
+        if (entries.isEmpty() && fadingEntries.isEmpty()) {
             return;
         }
 
@@ -48,8 +47,8 @@ public final class LootFeedHud {
         int lineHeight = font.FONT_HEIGHT + 3;
         int height = PADDING * 2 + lineHeight * 2;
 
-        if (fadingEntry != null) {
-            height += getEntryHeight(fadingEntry, lineHeight);
+        for (LootFeedTracker.FadingEntry fading : fadingEntries) {
+            height += getEntryHeight(fading.getEntry(), lineHeight);
         }
         for (LootFeedEntry entry : entries) {
             height += getEntryHeight(entry, lineHeight);
@@ -64,13 +63,13 @@ public final class LootFeedHud {
         font.drawString("LOOT FEED", textX, textY, 0xFFFFC83D);
         textY += lineHeight + 1;
 
-        // The evicted oldest group fades at the top while active groups shift up.
-        if (fadingEntry != null) {
-            textY = drawEntry(font, fadingEntry, textX, textY, lineHeight,
-                    fadeAlpha);
+        // Evicted groups fade independently above the active groups.
+        for (LootFeedTracker.FadingEntry fading : fadingEntries) {
+            textY = drawEntry(font, fading.getEntry(), textX, textY,
+                    lineHeight, fading.getAlpha());
         }
 
-        // Tracker order is oldest first, newest last: the newest group is at the bottom.
+        // Active groups remain oldest at the top and newest at the bottom.
         for (LootFeedEntry entry : entries) {
             textY = drawEntry(font, entry, textX, textY, lineHeight, 255);
         }
