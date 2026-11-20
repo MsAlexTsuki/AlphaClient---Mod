@@ -4,7 +4,7 @@ package com.alpharip.staffmod.RecordingStudio.timeline;
 public enum TimelineVideoEffect {
     NONE(""),
     GRAYSCALE("hue=s=0"),
-    SEPIA("colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131"),
+    SEPIA("colorchannelmixer=rr=.393:rg=.769:rb=.189:gr=.349:gg=.686:gb=.168:br=.272:bg=.534:bb=.131"),
     BRIGHTEN("eq=brightness=0.08"),
     DARKEN("eq=brightness=-0.08"),
     CONTRAST("eq=contrast=1.25");
