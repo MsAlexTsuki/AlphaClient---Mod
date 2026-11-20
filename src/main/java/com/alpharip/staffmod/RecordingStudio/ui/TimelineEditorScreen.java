@@ -576,6 +576,30 @@ public final class TimelineEditorScreen extends GuiScreen {
                     drawString(fontRendererObj, label, clipLeft + 4, rowY + 5, 0xFF17130A);
                 }
             }
+            if ("video".equals(currentTrack.getId())) {
+                for (TimelineTransition transition : timeline.getTransitions()) {
+                    TimelineClip destination = null;
+                    for (TimelineClip candidate : currentTrack.getClips()) {
+                        if (candidate.getId().equals(transition.getToClipId())) {
+                            destination = candidate;
+                            break;
+                        }
+                    }
+                    if (destination == null) continue;
+                    long transitionStart = destination.getStart() - transition.getDurationMillis();
+                    int transitionLeft = left + (int) Math.floor(
+                            Math.max(0L, transitionStart) / (double) scale * span);
+                    int transitionRight = left + (int) Math.ceil(
+                            destination.getStart() / (double) scale * span);
+                    transitionLeft = Math.max(left, Math.min(right - 1, transitionLeft));
+                    transitionRight = Math.max(transitionLeft + 2, Math.min(right, transitionRight));
+                    net.minecraft.client.gui.Gui.drawRect(transitionLeft, rowY + 1,
+                            transitionRight, rowY + 18, 0xCCFFFFFF);
+                    if (transitionRight - transitionLeft > 18) {
+                        drawString(fontRendererObj, "TR", transitionLeft + 2, rowY + 5, 0xFF17130A);
+                    }
+                }
+            }
         }
 
         for (TimelineMarker marker : timeline.getMarkers()) {
