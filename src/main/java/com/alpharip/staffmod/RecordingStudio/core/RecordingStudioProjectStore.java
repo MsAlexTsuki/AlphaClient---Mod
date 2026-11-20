@@ -64,7 +64,8 @@ public final class RecordingStudioProjectStore {
                 data.setProperty(sourcePrefix + "name", source.getName());
                 data.setProperty(sourcePrefix + "type", source.getType().name());
                 data.setProperty(sourcePrefix + "enabled", Boolean.toString(source.isEnabled()));
-                if (source.getType() == RecordingStudioSource.Type.MICROPHONE) {
+                if (source.getType() == RecordingStudioSource.Type.MICROPHONE
+                        || source.getType() == RecordingStudioSource.Type.GAME_AUDIO) {
                     data.setProperty(sourcePrefix + "audioDeviceKey", source.getAudioDeviceKey());
                 }
             }
@@ -155,7 +156,8 @@ public final class RecordingStudioProjectStore {
                                 required(data, sourcePrefix + "name"),
                                 RecordingStudioSource.Type.valueOf(required(data, sourcePrefix + "type")),
                                 Boolean.parseBoolean(enabledValue));
-                        if (source.getType() == RecordingStudioSource.Type.MICROPHONE) {
+                        if (source.getType() == RecordingStudioSource.Type.MICROPHONE
+                                || source.getType() == RecordingStudioSource.Type.GAME_AUDIO) {
                             source.setAudioDeviceKey(data.getProperty(sourcePrefix + "audioDeviceKey", ""));
                         }
                         scene.addSource(source);
