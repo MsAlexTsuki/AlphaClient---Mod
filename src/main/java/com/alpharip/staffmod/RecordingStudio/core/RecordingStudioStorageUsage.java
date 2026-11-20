@@ -2,6 +2,7 @@ package com.alpharip.staffmod.RecordingStudio.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -78,7 +79,7 @@ public final class RecordingStudioStorageUsage {
     }
 
     private long scanRecordingCategory(File recordings, String folderName, int category) {
-        if (!recordings.isDirectory()) return 0L;
+        if (Files.isSymbolicLink(recordings.toPath()) || !recordings.isDirectory()) return 0L;
         File[] projects = recordings.listFiles();
         if (projects == null) { readable = false; return 0L; }
         long size = 0L;
@@ -89,7 +90,7 @@ public final class RecordingStudioStorageUsage {
     }
 
     private long scan(File file, int category) {
-        if (!file.exists()) return 0L;
+        if (Files.isSymbolicLink(file.toPath()) || !file.exists()) return 0L;
         if (!file.isDirectory()) {
             if (file.isFile()) {
                 count(category);
@@ -111,6 +112,7 @@ public final class RecordingStudioStorageUsage {
         }
         long size = 0L;
         for (File child : children) {
+            if (Files.isSymbolicLink(child.toPath())) continue;
             if (child.isDirectory()) size = safeAdd(size, scan(child, category));
             else if (child.isFile()) {
                 count(category);
