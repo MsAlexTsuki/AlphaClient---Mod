@@ -207,7 +207,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         chooser.addChoosableFileFilter(new FileNameExtensionFilter(
                 "Audio files (WAV, MP3, AAC, M4A, OGG, FLAC)",
                 "wav", "mp3", "aac", "m4a", "ogg", "flac", "wma"));
-        int result = chooser.showOpenDialog(this);
+        int result = chooser.showOpenDialog(null);
         if (result != JFileChooser.APPROVE_OPTION) return;
 
         File selected = chooser.getSelectedFile();
