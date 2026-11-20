@@ -123,15 +123,35 @@ public final class Timeline {
     }
 
     public synchronized List<TimelineTransition> getTransitions() {
-        return Collections.unmodifiableList(new ArrayList<TimelineTransition>(transitions));
+        List<TimelineTransition> valid = new ArrayList<TimelineTransition>();
+        for (TimelineTransition transition : transitions) {
+            if (isValidTransition(transition)) valid.add(transition);
+        }
+        return Collections.unmodifiableList(valid);
     }
 
     public synchronized TimelineTransition getTransition(String fromClipId, String toClipId) {
         for (TimelineTransition transition : transitions) {
             if (transition.getFromClipId().equals(fromClipId)
-                    && transition.getToClipId().equals(toClipId)) return transition;
+                    && transition.getToClipId().equals(toClipId)
+                    && isValidTransition(transition)) return transition;
         }
         return null;
+    }
+
+    private boolean isValidTransition(TimelineTransition transition) {
+        TimelineClip from = null;
+        TimelineClip to = null;
+        for (TimelineTrack track : tracks) {
+            if (!"video".equals(track.getId())) continue;
+            for (TimelineClip clip : track.getClips()) {
+                if (clip.getId().equals(transition.getFromClipId())) from = clip;
+                if (clip.getId().equals(transition.getToClipId())) to = clip;
+            }
+        }
+        return from != null && to != null && from.getEnd() == to.getStart()
+                && !"@capture".equals(from.getSource()) && !"@capture".equals(to.getSource())
+                && transition.getDurationMillis() <= Math.min(from.getDuration(), to.getDuration());
     }
 
     /** Adds or replaces an explicitly selected transition between exactly adjacent video clips. */
