@@ -544,7 +544,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, "Input: " + compact(controller.getMicrophoneSelectionName(), 18),
                 right + 8, 128, 0xFFBBBBBB);
         drawString(fontRendererObj, "AUDIO MIXER", right + 8, 145, 0xFFFFC83D);
-        drawString(fontRendererObj, controller.getAudioStatus(), right + 8, 164, 0xFFE0E0E0);
+        drawString(fontRendererObj, compact(controller.getAudioStatus(), 25), right + 8, 164, 0xFFE0E0E0);
         drawString(fontRendererObj, controller.getMicrophoneMonitorStatus(), right + 8, 177, 0xFFBBBBBB);
         drawString(fontRendererObj, compact("Review: " + audioPlayback.getStatus(), 24),
                 right + 8, 181, 0xFFBBBBBB);
