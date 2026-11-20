@@ -18,12 +18,21 @@ import java.util.concurrent.Executors;
 
 /** Extracts low-resolution preview frames from external video clips with FFmpeg. */
 public final class RecordingStudioExternalVideoPreview {
-    private static final class Request {
-        final String key;
+    private static final class ClipRequest {
         final File source;
         final double sourceSeconds;
-        Request(String key, File source, double sourceSeconds) {
-            this.key = key; this.source = source; this.sourceSeconds = sourceSeconds;
+        ClipRequest(File source, double sourceSeconds) {
+            this.source = source;
+            this.sourceSeconds = sourceSeconds;
+        }
+    }
+
+    private static final class Request {
+        final String key;
+        final java.util.List<ClipRequest> clips;
+        Request(String key, java.util.List<ClipRequest> clips) {
+            this.key = key;
+            this.clips = clips;
         }
     }
 
@@ -45,29 +54,42 @@ public final class RecordingStudioExternalVideoPreview {
 
     public synchronized boolean update(Timeline timeline, long positionMillis) {
         if (closed) return false;
-        TimelineClip selected = findActiveExternalClip(timeline, positionMillis);
-        if (selected == null) {
+        java.util.List<TimelineClip> activeClips = findActiveExternalClips(timeline, positionMillis);
+        if (activeClips.isEmpty()) {
             requestedKey = "";
             pending = null;
             readyImage = null;
             status = "No external video at playhead";
             return false;
         }
-        long offsetMillis = Math.max(0L, positionMillis - selected.getStart());
-        double sourceSeconds = offsetMillis * selected.getSpeed() / 1000.0D;
-        long previewBucket = Math.max(0L, (long) Math.floor(sourceSeconds * 10.0D));
-        String key = selected.getId() + "|" + selected.getSource() + "|" + previewBucket;
-        if (!key.equals(requestedKey)) {
-            requestedKey = key;
-            readyImage = null;
-            File source = new File(selected.getSource());
+
+        StringBuilder keyBuilder = new StringBuilder();
+        java.util.List<ClipRequest> requests = new java.util.ArrayList<ClipRequest>();
+        for (TimelineClip clip : activeClips) {
+            long offsetMillis = Math.max(0L, positionMillis - clip.getStart());
+            double sourceSeconds = offsetMillis * clip.getSpeed() / 1000.0D;
+            long previewBucket = Math.max(0L, (long) Math.floor(sourceSeconds * 10.0D));
+            keyBuilder.append(clip.getId()).append('|').append(clip.getSource())
+                    .append('|').append(previewBucket).append(';');
+            File source = new File(clip.getSource());
             if (!source.isFile()) {
+                requestedKey = keyBuilder.toString();
                 pending = null;
+                readyImage = null;
                 status = "External video file not found: " + source.getName();
                 return true;
             }
-            pending = new Request(key, source, sourceSeconds);
-            status = "Loading external video preview...";
+            requests.add(new ClipRequest(source, sourceSeconds));
+        }
+
+        String key = keyBuilder.toString();
+        if (!key.equals(requestedKey)) {
+            requestedKey = key;
+            readyImage = null;
+            pending = new Request(key, requests);
+            status = requests.size() == 1
+                    ? "Loading external video preview..."
+                    : "Compositing " + requests.size() + " overlapping video clips...";
             if (!workerRunning) {
                 workerRunning = true;
                 decoder.execute(new Runnable() {
@@ -104,11 +126,36 @@ public final class RecordingStudioExternalVideoPreview {
         File log = File.createTempFile("alpha-recording-preview-", ".log");
         Process activeProcess = null;
         try {
-            String timestamp = String.format(Locale.ROOT, "%.3f", request.sourceSeconds);
-            ProcessBuilder builder = new ProcessBuilder("ffmpeg", "-hide_banner", "-loglevel", "error",
-                    "-ss", timestamp, "-i", request.source.getAbsolutePath(), "-frames:v", "1",
-                    "-vf", "scale=1280:720:force_original_aspect_ratio=decrease",
-                    "-f", "image2pipe", "-vcodec", "png", "pipe:1");
+            java.util.List<String> command = new java.util.ArrayList<String>();
+            java.util.Collections.addAll(command, "ffmpeg", "-hide_banner", "-loglevel", "error");
+            for (ClipRequest clip : request.clips) {
+                command.add("-ss");
+                command.add(String.format(Locale.ROOT, "%.3f", clip.sourceSeconds));
+                command.add("-i");
+                command.add(clip.source.getAbsolutePath());
+            }
+
+            StringBuilder filter = new StringBuilder();
+            filter.append("color=c=black:s=1280x720:r=1:d=1[base]");
+            String currentBase = "[base]";
+            for (int i = 0; i < request.clips.size(); i++) {
+                String clipLabel = "[clip" + i + "]";
+                String nextBase = "[base" + (i + 1) + "]";
+                filter.append(";[").append(i).append(":v:0]")
+                        .append("trim=duration=1,setpts=PTS-STARTPTS,fps=1")
+                        .append(",scale=1280:720:force_original_aspect_ratio=decrease")
+                        .append(",pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1")
+                        .append(clipLabel);
+                filter.append(';').append(currentBase).append(clipLabel)
+                        .append("overlay=shortest=1:format=auto").append(nextBase);
+                currentBase = nextBase;
+            }
+            filter.append(';').append(currentBase).append("format=rgb24[out]");
+            java.util.Collections.addAll(command, "-filter_complex", filter.toString(),
+                    "-map", "[out]", "-frames:v", "1", "-f", "image2pipe",
+                    "-vcodec", "png", "pipe:1");
+
+            ProcessBuilder builder = new ProcessBuilder(command);
             builder.redirectError(log);
             activeProcess = builder.start();
             process = activeProcess;
@@ -128,19 +175,25 @@ public final class RecordingStudioExternalVideoPreview {
         }
     }
 
-    private static TimelineClip findActiveExternalClip(Timeline timeline, long positionMillis) {
-        if (timeline == null) return null;
-        TimelineClip selected = null;
+    private static java.util.List<TimelineClip> findActiveExternalClips(
+            Timeline timeline, long positionMillis) {
+        java.util.List<TimelineClip> active = new java.util.ArrayList<TimelineClip>();
+        if (timeline == null) return active;
         for (TimelineTrack track : timeline.getTracks()) {
             if (!"video".equals(track.getId())) continue;
             for (TimelineClip clip : track.getClips()) {
                 if ("@capture".equals(clip.getSource()) || clip.getDuration() <= 0L) continue;
-                if (positionMillis >= clip.getStart() && positionMillis < clip.getEnd()
-                        && (selected == null || clip.getStart() >= selected.getStart())) selected = clip;
+                if (positionMillis >= clip.getStart() && positionMillis < clip.getEnd()) active.add(clip);
             }
             break;
         }
-        return selected;
+        java.util.Collections.sort(active, new java.util.Comparator<TimelineClip>() {
+            public int compare(TimelineClip left, TimelineClip right) {
+                int byStart = Long.compare(left.getStart(), right.getStart());
+                return byStart != 0 ? byStart : left.getId().compareTo(right.getId());
+            }
+        });
+        return active;
     }
 
     public synchronized String getStatus() { return status; }
@@ -149,7 +202,7 @@ public final class RecordingStudioExternalVideoPreview {
         if (width <= 0 || height <= 0) return;
         Gui.drawRect(x, y, x + width, y + height, 0xFF080808);
         if (readyImage != null) { updateTexture(minecraft, readyImage); readyImage = null; }
-        else if (!"External video preview".equals(status) && textureLocation != null) {
+        else if (!status.startsWith("External video preview") && !status.startsWith("Compositing ") && textureLocation != null) {
             minecraft.getTextureManager().deleteTexture(textureLocation);
             textureLocation = null; texture = null;
         }
