@@ -34,7 +34,7 @@ public final class TimelineClip {
     }
 
     public synchronized void setDuration(long value) {
-        if (value < 0) throw new IllegalArgumentException("Clip duration must be non-negative");
+        if (value <= 0) throw new IllegalArgumentException("Clip duration must be positive");
         duration = value;
         fadeInMillis = Math.min(fadeInMillis, duration);
         fadeOutMillis = Math.min(fadeOutMillis, Math.max(0L, duration - fadeInMillis));
