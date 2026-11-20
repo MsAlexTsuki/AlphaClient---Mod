@@ -612,7 +612,7 @@ public final class RecordingStudioController {
         return scene == null ? null : scene.findSource(RecordingStudioSource.Type.MICROPHONE);
     }
 
-    private static String resolveMicrophoneName(String selected) {
+    private String resolveMicrophoneName(String selected) {
         if (selected == null || selected.isEmpty()) return "System Default";
         for (RecordingAudioCaptureService.MicrophoneDevice device : microphoneDevices) {
             if (device.getKey().equals(selected)) return device.getName();
