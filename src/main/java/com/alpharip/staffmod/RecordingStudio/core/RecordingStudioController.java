@@ -425,8 +425,8 @@ public final class RecordingStudioController {
             status = "The active scene has no Game Audio source";
             return;
         }
-        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
-                RecordingAudioCaptureService.getAvailableLoopbackDevices();
+        gameAudioDevices = RecordingAudioCaptureService.getAvailableLoopbackDevices();
+        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices = gameAudioDevices;
         String selected = source.getAudioDeviceKey();
         if (selected == null || selected.isEmpty()) {
             gameAudioSelectionName = "Windows default output (WASAPI)";
@@ -548,8 +548,8 @@ public final class RecordingStudioController {
             status = "The active scene has no Microphone source";
             return;
         }
-        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
-                RecordingAudioCaptureService.getAvailableMicrophones();
+        microphoneDevices = RecordingAudioCaptureService.getAvailableMicrophones();
+        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices = microphoneDevices;
         String sceneSelection = microphone.getAudioDeviceKey();
         boolean usingProjectFallback = sceneSelection == null || sceneSelection.isEmpty();
         String selected = usingProjectFallback ? project.getMicrophoneDeviceKey() : sceneSelection;
