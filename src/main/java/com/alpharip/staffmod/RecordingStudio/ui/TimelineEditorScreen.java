@@ -88,6 +88,9 @@ public final class TimelineEditorScreen extends GuiScreen {
         buttonList.add(new AlphaStudioButton(13, left + 146, y, 70, 20, "Kind: MANUAL"));
         buttonList.add(new AlphaStudioButton(14, left + 219, y, 70, 20, "Effect: NONE"));
         y += 24;
+        buttonList.add(new AlphaStudioButton(15, left, y, 143, 20, "Fade In: 0 ms"));
+        buttonList.add(new AlphaStudioButton(16, left + 147, y, 143, 20, "Fade Out: 0 ms"));
+        y += 22;
         buttonList.add(new AlphaStudioButton(9, width / 2 - 50, y, 100, 20, "Back", true));
         syncSelection();
     }
@@ -243,12 +246,40 @@ public final class TimelineEditorScreen extends GuiScreen {
                     selectedClip().setEffect(effects[(currentEffect.ordinal() + 1) % effects.length]);
                     status = "Clip effect: " + selectedClip().getEffect().name();
                     break;
+                case 15:
+                case 16:
+                    requireClip(track);
+                    if (!"video".equals(track.getId()) || "@capture".equals(selectedClip().getSource()))
+                        throw new IllegalArgumentException("Fade controls are available for imported video clips only");
+                    TimelineClip fadeClip = selectedClip();
+                    long currentFade = button.id == 15 ? fadeClip.getFadeInMillis() : fadeClip.getFadeOutMillis();
+                    long otherFade = button.id == 15 ? fadeClip.getFadeOutMillis() : fadeClip.getFadeInMillis();
+                    long nextFade = nextFadeDuration(currentFade, Math.max(0L, fadeClip.getDuration() - otherFade));
+                    if (button.id == 15) fadeClip.setFadeInMillis(nextFade);
+                    else fadeClip.setFadeOutMillis(nextFade);
+                    status = (button.id == 15 ? "Fade in: " : "Fade out: ") + nextFade + " ms";
+                    break;
                 default: break;
             }
         } catch (IllegalArgumentException ex) {
             status = ex.getMessage();
         }
     }
+    private static long nextFadeDuration(long current, long maximum) {
+        long[] values = new long[] { 0L, 100L, 250L, 500L, 1000L };
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] == current) {
+                for (int step = 1; step <= values.length; step++) {
+                    long candidate = values[(i + step) % values.length];
+                    if (candidate <= maximum) return candidate;
+                }
+                return 0L;
+            }
+        }
+        for (long value : values) if (value > current && value <= maximum) return value;
+        return 0L;
+    }
+
     private void importMedia() {
         if (mediaProbePending) { status = "A media import is already being processed"; return; }
         JFileChooser chooser = new JFileChooser();
@@ -410,7 +441,7 @@ public final class TimelineEditorScreen extends GuiScreen {
     }
     private int timelineLeft() { return width / 2 - 145; }
     private int timelineRight() { return width / 2 + 145; }
-    private int timelineTop() { return height / 2 + 112; }
+    private int timelineTop() { return height / 2 + 136; }
     private int timelineRowHeight() { return 25; }
     private long timelineScale() { return Math.max(10000L, timeline.duration() + 10000L); }
     private long displayTimelineScale() { return dragMode != DRAG_NONE && dragScale > 0L ? dragScale : timelineScale(); }
@@ -631,12 +662,18 @@ public final class TimelineEditorScreen extends GuiScreen {
         drawTimeline();
         for (GuiButton button : buttonList) {
             if (button.id == 13) button.displayString = "Kind: " + TimelineMarkerKind.values()[markerKindIndex].name();
-            if (button.id == 14) {
+            if (button.id == 14 || button.id == 15 || button.id == 16) {
                 TimelineTrack activeTrack = selectedTrack();
                 TimelineClip activeClip = selectedClip();
-                button.enabled = activeTrack != null && "video".equals(activeTrack.getId())
+                boolean supported = activeTrack != null && "video".equals(activeTrack.getId())
                         && activeClip != null && !"@capture".equals(activeClip.getSource());
-                button.displayString = "Effect: " + (activeClip == null ? "NONE" : activeClip.getEffect().name());
+                button.enabled = supported;
+                if (button.id == 14) button.displayString = "Effect: "
+                        + (activeClip == null ? "NONE" : activeClip.getEffect().name());
+                if (button.id == 15) button.displayString = "Fade In: "
+                        + (activeClip == null ? 0 : activeClip.getFadeInMillis()) + " ms";
+                if (button.id == 16) button.displayString = "Fade Out: "
+                        + (activeClip == null ? 0 : activeClip.getFadeOutMillis()) + " ms";
             }
         }
         sourceField.drawTextBox();
