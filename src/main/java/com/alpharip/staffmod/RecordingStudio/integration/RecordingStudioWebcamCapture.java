@@ -55,7 +55,7 @@ public final class RecordingStudioWebcamCapture implements AutoCloseable {
         byte[] frame = latestFrame;
         if (frame == null) {
             if (failure != null) throw failure;
-            throw new IOException("Waiting for the webcam's first frame");
+            return null;
         }
         byte[] bottomUp = new byte[frame.length];
         int stride = WIDTH * 4;
