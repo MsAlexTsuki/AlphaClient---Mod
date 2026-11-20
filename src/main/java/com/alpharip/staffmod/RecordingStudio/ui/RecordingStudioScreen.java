@@ -84,6 +84,8 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(13, rightX + 8 + buttonWidth + gap, rightY + row * 6, buttonWidth, "Cancel");
         add(14, rightX + 8, rightY + row * 7, buttonWidth, "Storage");
         add(18, rightX + 8 + buttonWidth + gap, rightY + row * 7, buttonWidth, "Next Mic");
+        add(30, rightX + 8, rightY + row * 8, buttonWidth, "Monitor On");
+        add(39, rightX + 8 + buttonWidth + gap, rightY + row * 8, buttonWidth, "Monitor Off");
         add(27, 18, 450, 126, "Refresh Mic");
         add(28, rightX + 8, 198, buttonWidth, "Source Up");
         add(29, rightX + 8 + buttonWidth + gap, 198, buttonWidth, "Source Down");
@@ -132,7 +134,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 continue;
             }
             switch (b.id) {
-                case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: b.visible = rec; break;
+                case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: case 30: case 39: b.visible = rec; break;
                 case 4: case 32: case 33: case 34: case 35: b.visible = edit; break;
                 case 11: case 12: case 13: b.visible = pub; break;
                 default: b.visible = true; break;
@@ -289,6 +291,12 @@ public final class RecordingStudioScreen extends GuiScreen {
                 break;
             case 27:
                 controller.refreshMicrophones();
+                break;
+            case 30:
+                controller.startMicrophoneMonitoring();
+                break;
+            case 39:
+                controller.stopMicrophoneMonitoring();
                 break;
             case 28:
                 if (selectedSourceId != null) controller.moveActiveSceneSource(selectedSourceId, -1);
@@ -536,6 +544,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 right + 8, 128, 0xFFBBBBBB);
         drawString(fontRendererObj, "AUDIO MIXER", right + 8, 145, 0xFFFFC83D);
         drawString(fontRendererObj, controller.getAudioStatus(), right + 8, 164, 0xFFE0E0E0);
+        drawString(fontRendererObj, controller.getMicrophoneMonitorStatus(), right + 8, 177, 0xFFBBBBBB);
         drawString(fontRendererObj, compact("Review: " + audioPlayback.getStatus(), 24),
                 right + 8, 181, 0xFFBBBBBB);
         drawString(fontRendererObj, compact("Video: " + externalVideoPreview.getStatus(), 24),
