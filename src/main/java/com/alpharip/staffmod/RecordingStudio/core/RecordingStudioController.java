@@ -716,7 +716,8 @@ public final class RecordingStudioController {
     private static boolean isVideoSource(RecordingStudioSource.Type type) {
         return type == RecordingStudioSource.Type.GAME_CAPTURE
                 || type == RecordingStudioSource.Type.DESKTOP
-                || type == RecordingStudioSource.Type.DISPLAY;
+                || type == RecordingStudioSource.Type.DISPLAY
+                || type == RecordingStudioSource.Type.WEBCAM;
     }
 
     public synchronized java.util.List<DesktopScreenFrameWriter.Display> getAvailableDisplays() {
@@ -941,6 +942,35 @@ public final class RecordingStudioController {
         removeSceneSource(source.getType());
     }
 
+    public synchronized void addWebcamSource() {
+        ensureOpen();
+        if (capture.isRecording() || capture.isPaused()) { status = "Stop recording before adding a webcam"; return; }
+        RecordingStudioScene scene = timeline.getActiveScene();
+        if (scene == null) { status = "No active scene"; return; }
+        int count = 1;
+        for (RecordingStudioSource item : scene.getSources()) if (item.getType() == RecordingStudioSource.Type.WEBCAM) count++;
+        RecordingStudioSource source = new RecordingStudioSource("webcam-" + java.util.UUID.randomUUID().toString(),
+                "Webcam " + count, RecordingStudioSource.Type.WEBCAM, true);
+        source.setTransform(72, 70, 25, 25);
+        scene.addSource(source);
+        persistSceneChange(source.getName() + " added");
+    }
+
+    public synchronized void selectNextWebcamDevice(String sourceId) {
+        ensureOpen();
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null : scene.findSource(sourceId);
+        if (source == null || source.getType() != RecordingStudioSource.Type.WEBCAM) { status = "Select a Webcam source first"; return; }
+        try {
+            java.util.List<String> devices = com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioWebcamCapture.listDevices("ffmpeg");
+            if (devices.isEmpty()) { status = "No DirectShow webcam detected; check FFmpeg and camera permissions"; return; }
+            int current = devices.indexOf(source.getWebcamDeviceName());
+            String next = devices.get((current + 1) % devices.size());
+            source.setWebcamDeviceName(next);
+            persistSceneChange("Webcam selected: " + next);
+        } catch (IOException failure) { status = "Cannot enumerate webcams: " + failure.getMessage(); }
+    }
+
     public synchronized void toggleSceneSource(RecordingStudioSource.Type type) {
         ensureOpen();
         if (type == null) throw new IllegalArgumentException("Source type is required");
@@ -958,20 +988,17 @@ public final class RecordingStudioController {
             String id = type == RecordingStudioSource.Type.GAME_CAPTURE ? "game-capture"
                     : type == RecordingStudioSource.Type.GAME_AUDIO ? "game-audio"
                     : type == RecordingStudioSource.Type.DESKTOP ? "desktop"
-                    : type == RecordingStudioSource.Type.DISPLAY ? "display" : "microphone";
+                    : type == RecordingStudioSource.Type.DISPLAY ? "display"
+                    : type == RecordingStudioSource.Type.WEBCAM ? "webcam" : "microphone";
             String name = type == RecordingStudioSource.Type.GAME_CAPTURE ? "Minecraft Capture"
                     : type == RecordingStudioSource.Type.GAME_AUDIO ? "Game Audio"
-                    : type == RecordingStudioSource.Type.DESKTOP ? "Desktop" : type == RecordingStudioSource.Type.DISPLAY
-                    ? "Display" : "Microphone";
+                    : type == RecordingStudioSource.Type.DESKTOP ? "Desktop"
+                    : type == RecordingStudioSource.Type.DISPLAY ? "Display"
+                    : type == RecordingStudioSource.Type.WEBCAM ? "Webcam" : "Microphone";
             source = new RecordingStudioSource(id, name, type, true);
             scene.addSource(source);
         } else {
             source.setEnabled(!source.isEnabled());
-        }
-        if (isVideoSource(type) && source.isEnabled()) {
-            for (RecordingStudioSource other : scene.getSources()) {
-                if (other != source && isVideoSource(other.getType())) other.setEnabled(false);
-            }
         }
         if (type == RecordingStudioSource.Type.MICROPHONE && !source.isEnabled()) {
             resumeMicrophoneAfterPause = false;
