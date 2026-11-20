@@ -30,6 +30,7 @@ public final class RecordingStudioAudioPlayback {
         volatile Thread worker;
         volatile boolean started;
         volatile boolean finished;
+        volatile long streamGeneration;
         volatile long startedAtTimelineMillis;
         long lastTimelinePosition = -1L;
 
@@ -46,6 +47,7 @@ public final class RecordingStudioAudioPlayback {
             stopStream();
             started = true;
             finished = false;
+            final long generation = ++streamGeneration;
             startedAtTimelineMillis = timelinePositionMillis;
             final long sourceOffsetMillis = Math.max(0L,
                     Math.round((timelinePositionMillis - startMillis) * speed));
@@ -72,6 +74,7 @@ public final class RecordingStudioAudioPlayback {
                         DataLine.Info info = new DataLine.Info(SourceDataLine.class, outputFormat);
                         output = (SourceDataLine) AudioSystem.getLine(info);
                         output.open(outputFormat);
+                        if (generation != streamGeneration || Thread.currentThread().isInterrupted()) return;
                         line = output;
                         output.start();
 
@@ -85,7 +88,9 @@ public final class RecordingStudioAudioPlayback {
                     } catch (Exception failure) {
                         if (!Thread.currentThread().isInterrupted()) {
                             synchronized (RecordingStudioAudioPlayback.this) {
-                                status = "Audio preview failed: " + failure.getMessage();
+                                if (generation == streamGeneration) {
+                                    status = "Audio preview failed: " + failure.getMessage();
+                                }
                             }
                         }
                     } finally {
@@ -93,11 +98,13 @@ public final class RecordingStudioAudioPlayback {
                             try { output.stop(); } catch (RuntimeException ignored) { }
                             try { output.close(); } catch (RuntimeException ignored) { }
                         }
-                        line = null;
                         closeQuietly(pcmStream);
                         closeQuietly(sourceStream);
-                        started = false;
-                        finished = !Thread.currentThread().isInterrupted();
+                        if (generation == streamGeneration) {
+                            line = null;
+                            started = false;
+                            finished = !Thread.currentThread().isInterrupted();
+                        }
                     }
                 }
             }, "Alpha-RecordingStudio-AudioStream-" + id);
@@ -107,6 +114,7 @@ public final class RecordingStudioAudioPlayback {
         }
 
         void stopStream() {
+            streamGeneration++;
             Thread activeWorker = worker;
             worker = null;
             if (activeWorker != null) activeWorker.interrupt();
