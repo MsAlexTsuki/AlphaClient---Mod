@@ -8,7 +8,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import java.io.IOException;
 
-/** Read-only storage dashboard; it never deletes or modifies user recordings. */
+/** Storage dashboard with preview-first manual cleanup; it never deletes files automatically. */
 public final class RecordingStudioStorageScreen extends GuiScreen {
     private final GuiScreen parent;
     private final RecordingStudioStorageUsage usage;
