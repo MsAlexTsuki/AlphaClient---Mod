@@ -414,8 +414,8 @@ public final class RecordingStudioExportService {
      * Composes video-track clips over a black timeline background. The reserved @capture
      * source maps to the project's captured PNG sequence; other sources are FFmpeg video inputs.
      */
-    private static String buildVideoFilter(List<TimelineClip> clips, List<Integer> inputIndexes,
-                                            int width, int height, double fps, long durationMillis) {
+    private String buildVideoFilter(List<TimelineClip> clips, List<Integer> inputIndexes,
+                                     int width, int height, double fps, long durationMillis) {
         if (clips.isEmpty()) return "";
         String rate = formatRate(fps);
         StringBuilder filter = new StringBuilder();
@@ -447,6 +447,10 @@ public final class RecordingStudioExportService {
             double sourceDuration = clip.getDuration() * speed;
             long start = clip.getStart();
             long end = clip.getEnd();
+            TimelineTransition incoming = findTransitionTo(clip, clips);
+            TimelineTransition outgoing = findTransitionFrom(clip, clips);
+            long transitionDuration = incoming == null ? 0L : incoming.getDurationMillis();
+            long visualStart = Math.max(0L, start - transitionDuration);
             String clipLabel = "[vclip" + i + "]";
             String nextBase = "[vbase" + (i + 1) + "]";
             filter.append(";[").append(inputIndexes.get(i)).append(":v:0]")
@@ -470,16 +474,77 @@ public final class RecordingStudioExportService {
                         .append(seconds(Math.max(0.0D, clip.getDuration() - fadeOutMillis)))
                         .append(":d=").append(seconds(fadeOutMillis)).append(":color=black");
             }
-            filter.append(",setpts=PTS+").append(seconds(start)).append("/TB")
+            if (outgoing != null && outgoing.getType() == TimelineTransitionType.DIP_TO_BLACK) {
+                long outgoingDuration = outgoing.getDurationMillis();
+                filter.append(",fade=t=out:st=")
+                        .append(seconds(Math.max(0L, clip.getDuration() - outgoingDuration)))
+                        .append(":d=").append(seconds(outgoingDuration)).append(":color=black");
+            }
+            if (incoming != null) {
+                double transitionSeconds = seconds(transitionDuration);
+                switch (incoming.getType()) {
+                    case CROSS_DISSOLVE:
+                        filter.append(",format=rgba,fade=t=in:st=0:d=")
+                                .append(transitionSeconds).append(":alpha=1");
+                        break;
+                    case DIP_TO_BLACK:
+                        filter.append(",fade=t=in:st=0:d=")
+                                .append(transitionSeconds).append(":color=black");
+                        break;
+                    case WIPE_LEFT:
+                        filter.append(",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lt(X,W*min(1,T/")
+                                .append(transitionSeconds).append(")),255,0)'");
+                        break;
+                    case WIPE_RIGHT:
+                        filter.append(",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(gt(X,W*(1-min(1,T/")
+                                .append(transitionSeconds).append("))),255,0)'");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            filter.append(",setpts=PTS+").append(seconds(visualStart)).append("/TB")
                     .append(clipLabel);
-            filter.append(';').append(currentBase).append(clipLabel)
-                    .append("overlay=eof_action=pass:shortest=0:enable='between(t,")
-                    .append(seconds(start)).append(',').append(seconds(end)).append(")'")
-                    .append(nextBase);
+            filter.append(';').append(currentBase).append(clipLabel);
+            if (incoming != null && incoming.getType() == TimelineTransitionType.SLIDE_LEFT) {
+                filter.append("overlay=x='W*(1-min(1,max(0,(t-")
+                        .append(seconds(visualStart)).append(")/").append(seconds(transitionDuration))
+                        .append(")))':y=0");
+            } else if (incoming != null && incoming.getType() == TimelineTransitionType.SLIDE_RIGHT) {
+                filter.append("overlay=x='-W*(1-min(1,max(0,(t-")
+                        .append(seconds(visualStart)).append(")/").append(seconds(transitionDuration))
+                        .append(")))':y=0");
+            } else {
+                filter.append("overlay=eof_action=pass:shortest=0");
+            }
+            filter.append(":enable='between(t,").append(seconds(visualStart)).append(',')
+                    .append(seconds(end)).append(")'").append(nextBase);
             currentBase = nextBase;
         }
         filter.append(';').append(currentBase).append("format=yuv420p[vout]");
         return filter.toString();
+    }
+
+    private TimelineTransition findTransitionTo(TimelineClip clip, List<TimelineClip> clips) {
+        for (TimelineTransition transition : timeline.getTransitions()) {
+            if (!transition.getToClipId().equals(clip.getId())) continue;
+            for (TimelineClip previous : clips) {
+                if (previous.getId().equals(transition.getFromClipId())
+                        && previous.getEnd() == clip.getStart()) return transition;
+            }
+        }
+        return null;
+    }
+
+    private TimelineTransition findTransitionFrom(TimelineClip clip, List<TimelineClip> clips) {
+        for (TimelineTransition transition : timeline.getTransitions()) {
+            if (!transition.getFromClipId().equals(clip.getId())) continue;
+            for (TimelineClip next : clips) {
+                if (next.getId().equals(transition.getToClipId())
+                        && clip.getEnd() == next.getStart()) return transition;
+            }
+        }
+        return null;
     }
 
     private String buildAudioFilter(List<TimelineClip> clips, int firstInputIndex) {
