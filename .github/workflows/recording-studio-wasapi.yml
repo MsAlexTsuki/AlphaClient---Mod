@@ -53,8 +53,11 @@ jobs:
           $dll = "build/resources/main/native/windows-x86_64/alpha_wasapi.dll"
           if (!(Test-Path $dll)) { throw "WASAPI DLL was not packaged: $dll" }
 
-      - name: Compile Java 8 addon sources
-        run: .\gradlew.bat compileJava --no-daemon
+      - name: Compile Java 8 WASAPI bridge classes
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path build/wasapi-java | Out-Null
+          javac -source 1.8 -target 1.8 -d build/wasapi-java src/main/java/com/alpharip/staffmod/RecordingStudio/audio/WasapiNativeBridge.java src/main/java/com/alpharip/staffmod/RecordingStudio/audio/WasapiLoopbackCaptureService.java
 
       - name: Upload native bridge build
         uses: actions/upload-artifact@v4
