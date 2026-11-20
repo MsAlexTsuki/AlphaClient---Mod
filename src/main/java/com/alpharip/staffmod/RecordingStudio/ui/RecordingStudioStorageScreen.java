@@ -1,6 +1,8 @@
 package com.alpharip.staffmod.RecordingStudio.ui;
 
 import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioStorageUsage;
+import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioCleanupService;
+import java.io.File;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
@@ -11,6 +13,8 @@ public final class RecordingStudioStorageScreen extends GuiScreen {
     private final GuiScreen parent;
     private final RecordingStudioStorageUsage usage;
     private final RecordingStudioRuntime runtime;
+    private int retentionDays;
+    private String cleanupStatus = "Cleanup is manual and disabled until a retention period is selected";
 
     public RecordingStudioStorageScreen(GuiScreen parent, RecordingStudioStorageUsage usage,
                                          RecordingStudioRuntime runtime) {
@@ -24,13 +28,46 @@ public final class RecordingStudioStorageScreen extends GuiScreen {
 
     @Override public void initGui() {
         buttonList.clear();
-        buttonList.add(new AlphaStudioButton(0, width / 2 - 105, height - 42, 100, 22, "Refresh"));
-        buttonList.add(new AlphaStudioButton(1, width / 2 + 5, height - 42, 100, 22, "Back", true));
+        int left = width / 2 - 160;
+        buttonList.add(new AlphaStudioButton(0, left + 4, height - 42, 72, 22, "Refresh"));
+        buttonList.add(new AlphaStudioButton(1, left + 80, height - 42, 82, 22, retentionDays == 0 ? "Retention: OFF" : retentionDays + " days"));
+        buttonList.add(new AlphaStudioButton(2, left + 166, height - 42, 92, 22, "Preview cleanup"));
+        buttonList.add(new AlphaStudioButton(3, left + 262, height - 42, 58, 22, "Back", true));
     }
 
     @Override protected void actionPerformed(net.minecraft.client.gui.GuiButton button) {
         if (button.id == 0) usage.refreshAsync();
-        else if (button.id == 1) mc.displayGuiScreen(parent);
+        else if (button.id == 1) {
+            int[] periods = {0, 7, 30, 90, 180, 365};
+            int index = 0;
+            for (int i = 0; i < periods.length; i++) if (periods[i] == retentionDays) index = i;
+            retentionDays = periods[(index + 1) % periods.length];
+            initGui();
+        } else if (button.id == 2) previewCleanup();
+        else if (button.id == 3) mc.displayGuiScreen(parent);
+    }
+
+    private void previewCleanup() {
+        if (retentionDays <= 0) {
+            cleanupStatus = "Choose a retention period before previewing cleanup";
+            return;
+        }
+        try {
+            RecordingStudioCleanupService.CleanupPlan plan =
+                    RecordingStudioCleanupService.preview(new File(usage.getRootPath()),
+                            retentionDays, System.currentTimeMillis());
+            if (plan.getFileCount() == 0) {
+                cleanupStatus = "No eligible media files older than " + retentionDays + " days";
+                return;
+            }
+            mc.displayGuiScreen(new RecordingStudioCleanupConfirmScreen(this, usage, plan));
+        } catch (IOException | RuntimeException failure) {
+            cleanupStatus = "Cleanup preview failed: " + failure.getMessage();
+        }
+    }
+
+    public void setCleanupStatus(String value) {
+        cleanupStatus = value == null ? "" : value;
     }
 
     @Override
@@ -71,8 +108,12 @@ public final class RecordingStudioStorageScreen extends GuiScreen {
                 width / 2, 283, usage.isReadable() ? 0xFFB9B9B9 : 0xFFFFB45C);
         drawCenteredString(fontRendererObj, "Location: " + usage.getRootPath(),
                 width / 2, 299, 0xFF888888);
-        drawCenteredString(fontRendererObj, "Read-only overview  |  No files are removed automatically",
+        drawCenteredString(fontRendererObj, "Manual cleanup only  |  No automatic deletion",
                 width / 2, 316, 0xFF888888);
+        drawCenteredString(fontRendererObj, cleanupStatus,
+                width / 2, 333, 0xFFFFD65A);
+        drawCenteredString(fontRendererObj, "Only old media is eligible; project metadata and active projects are protected",
+                width / 2, 348, 0xFF888888);
         super.drawScreen(mouseX, mouseY, partialTicks);
         runtime.drawCameraPreview();
     }
