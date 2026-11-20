@@ -253,6 +253,29 @@ public final class RecordingStudioController {
         }
     }
 
+    public synchronized void startMicrophoneMonitoring() {
+        ensureOpen();
+        if (!audioCapture.isRecording()) {
+            status = "Start microphone recording before enabling live monitoring";
+            return;
+        }
+        try {
+            audioCapture.startMonitoring();
+            status = "Live microphone monitoring enabled";
+        } catch (Exception failure) {
+            status = "Cannot start microphone monitoring: " + failure.getMessage();
+        }
+    }
+
+    public synchronized void stopMicrophoneMonitoring() {
+        audioCapture.stopMonitoring();
+        status = "Live microphone monitoring disabled";
+    }
+
+    public synchronized String getMicrophoneMonitorStatus() {
+        return audioCapture.isMonitoring() ? "Live monitoring: ON" : "Live monitoring: OFF";
+    }
+
     public synchronized void stopAudioCapture() {
         resumeMicrophoneAfterPause = false;
         audioCapture.stop();
