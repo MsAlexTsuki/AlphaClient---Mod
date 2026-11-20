@@ -29,13 +29,18 @@ public final class RecordingStudioExternalVideoPreview {
 
     private static final class Request {
         final String key;
+        final File capturedFrame;
         final java.util.List<ClipRequest> clips;
-        Request(String key, java.util.List<ClipRequest> clips) {
+        Request(String key, File capturedFrame, java.util.List<ClipRequest> clips) {
             this.key = key;
+            this.capturedFrame = capturedFrame;
             this.clips = clips;
         }
     }
 
+    private final File framesDirectory;
+    private File[] capturedFrames = new File[0];
+    private boolean capturedFramesScanned;
     private final ExecutorService decoder = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "Alpha-RecordingStudio-ExternalVideoPreview");
         thread.setDaemon(true);
@@ -52,9 +57,15 @@ public final class RecordingStudioExternalVideoPreview {
     private ResourceLocation textureLocation;
     private int textureWidth, textureHeight;
 
-    public synchronized boolean update(Timeline timeline, long positionMillis) {
+    public RecordingStudioExternalVideoPreview(File framesDirectory) {
+        if (framesDirectory == null) throw new IllegalArgumentException("Frames directory is required");
+        this.framesDirectory = framesDirectory;
+    }
+
+    public synchronized boolean update(Timeline timeline, long positionMillis, long frameIntervalMillis) {
         if (closed) return false;
         java.util.List<TimelineClip> activeClips = findActiveExternalClips(timeline, positionMillis);
+        File capturedFrame = findCapturedFrame(timeline, positionMillis, frameIntervalMillis);
         if (activeClips.isEmpty()) {
             requestedKey = "";
             pending = null;
@@ -64,6 +75,7 @@ public final class RecordingStudioExternalVideoPreview {
         }
 
         StringBuilder keyBuilder = new StringBuilder();
+        keyBuilder.append(capturedFrame == null ? "no-capture" : capturedFrame.getAbsolutePath()).append('|');
         java.util.List<ClipRequest> requests = new java.util.ArrayList<ClipRequest>();
         for (TimelineClip clip : activeClips) {
             long offsetMillis = Math.max(0L, positionMillis - clip.getStart());
@@ -86,10 +98,9 @@ public final class RecordingStudioExternalVideoPreview {
         if (!key.equals(requestedKey)) {
             requestedKey = key;
             readyImage = null;
-            pending = new Request(key, requests);
-            status = requests.size() == 1
-                    ? "Loading external video preview..."
-                    : "Compositing " + requests.size() + " overlapping video clips...";
+            pending = new Request(key, capturedFrame, requests);
+            int layerCount = requests.size() + (capturedFrame == null ? 0 : 1);
+            status = "Compositing " + layerCount + " video layer(s)...";
             if (!workerRunning) {
                 workerRunning = true;
                 decoder.execute(new Runnable() {
@@ -128,6 +139,10 @@ public final class RecordingStudioExternalVideoPreview {
         try {
             java.util.List<String> command = new java.util.ArrayList<String>();
             java.util.Collections.addAll(command, "ffmpeg", "-hide_banner", "-loglevel", "error");
+            if (request.capturedFrame != null) {
+                command.add("-i");
+                command.add(request.capturedFrame.getAbsolutePath());
+            }
             for (ClipRequest clip : request.clips) {
                 command.add("-ss");
                 command.add(String.format(Locale.ROOT, "%.3f", clip.sourceSeconds));
@@ -136,12 +151,18 @@ public final class RecordingStudioExternalVideoPreview {
             }
 
             StringBuilder filter = new StringBuilder();
-            filter.append("color=c=black:s=1280x720:r=1:d=1[base]");
+            if (request.capturedFrame != null) {
+                filter.append("[0:v:0]scale=1280:720:force_original_aspect_ratio=decrease")
+                        .append(",pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1[base]");
+            } else {
+                filter.append("color=c=black:s=1280x720:r=1:d=1[base]");
+            }
             String currentBase = "[base]";
+            int firstExternalInput = request.capturedFrame == null ? 0 : 1;
             for (int i = 0; i < request.clips.size(); i++) {
                 String clipLabel = "[clip" + i + "]";
                 String nextBase = "[base" + (i + 1) + "]";
-                filter.append(";[").append(i).append(":v:0]")
+                filter.append(";[").append(firstExternalInput + i).append(":v:0]")
                         .append("trim=duration=1,setpts=PTS-STARTPTS,fps=1")
                         .append(",scale=1280:720:force_original_aspect_ratio=decrease")
                         .append(",pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1")
@@ -173,6 +194,37 @@ public final class RecordingStudioExternalVideoPreview {
             }
             if (!log.delete()) log.deleteOnExit();
         }
+    }
+
+    private synchronized File findCapturedFrame(Timeline timeline, long positionMillis, long frameIntervalMillis) {
+        if (timeline == null || frameIntervalMillis < 1L) return null;
+        TimelineClip captureClip = null;
+        for (TimelineTrack track : timeline.getTracks()) {
+            if (!"video".equals(track.getId())) continue;
+            for (TimelineClip clip : track.getClips()) {
+                if ("@capture".equals(clip.getSource()) && clip.getDuration() > 0L
+                        && positionMillis >= clip.getStart() && positionMillis < clip.getEnd()) {
+                    captureClip = clip;
+                    break;
+                }
+            }
+            break;
+        }
+        if (captureClip == null) return null;
+        if (!capturedFramesScanned) {
+            File[] found = framesDirectory.listFiles((directory, name) ->
+                    name.matches("frame-[0-9]{8}\\.png") && new File(directory, name).isFile());
+            if (found == null) found = new File[0];
+            java.util.Arrays.sort(found, new java.util.Comparator<File>() {
+                public int compare(File left, File right) { return left.getName().compareTo(right.getName()); }
+            });
+            capturedFrames = found;
+            capturedFramesScanned = true;
+        }
+        long relative = Math.max(0L, positionMillis - captureClip.getStart());
+        long frameIndex = relative / frameIntervalMillis;
+        if (frameIndex < 0L || frameIndex >= capturedFrames.length) return null;
+        return capturedFrames[(int) frameIndex];
     }
 
     private static java.util.List<TimelineClip> findActiveExternalClips(
