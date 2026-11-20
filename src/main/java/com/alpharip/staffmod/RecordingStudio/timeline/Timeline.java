@@ -100,8 +100,8 @@ public final class Timeline {
         return Collections.unmodifiableList(new ArrayList<TimelineMarker>(markers));
     }
 
-    public synchronized boolean moveMarker(TimelineMarker marker, long newTimeMillis) {
-        if (marker == null || newTimeMillis < 0 || !markers.contains(marker)) return false;
+    public synchronized TimelineMarker moveMarker(TimelineMarker marker, long newTimeMillis) {
+        if (marker == null || newTimeMillis < 0 || !markers.contains(marker)) return null;
         TimelineMarker moved = new TimelineMarker(newTimeMillis, marker.getLabel(), marker.getKind());
         markers.remove(marker);
         markers.add(moved);
@@ -110,7 +110,7 @@ public final class Timeline {
                 return Long.compare(a.getTimeMillis(), b.getTimeMillis());
             }
         });
-        return true;
+        return moved;
     }
 
     public synchronized boolean removeMarker(TimelineMarker marker) {
