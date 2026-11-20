@@ -1,6 +1,7 @@
 package com.alpharip.staffmod.RecordingStudio.core;
 
 import com.alpharip.staffmod.RecordingStudio.audio.RecordingAudioCaptureService;
+import com.alpharip.staffmod.RecordingStudio.audio.WasapiLoopbackCaptureService;
 import com.alpharip.staffmod.RecordingStudio.integration.DesktopScreenFrameWriter;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioExportHud;
 import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureService;
@@ -22,7 +23,7 @@ public final class RecordingStudioController {
     private final RecordingStudioProjectStore projectStore;
     private final RecordingStudioStorageUsage storageUsage;
     private final RecordingAudioCaptureService audioCapture;
-    private final RecordingAudioCaptureService gameAudioCapture;
+    private final WasapiLoopbackCaptureService gameAudioCapture;
     private final File audioDirectory;
     private final File gameAudioDirectory;
     private final File framesDirectory;
@@ -97,7 +98,7 @@ public final class RecordingStudioController {
                 }
             }
         });
-        this.gameAudioCapture = new RecordingAudioCaptureService(new RecordingAudioCaptureService.Listener() {
+        this.gameAudioCapture = new WasapiLoopbackCaptureService(new WasapiLoopbackCaptureService.Listener() {
             public void onAudioSaved(File file, long startMillis, long durationMillis) {
                 synchronized (RecordingStudioController.this) {
                     try {
@@ -328,19 +329,14 @@ public final class RecordingStudioController {
             status = "Enable the Game Audio source in the active scene first";
             return;
         }
-        String deviceKey = source.getAudioDeviceKey();
-        if (deviceKey == null || deviceKey.trim().isEmpty()) {
-            status = "Select an OS loopback input before starting game audio";
-            return;
-        }
         try {
             long timelineStart = project.getElapsedMillis(System.currentTimeMillis());
             gameAudioCapture.start(gameAudioDirectory,
                     "game-audio-" + java.util.UUID.randomUUID().toString() + ".wav",
-                    timelineStart, deviceKey);
-            status = "Game audio recording";
+                    timelineStart, "");
+            status = "Game audio recording through Windows WASAPI";
         } catch (Exception failure) {
-            status = "Cannot start game audio: " + failure.getMessage();
+            status = "Cannot start WASAPI game audio: " + failure.getMessage();
         }
     }
 
@@ -351,91 +347,18 @@ public final class RecordingStudioController {
     }
 
     /** Cycles through Java Sound capture inputs; choose an OS loopback device, not a microphone. */
+    /** WASAPI captures the Windows default render endpoint; no loopback input device is selected in Java Sound. */
     public synchronized void selectNextGameAudioInput() {
-        ensureOpen();
-        if (capture.isRecording() || capture.isPaused()
-                || gameAudioCapture.isRecording() || gameAudioCapture.isFinalizing()) {
-            status = "Stop recording before changing the game-audio input device";
-            return;
-        }
-        RecordingStudioScene scene = timeline.getActiveScene();
-        RecordingStudioSource source = scene == null ? null
-                : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
-        if (source == null) {
-            status = "The active scene has no Game Audio source";
-            return;
-        }
-        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
-                RecordingAudioCaptureService.getAvailableMicrophones();
-        if (devices.isEmpty()) {
-            source.setAudioDeviceKey("");
-            gameAudioSelectionName = "No loopback input detected";
-            status = "No Java Sound capture inputs detected; enable an OS loopback device";
-        } else {
-            String current = source.getAudioDeviceKey();
-            int index = -1;
-            for (int i = 0; i < devices.size(); i++) {
-                if (devices.get(i).getKey().equals(current)) { index = i; break; }
-            }
-            if (index + 1 >= devices.size()) {
-                source.setAudioDeviceKey("");
-                gameAudioSelectionName = "No loopback input selected";
-            } else {
-                RecordingAudioCaptureService.MicrophoneDevice next = devices.get(index + 1);
-                source.setAudioDeviceKey(next.getKey());
-                gameAudioSelectionName = next.getName();
-            }
-            status = "Game audio input selected: " + gameAudioSelectionName
-                    + " (select an OS loopback device)";
-        }
-        persistSceneChange(status);
+        status = "Game audio uses the Windows default output (WASAPI)";
     }
 
     public synchronized void refreshGameAudioInputs() {
         ensureOpen();
-        if (capture.isRecording() || capture.isPaused()
-                || gameAudioCapture.isRecording() || gameAudioCapture.isFinalizing()) {
-            status = "Stop recording before refreshing game-audio inputs";
-            return;
-        }
-        RecordingStudioScene scene = timeline.getActiveScene();
-        RecordingStudioSource source = scene == null ? null
-                : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
-        if (source == null) {
-            status = "The active scene has no Game Audio source";
-            return;
-        }
-        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
-                RecordingAudioCaptureService.getAvailableMicrophones();
-        String selected = source.getAudioDeviceKey();
-        boolean found = false;
-        for (RecordingAudioCaptureService.MicrophoneDevice device : devices) {
-            if (device.getKey().equals(selected)) {
-                gameAudioSelectionName = device.getName();
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            source.setAudioDeviceKey("");
-            gameAudioSelectionName = "No loopback input selected";
-            persistSceneChange("Selected game-audio input is unavailable; choose another OS loopback input");
-            return;
-        }
-        status = "Game audio inputs refreshed: " + devices.size() + " capture input(s)";
+        status = "Windows default audio output selected for WASAPI loopback";
     }
 
     public synchronized String getGameAudioSelectionName() {
-        RecordingStudioScene scene = timeline.getActiveScene();
-        RecordingStudioSource source = scene == null ? null
-                : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
-        if (source == null) return "No Game Audio source";
-        if (source.getAudioDeviceKey().isEmpty()) return "No loopback input selected";
-        for (RecordingAudioCaptureService.MicrophoneDevice device
-                : RecordingAudioCaptureService.getAvailableMicrophones()) {
-            if (device.getKey().equals(source.getAudioDeviceKey())) return device.getName();
-        }
-        return "Unavailable";
+        return "Windows default output (WASAPI)";
     }
 
     public synchronized void startMicrophoneMonitoring() {
