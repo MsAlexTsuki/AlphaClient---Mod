@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -88,7 +87,7 @@ public final class RecordingCaptureService {
 
         int recovered = 0;
         for (File temporary : temporaryFrames) {
-            if (!temporary.isFile()) continue;
+            if (Files.isSymbolicLink(temporary.toPath()) || !temporary.isFile()) continue;
             String name = temporary.getName();
             File destination = new File(directory, name.substring(0, name.length() - 4));
             if (destination.exists()) continue;
@@ -99,11 +98,9 @@ public final class RecordingCaptureService {
                 continue;
             }
             try {
-                try {
-                    Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.ATOMIC_MOVE);
-                } catch (AtomicMoveNotSupportedException unsupported) {
-                    Files.move(temporary.toPath(), destination.toPath());
-                }
+                // Do not use ATOMIC_MOVE here: providers may replace an existing target even
+                // without REPLACE_EXISTING when ATOMIC_MOVE is requested.
+                Files.move(temporary.toPath(), destination.toPath());
                 recovered++;
             } catch (FileAlreadyExistsException alreadyRecovered) {
                 // Another recovery pass or process won the destination race; do not overwrite it.
