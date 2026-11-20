@@ -598,7 +598,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 right + 8, 181, 0xFFBBBBBB);
         drawString(fontRendererObj, compact("Video: " + externalVideoPreview.getStatus(), 24),
                 right + 8, 198, 0xFFBBBBBB);
-        drawString(fontRendererObj, "Game input: " + compact(controller.getGameAudioSelectionName(), 17),
+        drawString(fontRendererObj, "Game output: " + compact(controller.getGameAudioSelectionName(), 17),
                 right + 8, 215, 0xFFBBBBBB);
         drawString(fontRendererObj, "CONTROLS", right + 8, 242, 0xFFFFC83D);
         }
