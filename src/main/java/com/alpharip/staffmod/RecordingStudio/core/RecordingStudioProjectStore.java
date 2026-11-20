@@ -83,7 +83,7 @@ public final class RecordingStudioProjectStore {
             }
         }
 
-        List<TimelineTransition> transitions = timeline.getTransitions();
+        List<TimelineTransition> transitions = timeline.getStoredTransitions();
         data.setProperty("transition.count", Integer.toString(transitions.size()));
         for (int i = 0; i < transitions.size(); i++) {
             TimelineTransition transition = transitions.get(i);
@@ -140,10 +140,14 @@ public final class RecordingStudioProjectStore {
                 int transitionCount = count(data, "transition.count");
                 for (int i = 0; i < transitionCount; i++) {
                     String prefix = "transition." + i + ".";
-                    timeline.setTransition(required(data, prefix + "fromClipId"),
+                    TimelineTransition transition = new TimelineTransition(
+                            required(data, prefix + "fromClipId"),
                             required(data, prefix + "toClipId"),
                             TimelineTransitionType.valueOf(required(data, prefix + "type")),
                             Long.parseLong(required(data, prefix + "durationMillis")));
+                    if (!timeline.restoreTransition(transition)) {
+                        throw new IOException("Saved transition references a missing or unsupported video clip");
+                    }
                 }
             }
 
