@@ -74,8 +74,10 @@ public final class RecordingStudioAudioPlayback {
                         DataLine.Info info = new DataLine.Info(SourceDataLine.class, outputFormat);
                         output = (SourceDataLine) AudioSystem.getLine(info);
                         output.open(outputFormat);
-                        if (generation != streamGeneration || Thread.currentThread().isInterrupted()) return;
-                        line = output;
+                        synchronized (RecordingStudioAudioPlayback.this) {
+                            if (generation != streamGeneration || Thread.currentThread().isInterrupted()) return;
+                            line = output;
+                        }
                         output.start();
 
                         byte[] buffer = new byte[BUFFER_SIZE];
