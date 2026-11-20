@@ -82,7 +82,17 @@ public final class WasapiLoopbackCaptureService {
         }, "Alpha-RecordingStudio-WASAPI");
         worker.setDaemon(true);
         writerThread = worker;
-        worker.start();
+        try {
+            worker.start();
+        } catch (Throwable failure) {
+            recording = false;
+            writerThread = null;
+            temporaryFile = null;
+            destinationFile = null;
+            if (temp.exists() && !temp.delete()) temp.deleteOnExit();
+            if (failure instanceof Exception) throw (Exception) failure;
+            throw (Error) failure;
+        }
     }
 
     public synchronized void stop() {
