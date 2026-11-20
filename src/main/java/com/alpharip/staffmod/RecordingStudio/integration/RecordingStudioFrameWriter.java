@@ -119,7 +119,9 @@ public final class RecordingStudioFrameWriter implements RecordingCaptureService
     public void writeFrame(RecordingCaptureService.FrameData frame, File output) throws Exception {
         minecraftWriter.writeFrame(frame, output);
     }
-    public synchronized void close() {
+    public synchronized void onCaptureStopped() { stopWebcams(); }
+    public synchronized void close() { stopWebcams(); }
+    private void stopWebcams() {
         for (RecordingStudioWebcamCapture webcam : webcams.values()) webcam.close();
         webcams.clear();
     }
