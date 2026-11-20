@@ -236,6 +236,9 @@ public final class RecordingCaptureService {
         }
         // Drain already accepted frames without blocking the Minecraft client thread.
         encoder.shutdown();
+        if (writer instanceof AutoCloseable) {
+            try { ((AutoCloseable) writer).close(); } catch (Exception ignored) { }
+        }
     }
 
     /** Waits for already accepted frame writes; intended for a non-client finalizer thread. */
