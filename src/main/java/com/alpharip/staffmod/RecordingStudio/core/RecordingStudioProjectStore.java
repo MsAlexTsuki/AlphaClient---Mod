@@ -43,6 +43,8 @@ public final class RecordingStudioProjectStore {
                 data.setProperty(cp + "duration", Long.toString(clip.getDuration()));
                 data.setProperty(cp + "speed", Double.toString(clip.getSpeed()));
                 data.setProperty(cp + "effect", clip.getEffect().name());
+                data.setProperty(cp + "fadeInMillis", Long.toString(clip.getFadeInMillis()));
+                data.setProperty(cp + "fadeOutMillis", Long.toString(clip.getFadeOutMillis()));
             }
         }
         List<RecordingStudioScene> scenes = timeline.getScenes();
@@ -100,6 +102,8 @@ public final class RecordingStudioProjectStore {
                     clip.setSpeed(Double.parseDouble(required(data, cp + "speed")));
                     String savedEffect = data.getProperty(cp + "effect", TimelineVideoEffect.NONE.name());
                     clip.setEffect(TimelineVideoEffect.valueOf(savedEffect));
+                    clip.setFadeInMillis(Long.parseLong(data.getProperty(cp + "fadeInMillis", "0")));
+                    clip.setFadeOutMillis(Long.parseLong(data.getProperty(cp + "fadeOutMillis", "0")));
                     track.add(clip);
                 }
                 timeline.addTrack(track);
