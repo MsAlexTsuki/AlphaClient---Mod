@@ -62,7 +62,7 @@ public final class RecordingStudioStorageUsage {
     }
 
     private synchronized void refreshSnapshot() {
-        totalBytes = projectBytes = frameBytes = audioBytes = exportBytes = 0L;
+        totalBytes = projectBytes = frameBytes = audioBytes = gameAudioBytes = exportBytes = 0L;
         projectCount = frameCount = audioCount = gameAudioCount = exportCount = 0;
         readable = true;
         visitedDirectories.clear();
