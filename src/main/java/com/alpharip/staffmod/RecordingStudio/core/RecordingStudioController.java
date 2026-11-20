@@ -521,10 +521,9 @@ public final class RecordingStudioController {
         }
         java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
                 RecordingAudioCaptureService.getAvailableMicrophones();
-        String selected = microphone.getAudioDeviceKey();
-        if (selected == null || selected.isEmpty()) {
-            selected = project.getMicrophoneDeviceKey();
-        }
+        String sceneSelection = microphone.getAudioDeviceKey();
+        boolean usingProjectFallback = sceneSelection == null || sceneSelection.isEmpty();
+        String selected = usingProjectFallback ? project.getMicrophoneDeviceKey() : sceneSelection;
         if (selected == null || selected.isEmpty()) {
             microphoneSelectionName = "System Default";
             status = "Microphone list refreshed: " + devices.size() + " input device(s) detected";
@@ -537,11 +536,29 @@ public final class RecordingStudioController {
                 return;
             }
         }
-        microphone.setAudioDeviceKey("");
-        microphoneSelectionName = "System Default";
+
+        // Clear only the unavailable selection. A valid project-level fallback remains usable
+        // when a scene-specific device has been unplugged.
+        if (usingProjectFallback) {
+            project.setMicrophoneDeviceKey("");
+        } else {
+            microphone.setAudioDeviceKey("");
+        }
+        String projectFallback = project.getMicrophoneDeviceKey();
+        boolean projectFallbackAvailable = projectFallback == null || projectFallback.isEmpty();
+        if (!projectFallbackAvailable) {
+            for (RecordingAudioCaptureService.MicrophoneDevice device : devices) {
+                if (device.getKey().equals(projectFallback)) {
+                    projectFallbackAvailable = true;
+                    break;
+                }
+            }
+        }
+        if (!projectFallbackAvailable) project.setMicrophoneDeviceKey("");
+        microphoneSelectionName = resolveMicrophoneName(project.getMicrophoneDeviceKey());
         try {
             projectStore.save(project, timeline);
-            status = "Selected microphone is unavailable; active scene switched to System Default";
+            status = "Selected microphone is unavailable; fallback changed to " + microphoneSelectionName;
         } catch (IOException failure) {
             status = "Selected microphone is unavailable; fallback could not be saved: " + failure.getMessage();
         }
