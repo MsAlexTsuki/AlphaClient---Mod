@@ -40,6 +40,10 @@ public final class RecordingCaptureService {
     private final ThreadPoolExecutor encoder;
     private long nextAt;
     private long nextFileIndex;
+    private long timelineOffsetMillis;
+    private long recordingWallStart;
+    private long pausedWallMillis;
+    private long pauseStartedAt;
     private long capturedFrames;
     private long failedFrames;
     private long droppedFrames;
@@ -65,6 +69,11 @@ public final class RecordingCaptureService {
     }
 
     public synchronized void start(long now) throws IOException {
+        start(now, 0L);
+    }
+
+    /** Starts capture with the project's already elapsed active-timeline offset. */
+    public synchronized void start(long now, long timelineOffsetMillis) throws IOException {
         ensureOpen();
         if (recording) return;
         if ((!directory.exists() && !directory.mkdirs()) || !directory.isDirectory()) {
@@ -74,16 +83,27 @@ public final class RecordingCaptureService {
         recording = true;
         paused = false;
         nextAt = now;
+        this.timelineOffsetMillis = Math.max(0L, timelineOffsetMillis);
+        recordingWallStart = now;
+        pausedWallMillis = 0L;
+        pauseStartedAt = 0L;
         lastError = null;
     }
 
     public synchronized void pause() {
-        if (recording) paused = true;
+        if (recording && !paused) {
+            paused = true;
+            pauseStartedAt = System.currentTimeMillis();
+        }
     }
 
     public synchronized void resume(long now) {
         ensureOpen();
         if (recording && paused) {
+            if (pauseStartedAt > 0L && now > pauseStartedAt) {
+                pausedWallMillis = safeAdd(pausedWallMillis, now - pauseStartedAt);
+            }
+            pauseStartedAt = 0L;
             paused = false;
             nextAt = now;
         }
@@ -92,6 +112,7 @@ public final class RecordingCaptureService {
     /** Must be called from the Minecraft client thread because captureFrame reads OpenGL. */
     public void tick(long now) {
         final File output;
+        final long frameTimestampMillis;
         synchronized (this) {
             if (closed || !recording || paused || capturing || now < nextAt) return;
             if (nextFileIndex > 99999999L) {
@@ -102,6 +123,8 @@ public final class RecordingCaptureService {
             long interval = settings.getIntervalMillis();
             nextAt = now > Long.MAX_VALUE - interval ? Long.MAX_VALUE : now + interval;
             output = new File(directory, String.format(Locale.ROOT, "frame-%08d.png", nextFileIndex++));
+            long activeWallMillis = Math.max(0L, now - recordingWallStart - pausedWallMillis);
+            frameTimestampMillis = safeAdd(timelineOffsetMillis, activeWallMillis);
             capturing = true;
         }
 
@@ -111,9 +134,15 @@ public final class RecordingCaptureService {
                 public void run() {
                     try {
                         writer.writeFrame(frame, output);
+                        String metadataWarning = null;
+                        try {
+                            RecordingFrameTimestamp.write(output, frameTimestampMillis);
+                        } catch (IOException timestampFailure) {
+                            metadataWarning = "Frame saved but timestamp metadata failed: " + timestampFailure.getMessage();
+                        }
                         synchronized (RecordingCaptureService.this) {
                             capturedFrames++;
-                            lastError = null;
+                            lastError = metadataWarning;
                         }
                     } catch (Exception failure) {
                         synchronized (RecordingCaptureService.this) {
@@ -192,6 +221,10 @@ public final class RecordingCaptureService {
             } catch (NumberFormatException ignored) { }
         }
         capturedFrames = existingFrameCount;
+    }
+
+    private static long safeAdd(long left, long right) {
+        return left > Long.MAX_VALUE - right ? Long.MAX_VALUE : left + right;
     }
 
     private void ensureOpen() {
