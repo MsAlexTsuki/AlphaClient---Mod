@@ -2,6 +2,12 @@ package com.alpharip.staffmod.RecordingStudio.capture;
 
 import java.io.File;
 import java.io.IOException;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -66,6 +72,44 @@ public final class RecordingCaptureService {
                     thread.setDaemon(true);
                     return thread;
                 }, new ThreadPoolExecutor.AbortPolicy());
+    }
+
+    /**
+     * Restores complete PNG writes left in the writer's temporary-file state by an interrupted process.
+     * Invalid or incomplete temporary files are deliberately left untouched for manual inspection.
+     */
+    public static int recoverCompletedTemporaryFrames(File directory) throws IOException {
+        if (directory == null) throw new IllegalArgumentException("Frame directory is required");
+        if (!directory.exists()) return 0;
+        if (!directory.isDirectory()) throw new IOException("Frame recovery path is not a directory");
+        File[] temporaryFrames = directory.listFiles((parent, name) ->
+                name.matches("frame-[0-9]{8}\\.png\\.tmp"));
+        if (temporaryFrames == null) throw new IOException("Cannot inspect temporary recording frames");
+
+        int recovered = 0;
+        for (File temporary : temporaryFrames) {
+            if (!temporary.isFile()) continue;
+            String name = temporary.getName();
+            File destination = new File(directory, name.substring(0, name.length() - 4));
+            if (destination.exists()) continue;
+            try {
+                BufferedImage image = ImageIO.read(temporary);
+                if (image == null) continue;
+            } catch (IOException incompleteImage) {
+                continue;
+            }
+            try {
+                try {
+                    Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                } catch (AtomicMoveNotSupportedException unsupported) {
+                    Files.move(temporary.toPath(), destination.toPath());
+                }
+                recovered++;
+            } catch (FileAlreadyExistsException alreadyRecovered) {
+                // Another recovery pass or process won the destination race; do not overwrite it.
+            }
+        }
+        return recovered;
     }
 
     public synchronized void start(long now) throws IOException {
