@@ -23,6 +23,14 @@ public final class TimelineEditorScreen extends GuiScreen {
     private int trackIndex, clipIndex;
     private String selectedClipId;
     private String status = "Select a track or create a clip";
+    private volatile boolean mediaProbePending;
+    private volatile boolean mediaProbeComplete;
+    private volatile long mediaProbeDuration;
+    private volatile String mediaProbeFailure;
+    private volatile File mediaProbeFile;
+    private volatile String mediaProbeTrackId;
+    private volatile long mediaProbeStart;
+    private volatile boolean screenClosed;
 
     public TimelineEditorScreen(GuiScreen parent, Timeline timeline) {
         this(parent, timeline, null);
@@ -210,6 +218,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         int result = chooser.showOpenDialog(null);
         if (result != JFileChooser.APPROVE_OPTION) return;
 
+        if (mediaProbePending) { status = "A media import is already being processed"; return; }
         File selected = chooser.getSelectedFile();
         if (selected == null || !selected.isFile()) {
             status = "Selected media file does not exist";
@@ -237,26 +246,77 @@ public final class TimelineEditorScreen extends GuiScreen {
         }
 
         trackIndex = targetIndex;
-        startField.setText(Long.toString(timeline.duration()));
-        sourceField.setText(selected.getAbsolutePath());
+        long startMillis;
         try {
-            long durationMillis = probeDurationMillis(selected);
-            if (durationMillis <= 0L) throw new IOException("Media duration is unavailable");
-            TimelineTrack track = selectedTrack();
-            TimelineClip created = new TimelineClip("clip-" + UUID.randomUUID(),
-                    selected.getAbsolutePath(), number(startField, "Start"), durationMillis);
-            created.setSpeed(1.0D);
-            track.add(created);
-            selectedClipId = created.getId();
-            durationField.setText(Long.toString(durationMillis));
-            speedField.setText("1.0");
-            status = (audio ? "Imported audio: " : "Imported video: ") + selected.getName();
-            syncSelection();
-        } catch (Exception failure) {
+            startMillis = timeline.duration();
+            startField.setText(Long.toString(startMillis));
+        } catch (RuntimeException failure) {
+            status = "Cannot determine the timeline insertion position: " + failure.getMessage();
+            return;
+        }
+        sourceField.setText(selected.getAbsolutePath());
+        mediaProbeFile = selected;
+        mediaProbeTrackId = targetTrackId;
+        mediaProbeStart = startMillis;
+        mediaProbeFailure = null;
+        mediaProbeDuration = 0L;
+        mediaProbeComplete = false;
+        mediaProbePending = true;
+        status = "Reading media duration...";
+        Thread worker = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    mediaProbeDuration = probeDurationMillis(selected);
+                } catch (Exception failure) {
+                    mediaProbeFailure = failure.getMessage();
+                } finally {
+                    mediaProbeComplete = true;
+                }
+            }
+        }, "Alpha-RecordingStudio-MediaProbe");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    private void finishMediaImportIfReady() {
+        if (!mediaProbeComplete) return;
+        mediaProbeComplete = false;
+        mediaProbePending = false;
+        File selected = mediaProbeFile;
+        String trackId = mediaProbeTrackId;
+        long startMillis = mediaProbeStart;
+        long durationMillis = mediaProbeDuration;
+        String failure = mediaProbeFailure;
+        mediaProbeFile = null;
+        if (screenClosed || selected == null) return;
+
+        int targetIndex = -1;
+        for (int i = 0; i < tracks().size(); i++) {
+            if (trackId.equals(tracks().get(i).getId())) { targetIndex = i; break; }
+        }
+        if (targetIndex < 0) {
+            status = "The target timeline track is no longer available";
+            return;
+        }
+        trackIndex = targetIndex;
+        if (failure != null || durationMillis <= 0L) {
+            selectedClipId = null;
+            sourceField.setText(selected.getAbsolutePath());
             durationField.setText("1000");
             speedField.setText("1.0");
-            status = "Media selected, but FFprobe could not read its duration. Set Duration (ms) and use Add Clip. " + failure.getMessage();
+            status = "Media selected, but FFprobe could not read its duration. Set Duration (ms) and use Add Clip. "
+                    + (failure == null ? "Invalid media duration" : failure);
+            return;
         }
+
+        TimelineTrack track = selectedTrack();
+        TimelineClip created = new TimelineClip("clip-" + UUID.randomUUID(),
+                selected.getAbsolutePath(), startMillis, durationMillis);
+        created.setSpeed(1.0D);
+        track.add(created);
+        selectedClipId = created.getId();
+        status = ("audio".equals(trackId) ? "Imported audio: " : "Imported video: ") + selected.getName();
+        syncSelection();
     }
 
     private static long probeDurationMillis(File media) throws Exception {
@@ -310,7 +370,10 @@ public final class TimelineEditorScreen extends GuiScreen {
         durationField.mouseClicked(x, y, button);
         speedField.mouseClicked(x, y, button);
     }
+    @Override public void onGuiClosed() { screenClosed = true; }
+
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        finishMediaImportIfReady();
         drawDefaultBackground();
         net.minecraft.client.gui.Gui.drawRect(width / 2 - 165, 10, width / 2 + 165, height - 8, 0xE8101010);
         net.minecraft.client.gui.Gui.drawRect(width / 2 - 165, 10, width / 2 + 165, 12, 0xFFFFC83D);
