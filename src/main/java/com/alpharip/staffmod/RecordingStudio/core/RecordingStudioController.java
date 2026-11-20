@@ -2,6 +2,7 @@ package com.alpharip.staffmod.RecordingStudio.core;
 
 import com.alpharip.staffmod.RecordingStudio.audio.RecordingAudioCaptureService;
 import com.alpharip.staffmod.RecordingStudio.integration.DesktopScreenFrameWriter;
+import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioExportHud;
 import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureService;
 import com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportService;
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
@@ -596,6 +597,7 @@ public final class RecordingStudioController {
         try {
             double exportFps = 1000.0 / capture.getIntervalMillis();
             exportService.start(format, exportFps, "ffmpeg", exportSettings);
+            RecordingStudioExportHud.show(this);
             status = format.name() + " export started";
         } catch (IOException | RuntimeException failure) {
             status = "Cannot start export: " + failure.getMessage();
