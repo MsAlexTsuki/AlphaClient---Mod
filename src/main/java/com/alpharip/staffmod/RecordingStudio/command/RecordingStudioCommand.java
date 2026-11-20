@@ -5,7 +5,7 @@ import com.alpharip.staffmod.RecordingStudio.capture.RecordingCaptureSettings;
 import com.alpharip.staffmod.RecordingStudio.core.RecordingProject;
 import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
 import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioProjectStore;
-import com.alpharip.staffmod.RecordingStudio.integration.MinecraftFramebufferFrameWriter;
+import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioFrameWriter;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
 import net.minecraft.client.Minecraft;
@@ -91,7 +91,7 @@ public final class RecordingStudioCommand extends CommandBase {
                 if (activeRuntime != null && !activeRuntime.isClosed()) activeRuntime.shutdown();
                 File output = new File(new File(root, "recordings"), project.getId() + "/frames");
                 RecordingCaptureService capture = new RecordingCaptureService(
-                        new MinecraftFramebufferFrameWriter(mc), new RecordingCaptureSettings(), output);
+                        new RecordingStudioFrameWriter(mc, timeline), new RecordingCaptureSettings(), output);
                 RecordingStudioController controller =
                         new RecordingStudioController(project, capture, projects, timeline);
                 runtime = new RecordingStudioRuntime(controller);
