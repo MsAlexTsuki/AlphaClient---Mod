@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiTextField;
 import java.util.List;
 import java.util.UUID;
 import java.io.File;
+import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import javax.swing.JFileChooser;
@@ -236,6 +237,7 @@ public final class TimelineEditorScreen extends GuiScreen {
         }
 
         trackIndex = targetIndex;
+        startField.setText(Long.toString(timeline.duration()));
         sourceField.setText(selected.getAbsolutePath());
         try {
             long durationMillis = probeDurationMillis(selected);
