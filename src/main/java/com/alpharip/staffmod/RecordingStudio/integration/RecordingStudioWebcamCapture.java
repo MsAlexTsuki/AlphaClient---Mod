@@ -52,11 +52,10 @@ public final class RecordingStudioWebcamCapture implements AutoCloseable {
         if (closed) throw new IOException("Webcam capture is closed");
         if (device == null || device.trim().isEmpty()) throw new IOException("Select a webcam device for this source");
         if (!device.equals(activeDevice) || process == null || !process.isAlive()) start(device);
+        IOException streamFailure = failure;
+        if (streamFailure != null) throw streamFailure;
         byte[] frame = latestFrame;
-        if (frame == null) {
-            if (failure != null) throw failure;
-            return null;
-        }
+        if (frame == null) return null;
         byte[] bottomUp = new byte[frame.length];
         int stride = WIDTH * 4;
         for (int y = 0; y < HEIGHT; y++) System.arraycopy(frame, y * stride, bottomUp, (HEIGHT - 1 - y) * stride, stride);
