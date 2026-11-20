@@ -82,7 +82,7 @@ The items below are **not implemented** unless a status elsewhere in this README
 - [x] Keep accepted export jobs running after the Studio window closes. Cancellation remains available while the Publishing tab is open.
 - [x] Add an export progress HUD outside the Studio screen. While an accepted FFmpeg export is running, a compact percentage indicator remains visible in the Minecraft HUD after the Studio window is closed; it is hidden while the Studio window itself is open.
 - [ ] Add custom capture/export resolutions and additional pipeline controls where supported.
-- [ ] Keep GIF output silent unless a future output format explicitly supports audio.
+- [x] Keep GIF output silent; only MP4 export maps audio timeline clips into the output.
 
 ### Storage and lifecycle
 - [x] Add manual media retention cleanup with selectable 7/30/90/180/365-day age thresholds. Retention is OFF by default and no automatic cleanup runs.
