@@ -440,7 +440,11 @@ public final class RecordingStudioExportService {
                     .append(",scale=").append(width).append(':').append(height)
                     .append(":force_original_aspect_ratio=decrease")
                     .append(",pad=").append(width).append(':').append(height)
-                    .append(":(ow-iw)/2:(oh-ih)/2:black,setsar=1[vbase]");
+                    .append(":(ow-iw)/2:(oh-ih)/2:black,setsar=1")
+                    .append(",tpad=stop_mode=clone:stop_duration=")
+                    .append(seconds(Math.max(0L, durationMillis - capture.getEnd())))
+                    .append(",trim=duration=").append(seconds(durationMillis))
+                    .append("[vbase]");
         } else {
             filter.append("color=c=black:s=").append(width).append('x').append(height)
                     .append(":r=").append(rate).append(":d=").append(seconds(durationMillis)).append("[vbase]");
