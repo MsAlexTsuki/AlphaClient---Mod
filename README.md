@@ -29,4 +29,4 @@ Use the included Gradle wrapper with the ForgeGradle 2.1 build configuration.
 - Windows x64 Game Audio uses the packaged WASAPI loopback bridge and captures the Windows default output mix from all applications, not Minecraft alone; Stereo Mix and virtual audio cables are not required. The microphone remains a separate input.
 - Building the Windows addon JAR requires a Java 8 JDK, CMake 3.15+ and the Visual Studio C++ x64 build tools so Gradle can compile and package `alpha_wasapi.dll`.
 - FFmpeg and FFprobe are external requirements for the applicable export workflows.
-- The addon dependency metadata, runtime composition and source changes have not yet been compiled or tested in Minecraft.
+- The Windows x64 WASAPI DLL has compiled successfully in CI, its packaged resource path has been verified, and both new Java 8 bridge classes compile independently. The full addon Java compile remains blocked by 21 existing errors in other Recording Studio camera, export, audio-preview and external-video-preview code. WASAPI capture has not yet been tested in a live Minecraft session.
