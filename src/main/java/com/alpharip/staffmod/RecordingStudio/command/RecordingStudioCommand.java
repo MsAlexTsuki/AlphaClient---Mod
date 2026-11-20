@@ -25,7 +25,7 @@ public final class RecordingStudioCommand extends CommandBase {
 
     public String getCommandName() { return "recordingstudio"; }
     public String getCommandUsage(ICommandSender sender) {
-        return "/recordingstudio [list|create <name>|open <project-id>]";
+        return "/recordingstudio [list|new|create <name>|open <project-id>]";
     }
     public int getRequiredPermissionLevel() { return 0; }
 
@@ -50,7 +50,7 @@ public final class RecordingStudioCommand extends CommandBase {
         File root = new File(mc.mcDataDir, "recordingstudio");
         File projects = new File(root, "projects");
         RecordingStudioProjectStore store = new RecordingStudioProjectStore(projects);
-        String action = args == null || args.length == 0 ? "create" : args[0].toLowerCase(java.util.Locale.ROOT);
+        String action = args == null || args.length == 0 ? "new" : args[0].toLowerCase(java.util.Locale.ROOT);
 
         try {
             if ("list".equals(action)) {
@@ -71,13 +71,13 @@ public final class RecordingStudioCommand extends CommandBase {
                 }
                 project = store.loadProject(args[1]);
                 timeline = store.loadTimeline(project.getId());
-            } else if ("create".equals(action)) {
+            } else if ("new".equals(action) || "create".equals(action)) {
                 String name = args.length <= 1 ? "Manual Recording" : join(args, 1);
                 project = new RecordingProject(name);
                 timeline = new Timeline();
                 timeline.addTrack(new com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack("video", "Video"));
                 timeline.addTrack(new com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack("audio", "Audio"));
-                store.save(project, timeline);
+                if ("create".equals(action)) store.save(project, timeline);
             } else {
                 usage(sender);
                 return;
@@ -123,12 +123,12 @@ public final class RecordingStudioCommand extends CommandBase {
     }
 
     private static void usage(ICommandSender sender) {
-        sender.addChatMessage(new ChatComponentText("§6[Recording Studio] §fUsage: /recordingstudio [list|create <name>|open <project-id>]"));
+        sender.addChatMessage(new ChatComponentText("§6[Recording Studio] §fUsage: /recordingstudio [list|new|create <name>|open <project-id>]"));
     }
 
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, net.minecraft.util.BlockPos pos) {
         if (args != null && args.length == 1) {
-            return java.util.Arrays.asList("list", "create", "open");
+            return java.util.Arrays.asList("list", "new", "create", "open");
         }
         if (args != null && args.length == 2 && "open".equalsIgnoreCase(args[0])) {
             try {
