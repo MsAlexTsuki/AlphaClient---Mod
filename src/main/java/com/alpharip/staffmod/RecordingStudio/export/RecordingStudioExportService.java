@@ -476,11 +476,12 @@ public final class RecordingStudioExportService {
             double fadeInMillis = clip.getFadeInMillis();
             double fadeOutMillis = clip.getFadeOutMillis();
             if (fadeInMillis > 0.0D) {
-                filter.append(",fade=t=in:st=0:d=").append(seconds(fadeInMillis)).append(":color=black");
+                filter.append(",fade=t=in:st=").append(seconds(transitionDuration))
+                        .append(":d=").append(seconds(fadeInMillis)).append(":color=black");
             }
             if (fadeOutMillis > 0.0D) {
                 filter.append(",fade=t=out:st=")
-                        .append(seconds(Math.max(0.0D, clip.getDuration() - fadeOutMillis)))
+                        .append(seconds(transitionDuration + Math.max(0.0D, clip.getDuration() - fadeOutMillis)))
                         .append(":d=").append(seconds(fadeOutMillis)).append(":color=black");
             }
             if (outgoing != null && outgoing.getType() == TimelineTransitionType.DIP_TO_BLACK) {
