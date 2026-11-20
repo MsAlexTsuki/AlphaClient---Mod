@@ -1163,16 +1163,18 @@ public final class RecordingStudioController {
     public synchronized void shutdown() {
         if (closed) return;
         stop();
-        try {
-            projectStore.save(project, timeline);
-            if (sessionStartedInThisRuntime && capture.getPendingFrameCount() == 0
-                    && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
-                projectStore.clearRecordingActive(project.getId());
-                sessionStartedInThisRuntime = false;
+        if (project.getStartedAt() > 0L) {
+            try {
+                projectStore.save(project, timeline);
+                if (sessionStartedInThisRuntime && capture.getPendingFrameCount() == 0
+                        && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
+                    projectStore.clearRecordingActive(project.getId());
+                    sessionStartedInThisRuntime = false;
+                }
+                status = "Project and timeline saved";
+            } catch (IOException failure) {
+                status = "Shutdown save failed; recovery marker retained: " + failure.getMessage();
             }
-            status = "Project and timeline saved";
-        } catch (IOException failure) {
-            status = "Shutdown save failed; recovery marker retained: " + failure.getMessage();
         }
         // Export workers own their inputs and temporary output files; keep accepted exports running
         // after the Studio UI closes. Users can still cancel while the Publishing tab is open.
