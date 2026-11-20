@@ -67,6 +67,8 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
         } else if (selectedCategory == AUDIO) {
             addSmall(220, controlRight - 104, 111, 104, "NEXT DEVICE");
             addSmall(221, controlRight - 104, 165, 104, "REFRESH");
+            addSmall(222, controlRight - 104, 219, 104, "NEXT LOOPBACK");
+            addSmall(223, controlRight - 104, 273, 104, "REFRESH LOOPBACK");
         }
     }
 
@@ -105,6 +107,8 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
             case 211: controller.getExportSettings().cycleQuality(); persist(); break;
             case 220: controller.selectNextMicrophone(); break;
             case 221: controller.refreshMicrophones(); break;
+            case 222: controller.selectNextGameAudioInput(); break;
+            case 223: controller.refreshGameAudioInputs(); break;
             default: return;
         }
         initGui();
@@ -143,6 +147,7 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
             } else if (control.id == 210) control.visible = matches("Output resolution");
             else if (control.id == 211) control.visible = matches("Encoding quality");
             else if (control.id == 220 || control.id == 221) control.visible = matches("Microphone input");
+            else if (control.id == 222 || control.id == 223) control.visible = matches("Game audio input") || matches("loopback");
         }
     }
 
@@ -232,8 +237,8 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
             setting("Capture format", "Current microphone capture format.", "44.1 kHz · 16-bit · Mono",
                     x, 162, controlRight);
             if (preferences.isAdvancedMode()) {
-                setting("Game audio", "Minecraft system/game audio capture is not implemented.",
-                        "Not available", x, 216, controlRight);
+                setting("Game audio input", "Choose an OS loopback capture device exposed through Java Sound (for example, Stereo Mix).",
+                        controller.getGameAudioSelectionName(), x, 216, controlRight - 118);
                 setting("Live monitoring", "Mirrors active microphone capture to the system default output.",
                         controller.getMicrophoneMonitorStatus(), x, 253, controlRight);
             }
