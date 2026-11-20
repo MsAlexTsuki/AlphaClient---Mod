@@ -263,9 +263,31 @@ public final class RecordingStudioProjectStore {
         File metadata = new File(directory, id + ".recording");
         File timeline = new File(directory, id + ".timeline");
         File active = new File(directory, id + ".active");
-        if (metadata.exists() && !metadata.delete()) throw new IOException("Cannot delete project metadata");
+        File recordingStudioRoot = directory.getParentFile();
+
+        // Remove project media first and metadata last. If deletion fails partway through,
+        // the project remains in the catalog and the user can retry instead of losing its entry.
+        if (recordingStudioRoot != null) {
+            deleteTree(new File(new File(recordingStudioRoot, "recordings"), id));
+            deleteTree(new File(new File(recordingStudioRoot, "exports"), id));
+        }
         if (timeline.exists() && !timeline.delete()) throw new IOException("Cannot delete project timeline");
         if (active.exists() && !active.delete()) throw new IOException("Cannot delete project recovery marker");
+        if (metadata.exists() && !metadata.delete()) throw new IOException("Cannot delete project metadata");
+    }
+
+    private static void deleteTree(File target) throws IOException {
+        if (target == null || (!target.exists() && !java.nio.file.Files.isSymbolicLink(target.toPath()))) return;
+        if (java.nio.file.Files.isSymbolicLink(target.toPath())) {
+            if (!target.delete()) throw new IOException("Cannot delete project media link: " + target);
+            return;
+        }
+        if (target.isDirectory()) {
+            File[] children = target.listFiles();
+            if (children == null) throw new IOException("Cannot inspect project media directory: " + target);
+            for (File child : children) deleteTree(child);
+        }
+        if (!target.delete()) throw new IOException("Cannot delete project media: " + target);
     }
 
     private static Timeline defaultTimeline() {
