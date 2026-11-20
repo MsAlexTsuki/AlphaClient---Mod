@@ -652,7 +652,8 @@ public final class RecordingStudioController {
         } catch (IOException failure) {
             status = "Shutdown save failed; recovery marker retained: " + failure.getMessage();
         }
-        exportService.cancel();
+        // Export workers own their inputs and temporary output files; keep accepted exports running
+        // after the Studio UI closes. Users can still cancel while the Publishing tab is open.
         capture.shutdown();
         if (sessionStartedInThisRuntime || audioCapture.isFinalizing()) {
             final RecordingCaptureService pendingCapture = capture;
