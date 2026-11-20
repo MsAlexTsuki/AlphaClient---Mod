@@ -33,10 +33,14 @@ public final class RecordingStudioExternalVideoPreview {
     private static final class Request {
         final String key;
         final File capturedFrame;
+        final com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect capturedEffect;
         final java.util.List<ClipRequest> clips;
-        Request(String key, File capturedFrame, java.util.List<ClipRequest> clips) {
+        Request(String key, File capturedFrame,
+                com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect capturedEffect,
+                java.util.List<ClipRequest> clips) {
             this.key = key;
             this.capturedFrame = capturedFrame;
+            this.capturedEffect = capturedEffect;
             this.clips = clips;
         }
     }
@@ -68,7 +72,11 @@ public final class RecordingStudioExternalVideoPreview {
     public synchronized boolean update(Timeline timeline, long positionMillis, long frameIntervalMillis) {
         if (closed) return false;
         java.util.List<TimelineClip> activeClips = findActiveExternalClips(timeline, positionMillis);
-        File capturedFrame = findCapturedFrame(timeline, positionMillis, frameIntervalMillis);
+        TimelineClip capturedClip = findActiveCaptureClip(timeline, positionMillis);
+        File capturedFrame = findCapturedFrame(capturedClip, positionMillis, frameIntervalMillis);
+        com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect capturedEffect =
+                capturedClip == null ? com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect.NONE
+                        : capturedClip.getEffect();
         if (activeClips.isEmpty()) {
             requestedKey = "";
             pending = null;
@@ -78,7 +86,8 @@ public final class RecordingStudioExternalVideoPreview {
         }
 
         StringBuilder keyBuilder = new StringBuilder();
-        keyBuilder.append(capturedFrame == null ? "no-capture" : capturedFrame.getAbsolutePath()).append('|');
+        keyBuilder.append(capturedFrame == null ? "no-capture" : capturedFrame.getAbsolutePath())
+                .append('|').append(capturedEffect.name()).append('|');
         java.util.List<ClipRequest> requests = new java.util.ArrayList<ClipRequest>();
         for (TimelineClip clip : activeClips) {
             long offsetMillis = Math.max(0L, positionMillis - clip.getStart());
@@ -102,7 +111,7 @@ public final class RecordingStudioExternalVideoPreview {
         if (!key.equals(requestedKey)) {
             requestedKey = key;
             readyImage = null;
-            pending = new Request(key, capturedFrame, requests);
+            pending = new Request(key, capturedFrame, capturedEffect, requests);
             int layerCount = requests.size() + (capturedFrame == null ? 0 : 1);
             status = "Compositing " + layerCount + " video layer(s)...";
             if (!workerRunning) {
@@ -161,7 +170,10 @@ public final class RecordingStudioExternalVideoPreview {
             StringBuilder filter = new StringBuilder();
             if (request.capturedFrame != null) {
                 filter.append("[0:v:0]scale=1280:720:force_original_aspect_ratio=decrease")
-                        .append(",pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1[base]");
+                        .append(",pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1");
+                String captureEffectFilter = request.capturedEffect.getFfmpegFilter();
+                if (!captureEffectFilter.isEmpty()) filter.append(',').append(captureEffectFilter);
+                filter.append("[base]");
             } else {
                 filter.append("color=c=black:s=1280x720:r=1:d=1[base]");
             }
@@ -206,21 +218,22 @@ public final class RecordingStudioExternalVideoPreview {
         }
     }
 
-    private synchronized File findCapturedFrame(Timeline timeline, long positionMillis, long frameIntervalMillis) {
-        if (timeline == null || frameIntervalMillis < 1L) return null;
-        TimelineClip captureClip = null;
+    private static TimelineClip findActiveCaptureClip(Timeline timeline, long positionMillis) {
+        if (timeline == null) return null;
         for (TimelineTrack track : timeline.getTracks()) {
             if (!"video".equals(track.getId())) continue;
             for (TimelineClip clip : track.getClips()) {
                 if ("@capture".equals(clip.getSource()) && clip.getDuration() > 0L
-                        && positionMillis >= clip.getStart() && positionMillis < clip.getEnd()) {
-                    captureClip = clip;
-                    break;
-                }
+                        && positionMillis >= clip.getStart() && positionMillis < clip.getEnd()) return clip;
             }
             break;
         }
-        if (captureClip == null) return null;
+        return null;
+    }
+
+    private synchronized File findCapturedFrame(TimelineClip captureClip, long positionMillis,
+                                                  long frameIntervalMillis) {
+        if (captureClip == null || frameIntervalMillis < 1L) return null;
         if (!capturedFramesScanned) {
             File[] found = framesDirectory.listFiles((directory, name) ->
                     name.matches("frame-[0-9]{8}\\.png") && new File(directory, name).isFile());
