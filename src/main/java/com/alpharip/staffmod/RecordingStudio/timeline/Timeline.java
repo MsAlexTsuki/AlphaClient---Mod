@@ -151,7 +151,8 @@ public final class Timeline {
         TimelineClip from = findVideoClip(transition.getFromClipId());
         TimelineClip to = findVideoClip(transition.getToClipId());
         if (from == null || to == null || from == to
-                || "@capture".equals(from.getSource()) || "@capture".equals(to.getSource())) return false;
+                || "@capture".equals(from.getSource()) || "@capture".equals(to.getSource())
+                || transition.getDurationMillis() > Math.min(from.getDuration(), to.getDuration())) return false;
         for (TimelineTransition existing : transitions) {
             if (existing.getFromClipId().equals(transition.getFromClipId())
                     || existing.getToClipId().equals(transition.getToClipId())) return false;
