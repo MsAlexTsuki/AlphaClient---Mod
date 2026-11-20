@@ -124,6 +124,9 @@ public final class RecordingStudioScreen extends GuiScreen {
             GuiButton b = (GuiButton) value;
             if (b.id == 31 || b.id == 36 || b.id == 37 || b.id == 38) { b.visible = true; continue; }
             boolean rec = "RECORDING".equals(activeTab), edit = "EDITING".equals(activeTab), pub = "PUBLISHING".equals(activeTab);
+            if (b.id == 36) b.displayString = rec ? "> Recording" : "Recording";
+            if (b.id == 37) b.displayString = edit ? "> Editing" : "Editing";
+            if (b.id == 38) b.displayString = pub ? "> Publishing" : "Publishing";
             switch (b.id) {
                 case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: b.visible = rec; break;
                 case 4: case 32: case 33: case 34: case 35: b.visible = edit; break;
@@ -356,7 +359,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         int timelineBarRight = width - 200;
         int videoTrackTop = height - 99;
         int videoTrackBottom = videoTrackTop + 11;
-        if (mouseButton == 0 && mediaReady && mouseY >= videoTrackTop && mouseY <= videoTrackBottom
+        if ("EDITING".equals(activeTab) && mouseButton == 0 && mediaReady && mouseY >= videoTrackTop && mouseY <= videoTrackBottom
                 && mouseX >= timelineBarLeft && mouseX < timelineBarRight) {
             if (!playbackMode) {
                 playback.refreshFrames();
@@ -447,6 +450,9 @@ public final class RecordingStudioScreen extends GuiScreen {
         int rightRight = width - 10;
         int panelTop = 48;
         int panelBottom = height - 14;
+        boolean recordingTab = "RECORDING".equals(activeTab);
+        boolean editingTab = "EDITING".equals(activeTab);
+        boolean publishingTab = "PUBLISHING".equals(activeTab);
         int previewLeft = 160;
         int previewRight = width - 190;
         int previewTop = 48;
@@ -467,6 +473,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawCenteredString(fontRendererObj, controller.getProject().getName(), width / 2, 31, 0xFFFFC83D);
 
         RecordingStudioScene activeScene = controller.getActiveScene();
+        if (recordingTab) {
         drawString(fontRendererObj, "SCENES  (" + controller.getTimeline().getScenes().size() + ")", 20, 59, 0xFFFFC83D);
         drawString(fontRendererObj, "> " + compact(activeScene == null ? "None" : activeScene.getName(), 20),
                 20, 78, 0xFFFFFFFF);
@@ -478,6 +485,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, "Option: " + compact(runtime.getSelectedOptionId().isEmpty()
                 ? "Default" : runtime.getSelectedOptionId(), 14), 20, 247, 0xFFBBBBBB);
         drawString(fontRendererObj, compact(runtime.getSelectedModuleStatus(), 22), 20, 265, 0xFFAAAAAA);
+        }
 
         drawCenteredString(fontRendererObj, playbackMode ? "RECORDED PLAYBACK" : "LIVE PREVIEW",
                 (previewLeft + previewRight) / 2, previewTop + 10, 0xFFFFC83D);
@@ -504,6 +512,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 + " ms  |  Interval " + controller.getCapture().getIntervalMillis() + " ms",
                 previewLeft + 12, previewBottom - 14, 0xFFBBBBBB);
 
+        if (recordingTab) {
         drawString(fontRendererObj, "SOURCES", right + 8, 59, 0xFFFFC83D);
         int sourceY = 78;
         if (activeScene != null) {
@@ -528,9 +537,11 @@ public final class RecordingStudioScreen extends GuiScreen {
                 right + 8, 198, 0xFFBBBBBB);
         drawString(fontRendererObj, "Game audio: not captured", right + 8, 215, 0xFF888888);
         drawString(fontRendererObj, "CONTROLS", right + 8, 242, 0xFFFFC83D);
+        }
 
         int timelineTop = height - 130;
         int timelineBottom = height - 43;
+        if (editingTab) {
         Gui.drawRect(previewLeft, timelineTop, previewRight, timelineBottom, 0xE8101010);
         Gui.drawRect(previewLeft, timelineTop, previewRight, timelineTop + 2, 0xFFFFC83D);
         drawString(fontRendererObj, "TIMELINE", previewLeft + 10, height - 120, 0xFFFFC83D);
@@ -571,6 +582,16 @@ public final class RecordingStudioScreen extends GuiScreen {
         drawString(fontRendererObj, "Duration: " + controller.getTimeline().duration() + " ms",
                 previewLeft + 10, height - 54, 0xFFBBBBBB);
         drawString(fontRendererObj, controller.getExportStatus(), previewLeft + 10, height - 34, 0xFFFFC83D);
+        }
+
+        if (publishingTab) {
+            Gui.drawRect(previewLeft + 18, previewTop + 28, previewRight - 18, previewBottom - 18, 0xE8101010);
+            Gui.drawRect(previewLeft + 18, previewTop + 28, previewRight - 18, previewTop + 30, 0xFFFFC83D);
+            drawCenteredString(fontRendererObj, "EXPORT & PUBLISH", (previewLeft + previewRight) / 2, previewTop + 48, 0xFFFFC83D);
+            drawCenteredString(fontRendererObj, "Export status: " + compact(controller.getExportStatus(), 38), (previewLeft + previewRight) / 2, previewTop + 82, 0xFFFFFFFF);
+            drawCenteredString(fontRendererObj, "Use MP4 or GIF to export this project.", (previewLeft + previewRight) / 2, previewTop + 112, 0xFFBBBBBB);
+            drawCenteredString(fontRendererObj, "Automatic uploads are not implemented yet.", (previewLeft + previewRight) / 2, previewTop + 138, 0xFF888888);
+        }
 
         boolean recordingActive = controller.getCapture().isRecording()
                 || controller.getCapture().isPaused();
@@ -594,6 +615,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 && (playback.getFrameCount() > 0 || hasExternalVideoClips());
 
         super.drawScreen(mouseX, mouseY, partialTicks);
+        if (publishingTab) return;
         if (playbackMode) {
             if (externalVideoActive) {
                 externalVideoPreview.draw(mc, previewLeft + 6, previewTop + 48,
