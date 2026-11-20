@@ -64,12 +64,6 @@ public final class LootFeedTracker {
             entry = lastMobGroup;
         } else {
             entry = new LootFeedEntry(entityName);
-            if (entries.size() >= MAX_VISIBLE_GROUPS) {
-                LootFeedEntry oldest = entries.remove(0);
-                if (!oldest.getDrops().isEmpty()) {
-                    fadingEntries.add(new FadingEntry(oldest, now));
-                }
-            }
             entries.add(entry);
         }
 
@@ -118,7 +112,43 @@ public final class LootFeedTracker {
 
         // Keep the exact kill-group reference; names are not unique identifiers.
         if (entries.contains(nearestKill.entry)) {
+            if (nearestKill.entry.getDrops().isEmpty()) {
+                makeRoomForVisibleGroup(nearestKill.entry, now);
+            }
             nearestKill.entry.addDrop(stack.getDisplayName(), stack.stackSize, now);
+        }
+    }
+
+
+    /**
+     * Empty kill groups stay hidden and do not consume one of the four visible
+     * slots. A slot is freed only when a group receives its first real drop.
+     */
+    private void makeRoomForVisibleGroup(LootFeedEntry incoming, long now) {
+        int visibleCount = 0;
+        for (LootFeedEntry entry : entries) {
+            if (!entry.getDrops().isEmpty()) {
+                visibleCount++;
+            }
+        }
+
+        if (visibleCount < MAX_VISIBLE_GROUPS) {
+            return;
+        }
+
+        for (Iterator<LootFeedEntry> iterator = entries.iterator(); iterator.hasNext();) {
+            LootFeedEntry oldest = iterator.next();
+            if (oldest == incoming || oldest.getDrops().isEmpty()) {
+                continue;
+            }
+
+            iterator.remove();
+            fadingEntries.add(new FadingEntry(oldest, now));
+            if (oldest == lastMobGroup) {
+                lastMobGroup = null;
+                lastMobClass = null;
+            }
+            return;
         }
     }
 
