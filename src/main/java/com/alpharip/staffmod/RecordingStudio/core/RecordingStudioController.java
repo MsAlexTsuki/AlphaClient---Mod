@@ -419,7 +419,8 @@ public final class RecordingStudioController {
         RecordingStudioScene scene = timeline.getActiveScene();
         RecordingStudioSource source = scene == null ? null
                 : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
-        if (source == null || source.getAudioDeviceKey().isEmpty()) return gameAudioSelectionName;
+        if (source == null) return "No Game Audio source";
+        if (source.getAudioDeviceKey().isEmpty()) return "No loopback input selected";
         for (RecordingAudioCaptureService.MicrophoneDevice device
                 : RecordingAudioCaptureService.getAvailableMicrophones()) {
             if (device.getKey().equals(source.getAudioDeviceKey())) return device.getName();
