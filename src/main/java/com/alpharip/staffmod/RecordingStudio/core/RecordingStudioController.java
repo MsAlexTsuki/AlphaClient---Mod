@@ -19,7 +19,9 @@ public final class RecordingStudioController {
     private final RecordingStudioProjectStore projectStore;
     private final RecordingStudioStorageUsage storageUsage;
     private final RecordingAudioCaptureService audioCapture;
+    private final RecordingAudioCaptureService gameAudioCapture;
     private final File audioDirectory;
+    private final File gameAudioDirectory;
     private final File framesDirectory;
     private final RecordingStudioExportService exportService;
     private final com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportSettings exportSettings =
@@ -27,8 +29,10 @@ public final class RecordingStudioController {
     private boolean closed;
     private boolean sessionStartedInThisRuntime;
     private boolean resumeMicrophoneAfterPause;
+    private boolean resumeGameAudioAfterPause;
     private long lastRecoveryCheckpointAt;
     private String microphoneSelectionName = "System Default";
+    private String gameAudioSelectionName = "No loopback input selected";
     private String status = "Ready";
 
     public RecordingStudioController(RecordingProject project, RecordingCaptureService capture, File projectDirectory) {
@@ -49,6 +53,7 @@ public final class RecordingStudioController {
         File recordingRoot = projectDirectory.getParentFile() == null ? projectDirectory : projectDirectory.getParentFile();
         this.storageUsage = new RecordingStudioStorageUsage(recordingRoot);
         this.audioDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/audio");
+        this.gameAudioDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/game-audio");
         this.framesDirectory = new File(new File(recordingRoot, "recordings"), project.getId() + "/frames");
         File exportDirectory = new File(new File(recordingRoot, "exports"), project.getId());
         this.exportService = new RecordingStudioExportService(framesDirectory, exportDirectory, timeline);
@@ -84,6 +89,43 @@ public final class RecordingStudioController {
             public void onAudioFailed(String message) {
                 synchronized (RecordingStudioController.this) {
                     status = "Audio capture failed: " + message;
+                    try { finishRecoveryMarkerIfIdle(); }
+                    catch (IOException failure) { status += " — Recovery marker retained: " + failure.getMessage(); }
+                }
+            }
+        });
+        this.gameAudioCapture = new RecordingAudioCaptureService(new RecordingAudioCaptureService.Listener() {
+            public void onAudioSaved(File file, long startMillis, long durationMillis) {
+                synchronized (RecordingStudioController.this) {
+                    try {
+                        TimelineTrack audioTrack = null;
+                        for (TimelineTrack track : timeline.getTracks()) {
+                            if ("audio".equals(track.getId())) { audioTrack = track; break; }
+                        }
+                        if (audioTrack == null) {
+                            audioTrack = new TimelineTrack("audio", "Audio");
+                            timeline.addTrack(audioTrack);
+                        }
+                        if (durationMillis > 0L) {
+                            audioTrack.add(new TimelineClip("game-audio-" + java.util.UUID.randomUUID().toString(),
+                                    file.getAbsolutePath(), startMillis, durationMillis));
+                        }
+                        if (project.isRecording()) {
+                            long checkpointAt = System.currentTimeMillis();
+                            project.checkpoint(checkpointAt);
+                            lastRecoveryCheckpointAt = checkpointAt;
+                        }
+                        projectStore.save(project, timeline);
+                        finishRecoveryMarkerIfIdle();
+                        status = "Game audio saved to timeline";
+                    } catch (IOException | RuntimeException failure) {
+                        status = "Game audio saved; timeline update failed: " + failure.getMessage();
+                    }
+                }
+            }
+            public void onAudioFailed(String message) {
+                synchronized (RecordingStudioController.this) {
+                    status = "Game audio capture failed: " + message;
                     try { finishRecoveryMarkerIfIdle(); }
                     catch (IOException failure) { status += " — Recovery marker retained: " + failure.getMessage(); }
                 }
@@ -149,7 +191,9 @@ public final class RecordingStudioController {
         ensureOpen();
         if (!capture.isRecording()) return;
         resumeMicrophoneAfterPause = audioCapture.isRecording();
+        resumeGameAudioAfterPause = gameAudioCapture.isRecording();
         audioCapture.stop();
+        gameAudioCapture.stop();
         long now = System.currentTimeMillis();
         capture.pause();
         project.pause(now);
@@ -185,14 +229,16 @@ public final class RecordingStudioController {
     public synchronized void stop() {
         if (closed || (!capture.isRecording() && !capture.isPaused())) return;
         resumeMicrophoneAfterPause = false;
+        resumeGameAudioAfterPause = false;
         audioCapture.stop();
+        gameAudioCapture.stop();
         long now = System.currentTimeMillis();
         capture.stop();
         project.stop(now);
         updateCapturedVideoClip(project.getElapsedMillis(now));
         try {
             projectStore.save(project, timeline);
-            if (capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing()) {
+            if (capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
                 projectStore.clearRecordingActive(project.getId());
                 sessionStartedInThisRuntime = false;
                 status = "Stopped — project checkpoint saved";
@@ -251,6 +297,128 @@ public final class RecordingStudioController {
         } catch (Exception failure) {
             status = "Cannot start microphone: " + failure.getMessage();
         }
+    }
+
+    /** Starts a separate audio input intended for an OS-provided loopback device such as Stereo Mix. */
+    public synchronized void startGameAudioCapture() {
+        ensureOpen();
+        resumeGameAudioAfterPause = false;
+        if (!capture.isRecording()) {
+            status = "Start video recording before capturing game audio";
+            return;
+        }
+        RecordingStudioScene activeScene = timeline.getActiveScene();
+        RecordingStudioSource source = activeScene == null ? null
+                : activeScene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
+        if (source == null || !source.isEnabled()) {
+            status = "Enable the Game Audio source in the active scene first";
+            return;
+        }
+        String deviceKey = source.getAudioDeviceKey();
+        if (deviceKey == null || deviceKey.trim().isEmpty()) {
+            status = "Select an OS loopback input before starting game audio";
+            return;
+        }
+        try {
+            long timelineStart = project.getElapsedMillis(System.currentTimeMillis());
+            gameAudioCapture.start(gameAudioDirectory,
+                    "game-audio-" + java.util.UUID.randomUUID().toString() + ".wav",
+                    timelineStart, deviceKey);
+            status = "Game audio recording";
+        } catch (Exception failure) {
+            status = "Cannot start game audio: " + failure.getMessage();
+        }
+    }
+
+    public synchronized void stopGameAudioCapture() {
+        resumeGameAudioAfterPause = false;
+        gameAudioCapture.stop();
+        if (gameAudioCapture.isFinalizing()) status = "Finalizing game audio";
+    }
+
+    /** Cycles through Java Sound capture inputs; choose an OS loopback device, not a microphone. */
+    public synchronized void selectNextGameAudioInput() {
+        ensureOpen();
+        if (gameAudioCapture.isRecording() || gameAudioCapture.isFinalizing()) {
+            status = "Stop game audio capture before changing the input device";
+            return;
+        }
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
+        if (source == null) {
+            status = "The active scene has no Game Audio source";
+            return;
+        }
+        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
+                RecordingAudioCaptureService.getAvailableMicrophones();
+        if (devices.isEmpty()) {
+            source.setAudioDeviceKey("");
+            gameAudioSelectionName = "No loopback input detected";
+            status = "No Java Sound capture inputs detected; enable an OS loopback device";
+        } else {
+            String current = source.getAudioDeviceKey();
+            int index = -1;
+            for (int i = 0; i < devices.size(); i++) {
+                if (devices.get(i).getKey().equals(current)) { index = i; break; }
+            }
+            if (index + 1 >= devices.size()) {
+                source.setAudioDeviceKey("");
+                gameAudioSelectionName = "No loopback input selected";
+            } else {
+                RecordingAudioCaptureService.MicrophoneDevice next = devices.get(index + 1);
+                source.setAudioDeviceKey(next.getKey());
+                gameAudioSelectionName = next.getName();
+            }
+            status = "Game audio input selected: " + gameAudioSelectionName
+                    + " (select an OS loopback device)";
+        }
+        persistSceneChange(status);
+    }
+
+    public synchronized void refreshGameAudioInputs() {
+        ensureOpen();
+        if (gameAudioCapture.isRecording() || gameAudioCapture.isFinalizing()) {
+            status = "Stop game audio capture before refreshing inputs";
+            return;
+        }
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
+        if (source == null) {
+            status = "The active scene has no Game Audio source";
+            return;
+        }
+        java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
+                RecordingAudioCaptureService.getAvailableMicrophones();
+        String selected = source.getAudioDeviceKey();
+        boolean found = false;
+        for (RecordingAudioCaptureService.MicrophoneDevice device : devices) {
+            if (device.getKey().equals(selected)) {
+                gameAudioSelectionName = device.getName();
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            source.setAudioDeviceKey("");
+            gameAudioSelectionName = "No loopback input selected";
+            persistSceneChange("Selected game-audio input is unavailable; choose another OS loopback input");
+            return;
+        }
+        status = "Game audio inputs refreshed: " + devices.size() + " capture input(s)";
+    }
+
+    public synchronized String getGameAudioSelectionName() {
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
+        if (source == null || source.getAudioDeviceKey().isEmpty()) return gameAudioSelectionName;
+        for (RecordingAudioCaptureService.MicrophoneDevice device
+                : RecordingAudioCaptureService.getAvailableMicrophones()) {
+            if (device.getKey().equals(source.getAudioDeviceKey())) return device.getName();
+        }
+        return "Unavailable";
     }
 
     public synchronized void startMicrophoneMonitoring() {
@@ -395,6 +563,8 @@ public final class RecordingStudioController {
     public synchronized String getAudioStatus() {
         if (audioCapture.isRecording()) return "Microphone: Recording";
         if (audioCapture.isFinalizing()) return "Microphone: Finalizing";
+        if (gameAudioCapture.isRecording()) return "Game audio: Recording";
+        if (gameAudioCapture.isFinalizing()) return "Game audio: Finalizing";
         RecordingStudioSource microphone = getActiveMicrophoneSource();
         return microphone == null || !microphone.isEnabled()
                 ? "Microphone: Disabled" : "Microphone: Idle";
@@ -406,7 +576,7 @@ public final class RecordingStudioController {
             status = "Stop recording before exporting";
             return;
         }
-        if (capture.getPendingFrameCount() > 0 || audioCapture.isFinalizing()) {
+        if (capture.getPendingFrameCount() > 0 || audioCapture.isFinalizing() || gameAudioCapture.isFinalizing()) {
             status = "Wait for pending frame and audio writes before exporting";
             return;
         }
@@ -448,7 +618,7 @@ public final class RecordingStudioController {
     public synchronized void tick(long now) {
         if (closed) return;
         if (resumeMicrophoneAfterPause && capture.isRecording()
-                && !audioCapture.isRecording() && !audioCapture.isFinalizing()) {
+                && !audioCapture.isRecording() && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
             resumeMicrophoneAfterPause = false;
             startAudioCapture();
         }
@@ -463,7 +633,7 @@ public final class RecordingStudioController {
             }
         }
         if (sessionStartedInThisRuntime && !capture.isRecording() && !capture.isPaused()
-                && capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing()) {
+                && capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
             try {
                 projectStore.clearRecordingActive(project.getId());
                 sessionStartedInThisRuntime = false;
@@ -614,6 +784,9 @@ public final class RecordingStudioController {
         if (type == RecordingStudioSource.Type.MICROPHONE) {
             resumeMicrophoneAfterPause = false;
             audioCapture.stop();
+        } else if (type == RecordingStudioSource.Type.GAME_AUDIO) {
+            resumeGameAudioAfterPause = false;
+            gameAudioCapture.stop();
         }
         persistSceneChange(source.getName() + " removed from " + scene.getName());
     }
@@ -643,6 +816,9 @@ public final class RecordingStudioController {
         if (type == RecordingStudioSource.Type.MICROPHONE && !source.isEnabled()) {
             resumeMicrophoneAfterPause = false;
             audioCapture.stop();
+        } else if (type == RecordingStudioSource.Type.GAME_AUDIO && !source.isEnabled()) {
+            resumeGameAudioAfterPause = false;
+            gameAudioCapture.stop();
         }
         persistSceneChange(source.getName() + (source.isEnabled() ? " enabled" : " disabled"));
     }
@@ -654,6 +830,12 @@ public final class RecordingStudioController {
         if ((microphone == null || !microphone.isEnabled()) && audioCapture.isRecording()) {
             audioCapture.stop();
             status = "Microphone stopped because it is disabled in the active scene";
+        }
+        RecordingStudioSource gameAudio = scene == null ? null
+                : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
+        if ((gameAudio == null || !gameAudio.isEnabled()) && gameAudioCapture.isRecording()) {
+            gameAudioCapture.stop();
+            status = "Game audio stopped because it is disabled in the active scene";
         }
     }
 
@@ -710,7 +892,7 @@ public final class RecordingStudioController {
         // Export workers own their inputs and temporary output files; keep accepted exports running
         // after the Studio UI closes. Users can still cancel while the Publishing tab is open.
         capture.shutdown();
-        if (sessionStartedInThisRuntime || audioCapture.isFinalizing()) {
+        if (sessionStartedInThisRuntime || audioCapture.isFinalizing() || gameAudioCapture.isFinalizing()) {
             final RecordingCaptureService pendingCapture = capture;
             final RecordingStudioProjectStore pendingStore = projectStore;
             final String projectId = project.getId();
@@ -719,6 +901,7 @@ public final class RecordingStudioController {
                 public void run() {
                     try {
                         audioCapture.awaitCompletion();
+                        gameAudioCapture.awaitCompletion();
                         while (!pendingCapture.awaitPendingWrites(1L, java.util.concurrent.TimeUnit.MINUTES)) {
                             // Keep the recovery marker until all accepted frame writes have completed.
                         }
