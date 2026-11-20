@@ -3,6 +3,8 @@ package com.alpharip.staffmod.RecordingStudio.export;
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineClip;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack;
+import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTransition;
+import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTransitionType;
 import com.alpharip.staffmod.RecordingStudio.capture.RecordingFrameTimestamp;
 
 import javax.imageio.ImageIO;
