@@ -129,9 +129,19 @@ public final class RecordingStudioController {
             lastRecoveryCheckpointAt = now;
             status = "Recording";
         } catch (IOException failure) {
+            long rollbackTime = System.currentTimeMillis();
             capture.stop();
-            project.stop(System.currentTimeMillis());
-            status = "Cannot start: " + failure.getMessage();
+            project.stop(rollbackTime);
+            String failureMessage = failure.getMessage();
+            try {
+                // If the initial checkpoint succeeded but the active marker failed, persist
+                // the stopped state so a later launch cannot mistake this failed start for
+                // an active recording session.
+                projectStore.save(project, timeline);
+            } catch (IOException rollbackFailure) {
+                failureMessage += "; stopped-state checkpoint also failed: " + rollbackFailure.getMessage();
+            }
+            status = "Cannot start: " + failureMessage;
         }
     }
 
