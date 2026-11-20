@@ -169,8 +169,10 @@ public final class RecordingStudioExternalVideoPreview {
                 filter.append(";[").append(firstExternalInput + i).append(":v:0]")
                         .append("trim=duration=1,setpts=PTS-STARTPTS,fps=1")
                         .append(",scale=1280:720:force_original_aspect_ratio=decrease")
-                        .append(",pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1")
-                        .append(clipLabel);
+                        .append(",pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1");
+                String effectFilter = clip.getEffect().getFfmpegFilter();
+                if (!effectFilter.isEmpty()) filter.append(',').append(effectFilter);
+                filter.append(clipLabel);
                 filter.append(';').append(currentBase).append(clipLabel)
                         .append("overlay=shortest=1:format=auto").append(nextBase);
                 currentBase = nextBase;
