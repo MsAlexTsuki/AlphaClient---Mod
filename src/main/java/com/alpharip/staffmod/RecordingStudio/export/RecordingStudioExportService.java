@@ -383,8 +383,10 @@ public final class RecordingStudioExportService {
                     .append(",scale=").append(width).append(':').append(height)
                     .append(":force_original_aspect_ratio=decrease")
                     .append(",pad=").append(width).append(':').append(height)
-                    .append(":(ow-iw)/2:(oh-ih)/2:black,setsar=1")
-                    .append(",setpts=PTS+").append(seconds(start)).append("/TB")
+                    .append(":(ow-iw)/2:(oh-ih)/2:black,setsar=1");
+            String effectFilter = clip.getEffect().getFfmpegFilter();
+            if (!effectFilter.isEmpty()) filter.append(',').append(effectFilter);
+            filter.append(",setpts=PTS+").append(seconds(start)).append("/TB")
                     .append(clipLabel);
             filter.append(';').append(currentBase).append(clipLabel)
                     .append("overlay=eof_action=pass:shortest=0:enable='between(t,")
