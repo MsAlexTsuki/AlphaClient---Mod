@@ -135,12 +135,15 @@ public final class RecordingStudioController {
             }
         });
         try {
+            int recoveredFrames = RecordingCaptureService.recoverCompletedTemporaryFrames(this.framesDirectory);
             boolean recoveryMarker = this.projectStore.hasRecoveryMarker(project.getId());
-            if (recoveryMarker || project.isRecording()) {
+            if (recoveryMarker || project.isRecording() || recoveredFrames > 0) {
                 project.recoverInterruptedSession(System.currentTimeMillis());
                 this.projectStore.save(project, timeline);
                 if (recoveryMarker) this.projectStore.clearRecordingActive(project.getId());
-                status = "Interrupted session recovered; existing frames are available";
+                status = recoveredFrames > 0
+                        ? "Interrupted session recovered; restored " + recoveredFrames + " completed frame(s)"
+                        : "Interrupted session recovered; existing frames are available";
             }
         } catch (IOException failure) {
             status = "Recovery check failed: " + failure.getMessage();
