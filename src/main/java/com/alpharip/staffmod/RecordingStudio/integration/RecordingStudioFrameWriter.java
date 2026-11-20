@@ -31,6 +31,7 @@ public final class RecordingStudioFrameWriter implements RecordingCaptureService
         int width = 0, height = 0;
         boolean hasNonWebcamCanvas = false;
         java.util.Set<String> activeWebcams = new java.util.HashSet<String>();
+        IOException webcamFailure = null;
         for (RecordingStudioSource source : scene.getSources()) {
             if (!source.isEnabled() || !isVisual(source.getType())) continue;
             RecordingCaptureService.FrameData frame;
@@ -42,7 +43,17 @@ public final class RecordingStudioFrameWriter implements RecordingCaptureService
                     activeWebcams.add(source.getId());
                     RecordingStudioWebcamCapture webcam = webcams.get(source.getId());
                     if (webcam == null) { webcam = new RecordingStudioWebcamCapture("ffmpeg"); webcams.put(source.getId(), webcam); }
-                    frame = webcam.capture(source.getWebcamDeviceName());
+                    try {
+                        frame = webcam.capture(source.getWebcamDeviceName());
+                    } catch (IOException unavailable) {
+                        source.setEnabled(false);
+                        if (webcamFailure == null) webcamFailure = unavailable;
+                        continue;
+                    }
+                    if (frame == null) {
+                        if (webcamFailure == null) webcamFailure = new IOException("Waiting for webcam: " + source.getName());
+                        continue;
+                    }
                     break;
                 default: continue;
             }
@@ -57,7 +68,10 @@ public final class RecordingStudioFrameWriter implements RecordingCaptureService
             Map.Entry<String, RecordingStudioWebcamCapture> entry = webcamIterator.next();
             if (!activeWebcams.contains(entry.getKey())) { entry.getValue().close(); webcamIterator.remove(); }
         }
-        if (layers.isEmpty()) throw new IOException("Enable at least one visual source in the active scene");
+        if (layers.isEmpty()) {
+            if (webcamFailure != null) throw webcamFailure;
+            throw new IOException("Enable at least one visual source in the active scene");
+        }
         if (layers.size() == 1) {
             RecordingStudioSource only = layers.get(0).source;
             if (only.getXPercent() == 0 && only.getYPercent() == 0
