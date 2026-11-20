@@ -47,6 +47,9 @@ public final class LootFeedHud {
         int height = PADDING * 2 + lineHeight * 2;
 
         for (LootFeedEntry entry : entries) {
+            if (entry.getDrops().isEmpty()) {
+                continue;
+            }
             height += lineHeight;
             height += entry.getDrops().size() * lineHeight;
             height += 3;
@@ -62,6 +65,9 @@ public final class LootFeedHud {
         textY += lineHeight + 1;
 
         for (LootFeedEntry entry : entries) {
+            if (entry.getDrops().isEmpty()) {
+                continue;
+            }
             String heading = entry.getKillCount() + "x " + entry.getEntityName();
             font.drawString(trimToWidth(font, heading, PANEL_WIDTH - PADDING * 2),
                     textX, textY, 0xFFFFFFFF);
