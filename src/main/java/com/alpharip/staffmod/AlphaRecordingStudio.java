@@ -12,6 +12,7 @@ import org.lwjgl.input.Keyboard;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
@@ -44,6 +45,7 @@ public final class AlphaRecordingStudio {
         ClientRegistry.registerKeyBinding(openStudioKey);
         ClientCommandHandler.instance.registerCommand(new BuildTimelapseCommand());
         MinecraftForge.EVENT_BUS.register(this);
+        FMLCommonHandler.instance().bus().register(this);
     }
 
     @SubscribeEvent
