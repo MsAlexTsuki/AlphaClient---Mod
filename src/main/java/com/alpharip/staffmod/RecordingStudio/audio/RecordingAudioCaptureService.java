@@ -53,6 +53,22 @@ public final class RecordingAudioCaptureService {
     private Thread monitorThread;
     private BlockingQueue<byte[]> monitorQueue;
 
+    /** Lists only Java Sound inputs whose descriptors explicitly identify loopback capture. */
+    public static List<MicrophoneDevice> getAvailableLoopbackDevices() {
+        List<MicrophoneDevice> devices = new ArrayList<MicrophoneDevice>();
+        for (MicrophoneDevice device : getAvailableMicrophones()) {
+            String descriptor = (device.info.getName() + " " + device.info.getDescription())
+                    .toLowerCase(java.util.Locale.ROOT);
+            if (descriptor.contains("loopback") || descriptor.contains("stereo mix")
+                    || descriptor.contains("what u hear") || descriptor.contains("wave out mix")
+                    || descriptor.contains("monitor of") || descriptor.contains("cable output")
+                    || descriptor.contains("virtual cable")) {
+                devices.add(device);
+            }
+        }
+        return Collections.unmodifiableList(devices);
+    }
+
     public RecordingAudioCaptureService(Listener listener) {
         if (listener == null) throw new IllegalArgumentException("Audio capture listener is required");
         this.listener = listener;
