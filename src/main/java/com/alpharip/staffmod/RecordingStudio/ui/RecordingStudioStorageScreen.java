@@ -63,15 +63,16 @@ public final class RecordingStudioStorageScreen extends GuiScreen {
         row("Projects", usage.getProjectBytes(), usage.getProjectCount(), 108);
         row("Video frames", usage.getFrameBytes(), usage.getFrameCount(), 143);
         row("Microphone audio", usage.getAudioBytes(), usage.getAudioCount(), 178);
-        row("Exports", usage.getExportBytes(), usage.getExportCount(), 213);
+        row("Game audio", usage.getGameAudioBytes(), usage.getGameAudioCount(), 213);
+        row("Exports", usage.getExportBytes(), usage.getExportCount(), 248);
         drawCenteredString(fontRendererObj, usage.isScanning() ? "Scanning storage..."
                 : usage.getScanError() != null ? "Storage scan failed: " + usage.getScanError()
                 : usage.isReadable() ? "Storage scan complete" : "Some folders could not be read",
-                width / 2, 254, usage.isReadable() ? 0xFFB9B9B9 : 0xFFFFB45C);
+                width / 2, 283, usage.isReadable() ? 0xFFB9B9B9 : 0xFFFFB45C);
         drawCenteredString(fontRendererObj, "Location: " + usage.getRootPath(),
-                width / 2, 270, 0xFF888888);
+                width / 2, 299, 0xFF888888);
         drawCenteredString(fontRendererObj, "Read-only overview  |  No files are removed automatically",
-                width / 2, 287, 0xFF888888);
+                width / 2, 316, 0xFF888888);
         super.drawScreen(mouseX, mouseY, partialTicks);
         runtime.drawCameraPreview();
     }
