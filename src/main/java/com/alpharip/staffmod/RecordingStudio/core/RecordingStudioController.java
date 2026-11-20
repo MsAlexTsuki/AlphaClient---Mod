@@ -618,9 +618,14 @@ public final class RecordingStudioController {
     public synchronized void tick(long now) {
         if (closed) return;
         if (resumeMicrophoneAfterPause && capture.isRecording()
-                && !audioCapture.isRecording() && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
+                && !audioCapture.isRecording() && !audioCapture.isFinalizing()) {
             resumeMicrophoneAfterPause = false;
             startAudioCapture();
+        }
+        if (resumeGameAudioAfterPause && capture.isRecording()
+                && !gameAudioCapture.isRecording() && !gameAudioCapture.isFinalizing()) {
+            resumeGameAudioAfterPause = false;
+            startGameAudioCapture();
         }
         if (capture.isRecording() && now - lastRecoveryCheckpointAt >= 1000L) {
             try {
@@ -806,8 +811,10 @@ public final class RecordingStudioController {
         }
         RecordingStudioSource source = scene.findSource(type);
         if (source == null) {
-            String id = type == RecordingStudioSource.Type.GAME_CAPTURE ? "game-capture" : "microphone";
-            String name = type == RecordingStudioSource.Type.GAME_CAPTURE ? "Minecraft Capture" : "Microphone";
+            String id = type == RecordingStudioSource.Type.GAME_CAPTURE ? "game-capture"
+                    : type == RecordingStudioSource.Type.GAME_AUDIO ? "game-audio" : "microphone";
+            String name = type == RecordingStudioSource.Type.GAME_CAPTURE ? "Minecraft Capture"
+                    : type == RecordingStudioSource.Type.GAME_AUDIO ? "Game Audio" : "Microphone";
             source = new RecordingStudioSource(id, name, type, true);
             scene.addSource(source);
         } else {
@@ -850,7 +857,7 @@ public final class RecordingStudioController {
 
     private void finishRecoveryMarkerIfIdle() throws IOException {
         if (sessionStartedInThisRuntime && !capture.isRecording() && !capture.isPaused()
-                && capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing()) {
+                && capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
             projectStore.clearRecordingActive(project.getId());
             sessionStartedInThisRuntime = false;
         }
@@ -881,7 +888,7 @@ public final class RecordingStudioController {
         try {
             projectStore.save(project, timeline);
             if (sessionStartedInThisRuntime && capture.getPendingFrameCount() == 0
-                    && !audioCapture.isFinalizing()) {
+                    && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
                 projectStore.clearRecordingActive(project.getId());
                 sessionStartedInThisRuntime = false;
             }
