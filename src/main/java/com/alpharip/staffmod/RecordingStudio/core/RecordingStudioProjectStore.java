@@ -268,8 +268,14 @@ public final class RecordingStudioProjectStore {
         // Remove project media first and metadata last. If deletion fails partway through,
         // the project remains in the catalog and the user can retry instead of losing its entry.
         if (recordingStudioRoot != null) {
-            deleteTree(new File(new File(recordingStudioRoot, "recordings"), id));
-            deleteTree(new File(new File(recordingStudioRoot, "exports"), id));
+            File recordingsRoot = new File(recordingStudioRoot, "recordings");
+            File exportsRoot = new File(recordingStudioRoot, "exports");
+            if (java.nio.file.Files.isSymbolicLink(recordingsRoot.toPath())
+                    || java.nio.file.Files.isSymbolicLink(exportsRoot.toPath())) {
+                throw new IOException("Refusing to delete project media through a symbolic-link directory");
+            }
+            deleteTree(new File(recordingsRoot, id));
+            deleteTree(new File(exportsRoot, id));
         }
         if (timeline.exists() && !timeline.delete()) throw new IOException("Cannot delete project timeline");
         if (active.exists() && !active.delete()) throw new IOException("Cannot delete project recovery marker");
