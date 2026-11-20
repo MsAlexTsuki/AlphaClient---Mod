@@ -262,8 +262,10 @@ public final class RecordingStudioProjectStore {
         validateId(id);
         File metadata = new File(directory, id + ".recording");
         File timeline = new File(directory, id + ".timeline");
+        File active = new File(directory, id + ".active");
         if (metadata.exists() && !metadata.delete()) throw new IOException("Cannot delete project metadata");
         if (timeline.exists() && !timeline.delete()) throw new IOException("Cannot delete project timeline");
+        if (active.exists() && !active.delete()) throw new IOException("Cannot delete project recovery marker");
     }
 
     private static Timeline defaultTimeline() {
