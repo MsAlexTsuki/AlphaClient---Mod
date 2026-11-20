@@ -58,7 +58,15 @@ public final class RecordingStudioFrameWriter implements RecordingCaptureService
             if (!activeWebcams.contains(entry.getKey())) { entry.getValue().close(); webcamIterator.remove(); }
         }
         if (layers.isEmpty()) throw new IOException("Enable at least one visual source in the active scene");
-        if (layers.size() == 1) return layers.get(0).frame;
+        if (layers.size() == 1) {
+            RecordingStudioSource only = layers.get(0).source;
+            if (only.getXPercent() == 0 && only.getYPercent() == 0
+                    && only.getWidthPercent() == 100 && only.getHeightPercent() == 100
+                    && only.getCropLeftPercent() == 0 && only.getCropTopPercent() == 0
+                    && only.getCropRightPercent() == 0 && only.getCropBottomPercent() == 0) {
+                return layers.get(0).frame;
+            }
+        }
         return composite(layers, width, height);
     }
 
