@@ -100,6 +100,10 @@ public final class Timeline {
         return Collections.unmodifiableList(new ArrayList<TimelineMarker>(markers));
     }
 
+    public synchronized boolean removeMarker(TimelineMarker marker) {
+        return marker != null && markers.remove(marker);
+    }
+
     public synchronized List<TimelineTrack> getTracks() {
         return Collections.unmodifiableList(new ArrayList<TimelineTrack>(tracks));
     }
