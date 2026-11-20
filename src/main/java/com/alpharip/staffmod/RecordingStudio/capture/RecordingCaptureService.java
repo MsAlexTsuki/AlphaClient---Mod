@@ -42,6 +42,7 @@ public final class RecordingCaptureService {
     private long nextFileIndex;
     private long capturedFrames;
     private long failedFrames;
+    private long droppedFrames;
     private boolean recording;
     private boolean paused;
     private boolean capturing;
@@ -124,8 +125,8 @@ public final class RecordingCaptureService {
             });
         } catch (RejectedExecutionException saturated) {
             synchronized (this) {
-                failedFrames++;
-                lastError = "Recording encoder queue is full; frame skipped";
+                droppedFrames++;
+                lastError = "Recording encoder queue is full; frame dropped";
             }
         } catch (Exception failure) {
             synchronized (this) {
@@ -154,6 +155,7 @@ public final class RecordingCaptureService {
     public synchronized boolean isCapturing() { return capturing; }
     public synchronized long getFrameCount() { return capturedFrames; }
     public synchronized long getFailedFrameCount() { return failedFrames; }
+    public synchronized long getDroppedFrameCount() { return droppedFrames; }
     public synchronized String getLastError() { return lastError; }
     public synchronized int getPendingFrameCount() { return encoder.getQueue().size() + (encoder.getActiveCount() > 0 ? 1 : 0); }
 
