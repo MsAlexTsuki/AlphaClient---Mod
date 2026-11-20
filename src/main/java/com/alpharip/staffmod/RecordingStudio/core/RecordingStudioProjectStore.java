@@ -64,6 +64,9 @@ public final class RecordingStudioProjectStore {
                 data.setProperty(sourcePrefix + "name", source.getName());
                 data.setProperty(sourcePrefix + "type", source.getType().name());
                 data.setProperty(sourcePrefix + "enabled", Boolean.toString(source.isEnabled()));
+                if (source.getType() == RecordingStudioSource.Type.MICROPHONE) {
+                    data.setProperty(sourcePrefix + "audioDeviceKey", source.getAudioDeviceKey());
+                }
             }
         }
 
@@ -147,11 +150,15 @@ public final class RecordingStudioProjectStore {
                         if (!"true".equalsIgnoreCase(enabledValue) && !"false".equalsIgnoreCase(enabledValue)) {
                             throw new IOException("Invalid scene source enabled value");
                         }
-                        scene.addSource(new RecordingStudioSource(
+                        RecordingStudioSource source = new RecordingStudioSource(
                                 required(data, sourcePrefix + "id"),
                                 required(data, sourcePrefix + "name"),
                                 RecordingStudioSource.Type.valueOf(required(data, sourcePrefix + "type")),
-                                Boolean.parseBoolean(enabledValue)));
+                                Boolean.parseBoolean(enabledValue));
+                        if (source.getType() == RecordingStudioSource.Type.MICROPHONE) {
+                            source.setAudioDeviceKey(data.getProperty(sourcePrefix + "audioDeviceKey", ""));
+                        }
+                        scene.addSource(source);
                     }
                     timeline.addScene(scene);
                 }
