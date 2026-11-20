@@ -105,6 +105,8 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(25, 18, 402, 126, "Remove Game Source");
         add(26, 18, 426, 126, "Remove Selected Source");
         add(40, 18, 450, 126, "Toggle Game Audio");
+        add(41, 18, 474, 126, "Add Webcam", true);
+        add(42, 18, 498, 126, "Next Webcam Device");
 
         int playbackX = width - 190 - 184;
         int playbackY = height - 124;
@@ -134,7 +136,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 continue;
             }
             switch (b.id) {
-                case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: case 30: case 39: case 40: b.visible = rec; break;
+                case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: case 30: case 39: case 40: case 41: case 42: b.visible = rec; break;
                 case 4: case 32: case 33: case 34: case 35: b.visible = edit; break;
                 case 11: case 12: case 13: b.visible = pub; break;
                 default: b.visible = true; break;
@@ -337,6 +339,19 @@ public final class RecordingStudioScreen extends GuiScreen {
                 break;
             case 40:
                 controller.toggleSceneSource(RecordingStudioSource.Type.GAME_AUDIO);
+                initGui();
+                break;
+            case 41:
+                controller.addWebcamSource();
+                RecordingStudioScene webcamScene = controller.getActiveScene();
+                if (webcamScene != null) for (int i = webcamScene.getSources().size() - 1; i >= 0; i--) {
+                    RecordingStudioSource candidate = webcamScene.getSources().get(i);
+                    if (candidate.getType() == RecordingStudioSource.Type.WEBCAM) { selectedSourceId = candidate.getId(); break; }
+                }
+                initGui();
+                break;
+            case 42:
+                if (selectedSourceId != null) controller.selectNextWebcamDevice(selectedSourceId);
                 initGui();
                 break;
             default: break;
