@@ -45,6 +45,7 @@ public final class RecordingStudioPlayback {
     private boolean loading;
     private boolean playing;
     private boolean closed;
+    private long frameGeneration;
     private int frameIndex;
     private long lastFrameAt;
     private long playbackStartWallMillis;
@@ -63,11 +64,15 @@ public final class RecordingStudioPlayback {
 
     public synchronized void refreshFrames() {
         if (closed) return;
+        frameGeneration++;
+        requestedFrame = -1;
+        decoded.set(null);
         if (!framesDirectory.isDirectory()) {
             frames = new File[0];
             frameIndex = 0;
             playing = false;
             status = "No captured frames yet";
+            clearTexture();
             return;
         }
         File[] found = framesDirectory.listFiles((directory, name) ->
@@ -82,6 +87,7 @@ public final class RecordingStudioPlayback {
             frameIndex = 0;
             playing = false;
             status = "No captured frames yet";
+            clearTexture();
             return;
         }
         frameIndex = Math.min(frameIndex, frames.length - 1);
@@ -139,7 +145,9 @@ public final class RecordingStudioPlayback {
                 while (true) {
                     final int next;
                     final File file;
+                    final long generation;
                     synchronized (RecordingStudioPlayback.this) {
+                        generation = frameGeneration;
                         next = requestedFrame;
                         requestedFrame = -1;
                         if (next < 0 || next >= frames.length || closed) {
@@ -156,8 +164,8 @@ public final class RecordingStudioPlayback {
                     } catch (Exception failure) {
                         result = new DecodedFrame(next, null, failure.getMessage());
                     }
-                    decoded.set(result);
                     synchronized (RecordingStudioPlayback.this) {
+                        if (generation == frameGeneration) decoded.set(result);
                         if (requestedFrame < 0 || closed) {
                             loading = false;
                             return;
@@ -225,6 +233,17 @@ public final class RecordingStudioPlayback {
                     drawWidth, drawHeight, textureWidth, textureHeight);
         }
         minecraft.fontRendererObj.drawString(status, x + 8, y + height - 12, 0xFFFFD65A);
+    }
+
+    private void clearTexture() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft != null && textureLocation != null) {
+            minecraft.getTextureManager().deleteTexture(textureLocation);
+        }
+        textureLocation = null;
+        texture = null;
+        textureWidth = 0;
+        textureHeight = 0;
     }
 
     private void updateTexture(Minecraft minecraft, BufferedImage image) {
