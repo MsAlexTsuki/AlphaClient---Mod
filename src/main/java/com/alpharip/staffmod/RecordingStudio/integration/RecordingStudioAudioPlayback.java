@@ -4,9 +4,11 @@ import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineClip;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack;
 
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.SourceDataLine;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,36 +16,142 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/** Plays supported audio timeline clips in sync with the Studio review playhead. */
+/** Streams audio timeline clips in sync with the Studio review playhead. */
 public final class RecordingStudioAudioPlayback {
-    private static final long MAX_AUDIO_BYTES = 64L * 1024L * 1024L;
+    private static final int BUFFER_SIZE = 16384;
     private static final class LoadedClip {
         final String id;
+        final File source;
         final long startMillis;
         final long durationMillis;
-        final Clip audio;
+        final double speed;
+        final AudioFormat decodedFormat;
+        volatile SourceDataLine line;
+        volatile Thread worker;
+        volatile boolean started;
+        volatile boolean finished;
+        volatile long startedAtTimelineMillis;
+        long lastTimelinePosition = -1L;
 
-        LoadedClip(TimelineClip timelineClip, Clip audio) {
-            this.id = timelineClip.getId();
-            this.startMillis = timelineClip.getStart();
-            this.durationMillis = timelineClip.getDuration();
-            this.audio = audio;
+        LoadedClip(TimelineClip clip, File source, AudioFormat decodedFormat) {
+            this.id = clip.getId();
+            this.source = source;
+            this.startMillis = clip.getStart();
+            this.durationMillis = clip.getDuration();
+            this.speed = clip.getSpeed();
+            this.decodedFormat = decodedFormat;
         }
 
-        void close() {
-            audio.stop();
-            audio.close();
+        void startAt(final long timelinePositionMillis) {
+            stopStream();
+            started = true;
+            finished = false;
+            startedAtTimelineMillis = timelinePositionMillis;
+            final long sourceOffsetMillis = Math.max(0L,
+                    Math.round((timelinePositionMillis - startMillis) * speed));
+            Thread thread = new Thread(new Runnable() {
+                public void run() {
+                    AudioInputStream sourceStream = null;
+                    AudioInputStream pcmStream = null;
+                    SourceDataLine output = null;
+                    try {
+                        sourceStream = AudioSystem.getAudioInputStream(source);
+                        AudioFormat pcm = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+                                decodedFormat.getSampleRate(), 16, decodedFormat.getChannels(),
+                                decodedFormat.getChannels() * 2, decodedFormat.getSampleRate(), false);
+                        pcmStream = AudioSystem.getAudioInputStream(pcm, sourceStream);
+                        long framesToSkip = Math.round(sourceOffsetMillis * pcm.getFrameRate() / 1000.0D);
+                        skipFrames(pcmStream, framesToSkip, pcm.getFrameSize());
+
+                        float outputRate = (float) (pcm.getSampleRate() * speed);
+                        if (outputRate < 1000.0F || outputRate > 192000.0F) {
+                            throw new IllegalArgumentException("Audio preview speed produces an unsupported sample rate");
+                        }
+                        AudioFormat outputFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+                                outputRate, 16, pcm.getChannels(), pcm.getFrameSize(), outputRate, false);
+                        DataLine.Info info = new DataLine.Info(SourceDataLine.class, outputFormat);
+                        output = (SourceDataLine) AudioSystem.getLine(info);
+                        output.open(outputFormat);
+                        line = output;
+                        output.start();
+
+                        byte[] buffer = new byte[BUFFER_SIZE];
+                        int count;
+                        while (!Thread.currentThread().isInterrupted()
+                                && (count = pcmStream.read(buffer, 0, buffer.length)) >= 0) {
+                            if (count > 0) output.write(buffer, 0, count);
+                        }
+                        if (!Thread.currentThread().isInterrupted()) output.drain();
+                    } catch (Exception failure) {
+                        if (!Thread.currentThread().isInterrupted()) {
+                            synchronized (RecordingStudioAudioPlayback.this) {
+                                status = "Audio preview failed: " + failure.getMessage();
+                            }
+                        }
+                    } finally {
+                        if (output != null) {
+                            output.stop();
+                            output.close();
+                        }
+                        line = null;
+                        closeQuietly(pcmStream);
+                        closeQuietly(sourceStream);
+                        started = false;
+                        finished = !Thread.currentThread().isInterrupted();
+                    }
+                }
+            }, "Alpha-RecordingStudio-AudioStream-" + id);
+            thread.setDaemon(true);
+            worker = thread;
+            thread.start();
+        }
+
+        void stopStream() {
+            Thread activeWorker = worker;
+            worker = null;
+            if (activeWorker != null) activeWorker.interrupt();
+            SourceDataLine activeLine = line;
+            line = null;
+            if (activeLine != null) {
+                activeLine.stop();
+                activeLine.flush();
+                activeLine.close();
+            }
+            started = false;
+        }
+
+        void close() { stopStream(); }
+
+        private static void skipFrames(AudioInputStream stream, long frames, int frameSize)
+                throws java.io.IOException {
+            long remaining = frames * (long) frameSize;
+            byte[] discard = new byte[8192];
+            while (remaining > 0L) {
+                long skipped = stream.skip(remaining);
+                if (skipped > 0L) {
+                    remaining -= skipped;
+                } else {
+                    int read = stream.read(discard, 0, (int) Math.min(discard.length, remaining));
+                    if (read < 0) break;
+                    remaining -= read;
+                }
+            }
+        }
+
+        private static void closeQuietly(AudioInputStream stream) {
+            if (stream == null) return;
+            try { stream.close(); } catch (Exception ignored) { }
         }
     }
 
     private final ExecutorService loader = Executors.newSingleThreadExecutor(runnable -> {
-        Thread thread = new Thread(runnable, "Alpha-RecordingStudio-AudioPreview");
+        Thread thread = new Thread(runnable, "Alpha-RecordingStudio-AudioPreviewLoader");
         thread.setDaemon(true);
         return thread;
     });
     private List<LoadedClip> loaded = Collections.emptyList();
     private String requestedSignature = "";
-    private String status = "No audio clips";
+    private volatile String status = "No audio clips";
     private boolean closed;
 
     public synchronized void update(Timeline timeline, long positionMillis, boolean playing) {
@@ -62,30 +170,24 @@ public final class RecordingStudioAudioPlayback {
                         List<LoadedClip> result = new ArrayList<LoadedClip>();
                         String failure = null;
                         for (TimelineClip clip : snapshot) {
-                            if (clip.getSpeed() != 1.0D) {
-                                failure = "Audio preview requires 1x clip speed";
-                                continue;
-                            }
                             File source = new File(clip.getSource());
                             if (!source.isFile()) {
                                 failure = "Audio file is missing: " + source.getName();
                                 continue;
                             }
-                            if (source.length() > MAX_AUDIO_BYTES) {
-                                failure = "Audio clip exceeds the 64 MB preview limit";
-                                continue;
-                            }
                             try {
-                                AudioInputStream stream = AudioSystem.getAudioInputStream(source);
-                                try {
-                                    Clip audio = AudioSystem.getClip();
-                                    audio.open(stream);
-                                    result.add(new LoadedClip(clip, audio));
-                                } finally {
-                                    stream.close();
+                                javax.sound.sampled.AudioFileFormat fileFormat = AudioSystem.getAudioFileFormat(source);
+                                AudioFormat sourceFormat = fileFormat.getFormat();
+                                float sampleRate = sourceFormat.getSampleRate();
+                                int channels = sourceFormat.getChannels();
+                                if (sampleRate <= 0.0F || channels <= 0) {
+                                    throw new IllegalArgumentException("Unsupported audio format");
                                 }
+                                AudioFormat decoded = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+                                        sampleRate, 16, channels, channels * 2, sampleRate, false);
+                                result.add(new LoadedClip(clip, source, decoded));
                             } catch (Exception problem) {
-                                failure = "Cannot load audio: " + problem.getMessage();
+                                failure = "Cannot read audio: " + problem.getMessage();
                             }
                         }
                         synchronized (RecordingStudioAudioPlayback.this) {
@@ -105,7 +207,7 @@ public final class RecordingStudioAudioPlayback {
 
         if (!playing) {
             stopLoaded();
-            if (status.startsWith("Playing")) status = "Audio ready (" + loaded.size() + " clip(s))";
+            if (status.startsWith("Playing")) status = "Audio paused";
             return;
         }
 
@@ -114,25 +216,26 @@ public final class RecordingStudioAudioPlayback {
             long clipEnd = clip.durationMillis > Long.MAX_VALUE - clip.startMillis
                     ? Long.MAX_VALUE : clip.startMillis + clip.durationMillis;
             if (positionMillis < clip.startMillis || positionMillis >= clipEnd) {
-                if (clip.audio.isRunning()) clip.audio.stop();
+                if (clip.started) clip.stopStream();
+                clip.lastTimelinePosition = positionMillis;
                 continue;
-            }
-            long offsetMillis = Math.max(0L, positionMillis - clip.startMillis);
-            long expectedMicros = Math.min(clip.audio.getMicrosecondLength(), offsetMillis * 1000L);
-            if (expectedMicros >= clip.audio.getMicrosecondLength()) {
-                if (clip.audio.isRunning()) clip.audio.stop();
-                continue;
-            }
-            long actualMicros = clip.audio.getMicrosecondPosition();
-            if (!clip.audio.isRunning() || Math.abs(actualMicros - expectedMicros) > 250000L) {
-                clip.audio.stop();
-                clip.audio.setMicrosecondPosition(expectedMicros);
-                clip.audio.start();
             }
             active = true;
+            SourceDataLine line = clip.line;
+            long expectedMicros = Math.max(0L, positionMillis - clip.startedAtTimelineMillis) * 1000L;
+            boolean seeked = clip.lastTimelinePosition >= 0L
+                    && Math.abs(positionMillis - clip.lastTimelinePosition) > 500L;
+            if (!clip.started && (!clip.finished || seeked)) {
+                clip.startAt(positionMillis);
+            } else if (clip.started && line != null
+                    && Math.abs(line.getMicrosecondPosition() - expectedMicros) > 250000L) {
+                clip.startAt(positionMillis);
+            }
+            clip.lastTimelinePosition = positionMillis;
         }
         if (active && status.startsWith("Audio ready")) status = "Playing timeline audio";
-        else if (!active && !loaded.isEmpty() && status.startsWith("Playing")) status = "Audio ready (" + loaded.size() + " clip(s))";
+        else if (!active && !loaded.isEmpty() && status.startsWith("Playing"))
+            status = "Audio ready (" + loaded.size() + " clip(s))";
     }
 
     public synchronized void pause() {
@@ -141,9 +244,7 @@ public final class RecordingStudioAudioPlayback {
         if (status.startsWith("Playing")) status = "Audio paused";
     }
 
-    public synchronized String getStatus() {
-        return status;
-    }
+    public synchronized String getStatus() { return status; }
 
     public synchronized void close() {
         if (closed) return;
@@ -160,7 +261,7 @@ public final class RecordingStudioAudioPlayback {
 
     private void stopLoaded() {
         for (LoadedClip clip : loaded) {
-            if (clip.audio.isRunning()) clip.audio.stop();
+            if (clip.started) clip.stopStream();
         }
     }
 
