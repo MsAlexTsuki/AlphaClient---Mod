@@ -39,7 +39,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         this.runtime = runtime;
         this.playback = new RecordingStudioPlayback(controller.getFramesDirectory());
         this.audioPlayback = new RecordingStudioAudioPlayback();
-        this.externalVideoPreview = new RecordingStudioExternalVideoPreview();
+        this.externalVideoPreview = new RecordingStudioExternalVideoPreview(controller.getFramesDirectory());
         RecordingStudioPreferences preferences = RecordingStudioPreferences.load(
                 net.minecraft.client.Minecraft.getMinecraft().mcDataDir);
         controller.getExportSettings().setResolution(preferences.getResolution());
@@ -570,7 +570,7 @@ public final class RecordingStudioScreen extends GuiScreen {
         audioPlayback.update(controller.getTimeline(), playheadMillis,
                 playbackMode && (playback.isPlaying() || externalReviewPlaying));
         boolean externalVideoActive = playbackMode
-                && externalVideoPreview.update(controller.getTimeline(), playheadMillis);
+                && externalVideoPreview.update(controller.getTimeline(), playheadMillis, controller.getCapture().getIntervalMillis());
         int timelineBarLeft = previewLeft + 58;
         int timelineBarRight = previewRight - 10;
         drawTimelineTrack("video", "VIDEO", height - 99, 0xFFC88F20,
