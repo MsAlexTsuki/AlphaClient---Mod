@@ -184,7 +184,7 @@ public final class RecordingStudioExportService {
                 Collections.addAll(command, "-c:v", "libx264", "-profile:v", "high", "-preset", "medium",
                         "-crf", Integer.toString(settings.getQuality().getCrf()), "-pix_fmt", "yuv420p",
                         "-bf", "2", "-g", Integer.toString(Math.max(1, (int) Math.round(fps / 2.0))),
-                        "-flags", "+cgop", "-use_editlist", "0", "-movflags", "+faststart", "-t", seconds(outputDurationMillis));
+                        "-flags", "+cgop", "-use_editlist", "0", "-movflags", "+faststart", "-vsync", "vfr", "-t", seconds(outputDurationMillis));
                 if (audioClips.isEmpty()) {
                     command.add("-an");
                 } else {
@@ -222,15 +222,16 @@ public final class RecordingStudioExportService {
                 gifCommand.add(palette.getAbsolutePath());
                 if (videoFilter.isEmpty()) {
                     Collections.addAll(gifCommand, "-lavfi",
-                            "fps=" + formatRate(fps) + ",scale=" + outputWidth + ":" + outputHeight
+                            (timestampManifest == null ? "fps=" + formatRate(fps) + "," : "")
+                                    + "scale=" + outputWidth + ":" + outputHeight
                                     + ":flags=lanczos[x];[x][" + ((hasCapturedFrames ? 1 : 0) + videoSources.size())
                                     + ":v]paletteuse=dither=sierra2_4a",
-                            "-t", seconds(outputDurationMillis), "-y", partial.getAbsolutePath());
+                            "-vsync", "vfr", "-t", seconds(outputDurationMillis), "-y", partial.getAbsolutePath());
                 } else {
                     Collections.addAll(gifCommand, "-filter_complex",
                             videoFilter + ";[vout][" + ((hasCapturedFrames ? 1 : 0) + videoSources.size())
                                     + ":v]paletteuse=dither=sierra2_4a[vfinal]",
-                            "-map", "[vfinal]", "-t", seconds(outputDurationMillis),
+                            "-map", "[vfinal]", "-vsync", "vfr", "-t", seconds(outputDurationMillis),
                             "-y", partial.getAbsolutePath());
                 }
                 run(gifCommand, "GIF export", outputDurationMillis, 5, 95);
