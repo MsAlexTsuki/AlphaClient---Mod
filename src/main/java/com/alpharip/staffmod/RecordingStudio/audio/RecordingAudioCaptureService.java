@@ -205,7 +205,18 @@ public final class RecordingAudioCaptureService {
         }, "Alpha-RecordingStudio-Microphone-Monitor");
         worker.setDaemon(true);
         monitorThread = worker;
-        worker.start();
+        try {
+            worker.start();
+        } catch (Throwable failure) {
+            monitoring = false;
+            monitorLine = null;
+            monitorQueue = null;
+            monitorThread = null;
+            try { output.stop(); } catch (RuntimeException ignored) { }
+            try { output.close(); } catch (RuntimeException ignored) { }
+            if (failure instanceof Exception) throw (Exception) failure;
+            throw (Error) failure;
+        }
     }
 
     public synchronized void stopMonitoring() {
