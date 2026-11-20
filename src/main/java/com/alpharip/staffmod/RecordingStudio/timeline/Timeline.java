@@ -154,7 +154,7 @@ public final class Timeline {
                 || "@capture".equals(from.getSource()) || "@capture".equals(to.getSource())) return false;
         for (TimelineTransition existing : transitions) {
             if (existing.getFromClipId().equals(transition.getFromClipId())
-                    && existing.getToClipId().equals(transition.getToClipId())) return false;
+                    || existing.getToClipId().equals(transition.getToClipId())) return false;
         }
         transitions.add(transition);
         return true;
