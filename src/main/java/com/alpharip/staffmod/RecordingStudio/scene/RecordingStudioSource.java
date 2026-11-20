@@ -5,7 +5,9 @@ public final class RecordingStudioSource {
     public enum Type {
         GAME_CAPTURE,
         MICROPHONE,
-        GAME_AUDIO
+        GAME_AUDIO,
+        DESKTOP,
+        DISPLAY
     }
 
     private final String id;
@@ -13,6 +15,7 @@ public final class RecordingStudioSource {
     private final Type type;
     private boolean enabled;
     private String audioDeviceKey = "";
+    private String screenDeviceId = "";
 
     public RecordingStudioSource(String id, String name, Type type, boolean enabled) {
         if (blank(id) || blank(name) || type == null) {
@@ -35,6 +38,13 @@ public final class RecordingStudioSource {
     public synchronized void setAudioDeviceKey(String value) {
         if (type != Type.MICROPHONE && type != Type.GAME_AUDIO) throw new IllegalStateException("This source does not use an audio input device");
         audioDeviceKey = value == null ? "" : value.trim();
+    }
+
+    /** Stable AWT device identifier used only by an additional Display source. */
+    public synchronized String getScreenDeviceId() { return screenDeviceId; }
+    public synchronized void setScreenDeviceId(String value) {
+        if (type != Type.DISPLAY) throw new IllegalStateException("Only Display sources select a monitor");
+        screenDeviceId = value == null ? "" : value.trim();
     }
 
     private static boolean blank(String value) {
