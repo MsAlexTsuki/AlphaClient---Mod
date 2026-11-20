@@ -122,11 +122,52 @@ public final class Timeline {
         return Collections.unmodifiableList(new ArrayList<TimelineTrack>(tracks));
     }
 
+    /** Returns only transitions that currently connect adjacent imported video clips. */
     public synchronized List<TimelineTransition> getTransitions() {
-        for (int i = transitions.size() - 1; i >= 0; i--) {
-            if (!isValidTransition(transitions.get(i))) transitions.remove(i);
+        List<TimelineTransition> valid = new ArrayList<TimelineTransition>();
+        for (TimelineTransition transition : transitions) {
+            if (isValidTransition(transition)) valid.add(transition);
         }
-        return Collections.unmodifiableList(new ArrayList<TimelineTransition>(transitions));
+        return Collections.unmodifiableList(valid);
+    }
+
+    /** Returns persisted transitions whose two referenced video clips still exist, even while temporarily non-adjacent. */
+    public synchronized List<TimelineTransition> getStoredTransitions() {
+        List<TimelineTransition> stored = new ArrayList<TimelineTransition>();
+        for (TimelineTransition transition : transitions) {
+            TimelineClip from = findVideoClip(transition.getFromClipId());
+            TimelineClip to = findVideoClip(transition.getToClipId());
+            if (from != null && to != null
+                    && !"@capture".equals(from.getSource()) && !"@capture".equals(to.getSource())) {
+                stored.add(transition);
+            }
+        }
+        return Collections.unmodifiableList(stored);
+    }
+
+    /** Restores a saved transition without requiring the clips to be adjacent at load time. */
+    public synchronized boolean restoreTransition(TimelineTransition transition) {
+        if (transition == null) throw new IllegalArgumentException("Transition is required");
+        TimelineClip from = findVideoClip(transition.getFromClipId());
+        TimelineClip to = findVideoClip(transition.getToClipId());
+        if (from == null || to == null || from == to
+                || "@capture".equals(from.getSource()) || "@capture".equals(to.getSource())) return false;
+        for (TimelineTransition existing : transitions) {
+            if (existing.getFromClipId().equals(transition.getFromClipId())
+                    && existing.getToClipId().equals(transition.getToClipId())) return false;
+        }
+        transitions.add(transition);
+        return true;
+    }
+
+    private TimelineClip findVideoClip(String clipId) {
+        for (TimelineTrack track : tracks) {
+            if (!"video".equals(track.getId())) continue;
+            for (TimelineClip clip : track.getClips()) {
+                if (clip.getId().equals(clipId)) return clip;
+            }
+        }
+        return null;
     }
 
     public synchronized TimelineTransition getTransition(String fromClipId, String toClipId) {
