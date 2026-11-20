@@ -211,3 +211,37 @@ gradle.taskGraph.whenReady { taskGraph ->
         versionFile.text = nextBuildNumber.toString()
     }
 }
+
+
+/*
+ * ==========================================
+ * WINDOWS WASAPI NATIVE BRIDGE
+ * ==========================================
+ *
+ * The Windows x64 bridge is compiled from source and packaged inside the addon JAR.
+ * Non-Windows builds remain source-compatible but do not contain the Windows DLL.
+ */
+def recordingStudioWindowsHost = System.getProperty("os.name", "").toLowerCase().contains("win")
+
+if (recordingStudioWindowsHost) {
+    def wasapiBuildDirectory = file("$buildDir/wasapi")
+
+    task configureWasapiNative(type: Exec) {
+        workingDir projectDir
+        environment "JAVA_HOME", System.getenv("JAVA_HOME")
+        commandLine "cmake", "-S", file("native/wasapi").absolutePath,
+                "-B", wasapiBuildDirectory.absolutePath, "-A", "x64"
+    }
+
+    task compileWasapiNative(type: Exec) {
+        dependsOn configureWasapiNative
+        workingDir projectDir
+        commandLine "cmake", "--build", wasapiBuildDirectory.absolutePath, "--config", "Release"
+    }
+
+    processResources.dependsOn compileWasapiNative
+    processResources.from(file("$buildDir/wasapi/bin/Release")) {
+        include "alpha_wasapi.dll"
+        into "native/windows-x86_64"
+    }
+}
