@@ -84,7 +84,7 @@ The items below are **not implemented** unless a status elsewhere in this README
 - [ ] Add a user-confirmed cleanup workflow only after retention rules and protected-file behavior are specified.
 
 ### Camera and integration
-- [x] Apply camera roll through Forge's `EntityViewRenderEvent.CameraSetup` while the Studio-owned render-view camera is active; the Camera Editor exposes Roll - / Roll + controls and displays the saved roll angle.
+- [x] Apply camera roll through Forge's `EntityViewRenderEvent.CameraSetup` while the Studio-owned render-view camera is active; the Camera Editor exposes Roll - / Roll + controls and displays the current roll angle.
 - [x] Add a configurable Minecraft keybind for the addon (default F8); it opens Recording Studio when no GUI is active. A top-level Alpha Client module-menu entry remains separate work because it requires integration with the Alpha Client core menu.
 - [ ] Compile and verify camera-path interpolation and render-thread behavior in Minecraft.
 
