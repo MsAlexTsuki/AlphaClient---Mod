@@ -29,6 +29,7 @@ public final class RecordingStudioScreen extends GuiScreen {
     private long externalReviewPositionMillis;
     private long externalReviewLastTick;
     private boolean navigating;
+    private String activeTab = "RECORDING";
     private GuiTextField sceneNameField;
     private String selectedSourceId;
 
@@ -87,6 +88,9 @@ public final class RecordingStudioScreen extends GuiScreen {
         add(28, rightX + 8, 198, buttonWidth, "Source Up");
         add(29, rightX + 8 + buttonWidth + gap, 198, buttonWidth, "Source Down");
         buttonList.add(new AlphaStudioButton(31, width - 94, 10, 78, 17, "Settings"));
+        buttonList.add(new AlphaStudioButton(36, width / 2 - 126, 42, 80, 18, "Recording"));
+        buttonList.add(new AlphaStudioButton(37, width / 2 - 40, 42, 80, 18, "Editing"));
+        buttonList.add(new AlphaStudioButton(38, width / 2 + 46, 42, 80, 18, "Publishing"));
 
         add(19, 18, 84, 126, "Next Scene");
         add(20, 18, 106, 126, "New Scene", true);
@@ -112,6 +116,28 @@ public final class RecordingStudioScreen extends GuiScreen {
         GuiButton pathButton = findButton(16);
         if (pathButton != null) pathButton.enabled = !"normal_gameplay".equals(runtime.getSelectedModuleId())
                 && !runtime.getSelectedModuleOptions().isEmpty();
+        updateTabButtonVisibility();
+    }
+
+    private void updateTabButtonVisibility() {
+        for (Object value : buttonList) {
+            GuiButton b = (GuiButton) value;
+            if (b.id == 31 || b.id == 36 || b.id == 37 || b.id == 38) { b.visible = true; continue; }
+            boolean rec = "RECORDING".equals(activeTab), edit = "EDITING".equals(activeTab), pub = "PUBLISHING".equals(activeTab);
+            switch (b.id) {
+                case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 10: case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: b.visible = rec; break;
+                case 4: case 32: case 33: case 34: case 35: b.visible = edit; break;
+                case 11: case 12: case 13: b.visible = pub; break;
+                default: b.visible = true; break;
+            }
+        }
+    }
+
+    private void selectTab(String tab) {
+        if (tab == null || tab.equals(activeTab)) return;
+        if (!"EDITING".equals(tab)) { playback.pause(); audioPlayback.pause(); externalReviewPlaying = false; }
+        activeTab = tab;
+        initGui();
     }
 
     private GuiButton findButton(int id) {
@@ -138,6 +164,9 @@ public final class RecordingStudioScreen extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         switch (button.id) {
+            case 36: selectTab("RECORDING"); return;
+            case 37: selectTab("EDITING"); return;
+            case 38: selectTab("PUBLISHING"); return;
             case 0:
                 playback.pause();
                 audioPlayback.pause();
