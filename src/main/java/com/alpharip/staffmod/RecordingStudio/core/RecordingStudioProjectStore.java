@@ -67,6 +67,17 @@ public final class RecordingStudioProjectStore {
             }
         }
 
+        List<TimelineTransition> transitions = timeline.getTransitions();
+        data.setProperty("transition.count", Integer.toString(transitions.size()));
+        for (int i = 0; i < transitions.size(); i++) {
+            TimelineTransition transition = transitions.get(i);
+            String prefix = "transition." + i + ".";
+            data.setProperty(prefix + "fromClipId", transition.getFromClipId());
+            data.setProperty(prefix + "toClipId", transition.getToClipId());
+            data.setProperty(prefix + "type", transition.getType().name());
+            data.setProperty(prefix + "durationMillis", Long.toString(transition.getDurationMillis()));
+        }
+
         List<TimelineMarker> markers = timeline.getMarkers();
         data.setProperty("marker.count", Integer.toString(markers.size()));
         for (int i = 0; i < markers.size(); i++) {
@@ -108,6 +119,18 @@ public final class RecordingStudioProjectStore {
                 }
                 timeline.addTrack(track);
             }
+            String savedTransitionCount = data.getProperty("transition.count");
+            if (savedTransitionCount != null) {
+                int transitionCount = count(data, "transition.count");
+                for (int i = 0; i < transitionCount; i++) {
+                    String prefix = "transition." + i + ".";
+                    timeline.setTransition(required(data, prefix + "fromClipId"),
+                            required(data, prefix + "toClipId"),
+                            TimelineTransitionType.valueOf(required(data, prefix + "type")),
+                            Long.parseLong(required(data, prefix + "durationMillis")));
+                }
+            }
+
             String savedSceneCount = data.getProperty("scene.count");
             if (savedSceneCount == null) {
                 timeline.addScene(RecordingStudioScene.createDefault("main", "Main Scene"));
