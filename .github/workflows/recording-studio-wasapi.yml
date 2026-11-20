@@ -8,7 +8,8 @@ on:
       - "native/wasapi/**"
       - "src/main/java/com/alpharip/staffmod/RecordingStudio/audio/**"
       - "src/main/java/com/alpharip/staffmod/RecordingStudio/core/RecordingStudioController.java"
-      - "src/main/java/com/alpharip/staffmod/RecordingStudio/ui/RecordingStudioScreen.java"
+      - "src/main/java/com/alpharip/staffmod/RecordingStudio/**/*.java"
+      - "src/main/java/com/alpharip/staffmod/AlphaRecordingStudio.java"
       - "build.gradle"
       - ".github/workflows/recording-studio-wasapi.yml"
       - "README.md"
@@ -16,7 +17,8 @@ on:
     paths:
       - "native/wasapi/**"
       - "src/main/java/com/alpharip/staffmod/RecordingStudio/audio/**"
-      - "src/main/java/com/alpharip/staffmod/RecordingStudio/core/RecordingStudioController.java"
+      - "src/main/java/com/alpharip/staffmod/RecordingStudio/**/*.java"
+      - "src/main/java/com/alpharip/staffmod/AlphaRecordingStudio.java"
       - "build.gradle"
 
 jobs:
