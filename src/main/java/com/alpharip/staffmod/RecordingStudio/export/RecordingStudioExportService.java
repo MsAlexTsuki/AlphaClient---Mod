@@ -298,6 +298,8 @@ public final class RecordingStudioExportService {
                 writer.write(escapeConcatPath(frames[i].getAbsolutePath()));
                 writer.write("'");
                 writer.newLine();
+                writer.write("option framerate 1000");
+                writer.newLine();
                 long duration = i + 1 < frames.length
                         ? Math.max(1L, timestamps[i + 1] - timestamps[i]) : fallbackInterval;
                 writer.write("duration ");
@@ -308,6 +310,8 @@ public final class RecordingStudioExportService {
             writer.write("file '");
             writer.write(escapeConcatPath(frames[frames.length - 1].getAbsolutePath()));
             writer.write("'");
+            writer.newLine();
+            writer.write("option framerate 1000");
             writer.newLine();
         } catch (IOException failure) {
             if (!manifest.delete()) manifest.deleteOnExit();
@@ -459,6 +463,9 @@ public final class RecordingStudioExportService {
                     .append("trim=duration=").append(seconds(sourceDuration))
                     .append(",setpts=(PTS-STARTPTS)/")
                     .append(String.format(Locale.ROOT, "%.6f", speed));
+            if (incoming != null) {
+                filter.append(",tpad=start_mode=clone:start_duration=").append(seconds(transitionDuration));
+            }
             if (inputIndexes.get(i) != 0 || captureIndex < 0) filter.append(",fps=").append(rate);
             filter.append(",scale=").append(width).append(':').append(height)
                     .append(":force_original_aspect_ratio=decrease")
