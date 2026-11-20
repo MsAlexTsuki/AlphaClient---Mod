@@ -377,9 +377,27 @@ public final class RecordingStudioRuntime {
         event.setRoll(activeCamera.getPose().roll);
     }
 
+    private boolean usesDesktopCapture() {
+        com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene scene = controller.getActiveScene();
+        if (scene == null) return false;
+        com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource desktop =
+                scene.findSource(com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource.Type.DESKTOP);
+        com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource display =
+                scene.findSource(com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource.Type.DISPLAY);
+        return (desktop != null && desktop.isEnabled()) || (display != null && display.isEnabled());
+    }
+
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
+        if (event.type == RenderGameOverlayEvent.ElementType.ALL && !usesDesktopCapture()) {
+            controller.captureFrameTick(System.currentTimeMillis());
+        }
+    }
+
+    /** Desktop screenshots are taken after the full Minecraft frame, including its open GUI, is rendered. */
+    @SubscribeEvent
+    public void onRenderTick(TickEvent.RenderTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && usesDesktopCapture()) {
             controller.captureFrameTick(System.currentTimeMillis());
         }
     }
@@ -388,7 +406,7 @@ public final class RecordingStudioRuntime {
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft != null && minecraft.gameSettings != null
+        if (!usesDesktopCapture() && minecraft != null && minecraft.gameSettings != null
                 && minecraft.gameSettings.hideGUI) {
             controller.captureFrameTick(System.currentTimeMillis());
         }
