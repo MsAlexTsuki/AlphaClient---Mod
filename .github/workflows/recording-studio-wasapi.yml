@@ -11,6 +11,7 @@ on:
       - "src/main/java/com/alpharip/staffmod/RecordingStudio/ui/RecordingStudioScreen.java"
       - "build.gradle"
       - ".github/workflows/recording-studio-wasapi.yml"
+      - "README.md"
   pull_request:
     paths:
       - "native/wasapi/**"
