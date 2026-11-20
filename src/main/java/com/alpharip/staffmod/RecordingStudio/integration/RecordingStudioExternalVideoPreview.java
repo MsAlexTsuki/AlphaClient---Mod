@@ -82,6 +82,7 @@ public final class RecordingStudioExternalVideoPreview {
             double sourceSeconds = offsetMillis * clip.getSpeed() / 1000.0D;
             long previewBucket = Math.max(0L, (long) Math.floor(sourceSeconds * 10.0D));
             keyBuilder.append(clip.getId()).append('|').append(clip.getSource())
+                    .append('|').append(clip.getEffect().name())
                     .append('|').append(previewBucket).append(';');
             File source = new File(clip.getSource());
             if (!source.isFile()) {
