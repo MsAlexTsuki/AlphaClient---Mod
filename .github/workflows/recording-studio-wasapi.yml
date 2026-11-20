@@ -43,6 +43,8 @@ jobs:
           if (!(Test-Path $dll)) { throw "WASAPI DLL was not produced: $dll" }
 
       - name: Package native DLL through Gradle resources
+        env:
+          ALPHA_WASAPI_CMAKE_GENERATOR: Visual Studio 18 2026
         run: .\gradlew.bat processResources --no-daemon
 
       - name: Verify packaged resource
