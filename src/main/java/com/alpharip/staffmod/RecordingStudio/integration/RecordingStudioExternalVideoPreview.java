@@ -3,6 +3,7 @@ package com.alpharip.staffmod.RecordingStudio.integration;
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineClip;
 import com.alpharip.staffmod.RecordingStudio.timeline.TimelineTrack;
+import com.alpharip.staffmod.RecordingStudio.capture.RecordingFrameTimestamp;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -249,10 +250,23 @@ public final class RecordingStudioExternalVideoPreview {
             capturedFrames = found;
             capturedFramesScanned = true;
         }
-        long relative = Math.max(0L, positionMillis - captureClip.getStart());
-        long frameIndex = relative / frameIntervalMillis;
-        if (frameIndex < 0L || frameIndex >= capturedFrames.length) return null;
-        return capturedFrames[(int) frameIndex];
+        long targetTimestamp = Math.max(0L, positionMillis);
+        int low = 0;
+        int high = capturedFrames.length - 1;
+        int selected = -1;
+        while (low <= high) {
+            int middle = low + (high - low) / 2;
+            long fallback = middle > Long.MAX_VALUE / frameIntervalMillis
+                    ? Long.MAX_VALUE : (long) middle * frameIntervalMillis;
+            long frameTimestamp = RecordingFrameTimestamp.read(capturedFrames[middle], fallback);
+            if (frameTimestamp <= targetTimestamp) {
+                selected = middle;
+                low = middle + 1;
+            } else {
+                high = middle - 1;
+            }
+        }
+        return selected < 0 ? null : capturedFrames[selected];
     }
 
     private static java.util.List<TimelineClip> findActiveExternalClips(
