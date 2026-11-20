@@ -64,7 +64,9 @@ public final class RecordingStudioCleanupService {
         int deleted = 0;
         long bytes = 0L;
         for (File file : plan.files) {
-            String relative = file.getCanonicalPath().substring(rootPath.length());
+            String canonical = file.getCanonicalPath();
+            if (!canonical.startsWith(rootPath)) continue;
+            String relative = canonical.substring(rootPath.length());
             int firstSeparator = relative.indexOf(File.separatorChar);
             int secondSeparator = firstSeparator < 0 ? -1 : relative.indexOf(File.separatorChar, firstSeparator + 1);
             if (firstSeparator < 0) continue;
