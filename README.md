@@ -26,7 +26,7 @@ Use the included Gradle wrapper with the ForgeGradle 2.1 build configuration.
 - This branch contains the Recording Studio and Build Timelapse source packages plus the addon build files.
 - No AlphaClient core source, launcher source, Supabase project files or unrelated client modules are included.
 - Build Timelapse is composed by the addon at client-world load. Its camera-path adapter is registered before Recording Studio opens; `/buildtimelapse` opens the separate workspace.
-- Windows x64 Game Audio uses the packaged WASAPI loopback bridge and captures the Windows default output mix; Stereo Mix and virtual audio cables are not required. The microphone remains a separate input.
+- Windows x64 Game Audio uses the packaged WASAPI loopback bridge and captures the Windows default output mix from all applications, not Minecraft alone; Stereo Mix and virtual audio cables are not required. The microphone remains a separate input.
 - Building the Windows addon JAR requires a Java 8 JDK, CMake 3.15+ and the Visual Studio C++ x64 build tools so Gradle can compile and package `alpha_wasapi.dll`.
 - FFmpeg and FFprobe are external requirements for the applicable export workflows.
 - The addon dependency metadata, runtime composition and source changes have not yet been compiled or tested in Minecraft.
