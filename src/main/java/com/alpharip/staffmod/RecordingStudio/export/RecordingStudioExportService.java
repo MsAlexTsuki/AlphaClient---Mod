@@ -502,8 +502,8 @@ public final class RecordingStudioExportService {
                         filter.append(",fade=t=in:st=").append(seconds(incomingHalf))
                                 .append(":d=").append(seconds(Math.max(1L, transitionDuration - incomingHalf)))
                                 .append(":color=black")
-                                .append(",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(gte(T/")
-                                .append(seconds(1L)).append(",").append(seconds(incomingHalf)).append("),255,0)'");
+                                .append(",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(gte(T,")
+                                .append(seconds(incomingHalf)).append("),255,0)'");
                         break;
                     case WIPE_LEFT:
                         filter.append(",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lt(X,W*min(1,T/")
