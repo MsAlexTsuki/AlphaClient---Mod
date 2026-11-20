@@ -612,6 +612,8 @@ public final class RecordingStudioController {
     }
 
     public synchronized String getExportStatus() { return exportService.getStatus(); }
+    public synchronized boolean isExportRunning() { return exportService.isRunning(); }
+    public synchronized int getExportProgressPercent() { return exportService.getProgressPercent(); }
     public synchronized com.alpharip.staffmod.RecordingStudio.export.RecordingStudioExportSettings getExportSettings() { return exportSettings; }
 
     public synchronized void adjustCaptureInterval(long deltaMillis) {

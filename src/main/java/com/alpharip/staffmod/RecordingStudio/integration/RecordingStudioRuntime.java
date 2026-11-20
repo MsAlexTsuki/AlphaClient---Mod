@@ -6,6 +6,8 @@ import com.alpharip.staffmod.RecordingStudio.module.RecordingStudioModule;
 import com.alpharip.staffmod.RecordingStudio.module.RecordingStudioModuleRegistry;
 import com.alpharip.staffmod.RecordingStudio.ui.RecordingStudioScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -389,9 +391,31 @@ public final class RecordingStudioRuntime {
 
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.type == RenderGameOverlayEvent.ElementType.ALL && !usesDesktopCapture()) {
-            controller.captureFrameTick(System.currentTimeMillis());
-        }
+        if (event.type != RenderGameOverlayEvent.ElementType.ALL) return;
+        if (!usesDesktopCapture()) controller.captureFrameTick(System.currentTimeMillis());
+        drawExportProgressHud();
+    }
+
+    /** Keeps accepted FFmpeg exports visible after the Studio window has been closed. */
+    private void drawExportProgressHud() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null || minecraft.fontRendererObj == null
+                || minecraft.currentScreen instanceof RecordingStudioScreen
+                || !controller.isExportRunning()) return;
+
+        ScaledResolution resolution = new ScaledResolution(minecraft);
+        String heading = "RECORDING STUDIO";
+        String progress = "EXPORT " + controller.getExportProgressPercent() + "%";
+        int panelWidth = Math.max(minecraft.fontRendererObj.getStringWidth(heading),
+                minecraft.fontRendererObj.getStringWidth(progress)) + 16;
+        int panelHeight = 30;
+        int left = resolution.getScaledWidth() - panelWidth - 8;
+        int top = resolution.getScaledHeight() - panelHeight - 8;
+
+        Gui.drawRect(left, top, left + panelWidth, top + panelHeight, 0xD9101010);
+        Gui.drawRect(left, top, left + 2, top + panelHeight, 0xFFFFC83D);
+        minecraft.fontRendererObj.drawStringWithShadow(heading, left + 8, top + 5, 0xFFFFC83D);
+        minecraft.fontRendererObj.drawStringWithShadow(progress, left + 8, top + 17, 0xFFFFFFFF);
     }
 
     /** Desktop screenshots are taken after the full Minecraft frame, including its open GUI, is rendered. */
