@@ -68,6 +68,9 @@ public final class RecordingStudioProjectStore {
                         || source.getType() == RecordingStudioSource.Type.GAME_AUDIO) {
                     data.setProperty(sourcePrefix + "audioDeviceKey", source.getAudioDeviceKey());
                 }
+                if (source.getType() == RecordingStudioSource.Type.DISPLAY) {
+                    data.setProperty(sourcePrefix + "screenDeviceId", source.getScreenDeviceId());
+                }
             }
         }
 
@@ -159,6 +162,9 @@ public final class RecordingStudioProjectStore {
                         if (source.getType() == RecordingStudioSource.Type.MICROPHONE
                                 || source.getType() == RecordingStudioSource.Type.GAME_AUDIO) {
                             source.setAudioDeviceKey(data.getProperty(sourcePrefix + "audioDeviceKey", ""));
+                        }
+                        if (source.getType() == RecordingStudioSource.Type.DISPLAY) {
+                            source.setScreenDeviceId(data.getProperty(sourcePrefix + "screenDeviceId", ""));
                         }
                         scene.addSource(source);
                     }
