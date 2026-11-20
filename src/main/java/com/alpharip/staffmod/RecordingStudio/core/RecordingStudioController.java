@@ -366,7 +366,7 @@ public final class RecordingStudioController {
             return;
         }
         java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
-                RecordingAudioCaptureService.getAvailableMicrophones();
+                RecordingAudioCaptureService.getAvailableLoopbackDevices();
         if (devices.isEmpty()) {
             source.setAudioDeviceKey("");
             gameAudioSelectionName = "Windows default output (WASAPI)";
@@ -407,7 +407,7 @@ public final class RecordingStudioController {
             return;
         }
         java.util.List<RecordingAudioCaptureService.MicrophoneDevice> devices =
-                RecordingAudioCaptureService.getAvailableMicrophones();
+                RecordingAudioCaptureService.getAvailableLoopbackDevices();
         String selected = source.getAudioDeviceKey();
         if (selected == null || selected.isEmpty()) {
             gameAudioSelectionName = "Windows default output (WASAPI)";
@@ -434,7 +434,7 @@ public final class RecordingStudioController {
         String selected = source.getAudioDeviceKey();
         if (selected == null || selected.isEmpty()) return "Windows default output (WASAPI)";
         for (RecordingAudioCaptureService.MicrophoneDevice device
-                : RecordingAudioCaptureService.getAvailableMicrophones()) {
+                : RecordingAudioCaptureService.getAvailableLoopbackDevices()) {
             if (device.getKey().equals(selected)) return device.getName() + " (Java Sound)";
         }
         return "Unavailable";
