@@ -39,6 +39,7 @@ Optional general-purpose recording feature packaged in the Alpha Recording Studi
 - Adjustable capture interval in 100 ms steps, bounded to 100–60000 ms.
 - Separate successful-frame and failed-frame counters; failed writes do not inflate the saved-frame count.
 - Shared general-purpose timeline, marker and clip/track models and editor.
+- Timeline Editor media import through a file picker for common video formats (MP4, MOV, MKV, AVI, WEBM, M4V, GIF, MPEG, MPG, FLV, WMV) and audio formats (WAV, MP3, AAC, M4A, OGG, FLAC, WMA). Imported files are added to the matching Video or Audio track, appended at the current timeline end, and use FFprobe to detect their duration. If FFprobe is unavailable or cannot read the file, the selected path remains available for manual clip creation with a user-entered duration.
 - Shared camera pose, modes, paths, waypoints, interpolation, presets, orbit calculations and local path persistence.
 - Recording Studio-owned Minecraft render-view camera adapter. It uses an unspawned render-view entity and does not move or control the real player.
 - In-game Camera Editor for activation, deactivation, position, rotation, FOV and camera paths.
