@@ -166,7 +166,6 @@ Java_com_alpharip_staffmod_RecordingStudio_audio_WasapiNativeBridge_nativeCaptur
     env->ReleaseStringChars(temporaryPath, temporaryChars);
     env->ReleaseStringChars(outputPath, outputChars);
 
-    g_stop.store(false);
     HRESULT comResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     const bool uninitializeCom = SUCCEEDED(comResult);
     if (FAILED(comResult) && comResult != RPC_E_CHANGED_MODE) {
@@ -315,6 +314,12 @@ Java_com_alpharip_staffmod_RecordingStudio_audio_WasapiNativeBridge_nativeCaptur
     }
     const uint32_t bytesPerSecond = sampleRate * channels * 2U;
     return bytesPerSecond == 0 ? 0 : static_cast<jlong>(dataBytes) * 1000LL / bytesPerSecond;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_alpharip_staffmod_RecordingStudio_audio_WasapiNativeBridge_nativeReset(
+        JNIEnv*, jclass) {
+    g_stop.store(false);
 }
 
 extern "C" JNIEXPORT void JNICALL
