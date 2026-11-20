@@ -47,9 +47,10 @@ Optional general-purpose recording feature packaged in the Alpha Recording Studi
 - Timeline Editor media import through a file picker for common video formats (MP4, MOV, MKV, AVI, WEBM, M4V, GIF, MPEG, MPG, FLV, WMV) and audio formats (WAV, MP3, AAC, M4A, OGG, FLAC, WMA). Imported files are added to the matching Video or Audio track, appended at the current timeline end, and use FFprobe on a background worker to detect their duration without running the probe on the Minecraft client thread. If FFprobe is unavailable or cannot read the file, the selected path remains available for manual clip creation with a user-entered duration.
 - Shared camera pose, modes, paths, waypoints, interpolation, presets, orbit calculations and local path persistence.
 - Recording Studio-owned Minecraft render-view camera adapter. It uses an unspawned render-view entity and does not move or control the real player.
-- In-game Camera Editor for activation, deactivation, position, rotation, FOV and camera paths.
+- In-game Camera Editor for activation, deactivation, position, yaw, pitch, roll, FOV and camera paths. Camera roll is applied through Forge's camera-setup event only while the Recording Studio-owned render-view camera is active.
 - World-space camera marker: a gold wireframe camera body and cyan direction/frustum guide are rendered at the active camera position, including while the editor GUI is open.
 - Camera paths are stored locally under the Recording Studio data directory.
+- F8 keyboard shortcut to open Recording Studio while no GUI is open; the shortcut is registered as a Minecraft control and can be rebound in Controls.
 - No Build Timelapse imports, build-event listeners, Supabase calls or network services inside Recording Studio.
 
 ## Remaining work / roadmap
@@ -82,8 +83,8 @@ The items below are **not implemented** unless a status elsewhere in this README
 - [ ] Add a user-confirmed cleanup workflow only after retention rules and protected-file behavior are specified.
 
 ### Camera and integration
-- [ ] Apply camera roll in the Minecraft render-view adapter.
-- [ ] Add a keybind or top-level module-menu entry for the addon; currently the documented entry points are the in-game commands.
+- [x] Apply camera roll through Forge's `EntityViewRenderEvent.CameraSetup` while the Studio-owned render-view camera is active; the Camera Editor exposes Roll - / Roll + controls and displays the saved roll angle.
+- [x] Add a configurable Minecraft keybind for the addon (default F8); it opens Recording Studio when no GUI is active. A top-level Alpha Client module-menu entry remains separate work because it requires integration with the Alpha Client core menu.
 - [ ] Compile and verify camera-path interpolation and render-thread behavior in Minecraft.
 
 ### Verification and release readiness
@@ -93,11 +94,11 @@ The items below are **not implemented** unless a status elsewhere in this README
 
 ## Current limitations
 - The Build Timelapse module option is registered when BuildTimelapseRuntime starts. Closing its Studio screen releases its camera but keeps the adapter registered until the current world unloads, so Recording Studio can select it in the same world session.
-- The Alpha Recording Studio Forge entry point initializes BuildTimelapseRuntime on client-world load and registers its camera-path adapter before Recording Studio opens. `/buildtimelapse` opens the separate workspace; no keybind or top-level module-menu entry is registered.
+- The Alpha Recording Studio Forge entry point initializes BuildTimelapseRuntime on client-world load and registers its camera-path adapter before Recording Studio opens. `/buildtimelapse` opens the separate workspace. Recording Studio can also be opened with the configurable F8 keybind when no GUI is active; a top-level Alpha Client module-menu entry is not implemented in this isolated addon branch.
 - Build Timelapse camera paths remain stored under `buildtimelapse/camera-paths/`; the Recording Studio Module panel reads those saved paths. Path creation/editing remains in the Build Timelapse Camera Editor.
 - If a separate Build Timelapse recording is already active, Recording Studio will not take ownership of its camera.
 - The in-game marker is a debug visualization, not a full 3D camera model.
-- Camera roll is not applied by the Minecraft render-view adapter.
+- Camera roll is applied by the Forge camera-setup event while the Studio-owned render-view camera is active; this has not yet been verified in a running Minecraft client.
 - Camera path interpolation and render-thread behavior have not been compiled or tested in Minecraft.
 - Capture uses native framebuffer resolution. OpenGL framebuffer readback remains on the Minecraft client thread; PNG conversion and disk writing run asynchronously.
 - FFmpeg must be installed separately and available as `ffmpeg` on PATH for MP4/GIF export.
@@ -107,5 +108,5 @@ The items below are **not implemented** unless a status elsewhere in this README
 - Crash recovery is currently checkpoint-based: it detects an uncleanly interrupted session and preserves previously written frames for continuation; it does not reconstruct a frame or microphone audio that was still being captured or encoded at the moment of the crash. Active-time recovery typically loses up to about one second since the last checkpoint under normal tick operation; a longer client stall can increase that gap.
 - Scene sources currently cover the built-in Minecraft framebuffer and microphone inputs. Arbitrary media sources are not implemented. Independent per-scene microphone input-device overrides are implemented and persisted. Per-clip effects and fade-in/fade-out controls are available for imported video clips; these controls are not available on the reserved @capture clip, and audio effects are not implemented.
 - Recording Studio Settings currently expose only controls backed by existing functionality: capture interval, export resolution and quality, microphone selection/refresh, preference mode and runtime diagnostics. Accepted export jobs continue after the Studio window closes; an export progress HUD outside Studio and custom capture resolutions remain unavailable. Live microphone monitoring is available during active microphone capture; other advanced pipeline controls remain unavailable and are not presented as working settings.
-- The addon entry point registers `/recordingstudio` and `/buildtimelapse`. It initializes BuildTimelapseRuntime on client-world load, registering the Build Timelapse camera-path adapter before Recording Studio opens. No keybind or top-level module-menu entry has been added.
+- The addon entry point registers `/recordingstudio` and `/buildtimelapse`, and registers a configurable F8 keybind for opening Recording Studio when no GUI is active. It initializes BuildTimelapseRuntime on client-world load, registering the Build Timelapse camera-path adapter before Recording Studio opens. A top-level Alpha Client module-menu entry has not been added because that menu belongs to the separate core integration.
 - This branch contains an isolated ForgeGradle build setup, but the current Recording Studio changes have not been compiled or verified in-game.
