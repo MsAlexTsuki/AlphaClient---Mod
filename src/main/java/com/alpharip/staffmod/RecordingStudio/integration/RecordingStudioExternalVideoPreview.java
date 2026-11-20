@@ -21,11 +21,13 @@ public final class RecordingStudioExternalVideoPreview {
     private static final class ClipRequest {
         final File source;
         final double sourceSeconds;
+        final double fadeFactor;
         final com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect effect;
-        ClipRequest(File source, double sourceSeconds,
+        ClipRequest(File source, double sourceSeconds, double fadeFactor,
                     com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect effect) {
             this.source = source;
             this.sourceSeconds = sourceSeconds;
+            this.fadeFactor = fadeFactor;
             this.effect = effect;
         }
     }
@@ -86,6 +88,7 @@ public final class RecordingStudioExternalVideoPreview {
             long previewBucket = Math.max(0L, (long) Math.floor(sourceSeconds * 10.0D));
             keyBuilder.append(clip.getId()).append('|').append(clip.getSource())
                     .append('|').append(clip.getEffect().name())
+                    .append("|fade=").append(clip.getFadeInMillis()).append(':').append(clip.getFadeOutMillis())
                     .append('|').append(previewBucket).append(';');
             File source = new File(clip.getSource());
             if (!source.isFile()) {
@@ -95,7 +98,16 @@ public final class RecordingStudioExternalVideoPreview {
                 status = "External video file not found: " + source.getName();
                 return true;
             }
-            requests.add(new ClipRequest(source, sourceSeconds, clip.getEffect()));
+            double sourceDurationSeconds = clip.getDuration() * clip.getSpeed() / 1000.0D;
+            double fadeInSeconds = clip.getFadeInMillis() * clip.getSpeed() / 1000.0D;
+            double fadeOutSeconds = clip.getFadeOutMillis() * clip.getSpeed() / 1000.0D;
+            double fadeFactor = 1.0D;
+            if (fadeInSeconds > 0.0D) fadeFactor = Math.min(fadeFactor, sourceSeconds / fadeInSeconds);
+            if (fadeOutSeconds > 0.0D) {
+                fadeFactor = Math.min(fadeFactor, (sourceDurationSeconds - sourceSeconds) / fadeOutSeconds);
+            }
+            fadeFactor = Math.max(0.0D, Math.min(1.0D, fadeFactor));
+            requests.add(new ClipRequest(source, sourceSeconds, fadeFactor, clip.getEffect()));
         }
 
         String key = keyBuilder.toString();
@@ -176,6 +188,12 @@ public final class RecordingStudioExternalVideoPreview {
                         .append(",pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1");
                 String effectFilter = clip.effect.getFfmpegFilter();
                 if (!effectFilter.isEmpty()) filter.append(',').append(effectFilter);
+                if (clip.fadeFactor < 0.999999D) {
+                    String factor = String.format(Locale.ROOT, "%.6f", clip.fadeFactor);
+                    filter.append(",lutrgb=r='val*").append(factor)
+                            .append("':g='val*").append(factor)
+                            .append("':b='val*").append(factor).append("'");
+                }
                 filter.append(clipLabel);
                 filter.append(';').append(currentBase).append(clipLabel)
                         .append("overlay=shortest=1:format=auto").append(nextBase);
