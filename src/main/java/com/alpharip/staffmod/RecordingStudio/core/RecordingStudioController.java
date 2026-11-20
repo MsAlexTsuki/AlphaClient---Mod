@@ -170,6 +170,10 @@ public final class RecordingStudioController {
             sessionStartedInThisRuntime = true;
             lastRecoveryCheckpointAt = now;
             status = "Recording";
+            RecordingStudioScene scene = timeline.getActiveScene();
+            RecordingStudioSource gameAudio = scene == null ? null
+                    : scene.findSource(RecordingStudioSource.Type.GAME_AUDIO);
+            if (gameAudio != null && gameAudio.isEnabled()) startGameAudioCapture();
         } catch (IOException failure) {
             long rollbackTime = System.currentTimeMillis();
             capture.stop();
@@ -339,8 +343,9 @@ public final class RecordingStudioController {
     /** Cycles through Java Sound capture inputs; choose an OS loopback device, not a microphone. */
     public synchronized void selectNextGameAudioInput() {
         ensureOpen();
-        if (gameAudioCapture.isRecording() || gameAudioCapture.isFinalizing()) {
-            status = "Stop game audio capture before changing the input device";
+        if (capture.isRecording() || capture.isPaused()
+                || gameAudioCapture.isRecording() || gameAudioCapture.isFinalizing()) {
+            status = "Stop recording before changing the game-audio input device";
             return;
         }
         RecordingStudioScene scene = timeline.getActiveScene();
@@ -378,8 +383,9 @@ public final class RecordingStudioController {
 
     public synchronized void refreshGameAudioInputs() {
         ensureOpen();
-        if (gameAudioCapture.isRecording() || gameAudioCapture.isFinalizing()) {
-            status = "Stop game audio capture before refreshing inputs";
+        if (capture.isRecording() || capture.isPaused()
+                || gameAudioCapture.isRecording() || gameAudioCapture.isFinalizing()) {
+            status = "Stop recording before refreshing game-audio inputs";
             return;
         }
         RecordingStudioScene scene = timeline.getActiveScene();
@@ -796,6 +802,17 @@ public final class RecordingStudioController {
         persistSceneChange(source.getName() + " removed from " + scene.getName());
     }
 
+    public synchronized void removeActiveSceneSource(String sourceId) {
+        ensureOpen();
+        RecordingStudioScene scene = timeline.getActiveScene();
+        RecordingStudioSource source = scene == null ? null : scene.findSource(sourceId);
+        if (source == null) {
+            status = "Select a source before removing it";
+            return;
+        }
+        removeSceneSource(source.getType());
+    }
+
     public synchronized void toggleSceneSource(RecordingStudioSource.Type type) {
         ensureOpen();
         if (type == null) throw new IllegalArgumentException("Source type is required");
@@ -823,9 +840,13 @@ public final class RecordingStudioController {
         if (type == RecordingStudioSource.Type.MICROPHONE && !source.isEnabled()) {
             resumeMicrophoneAfterPause = false;
             audioCapture.stop();
-        } else if (type == RecordingStudioSource.Type.GAME_AUDIO && !source.isEnabled()) {
-            resumeGameAudioAfterPause = false;
-            gameAudioCapture.stop();
+        } else if (type == RecordingStudioSource.Type.GAME_AUDIO) {
+            if (!source.isEnabled()) {
+                resumeGameAudioAfterPause = false;
+                gameAudioCapture.stop();
+            } else if (capture.isRecording()) {
+                startGameAudioCapture();
+            }
         }
         persistSceneChange(source.getName() + (source.isEnabled() ? " enabled" : " disabled"));
     }
