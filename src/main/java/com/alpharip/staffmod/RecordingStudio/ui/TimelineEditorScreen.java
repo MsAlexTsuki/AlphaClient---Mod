@@ -23,6 +23,7 @@ public final class TimelineEditorScreen extends GuiScreen {
     private int trackIndex, clipIndex;
     private String selectedClipId;
     private TimelineMarker selectedMarker;
+    private int markerKindIndex;
     private String status = "Select a track or create a clip";
     private volatile boolean mediaProbePending;
     private volatile boolean mediaProbeComplete;
@@ -82,8 +83,9 @@ public final class TimelineEditorScreen extends GuiScreen {
         y += 24;
         buttonList.add(new AlphaStudioButton(10, left, y, 290, 20, "Import Media", true));
         y += 22;
-        buttonList.add(new AlphaStudioButton(11, left, y, 140, 20, "Add Marker", true));
-        buttonList.add(new AlphaStudioButton(12, left + 150, y, 140, 20, "Remove Marker", true));
+        add(11, left, y, "Add Marker");
+        add(12, left + 98, y, "Remove Marker");
+        add(13, left + 196, y, "Kind: MANUAL");
         y += 24;
         buttonList.add(new AlphaStudioButton(9, width / 2 - 50, y, 100, 20, "Back", true));
         syncSelection();
@@ -217,7 +219,7 @@ public final class TimelineEditorScreen extends GuiScreen {
                 case 10: importMedia(); break;
                 case 11:
                     long markerTime = number(startField, "Marker time");
-                    selectedMarker = new TimelineMarker(markerTime, "Marker", TimelineMarkerKind.MANUAL);
+                    selectedMarker = new TimelineMarker(markerTime, "Marker", TimelineMarkerKind.values()[markerKindIndex]);
                     timeline.addMarker(selectedMarker);
                     status = "Marker added at " + markerTime + " ms";
                     break;
@@ -226,6 +228,10 @@ public final class TimelineEditorScreen extends GuiScreen {
                         throw new IllegalArgumentException("Select a timeline marker first");
                     status = "Marker removed";
                     selectedMarker = null;
+                    break;
+                case 13:
+                    markerKindIndex = (markerKindIndex + 1) % TimelineMarkerKind.values().length;
+                    status = "New marker kind: " + TimelineMarkerKind.values()[markerKindIndex].name();
                     break;
                 default: break;
             }
@@ -613,6 +619,9 @@ public final class TimelineEditorScreen extends GuiScreen {
         drawString(fontRendererObj, "Duration (ms)", width / 2 - 41, height / 2 - 61, 0xFFFFFF);
         drawString(fontRendererObj, "Speed", width / 2 + 63, height / 2 - 61, 0xFFFFFF);
         drawTimeline();
+        for (GuiButton button : buttonList) {
+            if (button.id == 13) button.displayString = "Kind: " + TimelineMarkerKind.values()[markerKindIndex].name();
+        }
         sourceField.drawTextBox();
         startField.drawTextBox();
         durationField.drawTextBox();
