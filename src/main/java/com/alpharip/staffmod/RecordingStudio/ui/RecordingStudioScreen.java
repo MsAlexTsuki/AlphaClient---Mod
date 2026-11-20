@@ -352,7 +352,7 @@ public final class RecordingStudioScreen extends GuiScreen {
             case 41:
                 controller.addWebcamSource();
                 RecordingStudioScene webcamScene = controller.getActiveScene();
-                if (webcamScene != null) for (int i = webcamScene.getSources().size() - 1; i >= 0; i--) {
+                if (webcamScene != null) for (int i = 0; i < webcamScene.getSources().size(); i++) {
                     RecordingStudioSource candidate = webcamScene.getSources().get(i);
                     if (candidate.getType() == RecordingStudioSource.Type.WEBCAM) { selectedSourceId = candidate.getId(); break; }
                 }
