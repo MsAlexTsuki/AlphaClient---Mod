@@ -123,11 +123,10 @@ public final class Timeline {
     }
 
     public synchronized List<TimelineTransition> getTransitions() {
-        List<TimelineTransition> valid = new ArrayList<TimelineTransition>();
-        for (TimelineTransition transition : transitions) {
-            if (isValidTransition(transition)) valid.add(transition);
+        for (int i = transitions.size() - 1; i >= 0; i--) {
+            if (!isValidTransition(transitions.get(i))) transitions.remove(i);
         }
-        return Collections.unmodifiableList(valid);
+        return Collections.unmodifiableList(new ArrayList<TimelineTransition>(transitions));
     }
 
     public synchronized TimelineTransition getTransition(String fromClipId, String toClipId) {
