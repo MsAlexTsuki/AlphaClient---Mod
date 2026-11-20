@@ -548,16 +548,9 @@ public final class TimelineEditorScreen extends GuiScreen {
         try {
             if (dragMode == DRAG_MARKER) {
                 long targetTime = Math.max(0L, dragMarkerOriginalTime + delta);
-                TimelineMarker previous = selectedMarker;
-                if (timeline.moveMarker(previous, targetTime)) {
-                    for (TimelineMarker marker : timeline.getMarkers()) {
-                        if (marker.getTimeMillis() == targetTime
-                                && marker.getLabel().equals(previous.getLabel())
-                                && marker.getKind() == previous.getKind()) {
-                            selectedMarker = marker;
-                            break;
-                        }
-                    }
+                TimelineMarker moved = timeline.moveMarker(selectedMarker, targetTime);
+                if (moved != null) {
+                    selectedMarker = moved;
                     startField.setText(Long.toString(targetTime));
                 }
             } else if (dragTrack == null || dragClip == null) {
