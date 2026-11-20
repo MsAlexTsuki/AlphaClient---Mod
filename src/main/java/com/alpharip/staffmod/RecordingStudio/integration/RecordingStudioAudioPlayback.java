@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 /** Streams audio timeline clips in sync with the Studio review playhead. */
 public final class RecordingStudioAudioPlayback {
     private static final int BUFFER_SIZE = 16384;
-    private static final class LoadedClip {
+    private final class LoadedClip {
         final String id;
         final File source;
         final long startMillis;
@@ -122,7 +122,7 @@ public final class RecordingStudioAudioPlayback {
 
         void close() { stopStream(); }
 
-        private static void skipFrames(AudioInputStream stream, long frames, int frameSize)
+        private void skipFrames(AudioInputStream stream, long frames, int frameSize)
                 throws java.io.IOException {
             long remaining = frames * (long) frameSize;
             byte[] discard = new byte[8192];
@@ -138,7 +138,7 @@ public final class RecordingStudioAudioPlayback {
             }
         }
 
-        private static void closeQuietly(AudioInputStream stream) {
+        private void closeQuietly(AudioInputStream stream) {
             if (stream == null) return;
             try { stream.close(); } catch (Exception ignored) { }
         }
