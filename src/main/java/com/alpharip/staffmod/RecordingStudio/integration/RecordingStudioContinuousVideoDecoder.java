@@ -36,7 +36,13 @@ final class RecordingStudioContinuousVideoDecoder {
                         + ":(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=bgr24",
                 "-vsync", "0", "-f", "rawvideo", "-pix_fmt", "bgr24", "pipe:1");
         builder.redirectError(errorLog);
-        final Process decoderProcess = builder.start();
+        final Process decoderProcess;
+        try {
+            decoderProcess = builder.start();
+        } catch (IOException startFailure) {
+            if (errorLog.exists() && !errorLog.delete()) errorLog.deleteOnExit();
+            throw startFailure;
+        }
         process = decoderProcess;
         final InputStream input = decoderProcess.getInputStream();
         outputStream = input;
