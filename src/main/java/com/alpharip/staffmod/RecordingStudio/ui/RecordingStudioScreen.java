@@ -638,7 +638,7 @@ public final class RecordingStudioScreen extends GuiScreen {
                 : controller.getProject().getElapsedMillis(now);
         boolean externalVideoActive = playbackMode
                 && externalVideoPreview.update(controller.getTimeline(), previewPositionMillis,
-                        controller.getCapture().getIntervalMillis());
+                        controller.getCapture().getIntervalMillis(), externalReviewPlaying);
         audioPlayback.update(controller.getTimeline(), previewPositionMillis,
                 playbackMode && (playback.isPlaying() || externalReviewPlaying));
         if (editingTab) {
