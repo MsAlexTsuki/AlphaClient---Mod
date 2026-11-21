@@ -12,10 +12,17 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ResourceLocation;
 
 import javax.imageio.ImageIO;
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -53,6 +60,19 @@ public final class RecordingStudioExternalVideoPreview {
         }
     }
 
+    private static final class ContinuousLayer {
+        final String key;
+        final TimelineClip clip;
+        final RecordingStudioContinuousVideoDecoder decoder;
+        BufferedImage latestFrame;
+
+        ContinuousLayer(String key, TimelineClip clip, RecordingStudioContinuousVideoDecoder decoder) {
+            this.key = key;
+            this.clip = clip;
+            this.decoder = decoder;
+        }
+    }
+
     private final File framesDirectory;
     private File[] capturedFrames = new File[0];
     private boolean capturedFramesScanned;
@@ -69,8 +89,8 @@ public final class RecordingStudioExternalVideoPreview {
     private BufferedImage readyImage;
     private String status = "No external video at playhead";
     private volatile Process process;
-    private RecordingStudioContinuousVideoDecoder continuousDecoder;
-    private String continuousDecoderKey = "";
+    private final Map<String, ContinuousLayer> continuousLayers =
+            new LinkedHashMap<String, ContinuousLayer>();
     private long continuousLastPositionMillis = -1L;
     private DynamicTexture texture;
     private ResourceLocation textureLocation;
@@ -94,9 +114,8 @@ public final class RecordingStudioExternalVideoPreview {
             return false;
         }
 
-        if (playing && capturedFrame == null && activeClips.size() == 1
-                && isContinuousPreviewEligible(timeline, activeClips.get(0))) {
-            return updateContinuousPreview(activeClips.get(0), positionMillis);
+        if (playing && capturedFrame == null && !activeClips.isEmpty()) {
+            return updateContinuousPreview(timeline, activeClips, positionMillis);
         }
         stopContinuousDecoder();
 
@@ -179,57 +198,168 @@ public final class RecordingStudioExternalVideoPreview {
         return true;
     }
 
-    private static boolean isContinuousPreviewEligible(Timeline timeline, TimelineClip clip) {
-        if (clip == null || clip.getDuration() <= 0L || clip.getSpeed() != 1.0D
-                || clip.getFadeInMillis() > 0L || clip.getFadeOutMillis() > 0L
-                || clip.getEffect() == null || !"NONE".equals(clip.getEffect().name())) return false;
-        return findTransitionTo(timeline, clip) == null && findTransitionFrom(timeline, clip) == null;
-    }
-
-    private boolean updateContinuousPreview(TimelineClip clip, long positionMillis) {
-        File source = new File(clip.getSource());
-        if (!source.isFile()) {
-            stopContinuousDecoder();
-            status = "External video file not found: " + source.getName();
-            return true;
-        }
-        long offsetMillis = Math.max(0L, positionMillis - clip.getStart());
-        String key = clip.getId() + "|" + source.getAbsolutePath();
+    private boolean updateContinuousPreview(Timeline timeline, java.util.List<TimelineClip> clips,
+                                             long positionMillis) {
         boolean discontinuity = continuousLastPositionMillis >= 0L
                 && (positionMillis < continuousLastPositionMillis
                     || positionMillis - continuousLastPositionMillis > 500L);
-        if (continuousDecoder == null || !key.equals(continuousDecoderKey) || discontinuity) {
-            stopContinuousDecoder();
-            try {
-                continuousDecoder = new RecordingStudioContinuousVideoDecoder(source, offsetMillis / 1000.0D);
-                continuousDecoderKey = key;
-                status = "Starting native-rate video preview...";
-            } catch (Exception failure) {
-                continuousDecoder = null;
-                status = "Continuous video preview failed: " + failure.getMessage();
-                continuousLastPositionMillis = positionMillis;
+        if (discontinuity) stopContinuousDecoder();
+
+        Set<String> activeIds = new HashSet<String>();
+        StringBuilder failures = new StringBuilder();
+        for (TimelineClip clip : clips) {
+            File source = new File(clip.getSource());
+            if (!source.isFile()) {
+                stopContinuousDecoder();
+                status = "External video file not found: " + source.getName();
                 return true;
             }
+            activeIds.add(clip.getId());
+            String key = source.getAbsolutePath() + "|" + clip.getSpeed() + "|"
+                    + clip.getEffect().name();
+            ContinuousLayer layer = continuousLayers.get(clip.getId());
+            if (layer == null || !key.equals(layer.key)) {
+                if (layer != null) layer.decoder.close();
+                try {
+                    long offsetMillis = Math.max(0L, positionMillis - clip.getStart());
+                    double sourceSeconds = offsetMillis * clip.getSpeed() / 1000.0D;
+                    RecordingStudioContinuousVideoDecoder stream =
+                            new RecordingStudioContinuousVideoDecoder(source, sourceSeconds,
+                                    clip.getSpeed(), clip.getEffect());
+                    layer = new ContinuousLayer(key, clip, stream);
+                    continuousLayers.put(clip.getId(), layer);
+                } catch (Exception failure) {
+                    continuousLayers.remove(clip.getId());
+                    if (failures.length() > 0) failures.append("; ");
+                    failures.append(source.getName()).append(": ").append(failure.getMessage());
+                    continue;
+                }
+            }
+            BufferedImage nextFrame;
+            while ((nextFrame = layer.decoder.pollFrame()) != null) {
+                layer.latestFrame = nextFrame;
+            }
+            if (layer.decoder.getFailure() != null) {
+                if (failures.length() > 0) failures.append("; ");
+                failures.append(source.getName()).append(": ").append(layer.decoder.getFailure());
+            }
         }
-        BufferedImage nextFrame = continuousDecoder.pollFrame();
-        if (nextFrame != null) {
-            readyImage = nextFrame;
-            status = "External video preview (continuous source-rate playback)";
-        } else if (continuousDecoder.getFailure() != null) {
-            status = "Continuous video preview failed: " + continuousDecoder.getFailure();
-        } else if (!continuousDecoder.isRunning()) {
-            status = "External video preview stream ended";
+
+        java.util.Iterator<Map.Entry<String, ContinuousLayer>> iterator =
+                continuousLayers.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, ContinuousLayer> entry = iterator.next();
+            if (!activeIds.contains(entry.getKey())) {
+                entry.getValue().decoder.close();
+                iterator.remove();
+            }
         }
+
+        BufferedImage composite = new BufferedImage(RecordingStudioContinuousVideoDecoder.WIDTH,
+                RecordingStudioContinuousVideoDecoder.HEIGHT, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = composite.createGraphics();
+        try {
+            graphics.setColor(Color.BLACK);
+            graphics.fillRect(0, 0, composite.getWidth(), composite.getHeight());
+            graphics.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                    java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            for (TimelineClip clip : clips) {
+                ContinuousLayer layer = continuousLayers.get(clip.getId());
+                if (layer == null || layer.latestFrame == null) continue;
+                drawContinuousLayer(graphics, composite, timeline, clip, layer.latestFrame, positionMillis);
+            }
+        } finally {
+            graphics.dispose();
+        }
+
+        readyImage = composite;
         continuousLastPositionMillis = positionMillis;
+        if (failures.length() > 0) {
+            status = "Continuous video preview issue: " + failures;
+        } else {
+            status = "External video preview (continuous, " + clips.size() + " layer(s))";
+        }
         return true;
     }
 
-    private void stopContinuousDecoder() {
-        if (continuousDecoder != null) {
-            continuousDecoder.close();
-            continuousDecoder = null;
+    private static void drawContinuousLayer(Graphics2D graphics, BufferedImage composite,
+                                            Timeline timeline, TimelineClip clip, BufferedImage frame,
+                                            long positionMillis) {
+        long offsetMillis = Math.max(0L, positionMillis - clip.getStart());
+        double opacity = 1.0D;
+        if (clip.getFadeInMillis() > 0L) {
+            opacity = Math.min(opacity, offsetMillis / (double) clip.getFadeInMillis());
         }
-        continuousDecoderKey = "";
+        if (clip.getFadeOutMillis() > 0L) {
+            opacity = Math.min(opacity,
+                    (clip.getDuration() - offsetMillis) / (double) clip.getFadeOutMillis());
+        }
+
+        TimelineTransition incoming = findTransitionTo(timeline, clip);
+        TimelineTransitionType transitionType = null;
+        double progress = 1.0D;
+        if (incoming != null && positionMillis < clip.getStart()) {
+            long transitionStart = clip.getStart() - incoming.getDurationMillis();
+            progress = Math.max(0.0D, Math.min(1.0D,
+                    (positionMillis - transitionStart) / (double) incoming.getDurationMillis()));
+            transitionType = incoming.getType();
+        }
+        opacity = Math.max(0.0D, Math.min(1.0D, opacity));
+
+        if (transitionType == TimelineTransitionType.DIP_TO_BLACK) {
+            if (progress < 0.5D) {
+                graphics.setComposite(AlphaComposite.SrcOver.derive((float) (progress * 2.0D)));
+                graphics.setColor(Color.BLACK);
+                graphics.fillRect(0, 0, composite.getWidth(), composite.getHeight());
+                graphics.setComposite(AlphaComposite.SrcOver);
+                return;
+            }
+            graphics.setColor(Color.BLACK);
+            graphics.fillRect(0, 0, composite.getWidth(), composite.getHeight());
+            opacity *= Math.max(0.0D, Math.min(1.0D, (progress - 0.5D) * 2.0D));
+        }
+
+        if (transitionType == TimelineTransitionType.SLIDE_LEFT
+                || transitionType == TimelineTransitionType.SLIDE_RIGHT) {
+            BufferedImage previous = new BufferedImage(composite.getWidth(), composite.getHeight(),
+                    BufferedImage.TYPE_INT_RGB);
+            Graphics2D copyGraphics = previous.createGraphics();
+            try { copyGraphics.drawImage(composite, 0, 0, null); }
+            finally { copyGraphics.dispose(); }
+            graphics.setComposite(AlphaComposite.Src);
+            graphics.setColor(Color.BLACK);
+            graphics.fillRect(0, 0, composite.getWidth(), composite.getHeight());
+            int oldOffset = (int) Math.round(composite.getWidth() * progress
+                    * (transitionType == TimelineTransitionType.SLIDE_LEFT ? -1.0D : 1.0D));
+            graphics.drawImage(previous, oldOffset, 0, null);
+            int newOffset = (int) Math.round(composite.getWidth() * (1.0D - progress)
+                    * (transitionType == TimelineTransitionType.SLIDE_LEFT ? 1.0D : -1.0D));
+            graphics.setComposite(AlphaComposite.SrcOver.derive((float) opacity));
+            graphics.drawImage(frame, newOffset, 0, null);
+            graphics.setComposite(AlphaComposite.SrcOver);
+            return;
+        }
+
+        Graphics2D layerGraphics = (Graphics2D) graphics.create();
+        try {
+            if (transitionType == TimelineTransitionType.WIPE_LEFT) {
+                layerGraphics.clipRect(0, 0,
+                        (int) Math.round(composite.getWidth() * progress), composite.getHeight());
+            } else if (transitionType == TimelineTransitionType.WIPE_RIGHT) {
+                int left = (int) Math.round(composite.getWidth() * (1.0D - progress));
+                layerGraphics.clipRect(left, 0, composite.getWidth() - left, composite.getHeight());
+            }
+            if (transitionType == TimelineTransitionType.CROSS_DISSOLVE) opacity *= progress;
+            layerGraphics.setComposite(AlphaComposite.SrcOver.derive((float) opacity));
+            layerGraphics.drawImage(frame, 0, 0, null);
+        } finally {
+            layerGraphics.dispose();
+        }
+    }
+
+    private void stopContinuousDecoder() {
+        for (ContinuousLayer layer : continuousLayers.values()) layer.decoder.close();
+        continuousLayers.clear();
         continuousLastPositionMillis = -1L;
     }
 
