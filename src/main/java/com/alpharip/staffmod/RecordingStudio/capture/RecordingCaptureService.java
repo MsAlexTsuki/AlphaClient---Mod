@@ -47,6 +47,7 @@ public final class RecordingCaptureService {
     private final RecordingCaptureSettings settings;
     private final File directory;
     private final ThreadPoolExecutor encoder;
+    private final Object lifecycleLock = new Object();
     private long nextAt;
     private long nextFileIndex;
     private long timelineOffsetMillis;
@@ -237,6 +238,7 @@ public final class RecordingCaptureService {
     }
 
     public void stop() {
+        synchronized (lifecycleLock) {
         synchronized (this) {
             if (!recording && !paused) return;
             recording = false;
@@ -270,8 +272,8 @@ public final class RecordingCaptureService {
                 lastError = "Video finalization was interrupted before it could be queued";
             }
         }
+        }
     }
-
     public synchronized boolean isRecording() { return recording && !paused; }
     public synchronized boolean isPaused() { return recording && paused; }
     public synchronized long getIntervalMillis() { return settings.getIntervalMillis(); }
@@ -293,16 +295,18 @@ public final class RecordingCaptureService {
     }
 
     public void shutdown() {
-        synchronized (this) {
-            if (closed) return;
+        synchronized (lifecycleLock) {
+            synchronized (this) {
+                if (closed) return;
+            }
+            stop();
+            synchronized (this) {
+                if (closed) return;
+                closed = true;
+            }
+            // Drain accepted frame writes and the finalization barrier in queue order.
+            encoder.shutdown();
         }
-        stop();
-        synchronized (this) {
-            if (closed) return;
-            closed = true;
-        }
-        // Drain already accepted frames without blocking the Minecraft client thread.
-        encoder.shutdown();
     }
 
     /** Waits for already accepted frame writes; intended for a non-client finalizer thread. */
