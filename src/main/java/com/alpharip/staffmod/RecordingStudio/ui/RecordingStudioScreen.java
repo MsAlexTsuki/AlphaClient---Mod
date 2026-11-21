@@ -732,4 +732,3 @@ public final class RecordingStudioScreen extends GuiScreen {
         }
     }
 }
-}
