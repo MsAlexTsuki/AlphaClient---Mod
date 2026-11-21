@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 public final class FfmpegVideoFrameWriter implements RecordingCaptureService.FrameWriter, AutoCloseable {
     private final RecordingCaptureService.FrameWriter source;
     private final File recordingsDirectory;
-    private final double framesPerSecond;
+    private double framesPerSecond;
     private Process process;
     private OutputStream videoInput;
     private File outputFile;
@@ -136,6 +136,12 @@ public final class FfmpegVideoFrameWriter implements RecordingCaptureService.Fra
 
     public boolean storesFrameTimestamps() {
         return false;
+    }
+
+    public synchronized void onCaptureIntervalChanged(long intervalMillis) {
+        if (process != null) throw new IllegalStateException("Stop recording before changing the video frame rate");
+        if (intervalMillis < 4L) throw new IllegalArgumentException("Capture interval must be at least 4 ms");
+        framesPerSecond = 1000.0D / intervalMillis;
     }
 
     public synchronized File getOutputFile() {
