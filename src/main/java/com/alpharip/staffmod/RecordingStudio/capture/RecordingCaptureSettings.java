@@ -1,3 +1,15 @@
 package com.alpharip.staffmod.RecordingStudio.capture;
-/** Settings for standalone manual Minecraft frame recording. */
-public final class RecordingCaptureSettings {private long intervalMillis=1000L;public synchronized long getIntervalMillis(){return intervalMillis;}public synchronized void setIntervalMillis(long v){if(v<100L||v>60000L)throw new IllegalArgumentException("Capture interval must be 100..60000 ms");intervalMillis=v;}}
+
+/** Source frame pacing for direct video recording. */
+public final class RecordingCaptureSettings {
+    private long intervalMillis = 33L;
+
+    public synchronized long getIntervalMillis() { return intervalMillis; }
+
+    public synchronized void setIntervalMillis(long value) {
+        if (value < 4L || value > 1000L) {
+            throw new IllegalArgumentException("Capture interval must be 4..1000 ms");
+        }
+        intervalMillis = value;
+    }
+}
