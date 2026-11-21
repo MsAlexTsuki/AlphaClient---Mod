@@ -6,6 +6,7 @@ import com.alpharip.staffmod.RecordingStudio.core.RecordingProject;
 import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioController;
 import com.alpharip.staffmod.RecordingStudio.core.RecordingStudioProjectStore;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioFrameWriter;
+import com.alpharip.staffmod.RecordingStudio.integration.FfmpegVideoFrameWriter;
 import com.alpharip.staffmod.RecordingStudio.integration.RecordingStudioRuntime;
 import com.alpharip.staffmod.RecordingStudio.timeline.Timeline;
 import net.minecraft.client.Minecraft;
@@ -110,9 +111,14 @@ public final class RecordingStudioCommand extends CommandBase {
                 runtime = activeRuntime;
             } else {
                 if (activeRuntime != null && !activeRuntime.isClosed()) activeRuntime.shutdown();
-                File output = new File(new File(root, "recordings"), project.getId() + "/frames");
-                RecordingCaptureService capture = new RecordingCaptureService(
-                        new RecordingStudioFrameWriter(mc, timeline), new RecordingCaptureSettings(), output);
+                File recordingDirectory = new File(new File(root, "recordings"), project.getId());
+                File output = new File(recordingDirectory, "frames");
+                RecordingCaptureSettings settings = new RecordingCaptureSettings();
+                settings.setIntervalMillis(project.getCaptureIntervalMillis());
+                RecordingStudioFrameWriter sceneWriter = new RecordingStudioFrameWriter(mc, timeline);
+                FfmpegVideoFrameWriter videoWriter = new FfmpegVideoFrameWriter(sceneWriter,
+                        recordingDirectory, 1000.0D / settings.getIntervalMillis());
+                RecordingCaptureService capture = new RecordingCaptureService(videoWriter, settings, output);
                 RecordingStudioController controller =
                         new RecordingStudioController(project, capture, projects, timeline);
                 runtime = new RecordingStudioRuntime(controller);
