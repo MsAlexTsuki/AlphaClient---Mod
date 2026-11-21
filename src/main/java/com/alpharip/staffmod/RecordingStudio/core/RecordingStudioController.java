@@ -262,6 +262,8 @@ public final class RecordingStudioController {
         try {
             projectStore.save(project, timeline);
             if (capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
+                updateCapturedVideoClip(project.getElapsedMillis(now));
+                projectStore.save(project, timeline);
                 projectStore.clearRecordingActive(project.getId());
                 sessionStartedInThisRuntime = false;
                 status = "Stopped — project checkpoint saved";
