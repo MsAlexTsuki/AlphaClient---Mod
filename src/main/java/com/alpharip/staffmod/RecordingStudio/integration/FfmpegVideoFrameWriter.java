@@ -39,7 +39,7 @@ public final class FfmpegVideoFrameWriter implements RecordingCaptureService.Fra
     }
 
     public synchronized void onCaptureStarted() throws Exception {
-        if (process != null || (partialFile != null && partialFile.exists())) {
+        if (process != null) {
             throw new IOException("The previous MP4 recording is still being finalized");
         }
         if ((!recordingsDirectory.exists() && !recordingsDirectory.mkdirs()) || !recordingsDirectory.isDirectory()) {
