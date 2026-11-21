@@ -98,7 +98,7 @@ public final class RecordingStudioStorageScreen extends GuiScreen {
                 width / 2, 62, 0xFFFFFFFF);
         drawCenteredString(fontRendererObj, "TRACKED STUDIO DATA", width / 2, 75, 0xFFAAAAAA);
         row("Projects", usage.getProjectBytes(), usage.getProjectCount(), 108);
-        row("Video frames", usage.getFrameBytes(), usage.getFrameCount(), 143);
+        row("Recorded video", usage.getFrameBytes(), usage.getFrameCount(), 143);
         row("Microphone audio", usage.getAudioBytes(), usage.getAudioCount(), 178);
         row("Game audio", usage.getGameAudioBytes(), usage.getGameAudioCount(), 213);
         row("Exports", usage.getExportBytes(), usage.getExportCount(), 248);
