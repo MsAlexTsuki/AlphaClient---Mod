@@ -677,8 +677,8 @@ public final class RecordingStudioController {
 
     public synchronized void adjustCaptureInterval(long deltaMillis) {
         ensureOpen();
-        if (capture.isRecording() || capture.isPaused()) {
-            status = "Stop recording before changing the video frame rate";
+        if (capture.isRecording() || capture.isPaused() || capture.isFinalizing()) {
+            status = "Wait until recording finalization completes before changing the video frame rate";
             return;
         }
         long adjusted = Math.max(4L, Math.min(60000L, capture.getIntervalMillis() + deltaMillis));
