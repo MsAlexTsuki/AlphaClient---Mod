@@ -279,7 +279,7 @@ public final class RecordingCaptureService {
     public synchronized long getIntervalMillis() { return settings.getIntervalMillis(); }
     public synchronized void setIntervalMillis(long intervalMillis) {
         ensureOpen();
-        if (recording || paused) throw new IllegalStateException("Stop recording before changing the video frame rate");
+        if (recording || paused || finalizing) throw new IllegalStateException("Wait until recording finalization completes before changing the video frame rate");
         settings.setIntervalMillis(intervalMillis);
         writer.onCaptureIntervalChanged(intervalMillis);
     }
