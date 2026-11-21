@@ -17,7 +17,10 @@ public final class RecordingCaptureService {
     public interface FrameWriter {
         FrameData captureFrame() throws Exception;
         void writeFrame(FrameData frame, File output) throws Exception;
-        default void onCaptureStopped() { }
+        default void onCaptureStarted() throws Exception { }
+        default void onCaptureStopped() throws Exception { }
+        default boolean storesFrameTimestamps() { return true; }
+        default File getOutputFile() { return null; }
     }
 
     public static final class FrameData {
@@ -55,6 +58,7 @@ public final class RecordingCaptureService {
     private boolean recording;
     private boolean paused;
     private boolean capturing;
+    private boolean finalizing;
     private boolean closed;
     private String lastError;
 
@@ -133,6 +137,12 @@ public final class RecordingCaptureService {
         if ((!directory.exists() && !directory.mkdirs()) || !directory.isDirectory()) {
             throw new IOException("Cannot create recording output directory");
         }
+        if (finalizing) throw new IOException("The previous video is still being finalized");
+        try {
+            writer.onCaptureStarted();
+        } catch (Exception failure) {
+            throw new IOException("Cannot initialize recording output: " + failure.getMessage(), failure);
+        }
         initializeNextFileIndex();
         recording = true;
         paused = false;
@@ -190,7 +200,9 @@ public final class RecordingCaptureService {
                         writer.writeFrame(frame, output);
                         String metadataWarning = null;
                         try {
+                            if (writer.storesFrameTimestamps()) {
                             RecordingFrameTimestamp.write(output, frameTimestampMillis);
+                        }
                         } catch (IOException timestampFailure) {
                             metadataWarning = "Frame saved but timestamp metadata failed: " + timestampFailure.getMessage();
                         }
@@ -224,9 +236,33 @@ public final class RecordingCaptureService {
     }
 
     public synchronized void stop() {
+        if (!recording && !paused) return;
         recording = false;
         paused = false;
-        writer.onCaptureStopped();
+        finalizing = true;
+        Runnable finish = new Runnable() {
+            public void run() {
+                try {
+                    writer.onCaptureStopped();
+                } catch (Exception failure) {
+                    synchronized (RecordingCaptureService.this) {
+                        lastError = "Video finalization failed: " + failure.getMessage();
+                    }
+                } finally {
+                    synchronized (RecordingCaptureService.this) {
+                        finalizing = false;
+                    }
+                }
+            }
+        };
+        try {
+            // Place finalization after every accepted frame write so FFmpeg receives a complete stream.
+            encoder.getQueue().put(finish);
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            finalizing = false;
+            lastError = "Video finalization was interrupted before it could be queued";
+        }
     }
 
     public synchronized boolean isRecording() { return recording && !paused; }
@@ -237,11 +273,15 @@ public final class RecordingCaptureService {
         settings.setIntervalMillis(intervalMillis);
     }
     public synchronized boolean isCapturing() { return capturing; }
+    public synchronized boolean isFinalizing() { return finalizing; }
+    public synchronized File getOutputFile() { return writer.getOutputFile(); }
     public synchronized long getFrameCount() { return capturedFrames; }
     public synchronized long getFailedFrameCount() { return failedFrames; }
     public synchronized long getDroppedFrameCount() { return droppedFrames; }
     public synchronized String getLastError() { return lastError; }
-    public synchronized int getPendingFrameCount() { return encoder.getQueue().size() + (encoder.getActiveCount() > 0 ? 1 : 0); }
+    public synchronized int getPendingFrameCount() {
+        return encoder.getQueue().size() + (encoder.getActiveCount() > 0 ? 1 : 0) + (finalizing ? 1 : 0);
+    }
 
     public void shutdown() {
         synchronized (this) {
@@ -261,6 +301,11 @@ public final class RecordingCaptureService {
 
     private void initializeNextFileIndex() throws IOException {
         if (nextFileIndex != 0L) return;
+        if (!writer.storesFrameTimestamps()) {
+            capturedFrames = 0L;
+            nextFileIndex = 1L;
+            return;
+        }
         File[] existing = directory.listFiles();
         if (existing == null) throw new IOException("Cannot inspect existing frame files; refusing to risk overwriting them");
         long existingFrameCount = 0L;
