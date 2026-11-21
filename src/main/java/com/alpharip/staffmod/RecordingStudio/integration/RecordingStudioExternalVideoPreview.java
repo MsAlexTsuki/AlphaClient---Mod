@@ -198,8 +198,7 @@ public final class RecordingStudioExternalVideoPreview {
         boolean discontinuity = continuousLastPositionMillis >= 0L
                 && (positionMillis < continuousLastPositionMillis
                     || positionMillis - continuousLastPositionMillis > 500L);
-        if (continuousDecoder == null || !key.equals(continuousDecoderKey) || discontinuity
-                || !continuousDecoder.isRunning()) {
+        if (continuousDecoder == null || !key.equals(continuousDecoderKey) || discontinuity) {
             stopContinuousDecoder();
             try {
                 continuousDecoder = new RecordingStudioContinuousVideoDecoder(source, offsetMillis / 1000.0D);
@@ -218,6 +217,8 @@ public final class RecordingStudioExternalVideoPreview {
             status = "External video preview (continuous source-rate playback)";
         } else if (continuousDecoder.getFailure() != null) {
             status = "Continuous video preview failed: " + continuousDecoder.getFailure();
+        } else if (!continuousDecoder.isRunning()) {
+            status = "External video preview stream ended";
         }
         continuousLastPositionMillis = positionMillis;
         return true;
