@@ -148,7 +148,7 @@ public final class RecordingStudioScreen extends GuiScreen {
     private void addCompact(int id, int column, int row, String label, boolean accent) {
         int rightX = width - 184;
         buttonList.add(new AlphaStudioButton(id, rightX + 8 + column * 76,
-                198 + row * 17, 72, 15, label, accent));
+                204 + row * 16, 72, 15, label, accent));
     }
 
     private void updateTabButtonVisibility() {
@@ -591,17 +591,26 @@ public final class RecordingStudioScreen extends GuiScreen {
                 }
             }
             RecordingStudioSource selectedSource = activeScene == null ? null : activeScene.findSource(selectedSourceId);
-            drawString(fontRendererObj, "Selected: " + compact(selectedSource == null
-                    ? "None" : selectedSource.getName(), 19), right + 8, 164, 0xFFBBBBBB);
-            drawString(fontRendererObj, "SOURCE PROPERTIES", right + 8, 181, 0xFFFFC83D);
+            drawString(fontRendererObj, "SOURCE PROPERTIES", right + 8, 164, 0xFFFFC83D);
+            if (selectedSource == null) {
+                drawString(fontRendererObj, "Select a source to inspect it", right + 8, 181, 0xFF888888);
+                drawString(fontRendererObj, "No source selected", right + 8, 190, 0xFF888888);
+            } else {
+                drawString(fontRendererObj, compact(selectedSource.getName() + "  /  "
+                        + selectedSource.getType().name(), 25), right + 8, 181, 0xFFE0E0E0);
+                drawString(fontRendererObj, compact("X " + selectedSource.getXPercent() + "%  Y "
+                        + selectedSource.getYPercent() + "%  W " + selectedSource.getWidthPercent()
+                        + "%  H " + selectedSource.getHeightPercent() + "%", 27),
+                        right + 8, 190, 0xFFBBBBBB);
+            }
 
-            drawString(fontRendererObj, "AUDIO MIXER", right + 8, 350, 0xFFFFC83D);
-            drawString(fontRendererObj, compact(controller.getAudioStatus(), 24), right + 8, 364, 0xFFE0E0E0);
-            drawString(fontRendererObj, compact(controller.getMicrophoneMonitorStatus(), 24), right + 8, 377, 0xFFBBBBBB);
-            drawString(fontRendererObj, compact("Review: " + audioPlayback.getStatus(), 24), right + 8, 390, 0xFFBBBBBB);
-            drawString(fontRendererObj, compact("Video: " + externalVideoPreview.getStatus(), 24), right + 8, 403, 0xFFBBBBBB);
+            drawString(fontRendererObj, "AUDIO MIXER", right + 8, 354, 0xFFFFC83D);
+            drawString(fontRendererObj, compact(controller.getAudioStatus(), 24), right + 8, 368, 0xFFE0E0E0);
+            drawString(fontRendererObj, compact(controller.getMicrophoneMonitorStatus(), 24), right + 8, 381, 0xFFBBBBBB);
+            drawString(fontRendererObj, compact("Review: " + audioPlayback.getStatus(), 24), right + 8, 394, 0xFFBBBBBB);
+            drawString(fontRendererObj, compact("Video: " + externalVideoPreview.getStatus(), 24), right + 8, 407, 0xFFBBBBBB);
             drawString(fontRendererObj, "Game audio: " + compact(controller.getGameAudioSelectionName(), 17),
-                    right + 8, 416, 0xFFBBBBBB);
+                    right + 8, 420, 0xFFBBBBBB);
         }
 
         drawCenteredString(fontRendererObj, playbackMode ? "RECORDED PLAYBACK" : "LIVE PREVIEW",
