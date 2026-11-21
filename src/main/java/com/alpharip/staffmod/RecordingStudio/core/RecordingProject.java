@@ -99,7 +99,7 @@ public final class RecordingProject {
     public synchronized boolean isRecording() { return recording; }
     public synchronized long getCaptureIntervalMillis() { return captureIntervalMillis; }
     public synchronized void setCaptureIntervalMillis(long value) {
-        if (value < 4L || value > 1000L) throw new IllegalArgumentException("Capture interval must be 4..1000 ms");
+        if (value < 4L || value > 60000L) throw new IllegalArgumentException("Capture interval must be 4..60000 ms");
         captureIntervalMillis = value;
     }
 
