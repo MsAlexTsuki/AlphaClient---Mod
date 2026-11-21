@@ -134,6 +134,10 @@ public final class FfmpegVideoFrameWriter implements RecordingCaptureService.Fra
         }
     }
 
+    public boolean storesFrameTimestamps() {
+        return false;
+    }
+
     public synchronized File getOutputFile() {
         return outputFile;
     }
