@@ -236,11 +236,13 @@ public final class RecordingCaptureService {
         }
     }
 
-    public synchronized void stop() {
-        if (!recording && !paused) return;
-        recording = false;
-        paused = false;
-        finalizing = true;
+    public void stop() {
+        synchronized (this) {
+            if (!recording && !paused) return;
+            recording = false;
+            paused = false;
+            finalizing = true;
+        }
         Runnable finish = new Runnable() {
             public void run() {
                 try {
@@ -258,11 +260,15 @@ public final class RecordingCaptureService {
         };
         try {
             // Place finalization after every accepted frame write so FFmpeg receives a complete stream.
+            // Do not hold this service's monitor while waiting for queue capacity: the writer worker
+            // needs that monitor to publish completion for the frame it has just written.
             encoder.getQueue().put(finish);
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();
-            finalizing = false;
-            lastError = "Video finalization was interrupted before it could be queued";
+            synchronized (this) {
+                finalizing = false;
+                lastError = "Video finalization was interrupted before it could be queued";
+            }
         }
     }
 
@@ -289,7 +295,10 @@ public final class RecordingCaptureService {
     public void shutdown() {
         synchronized (this) {
             if (closed) return;
-            stop();
+        }
+        stop();
+        synchronized (this) {
+            if (closed) return;
             closed = true;
         }
         // Drain already accepted frames without blocking the Minecraft client thread.
