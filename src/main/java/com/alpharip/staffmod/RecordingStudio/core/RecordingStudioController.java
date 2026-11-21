@@ -1204,6 +1204,8 @@ public final class RecordingStudioController {
                 projectStore.save(project, timeline);
                 if (sessionStartedInThisRuntime && capture.getPendingFrameCount() == 0
                         && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
+                    updateCapturedVideoClip(project.getElapsedMillis(System.currentTimeMillis()));
+                    projectStore.save(project, timeline);
                     projectStore.clearRecordingActive(project.getId());
                     sessionStartedInThisRuntime = false;
                 }
