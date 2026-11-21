@@ -78,7 +78,7 @@ public final class RecordingStudioExternalVideoPreview {
         this.framesDirectory = framesDirectory;
     }
 
-    public synchronized boolean update(Timeline timeline, long positionMillis, long frameIntervalMillis) {
+    public synchronized boolean update(Timeline timeline, long positionMillis, long frameIntervalMillis, boolean playing) {
         if (closed) return false;
         java.util.List<TimelineClip> activeClips = findActiveExternalClips(timeline, positionMillis);
         File capturedFrame = findCapturedFrame(timeline, positionMillis, frameIntervalMillis);
