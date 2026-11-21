@@ -143,6 +143,6 @@ public final class ResourcePackFileManager {
         if (name == null || name.trim().length() == 0) return false;
         if (".".equals(name) || "..".equals(name)) return false;
         return name.indexOf('/') < 0 && name.indexOf('\\') < 0
-                && name.indexOf(':') < 0 && name.indexOf('\u0000') < 0;
+                && name.indexOf(':') < 0 && name.indexOf(0) < 0;
     }
 }
