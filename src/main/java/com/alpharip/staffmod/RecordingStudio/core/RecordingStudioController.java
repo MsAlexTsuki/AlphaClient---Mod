@@ -259,7 +259,6 @@ public final class RecordingStudioController {
         long now = System.currentTimeMillis();
         capture.stop();
         project.stop(now);
-        updateCapturedVideoClip(project.getElapsedMillis(now));
         try {
             projectStore.save(project, timeline);
             if (capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
@@ -276,11 +275,8 @@ public final class RecordingStudioController {
 
     /** Adds the finalized MP4 session as a normal editable Video-track clip. */
     private void updateCapturedVideoClip(long elapsedMillis) {
-        long pendingVideoFrames = capture.getPendingFrameCount()
-                - (capture.isFinalizing() ? 1L : 0L);
-        long availableFrames = capture.getFrameCount() + Math.max(0L, pendingVideoFrames);
         File videoFile = capture.getOutputFile();
-        if (availableFrames <= 0L || videoFile == null) return;
+        if (capture.getFrameCount() <= 0L || videoFile == null || !videoFile.isFile()) return;
 
         TimelineTrack videoTrack = null;
         for (TimelineTrack track : timeline.getTracks()) {
@@ -720,6 +716,8 @@ public final class RecordingStudioController {
         if (sessionStartedInThisRuntime && !capture.isRecording() && !capture.isPaused()
                 && capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
             try {
+                updateCapturedVideoClip(project.getElapsedMillis(now));
+                projectStore.save(project, timeline);
                 projectStore.clearRecordingActive(project.getId());
                 sessionStartedInThisRuntime = false;
                 status = "Stopped — project checkpoint saved";
@@ -1172,6 +1170,8 @@ public final class RecordingStudioController {
     private void finishRecoveryMarkerIfIdle() throws IOException {
         if (sessionStartedInThisRuntime && !capture.isRecording() && !capture.isPaused()
                 && capture.getPendingFrameCount() == 0 && !audioCapture.isFinalizing() && !gameAudioCapture.isFinalizing()) {
+            updateCapturedVideoClip(project.getElapsedMillis(System.currentTimeMillis()));
+            projectStore.save(project, timeline);
             projectStore.clearRecordingActive(project.getId());
             sessionStartedInThisRuntime = false;
         }
@@ -1229,6 +1229,7 @@ public final class RecordingStudioController {
                             // Keep the recovery marker until all accepted frame writes have completed.
                         }
                         synchronized (RecordingStudioController.this) {
+                            updateCapturedVideoClip(project.getElapsedMillis(System.currentTimeMillis()));
                             projectStore.save(project, timeline);
                         }
                         pendingStore.clearRecordingActive(projectId);
