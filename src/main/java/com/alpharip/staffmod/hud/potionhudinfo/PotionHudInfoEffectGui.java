@@ -58,6 +58,7 @@ public final class PotionHudInfoEffectGui extends AlphaGuiScreen {
     private int adjust(int color,int shift,int amount){int c=Math.max(0,Math.min(255,channel(color,shift)+amount));return (color&~(255<<shift))|(c<<shift);}
     @Override protected void actionPerformed(GuiButton b)throws IOException{
         if(b==null)return;
+        if(customName!=null) setting.setCustomName(customName.getText());
         int name=setting.getRawNameColor(),timer=setting.getRawTimerColor();
         switch(b.id){
             case NAME_R_DOWN:setting.setNameColor(adjust(name,16,-16));break;

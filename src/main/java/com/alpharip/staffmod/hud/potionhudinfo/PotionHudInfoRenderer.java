@@ -47,7 +47,7 @@ public final class PotionHudInfoRenderer {
         for (PotionEffect effect : visible) {
             Potion potion = potion(effect.getPotionID());
             PotionHudInfoEffectSetting effectSetting = settings.getEffect(effect.getPotionID());
-            if (potion == null || effectSetting == null) continue;
+            if (potion == null || effectSetting == null || !effectSetting.isEnabled()) { row++; continue; }
             if (shouldFlicker(effect, effectSetting)) { row++; continue; }
 
             int cursor = 0;
