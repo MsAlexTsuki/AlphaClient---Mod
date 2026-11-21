@@ -7,8 +7,8 @@ public final class RecordingCaptureSettings {
     public synchronized long getIntervalMillis() { return intervalMillis; }
 
     public synchronized void setIntervalMillis(long value) {
-        if (value < 4L || value > 1000L) {
-            throw new IllegalArgumentException("Capture interval must be 4..1000 ms");
+        if (value < 4L || value > 60000L) {
+            throw new IllegalArgumentException("Capture interval must be 4..60000 ms");
         }
         intervalMillis = value;
     }
