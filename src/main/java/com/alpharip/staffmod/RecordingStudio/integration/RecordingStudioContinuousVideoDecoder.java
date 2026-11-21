@@ -35,7 +35,7 @@ final class RecordingStudioContinuousVideoDecoder {
                 "-vf", "scale=" + WIDTH + ":" + HEIGHT
                         + ":force_original_aspect_ratio=decrease,pad=" + WIDTH + ":" + HEIGHT
                         + ":(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=bgr24",
-                "-fps_mode", "passthrough", "-f", "rawvideo", "-pix_fmt", "bgr24", "pipe:1");
+                "-vsync", "0", "-f", "rawvideo", "-pix_fmt", "bgr24", "pipe:1");
         builder.redirectError(errorLog);
         process = builder.start();
         final InputStream input = process.getInputStream();
