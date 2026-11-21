@@ -85,7 +85,21 @@ public final class RecordingStudioStorageUsage {
         long size = 0L;
         for (File project : projects) {
             if (Files.isSymbolicLink(project.toPath())) continue;
-            if (project.isDirectory()) size = safeAdd(size, scan(new File(project, folderName), category));
+            if (project.isDirectory()) {
+                size = safeAdd(size, scan(new File(project, folderName), category));
+                if (category == 1) {
+                    File[] videoFiles = project.listFiles();
+                    if (videoFiles == null) { readable = false; continue; }
+                    for (File video : videoFiles) {
+                        if (Files.isSymbolicLink(video.toPath()) || !video.isFile()) continue;
+                        String name = video.getName().toLowerCase(java.util.Locale.ROOT);
+                        if (name.endsWith(".mp4")) {
+                            count(category, video);
+                            size = safeAdd(size, Math.max(0L, video.length()));
+                        }
+                    }
+                }
+            }
         }
         return size;
     }
@@ -126,7 +140,7 @@ public final class RecordingStudioStorageUsage {
     private void count(int category, File file) {
         String name = file.getName().toLowerCase(java.util.Locale.ROOT);
         if (category == 0) projectCount++;
-        else if (category == 1 && name.endsWith(".png")) frameCount++;
+        else if (category == 1 && (name.endsWith(".png") || name.endsWith(".mp4"))) frameCount++;
         else if (category == 2 && name.endsWith(".wav")) audioCount++;
         else if (category == 3 && (name.endsWith(".mp4") || name.endsWith(".gif"))) exportCount++;
         else if (category == 4 && name.endsWith(".wav")) gameAudioCount++;
