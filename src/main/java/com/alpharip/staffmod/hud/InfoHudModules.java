@@ -158,16 +158,13 @@ public final class InfoHudModules {
     public static String getPotionColorName() { load(); return COLOR_NAMES[potionColorIndex]; }
     public static int getPotionEditorWidth() {
         load();
-        if (potionMode == MODE_ICONS) return 18;
-        Minecraft mc = Minecraft.getMinecraft();
-        int screenWidth = mc == null ? 854 : new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth();
-        return potionX > screenWidth / 2 ? 210 : 210;
+        return 210;
     }
     public static int getPotionEditorHeight() {
         load();
         Minecraft mc = Minecraft.getMinecraft();
         int rows = mc == null || mc.thePlayer == null ? 3 : mc.thePlayer.getActivePotionEffects().size();
-        return Math.max(66, Math.min(180, rows * 22));
+        return Math.max(60, Math.min(180, rows * 20));
     }
     public static int getPotionMode() { load(); return potionMode; }
     public static void setPotionPosition(int x, int y) { load(); potionX = Math.max(0, x); potionY = Math.max(0, y); save(); }
@@ -287,42 +284,7 @@ public final class InfoHudModules {
         return mc.fontRendererObj.trimStringToWidth(value, maxWidth - mc.fontRendererObj.getStringWidth("…")) + "…";
     }
 
-    private static void renderPotions(Minecraft mc, boolean preview) {
-        Collection<PotionEffect> effects = mc.thePlayer.getActivePotionEffects();
-        GL11.glPushMatrix();
-        GL11.glTranslatef(potionX, potionY, 0.0F);
-        float scale = HudScaleConfig.get("potion");
-        GL11.glScalef(scale, scale, 1.0F);
-        if (preview && effects.isEmpty()) {
-            renderPotionPreview(mc);
-            GL11.glPopMatrix();
-            return;
-        }
-        int row = 0;
-        for (PotionEffect effect : effects) {
-            Potion potion = Potion.potionTypes[effect.getPotionID()];
-            if (potion == null) continue;
-            boolean bad = potion.isBadEffect();
-            if (potionMode == MODE_BUFFS && bad) continue;
-            if (potionMode == MODE_DEBUFFS && !bad) continue;
-            int x = 0, y = row * 22;
-            if (potionMode == MODE_ICONS) {
-                drawPotionIcon(mc, potion, x, y);
-                row++;
-                continue;
-            }
-            drawPotionIcon(mc, potion, x, y);
-            String level = effect.getAmplifier() > 0 ? " " + roman(effect.getAmplifier() + 1) : "";
-            String line = fit(mc, net.minecraft.util.StatCollector.translateToLocal(potion.getName()) + level + "  " + Potion.getDurationString(effect), 190);
-            boolean alignLeft = potionX > new net.minecraft.client.gui.ScaledResolution(mc).getScaledWidth() / 2;
-            int textX = alignLeft ? x - 2 - mc.fontRendererObj.getStringWidth(line) : x + 20;
-            mc.fontRendererObj.drawStringWithShadow(line, textX, y + 5, getPotionColor());
-            row++;
-        }
-        GL11.glPopMatrix();
-    }
-
-    private static void renderPotionPreview(Minecraft mc) {
+    private static void renderPotions(Minecraft mc, boolean preview) {\n        com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoRenderer.render(mc, preview);\n    }\n\n    private static void renderPotionPreview(Minecraft mc) {
         Potion[] samples = new Potion[] { Potion.moveSpeed, Potion.regeneration, Potion.poison };
         String[] names = new String[] { "Speed", "Regeneration", "Poison" };
         int row = 0;

@@ -584,7 +584,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 } else {
                     selectedModuleId = clickedModule.getId();
                     if ("armor-hud-info".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new InfoHudSettingsGui(this, true)); return; }
-                    if ("potion-hud-info".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new InfoHudSettingsGui(this, false)); return; }
+                    if ("potion-hud-info".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoSettingsGui(this)); return; }
                     if ("name-viewer".equals(clickedModule.getId())
                             && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
                         mc.displayGuiScreen(new NameViewerSettingsGui(this));
