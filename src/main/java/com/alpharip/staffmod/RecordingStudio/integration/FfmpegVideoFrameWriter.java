@@ -30,8 +30,8 @@ public final class FfmpegVideoFrameWriter implements RecordingCaptureService.Fra
     public FfmpegVideoFrameWriter(RecordingCaptureService.FrameWriter source, File recordingsDirectory,
                                   double framesPerSecond) {
         if (source == null || recordingsDirectory == null || Double.isNaN(framesPerSecond)
-                || Double.isInfinite(framesPerSecond) || framesPerSecond < 1.0D || framesPerSecond > 250.0D) {
-            throw new IllegalArgumentException("A frame source, output directory and FPS between 1 and 250 are required");
+                || Double.isInfinite(framesPerSecond) || framesPerSecond <= 0.0D || framesPerSecond > 250.0D) {
+            throw new IllegalArgumentException("A frame source, output directory and FPS greater than 0 and at most 250 are required");
         }
         this.source = source;
         this.recordingsDirectory = recordingsDirectory;
