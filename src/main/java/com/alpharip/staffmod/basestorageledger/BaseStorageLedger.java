@@ -26,7 +26,7 @@ public final class BaseStorageLedger {
     private BaseStorageLedger() { }
 
     public static BaseStorageLedger getInstance() { return INSTANCE; }
-    public StorageLedgerIndex getIndex() { refresh(); return index; }
+    public StorageLedgerIndex getIndex() { return index; }
     public StorageLowAlert getLowAlert() { loadSettings(); return lowAlert; }
 
     public synchronized void refresh() {
