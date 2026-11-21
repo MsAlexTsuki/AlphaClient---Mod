@@ -69,6 +69,9 @@ public final class RecordingStudioExternalVideoPreview {
     private BufferedImage readyImage;
     private String status = "No external video at playhead";
     private volatile Process process;
+    private RecordingStudioContinuousVideoDecoder continuousDecoder;
+    private String continuousDecoderKey = "";
+    private long continuousLastPositionMillis = -1L;
     private DynamicTexture texture;
     private ResourceLocation textureLocation;
     private int textureWidth, textureHeight;
@@ -83,12 +86,19 @@ public final class RecordingStudioExternalVideoPreview {
         java.util.List<TimelineClip> activeClips = findActiveExternalClips(timeline, positionMillis);
         File capturedFrame = findCapturedFrame(timeline, positionMillis, frameIntervalMillis);
         if (activeClips.isEmpty()) {
+            stopContinuousDecoder();
             requestedKey = "";
             pending = null;
             readyImage = null;
             status = "No external video at playhead";
             return false;
         }
+
+        if (playing && capturedFrame == null && activeClips.size() == 1
+                && isContinuousPreviewEligible(timeline, activeClips.get(0))) {
+            return updateContinuousPreview(activeClips.get(0), positionMillis);
+        }
+        stopContinuousDecoder();
 
         StringBuilder keyBuilder = new StringBuilder();
         keyBuilder.append(capturedFrame == null ? "no-capture" : capturedFrame.getAbsolutePath()).append('|');
@@ -167,6 +177,59 @@ public final class RecordingStudioExternalVideoPreview {
             }
         }
         return true;
+    }
+
+    private static boolean isContinuousPreviewEligible(Timeline timeline, TimelineClip clip) {
+        if (clip == null || clip.getDuration() <= 0L || clip.getSpeed() != 1.0D
+                || clip.getFadeInMillis() > 0L || clip.getFadeOutMillis() > 0L
+                || clip.getEffect() == null || !"NONE".equals(clip.getEffect().name())) return false;
+        return findTransitionTo(timeline, clip) == null && findTransitionFrom(timeline, clip) == null;
+    }
+
+    private boolean updateContinuousPreview(TimelineClip clip, long positionMillis) {
+        File source = new File(clip.getSource());
+        if (!source.isFile()) {
+            stopContinuousDecoder();
+            status = "External video file not found: " + source.getName();
+            return true;
+        }
+        long offsetMillis = Math.max(0L, positionMillis - clip.getStart());
+        String key = clip.getId() + "|" + source.getAbsolutePath();
+        boolean discontinuity = continuousLastPositionMillis >= 0L
+                && (positionMillis < continuousLastPositionMillis
+                    || positionMillis - continuousLastPositionMillis > 500L);
+        if (continuousDecoder == null || !key.equals(continuousDecoderKey) || discontinuity
+                || !continuousDecoder.isRunning()) {
+            stopContinuousDecoder();
+            try {
+                continuousDecoder = new RecordingStudioContinuousVideoDecoder(source, offsetMillis / 1000.0D);
+                continuousDecoderKey = key;
+                status = "Starting native-rate video preview...";
+            } catch (Exception failure) {
+                continuousDecoder = null;
+                status = "Continuous video preview failed: " + failure.getMessage();
+                continuousLastPositionMillis = positionMillis;
+                return true;
+            }
+        }
+        BufferedImage nextFrame = continuousDecoder.pollFrame();
+        if (nextFrame != null) {
+            readyImage = nextFrame;
+            status = "External video preview (continuous source-rate playback)";
+        } else if (continuousDecoder.getFailure() != null) {
+            status = "Continuous video preview failed: " + continuousDecoder.getFailure();
+        }
+        continuousLastPositionMillis = positionMillis;
+        return true;
+    }
+
+    private void stopContinuousDecoder() {
+        if (continuousDecoder != null) {
+            continuousDecoder.close();
+            continuousDecoder = null;
+        }
+        continuousDecoderKey = "";
+        continuousLastPositionMillis = -1L;
     }
 
     private void decodePendingRequests() {
@@ -431,6 +494,7 @@ public final class RecordingStudioExternalVideoPreview {
     public synchronized void close(Minecraft minecraft) {
         if (closed) return;
         closed = true; pending = null; decoder.shutdownNow();
+        stopContinuousDecoder();
         Process activeProcess = process;
         if (activeProcess != null) activeProcess.destroyForcibly();
         readyImage = null;
