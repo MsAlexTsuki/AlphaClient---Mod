@@ -34,6 +34,7 @@ public final class RecordingStudioController {
     private boolean sessionStartedInThisRuntime;
     private boolean resumeMicrophoneAfterPause;
     private boolean resumeGameAudioAfterPause;
+    private long currentVideoStartMillis;
     private long lastRecoveryCheckpointAt;
     private java.util.List<RecordingAudioCaptureService.MicrophoneDevice> microphoneDevices =
             java.util.Collections.emptyList();
@@ -181,7 +182,8 @@ public final class RecordingStudioController {
         }
         try {
             long now = System.currentTimeMillis();
-            capture.start(now, project.getElapsedMillis(now));
+            currentVideoStartMillis = project.getElapsedMillis(now);
+            capture.start(now, currentVideoStartMillis);
             project.start(now);
             projectStore.save(project, timeline);
             projectStore.markRecordingActive(project);
@@ -272,11 +274,14 @@ public final class RecordingStudioController {
         }
     }
 
-    /** Keeps the captured frame sequence editable as the default Video-track clip. */
-    private void updateCapturedVideoClip(long durationMillis) {
-        long availableFrames = capture.getFrameCount() + capture.getPendingFrameCount();
-        if (availableFrames <= 0L) availableFrames = countSavedFrameFiles();
-        if (availableFrames <= 0L) return;
+    /** Adds the finalized MP4 session as a normal editable Video-track clip. */
+    private void updateCapturedVideoClip(long elapsedMillis) {
+        long pendingVideoFrames = capture.getPendingFrameCount()
+                - (capture.isFinalizing() ? 1L : 0L);
+        long availableFrames = capture.getFrameCount() + Math.max(0L, pendingVideoFrames);
+        File videoFile = capture.getOutputFile();
+        if (availableFrames <= 0L || videoFile == null) return;
+
         TimelineTrack videoTrack = null;
         for (TimelineTrack track : timeline.getTracks()) {
             if ("video".equals(track.getId())) { videoTrack = track; break; }
@@ -285,13 +290,16 @@ public final class RecordingStudioController {
             videoTrack = new TimelineTrack("video", "Video");
             timeline.addTrack(videoTrack);
         }
+
+        String source = videoFile.getAbsolutePath();
         TimelineClip captured = null;
         for (TimelineClip clip : videoTrack.getClips()) {
-            if ("@capture".equals(clip.getSource())) { captured = clip; break; }
+            if (source.equals(clip.getSource())) { captured = clip; break; }
         }
-        long safeDuration = Math.max(1L, durationMillis);
+        long safeDuration = Math.max(1L, elapsedMillis - currentVideoStartMillis);
         if (captured == null) {
-            videoTrack.add(new TimelineClip("captured-footage", "@capture", 0L, safeDuration));
+            videoTrack.add(new TimelineClip("captured-video-" + java.util.UUID.randomUUID().toString(),
+                    source, currentVideoStartMillis, safeDuration));
         } else {
             captured.setDuration(safeDuration);
         }
@@ -671,7 +679,7 @@ public final class RecordingStudioController {
 
     public synchronized void adjustCaptureInterval(long deltaMillis) {
         ensureOpen();
-        long adjusted = Math.max(100L, Math.min(60000L, capture.getIntervalMillis() + deltaMillis));
+        long adjusted = Math.max(4L, Math.min(60000L, capture.getIntervalMillis() + deltaMillis));
         capture.setIntervalMillis(adjusted);
         project.setCaptureIntervalMillis(adjusted);
         if (project.isRecording()) project.checkpoint(System.currentTimeMillis());
