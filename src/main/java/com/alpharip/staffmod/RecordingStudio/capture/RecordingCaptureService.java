@@ -20,6 +20,7 @@ public final class RecordingCaptureService {
         default void onCaptureStarted() throws Exception { }
         default void onCaptureStopped() throws Exception { }
         default boolean storesFrameTimestamps() { return true; }
+        default void onCaptureIntervalChanged(long intervalMillis) { }
         default File getOutputFile() { return null; }
     }
 
@@ -270,7 +271,9 @@ public final class RecordingCaptureService {
     public synchronized long getIntervalMillis() { return settings.getIntervalMillis(); }
     public synchronized void setIntervalMillis(long intervalMillis) {
         ensureOpen();
+        if (recording || paused) throw new IllegalStateException("Stop recording before changing the video frame rate");
         settings.setIntervalMillis(intervalMillis);
+        writer.onCaptureIntervalChanged(intervalMillis);
     }
     public synchronized boolean isCapturing() { return capturing; }
     public synchronized boolean isFinalizing() { return finalizing; }
