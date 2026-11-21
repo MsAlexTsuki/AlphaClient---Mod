@@ -221,8 +221,8 @@ public final class RecordingStudioScreen extends GuiScreen {
                 navigating = true;
                 mc.displayGuiScreen(new CameraEditorScreen(this, runtime.getCameraController(), mc.mcDataDir, runtime));
                 break;
-            case 7: controller.adjustCaptureInterval(-100L); break;
-            case 8: controller.adjustCaptureInterval(100L); break;
+            case 7: controller.adjustCaptureInterval(-1L); break;
+            case 8: controller.adjustCaptureInterval(1L); break;
             case 9: controller.startAudioCapture(); break;
             case 10: controller.stopAudioCapture(); break;
             case 11:
@@ -468,7 +468,8 @@ public final class RecordingStudioScreen extends GuiScreen {
         for (TimelineTrack track : controller.getTimeline().getTracks()) {
             if (!"video".equals(track.getId())) continue;
             for (TimelineClip clip : track.getClips()) {
-                if (!"@capture".equals(clip.getSource()) && clip.getDuration() > 0L) return true;
+                if (!"@capture".equals(clip.getSource()) && clip.getDuration() > 0L
+                        && new java.io.File(clip.getSource()).isFile()) return true;
             }
         }
         return false;
@@ -579,13 +580,14 @@ public final class RecordingStudioScreen extends GuiScreen {
                 previewLeft + 12, previewTop + 28, 0xFFE0E0E0);
         drawString(fontRendererObj, "SESSION  " + controller.getStatus(),
                 previewLeft + 12, previewBottom - 42, 0xFFFFFFFF);
-        drawString(fontRendererObj, "Frames " + controller.getCapture().getFrameCount()
-                + " saved / " + controller.getCapture().getPendingFrameCount()
+        drawString(fontRendererObj, "Video frames " + controller.getCapture().getFrameCount()
+                + " encoded / " + controller.getCapture().getPendingFrameCount()
                 + " pending / " + controller.getCapture().getDroppedFrameCount() + " dropped / "
                 + controller.getCapture().getFailedFrameCount() + " failed",
                 previewLeft + 12, previewBottom - 28, 0xFFBBBBBB);
         drawString(fontRendererObj, "Timeline " + controller.getTimeline().duration()
-                + " ms  |  Interval " + controller.getCapture().getIntervalMillis() + " ms",
+                + " ms  |  FPS " + String.format(java.util.Locale.ROOT, "%.1f",
+                        1000.0D / controller.getCapture().getIntervalMillis()),
                 previewLeft + 12, previewBottom - 14, 0xFFBBBBBB);
 
         if (recordingTab) {
@@ -619,12 +621,6 @@ public final class RecordingStudioScreen extends GuiScreen {
 
         int timelineTop = height - 130;
         int timelineBottom = height - 43;
-        boolean externalVideoActive = false;
-        if (editingTab) {
-        Gui.drawRect(previewLeft, timelineTop, previewRight, timelineBottom, 0xE8101010);
-        Gui.drawRect(previewLeft, timelineTop, previewRight, timelineTop + 2, 0xFFFFC83D);
-        drawString(fontRendererObj, "TIMELINE", previewLeft + 10, height - 120, 0xFFFFC83D);
-
         long now = System.currentTimeMillis();
         if (playbackMode && playback.getFrameCount() == 0 && externalReviewPlaying) {
             long delta = Math.max(0L, Math.min(250L, now - externalReviewLastTick));
@@ -635,17 +631,24 @@ public final class RecordingStudioScreen extends GuiScreen {
                 externalReviewPlaying = false;
             }
         }
-        long playheadMillis = playbackMode
+        long previewPositionMillis = playbackMode
                 ? (playback.getFrameCount() > 0
                     ? playback.getPositionMillis(controller.getCapture().getIntervalMillis())
                     : externalReviewPositionMillis)
                 : controller.getProject().getElapsedMillis(now);
+        boolean externalVideoActive = playbackMode
+                && externalVideoPreview.update(controller.getTimeline(), previewPositionMillis,
+                        controller.getCapture().getIntervalMillis());
+        if (editingTab) {
+        Gui.drawRect(previewLeft, timelineTop, previewRight, timelineBottom, 0xE8101010);
+        Gui.drawRect(previewLeft, timelineTop, previewRight, timelineTop + 2, 0xFFFFC83D);
+        drawString(fontRendererObj, "TIMELINE", previewLeft + 10, height - 120, 0xFFFFC83D);
+
+        long playheadMillis = previewPositionMillis;
         long timelineDuration = Math.max(1L,
                 Math.max(controller.getTimeline().duration(), playheadMillis));
         audioPlayback.update(controller.getTimeline(), playheadMillis,
                 playbackMode && (playback.isPlaying() || externalReviewPlaying));
-        externalVideoActive = playbackMode
-                && externalVideoPreview.update(controller.getTimeline(), playheadMillis, controller.getCapture().getIntervalMillis());
         int timelineBarLeft = previewLeft + 58;
         int timelineBarRight = previewRight - 10;
         drawTimelineTrack("video", "VIDEO", height - 99, 0xFFC88F20,
