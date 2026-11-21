@@ -36,8 +36,9 @@ final class RecordingStudioContinuousVideoDecoder {
                         + ":(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=bgr24",
                 "-vsync", "0", "-f", "rawvideo", "-pix_fmt", "bgr24", "pipe:1");
         builder.redirectError(errorLog);
-        process = builder.start();
-        final InputStream input = process.getInputStream();
+        final Process decoderProcess = builder.start();
+        process = decoderProcess;
+        final InputStream input = decoderProcess.getInputStream();
         outputStream = input;
         reader = new Thread(new Runnable() {
             public void run() {
@@ -52,8 +53,8 @@ final class RecordingStudioContinuousVideoDecoder {
                             frames.offer(image);
                         }
                     }
-                    if (!closed && process != null) {
-                        int exit = process.waitFor();
+                    if (!closed) {
+                        int exit = decoderProcess.waitFor();
                         if (exit != 0) failure = "FFmpeg exited with code " + exit;
                     }
                 } catch (InterruptedException interrupted) {
@@ -63,11 +64,8 @@ final class RecordingStudioContinuousVideoDecoder {
                 } finally {
                     try { input.close(); } catch (IOException ignored) { }
                     outputStream = null;
-                    Process finished = process;
-                    if (finished != null) {
-                        try { finished.waitFor(); }
-                        catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
-                    }
+                    try { decoderProcess.waitFor(); }
+                    catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
                     if (errorLog != null && errorLog.exists() && !errorLog.delete()) errorLog.deleteOnExit();
                 }
             }
