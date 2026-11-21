@@ -109,11 +109,11 @@ public final class RecordingStudioScreen extends GuiScreen {
         addCompact(51, 1, 8, "Game Input");
 
         // Audio controls remain available without crowding the preview.
-        add(18, rightX + 8, height - 50, 150, "Next Mic");
-        add(9, rightX + 8, height - 32, 72, "Mic On");
-        add(10, rightX + 86, height - 32, 72, "Mic Off");
-        add(30, rightX + 8, height - 14, 72, "Monitor On");
-        add(39, rightX + 86, height - 14, 72, "Monitor Off");
+        buttonList.add(new AlphaStudioButton(18, rightX + 8, height - 54, 150, 16, "Next Mic"));
+        buttonList.add(new AlphaStudioButton(9, rightX + 8, height - 36, 72, 16, "Mic On"));
+        buttonList.add(new AlphaStudioButton(10, rightX + 86, height - 36, 72, 16, "Mic Off"));
+        buttonList.add(new AlphaStudioButton(30, rightX + 8, height - 18, 72, 16, "Monitor On"));
+        buttonList.add(new AlphaStudioButton(39, rightX + 86, height - 18, 72, 16, "Monitor Off"));
 
         // The primary recording actions have one consistent home in the footer.
         add(0, footerX, footerY, 88, "REC", true);
@@ -596,12 +596,12 @@ public final class RecordingStudioScreen extends GuiScreen {
             drawString(fontRendererObj, "SOURCE PROPERTIES", right + 8, 181, 0xFFFFC83D);
 
             drawString(fontRendererObj, "AUDIO MIXER", right + 8, 350, 0xFFFFC83D);
-            drawString(fontRendererObj, compact(controller.getAudioStatus(), 24), right + 8, 366, 0xFFE0E0E0);
-            drawString(fontRendererObj, compact(controller.getMicrophoneMonitorStatus(), 24), right + 8, 380, 0xFFBBBBBB);
-            drawString(fontRendererObj, compact("Review: " + audioPlayback.getStatus(), 24), right + 8, 394, 0xFFBBBBBB);
-            drawString(fontRendererObj, compact("Video: " + externalVideoPreview.getStatus(), 24), right + 8, 408, 0xFFBBBBBB);
+            drawString(fontRendererObj, compact(controller.getAudioStatus(), 24), right + 8, 364, 0xFFE0E0E0);
+            drawString(fontRendererObj, compact(controller.getMicrophoneMonitorStatus(), 24), right + 8, 377, 0xFFBBBBBB);
+            drawString(fontRendererObj, compact("Review: " + audioPlayback.getStatus(), 24), right + 8, 390, 0xFFBBBBBB);
+            drawString(fontRendererObj, compact("Video: " + externalVideoPreview.getStatus(), 24), right + 8, 403, 0xFFBBBBBB);
             drawString(fontRendererObj, "Game audio: " + compact(controller.getGameAudioSelectionName(), 17),
-                    right + 8, 422, 0xFFBBBBBB);
+                    right + 8, 416, 0xFFBBBBBB);
         }
 
         drawCenteredString(fontRendererObj, playbackMode ? "RECORDED PLAYBACK" : "LIVE PREVIEW",
