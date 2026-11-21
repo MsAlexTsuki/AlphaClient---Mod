@@ -220,13 +220,15 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
                     "Separate", x, 182, controlRight);
         } else if (selectedCategory == RECORDING) {
             section("Recording", x, 82, colWidth);
-            setting("Capture interval", "Time between captured frames; lower values capture more often.",
-                    controller.getCapture().getIntervalMillis() + " ms", x, 108, controlRight - 92);
+            setting("Video frame rate", "Direct MP4 recording frame interval; 33 ms is approximately 30 FPS.",
+                    String.format(java.util.Locale.ROOT, "%.1f FPS · %d ms",
+                            1000.0D / controller.getCapture().getIntervalMillis(),
+                            controller.getCapture().getIntervalMillis()), x, 108, controlRight - 92);
             if (preferences.isAdvancedMode()) {
-                setting("Capture interval range", "The current capture service accepts 100–60000 ms.",
-                        "100–60000 ms", x, 162, controlRight);
-                setting("Frame queue", "The capture worker uses a bounded queue; overflow is counted.",
-                        "1 active + 8 queued", x, 199, controlRight);
+                setting("Frame interval range", "Supported source frame intervals for direct MP4 recording.",
+                        "4–60000 ms", x, 162, controlRight);
+                setting("Video encoder", "Frames are streamed to FFmpeg and encoded directly as H.264 MP4.",
+                        "H.264 · CRF 18", x, 199, controlRight);
             }
             com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioScene activeScene = controller.getActiveScene();
             com.alpharip.staffmod.RecordingStudio.scene.RecordingStudioSource desktopSource = activeScene == null ? null
@@ -246,8 +248,8 @@ public final class RecordingStudioSettingsScreen extends GuiScreen {
             setting("Encoding quality", "H.264 quality preset; lower CRF produces larger files.",
                     null, x, 162, controlRight - 118);
             if (preferences.isAdvancedMode()) {
-                setting("Frame rate", "Uses the source capture interval; no forced conversion.",
-                        "Source", x, 216, controlRight);
+                setting("Frame rate", "MP4 is encoded at the selected source capture rate.",
+                        "Source FPS", x, 216, controlRight);
                 setting("Encoder", "Current MP4 encoder profile.", "H.264 High Profile", x, 253, controlRight);
                 setting("Background export", "Accepted exports continue after the Studio window closes.",
                         "Available", x, 290, controlRight);
