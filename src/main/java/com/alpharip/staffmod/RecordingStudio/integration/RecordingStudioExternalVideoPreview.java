@@ -215,7 +215,9 @@ public final class RecordingStudioExternalVideoPreview {
                 return true;
             }
             activeIds.add(clip.getId());
-            String key = source.getAbsolutePath() + "|" + clip.getSpeed() + "|"
+            boolean preRoll = positionMillis < clip.getStart();
+            double decoderSpeed = preRoll ? 0.0001D : clip.getSpeed();
+            String key = source.getAbsolutePath() + "|" + decoderSpeed + "|"
                     + clip.getEffect().name();
             ContinuousLayer layer = continuousLayers.get(clip.getId());
             if (layer == null || !key.equals(layer.key)) {
@@ -225,7 +227,7 @@ public final class RecordingStudioExternalVideoPreview {
                     double sourceSeconds = offsetMillis * clip.getSpeed() / 1000.0D;
                     RecordingStudioContinuousVideoDecoder stream =
                             new RecordingStudioContinuousVideoDecoder(source, sourceSeconds,
-                                    clip.getSpeed(), clip.getEffect());
+                                    decoderSpeed, clip.getEffect());
                     layer = new ContinuousLayer(key, clip, stream);
                     continuousLayers.put(clip.getId(), layer);
                 } catch (Exception failure) {
