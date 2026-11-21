@@ -1,5 +1,7 @@
 package com.alpharip.staffmod.RecordingStudio.integration;
 
+import com.alpharip.staffmod.RecordingStudio.timeline.TimelineVideoEffect;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -24,17 +26,39 @@ final class RecordingStudioContinuousVideoDecoder {
     private File errorLog;
 
     RecordingStudioContinuousVideoDecoder(File source, double startSeconds) throws IOException {
+        this(source, startSeconds, 1.0D, TimelineVideoEffect.NONE);
+    }
+
+    RecordingStudioContinuousVideoDecoder(File source, double startSeconds, double playbackSpeed,
+                                           TimelineVideoEffect effect) throws IOException {
         if (source == null || !source.isFile()) throw new IOException("Video file is missing");
+        if (playbackSpeed <= 0.0D || playbackSpeed > 100.0D
+                || Double.isNaN(playbackSpeed) || Double.isInfinite(playbackSpeed)) {
+            throw new IllegalArgumentException("Invalid video playback speed");
+        }
         errorLog = File.createTempFile("alpha-recording-stream-", ".log");
-        ProcessBuilder builder = new ProcessBuilder(
-                "ffmpeg", "-hide_banner", "-loglevel", "error",
-                "-ss", String.format(java.util.Locale.ROOT, "%.3f", Math.max(0.0D, startSeconds)),
-                "-re", "-i", source.getAbsolutePath(),
-                "-an", "-sn", "-dn",
-                "-vf", "scale=" + WIDTH + ":" + HEIGHT
-                        + ":force_original_aspect_ratio=decrease,pad=" + WIDTH + ":" + HEIGHT
-                        + ":(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=bgr24",
+        java.util.List<String> command = new java.util.ArrayList<String>();
+        java.util.Collections.addAll(command, "ffmpeg", "-hide_banner", "-loglevel", "error",
+                "-ss", String.format(java.util.Locale.ROOT, "%.3f", Math.max(0.0D, startSeconds)));
+        if (Math.abs(playbackSpeed - 1.0D) < 0.000001D) {
+            command.add("-re");
+        } else {
+            command.add("-readrate");
+            command.add(String.format(java.util.Locale.ROOT, "%.6f", playbackSpeed));
+        }
+        java.util.Collections.addAll(command, "-i", source.getAbsolutePath(),
+                "-an", "-sn", "-dn");
+        StringBuilder videoFilter = new StringBuilder();
+        if (effect != null && !effect.getFfmpegFilter().isEmpty()) {
+            videoFilter.append(effect.getFfmpegFilter()).append(',');
+        }
+        videoFilter.append("scale=").append(WIDTH).append(':').append(HEIGHT)
+                .append(":force_original_aspect_ratio=decrease,pad=")
+                .append(WIDTH).append(':').append(HEIGHT)
+                .append(":(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=bgr24");
+        java.util.Collections.addAll(command, "-vf", videoFilter.toString(),
                 "-vsync", "0", "-f", "rawvideo", "-pix_fmt", "bgr24", "pipe:1");
+        ProcessBuilder builder = new ProcessBuilder(command);
         builder.redirectError(errorLog);
         final Process decoderProcess;
         try {
