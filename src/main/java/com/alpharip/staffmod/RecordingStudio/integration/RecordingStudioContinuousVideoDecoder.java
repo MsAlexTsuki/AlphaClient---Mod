@@ -2,11 +2,9 @@ package com.alpharip.staffmod.RecordingStudio.integration;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Streams decoded MP4 frames from one FFmpeg process for real-time Review playback.
@@ -20,6 +18,7 @@ final class RecordingStudioContinuousVideoDecoder {
     private final ArrayBlockingQueue<BufferedImage> frames = new ArrayBlockingQueue<BufferedImage>(2);
     private volatile Process process;
     private volatile Thread reader;
+    private volatile InputStream outputStream;
     private volatile String failure;
     private volatile boolean closed;
     private File errorLog;
@@ -39,6 +38,7 @@ final class RecordingStudioContinuousVideoDecoder {
         builder.redirectError(errorLog);
         process = builder.start();
         final InputStream input = process.getInputStream();
+        outputStream = input;
         reader = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -62,6 +62,13 @@ final class RecordingStudioContinuousVideoDecoder {
                     if (!closed) failure = problem.getMessage();
                 } finally {
                     try { input.close(); } catch (IOException ignored) { }
+                    outputStream = null;
+                    Process finished = process;
+                    if (finished != null) {
+                        try { finished.waitFor(); }
+                        catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+                    }
+                    if (errorLog != null && errorLog.exists() && !errorLog.delete()) errorLog.deleteOnExit();
                 }
             }
         }, "Alpha-RecordingStudio-ContinuousVideoDecoder");
@@ -98,23 +105,11 @@ final class RecordingStudioContinuousVideoDecoder {
         closed = true;
         frames.clear();
         Process active = process;
-        if (active != null && active.isAlive()) {
-            active.destroy();
-            try {
-                if (!active.waitFor(250L, TimeUnit.MILLISECONDS)) active.destroyForcibly();
-            } catch (InterruptedException interrupted) {
-                Thread.currentThread().interrupt();
-                active.destroyForcibly();
-            }
+        if (active != null && active.isAlive()) active.destroyForcibly();
+        InputStream input = outputStream;
+        if (input != null) {
+            try { input.close(); } catch (IOException ignored) { }
         }
-        Thread activeReader = reader;
-        if (activeReader != null) {
-            activeReader.interrupt();
-            try { activeReader.join(250L); }
-            catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
-        }
-        if (errorLog != null && errorLog.exists() && !errorLog.delete()) errorLog.deleteOnExit();
         process = null;
-        reader = null;
     }
 }
