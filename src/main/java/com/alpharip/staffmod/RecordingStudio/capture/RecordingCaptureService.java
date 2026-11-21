@@ -283,7 +283,7 @@ public final class RecordingCaptureService {
     public synchronized long getDroppedFrameCount() { return droppedFrames; }
     public synchronized String getLastError() { return lastError; }
     public synchronized int getPendingFrameCount() {
-        return encoder.getQueue().size() + (encoder.getActiveCount() > 0 ? 1 : 0) + (finalizing ? 1 : 0);
+        return encoder.getQueue().size() + (encoder.getActiveCount() > 0 ? 1 : 0);
     }
 
     public void shutdown() {
