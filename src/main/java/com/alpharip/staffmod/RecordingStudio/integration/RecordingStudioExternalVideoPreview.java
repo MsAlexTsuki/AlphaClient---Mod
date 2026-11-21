@@ -92,6 +92,8 @@ public final class RecordingStudioExternalVideoPreview {
     private final Map<String, ContinuousLayer> continuousLayers =
             new LinkedHashMap<String, ContinuousLayer>();
     private long continuousLastPositionMillis = -1L;
+    private BufferedImage continuousComposite;
+    private BufferedImage continuousTransitionBuffer;
     private DynamicTexture texture;
     private ResourceLocation textureLocation;
     private int textureWidth, textureHeight;
@@ -257,18 +259,26 @@ public final class RecordingStudioExternalVideoPreview {
             }
         }
 
-        BufferedImage composite = new BufferedImage(RecordingStudioContinuousVideoDecoder.WIDTH,
-                RecordingStudioContinuousVideoDecoder.HEIGHT, BufferedImage.TYPE_INT_RGB);
+        if (continuousComposite == null) {
+            continuousComposite = new BufferedImage(RecordingStudioContinuousVideoDecoder.WIDTH,
+                    RecordingStudioContinuousVideoDecoder.HEIGHT, BufferedImage.TYPE_INT_RGB);
+            continuousTransitionBuffer = new BufferedImage(RecordingStudioContinuousVideoDecoder.WIDTH,
+                    RecordingStudioContinuousVideoDecoder.HEIGHT, BufferedImage.TYPE_INT_RGB);
+        }
+        BufferedImage composite = continuousComposite;
         Graphics2D graphics = composite.createGraphics();
         try {
+            graphics.setComposite(AlphaComposite.Src);
             graphics.setColor(Color.BLACK);
             graphics.fillRect(0, 0, composite.getWidth(), composite.getHeight());
+            graphics.setComposite(AlphaComposite.SrcOver);
             graphics.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
                     java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             for (TimelineClip clip : clips) {
                 ContinuousLayer layer = continuousLayers.get(clip.getId());
                 if (layer == null || layer.latestFrame == null) continue;
-                drawContinuousLayer(graphics, composite, timeline, clip, layer.latestFrame, positionMillis);
+                drawContinuousLayer(graphics, composite, continuousTransitionBuffer,
+                        timeline, clip, layer.latestFrame, positionMillis);
             }
         } finally {
             graphics.dispose();
@@ -285,8 +295,8 @@ public final class RecordingStudioExternalVideoPreview {
     }
 
     private static void drawContinuousLayer(Graphics2D graphics, BufferedImage composite,
-                                            Timeline timeline, TimelineClip clip, BufferedImage frame,
-                                            long positionMillis) {
+                                            BufferedImage transitionBuffer, Timeline timeline,
+                                            TimelineClip clip, BufferedImage frame, long positionMillis) {
         long offsetMillis = Math.max(0L, positionMillis - clip.getStart());
         double opacity = 1.0D;
         if (clip.getFadeInMillis() > 0L) {
@@ -323,17 +333,17 @@ public final class RecordingStudioExternalVideoPreview {
 
         if (transitionType == TimelineTransitionType.SLIDE_LEFT
                 || transitionType == TimelineTransitionType.SLIDE_RIGHT) {
-            BufferedImage previous = new BufferedImage(composite.getWidth(), composite.getHeight(),
-                    BufferedImage.TYPE_INT_RGB);
-            Graphics2D copyGraphics = previous.createGraphics();
-            try { copyGraphics.drawImage(composite, 0, 0, null); }
-            finally { copyGraphics.dispose(); }
+            Graphics2D copyGraphics = transitionBuffer.createGraphics();
+            try {
+                copyGraphics.setComposite(AlphaComposite.Src);
+                copyGraphics.drawImage(composite, 0, 0, null);
+            } finally { copyGraphics.dispose(); }
             graphics.setComposite(AlphaComposite.Src);
             graphics.setColor(Color.BLACK);
             graphics.fillRect(0, 0, composite.getWidth(), composite.getHeight());
             int oldOffset = (int) Math.round(composite.getWidth() * progress
                     * (transitionType == TimelineTransitionType.SLIDE_LEFT ? -1.0D : 1.0D));
-            graphics.drawImage(previous, oldOffset, 0, null);
+            graphics.drawImage(transitionBuffer, oldOffset, 0, null);
             int newOffset = (int) Math.round(composite.getWidth() * (1.0D - progress)
                     * (transitionType == TimelineTransitionType.SLIDE_LEFT ? 1.0D : -1.0D));
             graphics.setComposite(AlphaComposite.SrcOver.derive((float) opacity));
