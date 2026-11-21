@@ -22,7 +22,7 @@ public final class RecordingProject {
     private long startedAt;
     private long stoppedAt;
     private long elapsedMillis;
-    private long captureIntervalMillis = 1000L;
+    private long captureIntervalMillis = 33L;
     private String microphoneDeviceKey = "";
     private long segmentStartedAt;
     private boolean recording;
@@ -99,7 +99,7 @@ public final class RecordingProject {
     public synchronized boolean isRecording() { return recording; }
     public synchronized long getCaptureIntervalMillis() { return captureIntervalMillis; }
     public synchronized void setCaptureIntervalMillis(long value) {
-        if (value < 100L || value > 60000L) throw new IllegalArgumentException("Capture interval must be 100..60000 ms");
+        if (value < 4L || value > 1000L) throw new IllegalArgumentException("Capture interval must be 4..1000 ms");
         captureIntervalMillis = value;
     }
 
@@ -168,7 +168,7 @@ public final class RecordingProject {
             project.startedAt = Long.parseLong(properties.getProperty("startedAt", "0"));
             project.stoppedAt = Long.parseLong(properties.getProperty("stoppedAt", "0"));
             project.elapsedMillis = Math.max(0L, Long.parseLong(properties.getProperty("elapsedMillis", "0")));
-            project.setCaptureIntervalMillis(Long.parseLong(properties.getProperty("captureIntervalMillis", "1000")));
+            project.setCaptureIntervalMillis(Long.parseLong(properties.getProperty("captureIntervalMillis", "33")));
             project.setMicrophoneDeviceKey(properties.getProperty("microphoneDeviceKey", ""));
             project.recording = Boolean.parseBoolean(properties.getProperty("recording", "false"));
             project.segmentStartedAt = 0L;
