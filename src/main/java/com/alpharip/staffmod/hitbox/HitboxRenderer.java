@@ -8,7 +8,8 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import org.lwjgl.opengl.GL11;
 
 /**
- * Renders player bounding boxes without changing Minecraft collision geometry.
+ * Renders visible player bounding boxes without changing collision geometry.
+ * Depth testing is always enabled and invisible players are always excluded.
  */
 public final class HitboxRenderer {
     public void render(RenderWorldLastEvent event, HitboxSettings settings) {
@@ -27,16 +28,11 @@ public final class HitboxRenderer {
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
             GL11.glDisable(GL11.GL_TEXTURE_2D);
             GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+            GL11.glDepthMask(false);
             GL11.glLineWidth(settings.getLineWidth());
             GL11.glColor4f(settings.getRed(), settings.getGreen(),
                     settings.getBlue(), settings.getAlpha());
-
-            if (settings.isThroughWalls()) {
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
-            } else {
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
-            }
-            GL11.glDepthMask(false);
 
             GL11.glBegin(GL11.GL_LINES);
             try {
@@ -46,10 +42,8 @@ public final class HitboxRenderer {
                     }
 
                     EntityPlayer player = (EntityPlayer) object;
-                    if (player == mc.thePlayer || player.isDead || !player.isEntityAlive()) {
-                        continue;
-                    }
-                    if (!settings.isShowInvisiblePlayers() && player.isInvisible()) {
+                    if (player == mc.thePlayer || player.isDead || !player.isEntityAlive()
+                            || player.isInvisible()) {
                         continue;
                     }
                     if (mc.thePlayer.getDistanceToEntity(player) > settings.getRange()) {

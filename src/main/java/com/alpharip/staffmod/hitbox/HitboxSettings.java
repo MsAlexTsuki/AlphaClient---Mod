@@ -3,13 +3,11 @@ package com.alpharip.staffmod.hitbox;
 /**
  * Runtime settings for the Hitbox prototype.
  *
- * This class deliberately has no dependency on AlphaClient's module registry,
- * so the prototype remains isolated from the main client until integration is approved.
+ * Visibility restrictions are intentional: hitboxes never render through
+ * walls and invisible players are never included.
  */
 public final class HitboxSettings {
     private boolean enabled;
-    private boolean showInvisiblePlayers;
-    private boolean throughWalls;
     private double range = 32.0D;
     private float lineWidth = 1.4F;
     private float red = 1.0F;
@@ -19,14 +17,6 @@ public final class HitboxSettings {
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
-
-    public boolean isShowInvisiblePlayers() { return showInvisiblePlayers; }
-    public void setShowInvisiblePlayers(boolean showInvisiblePlayers) {
-        this.showInvisiblePlayers = showInvisiblePlayers;
-    }
-
-    public boolean isThroughWalls() { return throughWalls; }
-    public void setThroughWalls(boolean throughWalls) { this.throughWalls = throughWalls; }
 
     public double getRange() { return range; }
     public void setRange(double range) {
