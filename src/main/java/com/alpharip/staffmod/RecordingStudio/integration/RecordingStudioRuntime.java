@@ -327,8 +327,17 @@ public final class RecordingStudioRuntime {
         controller.stop();
         RecordingStudioModule module = selectedModule();
         if (module != null) {
-            try { module.onRecordingStop(); }
-            catch (Exception failure) { moduleStatus = "Module stop failed: " + failure.getMessage(); }
+            boolean restoreCameraPreview = false;
+            try {
+                restoreCameraPreview = module.isExternalCameraActive();
+                module.onRecordingStop();
+                if (restoreCameraPreview && selectedOptionId != null) {
+                    module.prepare(selectedOptionId);
+                    moduleStatus = module.getStatus();
+                }
+            } catch (Exception failure) {
+                moduleStatus = "Module stop failed: " + failure.getMessage();
+            }
         }
     }
 
