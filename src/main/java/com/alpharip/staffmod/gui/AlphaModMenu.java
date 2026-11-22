@@ -783,15 +783,15 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         if(!specialized && module.isImplemented()){
             List<AlphaModuleFeature> features=module.getFeatures();
-            int y=panelTop+158;
-            drawString(fontRendererObj,"MODULE FEATURES",x,y,ACCENT); y+=14;
+            int y=panelTop+150;
+            drawString(fontRendererObj,"MODULE FEATURES",x,y,ACCENT); y+=12;
             for(int i=0;i<features.size()&&i<8;i++){
                 AlphaModuleFeature f=features.get(i);
                 drawString(fontRendererObj,f.getName(),x,y,0xFFE7E9EE);
                 String status=f.getStatusLabel();
                 drawString(fontRendererObj,status,right-4-fontRendererObj.getStringWidth(status),y,
                         f.isAvailable()?0xFF9CE2AC:0xFFB8BDC8);
-                y+=18;
+                y+=15;
             }
         }
     }
