@@ -240,15 +240,7 @@ public class ProfileCreateGui extends ModernGuiScreen {
             return;
         }
 
-        boolean created =
-                ModuleProfileManager.saveProfile(
-                        name,
-                        "ALPHA'S BHOP",
-                        "#55FF55",
-                        false,
-                        false,
-                        2
-                );
+        boolean created = ModuleProfileManager.createProfile(name);
 
         if (!created) {
             return;
