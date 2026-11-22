@@ -25,6 +25,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import org.lwjgl.input.Keyboard;
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.input.Keyboard;
 import java.io.IOException;
@@ -70,6 +71,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private String searchText = "";
     private boolean searchFocused;
     private String accessFingerprint = "";
+    private String settingsSubpage = "";
+    private GuiTextField[] keystrokesColorFields = new GuiTextField[5];
+    private static final int COLOR_SAVE = 701;
+    private static final int COLOR_BACK = 702;
 
     public AlphaModMenu(GuiScreen parent) { this(parent, AlphaModule.Category.PUBLIC); }
 
@@ -445,6 +450,23 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
 
     private void addModuleSettingsButtons() {
+        if ("keystrokes-colors".equals(settingsSubpage)) {
+            int x = settingsLeft + 8;
+            int y = panelTop + 350;
+            int w = Math.max(90, panelLeft + panelWidth - x - 12);
+            buttonList.add(new AlphaButton(COLOR_SAVE, x, y, (w - 6) / 2, 19, "SAVE COLORS"));
+            buttonList.add(new AlphaButton(COLOR_BACK, x + (w - 6) / 2 + 6, y, (w - 6) / 2, 19, "CANCEL"));
+            int[] colors = {KeystrokesMod.getBackgroundColor(), KeystrokesMod.getPressedBackgroundColor(),
+                    KeystrokesMod.getTextColor(), KeystrokesMod.getPressedTextColor(), KeystrokesMod.getBorderColor()};
+            for (int i = 0; i < keystrokesColorFields.length; i++) {
+                keystrokesColorFields[i] = new GuiTextField(i, fontRendererObj, x + 106, panelTop + 145 + i * 34, w - 112, 18);
+                keystrokesColorFields[i].setMaxStringLength(9);
+                keystrokesColorFields[i].setText(String.format(Locale.ROOT, "%08X", colors[i]));
+                keystrokesColorFields[i].setTextColor(0xFFE7E9EE);
+                keystrokesColorFields[i].setDisabledTextColour(0xFF9DA4B1);
+            }
+            return;
+        }
         AlphaModule module = AlphaModuleRegistry.find(selectedModuleId);
         int x = settingsLeft + 8;
         int y = panelTop + 82;
@@ -507,6 +529,18 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private void drawModuleSettingsPanel(int mouseX,int mouseY,float partialTicks) {
         AlphaModule module=AlphaModuleRegistry.find(selectedModuleId);
         int x=settingsLeft+8, right=panelLeft+panelWidth-10;
+        if ("keystrokes-colors".equals(settingsSubpage)) {
+            drawString(fontRendererObj, "MODS  >  KEYSTROKES  >  COLORS", x, panelTop + 30, 0xFFB8BDC8);
+            drawString(fontRendererObj, "KEYSTROKES COLORS", x, panelTop + 40, ACCENT);
+            String[] labels = {"BACKGROUND", "PRESSED BACKGROUND", "TEXT", "PRESSED TEXT", "BORDER"};
+            for (int i = 0; i < keystrokesColorFields.length; i++) {
+                drawString(fontRendererObj, labels[i], x, panelTop + 150 + i * 34, 0xFFE7E9EE);
+                if (keystrokesColorFields[i] != null) keystrokesColorFields[i].drawTextBox();
+            }
+            drawWrappedTextLimited("Enter 8-digit AARRGGBB hex values. A 6-digit RGB value is also accepted.",
+                    x, panelTop + 330, right - x - 4, 0xFFB8BDC8, 2);
+            return;
+        }
         drawString(fontRendererObj,"MODS  >  "+selectedCategory.getTitle().toUpperCase(Locale.ROOT)+"  >  SETTINGS",x,panelTop+30,0xFFB8BDC8);
         drawString(fontRendererObj,module==null?"MODULE NOT FOUND":module.getName().toUpperCase(Locale.ROOT),x,panelTop+40,ACCENT);
         if(module==null)return;
@@ -572,7 +606,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             else if(setting==16)KeystrokesMod.setTextShadow(!KeystrokesMod.isTextShadow());else if(setting==17)KeystrokesMod.adjustFadeDelay(-25);
             else if(setting==18)KeystrokesMod.adjustFadeDelay(25);else if(setting==19)KeystrokesMod.adjustBoxSize(-1);
             else if(setting==20)KeystrokesMod.adjustBoxSize(1);else if(setting==21)KeystrokesMod.adjustBorderThickness(-0.5F);
-            else if(setting==22)KeystrokesMod.adjustBorderThickness(0.5F);else if(setting==23)mc.displayGuiScreen(new KeystrokesColorSettingsGui(this));
+            else if(setting==22)KeystrokesMod.adjustBorderThickness(0.5F);else if(setting==23){settingsSubpage="keystrokes-colors";initGui();}
         } else if("legacy-pvp".equals(id)&&setting==50)mc.displayGuiScreen(new LegacyPvpSettingsGui(this));
     }
 
@@ -622,7 +656,23 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
-        if (button.id == SETTINGS_BACK) { selectedModuleId = ""; initGui(); return; }
+        if (button.id == COLOR_BACK) { settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return; }
+        if (button.id == COLOR_SAVE) {
+            int[] parsed = new int[keystrokesColorFields.length];
+            try {
+                for (int i = 0; i < keystrokesColorFields.length; i++) {
+                    String value = keystrokesColorFields[i].getText().trim();
+                    if (value.startsWith("#")) value = value.substring(1);
+                    if (value.length() == 6) value = "FF" + value;
+                    if (value.length() != 8 || !value.matches("[0-9A-Fa-f]{8}")) return;
+                    parsed[i] = (int) Long.parseLong(value, 16);
+                }
+            } catch (NumberFormatException invalidColor) { return; }
+            String[] keys = {"background", "pressedBackground", "text", "pressedText", "border"};
+            for (int i = 0; i < keys.length; i++) KeystrokesMod.setColor(keys[i], parsed[i]);
+            settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return;
+        }
+        if (button.id == SETTINGS_BACK) { settingsSubpage = ""; selectedModuleId = ""; initGui(); return; }
         if (button.id >= SETTINGS_BASE && button.id < SETTINGS_BASE + 60) {
             handleModuleSetting(button.id - SETTINGS_BASE);
             initGui();
@@ -775,6 +825,13 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if ("keystrokes-colors".equals(settingsSubpage)) {
+            if (keyCode == Keyboard.KEY_ESCAPE) { settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return; }
+            for (GuiTextField field : keystrokesColorFields) {
+                if (field != null && field.isFocused()) { field.textboxKeyTyped(typedChar, keyCode); return; }
+            }
+            return;
+        }
         if (searchField != null && searchField.isFocused()) {
             if (keyCode == Keyboard.KEY_ESCAPE) {
                 searchFocused = false;
@@ -807,6 +864,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (searchField != null) {
             searchField.mouseClicked(mouseX, mouseY, mouseButton);
             searchFocused = searchField.isFocused();
+        }
+        if ("keystrokes-colors".equals(settingsSubpage)) {
+            for (GuiTextField field : keystrokesColorFields) if (field != null) field.mouseClicked(mouseX, mouseY, mouseButton);
         }
     }
 
