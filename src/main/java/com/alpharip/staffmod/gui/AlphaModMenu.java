@@ -989,7 +989,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             for (int i = 0; i < keys.length; i++) KeystrokesMod.setColor(keys[i], parsed[i]);
             Keyboard.enableRepeatEvents(false); settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return;
         }
-        if (button.id == SETTINGS_BACK) { settingsSubpage = ""; selectedModuleId = ""; initGui(); return; }
+        if (button.id == SETTINGS_BACK) { settingsSubpage = ""; selectedModuleId = "staffmods"; initGui(); return; }
         if (button.id >= SETTINGS_BASE && button.id < SETTINGS_BASE + 60) {
             handleModuleSetting(button.id - SETTINGS_BASE);
             initGui();
