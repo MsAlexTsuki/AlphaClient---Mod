@@ -13,7 +13,7 @@ import java.util.List;
 /** Paginated effect browser with a dedicated details and actions panel. */
 public final class PotionHudInfoEffectsGui extends AlphaGuiScreen {
     private static final int FIRST=100,PREV=10,NEXT=11,TOGGLE=12,EDIT=13,IMPORT=14,BACK=15;
-    private static final int PAGE_SIZE=7;
+    private static final int PAGE_SIZE=6;
     private final GuiScreen parent;
     private final List<Integer> ids=new ArrayList<Integer>();
     private final PotionHudInfoModule settings=PotionHudInfoModule.getInstance();
@@ -31,7 +31,7 @@ public final class PotionHudInfoEffectsGui extends AlphaGuiScreen {
         buttonList.clear();
         page=Math.max(0,Math.min(page,pageCount()-1));
         panelX=(width-620)/2;panelY=(height-410)/2;
-        int listX=panelX+18,listY=panelY+78;
+        int listX=panelX+18,listY=panelY+108;
         for(int slot=0;slot<PAGE_SIZE&&page*PAGE_SIZE+slot<ids.size();slot++){
             int item=page*PAGE_SIZE+slot,id=ids.get(item).intValue();
             PotionHudInfoEffectSetting s=settings.getEffect(id);
