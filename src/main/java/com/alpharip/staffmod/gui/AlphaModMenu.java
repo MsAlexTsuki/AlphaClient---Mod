@@ -766,6 +766,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 } else {
                     selectedModuleId = clickedModule.getId();
                     // Module settings now open in the right-hand panel of this menu.
+                    initGui();
                     return;
                 }
             }
@@ -844,8 +845,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             // profile/settings panel. Otherwise the wheel must scroll module tiles.
             if (mouseX >= settingsLeft && mouseX <= panelLeft + panelWidth - 8
                     && mouseY >= panelTop + 62 && mouseY <= panelTop + panelHeight - 42
-                    && ("staffmods".equals(selectedModuleId)
-                        || "quality".equals(selectedModuleId))) {
+                    && !isModuleSettingsOpen()) {
                 List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
                 int profileTop = panelTop + 86;
                 int actionY = panelTop + panelHeight - 48;
