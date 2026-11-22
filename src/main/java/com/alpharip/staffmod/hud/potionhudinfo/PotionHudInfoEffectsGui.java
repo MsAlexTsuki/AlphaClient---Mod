@@ -84,7 +84,6 @@ public final class PotionHudInfoEffectsGui extends AlphaGuiScreen {
             drawCenteredString(fontRendererObj,PotionHudInfoModule.getPotionName(currentId()),rx+145,ry+46,0xFFF3F4F6);
             drawCenteredString(fontRendererObj,s!=null&&s.isEnabled()?"Currently shown in your HUD":"Currently hidden from your HUD",
                     rx+145,ry+64,s!=null&&s.isEnabled()?0xFF9CE2AC:0xFFB8BDC8);
-            drawCenteredString(fontRendererObj,"Manage visibility and appearance below.",rx+145,ry+88,0xFF9DA4B1);
         }else drawCenteredString(fontRendererObj,"No potion effects found",rx+145,ry+80,0xFFB8BDC8);
         drawString(fontRendererObj,"Page "+(page+1)+" of "+pageCount(),panelX+116,panelY+345,0xFF9DA4B1);
         super.drawScreen(mx,my,partial);
