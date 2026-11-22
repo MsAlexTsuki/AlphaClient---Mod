@@ -517,8 +517,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 buttonList.add(new AlphaMenuButton(POTION_LIST_BASE + slot, x, y + slot * 23, listWidth, 20,
                         name + (setting != null && setting.isEnabled() ? "  ON" : "  OFF"), false, index == potionEffectIndex));
             }
-            buttonList.add(new AlphaMenuButton(POTION_PAGE_PREV, x, panelTop + 350, 55, 18, "PREV", false, potionEffectPage > 0));
-            buttonList.add(new AlphaMenuButton(POTION_PAGE_NEXT, x + 60, panelTop + 350, 55, 18, "NEXT", false,
+            int pageButtonY = panelTop + 263;
+            buttonList.add(new AlphaMenuButton(POTION_PAGE_PREV, x, pageButtonY, 55, 18, "PREV", false, potionEffectPage > 0));
+            buttonList.add(new AlphaMenuButton(POTION_PAGE_NEXT, x + 60, pageButtonY, 55, 18, "NEXT", false,
                     (potionEffectPage + 1) * POTION_PAGE_SIZE < potionEffectIds.size()));
             int actionX = x + listWidth + 8, actionW = w - listWidth - 8;
             buttonList.add(new AlphaMenuButton(POTION_TOGGLE, actionX, panelTop + 130, actionW, 20,
@@ -564,8 +565,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int x = settingsLeft + 8, w = Math.max(90, panelLeft + panelWidth - x - 12);
             buttonList.add(new AlphaMenuButton(POTION_IMPORT_PREV, x, panelTop + 160, 55, 18, "PREV", false, potionImportSourceIndex > 0));
             buttonList.add(new AlphaMenuButton(POTION_IMPORT_NEXT, x + w - 55, panelTop + 160, 55, 18, "NEXT", false, potionImportSourceIndex < potionImportSourceIds.size() - 1));
-            buttonList.add(new AlphaMenuButton(POTION_IMPORT_COPY, x, panelTop + 350, (w - 6) / 2, 19, "COPY"));
-            buttonList.add(new AlphaMenuButton(POTION_IMPORT_BACK, x + (w - 6) / 2 + 6, panelTop + 350, (w - 6) / 2, 19, "BACK"));
+            buttonList.add(new AlphaMenuButton(POTION_IMPORT_COPY, x, panelTop + 263, (w - 6) / 2, 18, "COPY"));
+            buttonList.add(new AlphaMenuButton(POTION_IMPORT_BACK, x + (w - 6) / 2 + 6, panelTop + 263, (w - 6) / 2, 18, "BACK"));
             return;
         }
         if ("legacy-list".equals(settingsSubpage)) {
@@ -586,7 +587,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             buttonList.add(new AlphaMenuButton(LEGACY_DETAIL_BACK, x, y, w, 19, "BACK TO LEGACY PVP"));
             LegacyPvpFeatureCatalog.Feature feature = getLegacySelectedFeature();
             if (feature != null && isLegacyToggleAvailable(feature.id)) {
-                buttonList.add(new AlphaMenuButton(LEGACY_TOGGLE, x, panelTop + 350, w, 20, getLegacyToggleLabel(feature.id)));
+                buttonList.add(new AlphaMenuButton(LEGACY_TOGGLE, x, panelTop + 263, w, 18, getLegacyToggleLabel(feature.id)));
             }
             return;
         }
@@ -678,7 +679,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 drawString(fontRendererObj, selected.isEnabled() ? "Visible in HUD" : "Hidden from HUD", x + Math.max(90, (right - x - 8) / 2) + 8, panelTop + 110, selected.isEnabled() ? 0xFF9CE2AC : 0xFFB8BDC8);
                 drawWrappedTextLimited("Customize the effect label, colors, text style and low-duration warning.", x + Math.max(90, (right - x - 8) / 2) + 8, panelTop + 142, Math.max(60, right - x - Math.max(90, (right - x - 8) / 2) - 12), 0xFFB8BDC8, 5);
             }
-            drawString(fontRendererObj, "PAGE " + (potionEffectPage + 1) + " / " + Math.max(1, (potionEffectIds.size() + POTION_PAGE_SIZE - 1) / POTION_PAGE_SIZE), x, panelTop + 330, 0xFFB8BDC8);
+            drawString(fontRendererObj, "PAGE " + (potionEffectPage + 1) + " / " + Math.max(1, (potionEffectIds.size() + POTION_PAGE_SIZE - 1) / POTION_PAGE_SIZE), x, panelTop + 248, 0xFFB8BDC8);
             return;
         }
         if ("potion-effect-edit".equals(settingsSubpage)) {
