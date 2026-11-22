@@ -77,6 +77,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int COLOR_BACK = 702;
     private static final int LEGACY_DETAIL_BACK = 721;
     private static final int LEGACY_TOGGLE = 722;
+    private static final int LEGACY_OPEN = 723;
     private static final int LEGACY_FEATURE_BASE = 730;
     private String legacySelectedFeatureId = "";
     private static final int POTION_LIST_BASE = 820, POTION_PAGE_PREV = 830, POTION_PAGE_NEXT = 831, POTION_MANAGER_BACK = 835;
@@ -665,7 +666,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             addCompactSettingButton(22,x+w/2,y,w-w/2,"BORDER + ("+KeystrokesMod.getBorderThickness()+")"); y+=17;
             addCompactSettingButton(23,x,y,w,"CUSTOMIZE COLORS");
         } else if ("legacy-pvp".equals(id)) {
-            addSettingButton(50,x,y,w,"OPEN LEGACY PVP FEATURES");
+            buttonList.add(new AlphaMenuButton(LEGACY_OPEN, x, y, w, 19, "OPEN LEGACY PVP FEATURES"));
         }
     }
 
@@ -923,7 +924,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             else if(setting==18)KeystrokesMod.adjustFadeDelay(25);else if(setting==19)KeystrokesMod.adjustBoxSize(-1);
             else if(setting==20)KeystrokesMod.adjustBoxSize(1);else if(setting==21)KeystrokesMod.adjustBorderThickness(-0.5F);
             else if(setting==22)KeystrokesMod.adjustBorderThickness(0.5F);else if(setting==23){settingsSubpage="keystrokes-colors";initGui();}
-        } else if("legacy-pvp".equals(id)&&setting==50){LegacyPvpSettings.load();settingsSubpage="legacy-list";initGui();}
+
     }
 
     private void drawWrappedTextLimited(String text, int x, int y, int maxWidth, int color, int maxLines) {
@@ -986,9 +987,16 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (button.id == POTION_IMPORT_NEXT) { potionImportSourceIndex = Math.min(potionImportSourceIds.size() - 1, potionImportSourceIndex + 1); initGui(); return; }
         if (button.id == POTION_IMPORT_COPY) { int targetId = getSelectedPotionEffectId(), sourceId = getPotionImportSourceId(); if (targetId >= 0 && sourceId >= 0) { PotionHudInfoEffectSetting target = PotionHudInfoModule.getInstance().getEffect(targetId); PotionHudInfoEffectSetting source = PotionHudInfoModule.getInstance().getEffect(sourceId); if (target != null && source != null) target.copyFrom(source); } settingsSubpage = "potion-effects"; initGui(); return; }
         if (button.id == POTION_IMPORT_BACK) { settingsSubpage = "potion-effects"; initGui(); return; }
-        if (button.id == LEGACY_DETAIL_BACK) { settingsSubpage = "legacy-list"; initGui(); return; }
+        if (button.id == LEGACY_OPEN && "legacy-pvp".equals(selectedModuleId) && settingsSubpage.isEmpty()) {
+            LegacyPvpSettings.load();
+            legacySelectedFeatureId = "";
+            settingsSubpage = "legacy-list";
+            initGui();
+            return;
+        }
+        if (button.id == LEGACY_DETAIL_BACK && "legacy-detail".equals(settingsSubpage)) { settingsSubpage = "legacy-list"; initGui(); return; }
         if (button.id == LEGACY_TOGGLE && "legacy-detail".equals(settingsSubpage)) { toggleLegacyFeature(legacySelectedFeatureId); initGui(); return; }
-        if (button.id >= LEGACY_FEATURE_BASE && button.id < LEGACY_FEATURE_BASE + LegacyPvpFeatureCatalog.getAll().length) {
+        if ("legacy-list".equals(settingsSubpage) && button.id >= LEGACY_FEATURE_BASE && button.id < LEGACY_FEATURE_BASE + LegacyPvpFeatureCatalog.getAll().length) {
             int featureIndex = button.id - LEGACY_FEATURE_BASE;
             LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
             if (featureIndex >= 0 && featureIndex < features.length) { legacySelectedFeatureId = features[featureIndex].id; settingsSubpage = "legacy-detail"; initGui(); }
