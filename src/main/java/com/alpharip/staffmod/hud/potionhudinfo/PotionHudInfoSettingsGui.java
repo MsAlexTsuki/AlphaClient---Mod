@@ -61,7 +61,7 @@ public final class PotionHudInfoSettingsGui extends AlphaGuiScreen {
 
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x50000000);
-        int left = width / 2 - 119, top = height / 2 - 119, right = width / 2 + 119, bottom = height / 2 + 136;
+        int left = width / 2 - 119, top = height / 2 - 119, right = width / 2 + 119, bottom = height / 2 + 151;
         drawRect(left, top, right, bottom, 0xE60A0C12);
         drawRect(left, top, right, top + 1, 0xFFFFD866);
         drawRect(left, top + 1, left + 1, bottom - 1, 0x554B515D);
