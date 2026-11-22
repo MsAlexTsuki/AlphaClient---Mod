@@ -287,6 +287,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     @Override
     public void updateScreen() {
         super.updateScreen();
+        if ("singleplayer".equals(openFolderId) && !hasActiveSingleplayerWorld()) {
+            openFolderId = "";
+            selectedFolderItemId = "";
+            initGui();
+            return;
+        }
         String current = buildAccessFingerprint();
         if (!current.equals(accessFingerprint)) {
             initGui();
@@ -444,7 +450,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     + "  ›  " + moduleName, contentLeft + 52, panelTop + 10, 0xFFB8BDC8);
         } else {
             int itemCount = isFolderOpen() ? getFolderItems().size() : getFilteredModules().size();
-            drawString(fontRendererObj, itemCount + (isFolderOpen() ? " modules" : " modules"),
+            drawString(fontRendererObj, itemCount + (isFolderOpen() ? " entries" : " modules"),
                     contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
             AlphaMenuRender.roundedRect(contentLeft + 2, panelTop + 24,
                     contentRight - 2, panelTop + 42, 5, 0xAA202630);
@@ -1342,6 +1348,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     openFolderId = clickedModule.getId();
                     selectedFolderItemId = "";
                     selectedModuleId = "";
+                    searchText = "";
+                    if (searchField != null) searchField.setText("");
                     scrollOffset = 0;
                     initGui();
                     return;
