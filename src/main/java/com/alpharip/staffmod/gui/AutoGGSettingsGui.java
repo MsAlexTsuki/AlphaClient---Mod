@@ -29,22 +29,21 @@ public final class AutoGGSettingsGui extends AlphaGuiScreen {
         top = Math.max(12, height / 2 - 95);
         bottom = Math.min(height - 12, top + 190);
 
-        buttonList.add(new AlphaButton(TOGGLE, left + 20, top + 58, 260, 20,
+        buttonList.add(new AlphaSettingsButton(TOGGLE, left + 20, top + 58, 260, 20,
                 "AUTO GG: " + (AutoGGMod.isEnabled() ? "ON" : "OFF"), AutoGGMod.isEnabled()));
-        buttonList.add(new AlphaButton(DELAY_DOWN, left + 20, top + 91, 38, 20, "-"));
-        GuiButton delayLabel = new AlphaButton(5, left + 62, top + 91, 176, 20,
+        buttonList.add(new AlphaSettingsButton(DELAY_DOWN, left + 20, top + 91, 38, 20, "-"));
+        GuiButton delayLabel = new AlphaSettingsButton(5, left + 62, top + 91, 176, 20,
                 "DELAY: " + String.format(java.util.Locale.ROOT, "%.1f", AutoGGMod.getDelaySeconds()) + "s");
         delayLabel.enabled = false;
         buttonList.add(delayLabel);
-        buttonList.add(new AlphaButton(DELAY_UP, left + 242, top + 91, 38, 20, "+"));
-        buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
+        buttonList.add(new AlphaSettingsButton(DELAY_UP, left + 242, top + 91, 38, 20, "+"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x30000000);
-        drawRect(left, top, right, bottom, 0xE00A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "AUTO GG", width / 2, top + 17, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Sends GG after a detected kill or match end",
                 width / 2, top + 37, 0xFFB8BDC8);
