@@ -136,9 +136,9 @@ public final class PotionHudInfoEffectGui extends AlphaGuiScreen {
         drawString(fontRendererObj,"NAME COLOR",left+8,top+34,0xFFB8BDC8);
         drawString(fontRendererObj,"TIMER COLOR",left+218,top+34,0xFFB8BDC8);
         drawRect(left+8,top+64,left+204,top+82,0xFF000000 | (setting.getRawNameColor() & 0xFFFFFF));
-        drawRect(left+218,top+64,left+414,top+82,0xFF000000 | (setting.getRawTimerColor() & 0xFFFFFF));
-        drawCenteredString(fontRendererObj,hex(setting.getRawNameColor()),left+106,top+69,contrast(setting.getRawNameColor()));
-        drawCenteredString(fontRendererObj,hex(setting.getRawTimerColor()),left+316,top+69,contrast(setting.getRawTimerColor()));
+        drawRect(left+218,top+45,left+414,top+59,0xFF000000 | (setting.getRawTimerColor() & 0xFFFFFF));
+        drawCenteredString(fontRendererObj,hex(setting.getRawNameColor()),left+106,top+48,contrast(setting.getRawNameColor()));
+        drawCenteredString(fontRendererObj,hex(setting.getRawTimerColor()),left+316,top+48,contrast(setting.getRawTimerColor()));
         drawString(fontRendererObj,"TEXT STYLE",left+8,top+119,0xFFFFD866);
         drawString(fontRendererObj,"LOW-TIME WARNING",left+8,top+163,0xFFFFD866);
         drawString(fontRendererObj,"Alert below",left+218,top+182,0xFFB8BDC8);
