@@ -108,11 +108,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     public void initGui() {
         buttonList.clear();
         if ("keystrokes-colors".equals(settingsSubpage)) Keyboard.enableRepeatEvents(true);
-        panelWidth = Math.min(880, Math.max(300, width - 28));
-        panelHeight = Math.min(440, Math.max(260, height - 28));
+        panelWidth = Math.min(760, Math.max(300, width - 40));
+        panelHeight = Math.min(420, Math.max(260, height - 40));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
-        sidebarWidth = 116;
+        sidebarWidth = 104;
         contentLeft = panelLeft + sidebarWidth + 18;
         contentRight = panelLeft + panelWidth - (isModuleSettingsOpen() ? 18 : 278);
         contentTop = panelTop + 49;
@@ -233,8 +233,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int gridWidth = Math.max(180, contentRight - contentLeft);
             int gap = 10;
             int tileWidth = (gridWidth - gap) / 2;
-            int tileHeight = 62;
-            int rowGap = 9;
+            int tileHeight = 48;
+            int rowGap = 8;
             int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
             int start = Math.min(scrollOffset, Math.max(0, filtered.size() - visibleRows * 2));
             for (int i = start; i < filtered.size() && i < start + visibleRows * 2; i++) {
