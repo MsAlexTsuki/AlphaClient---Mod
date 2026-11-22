@@ -34,8 +34,7 @@ public final class NameViewerSettingsGui extends AlphaGuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x18000000);
-        drawRect(left, top, right, bottom, 0xE00A0C11);
-        drawRect(left, top, right, top + 2, ACCENT);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "NAME VIEWER", width / 2, top + 16, 0xFFF3F4F6);
         AlphaModule module = AlphaModuleRegistry.find("name-viewer");
         boolean enabled = module != null && module.isEnabled();
