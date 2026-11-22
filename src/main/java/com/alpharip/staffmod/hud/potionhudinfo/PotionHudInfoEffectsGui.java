@@ -43,10 +43,10 @@ public final class PotionHudInfoEffectsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(PREV,panelX+18,panelY+337,78,25,"PREVIOUS",false,page>0));
         buttonList.add(new AlphaButton(NEXT,panelX+210,panelY+337,78,25,"NEXT",false,page<pageCount()-1));
         PotionHudInfoEffectSetting selected=current();
-        buttonList.add(new AlphaButton(TOGGLE,panelX+330,panelY+145,270,30,
+        buttonList.add(new AlphaButton(TOGGLE,panelX+330,panelY+164,270,30,
                 selected!=null&&selected.isEnabled()?"DISABLE THIS EFFECT":"ENABLE THIS EFFECT",false,selected!=null&&selected.isEnabled()));
-        buttonList.add(new AlphaButton(EDIT,panelX+330,panelY+188,270,32,"CUSTOMIZE APPEARANCE",true));
-        buttonList.add(new AlphaButton(IMPORT,panelX+330,panelY+232,270,30,"COPY SETTINGS FROM…"));
+        buttonList.add(new AlphaButton(EDIT,panelX+330,panelY+207,270,32,"CUSTOMIZE APPEARANCE",true));
+        buttonList.add(new AlphaButton(IMPORT,panelX+330,panelY+250,270,30,"COPY SETTINGS FROM…"));
         buttonList.add(new AlphaButton(BACK,panelX+492,panelY+337,108,25,"BACK"));
     }
 
@@ -81,13 +81,10 @@ public final class PotionHudInfoEffectsGui extends AlphaGuiScreen {
         drawString(fontRendererObj,"SELECTED EFFECT",rx+14,ry+10,0xFFFFD866);
         if(currentId()>=0){
             PotionHudInfoEffectSetting s=current();
-            drawCenteredString(fontRendererObj,PotionHudInfoModule.getPotionName(currentId()),rx+145,ry+55,0xFFF3F4F6);
+            drawCenteredString(fontRendererObj,PotionHudInfoModule.getPotionName(currentId()),rx+145,ry+46,0xFFF3F4F6);
             drawCenteredString(fontRendererObj,s!=null&&s.isEnabled()?"Currently shown in your HUD":"Currently hidden from your HUD",
-                    rx+145,ry+76,s!=null&&s.isEnabled()?0xFF9CE2AC:0xFFB8BDC8);
-            drawString(fontRendererObj,"Appearance",rx+16,ry+119,0xFFE6E8ED);
-            drawString(fontRendererObj,"Set custom name, colors and text style.",rx+16,ry+134,0xFF9DA4B1);
-            drawString(fontRendererObj,"Import",rx+16,ry+185,0xFFE6E8ED);
-            drawString(fontRendererObj,"Copy another effect's complete settings.",rx+16,ry+200,0xFF9DA4B1);
+                    rx+145,ry+64,s!=null&&s.isEnabled()?0xFF9CE2AC:0xFFB8BDC8);
+            drawCenteredString(fontRendererObj,"Manage visibility and appearance below.",rx+145,ry+88,0xFF9DA4B1);
         }else drawCenteredString(fontRendererObj,"No potion effects found",rx+145,ry+80,0xFFB8BDC8);
         drawString(fontRendererObj,"Page "+(page+1)+" of "+pageCount(),panelX+116,panelY+345,0xFF9DA4B1);
         super.drawScreen(mx,my,partial);
