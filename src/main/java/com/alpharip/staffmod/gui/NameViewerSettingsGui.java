@@ -26,9 +26,9 @@ public final class NameViewerSettingsGui extends AlphaGuiScreen {
         bottom = Math.min(height - 12, top + 180);
         AlphaModule module = AlphaModuleRegistry.find("name-viewer");
         boolean enabled = module != null && module.isEnabled();
-        buttonList.add(new AlphaButton(TOGGLE, left + 35, top + 105, right - left - 70, 22,
+        buttonList.add(new AlphaSettingsButton(TOGGLE, left + 35, top + 105, right - left - 70, 22,
                 enabled ? "DISABLE NAME VIEWER" : "ENABLE NAME VIEWER", true));
-        buttonList.add(new AlphaButton(BACK, left + 10, bottom - 28, 70, 18, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, bottom - 28, 70, 18, "BACK"));
     }
 
     @Override
