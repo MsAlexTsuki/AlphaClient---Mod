@@ -67,6 +67,7 @@ public final class PotionHudInfoEffectGui extends AlphaGuiScreen {
 
     @Override protected void actionPerformed(GuiButton b)throws IOException{
         if(b==null||setting==null)return;
+        if(nameField!=null)setting.setCustomName(nameField.getText());
         if(b.id==SAVE||b.id==BACK){
             setting.setCustomName(nameField.getText());
             if(b.id==BACK){mc.displayGuiScreen(parent);return;}
@@ -139,7 +140,6 @@ public final class PotionHudInfoEffectGui extends AlphaGuiScreen {
 
         drawRect(lx,top+159,lx+584,top+225,0x99191D26);
         drawString(fontRendererObj,"TEXT STYLE",lx+12,top+169,0xFFFFD866);
-        drawString(fontRendererObj,"Choose how the effect name is formatted.",lx+12,top+185,0xFF9DA4B1);
         drawRect(lx,top+230,lx+584,top+318,0x99191D26);
         drawString(fontRendererObj,"LOW-DURATION WARNING",lx+12,top+240,0xFFFFD866);
         drawString(fontRendererObj,"Alert threshold",rx+64,top+263,0xFFB8BDC8);
