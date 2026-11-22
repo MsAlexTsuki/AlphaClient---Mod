@@ -117,7 +117,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         contentRight = panelLeft + panelWidth - 112;
         contentTop = panelTop + 49;
         contentBottom = panelTop + panelHeight - 25;
-        settingsLeft = contentRight + 8;
+        settingsLeft = isModuleSettingsOpen() ? contentLeft : contentRight + 8;
 
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj,
                 contentLeft + 3, panelTop + 25, Math.max(80, contentRight - contentLeft - 6), 15);
