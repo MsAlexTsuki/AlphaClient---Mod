@@ -956,47 +956,70 @@ public final class SupabaseCommunityService {
     }
 
     private static PermissionService.Rank mapRank(String rankKey, boolean founder) {
-        if (founder || "founder".equalsIgnoreCase(rankKey)) return PermissionService.Rank.FOUNDER;
+        if (founder) return PermissionService.Rank.FOUNDER;
         if (rankKey == null) return PermissionService.Rank.PUBLIC;
-        String normalized = rankKey.trim().toLowerCase(java.util.Locale.ROOT).replace('-', '_').replace(' ', '_');
+
+        // Accept both stored rank keys and the human-readable labels shown in Alpha.
+        // Normalize punctuation consistently so labels such as "Alpha+" and
+        // "Sr. Moderator" resolve to the same canonical rank as their database keys.
+        String normalized = rankKey.trim().toLowerCase(java.util.Locale.ROOT)
+                .replace("+", "_plus")
+                .replaceAll("[^a-z0-9_]", "_")
+                .replaceAll("_+", "_");
+        if (normalized.startsWith("_")) normalized = normalized.substring(1);
+        if (normalized.endsWith("_")) normalized = normalized.substring(0, normalized.length() - 1);
+
         switch (normalized) {
+            case "founder": return PermissionService.Rank.FOUNDER;
+            case "owner": return PermissionService.Rank.OWNER;
+            case "developer": return PermissionService.Rank.DEVELOPER;
+            case "manager": return PermissionService.Rank.MANAGER;
+            case "plat_admin":
+            case "platadmin":
+            case "platform_admin":
+            case "platformadmin":
+            case "management": return PermissionService.Rank.PLAT_ADMIN;
+            case "sr_admin":
+            case "senior_admin":
+            case "senioradmin":
+            case "sadmin": return PermissionService.Rank.SR_ADMIN;
+            case "admin": return PermissionService.Rank.ADMIN;
+            case "sr_mod":
+            case "sr_moderator":
+            case "senior_mod":
+            case "senior_moderator":
+            case "seniormod":
+            case "seniormoderator":
+            case "smod": return PermissionService.Rank.SR_MOD;
+            case "mod":
+            case "moderator": return PermissionService.Rank.MOD;
+            case "t_mod":
+            case "tmod":
+            case "trial_mod":
+            case "trialmod":
+            case "trial_moderator":
+            case "trialmoderator": return PermissionService.Rank.T_MOD;
+            case "partner": return PermissionService.Rank.PARTNER;
+            case "famous": return PermissionService.Rank.FAMOUS;
+            case "media": return PermissionService.Rank.MEDIA;
+            case "the_nibbler":
+            case "thenibbler":
+            case "nibbler": return PermissionService.Rank.THE_NIBBLER;
             case "beta":
             case "beta_tester":
             case "betatester": return PermissionService.Rank.BETA;
+            case "alpha_plus":
+            case "alphaplus": return PermissionService.Rank.ALPHA_PLUS;
+            case "alpha": return PermissionService.Rank.ALPHA;
+            case "elite": return PermissionService.Rank.ELITE;
+            case "rogue": return PermissionService.Rank.ROGUE;
+            case "scout": return PermissionService.Rank.SCOUT;
+            case "donator": return PermissionService.Rank.DONATOR;
             case "member":
             case "public": return PermissionService.Rank.PUBLIC;
-            case "scout": return PermissionService.Rank.SCOUT;
-            case "rogue": return PermissionService.Rank.ROGUE;
-            case "elite": return PermissionService.Rank.ELITE;
-            case "alpha": return PermissionService.Rank.ALPHA;
-            case "alpha_plus": return PermissionService.Rank.ALPHA_PLUS;
-            case "the_nibbler":
-            case "nibbler": return PermissionService.Rank.THE_NIBBLER;
-            case "media": return PermissionService.Rank.MEDIA;
-            case "famous": return PermissionService.Rank.FAMOUS;
-            case "partner": return PermissionService.Rank.PARTNER;
-            case "donator": return PermissionService.Rank.DONATOR;
-            case "t_mod":
-            case "trial_mod":
-            case "trial_moderator":
-            case "tmod": return PermissionService.Rank.T_MOD;
-            case "mod":
-            case "moderator": return PermissionService.Rank.MOD;
-            case "sr_mod":
-            case "senior_mod":
-            case "senior_moderator":
-            case "smod": return PermissionService.Rank.SR_MOD;
-            case "admin": return PermissionService.Rank.ADMIN;
-            case "sr_admin":
-            case "senior_admin":
-            case "sadmin": return PermissionService.Rank.SR_ADMIN;
-            case "management":
-            case "plat_admin":
-            case "platform_admin": return PermissionService.Rank.PLAT_ADMIN;
-            case "manager": return PermissionService.Rank.MANAGER;
-            case "developer": return PermissionService.Rank.DEVELOPER;
-            case "owner": return PermissionService.Rank.OWNER;
-            default: return PermissionService.Rank.PUBLIC;
+            default:
+                System.err.println("[AlphaClient] Unrecognized community rank key: " + rankKey);
+                return PermissionService.Rank.PUBLIC;
         }
     }
 
