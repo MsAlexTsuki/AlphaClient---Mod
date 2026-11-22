@@ -23,20 +23,20 @@ public final class CpsSettingsGui extends AlphaGuiScreen {
         right = left + 300;
         top = Math.max(12, height / 2 - 108);
         bottom = Math.min(height - 12, top + 216);
-        buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 58, 260, 20, backgroundLabel()));
-        buttonList.add(new AlphaButton(COLOR, left + 20, top + 86, 260, 20, "TEXT COLOR: " + CpsMod.getColorName()));
-        buttonList.add(new AlphaButton(MODE, left + 20, top + 114, 260, 20,
+        buttonList.add(new AlphaSettingsButton(BACKGROUND, left + 20, top + 58, 260, 20, backgroundLabel()));
+        buttonList.add(new AlphaSettingsButton(COLOR, left + 20, top + 86, 260, 20, "TEXT COLOR: " + CpsMod.getColorName()));
+        buttonList.add(new AlphaSettingsButton(MODE, left + 20, top + 114, 260, 20,
                 CpsMod.getDisplayModeName() + (dropdownOpen ? "  ▲" : "  ▼")));
         if (dropdownOpen) {
-            buttonList.add(new AlphaButton(OPTION_BOTH, left + 20, top + 136, 260, 18, "LMB + RMB",
+            buttonList.add(new AlphaSettingsButton(OPTION_BOTH, left + 20, top + 136, 260, 18, "LMB + RMB",
                     CpsMod.getDisplayMode() == CpsMod.MODE_BOTH));
-            buttonList.add(new AlphaButton(OPTION_LEFT, left + 20, top + 154, 260, 18, "LMB",
+            buttonList.add(new AlphaSettingsButton(OPTION_LEFT, left + 20, top + 154, 260, 18, "LMB",
                     CpsMod.getDisplayMode() == CpsMod.MODE_LEFT));
-            buttonList.add(new AlphaButton(OPTION_RIGHT, left + 20, top + 172, 260, 18, "RMB",
+            buttonList.add(new AlphaSettingsButton(OPTION_RIGHT, left + 20, top + 172, 260, 18, "RMB",
                     CpsMod.getDisplayMode() == CpsMod.MODE_RIGHT));
             bottom = Math.min(height - 8, top + 216);
         }
-        buttonList.add(new AlphaButton(BACK, left + 10, Math.min(height - 32, bottom - 24), 75, 18, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, Math.min(height - 32, bottom - 24), 75, 18, "BACK"));
     }
 
     private String backgroundLabel() {
@@ -46,8 +46,7 @@ public final class CpsSettingsGui extends AlphaGuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x30000000);
-        drawRect(left, top, right, bottom, 0xE00A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "CPS SETTINGS", width / 2, top + 15, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Configure the CPS HUD appearance", width / 2, top + 34, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
