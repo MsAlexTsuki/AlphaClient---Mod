@@ -699,12 +699,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 for (AlphaModule.Category category : AlphaModule.Category.values()) {
                     if (isStaffRankCategory(category)
                             || isDonatorRankCategory(category)) continue;
-                    boolean allowed = PermissionService.hasAccess(category.getRequiredRank());
-                    if (!allowed) {
-                        for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
-                            if (!"staffmods".equals(module.getId()) && module.isUnlocked()) { allowed = true; break; }
-                        }
-                    }
+                    boolean allowed = category == AlphaModule.Category.DONATOR
+                            ? hasAnyUnlockedDonatorFolder()
+                            : PermissionService.hasAccess(category.getRequiredRank());
+                    if (!allowed) allowed = hasUnlockedModuleInCategory(category);
                     if (allowed) sidebarCount++;
                 }
                 if (PermissionService.hasStaffModsAccess()) sidebarCount++;
