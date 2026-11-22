@@ -640,13 +640,14 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             addSettingButton(33,x,y,w,"HUD COLOR: "+InfoHudModules.getArmorColorName());
         } else if ("potion-hud-info".equals(id)) {
             PotionHudInfoModule p=PotionHudInfoModule.getInstance(); p.load();
-            addSettingButton(40,x,y,w,"POTION ICONS: "+onOff(p.isRenderIcons())); y+=24;
-            addSettingButton(41,x,y,w,"AMPLIFIER LEVELS ABOVE IV: "+onOff(p.isRenderLevelsAbove4())); y+=24;
-            addSettingButton(42,x,y,w,"SHOW WHILE CHAT IS OPEN: "+onOff(p.isShowWhileChat())); y+=24;
-            addSettingButton(43,x,y,w,"ROMAN NUMERAL LEVELS: "+onOff(p.isRomanNumerals())); y+=24;
-            addSettingButton(44,x,y,w/2,"OPACITY -"); addSettingButton(45,x+w/2,y,w-w/2,"OPACITY +"); y+=24;
-            addSettingButton(46,x,y,w/2,"SCALE -"); addSettingButton(47,x+w/2,y,w-w/2,"SCALE +"); y+=24;
-            addSettingButton(48,x,y,w,"MANAGE POTION EFFECTS");
+            y = panelTop + 106;
+            addCompactSettingButton(40,x,y,w,"POTION ICONS: "+onOff(p.isRenderIcons())); y+=20;
+            addCompactSettingButton(41,x,y,w,"AMPLIFIER LEVELS ABOVE IV: "+onOff(p.isRenderLevelsAbove4())); y+=20;
+            addCompactSettingButton(42,x,y,w,"SHOW WHILE CHAT IS OPEN: "+onOff(p.isShowWhileChat())); y+=20;
+            addCompactSettingButton(43,x,y,w,"ROMAN NUMERAL LEVELS: "+onOff(p.isRomanNumerals())); y+=20;
+            addCompactSettingButton(44,x,y,w/2,"OPACITY -"); addCompactSettingButton(45,x+w/2,y,w-w/2,"OPACITY +"); y+=20;
+            addCompactSettingButton(46,x,y,w/2,"SCALE -"); addCompactSettingButton(47,x+w/2,y,w-w/2,"SCALE +"); y+=20;
+            addCompactSettingButton(48,x,y,w,"MANAGE POTION EFFECTS");
         } else if ("keystrokes".equals(id)) {
             y = panelTop + 106;
             addCompactSettingButton(10,x,y,w,"SHOW CLICKS: "+onOff(KeystrokesMod.isShowClicks())); y+=17;
@@ -707,9 +708,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     drawString(fontRendererObj, rgb[i] + " " + ((setting.getRawNameColor() >> shift) & 255), x + 34, yy + 5, 0xFFE7E9EE);
                     drawString(fontRendererObj, rgb[i] + " " + ((setting.getRawTimerColor() >> shift) & 255), x + Math.max(160, (right - x) / 2 + 28), yy + 5, 0xFFE7E9EE);
                 }
-                drawString(fontRendererObj, "Threshold: " + setting.getFlickerStartTime() + " sec", x + 32, panelTop + 245, 0xFFE7E9EE);
-                drawString(fontRendererObj, "Speed: " + setting.getFlickerSpeed() + " ms", x + Math.max(150, (right - x) / 2 + 28), panelTop + 245, 0xFFE7E9EE);
-                drawString(fontRendererObj, "CUSTOM NAME", x + 2, panelTop + 292, 0xFFB8BDC8);
+                drawString(fontRendererObj, "Threshold: " + setting.getFlickerStartTime() + " sec", x + 30, panelTop + 224, 0xFFE7E9EE);
+                drawString(fontRendererObj, "Speed: " + setting.getFlickerSpeed() + " ms", x + Math.max(150, (right - x) / 2 + 28), panelTop + 224, 0xFFE7E9EE);
+                drawString(fontRendererObj, "CUSTOM NAME", x + 2, panelTop + 240, 0xFFB8BDC8);
                 if (potionEffectNameField != null) potionEffectNameField.drawTextBox();
             }
             return;
@@ -777,8 +778,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if("name-viewer".equals(id))drawWrappedTextLimited("Displays the extra name and rank display above your own player.",x,panelTop+111,right-x-4,0xFFB8BDC8,3);
         if("potion-hud-info".equals(id)){
             PotionHudInfoModule p=PotionHudInfoModule.getInstance();
-            drawString(fontRendererObj,"Opacity: "+p.getOpacity()+" / 255",x,panelTop+264,0xFFE7E9EE);
-            drawString(fontRendererObj,"Scale: "+String.format(Locale.ROOT,"%.2f",p.getScale()),x,panelTop+278,0xFFE7E9EE);
+            drawString(fontRendererObj,"Opacity: "+p.getOpacity()+" / 255",x,panelTop+252,0xFFE7E9EE);
+            drawString(fontRendererObj,"Scale: "+String.format(Locale.ROOT,"%.2f",p.getScale()),x,panelTop+266,0xFFE7E9EE);
         }
         if(!specialized && module.isImplemented()){
             List<AlphaModuleFeature> features=module.getFeatures();
