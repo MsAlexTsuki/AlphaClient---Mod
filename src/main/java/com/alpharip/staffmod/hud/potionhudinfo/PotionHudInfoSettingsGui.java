@@ -5,76 +5,76 @@ import com.alpharip.staffmod.gui.AlphaGuiScreen;
 import com.alpharip.staffmod.gui.AlphaButton;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-
 import java.io.IOException;
 import java.util.Locale;
 
-/** Global Potion HUD settings, styled consistently with the AlphaClient menu. */
+/** Main Potion HUD settings, arranged as a clear two-panel AlphaClient workspace. */
 public final class PotionHudInfoSettingsGui extends AlphaGuiScreen {
-    private static final int ICONS=1, LEVELS=2, CHAT=3, ROMAN=4, OPACITY_DOWN=5, OPACITY_UP=6,
-            SCALE_DOWN=7, SCALE_UP=8, EFFECTS=9, BACK=10;
+    private static final int ICONS=1, LEVELS=2, CHAT=3, ROMAN=4, OPACITY_DOWN=5,
+            OPACITY_UP=6, SCALE_DOWN=7, SCALE_UP=8, EFFECTS=9, BACK=10;
     private final GuiScreen parent;
-    private final PotionHudInfoModule settings = PotionHudInfoModule.getInstance();
+    private final PotionHudInfoModule settings=PotionHudInfoModule.getInstance();
+    private int panelX, panelY;
 
-    public PotionHudInfoSettingsGui(GuiScreen parent) { this.parent = parent; }
+    public PotionHudInfoSettingsGui(GuiScreen parent){this.parent=parent;}
 
-    @Override public void initGui() {
+    @Override public void initGui(){
         settings.load();
         buttonList.clear();
-        int left = width / 2 - 104;
-        int top = height / 2 - 102;
-        buttonList.add(new AlphaButton(ICONS, left, top + 34, 202, 22,
-                "Show potion icons  " + state(settings.isRenderIcons()), false, settings.isRenderIcons()));
-        buttonList.add(new AlphaButton(LEVELS, left, top + 60, 202, 22,
-                "Show amplifier above IV  " + state(settings.isRenderLevelsAbove4()), false, settings.isRenderLevelsAbove4()));
-        buttonList.add(new AlphaButton(CHAT, left, top + 86, 202, 22,
-                "Show while chat is open  " + state(settings.isShowWhileChat()), false, settings.isShowWhileChat()));
-        buttonList.add(new AlphaButton(ROMAN, left, top + 112, 202, 22,
-                "Roman numeral levels  " + state(settings.isRomanNumerals()), false, settings.isRomanNumerals()));
-        buttonList.add(new AlphaButton(OPACITY_DOWN, left, top + 151, 96, 22, "Opacity  −"));
-        buttonList.add(new AlphaButton(OPACITY_UP, left + 106, top + 151, 96, 22, "Opacity  +"));
-        buttonList.add(new AlphaButton(SCALE_DOWN, left, top + 177, 96, 22, "Size  −"));
-        buttonList.add(new AlphaButton(SCALE_UP, left + 106, top + 177, 96, 22, "Size  +"));
-        buttonList.add(new AlphaButton(EFFECTS, left, top + 211, 202, 23, "POTION EFFECTS", true));
-        buttonList.add(new AlphaButton(BACK, width / 2 - 43, top + 240, 86, 20, "BACK"));
+        panelX=(width-600)/2;
+        panelY=(height-390)/2;
+        int left=panelX+18, right=panelX+312, y=panelY+91;
+        buttonList.add(new AlphaButton(ICONS,left,y,270,28,"Potion icons     "+state(settings.isRenderIcons()),false,settings.isRenderIcons()));
+        buttonList.add(new AlphaButton(LEVELS,left,y+38,270,28,"Amplifier levels above IV     "+state(settings.isRenderLevelsAbove4()),false,settings.isRenderLevelsAbove4()));
+        buttonList.add(new AlphaButton(CHAT,left,y+76,270,28,"Visible while chat is open     "+state(settings.isShowWhileChat()),false,settings.isShowWhileChat()));
+        buttonList.add(new AlphaButton(ROMAN,left,y+114,270,28,"Roman numeral levels     "+state(settings.isRomanNumerals()),false,settings.isRomanNumerals()));
+        buttonList.add(new AlphaButton(OPACITY_DOWN,right+8,y+34,54,26,"−"));
+        buttonList.add(new AlphaButton(OPACITY_UP,right+208,y+34,54,26,"+"));
+        buttonList.add(new AlphaButton(SCALE_DOWN,right+8,y+105,54,26,"−"));
+        buttonList.add(new AlphaButton(SCALE_UP,right+208,y+105,54,26,"+"));
+        buttonList.add(new AlphaButton(EFFECTS,panelX+312,panelY+316,270,32,"MANAGE POTION EFFECTS",true));
+        buttonList.add(new AlphaButton(BACK,panelX+18,panelY+316,110,32,"BACK"));
     }
+    private String state(boolean value){return value?"ON":"OFF";}
 
-    private String state(boolean value) { return value ? "ON" : "OFF"; }
-
-    @Override protected void actionPerformed(GuiButton button) throws IOException {
-        if (button == null) return;
-        switch (button.id) {
-            case ICONS: settings.setRenderIcons(!settings.isRenderIcons()); break;
-            case LEVELS: settings.setRenderLevelsAbove4(!settings.isRenderLevelsAbove4()); break;
-            case CHAT: settings.setShowWhileChat(!settings.isShowWhileChat()); break;
-            case ROMAN: settings.setRomanNumerals(!settings.isRomanNumerals()); break;
-            case OPACITY_DOWN: settings.setOpacity(settings.getOpacity()-16); break;
-            case OPACITY_UP: settings.setOpacity(settings.getOpacity()+16); break;
-            case SCALE_DOWN: settings.setScale(settings.getScale()-0.05F); break;
-            case SCALE_UP: settings.setScale(settings.getScale()+0.05F); break;
-            case EFFECTS: mc.displayGuiScreen(new PotionHudInfoEffectsGui(this)); return;
-            case BACK: mc.displayGuiScreen(parent); return;
-            default: return;
+    @Override protected void actionPerformed(GuiButton b)throws IOException{
+        if(b==null)return;
+        switch(b.id){
+            case ICONS:settings.setRenderIcons(!settings.isRenderIcons());break;
+            case LEVELS:settings.setRenderLevelsAbove4(!settings.isRenderLevelsAbove4());break;
+            case CHAT:settings.setShowWhileChat(!settings.isShowWhileChat());break;
+            case ROMAN:settings.setRomanNumerals(!settings.isRomanNumerals());break;
+            case OPACITY_DOWN:settings.setOpacity(settings.getOpacity()-16);break;
+            case OPACITY_UP:settings.setOpacity(settings.getOpacity()+16);break;
+            case SCALE_DOWN:settings.setScale(settings.getScale()-0.05F);break;
+            case SCALE_UP:settings.setScale(settings.getScale()+0.05F);break;
+            case EFFECTS:mc.displayGuiScreen(new PotionHudInfoEffectsGui(this));return;
+            case BACK:mc.displayGuiScreen(parent);return;
+            default:return;
         }
         initGui();
     }
 
-    @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawRect(0, 0, width, height, 0x50000000);
-        int left = width / 2 - 119, top = height / 2 - 119, right = width / 2 + 119, bottom = height / 2 + 162;
-        drawRect(left, top, right, bottom, 0xE60A0C12);
-        drawRect(left, top, right, top + 1, 0xFFFFD866);
-        drawRect(left, top + 1, left + 1, bottom - 1, 0x554B515D);
-        drawRect(right - 1, top + 1, right, bottom - 1, 0x554B515D);
-        drawCenteredString(fontRendererObj, "POTION HUD", width / 2, top + 10, 0xFFF3F4F6);
-        drawCenteredString(fontRendererObj, "DISPLAY", width / 2, top + 25, 0xFFFFD866);
-        drawString(fontRendererObj, "LAYOUT", left + 12, top + 121, 0xFFFFD866);
-        drawString(fontRendererObj, "Opacity", left + 12, top + 158, 0xFFB8BDC8);
-        drawString(fontRendererObj, settings.getOpacity() + " / 255", left + 132, top + 158, 0xFFF3F4F6);
-        drawString(fontRendererObj, "HUD size", left + 12, top + 184, 0xFFB8BDC8);
-        drawString(fontRendererObj, String.format(Locale.ROOT, "%.2f×", settings.getScale()), left + 132, top + 184, 0xFFF3F4F6);
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    @Override public void drawScreen(int mx,int my,float partial){
+        drawRect(0,0,width,height,0x9906080D);
+        drawRect(panelX,panelY,panelX+600,panelY+390,0xF00D1017);
+        drawRect(panelX,panelY,panelX+600,panelY+2,0xFFFFD866);
+        drawString(fontRendererObj,"ALPHA CLIENT",panelX+18,panelY+14,0xFFFFD866);
+        drawString(fontRendererObj,"POTION HUD",panelX+18,panelY+31,0xFFF3F4F6);
+        drawString(fontRendererObj,"Configure how active effects appear on your screen.",panelX+18,panelY+48,0xFF9DA4B1);
+        drawRect(panelX+18,panelY+69,panelX+582,panelY+70,0x554B515D);
+        int left=panelX+18,right=panelX+312,top=panelY+80;
+        drawRect(left,top,left+270,panelY+299,0x99191D26);
+        drawRect(right,top,right+270,panelY+299,0x99191D26);
+        drawString(fontRendererObj,"DISPLAY",left+12,top+12,0xFFFFD866);
+        drawString(fontRendererObj,"Choose which information is shown.",left+12,top+27,0xFF9DA4B1);
+        drawString(fontRendererObj,"LAYOUT",right+12,top+12,0xFFFFD866);
+        drawString(fontRendererObj,"Adjust the HUD's overall appearance.",right+12,top+27,0xFF9DA4B1);
+        drawString(fontRendererObj,"OPACITY",right+12,top+54,0xFFE6E8ED);
+        drawCenteredString(fontRendererObj,settings.getOpacity()+" / 255",right+135,top+88,0xFFFFD866);
+        drawString(fontRendererObj,"SIZE",right+12,top+125,0xFFE6E8ED);
+        drawCenteredString(fontRendererObj,String.format(Locale.ROOT,"%.2f×",settings.getScale()),right+135,top+159,0xFFFFD866);
+        super.drawScreen(mx,my,partial);
     }
-
-    @Override public boolean doesGuiPauseGame() { return false; }
+    @Override public boolean doesGuiPauseGame(){return false;}
 }
