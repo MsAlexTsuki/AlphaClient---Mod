@@ -31,16 +31,15 @@ public final class EnchantingNameSettingsGui extends AlphaGuiScreen {
         bottom = Math.min(height - 12, top + 180);
 
         boolean enabled = EnchantingNameMod.isEnabled();
-        buttonList.add(new AlphaButton(ENABLE, left + 20, top + 66, 280, 20,
+        buttonList.add(new AlphaSettingsButton(ENABLE, left + 20, top + 66, 280, 20,
                 "ENCHANTING NAMES: " + (enabled ? "ON" : "OFF"), enabled));
-        buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x30000000);
-        drawRect(left, top, right, bottom, 0xE00A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "ENCHANTING NAMES",
                 width / 2, top + 18, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Show localized enchantment names in the enchanting table.",
