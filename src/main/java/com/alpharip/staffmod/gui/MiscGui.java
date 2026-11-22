@@ -37,13 +37,13 @@ public final class MiscGui extends AlphaGuiScreen {
         int startY = panelTop + 68;
         int startX = panelLeft + 12;
 
-        buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
         boolean serverHistoryEnabled = ServerHistoryManager.isEnabled();
-        buttonList.add(new FeatureTileButton(SERVER_HISTORY, startX, startY,
+        buttonList.add(new RoundedFeatureTileButton(SERVER_HISTORY, startX, startY,
                 tileWidth, tileHeight, "Server History", "◆",
                 serverHistoryEnabled ? "ON" : "OFF", serverHistoryEnabled, true));
         boolean fightHistoryEnabled = FightHistoryManager.isEnabled();
-        buttonList.add(new FeatureTileButton(FIGHT_HISTORY, startX + tileWidth + gap, startY,
+        buttonList.add(new RoundedFeatureTileButton(FIGHT_HISTORY, startX + tileWidth + gap, startY,
                 tileWidth, tileHeight, "Fight History", "◆",
                 fightHistoryEnabled ? "ON" : "OFF", fightHistoryEnabled, true));
     }
@@ -51,8 +51,8 @@ public final class MiscGui extends AlphaGuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
-        if (button instanceof FeatureTileButton
-                && ((FeatureTileButton) button).wasSwitchClicked()) {
+        if (button instanceof RoundedFeatureTileButton
+                && ((RoundedFeatureTileButton) button).wasSwitchClicked()) {
             if (button.id == SERVER_HISTORY) {
                 ServerHistoryManager.setEnabled(!ServerHistoryManager.isEnabled());
             } else if (button.id == FIGHT_HISTORY) {
@@ -73,8 +73,7 @@ public final class MiscGui extends AlphaGuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x18000000);
-        drawRect(panelLeft, panelTop, panelRight, panelBottom, 0xD90A0C11);
-        drawRect(panelLeft, panelTop, panelRight, panelTop + 2, ACCENT);
+        AlphaSettingsRender.drawPanel(panelLeft, panelTop, panelRight, panelBottom);
         drawCenteredString(fontRendererObj, "MISC", width / 2, panelTop + 13, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "MISCELLANEOUS MODS", width / 2, panelTop + 30, ACCENT);
         drawString(fontRendererObj, "Features and roadmap ideas", panelLeft + 12, panelTop + 49, 0xFFB8BDC8);
