@@ -572,7 +572,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int x = settingsLeft + 8;
             int y = panelTop + 82;
             int w = Math.max(90, panelLeft + panelWidth - x - 12);
-            buttonList.add(new AlphaMenuButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO MODULES"));
             LegacyPvpSettings.load();
             LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
             for (int i = 0; i < features.length; i++) {
@@ -612,7 +611,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         int x = settingsLeft + 8;
         int y = panelTop + 82;
         int w = Math.max(90, panelLeft + panelWidth - x - 12);
-        buttonList.add(new AlphaMenuButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO MODULES"));
         if (module == null || !module.isUnlocked() || !module.isImplemented()) return;
         buttonList.add(new AlphaMenuButton(SETTINGS_BASE, x, y, w, 20,
                 module.isEnabled() ? "MODULE: ON" : "MODULE: OFF", module.isEnabled()));
@@ -1004,7 +1002,29 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             for (int i = 0; i < keys.length; i++) KeystrokesMod.setColor(keys[i], parsed[i]);
             Keyboard.enableRepeatEvents(false); settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return;
         }
-        if (button.id == SETTINGS_BACK) { settingsSubpage = ""; selectedModuleId = "staffmods"; initGui(); return; }
+        if (button.id == SETTINGS_PREVIOUS) {
+            List<AlphaModule> modules = getFilteredModules();
+            int currentIndex = -1;
+            for (int i = 0; i < modules.size(); i++) {
+                if (modules.get(i).getId().equals(selectedModuleId)) { currentIndex = i; break; }
+            }
+            if (currentIndex > 0) {
+                selectedModuleId = modules.get(currentIndex - 1).getId();
+                settingsSubpage = "";
+                potionEffectNameField = null;
+                Keyboard.enableRepeatEvents(false);
+                initGui();
+            }
+            return;
+        }
+        if (button.id == SETTINGS_BACK) {
+            settingsSubpage = "";
+            selectedModuleId = "";
+            potionEffectNameField = null;
+            Keyboard.enableRepeatEvents(false);
+            initGui();
+            return;
+        }
         if (button.id >= SETTINGS_BASE && button.id < SETTINGS_BASE + 60) {
             handleModuleSetting(button.id - SETTINGS_BASE);
             initGui();
