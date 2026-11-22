@@ -140,7 +140,7 @@ public final class QualityGui extends AlphaGuiScreen {
         drawCenteredString(fontRendererObj, "QUALITY OF LIFE FEATURES", width / 2, panelTop + 30, ACCENT);
         drawString(fontRendererObj, "Features and roadmap ideas", panelLeft + 12, panelTop + 49, 0xFFB8BDC8);
 
-        // Feature rows are rendered by AlphaButton, matching StaffMods -> General.
+        // Feature cards use the rounded style shared with the Mods menu.
         if (FEATURES.length > visibleRows) {
             drawString(fontRendererObj, "Scroll to view all " + FEATURES.length + " ideas", panelLeft + 112,
                     panelBottom - 23, 0xFF8E95A3);
