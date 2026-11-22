@@ -108,8 +108,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     public void initGui() {
         buttonList.clear();
         if ("keystrokes-colors".equals(settingsSubpage)) Keyboard.enableRepeatEvents(true);
-        panelWidth = Math.min(880, Math.max(300, width - 28));
-        panelHeight = Math.min(440, Math.max(260, height - 28));
+        panelWidth = Math.min(760, Math.max(280, width - 20));
+        panelHeight = Math.min(420, Math.max(260, height - 24));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
         sidebarWidth = 116;
