@@ -765,7 +765,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     x, panelTop + 232, right - x - 4, 0xFFB8BDC8, 2);
             return;
         }
-        drawString(fontRendererObj,"MODS  \u203A  "+selectedCategory.getTitle().toUpperCase(Locale.ROOT)+"  \u203A  "+(module==null?"MODULE":module.getName().toUpperCase(Locale.ROOT)),x,panelTop+30,0xFFB8BDC8);
         drawString(fontRendererObj,module==null?"MODULE NOT FOUND":module.getName().toUpperCase(Locale.ROOT),x,panelTop+40,ACCENT);
         if(module==null)return;
         String id=module.getId();
