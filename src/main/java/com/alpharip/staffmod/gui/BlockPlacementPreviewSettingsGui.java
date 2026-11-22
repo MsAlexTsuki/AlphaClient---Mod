@@ -37,20 +37,19 @@ public final class BlockPlacementPreviewSettingsGui extends AlphaGuiScreen {
         boolean showCollision = BlockPlacementPreviewSettings.isShowCollision();
         int opacity = Math.round(BlockPlacementPreviewSettings.getOpacity() * 100.0F);
 
-        buttonList.add(new AlphaButton(ENABLE, left + 20, top + 68, 280, 20,
+        buttonList.add(new AlphaSettingsButton(ENABLE, left + 20, top + 68, 280, 20,
                 "BLOCK PLACEMENT PREVIEW: " + (enabled ? "ON" : "OFF"), enabled));
-        buttonList.add(new AlphaButton(SHOW_COLLISION, left + 20, top + 94, 280, 20,
+        buttonList.add(new AlphaSettingsButton(SHOW_COLLISION, left + 20, top + 94, 280, 20,
                 "SHOW COLLISION: " + (showCollision ? "ON" : "OFF"), showCollision));
-        buttonList.add(new AlphaButton(OPACITY_DOWN, left + 20, top + 120, 135, 20, "OPACITY -"));
-        buttonList.add(new AlphaButton(OPACITY_UP, left + 165, top + 120, 135, 20, "OPACITY +"));
-        buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
+        buttonList.add(new AlphaSettingsButton(OPACITY_DOWN, left + 20, top + 120, 135, 20, "OPACITY -"));
+        buttonList.add(new AlphaSettingsButton(OPACITY_UP, left + 165, top + 120, 135, 20, "OPACITY +"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x30000000);
-        drawRect(left, top, right, bottom, 0xE00A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "BLOCK PLACEMENT PREVIEW",
                 width / 2, top + 18, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Preview the target block position before placing it.",
