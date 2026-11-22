@@ -65,8 +65,8 @@ public final class PotionHudInfoEffectsGui extends AlphaGuiScreen {
     @Override protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         if (button.id == BACK) { mc.displayGuiScreen(parent); return; }
-        if (button.id == PREVIOUS) { page = Math.max(0, page-1); initGui(); return; }
-        if (button.id == NEXT) { page = Math.min(pageCount()-1, page+1); initGui(); return; }
+        if (button.id == PREVIOUS) { page = Math.max(0, page-1); index = Math.min(index, Math.max(0, ids.size()-1)); if (index < page*PAGE_SIZE || index >= (page+1)*PAGE_SIZE) index = page*PAGE_SIZE; initGui(); return; }
+        if (button.id == NEXT) { page = Math.min(pageCount()-1, page+1); if (index < page*PAGE_SIZE || index >= (page+1)*PAGE_SIZE) index = page*PAGE_SIZE; initGui(); return; }
         if (button.id >= FIRST_EFFECT && button.id < FIRST_EFFECT + PAGE_SIZE) {
             int selected = page*PAGE_SIZE + button.id-FIRST_EFFECT;
             if (selected >= 0 && selected < ids.size()) index = selected;
