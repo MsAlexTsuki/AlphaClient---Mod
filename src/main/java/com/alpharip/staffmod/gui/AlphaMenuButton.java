@@ -10,20 +10,20 @@ public final class AlphaMenuButton extends GuiButton {
     private final boolean active;
     private final boolean transparentSurface;
 
-    public AlphaButton(int id, int x, int y, int width, int height, String label) {
+    public AlphaMenuButton(int id, int x, int y, int width, int height, String label) {
         this(id, x, y, width, height, label, false, false, false);
     }
 
-    public AlphaButton(int id, int x, int y, int width, int height, String label, boolean primary) {
+    public AlphaMenuButton(int id, int x, int y, int width, int height, String label, boolean primary) {
         this(id, x, y, width, height, label, primary, false, false);
     }
 
-    public AlphaButton(int id, int x, int y, int width, int height, String label,
+    public AlphaMenuButton(int id, int x, int y, int width, int height, String label,
                        boolean primary, boolean active) {
         this(id, x, y, width, height, label, primary, active, false);
     }
 
-    public AlphaButton(int id, int x, int y, int width, int height, String label,
+    public AlphaMenuButton(int id, int x, int y, int width, int height, String label,
                        boolean primary, boolean active, boolean transparentSurface) {
         super(id, x, y, width, height, UiText.normalize(label));
         this.primary = primary;
