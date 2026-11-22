@@ -102,14 +102,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             // Staff rank folders belong exclusively inside StaffMods, not in the regular Mods sidebar.
             if (isStaffRankCategory(category)
                     || isDonatorRankCategory(category)) continue;
-            boolean categoryAllowed = PermissionService.hasAccess(category.getRequiredRank());
+            boolean categoryAllowed = category == AlphaModule.Category.DONATOR
+                    ? hasAnyUnlockedDonatorFolder()
+                    : PermissionService.hasAccess(category.getRequiredRank());
             if (!categoryAllowed) {
-                for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
-                    if (!"staffmods".equals(module.getId()) && module.isUnlocked()) {
-                        categoryAllowed = true;
-                        break;
-                    }
-                }
+                categoryAllowed = hasUnlockedModuleInCategory(category);
             }
             if (categoryAllowed) sidebarCategories.add(category);
         }
@@ -161,8 +158,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int tileHeight = 38;
             for (int i = 0; i < donorCategories.length; i++) {
                 AlphaModule.Category donorCategory = donorCategories[i];
-                // A subfolder is shown only to accounts assigned that rank (or Owner/Founder).
-                if (!PermissionService.hasAccess(donorCategory.getRequiredRank())) continue;
+                // Rank access or an explicit grant for at least one module unlocks this folder.
+                if (!hasDonatorFolderAccess(donorCategory)) continue;
                 int x = contentLeft + (i % 3) * (tileWidth + gap);
                 int y = contentTop + (i / 3) * (tileHeight + gap);
                 buttonList.add(new AlphaButton(DONATOR_SUBFOLDER_BASE + i, x, y,
@@ -251,6 +248,29 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 || category == AlphaModule.Category.ELITE
                 || category == AlphaModule.Category.ALPHA
                 || category == AlphaModule.Category.ALPHA_PLUS;
+    }
+
+    private boolean hasUnlockedModuleInCategory(AlphaModule.Category category) {
+        for (AlphaModule module : AlphaModuleRegistry.getForCategory(category)) {
+            if (!"staffmods".equals(module.getId()) && module.isUnlocked()) return true;
+        }
+        return false;
+    }
+
+    private boolean hasDonatorFolderAccess(AlphaModule.Category category) {
+        return PermissionService.hasAccess(category.getRequiredRank())
+                || hasUnlockedModuleInCategory(category);
+    }
+
+    private boolean hasAnyUnlockedDonatorFolder() {
+        AlphaModule.Category[] donorCategories = {
+            AlphaModule.Category.SCOUT, AlphaModule.Category.ROGUE, AlphaModule.Category.ELITE,
+            AlphaModule.Category.ALPHA, AlphaModule.Category.ALPHA_PLUS
+        };
+        for (AlphaModule.Category category : donorCategories) {
+            if (hasDonatorFolderAccess(category)) return true;
+        }
+        return false;
     }
 
     private boolean isStaffRankCategory(AlphaModule.Category category) {
@@ -492,7 +512,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 AlphaModule.Category.ALPHA, AlphaModule.Category.ALPHA_PLUS
             };
             AlphaModule.Category targetCategory = donorCategories[button.id - DONATOR_SUBFOLDER_BASE];
-            if (!PermissionService.hasAccess(targetCategory.getRequiredRank())) {
+            if (!hasDonatorFolderAccess(targetCategory)) {
                 selectedCategory = AlphaModule.Category.DONATOR;
                 selectedModuleId = "";
                 scrollOffset = 0;
@@ -515,7 +535,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (button.id >= CATEGORY_BASE
                 && button.id < CATEGORY_BASE + AlphaModule.Category.values().length) {
             AlphaModule.Category category = AlphaModule.Category.values()[button.id - CATEGORY_BASE];
-            boolean categoryAccess = PermissionService.hasAccess(category.getRequiredRank())
+            boolean categoryAccess = category == AlphaModule.Category.DONATOR
+                    ? hasAnyUnlockedDonatorFolder()
+                    : PermissionService.hasAccess(category.getRequiredRank())
                     || (category == AlphaModule.Category.FOUNDER
                     && SupabaseCommunityService.isSignedInFounder());
             // Match the sidebar visibility rule: an unlocked module grants access to its category.
