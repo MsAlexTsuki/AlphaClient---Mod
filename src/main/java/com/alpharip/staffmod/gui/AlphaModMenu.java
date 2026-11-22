@@ -12,6 +12,13 @@ import com.alpharip.staffmod.founderfun.PixelGardenGUI;
 import com.alpharip.staffmod.waypoints.WaypointsGui;
 import com.alpharip.staffmod.singleplayer.worldedit.RogueWorldEditGui;
 import com.alpharip.staffmod.profile.ModuleProfileManager;
+import com.alpharip.staffmod.fps.FpsMod;
+import com.alpharip.staffmod.ping.PingMod;
+import com.alpharip.staffmod.cps.CpsMod;
+import com.alpharip.staffmod.keystrokes.KeystrokesMod;
+import com.alpharip.staffmod.hud.InfoHudModules;
+import com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoModule;
+import com.alpharip.staffmod.ComboCounter.ComboCounter;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.permissions.PermissionService;
 import net.minecraft.client.Minecraft;
@@ -44,6 +51,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int PROFILE_EDIT = 431;
     private static final int PROFILE_DELETE = 432;
     private static final int DONATOR_SUBFOLDER_BASE = 500;
+    private static final int SETTINGS_BASE = 600;
+    private static final int SETTINGS_BACK = 308;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -72,13 +81,13 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
-        panelWidth = Math.min(460, Math.max(280, width - 20));
-        panelHeight = Math.min(300, Math.max(210, height - 24));
+        panelWidth = Math.min(760, Math.max(280, width - 20));
+        panelHeight = Math.min(420, Math.max(260, height - 24));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
-        sidebarWidth = 70;
-        contentLeft = panelLeft + sidebarWidth + 10;
-        contentRight = panelLeft + panelWidth - 112;
+        sidebarWidth = 78;
+        contentLeft = panelLeft + sidebarWidth + 12;
+        contentRight = panelLeft + panelWidth - 278;
         contentTop = panelTop + 49;
         contentBottom = panelTop + panelHeight - 25;
         settingsLeft = contentRight + 8;
@@ -167,7 +176,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             }
         }
 
-        {
+        if (!isModuleSettingsOpen()) {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
             int actionY = panelTop + panelHeight - 49;
             int profileTop = panelTop + 86;
@@ -189,6 +198,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 18, "EDIT"));
             buttonList.add(new AlphaButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 18, "DELETE"));
         }
+
+        if (isModuleSettingsOpen()) addModuleSettingsButtons();
 
         List<AlphaModule> filtered = getFilteredModules();
         int gridWidth = Math.max(180, contentRight - contentLeft);
@@ -378,6 +389,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 selectedCategory == AlphaModule.Category.DONATOR
                         ? "Donator ranks" : selectedCategory.getTitle().toUpperCase(Locale.ROOT),
                 contentLeft + 3, contentTop - 9, ACCENT);
+        if (isModuleSettingsOpen()) {
+            drawModuleSettingsPanel(mouseX, mouseY, partialTicks);
+        } else {
         drawString(fontRendererObj, "PROFILES",
                 settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
         List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
@@ -410,6 +424,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         drawString(fontRendererObj, rankText, settingsLeft + 5, bottom - 11,
                 SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
+        }
         super.drawScreen(mouseX, mouseY, partialTicks);
         int iconY = panelTop + 5;
         int accountX = panelLeft + panelWidth - 43;
@@ -421,6 +436,145 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         drawRect(exitX + 6, iconY + 7, exitX + 12, iconY + 9, 0xFFE6E8ED);
         drawRect(exitX + 10, iconY + 5, exitX + 12, iconY + 7, 0xFFE6E8ED);
         drawRect(exitX + 10, iconY + 9, exitX + 12, iconY + 11, 0xFFE6E8ED);
+    }
+
+
+    private boolean isModuleSettingsOpen() {
+        return selectedModuleId != null && !selectedModuleId.isEmpty()
+                && !"staffmods".equals(selectedModuleId);
+    }
+
+    private void addModuleSettingsButtons() {
+        AlphaModule module = AlphaModuleRegistry.find(selectedModuleId);
+        int x = settingsLeft + 8;
+        int y = panelTop + 82;
+        int w = Math.max(90, panelLeft + panelWidth - x - 12);
+        buttonList.add(new AlphaButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO MODULES"));
+        if (module == null || !module.isUnlocked() || !module.isImplemented()) return;
+        buttonList.add(new AlphaButton(SETTINGS_BASE, x, y, w, 20,
+                module.isEnabled() ? "MODULE: ON" : "MODULE: OFF", module.isEnabled()));
+        y += 25;
+        String id = module.getId();
+        if ("fps".equals(id)) {
+            addSettingButton(1,x,y,w,"HUD BACKGROUND: "+onOff(FpsMod.isShowBackground())); y+=24;
+            addSettingButton(2,x,y,w,"TEXT COLOR: "+FpsMod.getColorName());
+        } else if ("ping".equals(id)) {
+            addSettingButton(1,x,y,w,"HUD BACKGROUND: "+onOff(PingMod.isShowBackground())); y+=24;
+            addSettingButton(2,x,y,w,"TEXT COLOR: "+PingMod.getColorName());
+        } else if ("cps".equals(id)) {
+            addSettingButton(1,x,y,w,"HUD BACKGROUND: "+onOff(CpsMod.isShowBackground())); y+=24;
+            addSettingButton(2,x,y,w,"TEXT COLOR: "+CpsMod.getColorName()); y+=24;
+            addSettingButton(3,x,y,w,"DISPLAY: "+CpsMod.getDisplayModeName());
+        } else if ("combo-counter".equals(id)) {
+            addSettingButton(1,x,y,w,"HUD BACKGROUND: "+onOff(ComboCounter.getInstance().isShowBackground())); y+=24;
+            addSettingButton(2,x,y,w,"TEXT COLOR: "+ComboCounter.getInstance().getColorName());
+        } else if ("armor-hud-info".equals(id)) {
+            addSettingButton(30,x,y,w,"ITEM NAMES: "+onOff(InfoHudModules.getArmorShowNames())); y+=24;
+            addSettingButton(31,x,y,w,"DURABILITY: "+onOff(InfoHudModules.getArmorShowDurability())); y+=24;
+            addSettingButton(32,x,y,w,"LAYOUT: "+InfoHudModules.getArmorLayoutName()); y+=24;
+            addSettingButton(33,x,y,w,"HUD COLOR: "+InfoHudModules.getArmorColorName());
+        } else if ("potion-hud-info".equals(id)) {
+            PotionHudInfoModule p=PotionHudInfoModule.getInstance(); p.load();
+            addSettingButton(40,x,y,w,"POTION ICONS: "+onOff(p.isRenderIcons())); y+=24;
+            addSettingButton(41,x,y,w,"AMPLIFIER LEVELS ABOVE IV: "+onOff(p.isRenderLevelsAbove4())); y+=24;
+            addSettingButton(42,x,y,w,"SHOW WHILE CHAT IS OPEN: "+onOff(p.isShowWhileChat())); y+=24;
+            addSettingButton(43,x,y,w,"ROMAN NUMERAL LEVELS: "+onOff(p.isRomanNumerals())); y+=24;
+            addSettingButton(44,x,y,w/2,"OPACITY -"); addSettingButton(45,x+w/2,y,w-w/2,"OPACITY +"); y+=24;
+            addSettingButton(46,x,y,w/2,"SCALE -"); addSettingButton(47,x+w/2,y,w-w/2,"SCALE +"); y+=24;
+            addSettingButton(48,x,y,w,"MANAGE POTION EFFECTS");
+        } else if ("keystrokes".equals(id)) {
+            addSettingButton(10,x,y,w,"SHOW CLICKS: "+onOff(KeystrokesMod.isShowClicks())); y+=24;
+            addSettingButton(11,x,y,w,"SHOW LMB/RMB CPS: "+onOff(KeystrokesMod.isShowCps())); y+=24;
+            addSettingButton(12,x,y,w,"SHOW SPACE BAR: "+onOff(KeystrokesMod.isShowSpaceBar())); y+=24;
+            addSettingButton(13,x,y,w,"SHOW MOVEMENT KEYS: "+onOff(KeystrokesMod.isShowMovementKeys())); y+=24;
+            addSettingButton(14,x,y,w,"REPLACE WITH ARROWS: "+onOff(KeystrokesMod.isUseArrows())); y+=24;
+            addSettingButton(15,x,y,w,"OUTER BORDER: "+onOff(KeystrokesMod.isBorder())); y+=24;
+            addSettingButton(16,x,y,w,"TEXT SHADOW: "+onOff(KeystrokesMod.isTextShadow())); y+=24;
+            addSettingButton(17,x,y,w/2,"FADE DELAY -"); addSettingButton(18,x+w/2,y,w-w/2,"FADE DELAY +"); y+=24;
+            addSettingButton(19,x,y,w/2,"BOX SIZE -"); addSettingButton(20,x+w/2,y,w-w/2,"BOX SIZE +"); y+=24;
+            addSettingButton(21,x,y,w/2,"BORDER -"); addSettingButton(22,x+w/2,y,w-w/2,"BORDER +"); y+=24;
+            addSettingButton(23,x,y,w,"CUSTOMIZE COLORS");
+        } else if ("legacy-pvp".equals(id)) {
+            addSettingButton(50,x,y,w,"OPEN LEGACY PVP FEATURES");
+        }
+    }
+
+    private void addSettingButton(int id,int x,int y,int width,String label) {
+        buttonList.add(new AlphaButton(SETTINGS_BASE+id,x,y,width,19,label));
+    }
+    private String onOff(boolean value) { return value ? "ON" : "OFF"; }
+
+    private void drawModuleSettingsPanel(int mouseX,int mouseY,float partialTicks) {
+        AlphaModule module=AlphaModuleRegistry.find(selectedModuleId);
+        int x=settingsLeft+8, right=panelLeft+panelWidth-10;
+        drawString(fontRendererObj,"MODS  >  "+selectedCategory.getTitle().toUpperCase(Locale.ROOT)+"  >  SETTINGS",x,panelTop+30,0xFFB8BDC8);
+        drawString(fontRendererObj,module==null?"MODULE NOT FOUND":module.getName().toUpperCase(Locale.ROOT),x,panelTop+40,ACCENT);
+        if(module==null)return;
+        drawString(fontRendererObj,module.getStatusLabel(),x,panelTop+68,module.isEnabled()?0xFF9CE2AC:0xFFB8BDC8);
+        String id=module.getId();
+        boolean specialized="fps".equals(id)||"ping".equals(id)||"cps".equals(id)||"combo-counter".equals(id)
+                ||"armor-hud-info".equals(id)||"potion-hud-info".equals(id)||"keystrokes".equals(id)
+                ||"legacy-pvp".equals(id)||"name-viewer".equals(id);
+        if(!specialized)drawWrappedTextLimited(module.getDescription(),x,panelTop+111,right-x-4,0xFFB8BDC8,3);
+        if(!module.isImplemented())drawString(fontRendererObj,"This module is not implemented yet.",x,panelTop+154,0xFFFFD866);
+        else if(!module.isUnlocked())drawString(fontRendererObj,"Your current rank does not unlock this module.",x,panelTop+154,0xFFFFD866);
+        if("name-viewer".equals(id))drawWrappedTextLimited("Displays the extra name and rank display above your own player.",x,panelTop+111,right-x-4,0xFFB8BDC8,3);
+        if("potion-hud-info".equals(id)){
+            PotionHudInfoModule p=PotionHudInfoModule.getInstance();
+            drawString(fontRendererObj,"Opacity: "+p.getOpacity()+" / 255",x,panelTop+278,0xFFE7E9EE);
+            drawString(fontRendererObj,"Scale: "+String.format(Locale.ROOT,"%.2f",p.getScale()),x,panelTop+292,0xFFE7E9EE);
+        } else if("keystrokes".equals(id)){
+            drawString(fontRendererObj,"Fade: "+KeystrokesMod.getFadeDelay()+" ms",x,panelTop+389,0xFFE7E9EE);
+            drawString(fontRendererObj,"Box: "+KeystrokesMod.getBoxSize()+"   Border: "+KeystrokesMod.getBorderThickness(),x,panelTop+402,0xFFE7E9EE);
+        }
+        if(!specialized && module.isImplemented()){
+            List<AlphaModuleFeature> features=module.getFeatures();
+            int y=panelTop+158;
+            drawString(fontRendererObj,"MODULE FEATURES",x,y,ACCENT); y+=14;
+            for(int i=0;i<features.size()&&i<8;i++){
+                AlphaModuleFeature f=features.get(i);
+                drawString(fontRendererObj,f.getName(),x,y,0xFFE7E9EE);
+                String status=f.getStatusLabel();
+                drawString(fontRendererObj,status,right-4-fontRendererObj.getStringWidth(status),y,
+                        f.isAvailable()?0xFF9CE2AC:0xFFB8BDC8);
+                y+=18;
+            }
+        }
+    }
+
+    private void handleModuleSetting(int setting) {
+        AlphaModule module=AlphaModuleRegistry.find(selectedModuleId);
+        if(module==null||!module.isUnlocked()||!module.isImplemented())return;
+        if(setting==0){module.setEnabled(!module.isEnabled());return;}
+        String id=module.getId();
+        if("fps".equals(id)){if(setting==1)FpsMod.setShowBackground(!FpsMod.isShowBackground());else if(setting==2)FpsMod.cycleColor();}
+        else if("ping".equals(id)){if(setting==1)PingMod.setShowBackground(!PingMod.isShowBackground());else if(setting==2)PingMod.cycleColor();}
+        else if("cps".equals(id)){
+            if(setting==1)CpsMod.setShowBackground(!CpsMod.isShowBackground());
+            else if(setting==2)CpsMod.cycleColor();
+            else if(setting==3){int m=CpsMod.getDisplayMode();CpsMod.setDisplayMode(m==CpsMod.MODE_BOTH?CpsMod.MODE_LEFT:m==CpsMod.MODE_LEFT?CpsMod.MODE_RIGHT:CpsMod.MODE_BOTH);}
+        } else if("combo-counter".equals(id)){
+            if(setting==1)ComboCounter.getInstance().setShowBackground(!ComboCounter.getInstance().isShowBackground());
+            else if(setting==2)ComboCounter.getInstance().cycleColor();
+        } else if("armor-hud-info".equals(id)){
+            if(setting==30)InfoHudModules.toggleArmorShowNames();else if(setting==31)InfoHudModules.toggleArmorShowDurability();
+            else if(setting==32)InfoHudModules.cycleArmorLayout();else if(setting==33)InfoHudModules.cycleArmorColor();
+        } else if("potion-hud-info".equals(id)){
+            PotionHudInfoModule p=PotionHudInfoModule.getInstance();
+            if(setting==40)p.setRenderIcons(!p.isRenderIcons());else if(setting==41)p.setRenderLevelsAbove4(!p.isRenderLevelsAbove4());
+            else if(setting==42)p.setShowWhileChat(!p.isShowWhileChat());else if(setting==43)p.setRomanNumerals(!p.isRomanNumerals());
+            else if(setting==44)p.setOpacity(p.getOpacity()-16);else if(setting==45)p.setOpacity(p.getOpacity()+16);
+            else if(setting==46)p.setScale(p.getScale()-0.05F);else if(setting==47)p.setScale(p.getScale()+0.05F);
+            else if(setting==48)mc.displayGuiScreen(new com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoEffectsGui(this));
+        } else if("keystrokes".equals(id)){
+            if(setting==10)KeystrokesMod.setShowClicks(!KeystrokesMod.isShowClicks());else if(setting==11)KeystrokesMod.setShowCps(!KeystrokesMod.isShowCps());
+            else if(setting==12)KeystrokesMod.setShowSpaceBar(!KeystrokesMod.isShowSpaceBar());else if(setting==13)KeystrokesMod.setShowMovementKeys(!KeystrokesMod.isShowMovementKeys());
+            else if(setting==14)KeystrokesMod.setUseArrows(!KeystrokesMod.isUseArrows());else if(setting==15)KeystrokesMod.setBorder(!KeystrokesMod.isBorder());
+            else if(setting==16)KeystrokesMod.setTextShadow(!KeystrokesMod.isTextShadow());else if(setting==17)KeystrokesMod.adjustFadeDelay(-25);
+            else if(setting==18)KeystrokesMod.adjustFadeDelay(25);else if(setting==19)KeystrokesMod.adjustBoxSize(-1);
+            else if(setting==20)KeystrokesMod.adjustBoxSize(1);else if(setting==21)KeystrokesMod.adjustBorderThickness(-0.5F);
+            else if(setting==22)KeystrokesMod.adjustBorderThickness(0.5F);else if(setting==23)mc.displayGuiScreen(new KeystrokesColorSettingsGui(this));
+        } else if("legacy-pvp".equals(id)&&setting==50)mc.displayGuiScreen(new LegacyPvpSettingsGui(this));
     }
 
     private void drawWrappedTextLimited(String text, int x, int y, int maxWidth, int color, int maxLines) {
@@ -469,6 +623,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
+        if (button.id == SETTINGS_BACK) { selectedModuleId = ""; initGui(); return; }
+        if (button.id >= SETTINGS_BASE && button.id < SETTINGS_BASE + 60) {
+            handleModuleSetting(button.id - SETTINGS_BASE);
+            initGui();
+            return;
+        }
         if (button.id == ACCOUNT) { mc.displayGuiScreen(new CommunityLoginGui(this)); return; }
         if (button.id == WAYPOINTS) {
             mc.displayGuiScreen(new WaypointsGui(this));
@@ -605,45 +765,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     }
                 } else {
                     selectedModuleId = clickedModule.getId();
-                    if ("armor-hud-info".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new InfoHudSettingsGui(this, true)); return; }
-                    if ("potion-hud-info".equals(clickedModule.getId()) && clickedModule.isImplemented() && clickedModule.isUnlocked()) { mc.displayGuiScreen(new com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoSettingsGui(this)); return; }
-                    if ("name-viewer".equals(clickedModule.getId())
-                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                        mc.displayGuiScreen(new NameViewerSettingsGui(this));
-                        return;
-                    }
-                    if ("fps".equals(clickedModule.getId())
-                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                        mc.displayGuiScreen(new FpsSettingsGui(this));
-                        return;
-                    }
-                    if ("ping".equals(clickedModule.getId())
-                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                        mc.displayGuiScreen(new PingSettingsGui(this));
-                        return;
-                    }
-                    if ("cps".equals(clickedModule.getId())
-                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                        mc.displayGuiScreen(new CpsSettingsGui(this));
-                        return;
-                    }
-                    if ("keystrokes".equals(clickedModule.getId())
-                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                        mc.displayGuiScreen(new KeystrokesSettingsGui(this));
-                        return;
-                    }
-                    if ("combo-counter".equals(clickedModule.getId())
-                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                        mc.displayGuiScreen(new ComboCounterSettingsGui(this));
-                        return;
-                    }
-                    if ("legacy-pvp".equals(clickedModule.getId())
-                            && clickedModule.isImplemented() && clickedModule.isUnlocked()) {
-                        mc.displayGuiScreen(new LegacyPvpSettingsGui(this));
-                        return;
-                    }
-                    // Every module must open a settings screen, even when it has no specialized GUI yet.
-                    mc.displayGuiScreen(new ModuleSettingsGui(this, clickedModule));
+                    // Module settings now open in the right-hand panel of this menu.
                     return;
                 }
             }
@@ -664,6 +786,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 scrollOffset = 0;
                 initGui();
             }
+            return;
+        }
+        if (keyCode == Keyboard.KEY_ESCAPE && isModuleSettingsOpen()) {
+            selectedModuleId = "";
+            initGui();
             return;
         }
         if (keyCode == Keyboard.KEY_SLASH) {
