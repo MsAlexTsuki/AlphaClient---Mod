@@ -21,6 +21,8 @@ import com.alpharip.staffmod.cps.CpsMod;
 import com.alpharip.staffmod.keystrokes.KeystrokesMod;
 import com.alpharip.staffmod.hud.InfoHudModules;
 import com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoModule;
+import com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoEffectSetting;
+import net.minecraft.potion.Potion;
 import com.alpharip.staffmod.ComboCounter.ComboCounter;
 import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import com.alpharip.staffmod.permissions.PermissionService;
@@ -81,6 +83,23 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int LEGACY_TOGGLE = 722;
     private static final int LEGACY_FEATURE_BASE = 730;
     private String legacySelectedFeatureId = "";
+    private static final int POTION_LIST_BASE = 820, POTION_PAGE_PREV = 830, POTION_PAGE_NEXT = 831;
+    private static final int POTION_TOGGLE = 832, POTION_EDIT = 833, POTION_IMPORT = 834;
+    private static final int POTION_EDITOR_BACK = 840, POTION_EDITOR_SAVE = 841;
+    private static final int POTION_NAME_R_DOWN = 850, POTION_NAME_G_DOWN = 851, POTION_NAME_B_DOWN = 852;
+    private static final int POTION_TIMER_R_DOWN = 853, POTION_TIMER_G_DOWN = 854, POTION_TIMER_B_DOWN = 855;
+    private static final int POTION_NAME_R_UP = 856, POTION_NAME_G_UP = 857, POTION_NAME_B_UP = 858;
+    private static final int POTION_TIMER_R_UP = 859, POTION_TIMER_G_UP = 860, POTION_TIMER_B_UP = 861;
+    private static final int POTION_CHROMA_NAME = 862, POTION_CHROMA_TIMER = 863, POTION_BOLD = 864;
+    private static final int POTION_ITALIC = 865, POTION_UNDERLINE = 866, POTION_FLICKER = 867;
+    private static final int POTION_THRESHOLD_DOWN = 868, POTION_THRESHOLD_UP = 869;
+    private static final int POTION_SPEED_DOWN = 870, POTION_SPEED_UP = 871;
+    private static final int POTION_IMPORT_PREV = 880, POTION_IMPORT_NEXT = 881, POTION_IMPORT_COPY = 882, POTION_IMPORT_BACK = 883;
+    private static final int POTION_PAGE_SIZE = 7;
+    private final List<Integer> potionEffectIds = new ArrayList<Integer>();
+    private final List<Integer> potionImportSourceIds = new ArrayList<Integer>();
+    private int potionEffectIndex, potionEffectPage, potionImportSourceIndex;
+    private GuiTextField potionEffectNameField;
 
     public AlphaModMenu(GuiScreen parent) { this(parent, AlphaModule.Category.PUBLIC); }
 
@@ -457,6 +476,72 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
 
     private void addModuleSettingsButtons() {
+        if ("potion-effects".equals(settingsSubpage)) {
+            int x = settingsLeft + 8, y = panelTop + 86;
+            int w = Math.max(90, panelLeft + panelWidth - x - 12);
+            buttonList.add(new AlphaButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO POTION HUD"));
+            int listWidth = Math.max(86, (w - 8) / 2);
+            for (int slot = 0; slot < POTION_PAGE_SIZE; slot++) {
+                int index = potionEffectPage * POTION_PAGE_SIZE + slot;
+                if (index >= potionEffectIds.size()) break;
+                int effectId = potionEffectIds.get(index).intValue();
+                PotionHudInfoEffectSetting setting = PotionHudInfoModule.getInstance().getEffect(effectId);
+                String name = PotionHudInfoModule.getPotionName(effectId);
+                if (name.length() > 16) name = name.substring(0, 15) + "…";
+                buttonList.add(new AlphaButton(POTION_LIST_BASE + slot, x, y + slot * 23, listWidth, 20,
+                        name + (setting != null && setting.isEnabled() ? "  ON" : "  OFF"), false, index == potionEffectIndex));
+            }
+            buttonList.add(new AlphaButton(POTION_PAGE_PREV, x, panelTop + 350, 55, 18, "PREV", false, potionEffectPage > 0));
+            buttonList.add(new AlphaButton(POTION_PAGE_NEXT, x + 60, panelTop + 350, 55, 18, "NEXT", false,
+                    (potionEffectPage + 1) * POTION_PAGE_SIZE < potionEffectIds.size()));
+            int actionX = x + listWidth + 8, actionW = w - listWidth - 8;
+            buttonList.add(new AlphaButton(POTION_TOGGLE, actionX, panelTop + 130, actionW, 20,
+                    getSelectedPotionEffect() != null && getSelectedPotionEffect().isEnabled() ? "DISABLE" : "ENABLE"));
+            buttonList.add(new AlphaButton(POTION_EDIT, actionX, panelTop + 158, actionW, 20, "CUSTOMIZE"));
+            buttonList.add(new AlphaButton(POTION_IMPORT, actionX, panelTop + 186, actionW, 20, "COPY SETTINGS"));
+            return;
+        }
+        if ("potion-effect-edit".equals(settingsSubpage)) {
+            int x = settingsLeft + 8, w = Math.max(90, panelLeft + panelWidth - x - 12);
+            int leftX = x + 2, rightX = x + w / 2 + 2;
+            int[] down = {POTION_NAME_R_DOWN, POTION_NAME_G_DOWN, POTION_NAME_B_DOWN};
+            int[] up = {POTION_NAME_R_UP, POTION_NAME_G_UP, POTION_NAME_B_UP};
+            int[] timerDown = {POTION_TIMER_R_DOWN, POTION_TIMER_G_DOWN, POTION_TIMER_B_DOWN};
+            int[] timerUp = {POTION_TIMER_R_UP, POTION_TIMER_G_UP, POTION_TIMER_B_UP};
+            for (int i = 0; i < 3; i++) {
+                int y = panelTop + 90 + i * 23;
+                buttonList.add(new AlphaButton(down[i], leftX, y, 22, 18, "-"));
+                buttonList.add(new AlphaButton(up[i], leftX + 92, y, 22, 18, "+"));
+                buttonList.add(new AlphaButton(timerDown[i], rightX, y, 22, 18, "-"));
+                buttonList.add(new AlphaButton(timerUp[i], rightX + 92, y, 22, 18, "+"));
+            }
+            int half = (w - 6) / 2;
+            buttonList.add(new AlphaButton(POTION_CHROMA_NAME, x, panelTop + 164, half, 18, "CHROMA NAME"));
+            buttonList.add(new AlphaButton(POTION_CHROMA_TIMER, x + half + 6, panelTop + 164, half, 18, "CHROMA TIMER"));
+            buttonList.add(new AlphaButton(POTION_BOLD, x, panelTop + 186, half, 18, "BOLD"));
+            buttonList.add(new AlphaButton(POTION_ITALIC, x + half + 6, panelTop + 186, half, 18, "ITALIC"));
+            buttonList.add(new AlphaButton(POTION_UNDERLINE, x, panelTop + 208, half, 18, "UNDERLINE"));
+            buttonList.add(new AlphaButton(POTION_FLICKER, x + half + 6, panelTop + 208, half, 18, "LOW-TIME FLICKER"));
+            buttonList.add(new AlphaButton(POTION_THRESHOLD_DOWN, x, panelTop + 240, 24, 18, "-"));
+            buttonList.add(new AlphaButton(POTION_THRESHOLD_UP, x + half - 24, panelTop + 240, 24, 18, "+"));
+            buttonList.add(new AlphaButton(POTION_SPEED_DOWN, x + half + 6, panelTop + 240, 24, 18, "-"));
+            buttonList.add(new AlphaButton(POTION_SPEED_UP, x + w - 24, panelTop + 240, 24, 18, "+"));
+            potionEffectNameField = new GuiTextField(884, fontRendererObj, x + 2, panelTop + 306, w - 4, 18);
+            potionEffectNameField.setMaxStringLength(64);
+            PotionHudInfoEffectSetting selected = getSelectedPotionEffect();
+            potionEffectNameField.setText(selected == null ? "" : selected.getCustomName());
+            buttonList.add(new AlphaButton(POTION_EDITOR_SAVE, x, panelTop + 350, half, 19, "SAVE"));
+            buttonList.add(new AlphaButton(POTION_EDITOR_BACK, x + half + 6, panelTop + 350, half, 19, "BACK"));
+            return;
+        }
+        if ("potion-effect-import".equals(settingsSubpage)) {
+            int x = settingsLeft + 8, w = Math.max(90, panelLeft + panelWidth - x - 12);
+            buttonList.add(new AlphaButton(POTION_IMPORT_PREV, x, panelTop + 160, 55, 18, "PREV", false, potionImportSourceIndex > 0));
+            buttonList.add(new AlphaButton(POTION_IMPORT_NEXT, x + w - 55, panelTop + 160, 55, 18, "NEXT", false, potionImportSourceIndex < potionImportSourceIds.size() - 1));
+            buttonList.add(new AlphaButton(POTION_IMPORT_COPY, x, panelTop + 350, (w - 6) / 2, 19, "COPY"));
+            buttonList.add(new AlphaButton(POTION_IMPORT_BACK, x + (w - 6) / 2 + 6, panelTop + 350, (w - 6) / 2, 19, "BACK"));
+            return;
+        }
         if ("legacy-list".equals(settingsSubpage)) {
             int x = settingsLeft + 8;
             int y = panelTop + 82;
@@ -559,6 +644,54 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private void drawModuleSettingsPanel(int mouseX,int mouseY,float partialTicks) {
         AlphaModule module=AlphaModuleRegistry.find(selectedModuleId);
         int x=settingsLeft+8, right=panelLeft+panelWidth-10;
+        if ("potion-effects".equals(settingsSubpage)) {
+            drawString(fontRendererObj, "MODS  >  POTION HUD  >  EFFECTS", x, panelTop + 30, 0xFFB8BDC8);
+            drawString(fontRendererObj, "POTION EFFECTS", x, panelTop + 40, ACCENT);
+            PotionHudInfoEffectSetting selected = getSelectedPotionEffect();
+            if (selected != null && potionEffectIndex < potionEffectIds.size()) {
+                int effectId = potionEffectIds.get(potionEffectIndex).intValue();
+                drawString(fontRendererObj, PotionHudInfoModule.getPotionName(effectId), x + Math.max(90, (right - x - 8) / 2) + 8, panelTop + 90, 0xFFE7E9EE);
+                drawString(fontRendererObj, selected.isEnabled() ? "Visible in HUD" : "Hidden from HUD", x + Math.max(90, (right - x - 8) / 2) + 8, panelTop + 110, selected.isEnabled() ? 0xFF9CE2AC : 0xFFB8BDC8);
+                drawWrappedTextLimited("Customize the effect label, colors, text style and low-duration warning.", x + Math.max(90, (right - x - 8) / 2) + 8, panelTop + 142, Math.max(60, right - x - Math.max(90, (right - x - 8) / 2) - 12), 0xFFB8BDC8, 5);
+            }
+            drawString(fontRendererObj, "PAGE " + (potionEffectPage + 1) + " / " + Math.max(1, (potionEffectIds.size() + POTION_PAGE_SIZE - 1) / POTION_PAGE_SIZE), x, panelTop + 330, 0xFFB8BDC8);
+            return;
+        }
+        if ("potion-effect-edit".equals(settingsSubpage)) {
+            PotionHudInfoEffectSetting setting = getSelectedPotionEffect();
+            drawString(fontRendererObj, "MODS  >  POTION HUD  >  CUSTOMIZE", x, panelTop + 30, 0xFFB8BDC8);
+            drawString(fontRendererObj, "CUSTOMIZE EFFECT", x, panelTop + 40, ACCENT);
+            if (setting != null) {
+                drawString(fontRendererObj, "NAME COLOR", x + 4, panelTop + 76, 0xFFB8BDC8);
+                drawString(fontRendererObj, "TIMER COLOR", x + Math.max(130, (right - x) / 2), panelTop + 76, 0xFFB8BDC8);
+                drawRect(x + 4, panelTop + 84, x + Math.max(110, (right - x) / 2 - 8), panelTop + 88, 0xFF000000 | (setting.getRawNameColor() & 0xFFFFFF));
+                drawRect(x + Math.max(130, (right - x) / 2), panelTop + 84, right - 4, panelTop + 88, 0xFF000000 | (setting.getRawTimerColor() & 0xFFFFFF));
+                String[] rgb = {"R", "G", "B"};
+                for (int i = 0; i < 3; i++) {
+                    int shift = 16 - i * 8, yy = panelTop + 96 + i * 23;
+                    drawString(fontRendererObj, rgb[i] + " " + ((setting.getRawNameColor() >> shift) & 255), x + 34, yy + 5, 0xFFE7E9EE);
+                    drawString(fontRendererObj, rgb[i] + " " + ((setting.getRawTimerColor() >> shift) & 255), x + Math.max(160, (right - x) / 2 + 28), yy + 5, 0xFFE7E9EE);
+                }
+                drawString(fontRendererObj, "Threshold: " + setting.getFlickerStartTime() + " sec", x + 32, panelTop + 245, 0xFFE7E9EE);
+                drawString(fontRendererObj, "Speed: " + setting.getFlickerSpeed() + " ms", x + Math.max(150, (right - x) / 2 + 28), panelTop + 245, 0xFFE7E9EE);
+                drawString(fontRendererObj, "CUSTOM NAME", x + 2, panelTop + 292, 0xFFB8BDC8);
+                if (potionEffectNameField != null) potionEffectNameField.drawTextBox();
+            }
+            return;
+        }
+        if ("potion-effect-import".equals(settingsSubpage)) {
+            drawString(fontRendererObj, "MODS  >  POTION HUD  >  COPY SETTINGS", x, panelTop + 30, 0xFFB8BDC8);
+            drawString(fontRendererObj, "COPY EFFECT SETTINGS", x, panelTop + 40, ACCENT);
+            int target = getSelectedPotionEffectId();
+            int source = getPotionImportSourceId();
+            drawString(fontRendererObj, "TARGET", x + 4, panelTop + 95, 0xFFB8BDC8);
+            drawString(fontRendererObj, target < 0 ? "None" : PotionHudInfoModule.getPotionName(target), x + 4, panelTop + 111, 0xFFE7E9EE);
+            drawString(fontRendererObj, "SOURCE", x + 4, panelTop + 135, 0xFFB8BDC8);
+            drawString(fontRendererObj, source < 0 ? "No source effects" : PotionHudInfoModule.getPotionName(source), x + 4, panelTop + 151, 0xFFE7E9EE);
+            drawWrappedTextLimited("Copying replaces the target effect's current settings.", x + 4, panelTop + 190, right - x - 8, 0xFFFFD866, 3);
+            if (!potionImportSourceIds.isEmpty()) drawString(fontRendererObj, (potionImportSourceIndex + 1) + " / " + potionImportSourceIds.size(), x + 4, panelTop + 185, 0xFFB8BDC8);
+            return;
+        }
         if ("legacy-list".equals(settingsSubpage)) {
             drawString(fontRendererObj, "MODS  >  LEGACY PVP", x, panelTop + 30, 0xFFB8BDC8);
             drawString(fontRendererObj, "LEGACY PVP FEATURES", x, panelTop + 40, ACCENT);
@@ -630,6 +763,63 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
     }
 
+    private void refreshPotionEffectIds() {
+        potionEffectIds.clear();
+        for (int i = 0; i < Potion.potionTypes.length; i++) if (Potion.potionTypes[i] != null) potionEffectIds.add(Integer.valueOf(i));
+        potionEffectIndex = Math.max(0, Math.min(potionEffectIndex, Math.max(0, potionEffectIds.size() - 1)));
+        potionEffectPage = Math.max(0, Math.min(potionEffectPage, Math.max(0, (potionEffectIds.size() - 1) / POTION_PAGE_SIZE)));
+    }
+    private int getSelectedPotionEffectId() {
+        return potionEffectIds.isEmpty() ? -1 : potionEffectIds.get(Math.max(0, Math.min(potionEffectIndex, potionEffectIds.size() - 1))).intValue();
+    }
+    private PotionHudInfoEffectSetting getSelectedPotionEffect() {
+        int id = getSelectedPotionEffectId();
+        return id < 0 ? null : PotionHudInfoModule.getInstance().getEffect(id);
+    }
+    private void refreshPotionImportSources() {
+        potionImportSourceIds.clear();
+        int target = getSelectedPotionEffectId();
+        for (int i = 0; i < Potion.potionTypes.length; i++) if (Potion.potionTypes[i] != null && i != target) potionImportSourceIds.add(Integer.valueOf(i));
+        potionImportSourceIndex = Math.max(0, Math.min(potionImportSourceIndex, Math.max(0, potionImportSourceIds.size() - 1)));
+    }
+    private int getPotionImportSourceId() {
+        return potionImportSourceIds.isEmpty() ? -1 : potionImportSourceIds.get(Math.max(0, Math.min(potionImportSourceIndex, potionImportSourceIds.size() - 1))).intValue();
+    }
+    private int adjustPotionColor(int color, int shift, int amount) {
+        int value = Math.max(0, Math.min(255, ((color >> shift) & 255) + amount));
+        return (color & ~(255 << shift)) | (value << shift);
+    }
+    private void handlePotionEditorAction(int id) {
+        PotionHudInfoEffectSetting setting = getSelectedPotionEffect();
+        if (setting == null) return;
+        if (potionEffectNameField != null) setting.setCustomName(potionEffectNameField.getText());
+        int name = setting.getRawNameColor(), timer = setting.getRawTimerColor();
+        switch (id) {
+            case POTION_NAME_R_DOWN: setting.setNameColor(adjustPotionColor(name, 16, -16)); break;
+            case POTION_NAME_G_DOWN: setting.setNameColor(adjustPotionColor(name, 8, -16)); break;
+            case POTION_NAME_B_DOWN: setting.setNameColor(adjustPotionColor(name, 0, -16)); break;
+            case POTION_TIMER_R_DOWN: setting.setTimerColor(adjustPotionColor(timer, 16, -16)); break;
+            case POTION_TIMER_G_DOWN: setting.setTimerColor(adjustPotionColor(timer, 8, -16)); break;
+            case POTION_TIMER_B_DOWN: setting.setTimerColor(adjustPotionColor(timer, 0, -16)); break;
+            case POTION_NAME_R_UP: setting.setNameColor(adjustPotionColor(name, 16, 16)); break;
+            case POTION_NAME_G_UP: setting.setNameColor(adjustPotionColor(name, 8, 16)); break;
+            case POTION_NAME_B_UP: setting.setNameColor(adjustPotionColor(name, 0, 16)); break;
+            case POTION_TIMER_R_UP: setting.setTimerColor(adjustPotionColor(timer, 16, 16)); break;
+            case POTION_TIMER_G_UP: setting.setTimerColor(adjustPotionColor(timer, 8, 16)); break;
+            case POTION_TIMER_B_UP: setting.setTimerColor(adjustPotionColor(timer, 0, 16)); break;
+            case POTION_CHROMA_NAME: setting.setChromaName(!setting.isChromaName()); break;
+            case POTION_CHROMA_TIMER: setting.setChromaTimer(!setting.isChromaTimer()); break;
+            case POTION_BOLD: setting.setBold(!setting.isBold()); break;
+            case POTION_ITALIC: setting.setItalic(!setting.isItalic()); break;
+            case POTION_UNDERLINE: setting.setUnderlined(!setting.isUnderlined()); break;
+            case POTION_FLICKER: setting.setFlickerWhenLow(!setting.isFlickerWhenLow()); break;
+            case POTION_THRESHOLD_DOWN: setting.setFlickerStartTime(setting.getFlickerStartTime() - 1); break;
+            case POTION_THRESHOLD_UP: setting.setFlickerStartTime(setting.getFlickerStartTime() + 1); break;
+            case POTION_SPEED_DOWN: setting.setFlickerSpeed(setting.getFlickerSpeed() - 1); break;
+            case POTION_SPEED_UP: setting.setFlickerSpeed(setting.getFlickerSpeed() + 1); break;
+        }
+    }
+
     private LegacyPvpFeatureCatalog.Feature getLegacySelectedFeature() {
         for (LegacyPvpFeatureCatalog.Feature feature : LegacyPvpFeatureCatalog.getAll()) {
             if (feature.id.equals(legacySelectedFeatureId)) return feature;
@@ -692,7 +882,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             else if(setting==42)p.setShowWhileChat(!p.isShowWhileChat());else if(setting==43)p.setRomanNumerals(!p.isRomanNumerals());
             else if(setting==44)p.setOpacity(p.getOpacity()-16);else if(setting==45)p.setOpacity(p.getOpacity()+16);
             else if(setting==46)p.setScale(p.getScale()-0.05F);else if(setting==47)p.setScale(p.getScale()+0.05F);
-            else if(setting==48)mc.displayGuiScreen(new com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoEffectsGui(this));
+            else if(setting==48){PotionHudInfoModule.getInstance().load();refreshPotionEffectIds();potionEffectIndex=0;potionEffectPage=0;settingsSubpage="potion-effects";initGui();}
         } else if("keystrokes".equals(id)){
             if(setting==10)KeystrokesMod.setShowClicks(!KeystrokesMod.isShowClicks());else if(setting==11)KeystrokesMod.setShowCps(!KeystrokesMod.isShowCps());
             else if(setting==12)KeystrokesMod.setShowSpaceBar(!KeystrokesMod.isShowSpaceBar());else if(setting==13)KeystrokesMod.setShowMovementKeys(!KeystrokesMod.isShowMovementKeys());
@@ -750,6 +940,19 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
+        if (button.id == POTION_PAGE_PREV) { potionEffectPage = Math.max(0, potionEffectPage - 1); potionEffectIndex = potionEffectPage * POTION_PAGE_SIZE; initGui(); return; }
+        if (button.id == POTION_PAGE_NEXT) { potionEffectPage = Math.min(Math.max(0, (potionEffectIds.size() - 1) / POTION_PAGE_SIZE), potionEffectPage + 1); potionEffectIndex = potionEffectPage * POTION_PAGE_SIZE; initGui(); return; }
+        if (button.id >= POTION_LIST_BASE && button.id < POTION_LIST_BASE + POTION_PAGE_SIZE) { int selected = potionEffectPage * POTION_PAGE_SIZE + button.id - POTION_LIST_BASE; if (selected < potionEffectIds.size()) potionEffectIndex = selected; initGui(); return; }
+        if (button.id == POTION_TOGGLE) { PotionHudInfoEffectSetting setting = getSelectedPotionEffect(); if (setting != null) setting.setEnabled(!setting.isEnabled()); initGui(); return; }
+        if (button.id == POTION_EDIT) { potionEffectNameField = null; settingsSubpage = "potion-effect-edit"; initGui(); return; }
+        if (button.id == POTION_IMPORT) { refreshPotionImportSources(); settingsSubpage = "potion-effect-import"; initGui(); return; }
+        if (button.id == POTION_EDITOR_BACK) { if (potionEffectNameField != null) { PotionHudInfoEffectSetting setting = getSelectedPotionEffect(); if (setting != null) setting.setCustomName(potionEffectNameField.getText()); } potionEffectNameField = null; settingsSubpage = "potion-effects"; initGui(); return; }
+        if (button.id == POTION_EDITOR_SAVE) { if (potionEffectNameField != null) { PotionHudInfoEffectSetting setting = getSelectedPotionEffect(); if (setting != null) setting.setCustomName(potionEffectNameField.getText()); } potionEffectNameField = null; settingsSubpage = "potion-effects"; initGui(); return; }
+        if (button.id >= POTION_NAME_R_DOWN && button.id <= POTION_SPEED_UP) { handlePotionEditorAction(button.id); initGui(); return; }
+        if (button.id == POTION_IMPORT_PREV) { potionImportSourceIndex = Math.max(0, potionImportSourceIndex - 1); initGui(); return; }
+        if (button.id == POTION_IMPORT_NEXT) { potionImportSourceIndex = Math.min(potionImportSourceIds.size() - 1, potionImportSourceIndex + 1); initGui(); return; }
+        if (button.id == POTION_IMPORT_COPY) { int targetId = getSelectedPotionEffectId(), sourceId = getPotionImportSourceId(); if (targetId >= 0 && sourceId >= 0) { PotionHudInfoEffectSetting target = PotionHudInfoModule.getInstance().getEffect(targetId); PotionHudInfoEffectSetting source = PotionHudInfoModule.getInstance().getEffect(sourceId); if (target != null && source != null) target.copyFrom(source); } settingsSubpage = "potion-effects"; initGui(); return; }
+        if (button.id == POTION_IMPORT_BACK) { settingsSubpage = "potion-effects"; initGui(); return; }
         if (button.id == LEGACY_DETAIL_BACK) { settingsSubpage = "legacy-list"; initGui(); return; }
         if (button.id == LEGACY_TOGGLE && "legacy-detail".equals(settingsSubpage)) { toggleLegacyFeature(legacySelectedFeatureId); initGui(); return; }
         if (button.id >= LEGACY_FEATURE_BASE && button.id < LEGACY_FEATURE_BASE + LegacyPvpFeatureCatalog.getAll().length) {
@@ -927,6 +1130,19 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if ("potion-effect-edit".equals(settingsSubpage)) {
+            if (keyCode == Keyboard.KEY_ESCAPE) { potionEffectNameField = null; settingsSubpage = "potion-effects"; initGui(); return; }
+            if (potionEffectNameField != null) { potionEffectNameField.textboxKeyTyped(typedChar, keyCode); return; }
+        }
+        if ("potion-effects".equals(settingsSubpage) || "potion-effect-import".equals(settingsSubpage)
+                || "legacy-list".equals(settingsSubpage) || "legacy-detail".equals(settingsSubpage)) {
+            if (keyCode == Keyboard.KEY_ESCAPE) {
+                if ("legacy-detail".equals(settingsSubpage)) settingsSubpage = "legacy-list";
+                else if ("potion-effect-edit".equals(settingsSubpage) || "potion-effect-import".equals(settingsSubpage)) settingsSubpage = "potion-effects";
+                else settingsSubpage = "";
+                initGui(); return;
+            }
+        }
         if ("keystrokes-colors".equals(settingsSubpage)) {
             if (keyCode == Keyboard.KEY_ESCAPE) { Keyboard.enableRepeatEvents(false); settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return; }
             for (GuiTextField field : keystrokesColorFields) {
@@ -970,6 +1186,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if ("keystrokes-colors".equals(settingsSubpage)) {
             for (GuiTextField field : keystrokesColorFields) if (field != null) field.mouseClicked(mouseX, mouseY, mouseButton);
         }
+        if ("potion-effect-edit".equals(settingsSubpage) && potionEffectNameField != null) potionEffectNameField.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
