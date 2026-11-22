@@ -27,7 +27,7 @@ public final class RecordingStudioCameraPreview {
     private int y = 52;
     private int width = 220;
     private int height = 140;
-    private boolean visible;
+    private boolean visible = true;
     private boolean dragging;
     private boolean resizing;
     private int dragOffsetX;
@@ -39,7 +39,7 @@ public final class RecordingStudioCameraPreview {
     }
 
     public synchronized boolean isVisible() {
-        return visible;
+        return visible && runtime.hasCameraPreviewMode();
     }
 
     public synchronized void toggle() {
@@ -73,7 +73,8 @@ public final class RecordingStudioCameraPreview {
     @SubscribeEvent
     public void onOverlay(RenderGameOverlayEvent.Post event) {
         if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
-            drawPreview();
+            Minecraft minecraft = Minecraft.getMinecraft();
+            if (minecraft != null && minecraft.currentScreen == null) drawPreview();
         }
     }
 
