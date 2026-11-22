@@ -536,29 +536,29 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int[] timerDown = {POTION_TIMER_R_DOWN, POTION_TIMER_G_DOWN, POTION_TIMER_B_DOWN};
             int[] timerUp = {POTION_TIMER_R_UP, POTION_TIMER_G_UP, POTION_TIMER_B_UP};
             for (int i = 0; i < 3; i++) {
-                int y = panelTop + 90 + i * 23;
+                int y = panelTop + 90 + i * 22;
                 buttonList.add(new AlphaMenuButton(down[i], leftX, y, 22, 18, "-"));
                 buttonList.add(new AlphaMenuButton(up[i], leftX + 92, y, 22, 18, "+"));
                 buttonList.add(new AlphaMenuButton(timerDown[i], rightX, y, 22, 18, "-"));
                 buttonList.add(new AlphaMenuButton(timerUp[i], rightX + 92, y, 22, 18, "+"));
             }
             int half = (w - 6) / 2;
-            buttonList.add(new AlphaMenuButton(POTION_CHROMA_NAME, x, panelTop + 164, half, 18, "CHROMA NAME: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaName() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_CHROMA_TIMER, x + half + 6, panelTop + 164, half, 18, "CHROMA TIMER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaTimer() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_BOLD, x, panelTop + 186, half, 18, "BOLD: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isBold() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_ITALIC, x + half + 6, panelTop + 186, half, 18, "ITALIC: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isItalic() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_UNDERLINE, x, panelTop + 208, half, 18, "UNDERLINE: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isUnderlined() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_FLICKER, x + half + 6, panelTop + 208, half, 18, "FLICKER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isFlickerWhenLow() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_THRESHOLD_DOWN, x, panelTop + 240, 24, 18, "-"));
-            buttonList.add(new AlphaMenuButton(POTION_THRESHOLD_UP, x + half - 24, panelTop + 240, 24, 18, "+"));
-            buttonList.add(new AlphaMenuButton(POTION_SPEED_DOWN, x + half + 6, panelTop + 240, 24, 18, "-"));
-            buttonList.add(new AlphaMenuButton(POTION_SPEED_UP, x + w - 24, panelTop + 240, 24, 18, "+"));
-            potionEffectNameField = new GuiTextField(884, fontRendererObj, x + 2, panelTop + 306, w - 4, 18);
+            buttonList.add(new AlphaMenuButton(POTION_CHROMA_NAME, x, panelTop + 158, half, 17, "CHROMA NAME: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaName() ? "ON" : "OFF")));
+            buttonList.add(new AlphaMenuButton(POTION_CHROMA_TIMER, x + half + 6, panelTop + 158, half, 17, "CHROMA TIMER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaTimer() ? "ON" : "OFF")));
+            buttonList.add(new AlphaMenuButton(POTION_BOLD, x, panelTop + 177, half, 17, "BOLD: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isBold() ? "ON" : "OFF")));
+            buttonList.add(new AlphaMenuButton(POTION_ITALIC, x + half + 6, panelTop + 177, half, 17, "ITALIC: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isItalic() ? "ON" : "OFF")));
+            buttonList.add(new AlphaMenuButton(POTION_UNDERLINE, x, panelTop + 196, half, 17, "UNDERLINE: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isUnderlined() ? "ON" : "OFF")));
+            buttonList.add(new AlphaMenuButton(POTION_FLICKER, x + half + 6, panelTop + 196, half, 17, "FLICKER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isFlickerWhenLow() ? "ON" : "OFF")));
+            buttonList.add(new AlphaMenuButton(POTION_THRESHOLD_DOWN, x, panelTop + 220, 22, 16, "-"));
+            buttonList.add(new AlphaMenuButton(POTION_THRESHOLD_UP, x + half - 22, panelTop + 220, 22, 16, "+"));
+            buttonList.add(new AlphaMenuButton(POTION_SPEED_DOWN, x + half + 6, panelTop + 220, 22, 16, "-"));
+            buttonList.add(new AlphaMenuButton(POTION_SPEED_UP, x + w - 22, panelTop + 220, 22, 16, "+"));
+            potionEffectNameField = new GuiTextField(884, fontRendererObj, x + 2, panelTop + 250, w - 4, 17);
             potionEffectNameField.setMaxStringLength(64);
             PotionHudInfoEffectSetting selected = getSelectedPotionEffect();
             potionEffectNameField.setText(selected == null ? "" : selected.getCustomName());
-            buttonList.add(new AlphaMenuButton(POTION_EDITOR_SAVE, x, panelTop + 350, half, 19, "SAVE"));
-            buttonList.add(new AlphaMenuButton(POTION_EDITOR_BACK, x + half + 6, panelTop + 350, half, 19, "BACK"));
+            buttonList.add(new AlphaMenuButton(POTION_EDITOR_SAVE, x, panelTop + 272, half, 16, "SAVE"));
+            buttonList.add(new AlphaMenuButton(POTION_EDITOR_BACK, x + half + 6, panelTop + 272, half, 16, "BACK"));
             return;
         }
         if ("potion-effect-import".equals(settingsSubpage)) {
@@ -575,8 +575,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int w = Math.max(90, panelLeft + panelWidth - x - 12);
             LegacyPvpSettings.load();
             LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
+            int availableHeight = panelHeight - 98;
+            int rowSpacing = Math.max(15, Math.min(21, availableHeight / Math.max(1, features.length)));
+            int rowHeight = Math.max(13, Math.min(18, rowSpacing - 2));
             for (int i = 0; i < features.length; i++) {
-                buttonList.add(new AlphaMenuButton(LEGACY_FEATURE_BASE + i, x, y + i * 21, w, 19, features[i].label));
+                buttonList.add(new AlphaMenuButton(LEGACY_FEATURE_BASE + i, x, y + i * rowSpacing, w, rowHeight, features[i].label));
             }
             return;
         }
