@@ -510,7 +510,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         drawString(fontRendererObj,"MODS  >  "+selectedCategory.getTitle().toUpperCase(Locale.ROOT)+"  >  SETTINGS",x,panelTop+30,0xFFB8BDC8);
         drawString(fontRendererObj,module==null?"MODULE NOT FOUND":module.getName().toUpperCase(Locale.ROOT),x,panelTop+40,ACCENT);
         if(module==null)return;
-        drawString(fontRendererObj,module.getStatusLabel(),x,panelTop+68,module.isEnabled()?0xFF9CE2AC:0xFFB8BDC8);
         String id=module.getId();
         boolean specialized="fps".equals(id)||"ping".equals(id)||"cps".equals(id)||"combo-counter".equals(id)
                 ||"armor-hud-info".equals(id)||"potion-hud-info".equals(id)||"keystrokes".equals(id)
