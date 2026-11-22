@@ -108,23 +108,24 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     public void initGui() {
         buttonList.clear();
         if ("keystrokes-colors".equals(settingsSubpage)) Keyboard.enableRepeatEvents(true);
-        panelWidth = Math.min(760, Math.max(280, width - 20));
-        panelHeight = Math.min(420, Math.max(260, height - 24));
+        panelWidth = Math.min(680, Math.max(280, width - 32));
+        panelHeight = Math.min(370, Math.max(250, height - 32));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
-        sidebarWidth = 78;
+        sidebarWidth = 68;
         contentLeft = panelLeft + sidebarWidth + 12;
-        contentRight = panelLeft + panelWidth - 278;
-        contentTop = panelTop + 49;
-        contentBottom = panelTop + panelHeight - 25;
-        settingsLeft = contentRight + 8;
+        int rightColumnWidth = isModuleSettingsOpen() ? 248 : 190;
+        contentRight = panelLeft + panelWidth - rightColumnWidth - 16;
+        contentTop = panelTop + 68;
+        contentBottom = panelTop + panelHeight - 24;
+        settingsLeft = contentRight + 12;
 
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj,
-                contentLeft + 3, panelTop + 25, Math.max(80, contentRight - contentLeft - 6), 15);
+                contentLeft + 4, panelTop + 29, Math.max(80, contentRight - contentLeft - 8), 16);
         searchField.setMaxStringLength(48);
         searchField.setText(searchText);
         searchField.setFocused(searchFocused);
-        searchField.setEnableBackgroundDrawing(true);
+        searchField.setEnableBackgroundDrawing(false);
         searchField.setTextColor(0xFFE7E9EE);
         searchField.setDisabledTextColour(0xFFB8BDC8);
         buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + 5, 16, 16, ""));
@@ -147,8 +148,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             if (categoryAllowed) sidebarCategories.add(category);
         }
         boolean showStaffMods = PermissionService.hasStaffModsAccess();
-        int categoryY = panelTop + 68;
-        int categoryBottom = panelTop + panelHeight - 43;
+        int categoryY = panelTop + 73;
+        int categoryBottom = panelTop + panelHeight - 48;
         int visibleCategorySlots = Math.max(1, (categoryBottom - categoryY) / 23);
         int sidebarItemCount = sidebarCategories.size() + (showStaffMods ? 1 : 0);
         int maxCategoryScroll = Math.max(0, sidebarItemCount - visibleCategorySlots);
@@ -191,7 +192,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             };
             int gap = 8;
             int tileWidth = Math.max(50, (contentRight - contentLeft - gap * 2) / 3);
-            int tileHeight = 38;
+            int tileHeight = 34;
             for (int i = 0; i < donorCategories.length; i++) {
                 AlphaModule.Category donorCategory = donorCategories[i];
                 // Rank access or an explicit grant for at least one module unlocks this folder.
@@ -205,25 +206,25 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
         if (!isModuleSettingsOpen()) {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-            int actionY = panelTop + panelHeight - 49;
-            int profileTop = panelTop + 86;
-            int profileBottom = actionY - 8;
-            int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
+            int actionY = panelTop + 143;
+            int profileTop = panelTop + 102;
+            int visibleProfiles = 2;
             profileScrollOffset = Math.max(0, Math.min(profileScrollOffset, Math.max(0, profiles.size() - visibleProfiles)));
-            int actionsLeft = settingsLeft + 4;
-            int actionsRight = panelLeft + panelWidth - 10;
-            int actionGap = 4;
+            int cardRight = panelLeft + panelWidth - 12;
+            int actionsLeft = settingsLeft + 7;
+            int actionsRight = cardRight - 7;
+            int actionGap = 3;
             int actionWidth = Math.max(1, (actionsRight - actionsLeft - actionGap * 2) / 3);
+            int profileWidth = Math.max(50, cardRight - settingsLeft - 14);
             for (int row = 0; row < visibleProfiles && profileScrollOffset + row < profiles.size(); row++) {
                 ModuleProfileManager.BhopProfile profile = profiles.get(profileScrollOffset + row);
-                buttonList.add(new AlphaButton(PROFILE_SELECT_BASE + row, settingsLeft + 4,
-                        profileTop + row * 21, Math.max(50, panelLeft + panelWidth - settingsLeft - 10),
-                        18, profile.getProfileName(),
+                buttonList.add(new AlphaButton(PROFILE_SELECT_BASE + row, settingsLeft + 7,
+                        profileTop + row * 19, profileWidth, 17, profile.getProfileName(),
                         profile.getProfileName().equalsIgnoreCase(ModuleProfileManager.getSelectedProfileName())));
             }
-            buttonList.add(new AlphaButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 18, "CREATE"));
-            buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 18, "EDIT"));
-            buttonList.add(new AlphaButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 18, "DELETE"));
+            buttonList.add(new AlphaButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 17, "CREATE"));
+            buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 17, "EDIT"));
+            buttonList.add(new AlphaButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 17, "DELETE"));
         }
 
         if (isModuleSettingsOpen()) addModuleSettingsButtons();
@@ -232,8 +233,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         int gridWidth = Math.max(180, contentRight - contentLeft);
         int gap = 8;
         int tileWidth = (gridWidth - gap) / 2;
-        int tileHeight = 54;
-        int rowGap = 7;
+        int tileHeight = 48;
+        int rowGap = 8;
         int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
         int start = Math.min(scrollOffset, Math.max(0, filtered.size() - visibleRows * 2));
         for (int i = start; i < filtered.size() && i < start + visibleRows * 2; i++) {
@@ -369,8 +370,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     private int visibleRows() {
         // Keep this in sync with the regular module tile layout in initGui().
-        // Each row is 54px tall with a 7px gap.
-        return Math.max(1, (contentBottom - contentTop) / 61);
+        // Each row is 48px tall with an 8px gap.
+        return Math.max(1, (contentBottom - contentTop) / 56);
     }
 
     private AlphaModule getSelectedModule() {
@@ -396,22 +397,26 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         // Only dim the game slightly; the surrounding world remains part of the interface.
         drawRect(0, 0, width, height, 0x18000000);
         int right = panelLeft + panelWidth, bottom = panelTop + panelHeight;
-        drawRect(panelLeft, panelTop, right, bottom, 0xD90A0C11);
-        drawRect(panelLeft, panelTop, right, panelTop + 1, 0x554B515D);
-        drawRect(panelLeft, panelTop + 1, panelLeft + 1, bottom - 1, 0x334B515D);
-        drawRect(right - 1, panelTop + 1, right, bottom - 1, 0x334B515D);
-        drawRect(panelLeft + sidebarWidth, panelTop + 2, panelLeft + sidebarWidth + 1, bottom - 1, 0x553F424A);
-        drawRect(settingsLeft - 7, panelTop + 2, settingsLeft - 6, bottom - 1, 0x553F424A);
+        AlphaGuiDraw.roundedRect(panelLeft, panelTop, panelWidth, panelHeight, 12F, 0xE60B0D13);
+        AlphaGuiDraw.roundedRect(panelLeft + 5, panelTop + 5, sidebarWidth - 10, panelHeight - 10, 8F, 0x99191D25);
+        AlphaGuiDraw.roundedRect(contentLeft + 1, panelTop + 26, Math.max(80, contentRight - contentLeft - 2), 21, 6F, 0xAA171A21);
+        if (isModuleSettingsOpen()) {
+            AlphaGuiDraw.roundedRect(settingsLeft, panelTop + 58, right - settingsLeft - 10,
+                    panelHeight - 70, 9F, 0xAA171B23);
+        } else {
+            AlphaGuiDraw.roundedRect(settingsLeft, panelTop + 58, right - settingsLeft - 10,
+                    176F, 9F, 0xAA171B23);
+        }
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1F, 1F, 1F, 1F);
-        drawScaledCustomSizeModalRect(panelLeft + 18, panelTop + 5, 0.0F, 0.0F, 1024, 1024, 32, 32, 1024.0F, 1024.0F);
-        drawString(fontRendererObj, "MODS", panelLeft + 8, panelTop + 40, 0xFFF0F1F4);
+        drawScaledCustomSizeModalRect(panelLeft + 15, panelTop + 7, 0.0F, 0.0F, 1024, 1024, 30, 30, 1024.0F, 1024.0F);
+        drawString(fontRendererObj, "MODS", panelLeft + 8, panelTop + 42, 0xFFF0F1F4);
         drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
                 + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
         searchField.drawTextBox();
 
-        drawString(fontRendererObj, "BROWSE", panelLeft + 6, panelTop + 57, 0xFFB8BDC8);
+        drawString(fontRendererObj, "BROWSE", panelLeft + 7, panelTop + 60, 0xFFB8BDC8);
         drawString(fontRendererObj,
                 selectedCategory == AlphaModule.Category.DONATOR
                         ? "Donator ranks" : selectedCategory.getTitle().toUpperCase(Locale.ROOT),
@@ -419,38 +424,27 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (isModuleSettingsOpen()) {
             drawModuleSettingsPanel(mouseX, mouseY, partialTicks);
         } else {
-        drawString(fontRendererObj, "PROFILES",
-                settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
-        List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-        String activeProfile = ModuleProfileManager.getSelectedProfileName();
-        int profileTop = panelTop + 67;
-        int actionY = panelTop + panelHeight - 49;
-        int profileBottom = actionY - 8;
-        int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
-        drawString(fontRendererObj, "Select a profile", settingsLeft + 7, panelTop + 55, 0xFFF3F4F6);
-        if (profiles.isEmpty()) {
-            drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, profileTop + 4, 0xFFB8BDC8);
-        } else {
-            if (hasBhopAccess()) {
-                drawString(fontRendererObj, "Active: " + activeProfile, settingsLeft + 7,
-                        panelTop + panelHeight - 27, 0xFF9CE2AC);
+            List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
+            String activeProfile = ModuleProfileManager.getSelectedProfileName();
+            int profileTop = panelTop + 102;
+            int visibleProfiles = 2;
+            drawString(fontRendererObj, "PROFILES", settingsLeft + 9, panelTop + 69, 0xFFF0F1F4);
+            drawString(fontRendererObj, "ACTIVE: " + activeProfile, settingsLeft + 9, panelTop + 86, ACCENT);
+            if (profiles.isEmpty()) {
+                drawString(fontRendererObj, "No profiles available.", settingsLeft + 9, profileTop + 4, 0xFFB8BDC8);
+            } else if (profiles.size() > visibleProfiles) {
+                drawString(fontRendererObj, (profileScrollOffset + 1) + "-"
+                        + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + " / " + profiles.size(),
+                        panelLeft + panelWidth - 43, panelTop + 69, 0xFF8F96A3);
             }
-            if (profiles.size() > visibleProfiles) {
-                drawString(fontRendererObj, "Scroll for more (" + (profileScrollOffset + 1) + "-"
-                        + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + "/" + profiles.size() + ")",
-                        settingsLeft + 7, panelTop + 68, 0xFFB8BDC8);
+            String rankText = "Alpha Rank: " + (SupabaseCommunityService.isSignedIn()
+                    ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK");
+            int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 14 - settingsLeft);
+            while (rankText.length() > 1 && fontRendererObj.getStringWidth(rankText) > rankMaxWidth) {
+                rankText = rankText.substring(0, rankText.length() - 1);
             }
-        }
-        // Keep the community rank directly beneath the fixed Profiles panel.
-        // Community Login and Exit remain as the existing top-right icon buttons.
-        String rankText = "Alpha Rank: " + (SupabaseCommunityService.isSignedIn()
-                ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK");
-        int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 14 - settingsLeft);
-        while (rankText.length() > 1 && fontRendererObj.getStringWidth(rankText) > rankMaxWidth) {
-            rankText = rankText.substring(0, rankText.length() - 1);
-        }
-        drawString(fontRendererObj, rankText, settingsLeft + 5, bottom - 11,
-                SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
+            drawString(fontRendererObj, rankText, settingsLeft + 5, bottom - 11,
+                    SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
         int iconY = panelTop + 5;
@@ -1219,12 +1213,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             // Scroll the profile list only when the mouse is over the right-hand
             // profile/settings panel. Otherwise the wheel must scroll module tiles.
             if (mouseX >= settingsLeft && mouseX <= panelLeft + panelWidth - 8
-                    && mouseY >= panelTop + 62 && mouseY <= panelTop + panelHeight - 42
+                    && mouseY >= panelTop + 100 && mouseY <= panelTop + 141
                     && !isModuleSettingsOpen()) {
                 List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-                int profileTop = panelTop + 86;
-                int actionY = panelTop + panelHeight - 48;
-                int visibleProfiles = Math.max(1, (actionY - 8 - profileTop) / 21);
+                int profileTop = panelTop + 102;
+                int actionY = panelTop + 143;
+                int visibleProfiles = 2;
                 int maxProfileOffset = Math.max(0, profiles.size() - visibleProfiles);
                 profileScrollOffset = Math.max(0, Math.min(maxProfileOffset,
                         profileScrollOffset + (wheel < 0 ? 1 : -1)));
