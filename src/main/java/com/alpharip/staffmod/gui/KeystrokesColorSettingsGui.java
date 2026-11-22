@@ -46,8 +46,8 @@ public final class KeystrokesColorSettingsGui extends AlphaGuiScreen {
             fields[i].setMaxStringLength(9);
             fields[i].setText(String.format("%08X", colors[i]));
         }
-        buttonList.add(new AlphaButton(SAVE, left + 12, top + 225, 125, 20, "SAVE COLORS"));
-        buttonList.add(new AlphaButton(BACK, left + 153, top + 225, 125, 20, "BACK"));
+        buttonList.add(new AlphaSettingsButton(SAVE, left + 12, top + 225, 125, 20, "SAVE COLORS"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 153, top + 225, 125, 20, "BACK"));
     }
 
     @Override
@@ -81,8 +81,7 @@ public final class KeystrokesColorSettingsGui extends AlphaGuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x30000000);
-        drawRect(left, top, left + 290, top + 260, 0xE00A0C11);
-        drawRect(left, top, left + 290, top + 2, 0xFFFFC83D);
+        AlphaSettingsRender.drawPanel(left, top, left + 290, top + 260);
         drawCenteredString(fontRendererObj, "KEYSTROKES COLORS", width / 2, top + 12, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Enter 8-digit AARRGGBB hex colors", width / 2, top + 29, 0xFFB8BDC8);
         for (int i = 0; i < fields.length; i++) {
