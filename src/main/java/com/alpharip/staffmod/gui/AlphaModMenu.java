@@ -596,14 +596,14 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         if ("keystrokes-colors".equals(settingsSubpage)) {
             int x = settingsLeft + 8;
-            int y = panelTop + 350;
+            int y = panelTop + 254;
             int w = Math.max(90, panelLeft + panelWidth - x - 12);
             buttonList.add(new AlphaMenuButton(COLOR_SAVE, x, y, (w - 6) / 2, 19, "SAVE COLORS"));
             buttonList.add(new AlphaMenuButton(COLOR_BACK, x + (w - 6) / 2 + 6, y, (w - 6) / 2, 19, "CANCEL"));
             int[] colors = {KeystrokesMod.getBackgroundColor(), KeystrokesMod.getPressedBackgroundColor(),
                     KeystrokesMod.getTextColor(), KeystrokesMod.getPressedTextColor(), KeystrokesMod.getBorderColor()};
             for (int i = 0; i < keystrokesColorFields.length; i++) {
-                keystrokesColorFields[i] = new GuiTextField(i, fontRendererObj, x + 106, panelTop + 145 + i * 34, w - 112, 18);
+                keystrokesColorFields[i] = new GuiTextField(i, fontRendererObj, x + 106, panelTop + 90 + i * 28, w - 112, 18);
                 keystrokesColorFields[i].setMaxStringLength(9);
                 keystrokesColorFields[i].setText(String.format(Locale.ROOT, "%08X", colors[i]));
                 keystrokesColorFields[i].setTextColor(0xFFE7E9EE);
@@ -648,17 +648,21 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             addSettingButton(46,x,y,w/2,"SCALE -"); addSettingButton(47,x+w/2,y,w-w/2,"SCALE +"); y+=24;
             addSettingButton(48,x,y,w,"MANAGE POTION EFFECTS");
         } else if ("keystrokes".equals(id)) {
-            addSettingButton(10,x,y,w,"SHOW CLICKS: "+onOff(KeystrokesMod.isShowClicks())); y+=24;
-            addSettingButton(11,x,y,w,"SHOW LMB/RMB CPS: "+onOff(KeystrokesMod.isShowCps())); y+=24;
-            addSettingButton(12,x,y,w,"SHOW SPACE BAR: "+onOff(KeystrokesMod.isShowSpaceBar())); y+=24;
-            addSettingButton(13,x,y,w,"SHOW MOVEMENT KEYS: "+onOff(KeystrokesMod.isShowMovementKeys())); y+=24;
-            addSettingButton(14,x,y,w,"REPLACE WITH ARROWS: "+onOff(KeystrokesMod.isUseArrows())); y+=24;
-            addSettingButton(15,x,y,w,"OUTER BORDER: "+onOff(KeystrokesMod.isBorder())); y+=24;
-            addSettingButton(16,x,y,w,"TEXT SHADOW: "+onOff(KeystrokesMod.isTextShadow())); y+=24;
-            addSettingButton(17,x,y,w/2,"FADE DELAY -"); addSettingButton(18,x+w/2,y,w-w/2,"FADE DELAY +"); y+=24;
-            addSettingButton(19,x,y,w/2,"BOX SIZE -"); addSettingButton(20,x+w/2,y,w-w/2,"BOX SIZE +"); y+=24;
-            addSettingButton(21,x,y,w/2,"BORDER -"); addSettingButton(22,x+w/2,y,w-w/2,"BORDER +"); y+=24;
-            addSettingButton(23,x,y,w,"CUSTOMIZE COLORS");
+            y = panelTop + 106;
+            addCompactSettingButton(10,x,y,w,"SHOW CLICKS: "+onOff(KeystrokesMod.isShowClicks())); y+=17;
+            addCompactSettingButton(11,x,y,w,"SHOW LMB/RMB CPS: "+onOff(KeystrokesMod.isShowCps())); y+=17;
+            addCompactSettingButton(12,x,y,w,"SHOW SPACE BAR: "+onOff(KeystrokesMod.isShowSpaceBar())); y+=17;
+            addCompactSettingButton(13,x,y,w,"SHOW MOVEMENT KEYS: "+onOff(KeystrokesMod.isShowMovementKeys())); y+=17;
+            addCompactSettingButton(14,x,y,w,"REPLACE WITH ARROWS: "+onOff(KeystrokesMod.isUseArrows())); y+=17;
+            addCompactSettingButton(15,x,y,w,"OUTER BORDER: "+onOff(KeystrokesMod.isBorder())); y+=17;
+            addCompactSettingButton(16,x,y,w,"TEXT SHADOW: "+onOff(KeystrokesMod.isTextShadow())); y+=17;
+            addCompactSettingButton(17,x,y,w/2,"FADE - ("+KeystrokesMod.getFadeDelay()+" ms)");
+            addCompactSettingButton(18,x+w/2,y,w-w/2,"FADE + ("+KeystrokesMod.getFadeDelay()+" ms)"); y+=17;
+            addCompactSettingButton(19,x,y,w/2,"BOX - ("+KeystrokesMod.getBoxSize()+")");
+            addCompactSettingButton(20,x+w/2,y,w-w/2,"BOX + ("+KeystrokesMod.getBoxSize()+")"); y+=17;
+            addCompactSettingButton(21,x,y,w/2,"BORDER - ("+KeystrokesMod.getBorderThickness()+")");
+            addCompactSettingButton(22,x+w/2,y,w-w/2,"BORDER + ("+KeystrokesMod.getBorderThickness()+")"); y+=17;
+            addCompactSettingButton(23,x,y,w,"CUSTOMIZE COLORS");
         } else if ("legacy-pvp".equals(id)) {
             addSettingButton(50,x,y,w,"OPEN LEGACY PVP FEATURES");
         }
@@ -666,6 +670,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     private void addSettingButton(int id,int x,int y,int width,String label) {
         buttonList.add(new AlphaMenuButton(SETTINGS_BASE+id,x,y,width,19,label));
+    }
+    private void addCompactSettingButton(int id,int x,int y,int width,String label) {
+        buttonList.add(new AlphaMenuButton(SETTINGS_BASE+id,x,y,width,16,label));
     }
     private String onOff(boolean value) { return value ? "ON" : "OFF"; }
 
@@ -750,11 +757,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             drawString(fontRendererObj, "KEYSTROKES COLORS", x, panelTop + 40, ACCENT);
             String[] labels = {"BACKGROUND", "PRESSED BACKGROUND", "TEXT", "PRESSED TEXT", "BORDER"};
             for (int i = 0; i < keystrokesColorFields.length; i++) {
-                drawString(fontRendererObj, labels[i], x, panelTop + 150 + i * 34, 0xFFE7E9EE);
+                drawString(fontRendererObj, labels[i], x, panelTop + 94 + i * 28, 0xFFE7E9EE);
                 if (keystrokesColorFields[i] != null) keystrokesColorFields[i].drawTextBox();
             }
             drawWrappedTextLimited("Enter 8-digit AARRGGBB hex values. A 6-digit RGB value is also accepted.",
-                    x, panelTop + 330, right - x - 4, 0xFFB8BDC8, 2);
+                    x, panelTop + 232, right - x - 4, 0xFFB8BDC8, 2);
             return;
         }
         drawString(fontRendererObj,"MODS  \u203A  "+selectedCategory.getTitle().toUpperCase(Locale.ROOT)+"  \u203A  "+(module==null?"MODULE":module.getName().toUpperCase(Locale.ROOT)),x,panelTop+30,0xFFB8BDC8);
@@ -770,11 +777,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if("name-viewer".equals(id))drawWrappedTextLimited("Displays the extra name and rank display above your own player.",x,panelTop+111,right-x-4,0xFFB8BDC8,3);
         if("potion-hud-info".equals(id)){
             PotionHudInfoModule p=PotionHudInfoModule.getInstance();
-            drawString(fontRendererObj,"Opacity: "+p.getOpacity()+" / 255",x,panelTop+278,0xFFE7E9EE);
-            drawString(fontRendererObj,"Scale: "+String.format(Locale.ROOT,"%.2f",p.getScale()),x,panelTop+292,0xFFE7E9EE);
-        } else if("keystrokes".equals(id)){
-            drawString(fontRendererObj,"Fade: "+KeystrokesMod.getFadeDelay()+" ms",x,panelTop+389,0xFFE7E9EE);
-            drawString(fontRendererObj,"Box: "+KeystrokesMod.getBoxSize()+"   Border: "+KeystrokesMod.getBorderThickness(),x,panelTop+402,0xFFE7E9EE);
+            drawString(fontRendererObj,"Opacity: "+p.getOpacity()+" / 255",x,panelTop+264,0xFFE7E9EE);
+            drawString(fontRendererObj,"Scale: "+String.format(Locale.ROOT,"%.2f",p.getScale()),x,panelTop+278,0xFFE7E9EE);
         }
         if(!specialized && module.isImplemented()){
             List<AlphaModuleFeature> features=module.getFeatures();
