@@ -35,17 +35,17 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
         for (int i = 0; i < ids.length; i++) {
             int x = (i % 2 == 0) ? x1 : x2;
             int y = top + 50 + (i / 2) * 23;
-            buttonList.add(new AlphaButton(ids[i], x, y, colW, 19, label(names[i], states[i])));
+            buttonList.add(new AlphaSettingsButton(ids[i], x, y, colW, 19, label(names[i], states[i])));
         }
         int y = top + 151;
-        buttonList.add(new AlphaButton(FADE_DOWN, x1, y, 30, 18, "-"));
-        buttonList.add(new AlphaButton(FADE_UP, right - 42, y, 30, 18, "+")); y += 28;
-        buttonList.add(new AlphaButton(SIZE_DOWN, x1, y, 30, 18, "-"));
-        buttonList.add(new AlphaButton(SIZE_UP, right - 42, y, 30, 18, "+")); y += 28;
-        buttonList.add(new AlphaButton(BORDER_DOWN, x1, y, 30, 18, "-"));
-        buttonList.add(new AlphaButton(BORDER_UP, right - 42, y, 30, 18, "+"));
-        buttonList.add(new AlphaButton(COLORS, left + 12, top + 235, right - left - 24, 18, "CUSTOMIZE COLORS"));
-        buttonList.add(new AlphaButton(BACK, left + 12, bottom - 25, 72, 18, "BACK"));
+        buttonList.add(new AlphaSettingsButton(FADE_DOWN, x1, y, 30, 18, "-"));
+        buttonList.add(new AlphaSettingsButton(FADE_UP, right - 42, y, 30, 18, "+")); y += 28;
+        buttonList.add(new AlphaSettingsButton(SIZE_DOWN, x1, y, 30, 18, "-"));
+        buttonList.add(new AlphaSettingsButton(SIZE_UP, right - 42, y, 30, 18, "+")); y += 28;
+        buttonList.add(new AlphaSettingsButton(BORDER_DOWN, x1, y, 30, 18, "-"));
+        buttonList.add(new AlphaSettingsButton(BORDER_UP, right - 42, y, 30, 18, "+"));
+        buttonList.add(new AlphaSettingsButton(COLORS, left + 12, top + 235, right - left - 24, 18, "CUSTOMIZE COLORS"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 12, bottom - 25, 72, 18, "BACK"));
     }
 
     private String label(String name, boolean enabled) { return name + ": " + (enabled ? "ON" : "OFF"); }
