@@ -152,9 +152,9 @@ public final class AlphaModule {
             return PermissionService.hasRogueOrHigherWorldEditAccess();
         }
 
-        // Pixel Garden is controlled by its authenticated command-permission bundle.
+        // Pixel Garden follows the established Scout-and-higher rank rule.
         if ("pixelgarden".equals(id)) {
-            return PermissionService.hasCommandPermission("menu.pixelgarden", false);
+            return PermissionService.hasPixelGardenRankAccess();
         }
 
         // Armor HUD, Potion HUD and CPS remain public.
