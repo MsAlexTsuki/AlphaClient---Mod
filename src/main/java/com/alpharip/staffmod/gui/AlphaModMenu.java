@@ -371,8 +371,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     private int visibleRows() {
         // Keep this in sync with the regular module tile layout in initGui().
-        // Each row is 54px tall with a 7px gap.
-        return Math.max(1, (contentBottom - contentTop) / 61);
+        // Each row is 62px tall with a 9px gap.
+        return Math.max(1, (contentBottom - contentTop) / 71);
     }
 
     private AlphaModule getSelectedModule() {
@@ -419,7 +419,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             String moduleName = activeModule == null ? "Module" : activeModule.getName();
             drawString(fontRendererObj, "Mods  ›  " + selectedCategory.getTitle()
                     + "  ›  " + moduleName, contentLeft + 8, panelTop + 10, 0xFFB8BDC8);
-            drawString(fontRendererObj, moduleName.toUpperCase(Locale.ROOT), contentLeft + 8, panelTop + 39, ACCENT);
         } else {
             drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
                     + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
@@ -741,7 +740,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     x, panelTop + 330, right - x - 4, 0xFFB8BDC8, 2);
             return;
         }
-        drawString(fontRendererObj,"MODS  >  "+selectedCategory.getTitle().toUpperCase(Locale.ROOT)+"  >  SETTINGS",x,panelTop+30,0xFFB8BDC8);
+        drawString(fontRendererObj,"MODS  \u203A  "+selectedCategory.getTitle().toUpperCase(Locale.ROOT)+"  \u203A  "+(module==null?"MODULE":module.getName().toUpperCase(Locale.ROOT)),x,panelTop+30,0xFFB8BDC8);
         drawString(fontRendererObj,module==null?"MODULE NOT FOUND":module.getName().toUpperCase(Locale.ROOT),x,panelTop+40,ACCENT);
         if(module==null)return;
         String id=module.getId();
