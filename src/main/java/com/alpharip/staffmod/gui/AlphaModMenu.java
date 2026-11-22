@@ -208,7 +208,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             }
         }
 
-        if (!isModuleSettingsOpen()) {
+        if (!isModuleSettingsOpen() && !isFolderFeatureSettingsOpen()) {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
             int actionY = panelTop + panelHeight - 49;
             int profileTop = panelTop + 86;
@@ -427,7 +427,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         AlphaMenuRender.roundedRect(panelLeft + 5, panelTop + 5, panelLeft + sidebarWidth - 5, bottom - 5, 8, 0xA9151922);
         AlphaMenuRender.roundedRect(panelLeft + sidebarWidth + 5, panelTop + 8,
                 panelLeft + sidebarWidth + 6, bottom - 8, 1, 0x66515A68);
-        if (isModuleSettingsOpen()) {
+        if (isModuleSettingsOpen() || isFolderFeatureSettingsOpen()) {
             AlphaMenuRender.roundedRect(contentLeft, panelTop + 26, right - 9, bottom - 9, 8, 0x55191D26);
         } else {
             AlphaMenuRender.roundedRect(settingsLeft, panelTop + 29, right - 9, bottom - 9, 8, 0x55191D26);
@@ -443,16 +443,18 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             drawString(fontRendererObj, "Mods  ›  " + selectedCategory.getTitle()
                     + "  ›  " + moduleName, contentLeft + 52, panelTop + 10, 0xFFB8BDC8);
         } else {
-            drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
-                    + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
+            int itemCount = isFolderOpen() ? getFolderItems().size() : getFilteredModules().size();
+            drawString(fontRendererObj, itemCount + (isFolderOpen() ? " modules" : " modules"),
+                    contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
             AlphaMenuRender.roundedRect(contentLeft + 2, panelTop + 24,
                     contentRight - 2, panelTop + 42, 5, 0xAA202630);
             searchField.drawTextBox();
             drawString(fontRendererObj, "BROWSE", panelLeft + 38, panelTop + 61, 0xFFB8BDC8);
-            drawString(fontRendererObj,
-                    selectedCategory == AlphaModule.Category.DONATOR
-                            ? "Donator ranks" : selectedCategory.getTitle().toUpperCase(Locale.ROOT),
-                    contentLeft + 3, contentTop - 9, ACCENT);
+            String breadcrumb = isFolderOpen()
+                    ? "GENERAL  >  " + openFolderId.toUpperCase(Locale.ROOT)
+                    : (selectedCategory == AlphaModule.Category.DONATOR
+                        ? "Donator ranks" : selectedCategory.getTitle().toUpperCase(Locale.ROOT));
+            drawString(fontRendererObj, breadcrumb, contentLeft + 3, contentTop - 9, ACCENT);
         }
         if (isModuleSettingsOpen()) {
             drawModuleSettingsPanel(mouseX, mouseY, partialTicks);
@@ -1142,7 +1144,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (button.id == FOLDER_FEATURE_TOGGLE) { FolderItem item=getSelectedFolderItem(); if(item!=null)item.toggle(); initGui(); return; }
         if (button.id >= FOLDER_ITEM_BASE && button.id < FOLDER_ITEM_BASE + 100) {
             List<FolderItem> items=getFolderItems(); int index=button.id-FOLDER_ITEM_BASE;
-            if(index>=0&&index<items.size()){selectedFolderItemId=items.get(index).id;initGui();}
+            if(index>=0&&index<items.size()){
+                selectedFolderItemId=items.get(index).id;
+                searchFocused=false;
+                if(searchField!=null)searchField.setFocused(false);
+                initGui();
+            }
             return;
         }
         if (button.id == POTION_MANAGER_BACK) { settingsSubpage = ""; initGui(); return; }
@@ -1466,7 +1473,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             // profile/settings panel. Otherwise the wheel must scroll module tiles.
             if (mouseX >= settingsLeft && mouseX <= panelLeft + panelWidth - 8
                     && mouseY >= panelTop + 62 && mouseY <= panelTop + panelHeight - 42
-                    && !isModuleSettingsOpen()) {
+                    && !isModuleSettingsOpen() && !isFolderFeatureSettingsOpen()) {
                 List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
                 int profileTop = panelTop + 86;
                 int actionY = panelTop + panelHeight - 48;
