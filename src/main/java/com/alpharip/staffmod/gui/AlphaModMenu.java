@@ -516,12 +516,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 buttonList.add(new AlphaButton(timerUp[i], rightX + 92, y, 22, 18, "+"));
             }
             int half = (w - 6) / 2;
-            buttonList.add(new AlphaButton(POTION_CHROMA_NAME, x, panelTop + 164, half, 18, "CHROMA NAME"));
-            buttonList.add(new AlphaButton(POTION_CHROMA_TIMER, x + half + 6, panelTop + 164, half, 18, "CHROMA TIMER"));
-            buttonList.add(new AlphaButton(POTION_BOLD, x, panelTop + 186, half, 18, "BOLD"));
-            buttonList.add(new AlphaButton(POTION_ITALIC, x + half + 6, panelTop + 186, half, 18, "ITALIC"));
-            buttonList.add(new AlphaButton(POTION_UNDERLINE, x, panelTop + 208, half, 18, "UNDERLINE"));
-            buttonList.add(new AlphaButton(POTION_FLICKER, x + half + 6, panelTop + 208, half, 18, "LOW-TIME FLICKER"));
+            buttonList.add(new AlphaButton(POTION_CHROMA_NAME, x, panelTop + 164, half, 18, "CHROMA NAME: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaName() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_CHROMA_TIMER, x + half + 6, panelTop + 164, half, 18, "CHROMA TIMER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaTimer() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_BOLD, x, panelTop + 186, half, 18, "BOLD: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isBold() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_ITALIC, x + half + 6, panelTop + 186, half, 18, "ITALIC: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isItalic() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_UNDERLINE, x, panelTop + 208, half, 18, "UNDERLINE: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isUnderlined() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_FLICKER, x + half + 6, panelTop + 208, half, 18, "FLICKER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isFlickerWhenLow() ? "ON" : "OFF")));
             buttonList.add(new AlphaButton(POTION_THRESHOLD_DOWN, x, panelTop + 240, 24, 18, "-"));
             buttonList.add(new AlphaButton(POTION_THRESHOLD_UP, x + half - 24, panelTop + 240, 24, 18, "+"));
             buttonList.add(new AlphaButton(POTION_SPEED_DOWN, x + half + 6, panelTop + 240, 24, 18, "-"));
@@ -947,7 +947,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (button.id == POTION_EDIT) { potionEffectNameField = null; settingsSubpage = "potion-effect-edit"; initGui(); return; }
         if (button.id == POTION_IMPORT) { refreshPotionImportSources(); settingsSubpage = "potion-effect-import"; initGui(); return; }
         if (button.id == POTION_EDITOR_BACK) { if (potionEffectNameField != null) { PotionHudInfoEffectSetting setting = getSelectedPotionEffect(); if (setting != null) setting.setCustomName(potionEffectNameField.getText()); } potionEffectNameField = null; settingsSubpage = "potion-effects"; initGui(); return; }
-        if (button.id == POTION_EDITOR_SAVE) { if (potionEffectNameField != null) { PotionHudInfoEffectSetting setting = getSelectedPotionEffect(); if (setting != null) setting.setCustomName(potionEffectNameField.getText()); } potionEffectNameField = null; settingsSubpage = "potion-effects"; initGui(); return; }
+        if (button.id == POTION_EDITOR_SAVE) { if (potionEffectNameField != null) { PotionHudInfoEffectSetting setting = getSelectedPotionEffect(); if (setting != null) setting.setCustomName(potionEffectNameField.getText()); } initGui(); return; }
         if (button.id >= POTION_NAME_R_DOWN && button.id <= POTION_SPEED_UP) { handlePotionEditorAction(button.id); initGui(); return; }
         if (button.id == POTION_IMPORT_PREV) { potionImportSourceIndex = Math.max(0, potionImportSourceIndex - 1); initGui(); return; }
         if (button.id == POTION_IMPORT_NEXT) { potionImportSourceIndex = Math.min(potionImportSourceIds.size() - 1, potionImportSourceIndex + 1); initGui(); return; }
