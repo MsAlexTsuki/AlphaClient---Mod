@@ -6,6 +6,9 @@ import com.alpharip.staffmod.modules.AlphaModuleFeature;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.pvp.LegacyPvpSettingsGui;
+import com.alpharip.staffmod.pvp.LegacyPvpFeatureCatalog;
+import com.alpharip.staffmod.pvp.LegacyPvpSettings;
+import com.alpharip.staffmod.pvp.LegacyPvpTransformer;
 import com.alpharip.staffmod.ComboCounter.ComboCounterSettingsGui;
 import com.alpharip.staffmod.gui.KeystrokesSettingsGui;
 import com.alpharip.staffmod.founderfun.PixelGardenGUI;
@@ -74,6 +77,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private GuiTextField[] keystrokesColorFields = new GuiTextField[5];
     private static final int COLOR_SAVE = 701;
     private static final int COLOR_BACK = 702;
+    private static final int LEGACY_DETAIL_BACK = 721;
+    private static final int LEGACY_TOGGLE = 722;
+    private static final int LEGACY_FEATURE_BASE = 730;
+    private String legacySelectedFeatureId = "";
 
     public AlphaModMenu(GuiScreen parent) { this(parent, AlphaModule.Category.PUBLIC); }
 
@@ -450,6 +457,29 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
 
     private void addModuleSettingsButtons() {
+        if ("legacy-list".equals(settingsSubpage)) {
+            int x = settingsLeft + 8;
+            int y = panelTop + 82;
+            int w = Math.max(90, panelLeft + panelWidth - x - 12);
+            buttonList.add(new AlphaButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO MODULES"));
+            LegacyPvpSettings.load();
+            LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
+            for (int i = 0; i < features.length; i++) {
+                buttonList.add(new AlphaButton(LEGACY_FEATURE_BASE + i, x, y + i * 21, w, 19, features[i].label));
+            }
+            return;
+        }
+        if ("legacy-detail".equals(settingsSubpage)) {
+            int x = settingsLeft + 8;
+            int y = panelTop + 52;
+            int w = Math.max(90, panelLeft + panelWidth - x - 12);
+            buttonList.add(new AlphaButton(LEGACY_DETAIL_BACK, x, y, w, 19, "BACK TO LEGACY PVP"));
+            LegacyPvpFeatureCatalog.Feature feature = getLegacySelectedFeature();
+            if (feature != null && isLegacyToggleAvailable(feature.id)) {
+                buttonList.add(new AlphaButton(LEGACY_TOGGLE, x, panelTop + 350, w, 20, getLegacyToggleLabel(feature.id)));
+            }
+            return;
+        }
         if ("keystrokes-colors".equals(settingsSubpage)) {
             int x = settingsLeft + 8;
             int y = panelTop + 350;
@@ -529,6 +559,31 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private void drawModuleSettingsPanel(int mouseX,int mouseY,float partialTicks) {
         AlphaModule module=AlphaModuleRegistry.find(selectedModuleId);
         int x=settingsLeft+8, right=panelLeft+panelWidth-10;
+        if ("legacy-list".equals(settingsSubpage)) {
+            drawString(fontRendererObj, "MODS  >  LEGACY PVP", x, panelTop + 30, 0xFFB8BDC8);
+            drawString(fontRendererObj, "LEGACY PVP FEATURES", x, panelTop + 40, ACCENT);
+            drawWrappedTextLimited("Select a feature to inspect its status, details and available controls.", x, panelTop + 65, right - x - 4, 0xFFB8BDC8, 2);
+            return;
+        }
+        if ("legacy-detail".equals(settingsSubpage)) {
+            LegacyPvpFeatureCatalog.Feature feature = getLegacySelectedFeature();
+            drawString(fontRendererObj, "MODS  >  LEGACY PVP  >  FEATURE", x, panelTop + 30, 0xFFB8BDC8);
+            drawString(fontRendererObj, feature == null ? "FEATURE NOT FOUND" : feature.label.toUpperCase(Locale.ROOT), x, panelTop + 40, ACCENT);
+            if (feature != null) {
+                String status = LegacyPvpFeatureCatalog.getStatusLabel(feature.status);
+                if (("blockhit".equals(feature.id) && !LegacyPvpTransformer.isInstalled())
+                        || ("missed-swing-delay".equals(feature.id) && !LegacyPvpTransformer.isMissedSwingDelayInstalled())
+                        || ("bow-animation".equals(feature.id) && !LegacyPvpTransformer.isBowAnimationInstalled())
+                        || ("sword-swing".equals(feature.id) && !LegacyPvpTransformer.isSwordSwingInstalled())
+                        || ("rod-animation".equals(feature.id) && !LegacyPvpTransformer.isRodAnimationInstalled())) status = "HOOK NOT LOADED";
+                drawString(fontRendererObj, status, x, panelTop + 76, isLegacyToggleAvailable(feature.id) ? 0xFF9CE2AC : 0xFFFFD866);
+                drawWrappedTextLimited(feature.detail, x, panelTop + 100, right - x - 4, 0xFFE7E9EE, 8);
+                if (!isLegacyToggleAvailable(feature.id)) {
+                    drawWrappedTextLimited("No control is available for this feature in the current client build.", x, panelTop + 250, right - x - 4, 0xFFB8BDC8, 3);
+                }
+            }
+            return;
+        }
         if ("keystrokes-colors".equals(settingsSubpage)) {
             drawString(fontRendererObj, "MODS  >  KEYSTROKES  >  COLORS", x, panelTop + 30, 0xFFB8BDC8);
             drawString(fontRendererObj, "KEYSTROKES COLORS", x, panelTop + 40, ACCENT);
@@ -575,6 +630,45 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
     }
 
+    private LegacyPvpFeatureCatalog.Feature getLegacySelectedFeature() {
+        for (LegacyPvpFeatureCatalog.Feature feature : LegacyPvpFeatureCatalog.getAll()) {
+            if (feature.id.equals(legacySelectedFeatureId)) return feature;
+        }
+        return null;
+    }
+
+    private boolean isLegacyToggleAvailable(String id) {
+        if ("blockhit".equals(id)) return LegacyPvpTransformer.isInstalled();
+        if ("missed-swing-delay".equals(id)) return LegacyPvpTransformer.isMissedSwingDelayInstalled();
+        if ("bow-animation".equals(id)) return LegacyPvpTransformer.isBowAnimationInstalled();
+        if ("sword-swing".equals(id)) return LegacyPvpTransformer.isSwordSwingInstalled();
+        if ("rod-animation".equals(id)) return LegacyPvpTransformer.isRodAnimationInstalled();
+        if ("potion-punch".equals(id)) return true;
+        return "camera-bobbing".equals(id);
+    }
+
+    private String getLegacyToggleLabel(String id) {
+        if ("blockhit".equals(id)) return LegacyPvpSettings.isBlockhitEnabled() ? "BLOCKHIT: ON" : "BLOCKHIT: OFF";
+        if ("camera-bobbing".equals(id)) return LegacyPvpSettings.isDisableViewBobbing() ? "BOBBING: OFF" : "BOBBING: ON";
+        if ("bow-animation".equals(id)) return LegacyPvpSettings.isLegacyBowAnimationEnabled() ? "LEGACY BOW: ON" : "LEGACY BOW: OFF";
+        if ("potion-punch".equals(id)) return LegacyPvpSettings.isPotionPunchAnimationEnabled() ? "POTION PUNCH: ON" : "POTION PUNCH: OFF";
+        if ("sword-swing".equals(id)) return LegacyPvpSettings.isLegacySwordSwingEnabled() ? "SWORD SWING: ON" : "SWORD SWING: OFF";
+        if ("rod-animation".equals(id)) return LegacyPvpSettings.isLegacyRodAnimationEnabled() ? "ROD ANIMATION: ON" : "ROD ANIMATION: OFF";
+        if ("food-drink-animation".equals(id)) return LegacyPvpSettings.isFoodDrinkAnimationEnabled() ? "FOOD/DRINK ANIMATION: ON" : "FOOD/DRINK ANIMATION: OFF";
+        return LegacyPvpSettings.isRemoveMissedSwingDelayEnabled() ? "MISS DELAY: OFF" : "MISS DELAY: ON";
+    }
+
+    private void toggleLegacyFeature(String id) {
+        if ("blockhit".equals(id) && LegacyPvpTransformer.isInstalled()) LegacyPvpSettings.setBlockhitEnabled(!LegacyPvpSettings.isBlockhitEnabled());
+        else if ("camera-bobbing".equals(id)) LegacyPvpSettings.setDisableViewBobbing(!LegacyPvpSettings.isDisableViewBobbing());
+        else if ("missed-swing-delay".equals(id) && LegacyPvpTransformer.isMissedSwingDelayInstalled()) LegacyPvpSettings.setRemoveMissedSwingDelayEnabled(!LegacyPvpSettings.isRemoveMissedSwingDelayEnabled());
+        else if ("bow-animation".equals(id) && LegacyPvpTransformer.isBowAnimationInstalled()) LegacyPvpSettings.setLegacyBowAnimationEnabled(!LegacyPvpSettings.isLegacyBowAnimationEnabled());
+        else if ("potion-punch".equals(id)) LegacyPvpSettings.setPotionPunchAnimationEnabled(!LegacyPvpSettings.isPotionPunchAnimationEnabled());
+        else if ("sword-swing".equals(id) && LegacyPvpTransformer.isSwordSwingInstalled()) LegacyPvpSettings.setLegacySwordSwingEnabled(!LegacyPvpSettings.isLegacySwordSwingEnabled());
+        else if ("rod-animation".equals(id) && LegacyPvpTransformer.isRodAnimationInstalled()) LegacyPvpSettings.setLegacyRodAnimationEnabled(!LegacyPvpSettings.isLegacyRodAnimationEnabled());
+        else if ("food-drink-animation".equals(id)) LegacyPvpSettings.setFoodDrinkAnimationEnabled(!LegacyPvpSettings.isFoodDrinkAnimationEnabled());
+    }
+
     private void handleModuleSetting(int setting) {
         AlphaModule module=AlphaModuleRegistry.find(selectedModuleId);
         if(module==null||!module.isUnlocked()||!module.isImplemented())return;
@@ -607,7 +701,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             else if(setting==18)KeystrokesMod.adjustFadeDelay(25);else if(setting==19)KeystrokesMod.adjustBoxSize(-1);
             else if(setting==20)KeystrokesMod.adjustBoxSize(1);else if(setting==21)KeystrokesMod.adjustBorderThickness(-0.5F);
             else if(setting==22)KeystrokesMod.adjustBorderThickness(0.5F);else if(setting==23){settingsSubpage="keystrokes-colors";initGui();}
-        } else if("legacy-pvp".equals(id)&&setting==50)mc.displayGuiScreen(new LegacyPvpSettingsGui(this));
+        } else if("legacy-pvp".equals(id)&&setting==50){LegacyPvpSettings.load();settingsSubpage="legacy-list";initGui();}
     }
 
     private void drawWrappedTextLimited(String text, int x, int y, int maxWidth, int color, int maxLines) {
@@ -656,6 +750,14 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
+        if (button.id == LEGACY_DETAIL_BACK) { settingsSubpage = "legacy-list"; initGui(); return; }
+        if (button.id == LEGACY_TOGGLE && "legacy-detail".equals(settingsSubpage)) { toggleLegacyFeature(legacySelectedFeatureId); initGui(); return; }
+        if (button.id >= LEGACY_FEATURE_BASE && button.id < LEGACY_FEATURE_BASE + LegacyPvpFeatureCatalog.getAll().length) {
+            int featureIndex = button.id - LEGACY_FEATURE_BASE;
+            LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
+            if (featureIndex >= 0 && featureIndex < features.length) { legacySelectedFeatureId = features[featureIndex].id; settingsSubpage = "legacy-detail"; initGui(); }
+            return;
+        }
         if (button.id == COLOR_BACK) { Keyboard.enableRepeatEvents(false); settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return; }
         if (button.id == COLOR_SAVE) {
             int[] parsed = new int[keystrokesColorFields.length];
