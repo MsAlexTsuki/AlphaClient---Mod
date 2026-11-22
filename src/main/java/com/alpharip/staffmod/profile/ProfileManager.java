@@ -16,6 +16,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public final class ProfileManager {
 
     /*
@@ -33,8 +34,10 @@ public final class ProfileManager {
      * =========================================================
      */
 
+    // Legacy manager retained for source compatibility only.
+    // The active AlphaClient Profiles system is ModuleProfileManager and owns profiles.json.
     private static final String FILE_NAME =
-            "profiles.json";
+            "profiles_legacy.json";
 
     private static final String OLD_FILE_NAME =
             "bhop_profiles.json";
