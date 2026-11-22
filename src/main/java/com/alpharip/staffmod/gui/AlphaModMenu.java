@@ -53,7 +53,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int PROFILE_DELETE = 432;
     private static final int DONATOR_SUBFOLDER_BASE = 500;
     private static final int SETTINGS_BASE = 600;
-    private static final int SETTINGS_BACK = 308;
+    private static final int SETTINGS_BACK = 308, SETTINGS_PREVIOUS = 309;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -418,7 +418,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             AlphaModule activeModule = AlphaModuleRegistry.find(selectedModuleId);
             String moduleName = activeModule == null ? "Module" : activeModule.getName();
             drawString(fontRendererObj, "Mods  ›  " + selectedCategory.getTitle()
-                    + "  ›  " + moduleName, contentLeft + 8, panelTop + 10, 0xFFB8BDC8);
+                    + "  ›  " + moduleName, contentLeft + 52, panelTop + 10, 0xFFB8BDC8);
         } else {
             drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
                     + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
@@ -487,6 +487,21 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
 
     private void addModuleSettingsButtons() {
+        List<AlphaModule> navigationModules = getFilteredModules();
+        int selectedIndex = -1;
+        for (int i = 0; i < navigationModules.size(); i++) {
+            if (navigationModules.get(i).getId().equals(selectedModuleId)) {
+                selectedIndex = i;
+                break;
+            }
+        }
+        AlphaMenuButton previousModule = new AlphaMenuButton(SETTINGS_PREVIOUS,
+                contentLeft + 8, panelTop + 7, 17, 17, "<");
+        previousModule.enabled = selectedIndex > 0;
+        buttonList.add(previousModule);
+        buttonList.add(new AlphaMenuButton(SETTINGS_BACK,
+                contentLeft + 28, panelTop + 7, 17, 17, ">"));
+
         if ("potion-effects".equals(settingsSubpage)) {
             int x = settingsLeft + 8, y = panelTop + 86;
             int w = Math.max(90, panelLeft + panelWidth - x - 12);
