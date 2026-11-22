@@ -5,6 +5,7 @@ import com.alpharip.staffmod.modules.AlphaModule;
 import com.alpharip.staffmod.modules.AlphaModuleRegistry;
 import com.alpharip.staffmod.movement.BhopMode;
 import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -185,7 +186,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
                 int operationsIndex = visibleModules.size() + 1;
                 int operationsRow = operationsIndex / columns - scrollOffset;
                 if (operationsRow >= 0 && operationsRow < visibleRows
-                        && PermissionService.hasStaffModsAccess()) {
+                        && SupabaseCommunityService.hasStaffOperationsAccess()) {
                     int x = contentLeft + (operationsIndex % columns) * (tileWidth + gap);
                     int y = contentTop + operationsRow * rowHeight;
                     buttonList.add(new AlphaButton(MODULE_BASE + 101, x, y,
@@ -527,7 +528,7 @@ public final class StaffModsMenuGui extends AlphaGuiScreen {
 
         if (openFolderRank != null && button.id == MODULE_BASE + 101
                 && selectedRank == PermissionService.Rank.PUBLIC) {
-            if (PermissionService.hasStaffModsAccess()) {
+            if (SupabaseCommunityService.hasStaffOperationsAccess()) {
                 mc.displayGuiScreen(new StaffOperationsGui(this));
             }
             return;
