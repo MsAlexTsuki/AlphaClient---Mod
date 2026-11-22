@@ -28,10 +28,10 @@ public final class PotionHudInfoSettingsGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(LEVELS,left,y+38,270,28,"Amplifier levels above IV     "+state(settings.isRenderLevelsAbove4()),false,settings.isRenderLevelsAbove4()));
         buttonList.add(new AlphaButton(CHAT,left,y+76,270,28,"Visible while chat is open     "+state(settings.isShowWhileChat()),false,settings.isShowWhileChat()));
         buttonList.add(new AlphaButton(ROMAN,left,y+114,270,28,"Roman numeral levels     "+state(settings.isRomanNumerals()),false,settings.isRomanNumerals()));
-        buttonList.add(new AlphaButton(OPACITY_DOWN,right+8,y-54,54,26,"−"));
-        buttonList.add(new AlphaButton(OPACITY_UP,right+208,y-54,54,26,"+"));
-        buttonList.add(new AlphaButton(SCALE_DOWN,right+8,y+92,54,26,"−"));
-        buttonList.add(new AlphaButton(SCALE_UP,right+208,y+92,54,26,"+"));
+        buttonList.add(new AlphaButton(OPACITY_DOWN,right+8,panelY+150,54,26,"−"));
+        buttonList.add(new AlphaButton(OPACITY_UP,right+208,panelY+150,54,26,"+"));
+        buttonList.add(new AlphaButton(SCALE_DOWN,right+8,panelY+226,54,26,"−"));
+        buttonList.add(new AlphaButton(SCALE_UP,right+208,panelY+226,54,26,"+"));
         buttonList.add(new AlphaButton(EFFECTS,panelX+312,panelY+316,270,32,"MANAGE POTION EFFECTS",true));
         buttonList.add(new AlphaButton(BACK,panelX+18,panelY+316,110,32,"BACK"));
     }
