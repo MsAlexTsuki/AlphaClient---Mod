@@ -28,21 +28,20 @@ public final class SessionTimerSettingsGui extends AlphaGuiScreen {
         top = Math.max(12, height / 2 - 105);
         bottom = Math.min(height - 12, top + 210);
 
-        buttonList.add(new AlphaButton(ENABLE, left + 20, top + 58, 260, 20,
+        buttonList.add(new AlphaSettingsButton(ENABLE, left + 20, top + 58, 260, 20,
                 "SESSION TIMER: " + (SessionTimerHud.isEnabled() ? "ON" : "OFF"),
                 SessionTimerHud.isEnabled()));
-        buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 84, 260, 20,
+        buttonList.add(new AlphaSettingsButton(BACKGROUND, left + 20, top + 84, 260, 20,
                 "HUD BACKGROUND: " + (SessionTimerHud.isShowBackground() ? "ON" : "OFF"),
                 SessionTimerHud.isShowBackground()));
-        buttonList.add(new AlphaButton(COLORS, left + 20, top + 110, 260, 20, "HUD COLOR: " + SessionTimerHud.getColorName()));
-        buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
+        buttonList.add(new AlphaSettingsButton(COLORS, left + 20, top + 110, 260, 20, "HUD COLOR: " + SessionTimerHud.getColorName()));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x30000000);
-        drawRect(left, top, right, bottom, 0xE00A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "SESSION TIMER", width / 2, top + 17, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Tracks the entire Minecraft runtime",
                 width / 2, top + 37, 0xFFB8BDC8);
