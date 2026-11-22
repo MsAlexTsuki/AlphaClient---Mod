@@ -402,10 +402,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         AlphaGuiDraw.roundedRect(contentLeft + 1, panelTop + 26, Math.max(80, contentRight - contentLeft - 2), 21, 6F, 0xAA171A21);
         if (isModuleSettingsOpen()) {
             AlphaGuiDraw.roundedRect(settingsLeft, panelTop + 58, right - settingsLeft - 10,
-                    panelHeight - 70, 9F, 0xAA171B23);
+                    panelHeight - 58, 9F, 0xAA171B23);
         } else {
             AlphaGuiDraw.roundedRect(settingsLeft, panelTop + 58, right - settingsLeft - 10,
-                    176F, 9F, 0xAA171B23);
+                    114F, 9F, 0xAA171B23);
         }
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
@@ -429,7 +429,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int profileTop = panelTop + 102;
             int visibleProfiles = 2;
             drawString(fontRendererObj, "PROFILES", settingsLeft + 9, panelTop + 69, 0xFFF0F1F4);
-            drawString(fontRendererObj, "ACTIVE: " + activeProfile, settingsLeft + 9, panelTop + 86, ACCENT);
+            String activeLabel = "ACTIVE: " + activeProfile;
+            int activeLabelWidth = Math.max(20, panelLeft + panelWidth - settingsLeft - 28);
+            while (activeLabel.length() > 1 && fontRendererObj.getStringWidth(activeLabel) > activeLabelWidth) {
+                activeLabel = activeLabel.substring(0, activeLabel.length() - 1);
+            }
+            drawString(fontRendererObj, activeLabel, settingsLeft + 9, panelTop + 86, ACCENT);
             if (profiles.isEmpty()) {
                 drawString(fontRendererObj, "No profiles available.", settingsLeft + 9, profileTop + 4, 0xFFB8BDC8);
             } else if (profiles.size() > visibleProfiles) {
