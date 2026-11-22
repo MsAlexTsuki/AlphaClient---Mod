@@ -284,7 +284,11 @@ public final class InfoHudModules {
         return mc.fontRendererObj.trimStringToWidth(value, maxWidth - mc.fontRendererObj.getStringWidth("…")) + "…";
     }
 
-    private static void renderPotions(Minecraft mc, boolean preview) {\n        com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoRenderer.render(mc, preview);\n    }\n\n    private static void renderPotionPreview(Minecraft mc) {
+    private static void renderPotions(Minecraft mc, boolean preview) {
+        com.alpharip.staffmod.hud.potionhudinfo.PotionHudInfoRenderer.render(mc, preview);
+    }
+
+    private static void renderPotionPreview(Minecraft mc) {
         Potion[] samples = new Potion[] { Potion.moveSpeed, Potion.regeneration, Potion.poison };
         String[] names = new String[] { "Speed", "Regeneration", "Poison" };
         int row = 0;
