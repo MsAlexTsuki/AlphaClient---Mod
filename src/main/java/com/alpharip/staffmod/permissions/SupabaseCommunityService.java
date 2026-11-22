@@ -960,7 +960,9 @@ public final class SupabaseCommunityService {
         if (rankKey == null) return PermissionService.Rank.PUBLIC;
         String normalized = rankKey.trim().toLowerCase(java.util.Locale.ROOT).replace('-', '_').replace(' ', '_');
         switch (normalized) {
-            case "beta": return PermissionService.Rank.BETA;
+            case "beta":
+            case "beta_tester":
+            case "betatester": return PermissionService.Rank.BETA;
             case "member":
             case "public": return PermissionService.Rank.PUBLIC;
             case "scout": return PermissionService.Rank.SCOUT;
