@@ -55,15 +55,12 @@ public final class AlphaButton extends GuiButton {
                 : (primary ? (hovered ? 0xFFFFF0BE : 0xFFFFD866)
                 : (hovered ? 0xFFFFD866 : 0x664B515D));
         if (!transparentSurface) {
-            drawRect(xPosition, yPosition, xPosition + width, yPosition + height, background);
-            drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height,
-                    primary ? 0x66FFFFFF : 0xAA090A0E);
+            AlphaGuiDraw.roundedRect(xPosition, yPosition, width, height, 5F, border);
+            AlphaGuiDraw.roundedRect(xPosition + 1, yPosition + 1, width - 2, height - 2,
+                    4F, background);
         } else if (hovered) {
-            drawRect(xPosition, yPosition, xPosition + width, yPosition + height, 0x332A2D35);
+            AlphaGuiDraw.roundedRect(xPosition, yPosition, width, height, 5F, 0x332A2D35);
         }
-        drawRect(xPosition, yPosition, xPosition + width, yPosition + 1, border);
-        drawRect(xPosition, yPosition, xPosition + 1, yPosition + height, border);
-        drawRect(xPosition + width - 1, yPosition, xPosition + width, yPosition + height, border);
 
         if (!transparentSurface) {
             drawCenteredString(mc.fontRendererObj, displayString,
