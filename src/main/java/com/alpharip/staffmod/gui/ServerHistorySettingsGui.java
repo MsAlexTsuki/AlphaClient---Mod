@@ -27,17 +27,16 @@ public final class ServerHistorySettingsGui extends AlphaGuiScreen {
         top = Math.max(12, height / 2 - 90);
         bottom = Math.min(height - 12, top + 180);
 
-        buttonList.add(new AlphaButton(TOGGLE, left + 20, top + 68, 260, 24,
+        buttonList.add(new AlphaSettingsButton(TOGGLE, left + 20, top + 68, 260, 24,
                 "SERVER HISTORY: " + (ServerHistoryManager.isEnabled() ? "ON" : "OFF"),
                 ServerHistoryManager.isEnabled()));
-        buttonList.add(new AlphaButton(BACK, left + 10, bottom - 29, 80, 20, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, bottom - 29, 80, 20, "BACK"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x18000000);
-        drawRect(left, top, right, bottom, 0xD90A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "SERVER HISTORY SETTINGS",
                 width / 2, top + 17, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Automatically save multiplayer servers you join",
