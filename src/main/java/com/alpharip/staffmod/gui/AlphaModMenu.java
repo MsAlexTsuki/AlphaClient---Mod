@@ -206,8 +206,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
         if (!isModuleSettingsOpen()) {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-            int actionY = panelTop + 143;
-            int profileTop = panelTop + 102;
+            int actionY = panelTop + 126;
+            int profileTop = panelTop + 91;
             int visibleProfiles = 2;
             profileScrollOffset = Math.max(0, Math.min(profileScrollOffset, Math.max(0, profiles.size() - visibleProfiles)));
             int cardRight = panelLeft + panelWidth - 12;
@@ -219,12 +219,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             for (int row = 0; row < visibleProfiles && profileScrollOffset + row < profiles.size(); row++) {
                 ModuleProfileManager.BhopProfile profile = profiles.get(profileScrollOffset + row);
                 buttonList.add(new AlphaButton(PROFILE_SELECT_BASE + row, settingsLeft + 7,
-                        profileTop + row * 19, profileWidth, 17, profile.getProfileName(),
+                        profileTop + row * 17, profileWidth, 15, profile.getProfileName(),
                         profile.getProfileName().equalsIgnoreCase(ModuleProfileManager.getSelectedProfileName())));
             }
-            buttonList.add(new AlphaButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 17, "CREATE"));
-            buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 17, "EDIT"));
-            buttonList.add(new AlphaButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 17, "DELETE"));
+            buttonList.add(new AlphaButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 15, "CREATE"));
+            buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 15, "EDIT"));
+            buttonList.add(new AlphaButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 15, "DELETE"));
         }
 
         if (isModuleSettingsOpen()) addModuleSettingsButtons();
@@ -405,7 +405,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     panelHeight - 58, 9F, 0xAA171B23);
         } else {
             AlphaGuiDraw.roundedRect(settingsLeft, panelTop + 58, right - settingsLeft - 10,
-                    114F, 9F, 0xAA171B23);
+                    92F, 9F, 0xAA171B23);
         }
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
@@ -426,21 +426,21 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         } else {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
             String activeProfile = ModuleProfileManager.getSelectedProfileName();
-            int profileTop = panelTop + 102;
+            int profileTop = panelTop + 91;
             int visibleProfiles = 2;
-            drawString(fontRendererObj, "PROFILES", settingsLeft + 9, panelTop + 69, 0xFFF0F1F4);
+            drawString(fontRendererObj, "PROFILES", settingsLeft + 9, panelTop + 66, 0xFFF0F1F4);
             String activeLabel = "ACTIVE: " + activeProfile;
             int activeLabelWidth = Math.max(20, panelLeft + panelWidth - settingsLeft - 28);
             while (activeLabel.length() > 1 && fontRendererObj.getStringWidth(activeLabel) > activeLabelWidth) {
                 activeLabel = activeLabel.substring(0, activeLabel.length() - 1);
             }
-            drawString(fontRendererObj, activeLabel, settingsLeft + 9, panelTop + 86, ACCENT);
+            drawString(fontRendererObj, activeLabel, settingsLeft + 9, panelTop + 80, ACCENT);
             if (profiles.isEmpty()) {
                 drawString(fontRendererObj, "No profiles available.", settingsLeft + 9, profileTop + 4, 0xFFB8BDC8);
             } else if (profiles.size() > visibleProfiles) {
                 drawString(fontRendererObj, (profileScrollOffset + 1) + "-"
                         + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + " / " + profiles.size(),
-                        panelLeft + panelWidth - 43, panelTop + 69, 0xFF8F96A3);
+                        panelLeft + panelWidth - 43, panelTop + 66, 0xFF8F96A3);
             }
             String rankText = "Alpha Rank: " + (SupabaseCommunityService.isSignedIn()
                     ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK");
@@ -1218,11 +1218,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             // Scroll the profile list only when the mouse is over the right-hand
             // profile/settings panel. Otherwise the wheel must scroll module tiles.
             if (mouseX >= settingsLeft && mouseX <= panelLeft + panelWidth - 8
-                    && mouseY >= panelTop + 100 && mouseY <= panelTop + 141
+                    && mouseY >= panelTop + 89 && mouseY <= panelTop + 124
                     && !isModuleSettingsOpen()) {
                 List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-                int profileTop = panelTop + 102;
-                int actionY = panelTop + 143;
+                int profileTop = panelTop + 91;
+                int actionY = panelTop + 126;
                 int visibleProfiles = 2;
                 int maxProfileOffset = Math.max(0, profiles.size() - visibleProfiles);
                 profileScrollOffset = Math.max(0, Math.min(maxProfileOffset,
