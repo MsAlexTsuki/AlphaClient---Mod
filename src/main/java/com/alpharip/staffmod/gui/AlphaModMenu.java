@@ -108,16 +108,16 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     public void initGui() {
         buttonList.clear();
         if ("keystrokes-colors".equals(settingsSubpage)) Keyboard.enableRepeatEvents(true);
-        panelWidth = Math.min(760, Math.max(280, width - 20));
-        panelHeight = Math.min(420, Math.max(260, height - 24));
+        panelWidth = Math.min(460, Math.max(280, width - 20));
+        panelHeight = Math.min(300, Math.max(210, height - 24));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
-        sidebarWidth = 116;
-        contentLeft = panelLeft + sidebarWidth + 18;
-        contentRight = panelLeft + panelWidth - (isModuleSettingsOpen() ? 18 : 278);
+        sidebarWidth = 70;
+        contentLeft = panelLeft + sidebarWidth + 10;
+        contentRight = panelLeft + panelWidth - 112;
         contentTop = panelTop + 49;
         contentBottom = panelTop + panelHeight - 25;
-        settingsLeft = isModuleSettingsOpen() ? contentLeft : contentRight + 10;
+        settingsLeft = contentRight + 8;
 
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj,
                 contentLeft + 3, panelTop + 25, Math.max(80, contentRight - contentLeft - 6), 15);
