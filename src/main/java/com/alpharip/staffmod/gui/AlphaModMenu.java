@@ -25,7 +25,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
-import org.lwjgl.input.Keyboard;
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.input.Keyboard;
 import java.io.IOException;
@@ -86,6 +85,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
+        if ("keystrokes-colors".equals(settingsSubpage)) Keyboard.enableRepeatEvents(true);
         panelWidth = Math.min(760, Math.max(280, width - 20));
         panelHeight = Math.min(420, Math.max(260, height - 24));
         panelLeft = (width - panelWidth) / 2;
@@ -656,7 +656,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
-        if (button.id == COLOR_BACK) { settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return; }
+        if (button.id == COLOR_BACK) { Keyboard.enableRepeatEvents(false); settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return; }
         if (button.id == COLOR_SAVE) {
             int[] parsed = new int[keystrokesColorFields.length];
             try {
@@ -670,7 +670,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             } catch (NumberFormatException invalidColor) { return; }
             String[] keys = {"background", "pressedBackground", "text", "pressedText", "border"};
             for (int i = 0; i < keys.length; i++) KeystrokesMod.setColor(keys[i], parsed[i]);
-            settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return;
+            Keyboard.enableRepeatEvents(false); settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return;
         }
         if (button.id == SETTINGS_BACK) { settingsSubpage = ""; selectedModuleId = ""; initGui(); return; }
         if (button.id >= SETTINGS_BASE && button.id < SETTINGS_BASE + 60) {
@@ -826,7 +826,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if ("keystrokes-colors".equals(settingsSubpage)) {
-            if (keyCode == Keyboard.KEY_ESCAPE) { settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return; }
+            if (keyCode == Keyboard.KEY_ESCAPE) { Keyboard.enableRepeatEvents(false); settingsSubpage = ""; keystrokesColorFields = new GuiTextField[5]; initGui(); return; }
             for (GuiTextField field : keystrokesColorFields) {
                 if (field != null && field.isFocused()) { field.textboxKeyTyped(typedChar, keyCode); return; }
             }
@@ -924,6 +924,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset + (wheel < 0 ? 2 : -2)));
             initGui();
         }
+    }
+
+    @Override
+    public void onGuiClosed() {
+        Keyboard.enableRepeatEvents(false);
     }
 
     @Override
