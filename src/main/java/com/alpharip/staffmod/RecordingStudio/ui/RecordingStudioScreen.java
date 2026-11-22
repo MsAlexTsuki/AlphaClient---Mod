@@ -161,6 +161,7 @@ public final class RecordingStudioScreen extends GuiScreen {
             GuiButton b = (GuiButton) value;
             boolean rec = "RECORDING".equals(activeTab), edit = "EDITING".equals(activeTab), pub = "PUBLISHING".equals(activeTab);
             if (b.id == 31) { b.visible = true; continue; }
+            if (b.id == 17) { b.visible = rec && runtime.hasCameraPreviewMode(); continue; }
             if (b.id == 36 || b.id == 37 || b.id == 38) {
                 b.visible = true;
                 if (b.id == 36) b.displayString = rec ? "> Recording" : "Recording";
@@ -483,7 +484,6 @@ public final class RecordingStudioScreen extends GuiScreen {
             audioPlayback.close();
             externalVideoPreview.close(mc);
             playback.close(mc);
-            runtime.shutdown();
         }
     }
 
