@@ -82,6 +82,10 @@ public final class RecordingStudioRuntime {
         if (cameraPreview != null) cameraPreview.toggle();
     }
 
+    public synchronized boolean hasCameraPreviewMode() {
+        return !closed && !"normal_gameplay".equals(selectedModuleId) && hasExternalCamera();
+    }
+
     public synchronized boolean isCameraPreviewVisible() {
         return cameraPreview != null && cameraPreview.isVisible();
     }
