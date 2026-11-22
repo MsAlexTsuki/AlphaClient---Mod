@@ -74,7 +74,7 @@ public final class QualityGui extends AlphaGuiScreen {
         int totalRows = (FEATURES.length + columns - 1) / columns;
         int maxScroll = Math.max(0, totalRows - visibleRows);
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
-        buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
         int startIndex = scrollOffset * columns;
         int endIndex = Math.min(FEATURES.length, startIndex + visibleRows * columns);
         for (int i = startIndex; i < endIndex; i++) {
@@ -83,49 +83,49 @@ public final class QualityGui extends AlphaGuiScreen {
             int y = panelTop + 68 + (local / columns) * rowHeight;
             if (i == PLAYTIME_TRACKER_INDEX) {
                 boolean on = PlaytimeTrackerHud.isEnabled();
-                buttonList.add(new FeatureTileButton(PLAYTIME_TRACKER, x, y,
+                buttonList.add(new RoundedFeatureTileButton(PLAYTIME_TRACKER, x, y,
                         tileWidth, tileHeight, "Playtime Tracker", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == 3) {
                 boolean on = AutoGGMod.isEnabled();
-                buttonList.add(new FeatureTileButton(AUTO_GG, x, y, tileWidth, tileHeight,
+                buttonList.add(new RoundedFeatureTileButton(AUTO_GG, x, y, tileWidth, tileHeight,
                         "Auto GG", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == AUTO_RECONNECT_INDEX) {
                 boolean on = AutoReconnectMod.isEnabled();
-                buttonList.add(new FeatureTileButton(AUTO_RECONNECT, x, y, tileWidth, tileHeight,
+                buttonList.add(new RoundedFeatureTileButton(AUTO_RECONNECT, x, y, tileWidth, tileHeight,
                         "Auto Reconnect", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == FULLBRIGHT_INDEX) {
                 boolean on = FullbrightMod.isEnabled();
-                buttonList.add(new FeatureTileButton(FULLBRIGHT, x, y, tileWidth, tileHeight,
+                buttonList.add(new RoundedFeatureTileButton(FULLBRIGHT, x, y, tileWidth, tileHeight,
                         "Fullbright", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == 18) {
                 boolean on = InventorySearchSettings.isEnabled();
-                buttonList.add(new FeatureTileButton(SEARCH_INV, x, y, tileWidth, tileHeight,
+                buttonList.add(new RoundedFeatureTileButton(SEARCH_INV, x, y, tileWidth, tileHeight,
                         "Search Inv", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == ANVIL_COST_INDEX) {
                 boolean on = AnvilCostMod.isEnabled();
-                buttonList.add(new FeatureTileButton(ANVIL_COST, x, y, tileWidth, tileHeight,
+                buttonList.add(new RoundedFeatureTileButton(ANVIL_COST, x, y, tileWidth, tileHeight,
                         "Anvil Cost", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == ENCHANTING_NAMES_INDEX) {
                 boolean on = EnchantingNameMod.isEnabled();
-                buttonList.add(new FeatureTileButton(ENCHANTING_NAMES, x, y, tileWidth, tileHeight,
+                buttonList.add(new RoundedFeatureTileButton(ENCHANTING_NAMES, x, y, tileWidth, tileHeight,
                         "Enchanting Names", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == BLOCK_PLACEMENT_PREVIEW_INDEX) {
                 boolean on = BlockPlacementPreviewSettings.isEnabled();
-                buttonList.add(new FeatureTileButton(BLOCK_PLACEMENT_PREVIEW, x, y,
+                buttonList.add(new RoundedFeatureTileButton(BLOCK_PLACEMENT_PREVIEW, x, y,
                         tileWidth, tileHeight, "Block Placement Preview", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == FEATURES.length - 2) {
-                buttonList.add(new FeatureTileButton(EASTER_EGGS, x, y, tileWidth, tileHeight,
+                buttonList.add(new RoundedFeatureTileButton(EASTER_EGGS, x, y, tileWidth, tileHeight,
                         "Easter Eggs", "◆", null, false, true));
             } else if (i == AFK_TIMER_INDEX) {
                 boolean on = AfkTimerHud.isEnabled();
-                buttonList.add(new FeatureTileButton(AFK_TIMER, x, y, tileWidth, tileHeight,
+                buttonList.add(new RoundedFeatureTileButton(AFK_TIMER, x, y, tileWidth, tileHeight,
                         "AFK Timer", "◆", on ? "ON" : "OFF", on, true));
             } else if (i == SESSION_TIMER_INDEX) {
                 boolean on = SessionTimerHud.isEnabled();
-                buttonList.add(new FeatureTileButton(SESSION_TIMER, x, y, tileWidth, tileHeight,
+                buttonList.add(new RoundedFeatureTileButton(SESSION_TIMER, x, y, tileWidth, tileHeight,
                         "Session Timer", "◆", on ? "ON" : "OFF", on, true));
             } else {
-                FeatureTileButton planned = new FeatureTileButton(1000 + i, x, y,
+                FeatureTileButton planned = new RoundedFeatureTileButton(1000 + i, x, y,
                         tileWidth, tileHeight, FEATURES[i], "◆", "PLANNED", false, false);
                 buttonList.add(planned);
             }
@@ -135,8 +135,7 @@ public final class QualityGui extends AlphaGuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x18000000);
-        drawRect(panelLeft, panelTop, panelRight, panelBottom, 0xD90A0C11);
-        drawRect(panelLeft, panelTop, panelRight, panelTop + 2, ACCENT);
+        AlphaSettingsRender.drawPanel(panelLeft, panelTop, panelRight, panelBottom);
         drawCenteredString(fontRendererObj, "QUALITY", width / 2, panelTop + 13, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "QUALITY OF LIFE FEATURES", width / 2, panelTop + 30, ACCENT);
         drawString(fontRendererObj, "Features and roadmap ideas", panelLeft + 12, panelTop + 49, 0xFFB8BDC8);
@@ -152,8 +151,8 @@ public final class QualityGui extends AlphaGuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
-        if (button instanceof FeatureTileButton
-                && ((FeatureTileButton) button).wasSwitchClicked()) {
+        if (button instanceof RoundedFeatureTileButton
+                && ((RoundedFeatureTileButton) button).wasSwitchClicked()) {
             if (button.id == AUTO_GG) {
                 AutoGGMod.setEnabled(!AutoGGMod.isEnabled());
             } else if (button.id == AUTO_RECONNECT) {
