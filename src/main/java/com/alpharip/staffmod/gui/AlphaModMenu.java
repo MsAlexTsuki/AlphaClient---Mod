@@ -394,6 +394,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        // Render the menu as a true 2D overlay. Without disabling depth testing,
+        // world geometry can occlude panel/button quads while font text remains visible.
+        GlStateManager.disableDepth();
         // Only dim the game slightly; the surrounding world remains part of the interface.
         drawRect(0, 0, width, height, 0x18000000);
         int right = panelLeft + panelWidth, bottom = panelTop + panelHeight;
@@ -462,6 +465,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         drawRect(exitX + 6, iconY + 7, exitX + 12, iconY + 9, 0xFFE6E8ED);
         drawRect(exitX + 10, iconY + 5, exitX + 12, iconY + 7, 0xFFE6E8ED);
         drawRect(exitX + 10, iconY + 9, exitX + 12, iconY + 11, 0xFFE6E8ED);
+        GlStateManager.enableDepth();
     }
 
 
