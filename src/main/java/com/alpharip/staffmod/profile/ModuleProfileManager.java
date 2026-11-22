@@ -375,7 +375,7 @@ public class ModuleProfileManager {
                 }
             }
 
-            // Merge profiles from the older profiles.json store without replacing
+            // Merge profiles from the legacy bhop_profiles.json store without replacing
             // current entries or changing the currently selected profile.
             String currentSelection = selectedProfile;
             mergeLegacyProfileFile(legacyFile, false);
