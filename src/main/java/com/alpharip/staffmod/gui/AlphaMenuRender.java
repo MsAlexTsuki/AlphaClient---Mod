@@ -25,8 +25,9 @@ public final class AlphaMenuRender {
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glDisable(GL11.GL_CULL_FACE);
         GL11.glColor4f(red, green, blue, alpha);
-        GL11.glBegin(GL11.GL_TRIANGLE_FAN);
-        GL11.glVertex2f((left + right) * 0.5F, (top + bottom) * 0.5F);
+        // A single convex polygon avoids the radial triangle-fan seams that
+        // can show through translucent rounded surfaces.
+        GL11.glBegin(GL11.GL_POLYGON);
         addRoundedVertices(left, top, right, bottom, r);
         GL11.glEnd();
         GL11.glPopAttrib();
