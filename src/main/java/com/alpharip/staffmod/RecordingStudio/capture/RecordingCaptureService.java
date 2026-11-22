@@ -2,10 +2,13 @@ package com.alpharip.staffmod.RecordingStudio.capture;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -213,10 +216,7 @@ public final class RecordingCaptureService {
                             lastError = metadataWarning;
                         }
                     } catch (Exception failure) {
-                        synchronized (RecordingCaptureService.this) {
-                            failedFrames++;
-                            lastError = failure.toString();
-                        }
+                        recordFailure("Frame encoding/writing", failure);
                     }
                 }
             });
@@ -226,14 +226,39 @@ public final class RecordingCaptureService {
                 lastError = "Recording encoder queue is full; frame dropped";
             }
         } catch (Exception failure) {
-            synchronized (this) {
-                failedFrames++;
-                lastError = failure.toString();
-            }
+            recordFailure("Framebuffer/source capture", failure);
         } finally {
             synchronized (this) {
                 capturing = false;
             }
+        }
+    }
+
+    /**
+     * Retains the complete latest frame failure on disk while keeping the in-game status concise.
+     * The file is overwritten so repeated failed frames do not grow an unbounded log.
+     */
+    private void recordFailure(String stage, Exception failure) {
+        StringWriter trace = new StringWriter();
+        failure.printStackTrace(new PrintWriter(trace));
+        String details = "Stage: " + stage + System.lineSeparator()
+                + "Time: " + new java.util.Date() + System.lineSeparator()
+                + trace.toString();
+        String logName = "recording-capture-error.log";
+        try {
+            Files.write(new File(directory, logName).toPath(),
+                    details.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+        } catch (IOException logFailure) {
+            details += System.lineSeparator() + "Could not write diagnostic log: " + logFailure;
+            logName = "diagnostic log unavailable";
+        }
+        synchronized (this) {
+            failedFrames++;
+            String message = failure.getMessage();
+            lastError = stage + ": " + failure.getClass().getSimpleName()
+                    + (message == null || message.isEmpty() ? "" : " — " + message)
+                    + " (full details: " + logName + ")";
         }
     }
 
