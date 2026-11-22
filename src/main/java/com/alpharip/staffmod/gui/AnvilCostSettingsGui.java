@@ -30,17 +30,16 @@ public final class AnvilCostSettingsGui extends AlphaGuiScreen {
         top = Math.max(12, height / 2 - 90);
         bottom = Math.min(height - 12, top + 180);
 
-        buttonList.add(new AlphaButton(TOGGLE, left + 20, top + 62, 280, 20,
+        buttonList.add(new AlphaSettingsButton(TOGGLE, left + 20, top + 62, 280, 20,
                 "ANVIL COST: " + (AnvilCostMod.isEnabled() ? "ON" : "OFF"),
                 AnvilCostMod.isEnabled()));
-        buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x30000000);
-        drawRect(left, top, right, bottom, 0xE00A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "ANVIL COST", width / 2, top + 18, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Preview anvil levels and material requirements",
                 width / 2, top + 38, 0xFFB8BDC8);
