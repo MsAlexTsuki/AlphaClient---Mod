@@ -496,11 +496,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             }
         }
         AlphaMenuButton previousModule = new AlphaMenuButton(SETTINGS_PREVIOUS,
-                contentLeft + 8, panelTop + 7, 17, 17, "<");
+                contentLeft + 8, panelTop + 7, 17, 17, "←");
         previousModule.enabled = selectedIndex > 0;
         buttonList.add(previousModule);
         buttonList.add(new AlphaMenuButton(SETTINGS_BACK,
-                contentLeft + 28, panelTop + 7, 17, 17, ">"));
+                contentLeft + 28, panelTop + 7, 17, 17, "→"));
 
         if ("potion-effects".equals(settingsSubpage)) {
             int x = settingsLeft + 8, y = panelTop + 86;
@@ -649,7 +649,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             addCompactSettingButton(46,x,y,w/2,"SCALE -"); addCompactSettingButton(47,x+w/2,y,w-w/2,"SCALE +"); y+=20;
             addCompactSettingButton(48,x,y,w,"MANAGE POTION EFFECTS");
         } else if ("keystrokes".equals(id)) {
-            y = panelTop + 106;
+            y = panelTop + 105;
             addCompactSettingButton(10,x,y,w,"SHOW CLICKS: "+onOff(KeystrokesMod.isShowClicks())); y+=17;
             addCompactSettingButton(11,x,y,w,"SHOW LMB/RMB CPS: "+onOff(KeystrokesMod.isShowCps())); y+=17;
             addCompactSettingButton(12,x,y,w,"SHOW SPACE BAR: "+onOff(KeystrokesMod.isShowSpaceBar())); y+=17;
