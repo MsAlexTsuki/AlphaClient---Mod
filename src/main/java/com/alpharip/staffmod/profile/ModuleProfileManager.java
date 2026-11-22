@@ -29,7 +29,7 @@ import java.util.Map;
  *
  * Author: MsAlexTsuki
  *
- * Central profile manager for all AlphaClient modules, including legacy BHOP settings.
+ * Central Profiles manager for all AlphaClient modules. Legacy BHOP fields are retained only for profile-data compatibility.
  *
  * The class keeps the existing BHOP fields for backwards
  * compatibility, while also providing a generic "modules"
@@ -281,7 +281,7 @@ public class ModuleProfileManager {
 
         return new File(
                 getDirectory(),
-                "bhop_profiles.json"
+                "profiles.json"
         );
     }
 
@@ -428,7 +428,7 @@ public class ModuleProfileManager {
     }
 
     private static File getLegacyProfileFile() {
-        return new File(getDirectory(), "profiles.json");
+        return new File(getDirectory(), "bhop_profiles.json");
     }
 
     private static boolean mergeLegacyProfileFile(File legacyFile, boolean useLegacySelection) {
