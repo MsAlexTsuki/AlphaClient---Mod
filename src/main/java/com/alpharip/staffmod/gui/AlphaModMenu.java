@@ -108,31 +108,30 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     public void initGui() {
         buttonList.clear();
         if ("keystrokes-colors".equals(settingsSubpage)) Keyboard.enableRepeatEvents(true);
-        panelWidth = Math.min(680, Math.max(280, width - 32));
-        panelHeight = Math.min(370, Math.max(250, height - 32));
+        panelWidth = Math.min(760, Math.max(280, width - 20));
+        panelHeight = Math.min(420, Math.max(260, height - 24));
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
-        sidebarWidth = 68;
+        sidebarWidth = 78;
         contentLeft = panelLeft + sidebarWidth + 12;
-        int rightColumnWidth = isModuleSettingsOpen() ? 248 : 190;
-        contentRight = panelLeft + panelWidth - rightColumnWidth - 16;
-        contentTop = panelTop + 68;
-        contentBottom = panelTop + panelHeight - 24;
-        settingsLeft = contentRight + 12;
+        contentRight = panelLeft + panelWidth - 278;
+        contentTop = panelTop + 49;
+        contentBottom = panelTop + panelHeight - 25;
+        settingsLeft = contentRight + 8;
 
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj,
-                contentLeft + 4, panelTop + 29, Math.max(80, contentRight - contentLeft - 8), 16);
+                contentLeft + 3, panelTop + 25, Math.max(80, contentRight - contentLeft - 6), 15);
         searchField.setMaxStringLength(48);
         searchField.setText(searchText);
         searchField.setFocused(searchFocused);
-        searchField.setEnableBackgroundDrawing(false);
+        searchField.setEnableBackgroundDrawing(true);
         searchField.setTextColor(0xFFE7E9EE);
         searchField.setDisabledTextColour(0xFFB8BDC8);
-        buttonList.add(new AlphaMenuButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + 5, 16, 16, ""));
-        buttonList.add(new AlphaMenuButton(EXIT, panelLeft + panelWidth - 23, panelTop + 5, 16, 16, ""));
+        buttonList.add(new AlphaButton(ACCOUNT, panelLeft + panelWidth - 43, panelTop + 5, 16, 16, ""));
+        buttonList.add(new AlphaButton(EXIT, panelLeft + panelWidth - 23, panelTop + 5, 16, 16, ""));
         // Keep Waypoints and the HUD editor permanently available at the bottom of the sidebar.
-        buttonList.add(new AlphaMenuButton(WAYPOINTS, panelLeft + 5, panelTop + panelHeight - 59, 60, 18, "WAYPOINTS", true));
-        buttonList.add(new AlphaMenuButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 37, 60, 18, "HUD EDITOR"));
+        buttonList.add(new AlphaButton(WAYPOINTS, panelLeft + 5, panelTop + panelHeight - 59, 60, 18, "WAYPOINTS", true));
+        buttonList.add(new AlphaButton(HUD_EDITOR, panelLeft + 5, panelTop + panelHeight - 37, 60, 18, "HUD EDITOR"));
 
         List<AlphaModule.Category> sidebarCategories = new ArrayList<AlphaModule.Category>();
         for (AlphaModule.Category category : AlphaModule.Category.values()) {
@@ -148,8 +147,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             if (categoryAllowed) sidebarCategories.add(category);
         }
         boolean showStaffMods = PermissionService.hasStaffModsAccess();
-        int categoryY = panelTop + 73;
-        int categoryBottom = panelTop + panelHeight - 48;
+        int categoryY = panelTop + 68;
+        int categoryBottom = panelTop + panelHeight - 43;
         int visibleCategorySlots = Math.max(1, (categoryBottom - categoryY) / 23);
         int sidebarItemCount = sidebarCategories.size() + (showStaffMods ? 1 : 0);
         int maxCategoryScroll = Math.max(0, sidebarItemCount - visibleCategorySlots);
@@ -174,7 +173,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 case FOUNDER: label = "FOUNDER"; break;
                 default: continue;
             }
-            buttonList.add(new AlphaMenuButton(CATEGORY_BASE + category.ordinal(),
+            buttonList.add(new AlphaButton(CATEGORY_BASE + category.ordinal(),
                     panelLeft + 5, categoryY, sidebarWidth - 10, 20,
                     label, category == selectedCategory));
             categoryY += 23;
@@ -182,7 +181,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (showStaffMods && sidebarCategories.size() >= categoryScrollOffset
                 && sidebarCategories.size() < categoryScrollOffset + visibleCategorySlots) {
             int staffY = panelTop + 68 + (sidebarCategories.size() - categoryScrollOffset) * 23;
-            buttonList.add(new AlphaMenuButton(STAFF_MODS, panelLeft + 5, staffY,
+            buttonList.add(new AlphaButton(STAFF_MODS, panelLeft + 5, staffY,
                     sidebarWidth - 10, 20, "STAFFMODS"));
         }
         if (selectedCategory == AlphaModule.Category.DONATOR) {
@@ -192,39 +191,39 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             };
             int gap = 8;
             int tileWidth = Math.max(50, (contentRight - contentLeft - gap * 2) / 3);
-            int tileHeight = 34;
+            int tileHeight = 38;
             for (int i = 0; i < donorCategories.length; i++) {
                 AlphaModule.Category donorCategory = donorCategories[i];
                 // Rank access or an explicit grant for at least one module unlocks this folder.
                 if (!hasDonatorFolderAccess(donorCategory)) continue;
                 int x = contentLeft + (i % 3) * (tileWidth + gap);
                 int y = contentTop + (i / 3) * (tileHeight + gap);
-                buttonList.add(new AlphaMenuButton(DONATOR_SUBFOLDER_BASE + i, x, y,
+                buttonList.add(new AlphaButton(DONATOR_SUBFOLDER_BASE + i, x, y,
                         tileWidth, tileHeight, donorCategory.getTitle()));
             }
         }
 
         if (!isModuleSettingsOpen()) {
             List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-            int actionY = panelTop + 126;
-            int profileTop = panelTop + 91;
-            int visibleProfiles = 2;
+            int actionY = panelTop + panelHeight - 49;
+            int profileTop = panelTop + 86;
+            int profileBottom = actionY - 8;
+            int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
             profileScrollOffset = Math.max(0, Math.min(profileScrollOffset, Math.max(0, profiles.size() - visibleProfiles)));
-            int cardRight = panelLeft + panelWidth - 12;
-            int actionsLeft = settingsLeft + 7;
-            int actionsRight = cardRight - 7;
-            int actionGap = 3;
+            int actionsLeft = settingsLeft + 4;
+            int actionsRight = panelLeft + panelWidth - 10;
+            int actionGap = 4;
             int actionWidth = Math.max(1, (actionsRight - actionsLeft - actionGap * 2) / 3);
-            int profileWidth = Math.max(50, cardRight - settingsLeft - 14);
             for (int row = 0; row < visibleProfiles && profileScrollOffset + row < profiles.size(); row++) {
                 ModuleProfileManager.BhopProfile profile = profiles.get(profileScrollOffset + row);
-                buttonList.add(new AlphaMenuButton(PROFILE_SELECT_BASE + row, settingsLeft + 7,
-                        profileTop + row * 17, profileWidth, 15, profile.getProfileName(),
+                buttonList.add(new AlphaButton(PROFILE_SELECT_BASE + row, settingsLeft + 4,
+                        profileTop + row * 21, Math.max(50, panelLeft + panelWidth - settingsLeft - 10),
+                        18, profile.getProfileName(),
                         profile.getProfileName().equalsIgnoreCase(ModuleProfileManager.getSelectedProfileName())));
             }
-            buttonList.add(new AlphaMenuButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 15, "CREATE"));
-            buttonList.add(new AlphaMenuButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 15, "EDIT"));
-            buttonList.add(new AlphaMenuButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 15, "DELETE"));
+            buttonList.add(new AlphaButton(PROFILE_CREATE, actionsLeft, actionY, actionWidth, 18, "CREATE"));
+            buttonList.add(new AlphaButton(PROFILE_EDIT, actionsLeft + actionWidth + actionGap, actionY, actionWidth, 18, "EDIT"));
+            buttonList.add(new AlphaButton(PROFILE_DELETE, actionsLeft + (actionWidth + actionGap) * 2, actionY, actionWidth, 18, "DELETE"));
         }
 
         if (isModuleSettingsOpen()) addModuleSettingsButtons();
@@ -233,8 +232,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         int gridWidth = Math.max(180, contentRight - contentLeft);
         int gap = 8;
         int tileWidth = (gridWidth - gap) / 2;
-        int tileHeight = 48;
-        int rowGap = 8;
+        int tileHeight = 54;
+        int rowGap = 7;
         int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
         int start = Math.min(scrollOffset, Math.max(0, filtered.size() - visibleRows * 2));
         for (int i = start; i < filtered.size() && i < start + visibleRows * 2; i++) {
@@ -370,8 +369,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     private int visibleRows() {
         // Keep this in sync with the regular module tile layout in initGui().
-        // Each row is 48px tall with an 8px gap.
-        return Math.max(1, (contentBottom - contentTop) / 56);
+        // Each row is 54px tall with a 7px gap.
+        return Math.max(1, (contentBottom - contentTop) / 61);
     }
 
     private AlphaModule getSelectedModule() {
@@ -394,32 +393,25 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        // Render the menu as a true 2D overlay. Without disabling depth testing,
-        // world geometry can occlude panel/button quads while font text remains visible.
-        GlStateManager.disableDepth();
         // Only dim the game slightly; the surrounding world remains part of the interface.
         drawRect(0, 0, width, height, 0x18000000);
         int right = panelLeft + panelWidth, bottom = panelTop + panelHeight;
-        AlphaGuiDraw.roundedRect(panelLeft, panelTop, panelWidth, panelHeight, 12F, 0xE60B0D13);
-        AlphaGuiDraw.roundedRect(panelLeft + 5, panelTop + 5, sidebarWidth - 10, panelHeight - 10, 8F, 0x99191D25);
-        AlphaGuiDraw.roundedRect(contentLeft + 1, panelTop + 26, Math.max(80, contentRight - contentLeft - 2), 21, 6F, 0xAA171A21);
-        if (isModuleSettingsOpen()) {
-            AlphaGuiDraw.roundedRect(settingsLeft, panelTop + 58, right - settingsLeft - 10,
-                    panelHeight - 58, 9F, 0xAA171B23);
-        } else {
-            AlphaGuiDraw.roundedRect(settingsLeft, panelTop + 58, right - settingsLeft - 10,
-                    92F, 9F, 0xAA171B23);
-        }
+        drawRect(panelLeft, panelTop, right, bottom, 0xD90A0C11);
+        drawRect(panelLeft, panelTop, right, panelTop + 1, 0x554B515D);
+        drawRect(panelLeft, panelTop + 1, panelLeft + 1, bottom - 1, 0x334B515D);
+        drawRect(right - 1, panelTop + 1, right, bottom - 1, 0x334B515D);
+        drawRect(panelLeft + sidebarWidth, panelTop + 2, panelLeft + sidebarWidth + 1, bottom - 1, 0x553F424A);
+        drawRect(settingsLeft - 7, panelTop + 2, settingsLeft - 6, bottom - 1, 0x553F424A);
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1F, 1F, 1F, 1F);
-        drawScaledCustomSizeModalRect(panelLeft + 15, panelTop + 7, 0.0F, 0.0F, 1024, 1024, 30, 30, 1024.0F, 1024.0F);
-        drawString(fontRendererObj, "MODS", panelLeft + 8, panelTop + 42, 0xFFF0F1F4);
+        drawScaledCustomSizeModalRect(panelLeft + 18, panelTop + 5, 0.0F, 0.0F, 1024, 1024, 32, 32, 1024.0F, 1024.0F);
+        drawString(fontRendererObj, "MODS", panelLeft + 8, panelTop + 40, 0xFFF0F1F4);
         drawString(fontRendererObj, AlphaModuleRegistry.getForCategory(selectedCategory).size()
                 + " modules", contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
         searchField.drawTextBox();
 
-        drawString(fontRendererObj, "BROWSE", panelLeft + 7, panelTop + 60, 0xFFB8BDC8);
+        drawString(fontRendererObj, "BROWSE", panelLeft + 6, panelTop + 57, 0xFFB8BDC8);
         drawString(fontRendererObj,
                 selectedCategory == AlphaModule.Category.DONATOR
                         ? "Donator ranks" : selectedCategory.getTitle().toUpperCase(Locale.ROOT),
@@ -427,32 +419,38 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (isModuleSettingsOpen()) {
             drawModuleSettingsPanel(mouseX, mouseY, partialTicks);
         } else {
-            List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-            String activeProfile = ModuleProfileManager.getSelectedProfileName();
-            int profileTop = panelTop + 91;
-            int visibleProfiles = 2;
-            drawString(fontRendererObj, "PROFILES", settingsLeft + 9, panelTop + 66, 0xFFF0F1F4);
-            String activeLabel = "ACTIVE: " + activeProfile;
-            int activeLabelWidth = Math.max(20, panelLeft + panelWidth - settingsLeft - 28);
-            while (activeLabel.length() > 1 && fontRendererObj.getStringWidth(activeLabel) > activeLabelWidth) {
-                activeLabel = activeLabel.substring(0, activeLabel.length() - 1);
+        drawString(fontRendererObj, "PROFILES",
+                settingsLeft + 5, panelTop + 39, 0xFFB8BDC8);
+        List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
+        String activeProfile = ModuleProfileManager.getSelectedProfileName();
+        int profileTop = panelTop + 67;
+        int actionY = panelTop + panelHeight - 49;
+        int profileBottom = actionY - 8;
+        int visibleProfiles = Math.max(1, (profileBottom - profileTop) / 21);
+        drawString(fontRendererObj, "Select a profile", settingsLeft + 7, panelTop + 55, 0xFFF3F4F6);
+        if (profiles.isEmpty()) {
+            drawString(fontRendererObj, "No profiles available.", settingsLeft + 7, profileTop + 4, 0xFFB8BDC8);
+        } else {
+            if (hasBhopAccess()) {
+                drawString(fontRendererObj, "Active: " + activeProfile, settingsLeft + 7,
+                        panelTop + panelHeight - 27, 0xFF9CE2AC);
             }
-            drawString(fontRendererObj, activeLabel, settingsLeft + 9, panelTop + 80, ACCENT);
-            if (profiles.isEmpty()) {
-                drawString(fontRendererObj, "No profiles available.", settingsLeft + 9, profileTop + 4, 0xFFB8BDC8);
-            } else if (profiles.size() > visibleProfiles) {
-                drawString(fontRendererObj, (profileScrollOffset + 1) + "-"
-                        + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + " / " + profiles.size(),
-                        panelLeft + panelWidth - 43, panelTop + 66, 0xFF8F96A3);
+            if (profiles.size() > visibleProfiles) {
+                drawString(fontRendererObj, "Scroll for more (" + (profileScrollOffset + 1) + "-"
+                        + Math.min(profiles.size(), profileScrollOffset + visibleProfiles) + "/" + profiles.size() + ")",
+                        settingsLeft + 7, panelTop + 68, 0xFFB8BDC8);
             }
-            String rankText = "Alpha Rank: " + (SupabaseCommunityService.isSignedIn()
-                    ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK");
-            int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 14 - settingsLeft);
-            while (rankText.length() > 1 && fontRendererObj.getStringWidth(rankText) > rankMaxWidth) {
-                rankText = rankText.substring(0, rankText.length() - 1);
-            }
-            drawString(fontRendererObj, rankText, settingsLeft + 5, bottom - 11,
-                    SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
+        }
+        // Keep the community rank directly beneath the fixed Profiles panel.
+        // Community Login and Exit remain as the existing top-right icon buttons.
+        String rankText = "Alpha Rank: " + (SupabaseCommunityService.isSignedIn()
+                ? SupabaseCommunityService.getSignedInRankLabel() : "NO RANK");
+        int rankMaxWidth = Math.max(24, panelLeft + panelWidth - 14 - settingsLeft);
+        while (rankText.length() > 1 && fontRendererObj.getStringWidth(rankText) > rankMaxWidth) {
+            rankText = rankText.substring(0, rankText.length() - 1);
+        }
+        drawString(fontRendererObj, rankText, settingsLeft + 5, bottom - 11,
+                SupabaseCommunityService.isSignedIn() ? ACCENT : 0xFFB8BDC8);
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
         int iconY = panelTop + 5;
@@ -465,7 +463,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         drawRect(exitX + 6, iconY + 7, exitX + 12, iconY + 9, 0xFFE6E8ED);
         drawRect(exitX + 10, iconY + 5, exitX + 12, iconY + 7, 0xFFE6E8ED);
         drawRect(exitX + 10, iconY + 9, exitX + 12, iconY + 11, 0xFFE6E8ED);
-        GlStateManager.enableDepth();
     }
 
 
@@ -478,7 +475,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if ("potion-effects".equals(settingsSubpage)) {
             int x = settingsLeft + 8, y = panelTop + 86;
             int w = Math.max(90, panelLeft + panelWidth - x - 12);
-            buttonList.add(new AlphaMenuButton(POTION_MANAGER_BACK, x, panelTop + 52, w, 19, "BACK TO POTION HUD"));
+            buttonList.add(new AlphaButton(POTION_MANAGER_BACK, x, panelTop + 52, w, 19, "BACK TO POTION HUD"));
             int listWidth = Math.max(86, (w - 8) / 2);
             for (int slot = 0; slot < POTION_PAGE_SIZE; slot++) {
                 int index = potionEffectPage * POTION_PAGE_SIZE + slot;
@@ -487,17 +484,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 PotionHudInfoEffectSetting setting = PotionHudInfoModule.getInstance().getEffect(effectId);
                 String name = PotionHudInfoModule.getPotionName(effectId);
                 if (name.length() > 16) name = name.substring(0, 15) + "…";
-                buttonList.add(new AlphaMenuButton(POTION_LIST_BASE + slot, x, y + slot * 23, listWidth, 20,
+                buttonList.add(new AlphaButton(POTION_LIST_BASE + slot, x, y + slot * 23, listWidth, 20,
                         name + (setting != null && setting.isEnabled() ? "  ON" : "  OFF"), false, index == potionEffectIndex));
             }
-            buttonList.add(new AlphaMenuButton(POTION_PAGE_PREV, x, panelTop + 350, 55, 18, "PREV", false, potionEffectPage > 0));
-            buttonList.add(new AlphaMenuButton(POTION_PAGE_NEXT, x + 60, panelTop + 350, 55, 18, "NEXT", false,
+            buttonList.add(new AlphaButton(POTION_PAGE_PREV, x, panelTop + 350, 55, 18, "PREV", false, potionEffectPage > 0));
+            buttonList.add(new AlphaButton(POTION_PAGE_NEXT, x + 60, panelTop + 350, 55, 18, "NEXT", false,
                     (potionEffectPage + 1) * POTION_PAGE_SIZE < potionEffectIds.size()));
             int actionX = x + listWidth + 8, actionW = w - listWidth - 8;
-            buttonList.add(new AlphaMenuButton(POTION_TOGGLE, actionX, panelTop + 130, actionW, 20,
+            buttonList.add(new AlphaButton(POTION_TOGGLE, actionX, panelTop + 130, actionW, 20,
                     getSelectedPotionEffect() != null && getSelectedPotionEffect().isEnabled() ? "DISABLE" : "ENABLE"));
-            buttonList.add(new AlphaMenuButton(POTION_EDIT, actionX, panelTop + 158, actionW, 20, "CUSTOMIZE"));
-            buttonList.add(new AlphaMenuButton(POTION_IMPORT, actionX, panelTop + 186, actionW, 20, "COPY SETTINGS"));
+            buttonList.add(new AlphaButton(POTION_EDIT, actionX, panelTop + 158, actionW, 20, "CUSTOMIZE"));
+            buttonList.add(new AlphaButton(POTION_IMPORT, actionX, panelTop + 186, actionW, 20, "COPY SETTINGS"));
             return;
         }
         if ("potion-effect-edit".equals(settingsSubpage)) {
@@ -509,47 +506,47 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int[] timerUp = {POTION_TIMER_R_UP, POTION_TIMER_G_UP, POTION_TIMER_B_UP};
             for (int i = 0; i < 3; i++) {
                 int y = panelTop + 90 + i * 23;
-                buttonList.add(new AlphaMenuButton(down[i], leftX, y, 22, 18, "-"));
-                buttonList.add(new AlphaMenuButton(up[i], leftX + 92, y, 22, 18, "+"));
-                buttonList.add(new AlphaMenuButton(timerDown[i], rightX, y, 22, 18, "-"));
-                buttonList.add(new AlphaMenuButton(timerUp[i], rightX + 92, y, 22, 18, "+"));
+                buttonList.add(new AlphaButton(down[i], leftX, y, 22, 18, "-"));
+                buttonList.add(new AlphaButton(up[i], leftX + 92, y, 22, 18, "+"));
+                buttonList.add(new AlphaButton(timerDown[i], rightX, y, 22, 18, "-"));
+                buttonList.add(new AlphaButton(timerUp[i], rightX + 92, y, 22, 18, "+"));
             }
             int half = (w - 6) / 2;
-            buttonList.add(new AlphaMenuButton(POTION_CHROMA_NAME, x, panelTop + 164, half, 18, "CHROMA NAME: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaName() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_CHROMA_TIMER, x + half + 6, panelTop + 164, half, 18, "CHROMA TIMER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaTimer() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_BOLD, x, panelTop + 186, half, 18, "BOLD: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isBold() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_ITALIC, x + half + 6, panelTop + 186, half, 18, "ITALIC: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isItalic() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_UNDERLINE, x, panelTop + 208, half, 18, "UNDERLINE: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isUnderlined() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_FLICKER, x + half + 6, panelTop + 208, half, 18, "FLICKER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isFlickerWhenLow() ? "ON" : "OFF")));
-            buttonList.add(new AlphaMenuButton(POTION_THRESHOLD_DOWN, x, panelTop + 240, 24, 18, "-"));
-            buttonList.add(new AlphaMenuButton(POTION_THRESHOLD_UP, x + half - 24, panelTop + 240, 24, 18, "+"));
-            buttonList.add(new AlphaMenuButton(POTION_SPEED_DOWN, x + half + 6, panelTop + 240, 24, 18, "-"));
-            buttonList.add(new AlphaMenuButton(POTION_SPEED_UP, x + w - 24, panelTop + 240, 24, 18, "+"));
+            buttonList.add(new AlphaButton(POTION_CHROMA_NAME, x, panelTop + 164, half, 18, "CHROMA NAME: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaName() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_CHROMA_TIMER, x + half + 6, panelTop + 164, half, 18, "CHROMA TIMER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isChromaTimer() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_BOLD, x, panelTop + 186, half, 18, "BOLD: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isBold() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_ITALIC, x + half + 6, panelTop + 186, half, 18, "ITALIC: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isItalic() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_UNDERLINE, x, panelTop + 208, half, 18, "UNDERLINE: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isUnderlined() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_FLICKER, x + half + 6, panelTop + 208, half, 18, "FLICKER: " + (getSelectedPotionEffect() != null && getSelectedPotionEffect().isFlickerWhenLow() ? "ON" : "OFF")));
+            buttonList.add(new AlphaButton(POTION_THRESHOLD_DOWN, x, panelTop + 240, 24, 18, "-"));
+            buttonList.add(new AlphaButton(POTION_THRESHOLD_UP, x + half - 24, panelTop + 240, 24, 18, "+"));
+            buttonList.add(new AlphaButton(POTION_SPEED_DOWN, x + half + 6, panelTop + 240, 24, 18, "-"));
+            buttonList.add(new AlphaButton(POTION_SPEED_UP, x + w - 24, panelTop + 240, 24, 18, "+"));
             potionEffectNameField = new GuiTextField(884, fontRendererObj, x + 2, panelTop + 306, w - 4, 18);
             potionEffectNameField.setMaxStringLength(64);
             PotionHudInfoEffectSetting selected = getSelectedPotionEffect();
             potionEffectNameField.setText(selected == null ? "" : selected.getCustomName());
-            buttonList.add(new AlphaMenuButton(POTION_EDITOR_SAVE, x, panelTop + 350, half, 19, "SAVE"));
-            buttonList.add(new AlphaMenuButton(POTION_EDITOR_BACK, x + half + 6, panelTop + 350, half, 19, "BACK"));
+            buttonList.add(new AlphaButton(POTION_EDITOR_SAVE, x, panelTop + 350, half, 19, "SAVE"));
+            buttonList.add(new AlphaButton(POTION_EDITOR_BACK, x + half + 6, panelTop + 350, half, 19, "BACK"));
             return;
         }
         if ("potion-effect-import".equals(settingsSubpage)) {
             int x = settingsLeft + 8, w = Math.max(90, panelLeft + panelWidth - x - 12);
-            buttonList.add(new AlphaMenuButton(POTION_IMPORT_PREV, x, panelTop + 160, 55, 18, "PREV", false, potionImportSourceIndex > 0));
-            buttonList.add(new AlphaMenuButton(POTION_IMPORT_NEXT, x + w - 55, panelTop + 160, 55, 18, "NEXT", false, potionImportSourceIndex < potionImportSourceIds.size() - 1));
-            buttonList.add(new AlphaMenuButton(POTION_IMPORT_COPY, x, panelTop + 350, (w - 6) / 2, 19, "COPY"));
-            buttonList.add(new AlphaMenuButton(POTION_IMPORT_BACK, x + (w - 6) / 2 + 6, panelTop + 350, (w - 6) / 2, 19, "BACK"));
+            buttonList.add(new AlphaButton(POTION_IMPORT_PREV, x, panelTop + 160, 55, 18, "PREV", false, potionImportSourceIndex > 0));
+            buttonList.add(new AlphaButton(POTION_IMPORT_NEXT, x + w - 55, panelTop + 160, 55, 18, "NEXT", false, potionImportSourceIndex < potionImportSourceIds.size() - 1));
+            buttonList.add(new AlphaButton(POTION_IMPORT_COPY, x, panelTop + 350, (w - 6) / 2, 19, "COPY"));
+            buttonList.add(new AlphaButton(POTION_IMPORT_BACK, x + (w - 6) / 2 + 6, panelTop + 350, (w - 6) / 2, 19, "BACK"));
             return;
         }
         if ("legacy-list".equals(settingsSubpage)) {
             int x = settingsLeft + 8;
             int y = panelTop + 82;
             int w = Math.max(90, panelLeft + panelWidth - x - 12);
-            buttonList.add(new AlphaMenuButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO MODULES"));
+            buttonList.add(new AlphaButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO MODULES"));
             LegacyPvpSettings.load();
             LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
             for (int i = 0; i < features.length; i++) {
-                buttonList.add(new AlphaMenuButton(LEGACY_FEATURE_BASE + i, x, y + i * 21, w, 19, features[i].label));
+                buttonList.add(new AlphaButton(LEGACY_FEATURE_BASE + i, x, y + i * 21, w, 19, features[i].label));
             }
             return;
         }
@@ -557,10 +554,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int x = settingsLeft + 8;
             int y = panelTop + 52;
             int w = Math.max(90, panelLeft + panelWidth - x - 12);
-            buttonList.add(new AlphaMenuButton(LEGACY_DETAIL_BACK, x, y, w, 19, "BACK TO LEGACY PVP"));
+            buttonList.add(new AlphaButton(LEGACY_DETAIL_BACK, x, y, w, 19, "BACK TO LEGACY PVP"));
             LegacyPvpFeatureCatalog.Feature feature = getLegacySelectedFeature();
             if (feature != null && isLegacyToggleAvailable(feature.id)) {
-                buttonList.add(new AlphaMenuButton(LEGACY_TOGGLE, x, panelTop + 350, w, 20, getLegacyToggleLabel(feature.id)));
+                buttonList.add(new AlphaButton(LEGACY_TOGGLE, x, panelTop + 350, w, 20, getLegacyToggleLabel(feature.id)));
             }
             return;
         }
@@ -568,8 +565,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int x = settingsLeft + 8;
             int y = panelTop + 350;
             int w = Math.max(90, panelLeft + panelWidth - x - 12);
-            buttonList.add(new AlphaMenuButton(COLOR_SAVE, x, y, (w - 6) / 2, 19, "SAVE COLORS"));
-            buttonList.add(new AlphaMenuButton(COLOR_BACK, x + (w - 6) / 2 + 6, y, (w - 6) / 2, 19, "CANCEL"));
+            buttonList.add(new AlphaButton(COLOR_SAVE, x, y, (w - 6) / 2, 19, "SAVE COLORS"));
+            buttonList.add(new AlphaButton(COLOR_BACK, x + (w - 6) / 2 + 6, y, (w - 6) / 2, 19, "CANCEL"));
             int[] colors = {KeystrokesMod.getBackgroundColor(), KeystrokesMod.getPressedBackgroundColor(),
                     KeystrokesMod.getTextColor(), KeystrokesMod.getPressedTextColor(), KeystrokesMod.getBorderColor()};
             for (int i = 0; i < keystrokesColorFields.length; i++) {
@@ -585,9 +582,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         int x = settingsLeft + 8;
         int y = panelTop + 82;
         int w = Math.max(90, panelLeft + panelWidth - x - 12);
-        buttonList.add(new AlphaMenuButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO MODULES"));
+        buttonList.add(new AlphaButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO MODULES"));
         if (module == null || !module.isUnlocked() || !module.isImplemented()) return;
-        buttonList.add(new AlphaMenuButton(SETTINGS_BASE, x, y, w, 20,
+        buttonList.add(new AlphaButton(SETTINGS_BASE, x, y, w, 20,
                 module.isEnabled() ? "MODULE: ON" : "MODULE: OFF", module.isEnabled()));
         y += 25;
         String id = module.getId();
@@ -636,7 +633,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
 
     private void addSettingButton(int id,int x,int y,int width,String label) {
-        buttonList.add(new AlphaMenuButton(SETTINGS_BASE+id,x,y,width,19,label));
+        buttonList.add(new AlphaButton(SETTINGS_BASE+id,x,y,width,19,label));
     }
     private String onOff(boolean value) { return value ? "ON" : "OFF"; }
 
@@ -744,8 +741,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             drawString(fontRendererObj,"Opacity: "+p.getOpacity()+" / 255",x,panelTop+278,0xFFE7E9EE);
             drawString(fontRendererObj,"Scale: "+String.format(Locale.ROOT,"%.2f",p.getScale()),x,panelTop+292,0xFFE7E9EE);
         } else if("keystrokes".equals(id)){
-            drawString(fontRendererObj,"Fade: "+KeystrokesMod.getFadeDelay()+" ms",x,panelTop+56,0xFFE7E9EE);
-            drawString(fontRendererObj,"Box: "+KeystrokesMod.getBoxSize()+"   Border: "+KeystrokesMod.getBorderThickness(),x,panelTop+68,0xFFE7E9EE);
+            drawString(fontRendererObj,"Fade: "+KeystrokesMod.getFadeDelay()+" ms",x,panelTop+389,0xFFE7E9EE);
+            drawString(fontRendererObj,"Box: "+KeystrokesMod.getBoxSize()+"   Border: "+KeystrokesMod.getBorderThickness(),x,panelTop+402,0xFFE7E9EE);
         }
         if(!specialized && module.isImplemented()){
             List<AlphaModuleFeature> features=module.getFeatures();
@@ -1222,12 +1219,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             // Scroll the profile list only when the mouse is over the right-hand
             // profile/settings panel. Otherwise the wheel must scroll module tiles.
             if (mouseX >= settingsLeft && mouseX <= panelLeft + panelWidth - 8
-                    && mouseY >= panelTop + 89 && mouseY <= panelTop + 124
+                    && mouseY >= panelTop + 62 && mouseY <= panelTop + panelHeight - 42
                     && !isModuleSettingsOpen()) {
                 List<ModuleProfileManager.BhopProfile> profiles = ModuleProfileManager.getProfiles();
-                int profileTop = panelTop + 91;
-                int actionY = panelTop + 126;
-                int visibleProfiles = 2;
+                int profileTop = panelTop + 86;
+                int actionY = panelTop + panelHeight - 48;
+                int visibleProfiles = Math.max(1, (actionY - 8 - profileTop) / 21);
                 int maxProfileOffset = Math.max(0, profiles.size() - visibleProfiles);
                 profileScrollOffset = Math.max(0, Math.min(maxProfileOffset,
                         profileScrollOffset + (wheel < 0 ? 1 : -1)));
