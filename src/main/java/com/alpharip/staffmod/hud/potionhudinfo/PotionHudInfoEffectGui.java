@@ -26,7 +26,7 @@ public final class PotionHudInfoEffectGui extends AlphaGuiScreen {
     @Override public void initGui(){
         setting=module.getEffect(effectId);
         buttonList.clear();
-        panelX=(width-620)/2;panelY=(height-410)/2;
+        panelX=(width-620)/2;panelY=(height-450)/2;
         int left=panelX+18,right=panelX+316,top=panelY+88;
         addColorButtons(left+12,top+48,false);
         addColorButtons(right+12,top+48,true);
@@ -35,18 +35,18 @@ public final class PotionHudInfoEffectGui extends AlphaGuiScreen {
         buttonList.add(new AlphaButton(BOLD,left+12,top+188,168,27,"BOLD     "+state(setting.isBold()),false,setting.isBold()));
         buttonList.add(new AlphaButton(ITALIC,left+190,top+188,168,27,"ITALIC     "+state(setting.isItalic()),false,setting.isItalic()));
         buttonList.add(new AlphaButton(UNDER,left+368,top+188,168,27,"UNDERLINE     "+state(setting.isUnderlined()),false,setting.isUnderlined()));
-        buttonList.add(new AlphaButton(FLICKER,left+12,top+267,260,27,"LOW-TIME FLICKER     "+state(setting.isFlickerWhenLow()),false,setting.isFlickerWhenLow()));
-        buttonList.add(new AlphaButton(TD,right+12,top+267,42,27,"−"));
-        buttonList.add(new AlphaButton(TU,right+224,top+267,42,27,"+"));
-        buttonList.add(new AlphaButton(SD,right+12,top+303,42,27,"−"));
-        buttonList.add(new AlphaButton(SU,right+224,top+303,42,27,"+"));
-        nameField=new GuiTextField(30,fontRendererObj,panelX+30,panelY+355,390,24);
+        buttonList.add(new AlphaButton(FLICKER,left+12,top+234,260,27,"LOW-TIME FLICKER     "+state(setting.isFlickerWhenLow()),false,setting.isFlickerWhenLow()));
+        buttonList.add(new AlphaButton(TD,right+12,top+234,42,27,"−"));
+        buttonList.add(new AlphaButton(TU,right+224,top+234,42,27,"+"));
+        buttonList.add(new AlphaButton(SD,right+12,top+266,42,27,"−"));
+        buttonList.add(new AlphaButton(SU,right+224,top+266,42,27,"+"));
+        nameField=new GuiTextField(30,fontRendererObj,panelX+30,panelY+414,390,24);
         nameField.setMaxStringLength(64);
         nameField.setText(setting.getCustomName());
         nameField.setTextColor(0xFFE7E9EE);
         nameField.setDisabledTextColour(0xFF9DA4B1);
-        buttonList.add(new AlphaButton(SAVE,panelX+438,panelY+352,82,28,"SAVE",true));
-        buttonList.add(new AlphaButton(BACK,panelX+528,panelY+352,74,28,"BACK"));
+        buttonList.add(new AlphaButton(SAVE,panelX+438,panelY+412,82,28,"SAVE",true));
+        buttonList.add(new AlphaButton(BACK,panelX+528,panelY+412,74,28,"BACK"));
     }
 
     private void addColorButtons(int x,int y,boolean timer){
@@ -112,7 +112,7 @@ public final class PotionHudInfoEffectGui extends AlphaGuiScreen {
 
     @Override public void drawScreen(int mx,int my,float partial){
         drawRect(0,0,width,height,0x9906080D);
-        drawRect(panelX,panelY,panelX+620,panelY+410,0xF00D1017);
+        drawRect(panelX,panelY,panelX+620,panelY+450,0xF00D1017);
         drawRect(panelX,panelY,panelX+620,panelY+2,0xFFFFD866);
         drawString(fontRendererObj,"ALPHA CLIENT",panelX+18,panelY+12,0xFFFFD866);
         drawString(fontRendererObj,"CUSTOMIZE EFFECT",panelX+18,panelY+29,0xFFF3F4F6);
@@ -120,8 +120,8 @@ public final class PotionHudInfoEffectGui extends AlphaGuiScreen {
         drawRect(panelX+18,panelY+65,panelX+602,panelY+66,0x554B515D);
 
         int lx=panelX+18,rx=panelX+316,top=panelY+78;
-        drawRect(lx,top,lx+286,top+160,0x99191D26);
-        drawRect(rx,top,rx+286,top+160,0x99191D26);
+        drawRect(lx,top,lx+286,top+148,0x99191D26);
+        drawRect(rx,top,rx+286,top+148,0x99191D26);
         drawString(fontRendererObj,"NAME COLOR",lx+12,top+12,0xFFFFD866);
         drawString(fontRendererObj,"TIMER COLOR",rx+12,top+12,0xFFFFD866);
         drawRect(lx+12,top+30,lx+272,top+43,0xFF000000|(setting.getRawNameColor()&0xFFFFFF));
@@ -137,18 +137,18 @@ public final class PotionHudInfoEffectGui extends AlphaGuiScreen {
             drawString(fontRendererObj,String.valueOf((setting.getRawTimerColor()>>(16-i*8))&255),rx+150,cy+8,0xFFE6E8ED);
         }
 
-        drawRect(lx,top+171,lx+584,top+252,0x99191D26);
-        drawString(fontRendererObj,"TEXT STYLE",lx+12,top+182,0xFFFFD866);
-        drawString(fontRendererObj,"Choose how the effect name is formatted.",lx+12,top+198,0xFF9DA4B1);
-        drawRect(lx,top+263,lx+584,top+337,0x99191D26);
-        drawString(fontRendererObj,"LOW-DURATION WARNING",lx+12,top+274,0xFFFFD866);
-        drawString(fontRendererObj,"Alert threshold",rx+20,top+279,0xFFB8BDC8);
-        drawString(fontRendererObj,setting.getFlickerStartTime()+" seconds",rx+105,top+279,0xFFE6E8ED);
-        drawString(fontRendererObj,"Flicker speed",rx+20,top+315,0xFFB8BDC8);
-        drawString(fontRendererObj,setting.getFlickerSpeed()+" ms",rx+105,top+315,0xFFE6E8ED);
-        drawString(fontRendererObj,"CUSTOM EFFECT NAME",panelX+30,panelY+340,0xFFFFD866);
+        drawRect(lx,top+159,lx+584,top+225,0x99191D26);
+        drawString(fontRendererObj,"TEXT STYLE",lx+12,top+169,0xFFFFD866);
+        drawString(fontRendererObj,"Choose how the effect name is formatted.",lx+12,top+185,0xFF9DA4B1);
+        drawRect(lx,top+230,lx+584,top+318,0x99191D26);
+        drawString(fontRendererObj,"LOW-DURATION WARNING",lx+12,top+240,0xFFFFD866);
+        drawString(fontRendererObj,"Alert threshold",rx+64,top+243,0xFFB8BDC8);
+        drawString(fontRendererObj,setting.getFlickerStartTime()+" sec",rx+150,top+243,0xFFE6E8ED);
+        drawString(fontRendererObj,"Flicker speed",rx+64,top+275,0xFFB8BDC8);
+        drawString(fontRendererObj,setting.getFlickerSpeed()+" ms",rx+150,top+275,0xFFE6E8ED);
+        drawString(fontRendererObj,"CUSTOM EFFECT NAME",panelX+30,panelY+400,0xFFFFD866);
         nameField.drawTextBox();
-        if(nameField.getText().isEmpty())drawString(fontRendererObj,"Leave blank to use the default name",panelX+35,panelY+360,0xFF777D88);
+        if(nameField.getText().isEmpty())drawString(fontRendererObj,"Leave blank to use the default name",panelX+35,panelY+422,0xFF777D88);
         super.drawScreen(mx,my,partial);
     }
     private String hex(int c){return String.format(java.util.Locale.ROOT,"#%06X",c&0xFFFFFF);}
