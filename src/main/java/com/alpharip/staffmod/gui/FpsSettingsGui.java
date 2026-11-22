@@ -23,9 +23,9 @@ public final class FpsSettingsGui extends AlphaGuiScreen {
         right = left + 300;
         top = Math.max(12, height / 2 - 80);
         bottom = Math.min(height - 12, top + 160);
-        buttonList.add(new AlphaButton(BACKGROUND, left + 20, top + 58, 260, 20, backgroundLabel()));
-        buttonList.add(new AlphaButton(COLOR, left + 20, top + 86, 260, 20, "TEXT COLOR: " + FpsMod.getColorName()));
-        buttonList.add(new AlphaButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACKGROUND, left + 20, top + 58, 260, 20, backgroundLabel()));
+        buttonList.add(new AlphaSettingsButton(COLOR, left + 20, top + 86, 260, 20, "TEXT COLOR: " + FpsMod.getColorName()));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, bottom - 27, 75, 18, "BACK"));
     }
 
     private String backgroundLabel() {
@@ -35,8 +35,7 @@ public final class FpsSettingsGui extends AlphaGuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x30000000);
-        drawRect(left, top, right, bottom, 0xE00A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "FPS SETTINGS", width / 2, top + 15, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Configure the FPS HUD appearance", width / 2, top + 34, 0xFFB8BDC8);
         super.drawScreen(mouseX, mouseY, partialTicks);
