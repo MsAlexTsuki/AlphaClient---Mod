@@ -83,7 +83,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int LEGACY_TOGGLE = 722;
     private static final int LEGACY_FEATURE_BASE = 730;
     private String legacySelectedFeatureId = "";
-    private static final int POTION_LIST_BASE = 820, POTION_PAGE_PREV = 830, POTION_PAGE_NEXT = 831;
+    private static final int POTION_LIST_BASE = 820, POTION_PAGE_PREV = 830, POTION_PAGE_NEXT = 831, POTION_MANAGER_BACK = 835;
     private static final int POTION_TOGGLE = 832, POTION_EDIT = 833, POTION_IMPORT = 834;
     private static final int POTION_EDITOR_BACK = 840, POTION_EDITOR_SAVE = 841;
     private static final int POTION_NAME_R_DOWN = 850, POTION_NAME_G_DOWN = 851, POTION_NAME_B_DOWN = 852;
@@ -479,7 +479,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if ("potion-effects".equals(settingsSubpage)) {
             int x = settingsLeft + 8, y = panelTop + 86;
             int w = Math.max(90, panelLeft + panelWidth - x - 12);
-            buttonList.add(new AlphaButton(SETTINGS_BACK, x, panelTop + 52, w, 19, "BACK TO POTION HUD"));
+            buttonList.add(new AlphaButton(POTION_MANAGER_BACK, x, panelTop + 52, w, 19, "BACK TO POTION HUD"));
             int listWidth = Math.max(86, (w - 8) / 2);
             for (int slot = 0; slot < POTION_PAGE_SIZE; slot++) {
                 int index = potionEffectPage * POTION_PAGE_SIZE + slot;
@@ -940,6 +940,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
+        if (button.id == POTION_MANAGER_BACK) { settingsSubpage = ""; initGui(); return; }
         if (button.id == POTION_PAGE_PREV) { potionEffectPage = Math.max(0, potionEffectPage - 1); potionEffectIndex = potionEffectPage * POTION_PAGE_SIZE; initGui(); return; }
         if (button.id == POTION_PAGE_NEXT) { potionEffectPage = Math.min(Math.max(0, (potionEffectIds.size() - 1) / POTION_PAGE_SIZE), potionEffectPage + 1); potionEffectIndex = potionEffectPage * POTION_PAGE_SIZE; initGui(); return; }
         if (button.id >= POTION_LIST_BASE && button.id < POTION_LIST_BASE + POTION_PAGE_SIZE) { int selected = potionEffectPage * POTION_PAGE_SIZE + button.id - POTION_LIST_BASE; if (selected < potionEffectIds.size()) potionEffectIndex = selected; initGui(); return; }
