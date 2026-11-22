@@ -125,7 +125,7 @@ public final class QualityGui extends AlphaGuiScreen {
                 buttonList.add(new RoundedFeatureTileButton(SESSION_TIMER, x, y, tileWidth, tileHeight,
                         "Session Timer", "◆", on ? "ON" : "OFF", on, true));
             } else {
-                FeatureTileButton planned = new RoundedFeatureTileButton(1000 + i, x, y,
+                GuiButton planned = new RoundedFeatureTileButton(1000 + i, x, y,
                         tileWidth, tileHeight, FEATURES[i], "◆", "PLANNED", false, false);
                 buttonList.add(planned);
             }
