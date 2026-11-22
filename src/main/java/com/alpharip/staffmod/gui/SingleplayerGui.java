@@ -66,30 +66,30 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         int tileY = panelTop + 68;
         int firstTileX = panelLeft + 12;
 
-        buttonList.add(new AlphaButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACK, panelLeft + 10, panelBottom - 29, 90, 20, "BACK"));
         AlphaModule worldEdit = AlphaModuleRegistry.find("world-edit");
         boolean worldEditEnabled = worldEdit != null && worldEdit.isEnabled();
-        buttonList.add(new FeatureTileButton(WORLD_EDIT, firstTileX, tileY,
+        buttonList.add(new RoundedFeatureTileButton(WORLD_EDIT, firstTileX, tileY,
                 tileWidth, tileHeight, "World Edit", "◆",
                 worldEditEnabled ? "ON" : "OFF", worldEditEnabled, true));
-        buttonList.add(new FeatureTileButton(AUTO_TOOL, firstTileX + tileWidth + gap, tileY,
+        buttonList.add(new RoundedFeatureTileButton(AUTO_TOOL, firstTileX + tileWidth + gap, tileY,
                 tileWidth, tileHeight, "AutoTool", "◆",
                 AutoToolSettings.isEnabled() ? "ON" : "OFF", AutoToolSettings.isEnabled(), true));
-        buttonList.add(new FeatureTileButton(ALPHA_HOMES, firstTileX + (tileWidth + gap) * 2, tileY,
+        buttonList.add(new RoundedFeatureTileButton(ALPHA_HOMES, firstTileX + (tileWidth + gap) * 2, tileY,
                 tileWidth, tileHeight, "AlphaHomes", "◆", null, false, true));
-        buttonList.add(new FeatureTileButton(PRIVATE_VAULTS, firstTileX + (tileWidth + gap) * 3, tileY,
+        buttonList.add(new RoundedFeatureTileButton(PRIVATE_VAULTS, firstTileX + (tileWidth + gap) * 3, tileY,
                 tileWidth, tileHeight, "Private Vaults", "◆", null, false, true));
         boolean treeExcavateEnabled = TreeExcavateSettings.isEnabled();
-        buttonList.add(new FeatureTileButton(TREE_EXCAVATE, firstTileX, tileY + tileHeight + gap,
+        buttonList.add(new RoundedFeatureTileButton(TREE_EXCAVATE, firstTileX, tileY + tileHeight + gap,
                 tileWidth, tileHeight, "Tree Excavate", "◆",
                 treeExcavateEnabled ? "ON" : "OFF", treeExcavateEnabled, true));
         boolean autoReplantEnabled = AutoReplantSettings.isEnabled();
-        buttonList.add(new FeatureTileButton(AUTO_REPLANT, firstTileX + tileWidth + gap,
+        buttonList.add(new RoundedFeatureTileButton(AUTO_REPLANT, firstTileX + tileWidth + gap,
                 tileY + tileHeight + gap, tileWidth, tileHeight, "Auto Replant", "◆",
                 autoReplantEnabled ? "ON" : "OFF", autoReplantEnabled, true));
         AlphaModuleFeature inventorySorter = AlphaModuleRegistry.findFeature("inventory-sorter");
         boolean inventorySorterEnabled = inventorySorter != null && inventorySorter.isEnabled();
-        buttonList.add(new FeatureTileButton(INVENTORY_SORTER, firstTileX + (tileWidth + gap) * 2,
+        buttonList.add(new RoundedFeatureTileButton(INVENTORY_SORTER, firstTileX + (tileWidth + gap) * 2,
                 tileY + tileHeight + gap, tileWidth, tileHeight, "Inventory Sorter", "◆",
                 inventorySorterEnabled ? "ON" : "OFF", inventorySorterEnabled, true));
         AlphaModuleFeature mobStacker = AlphaModuleRegistry.findFeature("mob-stacker");
@@ -97,7 +97,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
         boolean mobStackerEnabled = mobStackerAvailable && mobStacker.isEnabled();
         String mobStackerStatus = !mobStackerAvailable ? "LOCKED"
                 : (mobStackerEnabled ? "ON" : "OFF");
-        buttonList.add(new FeatureTileButton(MOB_STACKER,
+        buttonList.add(new RoundedFeatureTileButton(MOB_STACKER,
                 firstTileX + (tileWidth + gap) * 3, tileY + tileHeight + gap,
                 tileWidth, tileHeight, "Mob Stacker", "◆",
                 mobStackerStatus, mobStackerEnabled, mobStackerAvailable));
@@ -114,8 +114,8 @@ public final class SingleplayerGui extends AlphaGuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) {
         if (button == null) return;
-        if (button instanceof FeatureTileButton
-                && ((FeatureTileButton) button).wasSwitchClicked()) {
+        if (button instanceof RoundedFeatureTileButton
+                && ((RoundedFeatureTileButton) button).wasSwitchClicked()) {
             if (button.id == WORLD_EDIT) {
                 AlphaModule worldEdit = AlphaModuleRegistry.find("world-edit");
                 if (worldEdit != null) worldEdit.setEnabled(!worldEdit.isEnabled());
@@ -164,8 +164,7 @@ public final class SingleplayerGui extends AlphaGuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x18000000);
-        drawRect(panelLeft, panelTop, panelRight, panelBottom, 0xD90A0C11);
-        drawRect(panelLeft, panelTop, panelRight, panelTop + 2, ACCENT);
+        AlphaSettingsRender.drawPanel(panelLeft, panelTop, panelRight, panelBottom);
         drawCenteredString(fontRendererObj, "SINGLEPLAYER", width / 2,
                 panelTop + 13, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "SINGLEPLAYER MODS", width / 2, panelTop + 30, ACCENT);
