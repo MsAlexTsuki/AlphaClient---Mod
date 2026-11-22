@@ -34,8 +34,11 @@ public final class ModuleTileButton extends GuiButton {
         boolean on = available && module.isEnabled();
         int bg = hovered ? 0xF0272B34 : 0xE0181B22;
         int edge = "pixelgarden".equals(module.getId()) || selected || hovered ? YELLOW : 0x664B515D;
-        AlphaGuiDraw.roundedRect(xPosition, yPosition, width, height, 7F, edge);
-        AlphaGuiDraw.roundedRect(xPosition + 1, yPosition + 1, width - 2, height - 2, 6F, bg);
+        drawRect(xPosition, yPosition, xPosition + width, yPosition + height, bg);
+        drawRect(xPosition, yPosition, xPosition + width, yPosition + 1, edge);
+        drawRect(xPosition, yPosition + height - 1, xPosition + width, yPosition + height, 0xAA090A0E);
+        drawRect(xPosition, yPosition, xPosition + 1, yPosition + height, edge);
+        drawRect(xPosition + width - 1, yPosition, xPosition + width, yPosition + height, edge);
 
         if (!folder) {
             String state = module.getStatusLabel();
@@ -45,9 +48,9 @@ public final class ModuleTileButton extends GuiButton {
             int sw = SWITCH_WIDTH, sh = SWITCH_HEIGHT;
             int sx = xPosition + width - sw - 7, sy = yPosition + 6;
             int switchBg = on ? YELLOW : 0xFF454A54;
-            AlphaGuiDraw.roundedRect(sx, sy, sw, sh, sh / 2F, switchBg);
+            drawRect(sx, sy, sx + sw, sy + sh, switchBg);
             int knobX = on ? sx + sw - 7 : sx + 2;
-            AlphaGuiDraw.roundedRect(knobX, sy + 1, 5, sh - 2, (sh - 2) / 2F, 0xFFF6F6F6);
+            drawRect(knobX, sy + 1, knobX + 5, sy + sh - 1, 0xFFF6F6F6);
         }
 
         String icon = iconFor(module.getId());
