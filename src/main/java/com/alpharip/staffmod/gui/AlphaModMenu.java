@@ -740,8 +740,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             drawString(fontRendererObj,"Opacity: "+p.getOpacity()+" / 255",x,panelTop+278,0xFFE7E9EE);
             drawString(fontRendererObj,"Scale: "+String.format(Locale.ROOT,"%.2f",p.getScale()),x,panelTop+292,0xFFE7E9EE);
         } else if("keystrokes".equals(id)){
-            drawString(fontRendererObj,"Fade: "+KeystrokesMod.getFadeDelay()+" ms",x,panelTop+389,0xFFE7E9EE);
-            drawString(fontRendererObj,"Box: "+KeystrokesMod.getBoxSize()+"   Border: "+KeystrokesMod.getBorderThickness(),x,panelTop+402,0xFFE7E9EE);
+            drawString(fontRendererObj,"Fade: "+KeystrokesMod.getFadeDelay()+" ms",x,panelTop+56,0xFFE7E9EE);
+            drawString(fontRendererObj,"Box: "+KeystrokesMod.getBoxSize()+"   Border: "+KeystrokesMod.getBorderThickness(),x,panelTop+68,0xFFE7E9EE);
         }
         if(!specialized && module.isImplemented()){
             List<AlphaModuleFeature> features=module.getFeatures();
