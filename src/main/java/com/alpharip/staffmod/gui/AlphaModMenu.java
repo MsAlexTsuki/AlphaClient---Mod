@@ -929,7 +929,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             else if(setting==18)KeystrokesMod.adjustFadeDelay(25);else if(setting==19)KeystrokesMod.adjustBoxSize(-1);
             else if(setting==20)KeystrokesMod.adjustBoxSize(1);else if(setting==21)KeystrokesMod.adjustBorderThickness(-0.5F);
             else if(setting==22)KeystrokesMod.adjustBorderThickness(0.5F);else if(setting==23){settingsSubpage="keystrokes-colors";initGui();}
-
+        }
     }
 
     private void drawWrappedTextLimited(String text, int x, int y, int maxWidth, int color, int maxLines) {
