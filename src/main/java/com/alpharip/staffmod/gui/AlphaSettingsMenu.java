@@ -15,6 +15,7 @@ public final class AlphaSettingsMenu extends GuiScreen {
     private static final int EASTER_EGGS_TOGGLE = 2;
     private static final int DONE = 200;
     private final GuiScreen parent;
+    private boolean pixelGardenButtonVisible;
 
     public AlphaSettingsMenu(GuiScreen parent) {
         this.parent = parent;
@@ -27,7 +28,8 @@ public final class AlphaSettingsMenu extends GuiScreen {
         int firstRow = height / 6 + 24;
 
         int row = firstRow;
-        if (com.alpharip.staffmod.permissions.PermissionService.hasPixelGardenRankAccess()) {
+        pixelGardenButtonVisible = com.alpharip.staffmod.permissions.PermissionService.hasPixelGardenRankAccess();
+        if (pixelGardenButtonVisible) {
             buttonList.add(new GuiButton(PIXEL_GARDEN_TOGGLE, center - 100, row, 200, 20,
                     getPixelGardenLabel()));
             row += 26;
@@ -72,6 +74,11 @@ public final class AlphaSettingsMenu extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        // Community ranks synchronize asynchronously; refresh the toggle when access becomes verified.
+        boolean hasPixelGardenAccess = com.alpharip.staffmod.permissions.PermissionService.hasPixelGardenRankAccess();
+        if (hasPixelGardenAccess != pixelGardenButtonVisible) {
+            initGui();
+        }
         drawDefaultBackground();
         drawCenteredString(fontRendererObj, "Alpha Settings", width / 2, 15, 0xFFFFFF);
         super.drawScreen(mouseX, mouseY, partialTicks);
