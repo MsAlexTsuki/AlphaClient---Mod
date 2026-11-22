@@ -30,6 +30,11 @@ public final class PixelGardenModuleSettings {
 
     public synchronized void setEnabled(boolean value) {
         ensureLoaded();
+        AlphaModule module = AlphaModuleRegistry.find("pixelgarden");
+        if (module != null) {
+            // Persist the toggle through the normal module/profile system as well.
+            module.setEnabled(value);
+        }
         enabled = value;
         save();
     }
