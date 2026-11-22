@@ -54,6 +54,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int DONATOR_SUBFOLDER_BASE = 500;
     private static final int SETTINGS_BASE = 600;
     private static final int SETTINGS_BACK = 308, SETTINGS_PREVIOUS = 309;
+    private static final int FOLDER_BACK = 310, FOLDER_FEATURE_BACK = 311, FOLDER_FEATURE_TOGGLE = 312;
+    private static final int FOLDER_ITEM_BASE = 900;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
     private static final int ACCENT = 0xFFFFD866;
@@ -72,6 +74,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private boolean searchFocused;
     private String accessFingerprint = "";
     private String settingsSubpage = "";
+    private String openFolderId = "";
+    private String selectedFolderItemId = "";
     private GuiTextField[] keystrokesColorFields = new GuiTextField[5];
     private static final int COLOR_SAVE = 701;
     private static final int COLOR_BACK = 702;
@@ -118,7 +122,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         contentRight = panelLeft + panelWidth - 112;
         contentTop = panelTop + 49;
         contentBottom = panelTop + panelHeight - 25;
-        settingsLeft = isModuleSettingsOpen() ? contentLeft : contentRight + 8;
+        settingsLeft = (isModuleSettingsOpen() || isFolderFeatureSettingsOpen()) ? contentLeft : contentRight + 8;
 
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj,
                 contentLeft + 3, panelTop + 25, Math.max(80, contentRight - contentLeft - 6), 15);
@@ -228,8 +232,25 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
 
         if (isModuleSettingsOpen()) addModuleSettingsButtons();
+        if (isFolderFeatureSettingsOpen()) addFolderFeatureSettingsButtons();
 
-        if (!isModuleSettingsOpen()) {
+        if (!isModuleSettingsOpen() && !isFolderFeatureSettingsOpen()) {
+            if (isFolderOpen()) {
+                buttonList.add(new AlphaMenuButton(FOLDER_BACK, contentLeft, panelTop + 7, 78, 18, "← GENERAL"));
+                List<FolderItem> folderItems = getFolderItems();
+                int gridWidth = Math.max(180, contentRight - contentLeft);
+                int gap = 10, tileWidth = (gridWidth - gap) / 2, tileHeight = 48, rowGap = 8;
+                int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
+                int start = Math.min(scrollOffset, Math.max(0, folderItems.size() - visibleRows * 2));
+                for (int i = start; i < folderItems.size() && i < start + visibleRows * 2; i++) {
+                    FolderItem item = folderItems.get(i);
+                    int local = i - start;
+                    int x = contentLeft + (local % 2) * (tileWidth + gap);
+                    int y = contentTop + (local / 2) * (tileHeight + rowGap);
+                    buttonList.add(new AlphaMenuButton(FOLDER_ITEM_BASE + i, x, y, tileWidth, tileHeight,
+                            item.name + "  ·  " + item.getStatus(), false, item.isImplemented));
+                }
+            } else {
             List<AlphaModule> filtered = getFilteredModules();
             int gridWidth = Math.max(180, contentRight - contentLeft);
             int gap = 10;
@@ -245,6 +266,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 AlphaModule module = filtered.get(i);
                 buttonList.add(new ModuleTileButton(MODULE_BASE + i, x, y, tileWidth, tileHeight,
                         module, module.getId().equals(selectedModuleId)));
+            }
             }
         }
 
@@ -434,6 +456,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         if (isModuleSettingsOpen()) {
             drawModuleSettingsPanel(mouseX, mouseY, partialTicks);
+        } else if (isFolderFeatureSettingsOpen()) {
+            drawFolderFeatureSettingsPanel(mouseX, mouseY, partialTicks);
         } else {
         drawString(fontRendererObj, "PROFILES",
                 settingsLeft + 12, panelTop + 42, 0xFFB8BDC8);
@@ -485,6 +509,141 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private boolean isModuleSettingsOpen() {
         return selectedModuleId != null && !selectedModuleId.isEmpty()
                 && !"staffmods".equals(selectedModuleId);
+    }
+
+    private boolean isFolderOpen() { return openFolderId != null && !openFolderId.isEmpty(); }
+    private boolean isFolderFeatureSettingsOpen() {
+        return isFolderOpen() && selectedFolderItemId != null && !selectedFolderItemId.isEmpty();
+    }
+
+    private static final class FolderItem {
+        final String id, name, description;
+        final boolean isImplemented, toggleable;
+        FolderItem(String id, String name, String description, boolean implemented, boolean toggleable) {
+            this.id=id; this.name=name; this.description=description; this.isImplemented=implemented; this.toggleable=toggleable;
+        }
+        boolean isAvailable() {
+            if ("mob-stacker".equals(id)) {
+                AlphaModuleFeature f=AlphaModuleRegistry.findFeature(id);
+                return f!=null && f.isAvailable();
+            }
+            return true;
+        }
+        boolean isEnabled() {
+            if ("fullbright".equals(id)) return com.alpharip.staffmod.quality.FullbrightMod.isEnabled();
+            if ("auto-gg".equals(id)) return com.alpharip.staffmod.quality.AutoGGMod.isEnabled();
+            if ("auto-reconnect".equals(id)) return com.alpharip.staffmod.quality.AutoReconnectMod.isEnabled();
+            if ("inventory-search".equals(id)) return com.alpharip.staffmod.inventorysearch.InventorySearchSettings.isEnabled();
+            if ("anvil-cost".equals(id)) return com.alpharip.staffmod.quality.anvilcost.AnvilCostMod.isEnabled();
+            if ("enchanting-names".equals(id)) return com.alpharip.staffmod.quality.enchantingname.EnchantingNameMod.isEnabled();
+            if ("block-placement-preview".equals(id)) return com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings.isEnabled();
+            if ("afk-timer".equals(id)) return com.alpharip.staffmod.hud.AfkTimerHud.isEnabled();
+            if ("session-timer".equals(id)) return com.alpharip.staffmod.hud.SessionTimerHud.isEnabled();
+            if ("playtime-tracker".equals(id)) return com.alpharip.staffmod.hud.PlaytimeTrackerHud.isEnabled();
+            if ("server-history".equals(id)) return com.alpharip.staffmod.serverhistory.ServerHistoryManager.isEnabled();
+            if ("fight-history".equals(id)) return com.alpharip.staffmod.fighthistory.FightHistoryManager.isEnabled();
+            if ("world-edit".equals(id)) { AlphaModule m=AlphaModuleRegistry.find(id); return m!=null && m.isEnabled(); }
+            if ("autotool".equals(id)) return com.alpharip.staffmod.singleplayer.autotool.AutoToolSettings.isEnabled();
+            if ("tree-excavate".equals(id)) return com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavateSettings.isEnabled();
+            if ("auto-replant".equals(id)) return com.alpharip.staffmod.singleplayer.autoreplant.AutoReplantSettings.isEnabled();
+            if ("inventory-sorter".equals(id) || "mob-stacker".equals(id)) {
+                AlphaModuleFeature f=AlphaModuleRegistry.findFeature(id); return f!=null && f.isEnabled();
+            }
+            return false;
+        }
+        String getStatus() {
+            if (!isImplemented) return "COMING SOON";
+            if (!isAvailable()) return "LOCKED";
+            return toggleable ? (isEnabled() ? "ON" : "OFF") : "AVAILABLE";
+        }
+        void toggle() {
+            if (!toggleable || !isImplemented || !isAvailable()) return;
+            boolean next=!isEnabled();
+            if ("fullbright".equals(id)) com.alpharip.staffmod.quality.FullbrightMod.setEnabled(next);
+            else if ("auto-gg".equals(id)) com.alpharip.staffmod.quality.AutoGGMod.setEnabled(next);
+            else if ("auto-reconnect".equals(id)) com.alpharip.staffmod.quality.AutoReconnectMod.setEnabled(next);
+            else if ("inventory-search".equals(id)) com.alpharip.staffmod.inventorysearch.InventorySearchSettings.setEnabled(next);
+            else if ("anvil-cost".equals(id)) com.alpharip.staffmod.quality.anvilcost.AnvilCostMod.setEnabled(next);
+            else if ("enchanting-names".equals(id)) com.alpharip.staffmod.quality.enchantingname.EnchantingNameMod.setEnabled(next);
+            else if ("block-placement-preview".equals(id)) com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings.setEnabled(next);
+            else if ("afk-timer".equals(id)) com.alpharip.staffmod.hud.AfkTimerHud.setEnabled(next);
+            else if ("session-timer".equals(id)) com.alpharip.staffmod.hud.SessionTimerHud.setEnabled(next);
+            else if ("playtime-tracker".equals(id)) com.alpharip.staffmod.hud.PlaytimeTrackerHud.setEnabled(next);
+            else if ("server-history".equals(id)) com.alpharip.staffmod.serverhistory.ServerHistoryManager.setEnabled(next);
+            else if ("fight-history".equals(id)) com.alpharip.staffmod.fighthistory.FightHistoryManager.setEnabled(next);
+            else if ("world-edit".equals(id)) { AlphaModule m=AlphaModuleRegistry.find(id); if(m!=null)m.setEnabled(next); }
+            else if ("autotool".equals(id)) com.alpharip.staffmod.singleplayer.autotool.AutoToolSettings.setEnabled(next);
+            else if ("tree-excavate".equals(id)) com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavateSettings.setEnabled(next);
+            else if ("auto-replant".equals(id)) com.alpharip.staffmod.singleplayer.autoreplant.AutoReplantSettings.setEnabled(next);
+            else if ("inventory-sorter".equals(id) || "mob-stacker".equals(id)) {
+                AlphaModuleFeature f=AlphaModuleRegistry.findFeature(id); if(f!=null)f.setEnabled(next);
+            }
+        }
+    }
+
+    private List<FolderItem> getFolderItems() {
+        List<FolderItem> items=new ArrayList<FolderItem>();
+        if ("quality".equals(openFolderId)) {
+            items.add(new FolderItem("fullbright","Fullbright","Toggle Fullbright.",true,true));
+            items.add(new FolderItem("alpha-module-manager","Alpha Module Manager","Central module management.",false,false));
+            items.add(new FolderItem("mod-profiles","Mod Profiles","Save and switch module configurations.",false,false));
+            items.add(new FolderItem("auto-gg","Auto GG","Automatically send GG after a detected kill or match end.",true,true));
+            items.add(new FolderItem("keybind-profiles","Keybind Profiles","Save and switch keybind sets.",false,false));
+            items.add(new FolderItem("auto-respawn","Auto Respawn","Automatically respawn after death.",false,false));
+            items.add(new FolderItem("core-experience","AlphaClient Core Experience","Shared quality-of-life foundation.",false,false));
+            items.add(new FolderItem("afk-timer","AFK Timer","Track AFK time.",true,true));
+            items.add(new FolderItem("session-timer","Session Timer","Track elapsed time in the client.",true,true));
+            items.add(new FolderItem("playtime-tracker","Playtime Tracker","Track time spent playing.",true,true));
+            items.add(new FolderItem("config-manager","Config Manager","Manage AlphaClient configuration files.",false,false));
+            items.add(new FolderItem("auto-reconnect","Auto Reconnect","Reconnect after an unexpected disconnect.",true,true));
+            items.add(new FolderItem("system-monitor","Alpha System Monitor","Show client and system diagnostics.",false,false));
+            items.add(new FolderItem("crash-reporter","Alpha Crash Reporter","Collect crash diagnostics.",false,false));
+            items.add(new FolderItem("update-checker","Alpha Update Checker","Check AlphaClient updates.",false,false));
+            items.add(new FolderItem("control-center","Alpha Control Center","Central place for AlphaClient controls.",false,false));
+            items.add(new FolderItem("keybind-manager","Keybind Manager","Configure keybinds.",false,false));
+            items.add(new FolderItem("feature-flags","Alpha Feature Flags","Control experimental feature availability.",false,false));
+            items.add(new FolderItem("inventory-search","Search Inv","Search player inventories, chests, and ender chests.",true,true));
+            items.add(new FolderItem("anvil-cost","Anvil Cost","Preview anvil operations and experience costs.",true,true));
+            items.add(new FolderItem("enchanting-names","Enchanting Names","Show localized enchantment names.",true,true));
+            items.add(new FolderItem("easter-eggs","Easter Eggs","Easter Eggs settings.",true,false));
+            items.add(new FolderItem("block-placement-preview","Block Placement Preview","Preview block placement positions and collision state.",true,true));
+        } else if ("misc".equals(openFolderId)) {
+            items.add(new FolderItem("server-history","Server History","Keep a history of joined servers.",true,true));
+            items.add(new FolderItem("fight-history","Fight History","Keep a history of fights.",true,true));
+        } else if ("singleplayer".equals(openFolderId) && hasActiveSingleplayerWorld()) {
+            items.add(new FolderItem("world-edit","World Edit","Singleplayer World Edit controls.",true,true));
+            items.add(new FolderItem("autotool","AutoTool","Automatically select the best hotbar tool for the targeted block.",true,true));
+            items.add(new FolderItem("alphahomes","AlphaHomes","Singleplayer home management.",true,false));
+            items.add(new FolderItem("private-vaults","Private Vaults","Singleplayer private vaults.",true,false));
+            items.add(new FolderItem("tree-excavate","Tree Excavate","Toggle tree excavation.",true,true));
+            items.add(new FolderItem("auto-replant","Auto Replant","Toggle automatic replanting.",true,true));
+            items.add(new FolderItem("inventory-sorter","Inventory Sorter","Manually grab and sort chest contents and inventory.",true,true));
+            items.add(new FolderItem("mob-stacker","Mob Stacker","Combine nearby mobs of the same type into stacks.",true,true));
+        }
+        String query=searchField==null?"":searchField.getText().trim().toLowerCase(Locale.ROOT);
+        if(query.isEmpty())return items;
+        List<FolderItem> filtered=new ArrayList<FolderItem>();
+        for(FolderItem item:items) if(item.name.toLowerCase(Locale.ROOT).contains(query)||item.description.toLowerCase(Locale.ROOT).contains(query)) filtered.add(item);
+        return filtered;
+    }
+
+    private FolderItem getSelectedFolderItem() {
+        for(FolderItem item:getFolderItems()) if(item.id.equals(selectedFolderItemId)) return item;
+        return null;
+    }
+    private void addFolderFeatureSettingsButtons() {
+        FolderItem item=getSelectedFolderItem();
+        buttonList.add(new AlphaMenuButton(FOLDER_FEATURE_BACK,contentLeft+8,panelTop+7,78,18,"← "+openFolderId.toUpperCase(Locale.ROOT)));
+        if(item!=null&&item.toggleable&&item.isImplemented&&item.isAvailable())
+            buttonList.add(new AlphaMenuButton(FOLDER_FEATURE_TOGGLE,contentLeft+8,panelTop+86,Math.max(90,contentRight-contentLeft-16),22,item.isEnabled()?"DISABLE MODULE":"ENABLE MODULE"));
+    }
+    private void drawFolderFeatureSettingsPanel(int mouseX,int mouseY,float partialTicks) {
+        FolderItem item=getSelectedFolderItem(); if(item==null)return;
+        drawString(fontRendererObj,"GENERAL  >  "+openFolderId.toUpperCase(Locale.ROOT),contentLeft+8,panelTop+34,0xFFB8BDC8);
+        drawString(fontRendererObj,item.name.toUpperCase(Locale.ROOT),contentLeft+8,panelTop+52,ACCENT);
+        drawWrappedTextLimited(item.description,contentLeft+8,panelTop+72,Math.max(80,contentRight-contentLeft-16),0xFFB8BDC8,5);
+        drawString(fontRendererObj,"STATUS: "+item.getStatus(),contentLeft+8,panelTop+150,item.isEnabled()?0xFF9CE2AC:0xFFB8BDC8);
+        if(!item.toggleable) drawWrappedTextLimited(item.isImplemented?"This entry is available, but its detailed controls are not yet integrated into the Mod Menu.":"This feature is planned and is not currently implemented.",contentLeft+8,panelTop+174,Math.max(80,contentRight-contentLeft-16),0xFFB8BDC8,4);
     }
 
     private void addModuleSettingsButtons() {
@@ -978,6 +1137,14 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
+        if (button.id == FOLDER_BACK) { openFolderId=""; selectedFolderItemId=""; scrollOffset=0; initGui(); return; }
+        if (button.id == FOLDER_FEATURE_BACK) { selectedFolderItemId=""; initGui(); return; }
+        if (button.id == FOLDER_FEATURE_TOGGLE) { FolderItem item=getSelectedFolderItem(); if(item!=null)item.toggle(); initGui(); return; }
+        if (button.id >= FOLDER_ITEM_BASE && button.id < FOLDER_ITEM_BASE + 100) {
+            List<FolderItem> items=getFolderItems(); int index=button.id-FOLDER_ITEM_BASE;
+            if(index>=0&&index<items.size()){selectedFolderItemId=items.get(index).id;initGui();}
+            return;
+        }
         if (button.id == POTION_MANAGER_BACK) { settingsSubpage = ""; initGui(); return; }
         if (button.id == POTION_PAGE_PREV) { potionEffectPage = Math.max(0, potionEffectPage - 1); potionEffectIndex = potionEffectPage * POTION_PAGE_SIZE; initGui(); return; }
         if (button.id == POTION_PAGE_NEXT) { potionEffectPage = Math.min(Math.max(0, (potionEffectIds.size() - 1) / POTION_PAGE_SIZE), potionEffectPage + 1); potionEffectIndex = potionEffectPage * POTION_PAGE_SIZE; initGui(); return; }
@@ -1134,6 +1301,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             if (categoryAccess) {
                 selectedCategory = category;
                 selectedModuleId = "";
+                openFolderId = "";
+                selectedFolderItemId = "";
                 scrollOffset = 0;
             }
 } else if (button.id >= MODULE_BASE) {
@@ -1157,22 +1326,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     }
                     return;
                 }
-                if ("singleplayer".equals(clickedModule.getId())) {
+                if ("singleplayer".equals(clickedModule.getId())
+                        || "misc".equals(clickedModule.getId())
+                        || "quality".equals(clickedModule.getId())) {
+                    if ("singleplayer".equals(clickedModule.getId()) && !hasActiveSingleplayerWorld()) return;
                     searchFocused = false;
                     if (searchField != null) searchField.setFocused(false);
-                    mc.displayGuiScreen(new SingleplayerGui(this));
-                    return;
-                }
-                if ("misc".equals(clickedModule.getId())) {
-                    searchFocused = false;
-                    if (searchField != null) searchField.setFocused(false);
-                    mc.displayGuiScreen(new MiscGui(this));
-                    return;
-                }
-                if ("quality".equals(clickedModule.getId())) {
-                    searchFocused = false;
-                    if (searchField != null) searchField.setFocused(false);
-                    mc.displayGuiScreen(new QualityGui(this));
+                    openFolderId = clickedModule.getId();
+                    selectedFolderItemId = "";
+                    selectedModuleId = "";
+                    scrollOffset = 0;
+                    initGui();
                     return;
                 }
                 if ("staffmods".equals(clickedModule.getId())) {
@@ -1229,6 +1393,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 scrollOffset = 0;
                 initGui();
             }
+            return;
+        }
+        if (keyCode == Keyboard.KEY_ESCAPE && isFolderFeatureSettingsOpen()) {
+            selectedFolderItemId = "";
+            initGui();
+            return;
+        }
+        if (keyCode == Keyboard.KEY_ESCAPE && isFolderOpen()) {
+            openFolderId = "";
+            selectedFolderItemId = "";
+            initGui();
             return;
         }
         if (keyCode == Keyboard.KEY_ESCAPE && isModuleSettingsOpen()) {
@@ -1306,6 +1481,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             // complete filtered module list so lower entries such as CPS remain reachable.
             if (mouseX < contentLeft || mouseX > contentRight
                     || mouseY < contentTop || mouseY > contentBottom) return;
+            if (isFolderOpen() && !isFolderFeatureSettingsOpen()) {
+                int maxOffset = Math.max(0, getFolderItems().size() - visibleRows() * 2);
+                scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset + (wheel < 0 ? 2 : -2)));
+                initGui();
+                return;
+            }
             List<AlphaModule> modules = getFilteredModules();
             int maxOffset = Math.max(0, modules.size() - visibleRows() * 2);
             scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset + (wheel < 0 ? 2 : -2)));
