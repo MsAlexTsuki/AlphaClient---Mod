@@ -53,8 +53,7 @@ public final class KeystrokesSettingsGui extends AlphaGuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x30000000);
-        drawRect(left, top, right, bottom, 0xE00A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFC83D);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "KEYSTROKES SETTINGS", width / 2, top + 12, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "AlphaClient color palette", width / 2, top + 28, 0xFFB8BDC8);
         int y = top + 155;
