@@ -1,7 +1,7 @@
 // --- Made By MsAlexTsuki ---
 package com.alpharip.staffmod.gui;
 
-import com.alpharip.staffmod.permissions.PermissionService;
+import com.alpharip.staffmod.permissions.SupabaseCommunityService;
 import net.minecraft.client.gui.GuiButton;
 import java.io.IOException;
 
@@ -30,7 +30,7 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
-        if (!PermissionService.hasStaffModsAccess()) {
+        if (!SupabaseCommunityService.hasStaffOperationsAccess()) {
             mc.displayGuiScreen(parent);
             return;
         }
@@ -62,7 +62,7 @@ public final class StaffOperationsGui extends AlphaGuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
-        if (!PermissionService.hasStaffModsAccess()) {
+        if (!SupabaseCommunityService.hasStaffOperationsAccess()) {
             mc.displayGuiScreen(parent);
             return;
         }
