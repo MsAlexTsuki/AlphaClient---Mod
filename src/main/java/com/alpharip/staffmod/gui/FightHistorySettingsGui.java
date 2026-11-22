@@ -28,19 +28,18 @@ public final class FightHistorySettingsGui extends AlphaGuiScreen {
         top = Math.max(12, height / 2 - 100);
         bottom = Math.min(height - 12, top + 200);
 
-        buttonList.add(new AlphaButton(TOGGLE, left + 20, top + 68, 260, 24,
+        buttonList.add(new AlphaSettingsButton(TOGGLE, left + 20, top + 68, 260, 24,
                 "FIGHT HISTORY: " + (FightHistoryManager.isEnabled() ? "ON" : "OFF"),
                 FightHistoryManager.isEnabled()));
-        buttonList.add(new AlphaButton(CLEAR_HISTORY, left + 20, top + 102,
+        buttonList.add(new AlphaSettingsButton(CLEAR_HISTORY, left + 20, top + 102,
                 260, 24, "CLEAR HISTORY"));
-        buttonList.add(new AlphaButton(BACK, left + 10, bottom - 29, 80, 20, "BACK"));
+        buttonList.add(new AlphaSettingsButton(BACK, left + 10, bottom - 29, 80, 20, "BACK"));
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawRect(0, 0, width, height, 0x18000000);
-        drawRect(left, top, right, bottom, 0xD90A0C11);
-        drawRect(left, top, right, top + 2, 0xFFFFD866);
+        AlphaSettingsRender.drawPanel(left, top, right, bottom);
         drawCenteredString(fontRendererObj, "FIGHT HISTORY SETTINGS",
                 width / 2, top + 17, 0xFFF3F4F6);
         drawCenteredString(fontRendererObj, "Control automatic fight recording",
