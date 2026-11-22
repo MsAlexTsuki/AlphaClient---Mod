@@ -573,25 +573,30 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if ("legacy-list".equals(settingsSubpage)) {
             int x = settingsLeft + 8;
             int y = panelTop + 82;
-            int w = Math.max(90, panelLeft + panelWidth - x - 12);
+            int totalWidth = Math.max(90, panelLeft + panelWidth - x - 12);
+            int columnGap = 6;
+            int buttonWidth = (totalWidth - columnGap) / 2;
+            int rowSpacing = 23;
+            int buttonHeight = 18;
             LegacyPvpSettings.load();
             LegacyPvpFeatureCatalog.Feature[] features = LegacyPvpFeatureCatalog.getAll();
-            int availableHeight = panelHeight - 98;
-            int rowSpacing = Math.max(15, Math.min(21, availableHeight / Math.max(1, features.length)));
-            int rowHeight = Math.max(13, Math.min(18, rowSpacing - 2));
             for (int i = 0; i < features.length; i++) {
-                buttonList.add(new AlphaMenuButton(LEGACY_FEATURE_BASE + i, x, y + i * rowSpacing, w, rowHeight, features[i].label));
+                int column = i % 2;
+                int row = i / 2;
+                int buttonX = x + column * (buttonWidth + columnGap);
+                buttonList.add(new AlphaMenuButton(LEGACY_FEATURE_BASE + i, buttonX,
+                        y + row * rowSpacing, buttonWidth, buttonHeight, features[i].label));
             }
             return;
         }
         if ("legacy-detail".equals(settingsSubpage)) {
             int x = settingsLeft + 8;
             int y = panelTop + 52;
-            int w = Math.max(90, panelLeft + panelWidth - x - 12);
-            buttonList.add(new AlphaMenuButton(LEGACY_DETAIL_BACK, x, y, w, 19, "BACK TO LEGACY PVP"));
+            buttonList.add(new AlphaMenuButton(LEGACY_DETAIL_BACK, x, y, 116, 18, "BACK TO LEGACY PVP"));
             LegacyPvpFeatureCatalog.Feature feature = getLegacySelectedFeature();
             if (feature != null && isLegacyToggleAvailable(feature.id)) {
-                buttonList.add(new AlphaMenuButton(LEGACY_TOGGLE, x, panelTop + 263, w, 18, getLegacyToggleLabel(feature.id)));
+                buttonList.add(new AlphaMenuButton(LEGACY_TOGGLE, x, panelTop + 263, 104, 18,
+                        getLegacyToggleLabel(feature.id)));
             }
             return;
         }
