@@ -2,13 +2,14 @@
 package com.alpharip.staffmod.hud.potionhudinfo;
 
 import com.alpharip.staffmod.gui.AlphaGuiScreen;
-import com.alpharip.staffmod.config.HudScaleConfig;
+import com.alpharip.staffmod.gui.AlphaButton;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
 import java.io.IOException;
+import java.util.Locale;
 
-/** Global Potion HUD settings. */
+/** Global Potion HUD settings, styled consistently with the AlphaClient menu. */
 public final class PotionHudInfoSettingsGui extends AlphaGuiScreen {
     private static final int ICONS=1, LEVELS=2, CHAT=3, ROMAN=4, OPACITY_DOWN=5, OPACITY_UP=6,
             SCALE_DOWN=7, SCALE_UP=8, EFFECTS=9, BACK=10;
@@ -20,20 +21,25 @@ public final class PotionHudInfoSettingsGui extends AlphaGuiScreen {
     @Override public void initGui() {
         settings.load();
         buttonList.clear();
-        int x = width / 2 - 110, y = height / 2 - 88;
-        buttonList.add(new GuiButton(ICONS, x, y, 220, 20, "RENDER ICONS: " + onOff(settings.isRenderIcons())));
-        buttonList.add(new GuiButton(LEVELS, x, y+24, 220, 20, "LEVELS ABOVE IV: " + onOff(settings.isRenderLevelsAbove4())));
-        buttonList.add(new GuiButton(CHAT, x, y+48, 220, 20, "SHOW WHILE CHAT: " + onOff(settings.isShowWhileChat())));
-        buttonList.add(new GuiButton(ROMAN, x, y+72, 220, 20, "ROMAN NUMERALS: " + onOff(settings.isRomanNumerals())));
-        buttonList.add(new GuiButton(OPACITY_DOWN, x, y+100, 105, 20, "OPACITY -"));
-        buttonList.add(new GuiButton(OPACITY_UP, x+115, y+100, 105, 20, "OPACITY +"));
-        buttonList.add(new GuiButton(SCALE_DOWN, x, y+124, 105, 20, "SCALE -"));
-        buttonList.add(new GuiButton(SCALE_UP, x+115, y+124, 105, 20, "SCALE +"));
-        buttonList.add(new GuiButton(EFFECTS, x, y+152, 220, 20, "EDIT POTION EFFECTS"));
-        buttonList.add(new GuiButton(BACK, width/2-55, y+180, 110, 20, "BACK"));
+        int left = width / 2 - 104;
+        int top = height / 2 - 102;
+        buttonList.add(new AlphaButton(ICONS, left, top + 34, 202, 22,
+                "Show potion icons  " + state(settings.isRenderIcons()), false, settings.isRenderIcons()));
+        buttonList.add(new AlphaButton(LEVELS, left, top + 60, 202, 22,
+                "Show amplifier above IV  " + state(settings.isRenderLevelsAbove4()), false, settings.isRenderLevelsAbove4()));
+        buttonList.add(new AlphaButton(CHAT, left, top + 86, 202, 22,
+                "Show while chat is open  " + state(settings.isShowWhileChat()), false, settings.isShowWhileChat()));
+        buttonList.add(new AlphaButton(ROMAN, left, top + 112, 202, 22,
+                "Roman numeral levels  " + state(settings.isRomanNumerals()), false, settings.isRomanNumerals()));
+        buttonList.add(new AlphaButton(OPACITY_DOWN, left, top + 151, 96, 22, "Opacity  −"));
+        buttonList.add(new AlphaButton(OPACITY_UP, left + 106, top + 151, 96, 22, "Opacity  +"));
+        buttonList.add(new AlphaButton(SCALE_DOWN, left, top + 177, 96, 22, "Size  −"));
+        buttonList.add(new AlphaButton(SCALE_UP, left + 106, top + 177, 96, 22, "Size  +"));
+        buttonList.add(new AlphaButton(EFFECTS, left, top + 211, 202, 23, "POTION EFFECTS", true));
+        buttonList.add(new AlphaButton(BACK, width / 2 - 43, top + 240, 86, 20, "BACK"));
     }
 
-    private String onOff(boolean value) { return value ? "ON" : "OFF"; }
+    private String state(boolean value) { return value ? "ON" : "OFF"; }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
@@ -48,17 +54,27 @@ public final class PotionHudInfoSettingsGui extends AlphaGuiScreen {
             case SCALE_UP: settings.setScale(settings.getScale()+0.05F); break;
             case EFFECTS: mc.displayGuiScreen(new PotionHudInfoEffectsGui(this)); return;
             case BACK: mc.displayGuiScreen(parent); return;
-            default: break;
+            default: return;
         }
         initGui();
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawRect(0,0,width,height,0x9906090F);
-        drawCenteredString(fontRendererObj, "POTION HUD", width/2, height/2-112, 0xFFFFFFFF);
-        drawCenteredString(fontRendererObj, "Opacity: " + settings.getOpacity() + " / 255", width/2, height/2+75, 0xFFB8BDC8);
-        drawCenteredString(fontRendererObj, "Scale: " + String.format(java.util.Locale.ROOT, "%.2f", settings.getScale()), width/2, height/2+87, 0xFFB8BDC8);
+        drawRect(0, 0, width, height, 0x50000000);
+        int left = width / 2 - 119, top = height / 2 - 119, right = width / 2 + 119, bottom = height / 2 + 136;
+        drawRect(left, top, right, bottom, 0xE60A0C12);
+        drawRect(left, top, right, top + 1, 0xFFFFD866);
+        drawRect(left, top + 1, left + 1, bottom - 1, 0x554B515D);
+        drawRect(right - 1, top + 1, right, bottom - 1, 0x554B515D);
+        drawCenteredString(fontRendererObj, "POTION HUD", width / 2, top + 10, 0xFFF3F4F6);
+        drawCenteredString(fontRendererObj, "DISPLAY", width / 2, top + 25, 0xFFFFD866);
+        drawString(fontRendererObj, "LAYOUT", left + 12, top + 121, 0xFFFFD866);
+        drawString(fontRendererObj, "Opacity", left + 12, top + 158, 0xFFB8BDC8);
+        drawString(fontRendererObj, settings.getOpacity() + " / 255", left + 132, top + 158, 0xFFF3F4F6);
+        drawString(fontRendererObj, "HUD size", left + 12, top + 184, 0xFFB8BDC8);
+        drawString(fontRendererObj, String.format(Locale.ROOT, "%.2f×", settings.getScale()), left + 132, top + 184, 0xFFF3F4F6);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
+
     @Override public boolean doesGuiPauseGame() { return false; }
 }
