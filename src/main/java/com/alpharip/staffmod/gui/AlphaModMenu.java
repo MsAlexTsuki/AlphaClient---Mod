@@ -461,6 +461,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     ? "General" : selectedCategory.getTitle();
             drawString(fontRendererObj, categoryName + "  >  " + moduleName,
                     contentLeft + 52, panelTop + 10, 0xFFB8BDC8);
+        } else if (isFolderFeatureSettingsOpen()) {
+            FolderItem selectedItem = getSelectedFolderItem();
+            String breadcrumb = "General  >  " + getFolderDisplayName(openFolderId);
+            if (selectedItem != null) breadcrumb += "  >  " + selectedItem.name;
+            drawString(fontRendererObj, breadcrumb, contentLeft + 52, panelTop + 10, 0xFFB8BDC8);
         } else {
             int itemCount = isFolderOpen() ? getFolderItems().size() : getFilteredModules().size();
             drawString(fontRendererObj, itemCount + (isFolderOpen() ? " entries" : " modules"),
@@ -469,17 +474,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     contentRight - 2, panelTop + 42, 5, 0xAA202630);
             searchField.drawTextBox();
             drawString(fontRendererObj, "BROWSE", panelLeft + 38, panelTop + 61, 0xFFB8BDC8);
-            String breadcrumb;
-            if (isFolderOpen()) {
-                breadcrumb = "General  >  " + getFolderDisplayName(openFolderId);
-                if (isFolderFeatureSettingsOpen()) {
-                    FolderItem selectedItem = getSelectedFolderItem();
-                    if (selectedItem != null) breadcrumb += "  >  " + selectedItem.name;
-                }
-            } else {
-                breadcrumb = selectedCategory == AlphaModule.Category.DONATOR
+            String breadcrumb = isFolderOpen()
+                    ? "General  >  " + getFolderDisplayName(openFolderId)
+                    : selectedCategory == AlphaModule.Category.DONATOR
                         ? "Donator ranks" : selectedCategory.getTitle();
-            }
             drawString(fontRendererObj, breadcrumb, contentLeft + 3, contentTop - 9, ACCENT);
         }
         if (isModuleSettingsOpen()) {
@@ -670,7 +668,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
     private void addFolderFeatureSettingsButtons() {
         FolderItem item=getSelectedFolderItem();
-        buttonList.add(new AlphaMenuButton(FOLDER_FEATURE_BACK,contentLeft+8,panelTop+7,78,18,"← "+openFolderId.toUpperCase(Locale.ROOT)));
+        buttonList.add(new AlphaMenuButton(FOLDER_FEATURE_BACK,contentLeft+8,panelTop+7,17,17,"←"));
         if(item!=null&&item.toggleable&&item.isImplemented&&item.isAvailable())
             buttonList.add(new AlphaMenuButton(FOLDER_FEATURE_TOGGLE,contentLeft+8,panelTop+86,Math.max(90,contentRight-contentLeft-16),22,item.isEnabled()?"DISABLE MODULE":"ENABLE MODULE"));
     }
