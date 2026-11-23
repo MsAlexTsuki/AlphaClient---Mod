@@ -424,10 +424,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             // Keep the profile manager visible until the user chooses a module category.
             return null;
         }
-        if (module == null || module.getCategory() != selectedCategory) {
-            List<AlphaModule> modules = AlphaModuleRegistry.getForCategory(selectedCategory);
-            return modules.isEmpty() ? null : modules.get(0);
-        }
+        // Never auto-select the first module when a category is opened.
+        // A module's settings must appear only after the user clicks its tile.
+        if (selectedModuleId == null || selectedModuleId.isEmpty()) return null;
+        if (module == null || module.getCategory() != selectedCategory) return null;
         return module;
     }
 
