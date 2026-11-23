@@ -457,8 +457,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (isModuleSettingsOpen()) {
             AlphaModule activeModule = AlphaModuleRegistry.find(selectedModuleId);
             String moduleName = activeModule == null ? "Module" : activeModule.getName();
-            drawString(fontRendererObj, "Mods  ›  " + selectedCategory.getTitle()
-                    + "  ›  " + moduleName, contentLeft + 52, panelTop + 10, 0xFFB8BDC8);
+            String categoryName = selectedCategory == AlphaModule.Category.PUBLIC
+                    ? "General" : selectedCategory.getTitle();
+            drawString(fontRendererObj, categoryName + "  >  " + moduleName,
+                    contentLeft + 52, panelTop + 10, 0xFFB8BDC8);
         } else {
             int itemCount = isFolderOpen() ? getFolderItems().size() : getFilteredModules().size();
             drawString(fontRendererObj, itemCount + (isFolderOpen() ? " entries" : " modules"),
@@ -467,10 +469,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     contentRight - 2, panelTop + 42, 5, 0xAA202630);
             searchField.drawTextBox();
             drawString(fontRendererObj, "BROWSE", panelLeft + 38, panelTop + 61, 0xFFB8BDC8);
-            String breadcrumb = isFolderOpen()
-                    ? "GENERAL  >  " + openFolderId.toUpperCase(Locale.ROOT)
-                    : (selectedCategory == AlphaModule.Category.DONATOR
-                        ? "Donator ranks" : selectedCategory.getTitle().toUpperCase(Locale.ROOT));
+            String breadcrumb;
+            if (isFolderOpen()) {
+                breadcrumb = "General  >  " + getFolderDisplayName(openFolderId);
+                if (isFolderFeatureSettingsOpen()) {
+                    FolderItem selectedItem = getSelectedFolderItem();
+                    if (selectedItem != null) breadcrumb += "  >  " + selectedItem.name;
+                }
+            } else {
+                breadcrumb = selectedCategory == AlphaModule.Category.DONATOR
+                        ? "Donator ranks" : selectedCategory.getTitle();
+            }
             drawString(fontRendererObj, breadcrumb, contentLeft + 3, contentTop - 9, ACCENT);
         }
         if (isModuleSettingsOpen()) {
@@ -524,6 +533,14 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         drawRect(exitX + 10, iconY + 9, exitX + 12, iconY + 11, 0xFFE6E8ED);
     }
 
+
+    private String getFolderDisplayName(String folderId) {
+        if ("quality".equals(folderId)) return "Quality";
+        if ("misc".equals(folderId)) return "Misc";
+        if ("singleplayer".equals(folderId)) return "Singleplayer";
+        return folderId == null || folderId.isEmpty() ? "General"
+                : folderId.substring(0, 1).toUpperCase(Locale.ROOT) + folderId.substring(1);
+    }
 
     private boolean isModuleSettingsOpen() {
         // Folder navigation has priority over any stale module selection.
@@ -659,11 +676,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
     private void drawFolderFeatureSettingsPanel(int mouseX,int mouseY,float partialTicks) {
         FolderItem item=getSelectedFolderItem(); if(item==null)return;
-        drawString(fontRendererObj,"GENERAL  >  "+openFolderId.toUpperCase(Locale.ROOT),contentLeft+8,panelTop+34,0xFFB8BDC8);
-        drawString(fontRendererObj,item.name.toUpperCase(Locale.ROOT),contentLeft+8,panelTop+52,ACCENT);
-        drawWrappedTextLimited(item.description,contentLeft+8,panelTop+72,Math.max(80,contentRight-contentLeft-16),0xFFB8BDC8,5);
-        drawString(fontRendererObj,"STATUS: "+item.getStatus(),contentLeft+8,panelTop+150,item.isEnabled()?0xFF9CE2AC:0xFFB8BDC8);
-        if(!item.toggleable) drawWrappedTextLimited(item.isImplemented?"This entry is available, but its detailed controls are not yet integrated into the Mod Menu.":"This feature is planned and is not currently implemented.",contentLeft+8,panelTop+174,Math.max(80,contentRight-contentLeft-16),0xFFB8BDC8,4);
+        drawString(fontRendererObj,"MODULE DETAILS",contentLeft+8,panelTop+40,ACCENT);
+        drawWrappedTextLimited(item.description,contentLeft+8,panelTop+62,Math.max(80,contentRight-contentLeft-16),0xFFB8BDC8,5);
+        drawString(fontRendererObj,"STATUS: "+item.getStatus(),contentLeft+8,panelTop+140,item.isEnabled()?0xFF9CE2AC:0xFFB8BDC8);
+        if(!item.toggleable) drawWrappedTextLimited(item.isImplemented?"This entry is available, but its detailed controls are not yet integrated into the Mod Menu.":"This feature is planned and is not currently implemented.",contentLeft+8,panelTop+164,Math.max(80,contentRight-contentLeft-16),0xFFB8BDC8,4);
     }
 
     private void addModuleSettingsButtons() {
@@ -950,7 +966,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     x, panelTop + 232, right - x - 4, 0xFFB8BDC8, 2);
             return;
         }
-        drawString(fontRendererObj,module==null?"MODULE NOT FOUND":module.getName().toUpperCase(Locale.ROOT),x,panelTop+40,ACCENT);
+        drawString(fontRendererObj,"MODULE DETAILS",x,panelTop+40,ACCENT);
         if(module==null)return;
         String id=module.getId();
         boolean specialized="fps".equals(id)||"ping".equals(id)||"cps".equals(id)||"combo-counter".equals(id)
