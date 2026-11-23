@@ -83,7 +83,8 @@ public final class RogueWorldEditGui extends AlphaGuiScreen {
         int top = (height - panelHeight) / 2;
         drawRect(left, top, left + panelWidth, top + panelHeight, 0xE00A0C11);
         drawRect(left, top, left + panelWidth, top + 2, ACCENT);
-        drawCenteredString(fontRendererObj, "WORLD EDIT", width / 2, top + 20, 0xFFF3F4F6);
+        drawString(fontRendererObj, "Rogue  >  WorldEdit", left + 14, top + 18, 0xFFB8BDC8);
+        drawCenteredString(fontRendererObj, "MODULE DETAILS", width / 2, top + 40, 0xFFF3F4F6);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
