@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Compact in-game AlphaClient module browser inspired by the supplied reference:
@@ -61,6 +63,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int ACCENT = 0xFFFFD866;
 
     private final GuiScreen parent;
+    // Bind each rendered module button to the exact module instance shown for that button.
+    private final Map<Integer, AlphaModule> moduleButtons = new HashMap<Integer, AlphaModule>();
     private AlphaModule.Category selectedCategory = AlphaModule.Category.PUBLIC;
     private String selectedModuleId = "staffmods";
     private int panelLeft, panelTop, panelWidth, panelHeight;
@@ -112,6 +116,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
+        moduleButtons.clear();
         if ("keystrokes-colors".equals(settingsSubpage)) Keyboard.enableRepeatEvents(true);
         panelWidth = Math.min(460, Math.max(280, width - 20));
         panelHeight = Math.min(300, Math.max(210, height - 24));
@@ -264,7 +269,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 int x = contentLeft + (local % 2) * (tileWidth + gap);
                 int y = contentTop + (local / 2) * (tileHeight + rowGap);
                 AlphaModule module = filtered.get(i);
-                buttonList.add(new ModuleTileButton(MODULE_BASE + i, x, y, tileWidth, tileHeight,
+                int moduleButtonId = MODULE_BASE + i;
+                moduleButtons.put(moduleButtonId, module);
+                buttonList.add(new ModuleTileButton(moduleButtonId, x, y, tileWidth, tileHeight,
                         module, module.getId().equals(selectedModuleId)));
             }
             }
@@ -1337,10 +1344,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 scrollOffset = 0;
             }
 } else if (button.id >= MODULE_BASE) {
-            List<AlphaModule> modules = getFilteredModules();
-            int index = button.id - MODULE_BASE;
-            if (index >= 0 && index < modules.size()) {
-                AlphaModule clickedModule = modules.get(index);
+            // Resolve the click against the module instance bound when the tile was rendered.
+            // Rebuilding the filtered list here can shift indices and route a click to another module.
+            AlphaModule clickedModule = moduleButtons.get(button.id);
+            if (clickedModule != null) {
                 // Re-check access at the action boundary, not only when drawing the list.
                 if (!clickedModule.isUnlocked()) {
                     selectedModuleId = "";
