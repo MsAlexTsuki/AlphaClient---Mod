@@ -262,9 +262,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int gridWidth = Math.max(180, contentRight - contentLeft);
             int gap = 10;
             int tileWidth = (gridWidth - gap) / 2;
-            int tileHeight = 72;
             int rowGap = 10;
-            int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
+            int visibleRows = moduleVisibleRows();
+            int tileHeight = Math.max(1,
+                    (contentBottom - contentTop - (visibleRows - 1) * rowGap) / visibleRows);
             int start = Math.min(scrollOffset, Math.max(0, filtered.size() - visibleRows * 2));
             for (int i = start; i < filtered.size() && i < start + visibleRows * 2; i++) {
                 int local = i - start;
@@ -408,6 +409,13 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             if (quality != null) result.add(quality);
         }
         return result;
+    }
+
+    private int moduleVisibleRows() {
+        int availableHeight = Math.max(1, contentBottom - contentTop);
+        int rowGap = 10;
+        int minimumTileHeight = 52;
+        return Math.max(1, (availableHeight + rowGap) / (minimumTileHeight + rowGap));
     }
 
     private int visibleRows() {
@@ -1563,7 +1571,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 return;
             }
             List<AlphaModule> modules = getFilteredModules();
-            int maxOffset = Math.max(0, modules.size() - visibleRows() * 2);
+            int maxOffset = Math.max(0, modules.size() - moduleVisibleRows() * 2);
             scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset + (wheel < 0 ? 2 : -2)));
             initGui();
         }
