@@ -405,6 +405,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
 
     private AlphaModule getSelectedModule() {
+        // Folder navigation owns the content area; never resolve a module while a folder is open.
+        if (isFolderOpen()) return null;
         // Scout is a folder view: never auto-select Pixel Garden in its details panel.
         // Pixel Garden opens only through an explicit click on its module tile.
         if (selectedCategory == AlphaModule.Category.SCOUT) return null;
@@ -515,7 +517,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
 
     private boolean isModuleSettingsOpen() {
-        return selectedModuleId != null && !selectedModuleId.isEmpty()
+        // Folder navigation has priority over any stale module selection.
+        return !isFolderOpen() && selectedModuleId != null && !selectedModuleId.isEmpty()
                 && !"staffmods".equals(selectedModuleId);
     }
 
@@ -1145,8 +1148,23 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == null) return;
         if (button.id == EXIT) { mc.displayGuiScreen(parent); return; }
-        if (button.id == FOLDER_BACK) { openFolderId=""; selectedFolderItemId=""; scrollOffset=0; initGui(); return; }
-        if (button.id == FOLDER_FEATURE_BACK) { selectedFolderItemId=""; initGui(); return; }
+        if (button.id == FOLDER_BACK) {
+            selectedFolderItemId = "";
+            selectedModuleId = "";
+            settingsSubpage = "";
+            openFolderId = "";
+            scrollOffset = 0;
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_FEATURE_BACK) {
+            // Return to the current folder, not to General or the module browser.
+            selectedFolderItemId = "";
+            selectedModuleId = "";
+            settingsSubpage = "";
+            initGui();
+            return;
+        }
         if (button.id == FOLDER_FEATURE_TOGGLE) { FolderItem item=getSelectedFolderItem(); if(item!=null)item.toggle(); initGui(); return; }
         if (button.id >= FOLDER_ITEM_BASE && button.id < FOLDER_ITEM_BASE + 100) {
             List<FolderItem> items=getFolderItems(); int index=button.id-FOLDER_ITEM_BASE;
@@ -1348,6 +1366,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     openFolderId = clickedModule.getId();
                     selectedFolderItemId = "";
                     selectedModuleId = "";
+                    settingsSubpage = "";
                     searchText = "";
                     if (searchField != null) searchField.setText("");
                     scrollOffset = 0;
@@ -1412,6 +1431,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         if (keyCode == Keyboard.KEY_ESCAPE && isFolderFeatureSettingsOpen()) {
             selectedFolderItemId = "";
+            selectedModuleId = "";
+            settingsSubpage = "";
             initGui();
             return;
         }
