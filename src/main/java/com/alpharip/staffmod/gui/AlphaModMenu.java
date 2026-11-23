@@ -80,6 +80,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private String settingsSubpage = "";
     private String openFolderId = "";
     private String selectedFolderItemId = "";
+    // Rebuild navigation buttons only after GuiScreen finishes dispatching the current click.
+    private boolean rebuildAfterMouseClick;
     private GuiTextField[] keystrokesColorFields = new GuiTextField[5];
     private static final int COLOR_SAVE = 701;
     private static final int COLOR_BACK = 702;
@@ -1161,7 +1163,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             settingsSubpage = "";
             openFolderId = "";
             scrollOffset = 0;
-            initGui();
+            rebuildAfterMouseClick = true;
             return;
         }
         if (button.id == FOLDER_FEATURE_BACK) {
@@ -1169,17 +1171,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             selectedFolderItemId = "";
             selectedModuleId = "";
             settingsSubpage = "";
-            initGui();
+            rebuildAfterMouseClick = true;
             return;
         }
-        if (button.id == FOLDER_FEATURE_TOGGLE) { FolderItem item=getSelectedFolderItem(); if(item!=null)item.toggle(); initGui(); return; }
+        if (button.id == FOLDER_FEATURE_TOGGLE) { FolderItem item=getSelectedFolderItem(); if(item!=null)item.toggle(); rebuildAfterMouseClick = true; return; }
         if (button.id >= FOLDER_ITEM_BASE && button.id < FOLDER_ITEM_BASE + 100) {
             List<FolderItem> items=getFolderItems(); int index=button.id-FOLDER_ITEM_BASE;
             if(index>=0&&index<items.size()){
                 selectedFolderItemId=items.get(index).id;
                 searchFocused=false;
                 if(searchField!=null)searchField.setFocused(false);
-                initGui();
+                rebuildAfterMouseClick = true;
             }
             return;
         }
@@ -1377,7 +1379,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     searchText = "";
                     if (searchField != null) searchField.setText("");
                     scrollOffset = 0;
-                    initGui();
+                    rebuildAfterMouseClick = true;
                     return;
                 }
                 if ("staffmods".equals(clickedModule.getId())) {
@@ -1465,6 +1467,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
+        if (rebuildAfterMouseClick) {
+            rebuildAfterMouseClick = false;
+            initGui();
+            return;
+        }
         if (searchField != null) {
             searchField.mouseClicked(mouseX, mouseY, mouseButton);
             searchFocused = searchField.isFocused();
