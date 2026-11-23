@@ -127,7 +127,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         sidebarWidth = 70;
         contentLeft = panelLeft + sidebarWidth + 10;
         contentRight = panelLeft + panelWidth - 112;
-        contentTop = panelTop + 49;
+        contentTop = panelTop + 66;
         contentBottom = panelTop + panelHeight - 25;
         settingsLeft = (isModuleSettingsOpen() || isFolderFeatureSettingsOpen()) ? contentLeft : contentRight + 8;
 
@@ -262,8 +262,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int gridWidth = Math.max(180, contentRight - contentLeft);
             int gap = 10;
             int tileWidth = (gridWidth - gap) / 2;
-            int tileHeight = 62;
-            int rowGap = 9;
+            int tileHeight = 72;
+            int rowGap = 10;
             int visibleRows = Math.max(1, (contentBottom - contentTop) / (tileHeight + rowGap));
             int start = Math.min(scrollOffset, Math.max(0, filtered.size() - visibleRows * 2));
             for (int i = start; i < filtered.size() && i < start + visibleRows * 2; i++) {
@@ -372,7 +372,10 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private List<AlphaModule> getFilteredModules() {
         List<AlphaModule> result = new ArrayList<AlphaModule>();
         String query = searchField == null ? "" : searchField.getText().trim().toLowerCase(Locale.ROOT);
-        for (AlphaModule module : AlphaModuleRegistry.getForCategory(selectedCategory)) {
+        List<AlphaModule> candidates = query.isEmpty()
+                ? AlphaModuleRegistry.getForCategory(selectedCategory)
+                : AlphaModuleRegistry.getAll();
+        for (AlphaModule module : candidates) {
             // The Singleplayer folder is only available inside an active integrated-server world.
             if ("singleplayer".equals(module.getId()) && !hasActiveSingleplayerWorld()) continue;
             // World Edit is managed only from the Singleplayer -> World Edit screen.
@@ -386,7 +389,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
 
         // Keep the dedicated General folders in a fixed order at the end of the list.
-        if (selectedCategory == AlphaModule.Category.PUBLIC) {
+        if (query.isEmpty() && selectedCategory == AlphaModule.Category.PUBLIC) {
             AlphaModule singleplayer = null;
             AlphaModule misc = null;
             AlphaModule quality = null;
@@ -410,7 +413,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private int visibleRows() {
         // Keep this in sync with the regular module tile layout in initGui().
         // Each row is 62px tall with a 9px gap.
-        return Math.max(1, (contentBottom - contentTop) / 71);
+        return Math.max(1, (contentBottom - contentTop) / 82);
     }
 
     private AlphaModule getSelectedModule() {
@@ -452,8 +455,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(ALPHA_LOGO);
         GlStateManager.color(1F, 1F, 1F, 1F);
-        drawScaledCustomSizeModalRect(panelLeft + 39, panelTop + 8, 0.0F, 0.0F, 1024, 1024, 34, 34, 1024.0F, 1024.0F);
-        drawString(fontRendererObj, "MODS", panelLeft + 38, panelTop + 45, 0xFFF0F1F4);
+        drawScaledCustomSizeModalRect(panelLeft + 18, panelTop + 8, 0.0F, 0.0F, 1024, 1024, 34, 34, 1024.0F, 1024.0F);
+        drawString(fontRendererObj, "Mods", panelLeft + (sidebarWidth - fontRendererObj.getStringWidth("Mods")) / 2, panelTop + 45, 0xFFF0F1F4);
         if (isModuleSettingsOpen()) {
             AlphaModule activeModule = AlphaModuleRegistry.find(selectedModuleId);
             String moduleName = activeModule == null ? "Module" : activeModule.getName();
@@ -473,9 +476,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             AlphaMenuRender.roundedRect(contentLeft + 2, panelTop + 24,
                     contentRight - 2, panelTop + 42, 5, 0xAA202630);
             searchField.drawTextBox();
-            drawString(fontRendererObj, "BROWSE", panelLeft + 38, panelTop + 61, 0xFFB8BDC8);
-            String breadcrumb = isFolderOpen()
-                    ? "General  >  " + getFolderDisplayName(openFolderId)
+            if (searchField.getText().trim().isEmpty() && !searchField.isFocused()) {
+                drawString(fontRendererObj, "Search for Modules", contentLeft + 8, panelTop + 29, 0xFF777F8D);
+            }
+            String breadcrumb = !searchField.getText().trim().isEmpty() ? "Search Results"
+                    : isFolderOpen() ? "General  >  " + getFolderDisplayName(openFolderId)
                     : selectedCategory == AlphaModule.Category.DONATOR
                         ? "Donator ranks" : selectedCategory.getTitle();
             drawString(fontRendererObj, breadcrumb, contentLeft + 3, contentTop - 9, ACCENT);
@@ -1407,6 +1412,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                         clickedModule.setEnabled(!clickedModule.isEnabled());
                     }
                 } else {
+                    selectedCategory = clickedModule.getCategory();
                     selectedModuleId = clickedModule.getId();
                     // Module settings now open in the right-hand panel of this menu.
                     initGui();
@@ -1447,6 +1453,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                 searchField.textboxKeyTyped(typedChar, keyCode);
                 searchText = searchField.getText();
                 searchFocused = true;
+                if (!searchText.trim().isEmpty()) {
+                    openFolderId = "";
+                    selectedFolderItemId = "";
+                    selectedModuleId = "";
+                }
                 scrollOffset = 0;
                 initGui();
             }
