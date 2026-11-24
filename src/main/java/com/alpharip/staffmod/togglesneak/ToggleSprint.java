@@ -1,8 +1,8 @@
 package com.alpharip.staffmod.togglesneak;
 
-/** Local ToggleSprint state; default module enablement matches the original idea scaffold. */
+/** Local ToggleSprint state; module is available immediately after its activation key is assigned. */
 public final class ToggleSprint {
-    private boolean enabled;
+    private boolean enabled = true;
     private boolean toggled;
 
     public boolean isEnabled() { return enabled; }
