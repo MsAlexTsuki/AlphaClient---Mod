@@ -1545,3 +1545,19 @@ Folder: `MinecraftWindowAlphaClient/` (a sibling of `staffops/`).
 **Current status:** The standalone title formatter, JAR-version lookup, enable setting, controller, and LWJGL 2 target adapter are present in source. The intended example is `AlphaClient 0.5.XX + Forge 1.8.9`, with the AlphaClient version read from the actual installed JAR metadata.
 
 **Still missing / not verified:** Automatic invocation at the correct Minecraft display lifecycle point, module/menu registration, settings persistence or GUI, and compile/runtime verification. The prototype has not been built or tested in Minecraft 1.8.9 / Forge 11.15.1.2318. The version resolver returns `Unknown` if the packaged JAR does not contain readable version metadata. No AlphaClient Core, `development`, Alpha Launcher, or Supabase integration is included.
+
+
+## ToggleSneak & ToggleSprint
+
+Folder: `togglesneak/` (a sibling of `staffops/`).
+
+- **ToggleSneak.java** — Holds local enabled/toggled state for sneak. It starts enabled but not toggled; disabling the module clears its active state.
+- **ToggleSprint.java** — Holds local enabled/toggled state for sprint. It starts enabled but not toggled; disabling the module clears its active state.
+- **ToggleMovementKeyBindings.java** — Registers separate user-configurable activation keybindings. Both default to unbound so the prototype does not take over an existing control.
+- **ToggleMovementKeyHandler.java** — Consumes the activation key presses on client ticks and applies the states to Minecraft's existing vanilla sneak/sprint key bindings. It preserves physical keyboard/mouse input when a toggle is off, and releases movement keys while a GUI is open or the game is unfocused.
+- **ToggleMovementRuntime.java** — Owns the two state models and event handler with explicit start/stop methods. It is not started automatically by AlphaClient Core.
+- **assets/alphaclient/lang/en_US.lang** — Supplies the movement category and keybinding labels.
+
+**Current status:** The standalone state models, configurable activation bindings, client-tick adapter, explicit runtime lifecycle, and English keybinding labels are present in source. Both modules start enabled with their toggled movement state off; assign activation keys in Options → Controls.
+
+**Still missing / not verified:** The runtime is not wired into a client lifecycle or module menu, and no settings GUI or persistence is included. Forge compilation and Minecraft 1.8.9 in-game behavior have not been verified. No AlphaClient Core, `development`, Alpha Launcher, or Supabase integration is included.
