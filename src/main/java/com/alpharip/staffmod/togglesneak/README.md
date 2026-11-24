@@ -16,7 +16,7 @@ Standalone Minecraft 1.8.9 / Forge 11.15.1.2318 / Java 8 prototype.
 ## Current defaults
 
 - ToggleSneak module enabled: yes (matching the original idea scaffold).
-- ToggleSprint module enabled: no (matching the original idea scaffold).
+- ToggleSprint module enabled: yes.
 - Both activation keybindings: unbound. Assign them in Minecraft Options → Controls before use.
 - Both toggled movement states: off at startup.
 
