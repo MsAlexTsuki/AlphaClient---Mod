@@ -4,7 +4,7 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.input.Keyboard;
 
-/** Configurable activation keys; both start unbound to avoid taking over existing controls. */
+/** User-configurable activation bindings for the two toggle modules. */
 public final class ToggleMovementKeyBindings {
     public static final KeyBinding TOGGLE_SNEAK = new KeyBinding(
             "key.alphaclient.togglesneak",
@@ -27,5 +27,19 @@ public final class ToggleMovementKeyBindings {
         ClientRegistry.registerKeyBinding(TOGGLE_SNEAK);
         ClientRegistry.registerKeyBinding(TOGGLE_SPRINT);
         registered = true;
+    }
+
+    public static boolean consumeSneakPress() {
+        return consumePress(TOGGLE_SNEAK);
+    }
+
+    public static boolean consumeSprintPress() {
+        return consumePress(TOGGLE_SPRINT);
+    }
+
+    private static boolean consumePress(KeyBinding binding) {
+        boolean pressed = false;
+        while (binding.isPressed()) pressed = true;
+        return pressed;
     }
 }
