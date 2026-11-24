@@ -243,7 +243,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
         if (!isModuleSettingsOpen() && !isFolderFeatureSettingsOpen()) {
             if (isFolderOpen()) {
-                buttonList.add(new AlphaMenuButton(FOLDER_BACK, contentLeft, panelTop + 7, 78, 18, "← GENERAL"));
+                buttonList.add(new AlphaMenuButton(FOLDER_BACK, contentLeft + 84, panelTop + 7, 78, 18, "← GENERAL"));
                 List<FolderItem> folderItems = getFolderItems();
                 int gridWidth = Math.max(180, contentRight - contentLeft);
                 int gap = 10, tileWidth = (gridWidth - gap) / 2, tileHeight = 48, rowGap = 8;
@@ -480,7 +480,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         } else {
             int itemCount = isFolderOpen() ? getFolderItems().size() : getFilteredModules().size();
             drawString(fontRendererObj, itemCount + (isFolderOpen() ? " entries" : " modules"),
-                    contentLeft + (isFolderOpen() ? 84 : 4), panelTop + 8, 0xFFB8BDC8);
+                    contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
             AlphaMenuRender.roundedRect(contentLeft + 2, panelTop + 24,
                     contentRight - 2, panelTop + 42, 5, 0xAA202630);
             searchField.drawTextBox();
