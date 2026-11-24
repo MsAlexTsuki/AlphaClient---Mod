@@ -1,6 +1,6 @@
-package com.alpharip.staffmod;
+package com.alpharip.staffmod.Bestiary;
 
-/** Receives observations from a future client-world/entity scanner. */
+/** Accepts confirmed player kills; sightings and encounters never unlock entries. */
 public final class BestiaryTracker {
     private final BestiaryBook book;
 
@@ -9,8 +9,8 @@ public final class BestiaryTracker {
         this.book = book;
     }
 
-    public BestiaryEntry onMobEncounter(String registryId, String displayName, String worldName, long timestamp) {
-        return book.record(registryId, displayName, worldName, timestamp);
+    public BestiaryEntry onMobKilled(String registryId, String displayName, String worldName, long timestamp) {
+        return book.recordKill(registryId, displayName, worldName, timestamp);
     }
 
     public BestiaryBook getBook() { return book; }
