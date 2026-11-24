@@ -480,7 +480,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         } else {
             int itemCount = isFolderOpen() ? getFolderItems().size() : getFilteredModules().size();
             drawString(fontRendererObj, itemCount + (isFolderOpen() ? " entries" : " modules"),
-                    contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
+                    contentLeft + (isFolderOpen() ? 84 : 4), panelTop + 8, 0xFFB8BDC8);
             AlphaMenuRender.roundedRect(contentLeft + 2, panelTop + 24,
                     contentRight - 2, panelTop + 42, 5, 0xAA202630);
             searchField.drawTextBox();
