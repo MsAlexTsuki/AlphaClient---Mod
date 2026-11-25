@@ -1453,7 +1453,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             return;
         }
         if (button.id == FOLDER_INVENTORY_SEARCH_MODE) {
-            com.alpharip.staffmod.inventorysearch.InventorySearchSettings settings = null;
             com.alpharip.staffmod.inventorysearch.InventorySearchSettings.setMode(
                     com.alpharip.staffmod.inventorysearch.InventorySearchSettings.getMode().next());
             initGui();
