@@ -61,6 +61,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int FOLDER_AUTORECONNECT_DELAY_DOWN = 314, FOLDER_AUTORECONNECT_DELAY_UP = 315;
     private static final int FOLDER_AUTOGG_DELAY_DOWN = 317, FOLDER_AUTOGG_DELAY_UP = 318;
     private static final int FOLDER_AFK_DISPLAY = 330, FOLDER_AFK_BACKGROUND = 331, FOLDER_AFK_COLOR = 332;
+    private static final int FOLDER_SESSION_BACKGROUND = 333, FOLDER_SESSION_COLOR = 334;
     private static final int FOLDER_ITEM_BASE = 900;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
@@ -722,6 +723,15 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             buttonList.add(new AlphaMenuButton(FOLDER_AFK_COLOR, contentLeft + 8,
                     panelTop + 152, settingsWidth, 18,
                     "TEXT COLOR: " + com.alpharip.staffmod.hud.AfkTimerHud.getColorName()));
+        } else if ("session-timer".equals(item.id)) {
+            int settingsWidth = Math.max(90, contentRight - contentLeft - 16);
+            buttonList.add(new AlphaMenuButton(FOLDER_SESSION_BACKGROUND, contentLeft + 8,
+                    panelTop + 108, settingsWidth, 18,
+                    "HUD BACKGROUND: " + (com.alpharip.staffmod.hud.SessionTimerHud.isShowBackground() ? "ON" : "OFF"),
+                    com.alpharip.staffmod.hud.SessionTimerHud.isShowBackground()));
+            buttonList.add(new AlphaMenuButton(FOLDER_SESSION_COLOR, contentLeft + 8,
+                    panelTop + 130, settingsWidth, 18,
+                    "TEXT COLOR: " + com.alpharip.staffmod.hud.SessionTimerHud.getColorName()));
         }
 
         if ("server-history".equals(item.id)) {
@@ -750,8 +760,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         int textWidth = Math.max(80, contentRight - contentLeft - 16);
         drawString(fontRendererObj, "MODULE DETAILS", textX, panelTop + 40, ACCENT);
         drawWrappedTextLimited(item.description, textX, panelTop + 62, textWidth, 0xFFB8BDC8, 2);
-        drawString(fontRendererObj, "STATUS: " + item.getStatus(), textX,
-                panelTop + ("afk-timer".equals(item.id) ? 178 : 140),
+        int statusY = "afk-timer".equals(item.id) ? 178
+                : ("session-timer".equals(item.id) ? 156 : 140);
+        drawString(fontRendererObj, "STATUS: " + item.getStatus(), textX, panelTop + statusY,
                 item.isEnabled() ? 0xFF9CE2AC : 0xFFB8BDC8);
 
         if ("server-history".equals(item.id)) {
@@ -1367,6 +1378,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         if (button.id == FOLDER_AFK_COLOR) {
             com.alpharip.staffmod.hud.AfkTimerHud.cycleColor();
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_SESSION_BACKGROUND) {
+            com.alpharip.staffmod.hud.SessionTimerHud.setShowBackground(
+                    !com.alpharip.staffmod.hud.SessionTimerHud.isShowBackground());
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_SESSION_COLOR) {
+            com.alpharip.staffmod.hud.SessionTimerHud.cycleColor();
             initGui();
             return;
         }
