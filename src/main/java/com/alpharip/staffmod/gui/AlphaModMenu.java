@@ -64,6 +64,8 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int FOLDER_SESSION_BACKGROUND = 333, FOLDER_SESSION_COLOR = 334;
     private static final int FOLDER_PLAYTIME_FORMAT = 335, FOLDER_PLAYTIME_BACKGROUND = 336, FOLDER_PLAYTIME_COLOR = 337;
     private static final int FOLDER_INVENTORY_SEARCH_MODE = 338;
+    private static final int FOLDER_BLOCK_PREVIEW_COLLISION = 339;
+    private static final int FOLDER_BLOCK_PREVIEW_OPACITY_DOWN = 340, FOLDER_BLOCK_PREVIEW_OPACITY_UP = 341;
     private static final int FOLDER_ITEM_BASE = 900;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
@@ -751,6 +753,22 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             buttonList.add(new AlphaMenuButton(FOLDER_INVENTORY_SEARCH_MODE, contentLeft + 8,
                     panelTop + 108, settingsWidth, 18,
                     "SEARCH MODE: " + com.alpharip.staffmod.inventorysearch.InventorySearchSettings.getMode().getLabel()));
+        } else if ("block-placement-preview".equals(item.id)) {
+            int settingsWidth = Math.max(90, contentRight - contentLeft - 16);
+            buttonList.add(new AlphaMenuButton(FOLDER_BLOCK_PREVIEW_COLLISION, contentLeft + 8,
+                    panelTop + 108, settingsWidth, 18,
+                    "SHOW COLLISION: " + (com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings.isShowCollision() ? "ON" : "OFF"),
+                    com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings.isShowCollision()));
+            int rowY = panelTop + 130;
+            buttonList.add(new AlphaMenuButton(FOLDER_BLOCK_PREVIEW_OPACITY_DOWN,
+                    contentLeft + 8, rowY, 32, 18, "-"));
+            GuiButton opacityLabel = new AlphaMenuButton(342, contentLeft + 44, rowY,
+                    Math.max(50, contentRight - contentLeft - 96), 18,
+                    "OPACITY: " + Math.round(com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings.getOpacity() * 100.0F) + "%");
+            opacityLabel.enabled = false;
+            buttonList.add(opacityLabel);
+            buttonList.add(new AlphaMenuButton(FOLDER_BLOCK_PREVIEW_OPACITY_UP,
+                    contentRight - 40, rowY, 32, 18, "+"));
         }
 
         if ("server-history".equals(item.id)) {
@@ -798,9 +816,14 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         drawString(fontRendererObj, "MODULE DETAILS", textX, panelTop + 40, ACCENT);
         drawWrappedTextLimited(item.description, textX, panelTop + 62, textWidth, 0xFFB8BDC8, 2);
         int statusY = ("afk-timer".equals(item.id) || "playtime-tracker".equals(item.id)) ? 178
-                : ("session-timer".equals(item.id) ? 156 : 140);
+                : ("block-placement-preview".equals(item.id) ? 164
+                : ("session-timer".equals(item.id) ? 156 : 140));
         drawString(fontRendererObj, "STATUS: " + item.getStatus(), textX, panelTop + statusY,
                 item.isEnabled() ? 0xFF9CE2AC : 0xFFB8BDC8);
+        if ("block-placement-preview".equals(item.id)) {
+            drawString(fontRendererObj, "Opacity controls preview transparency in 10% steps.",
+                    textX, panelTop + 151, 0xFFB8BDC8);
+        }
         if ("playtime-tracker".equals(item.id)) {
             long totalSeconds = com.alpharip.staffmod.hud.PlaytimeTrackerHud.getTotalPlaytimeSeconds();
             drawString(fontRendererObj, "TOTAL PLAYTIME: " + com.alpharip.staffmod.hud.PlaytimeTrackerHud.formatDuration(totalSeconds),
@@ -1449,6 +1472,19 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         if (button.id == FOLDER_PLAYTIME_COLOR) {
             com.alpharip.staffmod.hud.PlaytimeTrackerHud.cycleColor();
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_BLOCK_PREVIEW_COLLISION) {
+            com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings.setShowCollision(
+                    !com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings.isShowCollision());
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_BLOCK_PREVIEW_OPACITY_DOWN || button.id == FOLDER_BLOCK_PREVIEW_OPACITY_UP) {
+            float delta = button.id == FOLDER_BLOCK_PREVIEW_OPACITY_DOWN ? -0.1F : 0.1F;
+            com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings.setOpacity(
+                    com.alpharip.staffmod.BlockPlacementPreview.BlockPlacementPreviewSettings.getOpacity() + delta);
             initGui();
             return;
         }
