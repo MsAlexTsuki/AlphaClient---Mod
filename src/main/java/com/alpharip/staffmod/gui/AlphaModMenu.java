@@ -58,6 +58,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int SETTINGS_BACK = 308, SETTINGS_PREVIOUS = 309;
     private static final int FOLDER_BACK = 310, FOLDER_FEATURE_BACK = 311, FOLDER_FEATURE_TOGGLE = 312;
     private static final int FOLDER_HISTORY_CLEAR = 313, FOLDER_HISTORY_JOIN_BASE = 320;
+    private static final int FOLDER_AUTORECONNECT_DELAY_DOWN = 314, FOLDER_AUTORECONNECT_DELAY_UP = 315;
     private static final int FOLDER_ITEM_BASE = 900;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
@@ -685,6 +686,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if ("server-history".equals(item.id) || "fight-history".equals(item.id)) {
             buttonList.add(new AlphaMenuButton(FOLDER_HISTORY_CLEAR, contentLeft + 8, panelTop + 108,
                     Math.max(90, contentRight - contentLeft - 16), 18, "CLEAR HISTORY"));
+        } else if ("auto-reconnect".equals(item.id)) {
+            int rowY = panelTop + 108;
+            buttonList.add(new AlphaMenuButton(FOLDER_AUTORECONNECT_DELAY_DOWN,
+                    contentLeft + 8, rowY, 32, 18, "-"));
+            GuiButton delayLabel = new AlphaMenuButton(316, contentLeft + 44, rowY,
+                    Math.max(50, contentRight - contentLeft - 96), 18,
+                    "DELAY: " + String.format(Locale.ROOT, "%.1f", com.alpharip.staffmod.quality.AutoReconnectMod.getDelaySeconds()) + "s");
+            delayLabel.enabled = false;
+            buttonList.add(delayLabel);
+            buttonList.add(new AlphaMenuButton(FOLDER_AUTORECONNECT_DELAY_UP,
+                    contentRight - 40, rowY, 32, 18, "+"));
         }
 
         if ("server-history".equals(item.id)) {
@@ -1299,6 +1311,14 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             FolderItem item = getSelectedFolderItem();
             if (item != null) item.toggle();
             rebuildAfterMouseClick = true;
+            return;
+        }
+        if (button.id == FOLDER_AUTORECONNECT_DELAY_DOWN
+                || button.id == FOLDER_AUTORECONNECT_DELAY_UP) {
+            double delta = button.id == FOLDER_AUTORECONNECT_DELAY_DOWN ? -0.5D : 0.5D;
+            com.alpharip.staffmod.quality.AutoReconnectMod.setDelaySeconds(
+                    com.alpharip.staffmod.quality.AutoReconnectMod.getDelaySeconds() + delta);
+            initGui();
             return;
         }
         if (button.id == FOLDER_HISTORY_CLEAR) {
