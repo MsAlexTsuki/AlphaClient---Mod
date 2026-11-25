@@ -643,10 +643,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             items.add(new FolderItem("session-timer","Session Timer","Track elapsed time in the client.",true,true));
             items.add(new FolderItem("playtime-tracker","Playtime Tracker","Track time spent playing.",true,true));
             items.add(new FolderItem("auto-reconnect","Auto Reconnect","Reconnect after an unexpected disconnect.",true,true));
-            items.add(new FolderItem("update-checker","Alpha Update Checker","Check AlphaClient updates.",false,false));
-            items.add(new FolderItem("control-center","Alpha Control Center","Central place for AlphaClient controls.",false,false));
-            items.add(new FolderItem("keybind-manager","Keybind Manager","Configure keybinds.",false,false));
-            items.add(new FolderItem("feature-flags","Alpha Feature Flags","Control experimental feature availability.",false,false));
             items.add(new FolderItem("inventory-search","Search Inv","Search player inventories, chests, and ender chests.",true,true));
             items.add(new FolderItem("anvil-cost","Anvil Cost","Preview anvil operations and experience costs.",true,true));
             items.add(new FolderItem("enchanting-names","Enchanting Names","Show localized enchantment names.",true,true));
