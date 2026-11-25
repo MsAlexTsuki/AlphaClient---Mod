@@ -639,7 +639,6 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     
             items.add(new FolderItem("auto-gg","Auto GG","Automatically send GG after a detected kill or match end.",true,true));
             items.add(new FolderItem("auto-respawn","Auto Respawn","Automatically respawn after death.",false,false));
-            items.add(new FolderItem("core-experience","AlphaClient Core Experience","Shared quality-of-life foundation.",false,false));
             items.add(new FolderItem("afk-timer","AFK Timer","Track AFK time.",true,true));
             items.add(new FolderItem("session-timer","Session Timer","Track elapsed time in the client.",true,true));
             items.add(new FolderItem("playtime-tracker","Playtime Tracker","Track time spent playing.",true,true));
