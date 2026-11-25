@@ -256,8 +256,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                     int local = i - start;
                     int x = contentLeft + (local % 2) * (tileWidth + gap);
                     int y = contentTop + (local / 2) * (tileHeight + rowGap);
-                    buttonList.add(new AlphaMenuButton(FOLDER_ITEM_BASE + i, x, y, tileWidth, tileHeight,
-                            item.name + "  ·  " + item.getStatus(), false, item.isImplemented));
+                    buttonList.add(new FolderItemTileButton(FOLDER_ITEM_BASE + i, x, y, tileWidth, tileHeight,
+                            item.id, item.name, item.isImplemented, item.toggleable && item.isAvailable(),
+                            item.isEnabled(), item.id.equals(selectedFolderItemId)));
                 }
             } else {
             List<AlphaModule> filtered = getFilteredModules();
@@ -1207,9 +1208,15 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (button.id >= FOLDER_ITEM_BASE && button.id < FOLDER_ITEM_BASE + 100) {
             List<FolderItem> items=getFolderItems(); int index=button.id-FOLDER_ITEM_BASE;
             if(index>=0&&index<items.size()){
-                selectedFolderItemId=items.get(index).id;
-                searchFocused=false;
-                if(searchField!=null)searchField.setFocused(false);
+                FolderItem item = items.get(index);
+                if (button instanceof FolderItemTileButton
+                        && ((FolderItemTileButton) button).wasSwitchClicked()) {
+                    item.toggle();
+                } else {
+                    selectedFolderItemId=item.id;
+                    searchFocused=false;
+                    if(searchField!=null)searchField.setFocused(false);
+                }
                 rebuildAfterMouseClick = true;
             }
             return;
