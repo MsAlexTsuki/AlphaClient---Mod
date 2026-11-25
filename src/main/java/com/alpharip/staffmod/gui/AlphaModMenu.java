@@ -63,6 +63,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int FOLDER_AFK_DISPLAY = 330, FOLDER_AFK_BACKGROUND = 331, FOLDER_AFK_COLOR = 332;
     private static final int FOLDER_SESSION_BACKGROUND = 333, FOLDER_SESSION_COLOR = 334;
     private static final int FOLDER_PLAYTIME_FORMAT = 335, FOLDER_PLAYTIME_BACKGROUND = 336, FOLDER_PLAYTIME_COLOR = 337;
+    private static final int FOLDER_INVENTORY_SEARCH_MODE = 338;
     private static final int FOLDER_ITEM_BASE = 900;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
@@ -745,6 +746,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             buttonList.add(new AlphaMenuButton(FOLDER_PLAYTIME_COLOR, contentLeft + 8,
                     panelTop + 152, settingsWidth, 18,
                     "TEXT COLOR: " + com.alpharip.staffmod.hud.PlaytimeTrackerHud.getColorName()));
+        } else if ("inventory-search".equals(item.id)) {
+            int settingsWidth = Math.max(90, contentRight - contentLeft - 16);
+            buttonList.add(new AlphaMenuButton(FOLDER_INVENTORY_SEARCH_MODE, contentLeft + 8,
+                    panelTop + 108, settingsWidth, 18,
+                    "SEARCH MODE: " + com.alpharip.staffmod.inventorysearch.InventorySearchSettings.getMode().getLabel()));
         }
 
         if ("server-history".equals(item.id)) {
@@ -1443,6 +1449,13 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         if (button.id == FOLDER_PLAYTIME_COLOR) {
             com.alpharip.staffmod.hud.PlaytimeTrackerHud.cycleColor();
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_INVENTORY_SEARCH_MODE) {
+            com.alpharip.staffmod.inventorysearch.InventorySearchSettings settings = null;
+            com.alpharip.staffmod.inventorysearch.InventorySearchSettings.setMode(
+                    com.alpharip.staffmod.inventorysearch.InventorySearchSettings.getMode().next());
             initGui();
             return;
         }
