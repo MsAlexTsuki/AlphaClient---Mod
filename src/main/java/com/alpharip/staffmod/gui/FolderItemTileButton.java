@@ -56,7 +56,7 @@ public final class FolderItemTileButton extends GuiButton {
         String icon = iconFor(moduleId);
         int iconWidth = mc.fontRendererObj.getStringWidth(icon);
         mc.fontRendererObj.drawString(icon, xPosition + (width - iconWidth) / 2,
-                yPosition + 13, implemented ? 0xFFE5E7EB : 0xFF858C98, false);
+                yPosition + 21, implemented ? 0xFFE5E7EB : 0xFF858C98, false);
 
         String name = moduleName;
         int maxWidth = width - 10;
