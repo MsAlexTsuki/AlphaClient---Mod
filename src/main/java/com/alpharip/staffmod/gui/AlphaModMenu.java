@@ -701,7 +701,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
     private int getFolderHistoryVisibleRows(String itemId) {
         int available = Math.max(1, panelTop + panelHeight - 24 - (panelTop + 184));
-        int rowHeight = "server-history".equals(itemId) ? 43 : 28;
+        int rowHeight = "server-history".equals(itemId) ? 43 : 36;
         return Math.max(1, available / rowHeight);
     }
 
@@ -745,7 +745,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             drawRect(contentLeft + 6, y, contentRight - 4, y + 38, 0x9914171E);
             drawString(fontRendererObj, entry.getName(), contentLeft + 11, y + 4, 0xFFF3F4F6);
             drawString(fontRendererObj, entry.getAddress(), contentLeft + 11, y + 16, 0xFFB8BDC8);
-            drawString(fontRendererObj, "JOINS: " + entry.getJoinCount(),
+            String visited = new java.text.SimpleDateFormat("dd MMM · HH:mm", Locale.ENGLISH)
+                    .format(new java.util.Date(entry.getLastVisited()));
+            drawString(fontRendererObj, "VISITED: " + visited + "  |  JOINS: " + entry.getJoinCount(),
                     contentLeft + 11, y + 28, 0xFFFFD866);
         }
         if (entries.size() > visibleRows) {
@@ -767,13 +769,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         for (int row = 0; row < visibleRows && start + row < entries.size(); row++) {
             com.alpharip.staffmod.fighthistory.FightHistoryManager.FightEntry entry = entries.get(start + row);
-            int y = panelTop + 181 + row * 28;
-            drawRect(contentLeft + 6, y, contentRight - 4, y + 24, 0x9914171E);
+            int y = panelTop + 181 + row * 36;
+            drawRect(contentLeft + 6, y, contentRight - 4, y + 32, 0x9914171E);
             drawString(fontRendererObj, entry.getPlayerName(), contentLeft + 11, y + 3, 0xFFF3F4F6);
             String details = "FIGHTS: " + entry.getFightCount()
                     + (entry.isActive() ? "  |  ACTIVE" : "");
             drawString(fontRendererObj, details, contentLeft + 11, y + 14,
                     entry.isActive() ? 0xFF9CE2AC : 0xFFFFD866);
+            String lastSeen = new java.text.SimpleDateFormat("dd MMM · HH:mm", Locale.ENGLISH)
+                    .format(new java.util.Date(entry.getLastSeenAt()));
+            drawString(fontRendererObj, "LAST SEEN: " + lastSeen,
+                    contentLeft + 11, y + 24, 0xFF8E95A3);
         }
         if (entries.size() > visibleRows) {
             drawString(fontRendererObj, "Scroll for more fights",
