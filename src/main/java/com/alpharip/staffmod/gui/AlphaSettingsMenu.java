@@ -34,11 +34,14 @@ public final class AlphaSettingsMenu extends GuiScreen {
                     getPixelGardenLabel()));
             row += 26;
         }
-        GuiButton easterEggToggle = new GuiButton(EASTER_EGGS_TOGGLE, center - 100, row, 200, 20,
-                "Easter Eggs: " + (EasterEggManager.isGloballyEnabled() ? "ON" : "OFF"));
-        easterEggToggle.enabled = com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder();
-        buttonList.add(easterEggToggle);
-        buttonList.add(new GuiButton(DONE, center - 100, row + 26, 200, 20, "Done"));
+        boolean easterEggSettingsVisible =
+                com.alpharip.staffmod.permissions.SupabaseCommunityService.isSignedInFounder();
+        if (easterEggSettingsVisible) {
+            buttonList.add(new GuiButton(EASTER_EGGS_TOGGLE, center - 100, row, 200, 20,
+                    "Easter Eggs: " + (EasterEggManager.isGloballyEnabled() ? "ON" : "OFF")));
+            row += 26;
+        }
+        buttonList.add(new GuiButton(DONE, center - 100, row, 200, 20, "Done"));
     }
 
     private static String getPixelGardenLabel() {
