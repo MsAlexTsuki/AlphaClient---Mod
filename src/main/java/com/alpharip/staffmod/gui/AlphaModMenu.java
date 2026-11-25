@@ -59,6 +59,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int FOLDER_BACK = 310, FOLDER_FEATURE_BACK = 311, FOLDER_FEATURE_TOGGLE = 312;
     private static final int FOLDER_HISTORY_CLEAR = 313, FOLDER_HISTORY_JOIN_BASE = 320;
     private static final int FOLDER_AUTORECONNECT_DELAY_DOWN = 314, FOLDER_AUTORECONNECT_DELAY_UP = 315;
+    private static final int FOLDER_AUTOGG_DELAY_DOWN = 317, FOLDER_AUTOGG_DELAY_UP = 318;
     private static final int FOLDER_ITEM_BASE = 900;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
@@ -697,6 +698,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             buttonList.add(delayLabel);
             buttonList.add(new AlphaMenuButton(FOLDER_AUTORECONNECT_DELAY_UP,
                     contentRight - 40, rowY, 32, 18, "+"));
+        } else if ("auto-gg".equals(item.id)) {
+            int rowY = panelTop + 108;
+            buttonList.add(new AlphaMenuButton(FOLDER_AUTOGG_DELAY_DOWN,
+                    contentLeft + 8, rowY, 32, 18, "-"));
+            GuiButton delayLabel = new AlphaMenuButton(319, contentLeft + 44, rowY,
+                    Math.max(50, contentRight - contentLeft - 96), 18,
+                    "DELAY: " + String.format(Locale.ROOT, "%.1f", com.alpharip.staffmod.quality.AutoGGMod.getDelaySeconds()) + "s");
+            delayLabel.enabled = false;
+            buttonList.add(delayLabel);
+            buttonList.add(new AlphaMenuButton(FOLDER_AUTOGG_DELAY_UP,
+                    contentRight - 40, rowY, 32, 18, "+"));
         }
 
         if ("server-history".equals(item.id)) {
@@ -1318,6 +1330,13 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             double delta = button.id == FOLDER_AUTORECONNECT_DELAY_DOWN ? -0.5D : 0.5D;
             com.alpharip.staffmod.quality.AutoReconnectMod.setDelaySeconds(
                     com.alpharip.staffmod.quality.AutoReconnectMod.getDelaySeconds() + delta);
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_AUTOGG_DELAY_DOWN || button.id == FOLDER_AUTOGG_DELAY_UP) {
+            double delta = button.id == FOLDER_AUTOGG_DELAY_DOWN ? -0.5D : 0.5D;
+            com.alpharip.staffmod.quality.AutoGGMod.setDelaySeconds(
+                    com.alpharip.staffmod.quality.AutoGGMod.getDelaySeconds() + delta);
             initGui();
             return;
         }
