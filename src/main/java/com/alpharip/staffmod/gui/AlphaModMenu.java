@@ -57,6 +57,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int SETTINGS_BASE = 600;
     private static final int SETTINGS_BACK = 308, SETTINGS_PREVIOUS = 309;
     private static final int FOLDER_BACK = 310, FOLDER_FEATURE_BACK = 311, FOLDER_FEATURE_TOGGLE = 312;
+    private static final int FOLDER_HISTORY_CLEAR = 313, FOLDER_HISTORY_JOIN_BASE = 320;
     private static final int FOLDER_ITEM_BASE = 900;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
@@ -80,6 +81,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private String settingsSubpage = "";
     private String openFolderId = "";
     private String selectedFolderItemId = "";
+    private int historyScrollOffset;
     // Rebuild navigation buttons only after GuiScreen finishes dispatching the current click.
     private boolean rebuildAfterMouseClick;
     private GuiTextField[] keystrokesColorFields = new GuiTextField[5];
@@ -297,8 +299,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         return fingerprint.toString();
     }
 
-    @Override
-    public void updateScreen() {
+    @Override    public void updateScreen() {
         super.updateScreen();
         if ("singleplayer".equals(openFolderId) && !hasActiveSingleplayerWorld()) {
             openFolderId = "";
@@ -597,8 +598,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             if ("autotool".equals(id)) return com.alpharip.staffmod.singleplayer.autotool.AutoToolSettings.isEnabled();
             if ("tree-excavate".equals(id)) return com.alpharip.staffmod.singleplayer.treeexcavate.TreeExcavateSettings.isEnabled();
             if ("auto-replant".equals(id)) return com.alpharip.staffmod.singleplayer.autoreplant.AutoReplantSettings.isEnabled();
-            if ("inventory-sorter".equals(id) || "mob-stacker".equals(id)) {
-                AlphaModuleFeature f=AlphaModuleRegistry.findFeature(id); return f!=null && f.isEnabled();
+            if ("inventory-sorter".equals(id) || "mob-stacker".equals(id)) {                AlphaModuleFeature f=AlphaModuleRegistry.findFeature(id); return f!=null && f.isEnabled();
             }
             return false;
         }
@@ -673,17 +673,112 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         return null;
     }
     private void addFolderFeatureSettingsButtons() {
-        FolderItem item=getSelectedFolderItem();
-        buttonList.add(new AlphaMenuButton(FOLDER_FEATURE_BACK,contentLeft+8,panelTop+7,17,17,"←"));
-        if(item!=null&&item.toggleable&&item.isImplemented&&item.isAvailable())
-            buttonList.add(new AlphaMenuButton(FOLDER_FEATURE_TOGGLE,contentLeft+8,panelTop+86,Math.max(90,contentRight-contentLeft-16),22,item.isEnabled()?"DISABLE MODULE":"ENABLE MODULE"));
+        FolderItem item = getSelectedFolderItem();
+        buttonList.add(new AlphaMenuButton(FOLDER_FEATURE_BACK, contentLeft + 8, panelTop + 7, 17, 17, "←"));
+        if (item == null) return;
+
+        if (item.toggleable && item.isImplemented && item.isAvailable()) {
+            buttonList.add(new AlphaMenuButton(FOLDER_FEATURE_TOGGLE, contentLeft + 8, panelTop + 86,
+                    Math.max(90, contentRight - contentLeft - 16), 19,
+                    item.isEnabled() ? "DISABLE MODULE" : "ENABLE MODULE"));
+        }
+        if ("server-history".equals(item.id) || "fight-history".equals(item.id)) {
+            buttonList.add(new AlphaMenuButton(FOLDER_HISTORY_CLEAR, contentLeft + 8, panelTop + 108,
+                    Math.max(90, contentRight - contentLeft - 16), 18, "CLEAR HISTORY"));
+        }
+
+        if ("server-history".equals(item.id)) {
+            List<com.alpharip.staffmod.serverhistory.ServerHistoryManager.Entry> entries =
+                    com.alpharip.staffmod.serverhistory.ServerHistoryManager.getEntries();
+            int visibleRows = getFolderHistoryVisibleRows(item.id);
+            int start = Math.min(historyScrollOffset, Math.max(0, entries.size() - visibleRows));
+            for (int row = 0; row < visibleRows && start + row < entries.size(); row++) {
+                buttonList.add(new AlphaMenuButton(FOLDER_HISTORY_JOIN_BASE + row,
+                        contentRight - 58, panelTop + 184 + row * 43, 50, 18, "JOIN"));
+            }
+        }
     }
-    private void drawFolderFeatureSettingsPanel(int mouseX,int mouseY,float partialTicks) {
-        FolderItem item=getSelectedFolderItem(); if(item==null)return;
-        drawString(fontRendererObj,"MODULE DETAILS",contentLeft+8,panelTop+40,ACCENT);
-        drawWrappedTextLimited(item.description,contentLeft+8,panelTop+62,Math.max(80,contentRight-contentLeft-16),0xFFB8BDC8,5);
-        drawString(fontRendererObj,"STATUS: "+item.getStatus(),contentLeft+8,panelTop+140,item.isEnabled()?0xFF9CE2AC:0xFFB8BDC8);
-        if(!item.toggleable) drawWrappedTextLimited(item.isImplemented?"This entry is available, but its detailed controls are not yet integrated into the Mod Menu.":"This feature is planned and is not currently implemented.",contentLeft+8,panelTop+164,Math.max(80,contentRight-contentLeft-16),0xFFB8BDC8,4);
+
+    private int getFolderHistoryVisibleRows(String itemId) {
+        int available = Math.max(1, panelTop + panelHeight - 24 - (panelTop + 184));
+        int rowHeight = "server-history".equals(itemId) ? 43 : 28;
+        return Math.max(1, available / rowHeight);
+    }
+
+    private void drawFolderFeatureSettingsPanel(int mouseX, int mouseY, float partialTicks) {
+        FolderItem item = getSelectedFolderItem();
+        if (item == null) return;
+
+        int textX = contentLeft + 8;
+        int textWidth = Math.max(80, contentRight - contentLeft - 16);
+        drawString(fontRendererObj, "MODULE DETAILS", textX, panelTop + 40, ACCENT);
+        drawWrappedTextLimited(item.description, textX, panelTop + 62, textWidth, 0xFFB8BDC8, 2);
+        drawString(fontRendererObj, "STATUS: " + item.getStatus(), textX, panelTop + 140,
+                item.isEnabled() ? 0xFF9CE2AC : 0xFFB8BDC8);
+
+        if ("server-history".equals(item.id)) {
+            drawServerHistoryDetails();
+        } else if ("fight-history".equals(item.id)) {
+            drawFightHistoryDetails();
+        } else if (!item.toggleable) {
+            drawWrappedTextLimited(item.isImplemented
+                    ? "This entry is available, but its detailed controls are not yet integrated into the Mod Menu."
+                    : "This feature is planned and is not currently implemented.",
+                    textX, panelTop + 164, textWidth, 0xFFB8BDC8, 4);
+        }
+    }
+
+    private void drawServerHistoryDetails() {
+        List<com.alpharip.staffmod.serverhistory.ServerHistoryManager.Entry> entries =
+                com.alpharip.staffmod.serverhistory.ServerHistoryManager.getEntries();
+        int visibleRows = getFolderHistoryVisibleRows("server-history");
+        int start = Math.min(historyScrollOffset, Math.max(0, entries.size() - visibleRows));
+        drawString(fontRendererObj, "RECENT SERVERS (" + entries.size() + ")",
+                contentLeft + 8, panelTop + 164, ACCENT);
+        if (entries.isEmpty()) {
+            drawString(fontRendererObj, "No servers saved yet.", contentLeft + 8, panelTop + 184, 0xFFB8BDC8);
+            return;
+        }
+        for (int row = 0; row < visibleRows && start + row < entries.size(); row++) {
+            com.alpharip.staffmod.serverhistory.ServerHistoryManager.Entry entry = entries.get(start + row);
+            int y = panelTop + 181 + row * 43;
+            drawRect(contentLeft + 6, y, contentRight - 4, y + 38, 0x9914171E);
+            drawString(fontRendererObj, entry.getName(), contentLeft + 11, y + 4, 0xFFF3F4F6);
+            drawString(fontRendererObj, entry.getAddress(), contentLeft + 11, y + 16, 0xFFB8BDC8);
+            drawString(fontRendererObj, "JOINS: " + entry.getJoinCount(),
+                    contentLeft + 11, y + 28, 0xFFFFD866);
+        }
+        if (entries.size() > visibleRows) {
+            drawString(fontRendererObj, "Scroll for more servers",
+                    contentLeft + 8, panelTop + panelHeight - 18, 0xFF8E95A3);
+        }
+    }
+
+    private void drawFightHistoryDetails() {
+        List<com.alpharip.staffmod.fighthistory.FightHistoryManager.FightEntry> entries =
+                com.alpharip.staffmod.fighthistory.FightHistoryManager.getEntries();
+        int visibleRows = getFolderHistoryVisibleRows("fight-history");
+        int start = Math.min(historyScrollOffset, Math.max(0, entries.size() - visibleRows));
+        drawString(fontRendererObj, "RECENT FIGHTS (" + entries.size() + ")",
+                contentLeft + 8, panelTop + 164, ACCENT);
+        if (entries.isEmpty()) {
+            drawString(fontRendererObj, "No fights recorded yet.", contentLeft + 8, panelTop + 184, 0xFFB8BDC8);
+            return;
+        }
+        for (int row = 0; row < visibleRows && start + row < entries.size(); row++) {
+            com.alpharip.staffmod.fighthistory.FightHistoryManager.FightEntry entry = entries.get(start + row);
+            int y = panelTop + 181 + row * 28;
+            drawRect(contentLeft + 6, y, contentRight - 4, y + 24, 0x9914171E);
+            drawString(fontRendererObj, entry.getPlayerName(), contentLeft + 11, y + 3, 0xFFF3F4F6);
+            String details = "FIGHTS: " + entry.getFightCount()
+                    + (entry.isActive() ? "  |  ACTIVE" : "");
+            drawString(fontRendererObj, details, contentLeft + 11, y + 14,
+                    entry.isActive() ? 0xFF9CE2AC : 0xFFFFD866);
+        }
+        if (entries.size() > visibleRows) {
+            drawString(fontRendererObj, "Scroll for more fights",
+                    contentLeft + 8, panelTop + panelHeight - 18, 0xFF8E95A3);
+        }
     }
 
     private void addModuleSettingsButtons() {
@@ -897,8 +992,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             }
             drawString(fontRendererObj, "PAGE " + (potionEffectPage + 1) + " / " + Math.max(1, (potionEffectIds.size() + POTION_PAGE_SIZE - 1) / POTION_PAGE_SIZE), x, panelTop + 248, 0xFFB8BDC8);
             return;
-        }
-        if ("potion-effect-edit".equals(settingsSubpage)) {
+        }        if ("potion-effect-edit".equals(settingsSubpage)) {
             PotionHudInfoEffectSetting setting = getSelectedPotionEffect();
             drawString(fontRendererObj, "MODS  >  POTION HUD  >  CUSTOMIZE", x, panelTop + 30, 0xFFB8BDC8);
             drawString(fontRendererObj, "CUSTOMIZE EFFECT", x, panelTop + 40, ACCENT);
@@ -1189,21 +1283,53 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         if (button.id == FOLDER_FEATURE_BACK) {
             // Return to the current folder, not to General or the module browser.
             selectedFolderItemId = "";
+            historyScrollOffset = 0;
             selectedModuleId = "";
             settingsSubpage = "";
             rebuildAfterMouseClick = true;
             return;
         }
-        if (button.id == FOLDER_FEATURE_TOGGLE) { FolderItem item=getSelectedFolderItem(); if(item!=null)item.toggle(); rebuildAfterMouseClick = true; return; }
+        if (button.id == FOLDER_FEATURE_TOGGLE) {
+            FolderItem item = getSelectedFolderItem();
+            if (item != null) item.toggle();
+            rebuildAfterMouseClick = true;
+            return;
+        }
+        if (button.id == FOLDER_HISTORY_CLEAR) {
+            FolderItem item = getSelectedFolderItem();
+            if (item != null && "server-history".equals(item.id)) {
+                com.alpharip.staffmod.serverhistory.ServerHistoryManager.clearHistory();
+            } else if (item != null && "fight-history".equals(item.id)) {
+                com.alpharip.staffmod.fighthistory.FightHistoryManager.clearHistory();
+            }
+            historyScrollOffset = 0;
+            initGui();
+            return;
+        }
+        if (button.id >= FOLDER_HISTORY_JOIN_BASE
+                && button.id < FOLDER_HISTORY_JOIN_BASE + 10
+                && "server-history".equals(selectedFolderItemId)) {
+            int row = button.id - FOLDER_HISTORY_JOIN_BASE;
+            List<com.alpharip.staffmod.serverhistory.ServerHistoryManager.Entry> entries =
+                    com.alpharip.staffmod.serverhistory.ServerHistoryManager.getEntries();
+            int index = historyScrollOffset + row;
+            if (index >= 0 && index < entries.size()) {
+                com.alpharip.staffmod.serverhistory.ServerHistoryManager.Entry entry = entries.get(index);
+                net.minecraft.client.multiplayer.ServerData server =
+                        new net.minecraft.client.multiplayer.ServerData(entry.getName(), entry.getAddress(), false);
+                mc.displayGuiScreen(new net.minecraft.client.multiplayer.GuiConnecting(this, mc, server));
+            }
+            return;
+        }
         if (button.id >= FOLDER_ITEM_BASE && button.id < FOLDER_ITEM_BASE + 100) {
             List<FolderItem> items=getFolderItems(); int index=button.id-FOLDER_ITEM_BASE;
-            if(index>=0&&index<items.size()){
-                FolderItem item = items.get(index);
+            if(index>=0&&index<items.size()){                FolderItem item = items.get(index);
                 if (button instanceof FolderItemTileButton
                         && ((FolderItemTileButton) button).wasSwitchClicked()) {
                     item.toggle();
                 } else {
                     selectedFolderItemId=item.id;
+                    historyScrollOffset = 0;
                     searchFocused=false;
                     if(searchField!=null)searchField.setFocused(false);
                 }
@@ -1497,8 +1623,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {        super.mouseClicked(mouseX, mouseY, mouseButton);
         if (rebuildAfterMouseClick) {
             rebuildAfterMouseClick = false;
             initGui();
@@ -1561,6 +1686,20 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             }
             // Ignore wheel events outside the module grid; inside it, scroll the
             // complete filtered module list so lower entries such as CPS remain reachable.
+            if (isFolderFeatureSettingsOpen()
+                    && mouseX >= contentLeft && mouseX <= contentRight
+                    && mouseY >= panelTop + 160 && mouseY <= panelTop + panelHeight - 20
+                    && ("server-history".equals(selectedFolderItemId)
+                    || "fight-history".equals(selectedFolderItemId))) {
+                int count = "server-history".equals(selectedFolderItemId)
+                        ? com.alpharip.staffmod.serverhistory.ServerHistoryManager.getEntries().size()
+                        : com.alpharip.staffmod.fighthistory.FightHistoryManager.getEntries().size();
+                int visible = getFolderHistoryVisibleRows(selectedFolderItemId);
+                historyScrollOffset = Math.max(0, Math.min(Math.max(0, count - visible),
+                        historyScrollOffset + (wheel < 0 ? 1 : -1)));
+                initGui();
+                return;
+            }
             if (mouseX < contentLeft || mouseX > contentRight
                     || mouseY < contentTop || mouseY > contentBottom) return;
             if (isFolderOpen() && !isFolderFeatureSettingsOpen()) {
