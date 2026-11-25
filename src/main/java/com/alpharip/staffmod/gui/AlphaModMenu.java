@@ -62,6 +62,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
     private static final int FOLDER_AUTOGG_DELAY_DOWN = 317, FOLDER_AUTOGG_DELAY_UP = 318;
     private static final int FOLDER_AFK_DISPLAY = 330, FOLDER_AFK_BACKGROUND = 331, FOLDER_AFK_COLOR = 332;
     private static final int FOLDER_SESSION_BACKGROUND = 333, FOLDER_SESSION_COLOR = 334;
+    private static final int FOLDER_PLAYTIME_FORMAT = 335, FOLDER_PLAYTIME_BACKGROUND = 336, FOLDER_PLAYTIME_COLOR = 337;
     private static final int FOLDER_ITEM_BASE = 900;
     private static final net.minecraft.util.ResourceLocation ALPHA_LOGO =
             new net.minecraft.util.ResourceLocation("alphastaffmod", "textures/gui/alpha_client_logo.png");
@@ -732,6 +733,18 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             buttonList.add(new AlphaMenuButton(FOLDER_SESSION_COLOR, contentLeft + 8,
                     panelTop + 130, settingsWidth, 18,
                     "TEXT COLOR: " + com.alpharip.staffmod.hud.SessionTimerHud.getColorName()));
+        } else if ("playtime-tracker".equals(item.id)) {
+            int settingsWidth = Math.max(90, contentRight - contentLeft - 16);
+            buttonList.add(new AlphaMenuButton(FOLDER_PLAYTIME_FORMAT, contentLeft + 8,
+                    panelTop + 108, settingsWidth, 18,
+                    "TIME FORMAT: " + getPlaytimeFormatLabel()));
+            buttonList.add(new AlphaMenuButton(FOLDER_PLAYTIME_BACKGROUND, contentLeft + 8,
+                    panelTop + 130, settingsWidth, 18,
+                    "HUD BACKGROUND: " + (com.alpharip.staffmod.hud.PlaytimeTrackerHud.isShowBackground() ? "ON" : "OFF"),
+                    com.alpharip.staffmod.hud.PlaytimeTrackerHud.isShowBackground()));
+            buttonList.add(new AlphaMenuButton(FOLDER_PLAYTIME_COLOR, contentLeft + 8,
+                    panelTop + 152, settingsWidth, 18,
+                    "TEXT COLOR: " + com.alpharip.staffmod.hud.PlaytimeTrackerHud.getColorName()));
         }
 
         if ("server-history".equals(item.id)) {
@@ -744,6 +757,24 @@ public final class AlphaModMenu extends AlphaGuiScreen {
                         contentRight - 58, panelTop + 184 + row * 43, 50, 18, "JOIN"));
             }
         }
+    }
+
+    private String getPlaytimeFormatLabel() {
+        String mode = com.alpharip.staffmod.hud.PlaytimeTrackerHud.getFormatMode();
+        if ("months_days".equals(mode)) return "MONTHS / DAYS";
+        if ("days_hours".equals(mode)) return "DAYS / HOURS";
+        if ("hours_minutes".equals(mode)) return "HOURS / MINUTES";
+        if ("minutes_seconds".equals(mode)) return "MINUTES / SECONDS";
+        if ("seconds_millis".equals(mode)) return "SECONDS / MILLISECONDS";
+        return "YEARS / MONTHS";
+    }
+
+    private void cyclePlaytimeFormat() {
+        String[] modes = {"years_months", "months_days", "days_hours", "hours_minutes", "minutes_seconds", "seconds_millis"};
+        String current = com.alpharip.staffmod.hud.PlaytimeTrackerHud.getFormatMode();
+        int index = 0;
+        for (int i = 0; i < modes.length; i++) if (modes[i].equals(current)) { index = i; break; }
+        com.alpharip.staffmod.hud.PlaytimeTrackerHud.setFormatMode(modes[(index + 1) % modes.length]);
     }
 
     private int getFolderHistoryVisibleRows(String itemId) {
@@ -760,10 +791,17 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         int textWidth = Math.max(80, contentRight - contentLeft - 16);
         drawString(fontRendererObj, "MODULE DETAILS", textX, panelTop + 40, ACCENT);
         drawWrappedTextLimited(item.description, textX, panelTop + 62, textWidth, 0xFFB8BDC8, 2);
-        int statusY = "afk-timer".equals(item.id) ? 178
+        int statusY = ("afk-timer".equals(item.id) || "playtime-tracker".equals(item.id)) ? 178
                 : ("session-timer".equals(item.id) ? 156 : 140);
         drawString(fontRendererObj, "STATUS: " + item.getStatus(), textX, panelTop + statusY,
                 item.isEnabled() ? 0xFF9CE2AC : 0xFFB8BDC8);
+        if ("playtime-tracker".equals(item.id)) {
+            long totalSeconds = com.alpharip.staffmod.hud.PlaytimeTrackerHud.getTotalPlaytimeSeconds();
+            drawString(fontRendererObj, "TOTAL PLAYTIME: " + com.alpharip.staffmod.hud.PlaytimeTrackerHud.formatDuration(totalSeconds),
+                    textX, panelTop + 198, 0xFFFFD866);
+            drawWrappedTextLimited("Tracks cumulative Minecraft runtime and saves it locally between launches.",
+                    textX, panelTop + 216, textWidth, 0xFFB8BDC8, 3);
+        }
 
         if ("server-history".equals(item.id)) {
             drawServerHistoryDetails();
@@ -1389,6 +1427,22 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         }
         if (button.id == FOLDER_SESSION_COLOR) {
             com.alpharip.staffmod.hud.SessionTimerHud.cycleColor();
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_PLAYTIME_FORMAT) {
+            cyclePlaytimeFormat();
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_PLAYTIME_BACKGROUND) {
+            com.alpharip.staffmod.hud.PlaytimeTrackerHud.setShowBackground(
+                    !com.alpharip.staffmod.hud.PlaytimeTrackerHud.isShowBackground());
+            initGui();
+            return;
+        }
+        if (button.id == FOLDER_PLAYTIME_COLOR) {
+            com.alpharip.staffmod.hud.PlaytimeTrackerHud.cycleColor();
             initGui();
             return;
         }
