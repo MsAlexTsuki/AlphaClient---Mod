@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Locale;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 /**
@@ -27,6 +28,13 @@ public final class AutoGGMod {
     private static final int COOLDOWN_TICKS = 160; // 8 seconds
     private static final int MAX_DELAY_TICKS = 200; // 10 seconds
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
+    private static final String[] CHAT_MESSAGES = {
+        "gg",
+        "Good Game",
+        "Good Fight buddy boy",
+        "GG"
+    };
+    private static final Random RANDOM = new Random();
 
     private static int delayTicks = DEFAULT_DELAY_TICKS;
     private static boolean enabled;
@@ -161,7 +169,7 @@ public final class AutoGGMod {
 
         pending = false;
         pendingTicks = -1;
-        minecraft.thePlayer.sendChatMessage("GG");
+        minecraft.thePlayer.sendChatMessage(CHAT_MESSAGES[RANDOM.nextInt(CHAT_MESSAGES.length)]);
         cooldownTicks = COOLDOWN_TICKS;
     }
 
