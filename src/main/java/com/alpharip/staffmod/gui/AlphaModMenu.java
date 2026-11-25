@@ -301,6 +301,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         fingerprint.append('|').append(PermissionService.getVerifiedOnlineRanks());
         fingerprint.append('|').append(PermissionService.areModEntitlementsVerified());
         fingerprint.append("|singleplayer=").append(hasActiveSingleplayerWorld());
+        fingerprint.append("|easterEggs=").append(com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager.isGloballyEnabled());
         for (AlphaModule module : AlphaModuleRegistry.getAll()) {
             fingerprint.append('|').append(module.getId()).append('=').append(module.isUnlocked());
         }
@@ -311,6 +312,12 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         super.updateScreen();
         if ("singleplayer".equals(openFolderId) && !hasActiveSingleplayerWorld()) {
             openFolderId = "";
+            selectedFolderItemId = "";
+            initGui();
+            return;
+        }
+        if ("easter-eggs".equals(selectedFolderItemId)
+                && !com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager.isGloballyEnabled()) {
             selectedFolderItemId = "";
             initGui();
             return;
@@ -654,7 +661,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             items.add(new FolderItem("inventory-search","Search Inv","Search player inventories, chests, and ender chests.",true,true));
             items.add(new FolderItem("anvil-cost","Anvil Cost","Preview anvil operations and experience costs.",true,true));
             items.add(new FolderItem("enchanting-names","Enchanting Names","Show localized enchantment names.",true,true));
-            items.add(new FolderItem("easter-eggs","Easter Eggs","Easter Eggs settings.",true,false));
+            if (com.alpharip.staffmod.founderfun.eastereggs.EasterEggManager.isGloballyEnabled()) {
+                items.add(new FolderItem("easter-eggs","Easter Eggs","Easter Eggs settings.",true,false));
+            }
             items.add(new FolderItem("block-placement-preview","Block Placement Preview","Preview block placement positions and collision state.",true,true));
         } else if ("misc".equals(openFolderId)) {
             items.add(new FolderItem("server-history","Server History","Keep a history of joined servers.",true,true));
