@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
@@ -59,6 +60,9 @@ public final class TreeExcavate {
         if (!TreeExcavateAccess.isAvailable(mc) || !TreeExcavateSettings.isEnabled()) return;
 
         EntityPlayer player = event.getPlayer();
+        ItemStack heldItem = player.getCurrentEquippedItem();
+        if (heldItem == null || !(heldItem.getItem() instanceof ItemAxe)) return;
+
         World world = event.world;
         BlockPos origin = event.pos;
         if (origin == null || !world.isBlockLoaded(origin)) return;
@@ -68,9 +72,8 @@ public final class TreeExcavate {
         if (connectedLogs.size() <= 1 || !hasNearbyLeaves(world, connectedLogs)) return;
 
         boolean dropItems = !player.capabilities.isCreativeMode;
-        ItemStack heldItem = player.getCurrentEquippedItem();
 
-        if (dropItems && heldItem != null && heldItem.isItemStackDamageable()) {
+        if (dropItems && heldItem.isItemStackDamageable()) {
             int remainingDurability = heldItem.getMaxDamage() - heldItem.getItemDamage() + 1;
             int projectedDurability = remainingDurability - connectedLogs.size();
             if (projectedDurability <= 1) {
@@ -79,13 +82,18 @@ public final class TreeExcavate {
             }
         }
 
+        // The origin log is broken by the normal block-break flow.
+        player.addExhaustion(0.25F);
+
         for (BlockPos log : connectedLogs) {
             if (log.equals(origin) || !world.isBlockLoaded(log)) continue;
 
             net.minecraft.block.Block block = world.getBlockState(log).getBlock();
-            if (!world.destroyBlock(log, dropItems) || !dropItems || heldItem == null || heldItem.stackSize <= 0) {
-                continue;
-            }
+            if (!world.destroyBlock(log, dropItems)) continue;
+
+            player.addExhaustion(0.25F);
+
+            if (!dropItems || heldItem.stackSize <= 0) continue;
 
             heldItem.onBlockDestroyed(world, block, log, player);
             if (heldItem.stackSize == 0) {
