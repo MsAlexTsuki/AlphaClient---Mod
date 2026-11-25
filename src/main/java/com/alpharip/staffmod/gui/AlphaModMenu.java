@@ -642,9 +642,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             items.add(new FolderItem("afk-timer","AFK Timer","Track AFK time.",true,true));
             items.add(new FolderItem("session-timer","Session Timer","Track elapsed time in the client.",true,true));
             items.add(new FolderItem("playtime-tracker","Playtime Tracker","Track time spent playing.",true,true));
-            items.add(new FolderItem("config-manager","Config Manager","Manage AlphaClient configuration files.",false,false));
             items.add(new FolderItem("auto-reconnect","Auto Reconnect","Reconnect after an unexpected disconnect.",true,true));
-            items.add(new FolderItem("system-monitor","Alpha System Monitor","Show client and system diagnostics.",false,false));
             items.add(new FolderItem("crash-reporter","Alpha Crash Reporter","Collect crash diagnostics.",false,false));
             items.add(new FolderItem("update-checker","Alpha Update Checker","Check AlphaClient updates.",false,false));
             items.add(new FolderItem("control-center","Alpha Control Center","Central place for AlphaClient controls.",false,false));
