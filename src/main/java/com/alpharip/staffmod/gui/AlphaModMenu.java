@@ -132,7 +132,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         settingsLeft = (isModuleSettingsOpen() || isFolderFeatureSettingsOpen()) ? contentLeft : contentRight + 8;
 
         searchField = new GuiTextField(SEARCH_ID, fontRendererObj,
-                contentLeft + 3, panelTop + 29, Math.max(80, contentRight - contentLeft - 6), 15);
+                contentLeft + 3, panelTop + 25, Math.max(80, contentRight - contentLeft - 6), 15);
         searchField.setMaxStringLength(48);
         searchField.setText(searchText);
         searchField.setFocused(searchFocused);
@@ -243,7 +243,9 @@ public final class AlphaModMenu extends AlphaGuiScreen {
 
         if (!isModuleSettingsOpen() && !isFolderFeatureSettingsOpen()) {
             if (isFolderOpen()) {
-                buttonList.add(new AlphaMenuButton(FOLDER_BACK, contentLeft + 84, panelTop + 7, 78, 18, "← GENERAL"));
+                String folderEntryLabel = getFolderItems().size() + " entries";
+                int folderBackX = contentLeft + 4 + fontRendererObj.getStringWidth(folderEntryLabel) + 6;
+                buttonList.add(new AlphaMenuButton(FOLDER_BACK, folderBackX, panelTop + 4, 78, 18, "← GENERAL"));
                 List<FolderItem> folderItems = getFolderItems();
                 int gridWidth = Math.max(180, contentRight - contentLeft);
                 int gap = 10, tileWidth = (gridWidth - gap) / 2, tileHeight = 48, rowGap = 8;
@@ -481,11 +483,11 @@ public final class AlphaModMenu extends AlphaGuiScreen {
             int itemCount = isFolderOpen() ? getFolderItems().size() : getFilteredModules().size();
             drawString(fontRendererObj, itemCount + (isFolderOpen() ? " entries" : " modules"),
                     contentLeft + 4, panelTop + 8, 0xFFB8BDC8);
-            AlphaMenuRender.roundedRect(contentLeft + 2, panelTop + 28,
-                    contentRight - 2, panelTop + 46, 5, 0xAA202630);
+            AlphaMenuRender.roundedRect(contentLeft + 2, panelTop + 24,
+                    contentRight - 2, panelTop + 42, 5, 0xAA202630);
             searchField.drawTextBox();
             if (searchField.getText().trim().isEmpty() && !searchField.isFocused()) {
-                drawString(fontRendererObj, "Search for Modules", contentLeft + 8, panelTop + 33, 0xFF777F8D);
+                drawString(fontRendererObj, "Search for Modules", contentLeft + 8, panelTop + 29, 0xFF777F8D);
             }
             String breadcrumb = !searchField.getText().trim().isEmpty() ? "Search Results"
                     : isFolderOpen() ? "General  >  " + getFolderDisplayName(openFolderId)
