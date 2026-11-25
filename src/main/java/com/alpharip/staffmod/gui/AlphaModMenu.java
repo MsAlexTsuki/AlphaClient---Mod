@@ -636,7 +636,7 @@ public final class AlphaModMenu extends AlphaGuiScreen {
         List<FolderItem> items=new ArrayList<FolderItem>();
         if ("quality".equals(openFolderId)) {
             items.add(new FolderItem("fullbright","Fullbright","Toggle Fullbright.",true,true));
-            items.add(new FolderItem("mod-profiles","Mod Profiles","Save and switch module configurations.",false,false));
+    
             items.add(new FolderItem("auto-gg","Auto GG","Automatically send GG after a detected kill or match end.",true,true));
             items.add(new FolderItem("keybind-profiles","Keybind Profiles","Save and switch keybind sets.",false,false));
             items.add(new FolderItem("auto-respawn","Auto Respawn","Automatically respawn after death.",false,false));
