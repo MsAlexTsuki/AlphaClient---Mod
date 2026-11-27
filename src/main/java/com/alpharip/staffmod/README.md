@@ -1121,7 +1121,7 @@ The following work is still outstanding. It is not represented as already implem
 
 ## Sibling module directory inventory
 
-The following counts are taken from the current `mod-ideas` Git tree. They count Java source files in each top-level folder directly beside `staffops/`; they do not imply that every folder is a complete or tested feature.
+The following counts are taken from the current `mod-ideas` Git tree. There are **63 top-level sibling directories** beside `staffops/`; **62 contain Java source files** and `Donator Modules/` currently contains no Java source file. The counts do not imply that any folder is a complete or tested feature.
 
 | Sibling folder | Java files |
 |---|---:|
@@ -1158,6 +1158,7 @@ The following counts are taken from the current `mod-ideas` Git tree. They count
 | `Combo/` | 2 |
 | `Cooldowns/` | 2 |
 | `Customization/` | 33 |
+| `Donator Modules/` | 0 |
 | `gui/` | 1 |
 | `hitbox/` | 4 |
 | `Indicators/` | 7 |
