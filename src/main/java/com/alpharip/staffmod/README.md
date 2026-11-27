@@ -3,7 +3,7 @@
 This document is the implementation checklist for **every Java file currently located beside `staffops/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/` outside `staffops/`.
-- Current verified inventory: **902 Java files** across **60 folders**, plus **1 Java file** directly in the package root.
+- Current verified inventory: **679 Java files** across **62 sibling folders**, plus **1 Java file** directly in the package root (**680 total**).
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -706,11 +706,494 @@ Folder: `armorbreakwarning/`
 **Prototype boundary:** The original idea provides a fixed 10% threshold and a HUD warning with the number of low-durability armor pieces. The configurable threshold and standalone settings screen are prototype additions. This checks only the local player's equipped armor; it is separate from opponent armor-break prediction. Registration is explicit. No existing menu button, keybind, AlphaModuleRegistry integration, AlphaClient Core registration, rank permission, Supabase, or Launcher integration is included. Compilation and in-game behavior remain unverified.
 
 
+## Auto Loading Server Profiles — complete source and integration audit (2026-11-27)
+
+**Location:** \`src/main/java/com/alpharip/staffmod/AutoLoadingServerProfiles/\`  
+**Branch:** \`mod-ideas\`  
+**Purpose:** Select an existing AlphaClient profile from the Minecraft server address after a connection is reported to the prototype controller.
+
+This section is an inspection-based record of the code currently present. It does not claim that the prototype is compiled, registered, connected to Forge events, or verified in-game.
+
+### 1. Overall project status
+
+**Status: substantial standalone logic prototype; not a complete in-game feature.**
+
+The folder contains ten Java files split into five responsibility packages:
+
+- \`matching/\`: address normalization and match selection.
+- \`model/\`: immutable server-to-profile binding and match data.
+- \`registry/\`: in-memory binding collection.
+- \`runtime/\`: controller, activation boundary, and result.
+- \`storage/\`: local Properties persistence contract and implementation.
+
+The prototype already contains the core algorithm and supporting data/storage pieces. It is more than an empty idea stub, but it is not an end-to-end Minecraft feature. There is no implemented Minecraft connection listener, no real adapter to the active AlphaClient Profiles manager, no lifecycle/bootstrap owner, and no GUI for configuring bindings.
+
+**What the current source can do when called by an external integration:**
+
+1. Normalize a supplied server address.
+2. Compare it with enabled server-address bindings.
+3. Prefer an exact match over a domain/subdomain match.
+4. Prefer the most specific matching binding when multiple domain bindings match.
+5. Return the selected profile identifier to an activation adapter.
+6. Report no match, activation accepted, or activation rejected.
+7. Load and save binding records through a caller-supplied local Properties file path.
+
+**What it does not do by itself:** detect a Minecraft connection, discover the active profile list, validate that a referenced profile exists, switch the real AlphaClient profile, decide when to load/save, expose controls to the player, or register itself with AlphaClient.
+
+### 2. Complete Java-file inventory — every file in this prototype
+
+There are exactly **10 Java source files** in the module at this branch snapshot.
+
+#### 2.1 \`matching/ServerAddressNormalizer.java\`
+
+**Role:** Static address normalization and address-compatibility rules.
+
+**Public API:**
+
+- \`normalize(String address)\`
+  - Rejects null or blank input with \`IllegalArgumentException\`.
+  - Trims surrounding whitespace and lowercases using \`Locale.ROOT\`.
+  - Removes a leading URI scheme through \`://\`.
+  - Removes the path and query portions.
+  - Removes trailing dots from a non-bracketed hostname.
+  - Preserves an explicitly supplied port rather than inserting a default port.
+  - For a non-bracketed single-colon address, validates that the port contains digits and is in the range 1–65535.
+  - Handles bracketed address text separately, intended for IPv6-style literals.
+- \`matches(String configuredAddress, String connectedAddress)\`
+  - Normalizes both inputs.
+  - Requires an explicitly configured port to equal the connected port.
+  - Accepts an exact host match.
+  - Otherwise accepts a DNS-style subdomain only when the connected host ends in a dot plus the configured host. This avoids treating an arbitrary string suffix as a subdomain.
+  - A binding without a configured port can match the same host when the connected address uses a port.
+- \`specificity(String address)\`
+  - Scores the host length and adds one point when a port is explicitly present. The matcher uses this score to choose between matching domain bindings.
+
+**Private implementation pieces:** \`split(...)\` separates host and optional port; \`isDnsName(...)\` prevents colon-containing literals from being treated as DNS names; the private \`Address\` value holder carries host and port.
+
+**Current limitations / validation gaps visible in source:**
+
+- The bracketed-address branch checks the port's digit format but does not apply the 1–65535 numeric range check used by the non-bracketed branch.
+- The bracketed branch does not reject an empty host between the brackets.
+- The code does not perform full DNS syntax validation or IDN conversion.
+- URI fragments are not explicitly stripped.
+- These are code-inspection findings, not claims that a particular in-game connection currently fails.
+
+#### 2.2 \`matching/ServerProfileMatcher.java\`
+
+**Role:** Chooses the best enabled binding for one connected server address.
+
+**Public API:**
+
+- \`findBest(String connectedAddress, Collection<ServerProfileBinding> bindings)\`
+  - Returns no match for null/blank connection input or a null collection.
+  - Ignores null binding entries and disabled bindings.
+  - Normalizes the connected address.
+  - Uses \`ServerAddressNormalizer.matches(...)\` for compatibility.
+  - Gives an exact normalized address match priority over a domain match.
+  - When match types are equal, prefers the greater specificity score.
+  - Returns a \`ServerProfileMatch\` carrying the selected binding and match type, or \`null\` when nothing matches.
+
+**Tie behavior:** When two candidates have the same match type and specificity score, the first encountered candidate remains selected. The registry currently preserves insertion order through \`LinkedHashMap\`.
+
+**Not included:** profile existence validation, user-facing explanation, server event detection, or activation.
+
+#### 2.3 \`model/ServerProfileBinding.java\`
+
+**Role:** Immutable mapping from a server address/domain to an existing profile identifier.
+
+**Stored fields:**
+
+- \`serverAddress\`: normalized address/domain.
+- \`profileId\`: nonblank identifier supplied by the caller.
+- \`enabled\`: whether the matcher may use this binding.
+
+**Public API:** Constructor plus \`getServerAddress()\`, \`getProfileId()\`, and \`isEnabled()\`.
+
+**Validation:** Address and profile identifier must not be null or blank. The server address is normalized during construction.
+
+**Not included:** checking the profile identifier against AlphaClient's actual profile registry, renaming a profile when its binding changes, or automatically deleting bindings when a profile is deleted.
+
+#### 2.4 \`model/ServerProfileMatch.java\`
+
+**Role:** Immutable result describing which binding was selected.
+
+**Data:**
+
+- Selected \`ServerProfileBinding\`.
+- \`Type.EXACT\` or \`Type.DOMAIN\`.
+
+**Validation:** Constructor rejects a null binding or null type.
+
+**Public API:** \`getBinding()\` and \`getType()\`.
+
+This class describes a decision; it does not activate anything.
+
+#### 2.5 \`registry/ServerProfileRegistry.java\`
+
+**Role:** Thread-synchronized in-memory registry of server-to-profile bindings.
+
+**Public API:**
+
+- \`put(ServerProfileBinding)\`: adds or replaces the binding under its normalized address key.
+- \`remove(String serverAddress)\`: normalizes the supplied address and removes that key.
+- \`get(String serverAddress)\`: normalizes the supplied address and returns the matching binding.
+- \`getAll()\`: returns an unmodifiable snapshot list, not the mutable internal map.
+- \`replaceAll(Collection<ServerProfileBinding>)\`: clears the current registry and inserts the supplied values; null means an empty registry.
+- \`size()\`: returns the number of registered bindings.
+
+**Implementation details:** A \`LinkedHashMap\` preserves insertion order. Public registry methods are synchronized. Adding another binding for the same normalized address replaces the previous entry.
+
+**Not included:** automatic persistence, automatic profile-deletion cleanup, a GUI, or validation that the target profile exists.
+
+#### 2.6 \`runtime/ServerProfileActivationPort.java\`
+
+**Role:** Integration boundary for the real AlphaClient Profiles implementation.
+
+**Contract:**
+
+- \`boolean activateProfile(String profileId)\`
+
+A future Minecraft/AlphaClient adapter must implement this interface and call the approved real profile-selection API. Returning \`true\` means the adapter accepted the activation request; returning \`false\` means it rejected it.
+
+**Current state:** This is only an interface. No implementation that calls \`ModuleProfileManager\` is present in this module.
+
+#### 2.7 \`runtime/ServerProfileAutoLoadController.java\`
+
+**Role:** Coordinates matching and delegates activation.
+
+**Dependencies supplied through its constructor:**
+
+- \`ServerProfileRegistry\`
+- \`ServerProfileMatcher\`
+- \`ServerProfileActivationPort\`
+
+The constructor rejects null dependencies.
+
+**Public API:**
+
+- \`onServerConnected(String serverAddress)\`
+  1. Reads a snapshot of registry bindings.
+  2. Asks the matcher for the best match.
+  3. Returns \`NO_MATCH\` when there is no match.
+  4. Calls \`activateProfile(profileId)\` when a match exists.
+  5. Returns either \`ACTIVATED\` or \`ACTIVATION_REJECTED\` with the selected match.
+
+**Important boundary:** The method name describes the event the future integration should report. This class does not subscribe to a Minecraft or Forge connection event. Another component must call it after the appropriate connection-success point.
+
+**Not included:** client-thread scheduling, connection lifecycle registration, duplicate-event suppression, retry policy, or exception-to-result conversion around the activation adapter.
+
+#### 2.8 \`runtime/ServerProfileAutoLoadResult.java\`
+
+**Role:** Immutable outcome of one auto-load attempt.
+
+**Statuses:**
+
+- \`NO_MATCH\`: no enabled binding matched.
+- \`ACTIVATED\`: a match existed and the activation adapter returned true.
+- \`ACTIVATION_REJECTED\`: a match existed but the adapter returned false.
+
+**Public API:** Static factories \`noMatch()\`, \`activated(match)\`, and \`rejected(match)\`; getters \`getStatus()\` and \`getMatch()\`.
+
+For \`NO_MATCH\`, the match is null. For the other states, the controller supplies the selected match.
+
+**Not included:** user-facing messages, logging, notification display, or persistence of the last result.
+
+#### 2.9 \`storage/ServerProfileStore.java\`
+
+**Role:** Persistence abstraction.
+
+**Contract:**
+
+- \`List<ServerProfileBinding> load() throws IOException\`
+- \`void save(List<ServerProfileBinding> bindings) throws IOException\`
+
+The registry and matching logic depend on this interface rather than a concrete file format.
+
+**Not included:** a default path, automatic startup loading, automatic save-on-change, schema migration, or a lifecycle owner.
+
+#### 2.10 \`storage/PropertiesServerProfileStore.java\`
+
+**Role:** Local Java Properties implementation of \`ServerProfileStore\`.
+
+**Constructor:** Receives a caller-supplied \`Path\`; null is rejected. The class does not decide the AlphaClient configuration directory itself.
+
+**Load behavior:**
+
+- Returns an empty list when the file does not exist.
+- Loads the Properties file when present.
+- Reads \`binding.count\`.
+- Reads each indexed record's \`server\`, \`profile\`, and \`enabled\` values.
+- Defaults a missing \`enabled\` property to true.
+- Rejects missing server/profile values and wraps invalid binding data in \`IOException\`.
+- Rejects a negative or non-numeric binding count.
+
+**Save behavior:**
+
+- Rejects a null list.
+- Creates the parent directory when necessary.
+- Writes the binding count and each address/profile/enabled value.
+- Uses \`Properties.store(...)\` with the comment \`Alpha Client - Auto Loading Server Profiles\`.
+
+**Current limitations visible in source:**
+
+- The write is direct to the target file; there is no temporary-file plus atomic-replacement strategy.
+- There is no explicit upper bound on the number of loaded bindings.
+- \`Boolean.parseBoolean\` maps any value other than case-insensitive \`true\` to false; malformed boolean text is not separately rejected.
+- The caller must handle load/save timing and I/O errors.
+- No compile, round-trip test, corruption test, or runtime test is claimed here.
+
+### 3. Data flow and ownership
+
+The intended call sequence is:
+
+1. A future client lifecycle component chooses the local Properties path.
+2. It calls \`ServerProfileStore.load()\`.
+3. It supplies the loaded records to \`ServerProfileRegistry.replaceAll(...)\`.
+4. A future Forge/Minecraft connection adapter detects a successful server connection and obtains the actual connected address.
+5. That adapter calls \`ServerProfileAutoLoadController.onServerConnected(address)\` on the correct client thread.
+6. The controller asks \`ServerProfileMatcher\` to select the best enabled binding.
+7. The controller delegates the selected profile ID to \`ServerProfileActivationPort\`.
+8. The production adapter validates and activates the existing AlphaClient profile.
+9. When a binding is created, edited, enabled, disabled, or removed, the owning settings/lifecycle component saves \`registry.getAll()\` through \`ServerProfileStore.save(...)\`.
+
+Steps 1–3, 4–5, 8, and 9 are not wired into the live client by this prototype. The core classes for matching, registry, persistence, controller, and the adapter contract are present.
+
+### 4. Matching rules currently encoded in source
+
+| Configured binding | Connected address | Expected matcher outcome |
+|---|---|---|
+| \`play.example.net\` | \`play.example.net\` | Exact |
+| \`example.net\` | \`play.example.net\` | Domain |
+| \`example.net\` | \`eu.play.example.net\` | Domain |
+| \`play.example.net:25566\` | \`play.example.net:25566\` | Exact |
+| \`play.example.net:25566\` | \`play.example.net:25565\` | No match |
+| \`other.net\` | \`play.example.net\` | No match |
+| disabled \`play.example.net\` | \`play.example.net\` | Ignored |
+
+A configured host without a port is intentionally port-agnostic. A configured host with a port requires the same connected port. An exact match wins over a broader domain match. Among domain matches, the more specific configured host wins.
+
+### 5. Existing AlphaClient profile-related source — do not confuse these systems
+
+#### 5.1 Active profile manager in \`development\`
+
+The inspected \`development\` branch contains:
+
+- \`src/main/java/com/alpharip/staffmod/profile/ModuleProfileManager.java\`
+- \`src/main/java/com/alpharip/staffmod/profile/Profile.java\`
+- \`src/main/java/com/alpharip/staffmod/profile/ProfileManager.java\`
+
+The source comment in \`ProfileManager.java\` explicitly marks that class as deprecated and says the active AlphaClient Profiles system is \`ModuleProfileManager\`, which owns \`profiles.json\`.
+
+The inspected \`ModuleProfileManager\` contains profile loading/saving, default-profile handling, profile listing, selection, creation, rename and deletion operations, profile/module settings, module-state application, and mod-colour handling. It also retains legacy Bhop profile data for backwards compatibility. Its nested \`BhopProfile\` model contains profile data; the old name in that model must not be interpreted as proof that the entire Profiles feature is still a standalone Bhop-only feature.
+
+The deprecated \`ProfileManager\` retains legacy profile-file compatibility and references \`profiles_legacy.json\` and the old \`bhop_profiles.json\` migration path. \`Profile.java\` is the associated legacy profile data class in that older manager.
+
+**Important:** This is the existing general AlphaClient Profiles system. It is the intended future activation target only after its actual API and lifecycle are integrated deliberately. The new prototype currently does not call it.
+
+#### 5.2 Other profile-related files beside \`staffops/\` on \`mod-ideas\`
+
+These files are present in the inspected \`mod-ideas\` tree, but are not the new auto-loader:
+
+- \`Customization/ServerProfiles.java\`
+  - Its physical path is under \`Customization/\`, but its declared package is \`com.alpharip.staffmod.staffops.ideas\`.
+  - It stores an enabled flag, generic string options, and a list of string records.
+  - It supports recording, listing, searching, and clearing those records.
+  - Its own class comment describes it as a client-side foundation; Minecraft event hooks, rendering, and network integration are separate.
+  - It does not implement the server-address-to-AlphaClient-profile matching algorithm in the new module.
+- \`Customization/ServerProfileSpecificKeybinds.java\`
+  - Its declared package is also \`com.alpharip.staffmod.staffops.ideas\`.
+  - It currently contains only an enabled flag, an active-server-profile string, and a \`separateBindingsByServer\` flag.
+  - The class comment explicitly says runtime integration is not implemented.
+  - It does not yet switch keybind sets on connection.
+
+Neither of these two files is a substitute for the active \`development/profile/ModuleProfileManager\`, and neither is the new auto-loader.
+
+### 6. Branch-by-branch presence matrix
+
+| Component | \`mod-ideas\` | AlphaClient \`development\` | Alpha Launcher |
+|---|---|---|---|
+| New \`AutoLoadingServerProfiles/\` folder | **Present** | **Absent** in inspected branch tree | Not applicable; no matching module folder |
+| Address normalizer and matcher | **Present** | **Absent** | **Absent** |
+| Server-address → profile binding registry | **Present** | **Absent** | **Absent** |
+| Properties persistence for those bindings | **Present** | **Absent** | **Absent** |
+| Auto-load controller and activation interface | **Present** | **Absent** | **Absent** |
+| Real Minecraft/Forge connection-event adapter for this feature | **Absent** | **Absent** | **Absent** |
+| Adapter that calls the real active AlphaClient profile manager | **Absent** | Existing profile manager exists, but no auto-loader adapter | **Absent** |
+| Existing general AlphaClient Profiles manager | Other prototype/legacy foundations exist; not the production manager | **Present** | Community account profiles are separate |
+| Server-profile binding management GUI | **Absent** | **Absent** for this feature | **Absent** |
+
+The branch checks above are source-tree checks at the snapshot recorded in this README. “Absent” means no matching implementation was found in the inspected branch tree; it does not claim that no future work or untracked local file can exist.
+
+### 7. Alpha Launcher overlap — what exists and what does not
+
+The inspected Alpha Launcher branch is \`feature/changelog-audit-logging\`.
+
+**Existing Launcher functionality related by the word “profile” or by AlphaClient module management:**
+
+- The Launcher has community-profile data such as display name, bio, and avatar URL. The inspected migration adds \`bio\` and \`avatar_url\` to \`public.profiles\`, limits the bio to 160 characters, and defines storage policies for profile avatars.
+- The Launcher has a Minecraft-account linking data path. The inspected migration creates \`public.alpha_minecraft_accounts\` and an authenticated \`link_minecraft_uuid(...)\` flow to associate Minecraft UUIDs with an Alpha community profile.
+- The Launcher has a Client Mod Permissions Manager. Its inspected source manages module access by community rank, player-specific overrides, category grants, and revocation. It mirrors the AlphaClient StaffMods folder structure and deliberately excludes Founder-only personal modules from the Developer → Mods catalog.
+- These are community identity, linked-account, and module-permission features. They are not Minecraft server-specific gameplay profile switching.
+
+**Not present in the inspected Launcher branch for Auto Loading Server Profiles:**
+
+- No server-address-to-AlphaClient-profile binding list.
+- No exact-host/subdomain matching for Minecraft multiplayer connections.
+- No profile activation request sent from Launcher to the running Minecraft client when a server is joined.
+- No Auto Loading Server Profiles settings screen or persistence.
+- No Launcher dependency is required by the current local-only prototype.
+
+**Scope decision:** This prototype remains a client-side Minecraft feature. The Launcher is not modified, and no new Supabase table, migration, RPC, or remote storage is required for the currently documented design.
+
+### 8. Implementation work still required for a complete in-game feature
+
+The following work is still outstanding. It is not represented as already implemented.
+
+1. **Connection event integration**
+   - Identify the correct Minecraft 1.8.9 / Forge 11.15.1.2318 successful-connection lifecycle point.
+   - Add a dedicated adapter that obtains the actual connected server address.
+   - Ensure it does not trigger on failed connection attempts, menu previews, or stale server data.
+   - Invoke the controller on the Minecraft client thread.
+2. **Profile activation adapter**
+   - Inspect the exact current \`ModuleProfileManager\` API on \`development\` at integration time.
+   - Resolve the binding's profile identifier against the real profile list.
+   - Define behavior when the profile was renamed or deleted.
+   - Activate through the existing profile system without creating a second profile manager or bypassing existing module/profile application logic.
+   - Return a truthful accepted/rejected result.
+3. **Runtime/bootstrap ownership**
+   - Construct the registry, matcher, store, activation adapter, and controller once.
+   - Choose a stable local config path under the approved AlphaClient configuration directory.
+   - Load bindings at the correct client lifecycle point.
+   - Save after changes and handle I/O errors.
+   - Avoid duplicate Forge event registrations and duplicate runtime instances.
+4. **Binding management UI**
+   - List configured server addresses and their target profiles.
+   - Add, edit, remove, enable, and disable bindings.
+   - Populate profile choices from the real Profiles manager rather than accepting arbitrary IDs only.
+   - Show validation errors for malformed addresses, duplicate bindings, missing profiles, and storage failures.
+   - Make it clear that a domain binding can apply to its subdomains.
+5. **Profile lifecycle consistency**
+   - Decide what happens to a binding when its target profile is renamed or deleted.
+   - Prevent silent activation of a different profile if an identifier becomes stale.
+   - Define behavior for duplicate matching bindings and equal-specificity ties.
+6. **Hardening**
+   - Validate bracketed IPv6 host/port values consistently with normal host/port values.
+   - Decide whether URI fragments and internationalized hostnames should be supported.
+   - Consider atomic file replacement, malformed boolean rejection, and a sensible maximum binding count.
+   - Add tests for normalization, exact/domain matching, port rules, priority, disabled bindings, persistence round trips, malformed files, and missing profiles.
+7. **Verification**
+   - Compile with the actual project ForgeGradle/Java 8 setup.
+   - Run focused unit tests where the project test setup permits.
+   - Verify successful join, failed join, server switch, subdomain match, exact match priority, profile deletion/rename, and local save/reload in Minecraft 1.8.9.
+   - Confirm no existing profile behavior, Bhop compatibility data, rank rules, or module permissions are changed.
+
+### 9. Current completeness assessment
+
+| Area | Assessment |
+|---|---|
+| Address normalization | **Implemented in prototype source; edge-case validation still needed** |
+| Exact host matching | **Implemented in prototype source; not runtime-tested** |
+| Domain/subdomain matching | **Implemented in prototype source; not runtime-tested** |
+| Port-aware matching | **Implemented in prototype source; bracketed IPv6 port validation gap remains** |
+| Match priority | **Implemented in prototype source; equal-score tie policy is insertion order** |
+| In-memory binding registry | **Implemented in prototype source** |
+| Local Properties store | **Implemented in prototype source; hardening and round-trip verification remain** |
+| Controller/result flow | **Implemented as a callable prototype flow** |
+| Actual profile activation | **Missing; interface only** |
+| Minecraft/Forge connection detection | **Missing** |
+| Lifecycle/bootstrap | **Missing** |
+| Binding GUI | **Missing** |
+| AlphaClient \`development\` integration | **Not present** |
+| Alpha Launcher integration | **Not present and not required by the current design** |
+| Supabase/remote persistence | **Not present and not required by the current design** |
+| Build / automated test / in-game verification | **Not verified** |
+
+### 10. Scope and preservation rules
+
+- The prototype belongs to \`mod-ideas\` only until a separate integration task is authorized.
+- The original idea file under \`staffops/ideas/\` was removed when this prototype was created; the new module is the replacement location.
+- The existing \`development\` Profiles system remains separate and unchanged.
+- The existing \`Customization/ServerProfiles.java\` and \`ServerProfileSpecificKeybinds.java\` files remain separate and unchanged.
+- Alpha Launcher remains unchanged.
+- No Supabase or remote service is used.
+- No AlphaClient Core, rank, permission, StaffMods, or Bhop behavior is changed by this README update.
+- This document records source presence and missing integration work; it does not certify compilation or runtime behavior.
+
+## Sibling module directory inventory
+
+The following counts are taken from the current `mod-ideas` Git tree. They count Java source files in each top-level folder directly beside `staffops/`; they do not imply that every folder is a complete or tested feature.
+
+| Sibling folder | Java files |
+|---|---:|
+| `AccessibilityTheme/` | 2 |
+| `AccessReviewReminder/` | 4 |
+| `account/` | 8 |
+| `achievements/` | 17 |
+| `ActingRankAssignment/` | 8 |
+| `ActiveDeviceListGlobalSignOut/` | 9 |
+| `AdjustableRainAndSnowSpeed/` | 6 |
+| `AdjustableStarDensity/` | 6 |
+| `AdjustThirdPerson/` | 3 |
+| `Adventure Diary/` | 4 |
+| `AfkCamera/` | 7 |
+| `Aim Pattern Library/` | 9 |
+| `AirHud/` | 7 |
+| `AlphaClans/` | 16 |
+| `AlphaCoins/` | 23 |
+| `AlphaCrashReporter/` | 33 |
+| `Analystics/` | 10 |
+| `animalbreedingcooldowntimer/` | 8 |
+| `armorbreakwarning/` | 6 |
+| `ArrowCounter/` | 7 |
+| `AutoLoadingServerProfiles/` | 10 |
+| `autosave/` | 8 |
+| `Badges/` | 15 |
+| `basestorageledger/` | 5 |
+| `Bestiary/` | 5 |
+| `BiomeHud/` | 6 |
+| `Block Break Ring/` | 7 |
+| `cases/` | 88 |
+| `ChestItemTotal/` | 9 |
+| `Clutch/` | 4 |
+| `Combo/` | 2 |
+| `Cooldowns/` | 2 |
+| `Customization/` | 33 |
+| `gui/` | 1 |
+| `hitbox/` | 4 |
+| `Indicators/` | 7 |
+| `Kitmap & HCF/` | 4 |
+| `Lifetime Stats Book/` | 4 |
+| `LootFeed/` | 4 |
+| `MinecraftWindowAlphaClient/` | 7 |
+| `OpponentProfiles/` | 1 |
+| `Pet Memorial/` | 4 |
+| `playerhistory/` | 9 |
+| `Predictions/` | 16 |
+| `punishmentcommandpreflight/` | 5 |
+| `punishmentconflictdetector/` | 5 |
+| `Remember Villagers/` | 8 |
+| `rememberchestinventory/` | 8 |
+| `resourcepackorganizer/` | 4 |
+| `screenshotcomparison/` | 11 |
+| `Singleplayer/` | 10 |
+| `Sounds/` | 2 |
+| `Staff Dashboard Expansion/` | 81 |
+| `Statistics/` | 4 |
+| `TimeTill/` | 7 |
+| `Timing/` | 12 |
+| `togglesneak/` | 11 |
+| `Trackers/` | 12 |
+| `Trainers/` | 23 |
+| `Viewer/` | 16 |
+| `Weather-Reactive HUD/` | 4 |
+| `Wrapped/` | 8 |
+| **Total in sibling folders** | **679** |
+
 ## Current Java Source Inventory (authoritative)
 
-Snapshot: branch `mod-ideas`, tree `665cfbbdf46f9132e5d7ec400e533b82d8cbacad`.
-Count: **536 Java files** in **41 folders** plus **1 root-level Java file**.
-This manifest is generated from the files present in the branch at the snapshot above. It excludes everything under `staffops/` and excludes non-Java files. A listed file being present does not mean it compiles, is registered, or has been tested.
+Snapshot: branch `mod-ideas`, commit/tree `ba25bc56f7196c3cb9f3b9d7cc74932469d4ac56`.
+Count: **679 Java files across 62 sibling folders, plus 1 root-level Java file (680 total)**.
+This manifest is generated from the current Git tree. It excludes everything under `staffops/` and excludes non-Java files. A listed file being present does not mean it compiles, is registered, or has been tested.
 
 ### `AccessibilityTheme/`
 
@@ -742,6 +1225,11 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `AchievementChecklistSearch.java`
 - `AchievementChecklistSettings.java`
 - `AchievementEntry.java`
+- `AchievementSuffixEntry.java`
+- `AchievementSuffixGui.java`
+- `AchievementSuffixRegistry.java`
+- `AchievementSuffixService.java`
+- `AchievementSuffixSettings.java`
 - `AchievementWall.java`
 - `AchievementWallEntry.java`
 - `AchievementWallGui.java`
@@ -749,11 +1237,6 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `AchievementWallSettings.java`
 - `AchievementWallSnapshot.java`
 - `AchievementWallSort.java`
-- `suffix/AchievementSuffixEntry.java`
-- `suffix/AchievementSuffixGui.java`
-- `suffix/AchievementSuffixRegistry.java`
-- `suffix/AchievementSuffixService.java`
-- `suffix/AchievementSuffixSettings.java`
 
 ### `ActingRankAssignment/`
 
@@ -802,6 +1285,13 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `ThirdPersonOptionsGui.java`
 - `ThirdPersonOptionsHooks.java`
 
+### `Adventure Diary/`
+
+- `AdventureDiaryBook.java`
+- `AdventureDiaryEntry.java`
+- `AdventureDiaryEvent.java`
+- `DramaticDiaryNarrator.java`
+
 ### `AfkCamera/`
 
 - `AfkActivityTracker.java`
@@ -834,18 +1324,110 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `AirHudStorage.java`
 - `MinecraftForgeBridge.java`
 
+### `AlphaClans/`
+
+- `AlphaClans.java`
+- `Clan.java`
+- `ClanChatMessage.java`
+- `ClanCommand.java`
+- `ClanCommandHandler.java`
+- `ClanCommandParser.java`
+- `ClanInvite.java`
+- `ClanMember.java`
+- `ClanPermission.java`
+- `ClanPlayerDirectory.java`
+- `ClanRepository.java`
+- `ClanResult.java`
+- `ClanRole.java`
+- `ClanScreenModel.java`
+- `ClanService.java`
+- `FileClanRepository.java`
+
+### `AlphaCoins/`
+
+- `AlphaCoin.java`
+- `AlphaCoinsCommands.java`
+- `AlphaCoinsCore.java`
+- `AlphaCoinService.java`
+- `AlphaCoinsPlaytime.java`
+- `AlphaCoinsPlaytimeEventHandler.java`
+- `AlphaCoinsPlaytimeModule.java`
+- `AlphaCoinStorage.java`
+- `AlphaCoinTransaction.java`
+- `AlphaCoinWallet.java`
+- `AlphaDailyChallenges.java`
+- `ChallengeDifficulty.java`
+- `ChallengeMetric.java`
+- `DailyChallengeCatalog.java`
+- `DailyChallengeDefinition.java`
+- `DailyChallengeEventHandler.java`
+- `DailyChallengeManager.java`
+- `DailyChallengeProgress.java`
+- `DailyChallengesGui.java`
+- `DailyChallengeStorage.java`
+- `PlaytimeRewardDefinition.java`
+- `PlaytimeRewardStatus.java`
+- `PlaytimeRewardStorage.java`
+
+### `AlphaCrashReporter/`
+
+- `AlphaCrashReporter.java`
+- `CrashAnalysisResult.java`
+- `CrashAnalyzer.java`
+- `CrashCaptureException.java`
+- `CrashCategory.java`
+- `CrashClassifier.java`
+- `CrashDetector.java`
+- `CrashEnvironment.java`
+- `CrashEventListener.java`
+- `CrashExportService.java`
+- `CrashFingerprint.java`
+- `CrashFixCatalog.java`
+- `CrashHistoryFilter.java`
+- `CrashModuleInfo.java`
+- `CrashPattern.java`
+- `CrashPatternGrouper.java`
+- `CrashPrivacyFilter.java`
+- `CrashReport.java`
+- `CrashReportBuilder.java`
+- `CrashReportCodec.java`
+- `CrashReportDetailsScreen.java`
+- `CrashReporterBootstrap.java`
+- `CrashReporterConfig.java`
+- `CrashReporterController.java`
+- `CrashReporterScreen.java`
+- `CrashReportManager.java`
+- `CrashReportRepository.java`
+- `CrashReportStatus.java`
+- `CrashSeverity.java`
+- `CrashSource.java`
+- `FileCrashReportRepository.java`
+- `SuggestedFix.java`
+- `UncaughtExceptionHandlerAdapter.java`
+
 ### `Analystics/`
 
-- `Combo Analysis/ComboAnalysisAfterFight.java`
-- `Combo Analysis/ComboConfig.java`
-- `Combo Analysis/ComboResult.java`
-- `Combo Analysis/ComboSession.java`
-- `Combo Analysis/ComboStats.java`
-- `Target/TargetSwitchAnalyzer.java`
-- `Target/TargetSwitchConfig.java`
-- `Target/TargetSwitchResult.java`
-- `Target/TargetSwitchSession.java`
-- `Target/TargetSwitchStats.java`
+- `ComboAnalysisAfterFight.java`
+- `ComboConfig.java`
+- `ComboResult.java`
+- `ComboSession.java`
+- `ComboStats.java`
+- `TargetSwitchAnalyzer.java`
+- `TargetSwitchConfig.java`
+- `TargetSwitchResult.java`
+- `TargetSwitchSession.java`
+- `TargetSwitchStats.java`
+
+### `animalbreedingcooldowntimer/`
+
+- `AnimalBreedingCooldownTimer.java`
+- `AnimalBreedingEntry.java`
+- `AnimalBreedingEventHandler.java`
+- `AnimalBreedingGui.java`
+- `AnimalBreedingHud.java`
+- `AnimalBreedingSettings.java`
+- `AnimalBreedingStorage.java`
+- `AnimalBreedingTracker.java`
 
 ### `armorbreakwarning/`
 
@@ -866,23 +1448,63 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `ArrowCounterSettings.java`
 - `ArrowCounterStorage.java`
 
+### `AutoLoadingServerProfiles/`
+
+- `PropertiesServerProfileStore.java`
+- `ServerAddressNormalizer.java`
+- `ServerProfileActivationPort.java`
+- `ServerProfileAutoLoadController.java`
+- `ServerProfileAutoLoadResult.java`
+- `ServerProfileBinding.java`
+- `ServerProfileMatch.java`
+- `ServerProfileMatcher.java`
+- `ServerProfileRegistry.java`
+- `ServerProfileStore.java`
+
+### `autosave/`
+
+- `AutoSave.java`
+- `AutoSaveEventHandler.java`
+- `AutoSaveFormatter.java`
+- `AutoSaveGui.java`
+- `AutoSaveHud.java`
+- `AutoSaveSettings.java`
+- `AutoSaveState.java`
+- `AutoSaveStorage.java`
+
 ### `Badges/`
 
-- `Anniversary/AnniversaryBadgeCalculator.java`
-- `Anniversary/AnniversaryBadgeGui.java`
-- `Anniversary/AnniversaryBadgeSettings.java`
-- `Anniversary/AnniversaryBadgeStatus.java`
-- `Anniversary/AnniversaryBadgeTier.java`
-- `Anniversary/Birthday/BirthdayCelebrationGui.java`
-- `Anniversary/Birthday/BirthdayCelebrationService.java`
-- `Anniversary/Birthday/BirthdayCelebrationSettings.java`
-- `Anniversary/Birthday/BirthdayConfettiParticle.java`
-- `Anniversary/Birthday/BirthdayConfettiParticleSink.java`
-- `Playtime/PlaytimeBadgeCalculator.java`
-- `Playtime/PlaytimeBadgeGui.java`
-- `Playtime/PlaytimeBadgeService.java`
-- `Playtime/PlaytimeBadgeStatus.java`
-- `Playtime/PlaytimeBadgeTier.java`
+- `AnniversaryBadgeCalculator.java`
+- `AnniversaryBadgeGui.java`
+- `AnniversaryBadgeSettings.java`
+- `AnniversaryBadgeStatus.java`
+- `AnniversaryBadgeTier.java`
+- `BirthdayCelebrationGui.java`
+- `BirthdayCelebrationService.java`
+- `BirthdayCelebrationSettings.java`
+- `BirthdayConfettiParticle.java`
+- `BirthdayConfettiParticleSink.java`
+- `PlaytimeBadgeCalculator.java`
+- `PlaytimeBadgeGui.java`
+- `PlaytimeBadgeService.java`
+- `PlaytimeBadgeStatus.java`
+- `PlaytimeBadgeTier.java`
+
+### `basestorageledger/`
+
+- `BaseStorageLedger.java`
+- `BaseStorageLedgerGui.java`
+- `StorageLedgerIndex.java`
+- `StorageLedgerItem.java`
+- `StorageLowAlert.java`
+
+### `Bestiary/`
+
+- `Bestiary.java`
+- `BestiaryBook.java`
+- `BestiaryEntry.java`
+- `BestiaryKillEventHandler.java`
+- `BestiaryTracker.java`
 
 ### `BiomeHud/`
 
@@ -902,6 +1524,97 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `BlockBreakRingGui.java`
 - `BlockBreakRingRenderer.java`
 - `BlockBreakRingSnapshot.java`
+
+### `cases/`
+
+- `AppealCase.java`
+- `AppealConflictDetector.java`
+- `AppealConflictDetectorGui.java`
+- `AppealConflictFinding.java`
+- `AppealConflictFormatter.java`
+- `AppealConflictPolicy.java`
+- `AppealConflictRegistry.java`
+- `AppealConflictReport.java`
+- `AppealConflictRule.java`
+- `AppealConflictService.java`
+- `AppealInvolvement.java`
+- `AppealInvolvementType.java`
+- `BlindCase.java`
+- `BlindCaseAnonymizer.java`
+- `BlindCaseEvidence.java`
+- `BlindCaseReviewFormatter.java`
+- `BlindCaseReviewGui.java`
+- `BlindCaseReviewService.java`
+- `BlindCaseView.java`
+- `BlindReviewDecision.java`
+- `BlindReviewOutcome.java`
+- `BlindReviewSession.java`
+- `CaseAgeHighlighter.java`
+- `CaseDocumentationScore.java`
+- `CaseEscalationTimer.java`
+- `CaseEscalationTimerGui.java`
+- `CaseMergeApproval.java`
+- `CaseMilestoneBoard.java`
+- `CaseOwnershipTransfer.java`
+- `CasePriority.java`
+- `CasePriorityOverride.java`
+- `CaseQualitySampler.java`
+- `CaseRedactionTool.java`
+- `CaseRedactionToolGui.java`
+- `CaseSeverityRating.java`
+- `CaseSlaMonitor.java`
+- `CaseStatus.java`
+- `CaseTags.java`
+- `CaseTimeline.java`
+- `DetectionCaseAutoLinker.java`
+- `DetectionCaseAutoLinkerGui.java`
+- `DetectionLink.java`
+- `DetectionLinkService.java`
+- `DetectionLinkStorage.java`
+- `DetectionRecord.java`
+- `EscalationCase.java`
+- `EscalationCaseState.java`
+- `EscalationDeadline.java`
+- `EscalationFormatter.java`
+- `EscalationNotification.java`
+- `EscalationNotificationManager.java`
+- `EscalationNotificationType.java`
+- `EscalationPolicy.java`
+- `EscalationStatus.java`
+- `EscalationStorage.java`
+- `EscalationTracker.java`
+- `EvidenceCaseLinker.java`
+- `EvidenceCaseLinkerGui.java`
+- `EvidenceLink.java`
+- `EvidenceLinkService.java`
+- `EvidenceLinkStorage.java`
+- `ExecutiveCaseFlag.java`
+- `GuidedCaseWalkthrough.java`
+- `InvestigationCaseExport.java`
+- `InvestigationCaseExportGui.java`
+- `InvestigationCaseImport.java`
+- `InvestigationCaseImportGui.java`
+- `InvestigationCaseManager.java`
+- `InvestigationCaseManagerGui.java`
+- `InvestigationCases.java`
+- `InvestigationCaseStorage.java`
+- `OverdueCaseAlert.java`
+- `PracticeCaseSimulator.java`
+- `RedactionDocument.java`
+- `RedactionEntry.java`
+- `RedactionService.java`
+- `RedactionStorage.java`
+- `RejectedCaseReview.java`
+- `SeniorCaseChecklist.java`
+- `SeniorCaseCommandCenter.java`
+- `SeniorCaseLock.java`
+- `SeniorCaseNotes.java`
+- `SeniorCaseQueue.java`
+- `SensitiveCaseFlag.java`
+- `StaffCaseLock.java`
+- `StaffCasePermissions.java`
+- `StaffConductCase.java`
+- `StaleCaseSweeper.java`
 
 ### `ChestItemTotal/`
 
@@ -930,138 +1643,7 @@ This manifest is generated from the files present in the branch at the snapshot 
 ### `Cooldowns/`
 
 - `Cooldowns.java`
-- `enderpearl/PearlCooldown.java`
-
-### `Cosmetics/`
-
-- `AlphaBadgeChatCosmetic.java`
-- `AlphaColoredName.java`
-- `AlphaCosmeticsCore.java`
-- `AlphaLogoKillEffect.java`
-- `AlphaLogoVictoryEffect.java`
-- `AlphaParticlesHitEffect.java`
-- `AlphaTrail.java`
-- `AnimatedName.java`
-- `AnimatedPrefixes.java`
-- `AnimationCustomizer.java`
-- `BigName.java`
-- `BowEmote.java`
-- `CapeManager.java`
-- `Capes.java`
-- `CelebrateEmote.java`
-- `ChatAppearanceCustomization.java`
-- `ChatBadges.java`
-- `ChatBubblesAbovePlayerHeads.java`
-- `CoinsVictoryEffect.java`
-- `ComboParticlesHitEffect.java`
-- `ConfettiKillEffect.java`
-- `ConfettiVictoryEffect.java`
-- `CosmeticAssetManagement.java`
-- `CosmeticAuditHistory.java`
-- `CosmeticBundles.java`
-- `CosmeticCoinShop.java`
-- `CosmeticCollectionScreen.java`
-- `CosmeticDatabase.java`
-- `CosmeticLoadouts.java`
-- `CosmeticManager.java`
-- `CosmeticMixer.java`
-- `CosmeticMysteryBoxes.java`
-- `CosmeticPerformanceSettings.java`
-- `CosmeticPetsLobby.java`
-- `CosmeticPreview.java`
-- `CosmeticSecurity.java`
-- `CosmeticSetSynergy.java`
-- `CosmeticShopPreview.java`
-- `CosmeticStore.java`
-- `CosmeticVisibility.java`
-- `CosmeticVisibilitySettings.java`
-- `CreatorBadgeChatCosmetic.java`
-- `CriticalParticlesHitEffect.java`
-- `CrossArmsEmote.java`
-- `CrownVictoryEffect.java`
-- `CursorSkins.java`
-- `CustomCrosshairManager.java`
-- `CustomGrassAndFoliageColors.java`
-- `CustomHotbarSkin.java`
-- `CustomHudFont.java`
-- `CustomLoadingScreens.java`
-- `CustomMenuButtonStyles.java`
-- `CustomMenuSounds.java`
-- `CustomMenuSoundscape.java`
-- `CustomNametagBackgroundsAnimations.java`
-- `CustomProfileBanners.java`
-- `CustomRainSnowParticles.java`
-- `CustomSkyAndStars.java`
-- `CustomWeatherParticles.java`
-- `CustomXpBarColor.java`
-- `DabEmote.java`
-- `DanceEmote.java`
-- `DeveloperBadgeChatCosmetic.java`
-- `EarlySupporterBadge.java`
-- `EmoteManager.java`
-- `EmoteWheel.java`
-- `EmoteWheelCustomization.java`
-- `EnergyBurstVictoryEffect.java`
-- `EnergyTrail.java`
-- `ExplosionVictoryEffect.java`
-- `FireTrail.java`
-- `FireworksVictoryEffect.java`
-- `FounderBadgeChatCosmetic.java`
-- `FriendNametagColors.java`
-- `FriendNametags.java`
-- `FriendsCosmeticIntegration.java`
-- `GlowName.java`
-- `GradientName.java`
-- `HeartTrail.java`
-- `LaughEmote.java`
-- `LauncherCosmeticIntegration.java`
-- `LightningTrail.java`
-- `LightningVictoryEffect.java`
-- `LimitedCosmeticsSystem.java`
-- `LimitedTimeEventBadges.java`
-- `LinkedAccountVerificationBadge.java`
-- `LocalSkinPreviewSwitcher.java`
-- `MenuOpeningAnimations.java`
-- `MouseTrail.java`
-- `MultipleAchievementBadges.java`
-- `NameTagCustomizer.java`
-- `OwnerEmotePack.java`
-- `ParticleCustomizer.java`
-- `PixelExplosionKillEffect.java`
-- `PixelTrail.java`
-- `PointEmote.java`
-- `PortalVictoryEffect.java`
-- `PremiumBadgeChatCosmetic.java`
-- `RadialEmoteMenu.java`
-- `RainbowName.java`
-- `RainbowNametagForYourself.java`
-- `RainbowTrail.java`
-- `RankBasedCosmetics.java`
-- `RotatingSkinPreviewInMenus.java`
-- `SaluteEmote.java`
-- `ScreenshotFilters.java`
-- `SelectableMainMenuBackgrounds.java`
-- `SilentNotificationSkin.java`
-- `SitEmote.java`
-- `SkinLayerToggle.java`
-- `SkinManager.java`
-- `SmokeKillEffect.java`
-- `SmokeTrail.java`
-- `SocialBadgeShowcase.java`
-- `SoulKillEffect.java`
-- `SpotifyNowPlayingBadge.java`
-- `StaffBadgeChatCosmetic.java`
-- `StarsVictoryEffect.java`
-- `StarTrail.java`
-- `SwingAnimationSpeed.java`
-- `ThreeDSkins.java`
-- `TrailEffects.java`
-- `UnlockableGradientColoredNames.java`
-- `UnlockableHotbarSkins.java`
-- `ViewmodelCustomizer.java`
-- `VoidTrail.java`
-- `WaveEmote.java`
-- `Wings.java`
+- `PearlCooldown.java`
 
 ### `Customization/`
 
@@ -1099,26 +1681,68 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `ViewBobbingCustomizer.java`
 - `WaterColorBrightnessControls.java`
 
+### `gui/`
+
+- `AlphaModMenu.java`
+
+### `hitbox/`
+
+- `HitboxGeometry.java`
+- `HitboxModule.java`
+- `HitboxRenderer.java`
+- `HitboxSettings.java`
+
 ### `Indicators/`
 
-- `Bow/BowChargeCalculator.java`
-- `Bow/BowChargeConfig.java`
-- `Bow/BowChargeIndicator.java`
-- `Bow/BowChargeSnapshot.java`
-- `Knockback/KnockbackDirectionIndicator.java`
-- `Knockback/KnockbackDirectionSnapshot.java`
-- `Knockback/KnockbackIndicatorConfig.java`
+- `BowChargeCalculator.java`
+- `BowChargeConfig.java`
+- `BowChargeIndicator.java`
+- `BowChargeSnapshot.java`
+- `KnockbackDirectionIndicator.java`
+- `KnockbackDirectionSnapshot.java`
+- `KnockbackIndicatorConfig.java`
 
 ### `Kitmap & HCF/`
 
-- `Factions/ally/AllyFactionNotes.java`
-- `Factions/ally/AllyFactionNotesModule.java`
-- `Factions/ally/AllyFactionNotesScreen.java`
-- `Factions/ally/AllyFactionNotesStore.java`
+- `AllyFactionNotes.java`
+- `AllyFactionNotesModule.java`
+- `AllyFactionNotesScreen.java`
+- `AllyFactionNotesStore.java`
+
+### `Lifetime Stats Book/`
+
+- `LifetimeStat.java`
+- `LifetimeStatsBook.java`
+- `LifetimeStatsSnapshot.java`
+- `LifetimeStatsTracker.java`
+
+### `LootFeed/`
+
+- `LootFeed.java`
+- `LootFeedEntry.java`
+- `LootFeedHud.java`
+- `LootFeedTracker.java`
+
+### `MinecraftWindowAlphaClient/`
+
+- `AlphaClientJarVersionResolver.java`
+- `LwjglWindowTitleTarget.java`
+- `MinecraftWindowAlphaClient.java`
+- `MinecraftWindowTitleController.java`
+- `MinecraftWindowTitleFormatter.java`
+- `MinecraftWindowTitleSettings.java`
+- `MinecraftWindowTitleTarget.java`
 
 ### `OpponentProfiles/`
 
 - `OpponentProfile.java`
+
+### `Pet Memorial/`
+
+- `PetDeathRecorder.java`
+- `PetMemorialBook.java`
+- `PetMemorialFormatter.java`
+- `PetMemorialRecord.java`
 
 ### `playerhistory/`
 
@@ -1134,16 +1758,38 @@ This manifest is generated from the files present in the branch at the snapshot 
 
 ### `Predictions/`
 
-- `Armor/ArmorBreakPrediction.java`
-- `Armor/ArmorBreakPredictionConfig.java`
-- `Armor/ArmorBreakResult.java`
-- `Armor/ArmorDurabilityTracker.java`
-- `Armor/ArmorSlot.java`
-- `Enderpearl/EnderPearlLandingPrediction.java`
-- `Enderpearl/EnderPearlPredictionConfig.java`
-- `Enderpearl/EnderPearlPredictionResult.java`
-- `Enderpearl/EnderPearlTrajectoryPredictor.java`
-- `Enderpearl/EnderPearlVector.java`
+- `ArmorBreakPrediction.java`
+- `ArmorBreakPredictionConfig.java`
+- `ArmorBreakResult.java`
+- `ArmorDurabilityTracker.java`
+- `ArmorDurabilityWarningConfig.java`
+- `ArmorDurabilityWarningMod.java`
+- `ArmorDurabilityWarningPiece.java`
+- `ArmorDurabilityWarningRenderer.java`
+- `ArmorDurabilityWarningResult.java`
+- `ArmorDurabilityWarningScanner.java`
+- `ArmorSlot.java`
+- `EnderPearlLandingPrediction.java`
+- `EnderPearlPredictionConfig.java`
+- `EnderPearlPredictionResult.java`
+- `EnderPearlTrajectoryPredictor.java`
+- `EnderPearlVector.java`
+
+### `punishmentcommandpreflight/`
+
+- `PunishmentCommandDraft.java`
+- `PunishmentCommandParser.java`
+- `PunishmentCommandPreflight.java`
+- `PunishmentCommandPreflightGui.java`
+- `PunishmentCommandRule.java`
+
+### `punishmentconflictdetector/`
+
+- `PunishmentConflict.java`
+- `PunishmentConflictDetector.java`
+- `PunishmentConflictDetectorGui.java`
+- `PunishmentRecord.java`
+- `PunishmentType.java`
 
 ### `Remember Villagers/`
 
@@ -1156,139 +1802,146 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `VillagerTradeRegistry.java`
 - `VillagerTradeStorage.java`
 
+### `rememberchestinventory/`
+
+- `ChestItemSnapshot.java`
+- `ChestMemoryEntry.java`
+- `ChestMemoryManager.java`
+- `ChestMemoryScanner.java`
+- `ChestMemorySearch.java`
+- `ChestMemoryStorage.java`
+- `RememberChestInventory.java`
+- `RememberChestInventoryGui.java`
+
+### `resourcepackorganizer/`
+
+- `ResourcePackEntry.java`
+- `ResourcePackFileManager.java`
+- `ResourcePackOrganizer.java`
+- `ResourcePackOrganizerGui.java`
+
+### `screenshotcomparison/`
+
+- `ScreenshotComparison.java`
+- `ScreenshotComparisonComposer.java`
+- `ScreenshotComparisonConfig.java`
+- `ScreenshotComparisonImage.java`
+- `ScreenshotComparisonImageLoader.java`
+- `ScreenshotComparisonMode.java`
+- `ScreenshotComparisonPair.java`
+- `ScreenshotComparisonScreen.java`
+- `ScreenshotComparisonTexture.java`
+- `ScreenshotDifferenceAnalyzer.java`
+- `ScreenshotDifferenceResult.java`
+
 ### `Singleplayer/`
 
-- `EasyCraft/EasyCraft.java`
-- `EasyCraft/EasyCraftCategory.java`
-- `EasyCraft/EasyCraftCraftingAdapter.java`
-- `EasyCraft/EasyCraftCraftingTableHook.java`
-- `EasyCraft/EasyCraftFavorites.java`
-- `EasyCraft/EasyCraftFavoriteStorage.java`
-- `EasyCraft/EasyCraftGui.java`
-- `EasyCraft/EasyCraftRecipe.java`
-- `EasyCraft/EasyCraftRecipeCatalog.java`
-- `EasyCraft/EasyCraftTableButton.java`
+- `EasyCraft.java`
+- `EasyCraftCategory.java`
+- `EasyCraftCraftingAdapter.java`
+- `EasyCraftCraftingTableHook.java`
+- `EasyCraftFavorites.java`
+- `EasyCraftFavoriteStorage.java`
+- `EasyCraftGui.java`
+- `EasyCraftRecipe.java`
+- `EasyCraftRecipeCatalog.java`
+- `EasyCraftTableButton.java`
 
 ### `Sounds/`
 
-- `Alert Sound/AlertSounds.java`
-- `Alert Sound/AlertSoundsGui.java`
+- `AlertSounds.java`
+- `AlertSoundsGui.java`
 
 ### `Staff Dashboard Expansion/`
 
-- `Attendance/StaffAttendanceGui.java`
-- `Attendance/StaffAttendanceManager.java`
-- `Attendance/StaffAttendanceOverview.java`
-- `Attendance/StaffAttendanceSession.java`
-- `Availability/StaffAvailabilityBoard.java`
-- `Availability/StaffAvailabilityEntry.java`
-- `Availability/StaffAvailabilityGui.java`
-- `Availability/StaffAvailabilityStatus.java`
-- `Competency/StaffCompetency.java`
-- `Competency/StaffCompetencyAssessment.java`
-- `Competency/StaffCompetencyGui.java`
-- `Competency/StaffCompetencyLevel.java`
-- `Competency/StaffCompetencyManager.java`
-- `Competency/StaffCompetencyMatrix.java`
-- `Coverage/CoverageForecastManager.java`
-- `Coverage/CoverageRequirement.java`
-- `Coverage/CoverageResult.java`
-- `Coverage/StaffCoverageForecast.java`
-- `Coverage/StaffCoverageForecastGui.java`
-- `Goals/StaffGoal.java`
-- `Goals/StaffGoalBoard.java`
-- `Goals/StaffGoalBoardGui.java`
-- `Goals/StaffGoalStatus.java`
-- `Improvement Plan/StaffImprovementAction.java`
-- `Improvement Plan/StaffImprovementEvaluation.java`
-- `Improvement Plan/StaffImprovementManager.java`
-- `Improvement Plan/StaffImprovementPlan.java`
-- `Improvement Plan/StaffImprovementPlanGui.java`
-- `Improvement Plan/StaffImprovementStatus.java`
-- `OverloadedStaffAlert/OverloadedStaffAlert.java`
-- `OverloadedStaffAlert/StaffWorkload.java`
-- `OverloadedStaffAlert/WorkloadAlert.java`
-- `OverloadedStaffAlert/WorkloadConfig.java`
-- `OverloadedStaffAlert/WorkloadLevel.java`
-- `OverloadedStaffAlert/WorkloadManager.java`
-- `Presence/StaffPresenceEntry.java`
-- `Presence/StaffPresenceGui.java`
-- `Presence/StaffPresenceList.java`
-- `Presence/StaffPresenceManager.java`
-- `Rank Comp/StaffRankComparison.java`
-- `Rank Comp/StaffRankComparisonGui.java`
-- `Rank Comp/StaffRankComparisonModule.java`
-- `Rank Comp/StaffRankComparisonResult.java`
-- `Rank Comp/StaffRankProfile.java`
-- `Responsibility Board/StaffResponsibility.java`
-- `Responsibility Board/StaffResponsibilityBoard.java`
-- `Responsibility Board/StaffResponsibilityBoardGui.java`
-- `Responsibility Board/StaffResponsibilityManager.java`
-- `Responsibility Board/StaffResponsibilityPriority.java`
-- `Responsibility Board/StaffResponsibilityStatus.java`
-- `Review Calendar/StaffReview.java`
-- `Review Calendar/StaffReviewBoardGui.java`
-- `Review Calendar/StaffReviewCalendar.java`
-- `Review Calendar/StaffReviewCalendarGui.java`
-- `Review Calendar/StaffReviewCalendarManager.java`
-- `Review Calendar/StaffReviewDayGui.java`
-- `Review Calendar/StaffReviewEditorGui.java`
-- `Review Calendar/StaffReviewReminder.java`
-- `Review Calendar/StaffReviewStatus.java`
-- `Shifts/ChecklistCategory.java`
-- `Shifts/ChecklistItem.java`
-- `Shifts/ShiftStartChecklist.java`
-- `Shifts/ShiftStartChecklistGui.java`
-- `Shifts/StaffShift.java`
-- `Shifts/StaffShiftBoard.java`
-- `Shifts/StaffShiftBoardGui.java`
-- `Shifts/StaffShiftManager.java`
-- `Shifts/StaffShiftStatus.java`
-- `Staff Duty Mode/StaffDutyManager.java`
-- `Staff Duty Mode/StaffDutyMode.java`
-- `Staff Duty Mode/StaffDutyModeGui.java`
-- `Staff Duty Mode/StaffDutyState.java`
-- `Staff Handoff/StaffHandoff.java`
-- `Staff Handoff/StaffHandoffGui.java`
-- `Staff Handoff/StaffHandoffManager.java`
-- `Staff Handoff/StaffHandoffStatus.java`
-- `Staff Queue/StaffQueue.java`
-- `Staff Queue/StaffQueueEntry.java`
-- `Staff Queue/StaffQueueGui.java`
-- `Staff Queue/StaffQueuePriority.java`
-- `Staff Queue/StaffQueueStatus.java`
+- `ChecklistCategory.java`
+- `ChecklistItem.java`
+- `CoverageForecastManager.java`
+- `CoverageRequirement.java`
+- `CoverageResult.java`
+- `OverloadedStaffAlert.java`
+- `ShiftStartChecklist.java`
+- `ShiftStartChecklistGui.java`
+- `StaffAttendanceGui.java`
+- `StaffAttendanceManager.java`
+- `StaffAttendanceOverview.java`
+- `StaffAttendanceSession.java`
+- `StaffAvailabilityBoard.java`
+- `StaffAvailabilityEntry.java`
+- `StaffAvailabilityGui.java`
+- `StaffAvailabilityStatus.java`
+- `StaffCompetency.java`
+- `StaffCompetencyAssessment.java`
+- `StaffCompetencyGui.java`
+- `StaffCompetencyLevel.java`
+- `StaffCompetencyManager.java`
+- `StaffCompetencyMatrix.java`
+- `StaffCoverageForecast.java`
+- `StaffCoverageForecastGui.java`
+- `StaffDutyManager.java`
+- `StaffDutyMode.java`
+- `StaffDutyModeGui.java`
+- `StaffDutyState.java`
+- `StaffGoal.java`
+- `StaffGoalBoard.java`
+- `StaffGoalBoardGui.java`
+- `StaffGoalStatus.java`
+- `StaffHandoff.java`
+- `StaffHandoffGui.java`
+- `StaffHandoffManager.java`
+- `StaffHandoffStatus.java`
+- `StaffImprovementAction.java`
+- `StaffImprovementEvaluation.java`
+- `StaffImprovementManager.java`
+- `StaffImprovementPlan.java`
+- `StaffImprovementPlanGui.java`
+- `StaffImprovementStatus.java`
+- `StaffPresenceEntry.java`
+- `StaffPresenceGui.java`
+- `StaffPresenceList.java`
+- `StaffPresenceManager.java`
+- `StaffQueue.java`
+- `StaffQueueEntry.java`
+- `StaffQueueGui.java`
+- `StaffQueuePriority.java`
+- `StaffQueueStatus.java`
+- `StaffRankComparison.java`
+- `StaffRankComparisonGui.java`
+- `StaffRankComparisonModule.java`
+- `StaffRankComparisonResult.java`
+- `StaffRankProfile.java`
+- `StaffResponsibility.java`
+- `StaffResponsibilityBoard.java`
+- `StaffResponsibilityBoardGui.java`
+- `StaffResponsibilityManager.java`
+- `StaffResponsibilityPriority.java`
+- `StaffResponsibilityStatus.java`
+- `StaffReview.java`
+- `StaffReviewBoardGui.java`
+- `StaffReviewCalendar.java`
+- `StaffReviewCalendarGui.java`
+- `StaffReviewCalendarManager.java`
+- `StaffReviewDayGui.java`
+- `StaffReviewEditorGui.java`
+- `StaffReviewReminder.java`
+- `StaffReviewStatus.java`
+- `StaffShift.java`
+- `StaffShiftBoard.java`
+- `StaffShiftBoardGui.java`
+- `StaffShiftManager.java`
+- `StaffShiftStatus.java`
+- `StaffWorkload.java`
+- `WorkloadAlert.java`
+- `WorkloadConfig.java`
+- `WorkloadLevel.java`
+- `WorkloadManager.java`
 
 ### `Statistics/`
 
-- `Duels/DuelRecord.java`
-- `Duels/DuelStatisticsConfig.java`
-- `Duels/DuelStatisticsSnapshot.java`
-- `Duels/OpponentSpecificDuelStatistics.java`
-
-### `store/`
-
-- `Store.java`
-- `StoreGui.java`
-- `README.md`
-- `Addons/AddonCategory.java`
-- `Addons/AddonEntry.java`
-- `Addons/AddonInstallState.java`
-- `Addons/AddonManager.java`
-- `Addons/AddonRegistry.java`
-- `Addons/AddonSearch.java`
-- `Addons/AddonStore.java`
-- `Addons/AddonStoreGui.java`
-- `Addons/AddonStoreSettings.java`
-- `Addons/AddonStoreStorage.java`
-- `cosmetics/CosmeticCategory.java`
-- `cosmetics/CosmeticEntry.java`
-- `cosmetics/CosmeticRegistry.java`
-- `cosmetics/CosmeticCatalog.java`
-- `Cosmetics/` — 128 moved idea/prototype source files; package declarations still reference `com.alpharip.staffmod.staffops.ideas` and these files are not wired as Store catalogue entries.
-- `partners/PartnerEntry.java`
-- `partners/PartnerType.java`
-- `partners/PartnerRegistry.java`
-- `partners/PartnerCatalog.java`
+- `DuelRecord.java`
+- `DuelStatisticsConfig.java`
+- `DuelStatisticsSnapshot.java`
+- `OpponentSpecificDuelStatistics.java`
 
 ### `TimeTill/`
 
@@ -1302,74 +1955,99 @@ This manifest is generated from the files present in the branch at the snapshot 
 
 ### `Timing/`
 
-- `block break timing/BlockBreakSample.java`
-- `block break timing/BlockBreakTiming.java`
-- `block break timing/BlockBreakTimingConfig.java`
-- `block break timing/BlockBreakTimingStats.java`
-- `Block placement timing/BlockPlacementSample.java`
-- `Block placement timing/BlockPlacementTiming.java`
-- `Block placement timing/BlockPlacementTimingConfig.java`
-- `Block placement timing/BlockPlacementTimingStats.java`
-- `brewing/BrewingStandReader.java`
-- `brewing/BrewingTimer.java`
-- `brewing/BrewingTimerSettingsScreen.java`
-- `Combat Timer/CombatTimer.java`
+- `BlockBreakSample.java`
+- `BlockBreakTiming.java`
+- `BlockBreakTimingConfig.java`
+- `BlockBreakTimingStats.java`
+- `BlockPlacementSample.java`
+- `BlockPlacementTiming.java`
+- `BlockPlacementTimingConfig.java`
+- `BlockPlacementTimingStats.java`
+- `BrewingStandReader.java`
+- `BrewingTimer.java`
+- `BrewingTimerSettingsScreen.java`
+- `CombatTimer.java`
+
+### `togglesneak/`
+
+- `AbstractToggleMovementModule.java`
+- `ToggleMovementController.java`
+- `ToggleMovementInput.java`
+- `ToggleMovementKeyBindings.java`
+- `ToggleMovementKeyHandler.java`
+- `ToggleMovementKeyState.java`
+- `ToggleMovementModule.java`
+- `ToggleMovementRuntime.java`
+- `ToggleMovementType.java`
+- `ToggleSneak.java`
+- `ToggleSprint.java`
 
 ### `Trackers/`
 
-- `Acknowledgement/AcknowledgementEntry.java`
-- `Acknowledgement/AcknowledgementGui.java`
-- `Acknowledgement/AcknowledgementRegistry.java`
-- `Acknowledgement/AcknowledgementService.java`
-- `Acknowledgement/AcknowledgementSettings.java`
-- `Acknowledgement/AcknowledgementStatus.java`
-- `Acknowledgement/AcknowledgementTracker.java`
-- `Acknowledgement/AcknowledgementValidator.java`
-- `Arrow Tracker/ArrowTrack.java`
-- `Arrow Tracker/ArrowTracker.java`
-- `Arrow Tracker/ArrowTrackerConfig.java`
-- `Arrow Tracker/ArrowTrackerSnapshot.java`
+- `AcknowledgementEntry.java`
+- `AcknowledgementGui.java`
+- `AcknowledgementRegistry.java`
+- `AcknowledgementService.java`
+- `AcknowledgementSettings.java`
+- `AcknowledgementStatus.java`
+- `AcknowledgementTracker.java`
+- `AcknowledgementValidator.java`
+- `ArrowTrack.java`
+- `ArrowTracker.java`
+- `ArrowTrackerConfig.java`
+- `ArrowTrackerSnapshot.java`
 
 ### `Trainers/`
 
-- `Aim Trainer/AimDriftHeatmap.java`
-- `Aim Trainer/AimTrainerConfig.java`
-- `Aim Trainer/AimTrainerResult.java`
-- `Aim Trainer/AimTrainerSession.java`
-- `Aim Trainer/AimTrainerStats.java`
-- `Bridge/BridgePersonalBest.java`
-- `Bridge/BridgeRun.java`
-- `Bridge/BridgeRunResult.java`
-- `Bridge/BridgeRunStats.java`
-- `Bridge/BridgeSpeedTrainer.java`
-- `Bridge/BridgeTrainerConfig.java`
-- `enderpearl/EnderPearlAccuracyPractice.java`
-- `potion throw Coach/PotionThrowCoach.java`
-- `potion throw Coach/PotionThrowCoachConfig.java`
-- `potion throw Coach/PotionThrowCoachPanel.java`
-- `potion throw Coach/PotionThrowCoachStats.java`
-- `potion throw Coach/PotionThrowResult.java`
-- `WarmupTrainer/WarmupRoutine.java`
-- `WarmupTrainer/WarmUpRoutineRunner.java`
-- `WarmupTrainer/WarmUpRoutineRunnerPanel.java`
-- `WarmupTrainer/WarmupSession.java`
-- `WarmupTrainer/WarmupStats.java`
-- `WarmupTrainer/WarmupStep.java`
+- `AimDriftHeatmap.java`
+- `AimTrainerConfig.java`
+- `AimTrainerResult.java`
+- `AimTrainerSession.java`
+- `AimTrainerStats.java`
+- `BridgePersonalBest.java`
+- `BridgeRun.java`
+- `BridgeRunResult.java`
+- `BridgeRunStats.java`
+- `BridgeSpeedTrainer.java`
+- `BridgeTrainerConfig.java`
+- `EnderPearlAccuracyPractice.java`
+- `PotionThrowCoach.java`
+- `PotionThrowCoachConfig.java`
+- `PotionThrowCoachPanel.java`
+- `PotionThrowCoachStats.java`
+- `PotionThrowResult.java`
+- `WarmupRoutine.java`
+- `WarmUpRoutineRunner.java`
+- `WarmUpRoutineRunnerPanel.java`
+- `WarmupSession.java`
+- `WarmupStats.java`
+- `WarmupStep.java`
 
 ### `Viewer/`
 
-- `playerconnectionviewer/ConnectionFormatter.java`
-- `playerconnectionviewer/ConnectionSnapshot.java`
-- `playerconnectionviewer/ConnectionState.java`
-- `playerconnectionviewer/ConnectionTracker.java`
-- `playerconnectionviewer/PlayerConnectionViewer.java`
-- `playerconnectionviewer/PlayerConnectionViewerEventHandler.java`
-- `playerconnectionviewer/PlayerConnectionViewerGui.java`
-- `PlayerDirectionViewer/PlayerDirectionFormatter.java`
-- `PlayerDirectionViewer/PlayerDirectionSnapshot.java`
-- `PlayerDirectionViewer/PlayerDirectionViewer.java`
-- `PlayerDirectionViewer/PlayerDirectionViewerEventHandler.java`
-- `PlayerDirectionViewer/PlayerDirectionViewerGui.java`
+- `ConnectionFormatter.java`
+- `ConnectionSnapshot.java`
+- `ConnectionState.java`
+- `ConnectionTracker.java`
+- `ItemNbtViewer.java`
+- `ItemNbtViewerGui.java`
+- `NbtTreeBuilder.java`
+- `NbtTreeNode.java`
+- `PlayerConnectionViewer.java`
+- `PlayerConnectionViewerEventHandler.java`
+- `PlayerConnectionViewerGui.java`
+- `PlayerDirectionFormatter.java`
+- `PlayerDirectionSnapshot.java`
+- `PlayerDirectionViewer.java`
+- `PlayerDirectionViewerEventHandler.java`
+- `PlayerDirectionViewerGui.java`
+
+### `Weather-Reactive HUD/`
+
+- `HudWeatherPalette.java`
+- `WeatherCondition.java`
+- `WeatherPaletteResolver.java`
+- `WeatherReactiveHudModel.java`
 
 ### `Wrapped/`
 
@@ -1381,39 +2059,6 @@ This manifest is generated from the files present in the branch at the snapshot 
 - `AnnualAlphaWrappedSession.java`
 - `AnnualAlphaWrappedSettings.java`
 - `AnnualAlphaWrappedSummary.java`
-
-### `rememberchestinventory/`
-
-- `ChestItemSnapshot.java`
-- `ChestMemoryEntry.java`
-- `ChestMemoryManager.java`
-- `ChestMemoryScanner.java`
-- `ChestMemorySearch.java`
-- `ChestMemoryStorage.java`
-- `RememberChestInventory.java`
-- `RememberChestInventoryGui.java`
-
-### `animalbreedingcooldowntimer/`
-
-- `AnimalBreedingCooldownTimer.java`
-- `AnimalBreedingEntry.java`
-- `AnimalBreedingEventHandler.java`
-- `AnimalBreedingGui.java`
-- `AnimalBreedingHud.java`
-- `AnimalBreedingSettings.java`
-- `AnimalBreedingStorage.java`
-- `AnimalBreedingTracker.java`
-
-### `autosave/`
-
-- `AutoSave.java`
-- `AutoSaveEventHandler.java`
-- `AutoSaveFormatter.java`
-- `AutoSaveGui.java`
-- `AutoSaveHud.java`
-- `AutoSaveSettings.java`
-- `AutoSaveState.java`
-- `AutoSaveStorage.java`
 
 ### Package root
 
