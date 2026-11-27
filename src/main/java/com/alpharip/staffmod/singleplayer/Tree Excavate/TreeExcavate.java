@@ -60,6 +60,8 @@ public final class TreeExcavate {
         if (!TreeExcavateAccess.isAvailable(mc) || !TreeExcavateSettings.isEnabled()) return;
 
         EntityPlayer player = event.getPlayer();
+        if (player.capabilities.isCreativeMode) return;
+
         ItemStack heldItem = player.getCurrentEquippedItem();
         if (heldItem == null || !(heldItem.getItem() instanceof ItemAxe)) return;
 
