@@ -20,7 +20,7 @@ public final class BuildSymmetryGuidesGui extends GuiScreen {
     public void initGui() {
         buttonList.clear();
         panelWidth = Math.min(360, Math.max(280, width - 20));
-        panelHeight = 260;
+        panelHeight = 280;
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
         int x = left + 16;
