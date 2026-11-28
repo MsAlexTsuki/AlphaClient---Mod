@@ -4,11 +4,37 @@
 >
 > Entries are ordered newest first. Times are UTC. Commit subjects and message bodies are preserved from GitHub. Each short hash links to the full commit.
 >
-> This is the central changelog for `mod-ideas`. For every future approved change, add the user-facing English changelog here as well as recording the corresponding commit.
+> This is the central changelog for `mod-ideas`. Previously prepared user-facing summaries are collected in the section below. The complete historical commit messages follow afterward. For every future approved change, add the full user-facing English changelog here as well as recording the corresponding commit.
 
 - **Branch:** `mod-ideas`
 - **Commits included:** 3949 (complete branch history captured from GitHub)
 - **Current branch head at collection start:** `614e6354c77e0fc45438cdb7f95d0ab468e075c2`
+
+## User-facing feature changelogs
+
+The following full release-note summaries were previously prepared in chat and are included here so they can be read directly from the repository.
+
+### Builder Grid & Ruler Overlay
+Added the standalone Builder Grid & Ruler Overlay prototype. It includes a configurable world-space building grid, X/Z measurement guides, block-distance tick marks, and an X/Y/Z ruler HUD. Added adjustable grid spacing and guide area radius, origin capture, coordinate snapping, a dedicated settings interface, and local settings persistence. Preserved the original grid and ruler defaults and snapping behavior. Removed the original idea file and updated the project documentation. The prototype is not integrated into AlphaClient Core, and build and in-game verification are still pending.
+
+Commits: [Add Builder Grid and Ruler Overlay prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/dda1668ea59fd85cef41e68f675d5b3b462353c8) · [Bound ruler rendering and correct prototype inventory](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/614e6354c77e0fc45438cdb7f95d0ab468e075c2)
+
+### Chunk Borders
+Added the standalone Chunk Borders prototype with vertical chunk-corner pillars, horizontal chunk boundary lines, and a current-chunk highlight. Added three visual styles, configurable render distance, visibility controls, opacity settings, a dedicated settings interface, and local settings storage. Preserved the original disabled default and default style. Removed the original idea file and updated the project documentation. The prototype is not integrated into AlphaClient Core, and build and in-game verification are still pending.
+
+Commit: [Add Chunk Borders prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/4eb0c96c01bfab68bb14db6e77a542a0b065fda0)
+
+### Fishing Bite Alarm
+Added the standalone Fishing Bite Alarm prototype. It includes fishing hook movement detection, a configurable local sound alert, adjustable alert intervals and volume, a test sound option, a settings interface, and local settings storage. The original idea file has been removed and the project documentation updated. The prototype is not yet integrated into the playable AlphaClient module system, and in-game detection and build verification are still pending.
+
+Commit: [Add Fishing Bite Alarm prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/8cb0f99e39dcb440210450831e8c89e163a18aad)
+
+### Build Symmetry Guides
+Added the standalone Build Symmetry Guides prototype. It provides X-plane, Z-plane, and combined X/Z mirror previews, with configurable guide visibility, guide lines, colors, opacity, and origin controls. The prototype draws visual previews only and does not place or modify blocks. Its source was moved into the canonical Java prototype directory and the project documentation was updated. The prototype is not integrated into AlphaClient Core, and build and in-game verification are still pending.
+
+Commits: [Add Build Symmetry Guides prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/40b064f7c684f4f3ad06c2c4104d63ea0ff526e0) · [Move and expand Build Symmetry Guides prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/983fcf0cb0ad295bdad86a473ab39bb56f189abd) · [Document Build Symmetry Guides source location](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/85e016e42f16b23aee8093028ee973dafbc1e4f6)
+
+---
 
 ## Commit-by-commit history
 
