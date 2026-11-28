@@ -11,7 +11,7 @@ Existing prototype folders remain in repository-root `Prototypes/` unless specif
 This document is the implementation checklist for Java prototype source in repository-root `Prototypes/` and the canonical Java-source `src/main/java/com/alpharip/staffmod/Prototypes/` folder on branch `mod-ideas`.
 
 - Scope inspected: repository-root `Prototypes/` and `src/main/java/com/alpharip/staffmod/Prototypes/`.
-- Current verified inventory: **679 Java files** across **62 folders** in repository-root `Prototypes/`, plus **28 Java files** across **3 folders** in `src/main/java/com/alpharip/staffmod/Prototypes/` (**707 prototype Java files across 65 folders total**). The repository-root `StaffMod.java` is separate and is not included in this prototype count.
+- Current verified inventory: **679 Java files** across **62 folders** in repository-root `Prototypes/`, plus **37 Java files** across **4 folders** in `src/main/java/com/alpharip/staffmod/Prototypes/` (**716 prototype Java files across 66 folders total**). The repository-root `StaffMod.java` is separate and is not included in this prototype count.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -2294,3 +2294,25 @@ Folder: `src/main/java/com/alpharip/staffmod/Prototypes/ChunkBorders/`
 **Current status:** The standalone settings model, style definitions, render snapshot, Forge world-render adapter, OpenGL chunk-boundary renderer, settings GUI, and local properties persistence are present.
 
 **Still missing / not verified:** AlphaClient Core/module-menu registration and an approved GUI access route. Compilation against the exact ForgeGradle setup, rendering behavior in Minecraft 1.8.9, OpenGL state interaction with other overlays, performance at larger radii, GUI behavior at different resolutions, and settings save/load round trips have not been verified. No Supabase, Alpha Launcher, or `development` changes are included.
+
+
+## Builder Grid & Ruler Overlay
+
+Folder: `src/main/java/com/alpharip/staffmod/Prototypes/BuilderGridAndRulerOverlay/`
+
+- **BuilderGridAndRulerOverlay.java** — Standalone module facade with explicit Forge event lifecycle, settings access, anchor management, snap calculation, and GUI entry point. It is not automatically registered or enabled by AlphaClient Core.
+- **BuilderGridSettings.java** — Holds the independent grid/ruler toggles, grid spacing, and visible build-area radius. The original defaults (both overlays enabled and spacing 1) are preserved.
+- **BuilderGridAnchor.java** — Stores the world-coordinate origin used to position the guide area and measure offsets.
+- **BuilderGridSnapshot.java** — Immutable render-time copy of the anchor, player block position, and active settings.
+- **BuilderGridCalculator.java** — Calculates grid-aligned world coordinates using the original nearest-multiple snapping rule and generates bounded grid-line coordinates.
+- **BuilderGridRenderer.java** — Renders the horizontal build grid and X/Z ruler axes with per-block tick marks, using camera-relative coordinates and restoring the OpenGL state it changes.
+- **BuilderGridRulerHudRenderer.java** — Displays the current X/Z offset from the saved anchor and the active grid spacing while the ruler is enabled.
+- **BuilderGridEventHandler.java** — Receives Forge world-render and HUD overlay events and delegates only while the standalone module is running.
+- **BuilderGridGui.java** — Provides independent grid/ruler toggles, spacing and area-radius controls, anchor capture, save, and return navigation.
+- **BuilderGridStorage.java** — Loads and saves local settings and anchor coordinates under `config/alphaclient/builder_grid_ruler.properties`.
+
+**Preserved defaults:** The original idea used `gridEnabled = true`, `rulerEnabled = true`, and `gridSpacing = 1`. All three defaults are retained. The original spacing clamp of 1–64 and nearest-multiple snap behavior are retained.
+
+**Current status:** The standalone settings model, saved world-coordinate anchor, grid snapping/calculation, world grid and ruler rendering, ruler offset HUD, settings GUI, and local properties persistence are present.
+
+**Still missing / not verified:** AlphaClient Core/module-menu registration and an approved GUI access route. Compilation against the exact ForgeGradle setup, rendering behavior in Minecraft 1.8.9, OpenGL state interaction with other overlays, measurement appearance at different angles/heights, GUI behavior at different resolutions, and settings save/load round trips have not been verified. No Supabase, Alpha Launcher, or `development` changes are included.
