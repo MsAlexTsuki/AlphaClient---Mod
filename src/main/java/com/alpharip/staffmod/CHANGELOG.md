@@ -216,6 +216,27 @@ The current branch contains **717 Java files across 66 prototype folders** under
 - Alpha Policy website and policy document collection, including draft policy pages and the policy reader.
 - AlphaCrashReporter — crash capture, analysis, report metadata, privacy redaction, and report-detail screen.
 
+
+### Detailed StaffOps module work
+- **AimAssist Expansion:** added target selection, target snapshots, rotation calculation, smoothing controls, modes, settings, and a standalone GUI.
+- **AnvilCost:** added vanilla anvil-cost calculation and compact inventory tooltips; refined enchantment-book previews, XP-cost sorting, and missing-XP information.
+- **AutoTool:** added automatic tool selection, settings/navigation, selection refinements, and singleplayer-save-scoped profile handling.
+- **BlockPlacementPreview:** added placement preview rendering, settings and command source; refined placement metadata, collision checks, and vanilla block-model handling for non-solid shapes.
+- **BuildTimelapse:** added a modular studio with build-area tracking, block/activity analytics, local project persistence, interval-based frame capture, camera paths, timeline models, effects profiles, and export-job metadata.
+- **CPSMod and ComboCounter:** added click/combo tracking; ComboCounter also received HUD rendering, a public General module registration, settings, preview dragging, reset support, and saved appearance/position.
+- **CommandPalette:** added searchable action navigation and corrected row interaction and mouse-wheel scrolling.
+- **InventorySearch:** added search interfaces for player inventory, chests, and Ender Chests, plus settings and persistence.
+- **PixelGarden:** added the Pixel Garden source collection, including its feature, commands, animation, and coin-related components.
+- **RecordingStudio:** added an OBS-style recording workspace with scenes, sources, a live gameplay preview, video/audio timeline, camera editor, microphone selection and capture, local project storage, crash-recovery checkpoints, asynchronous frame encoding, and MP4/GIF export controls. Export support includes timeline clip timing, resolution/quality presets, progress reporting, cancellation, and external video sources. FFmpeg/FFprobe are external requirements; this prototype is not described as integrated or tested.
+- **Store:** added the central Store navigation and Addons, Cosmetics, Owned, and Partners sections; migrated 128 cosmetic component files into the catalogue and added local search, details, optional texture previews, ownership/loadout state, and player-skin preview source. Purchase processing, remote entitlements, and live cosmetic attachment are not claimed.
+- **WayPoints:** added local waypoint management with commands, profiles, favorites, history, import/export, route tools, visual customization, and safer persistence.
+- **WinLossTracker:** added Practice win/loss tracking, server-address profiles, per-address statistics, profile aliases, explicit result detection, and safer local persistence.
+- **EnchantingName:** added vanilla-enchantment clue handling and a text-only clue renderer.
+- **FPS, Ping, GUI, HUD, Config, Modules, Movement, Network, Optimization, Permissions, Profile, PvP, Quality, Ranks, RankViewer, Developer, and EasterEggs:** organized their supporting source into the StaffOps done collection.
+
+### Exact standalone prototype folder inventory
+AccessReviewReminder; AccessibilityTheme; ActingRankAssignment; ActiveDeviceListGlobalSignOut; AdjustThirdPerson; AdjustableRainAndSnowSpeed; AdjustableStarDensity; Adventure Diary; AfkCamera; Aim Pattern Library; AirHud; AlphaClans; AlphaCoins; AlphaCrashReporter; Analystics; ArrowCounter; AutoLoadingServerProfiles; Badges; Bestiary; BiomeHud; Block Break Ring; BuildSymmetryGuides; BuilderGridAndRulerOverlay; ChestItemTotal; ChunkBorders; Clutch; Combo; Cooldowns; Customization; FishingBiteAlarm; Indicators; Kitmap & HCF; Lifetime Stats Book; LootFeed; MinecraftWindowAlphaClient; OpponentProfiles; Pet Memorial; Predictions; Remember Villagers; Singleplayer; Sounds; Staff Dashboard Expansion; Statistics; TimeTill; Timing; Trackers; Trainers; Viewer; Weather-Reactive HUD; Wrapped; account; achievements; animalbreedingcooldowntimer; armorbreakwarning; autosave; basestorageledger; cases; gui; hitbox; playerhistory; punishmentcommandpreflight; punishmentconflictdetector; rememberchestinventory; resourcepackorganizer; screenshotcomparison; togglesneak.
+
 ## StaffOps idea-source foundations
 
 The current branch contains **1,496 Java source files** under staffops/ideas. These are idea/source foundations and are not represented as finished client features.
