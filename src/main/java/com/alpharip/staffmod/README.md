@@ -11,7 +11,7 @@ The previous repository-root `Prototypes/` directory has been moved into `src/ma
 This document is the implementation checklist for Java prototype source in `src/main/java/com/alpharip/staffmod/Prototypes/` on branch `mod-ideas`.
 
 - Scope inspected: the complete `src/main/java/com/alpharip/staffmod/Prototypes/` tree on `mod-ideas`.
-- Current verified inventory: **733 Java files across 68 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
+- Current verified inventory: **750 Java files across 69 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -2336,3 +2336,26 @@ Folder: `RiskMitigationBoard/`
 **Current status:** The standalone data model, in-memory register, service operations, filtering/sorting helpers, summary model, local JSON persistence, CSV export, access boundary, controller, and first GUI screen are present.
 
 **Still missing / not verified:** Full GUI editing for category/severity/due dates, mitigation-action and note management controls, a concrete StaffMods authorization adapter and approved dashboard entry, production-safe persistence recovery, compilation against the exact ForgeGradle setup, and in-game behavior. No AlphaClient Core or `development` integration is included.
+
+
+## Appeal Review Workspace
+
+Folder: `Prototypes/AppealReviewWorkspace/`
+
+- **AppealCase.java**, **AppealStatus.java**, and **AppealDecisionType.java** — Define an appeal record, its lifecycle, and decision actions.
+- **AppealEvidence.java** — Stores evidence labels and references as metadata only; it does not copy, upload, or verify evidence files.
+- **AppealReviewNote.java** — Stores reviewer notes with author and timestamp.
+- **AppealReviewerAssignment.java** — Represents reviewer assignment history.
+- **AppealDecisionRecord.java** — Records decision type, reviewer, rationale, and timestamp.
+- **AppealEscalationRecord.java** — Records escalation reason, actor, target, and timestamp.
+- **AppealReopenRequest.java** — Tracks reopen requests and their pending/accepted/rejected state.
+- **AppealReviewFilter.java** and **AppealReviewSort.java** — Define queue filters and ordering.
+- **AppealReviewSummary.java** — Exposes queue totals by workflow status.
+- **AppealReviewBoard.java** — Manages appeal records and related evidence, notes, decisions, assignments, escalations, and reopen requests in memory.
+- **AppealReviewService.java** — Provides submission, assignment, status changes, evidence/note entry, decisions, escalation, reopen-request handling, filtering, and summary operations.
+- **AppealReviewStorage.java** — Saves and loads a versioned local JSON snapshot. Only base appeal records are persisted; related records remain memory-only.
+- **AppealReviewAccess.java** — Defines an authorization adapter boundary. It does not grant ranks or permissions; connect it to the established StaffMods authorization layer before production use.
+- **AppealReviewController.java** — Coordinates the board, service, local storage, and supplied access adapter.
+- **AppealReviewWorkspaceGui.java** — Provides an initial in-game queue with submission, status cycling, removal, and summary counts. Dedicated evidence, notes, reviewer assignment, decision, escalation, and reopen-request screens are not exposed yet.
+
+The prototype is local-only: no Supabase calls, remote persistence, server integration, or automatic appeal ingestion are included. Compilation, production integration, permission enforcement through the real StaffMods layer, persistence recovery, and in-game behavior remain unverified.

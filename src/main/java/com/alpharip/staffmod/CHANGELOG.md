@@ -637,3 +637,16 @@ The idea-source directory also contains concrete Java foundations for many named
 - Added an authorization adapter boundary; production access must still be connected to the established StaffMods permission layer. The prototype does not grant permissions.
 - Moved the source from `staffops/ideas/RiskMitigationBoard.java` into the standalone `Prototypes/RiskMitigationBoard/` folder and removed the original idea file.
 - Compilation, production integration, persistence recovery, and in-game behavior have not been verified.
+
+
+### 2026-11-28
+
+#### Appeal Review Workspace
+- Added a standalone appeal workflow prototype with appeal records, lifecycle statuses, reviewer assignments, evidence references, internal notes, decision records, escalation records, and reopen requests.
+- Added queue filtering and sorting models, status summary counts, and service operations for submission, review, decisions, escalation, and reopen-request handling.
+- Added versioned local JSON storage for appeal case records only. Evidence, notes, decisions, assignments, escalations, and reopen requests currently remain in memory.
+- Added an initial in-game queue interface for submitting appeals, cycling statuses, removing records, and viewing summary counts.
+- Added an authorization adapter boundary; production access must be connected to the established StaffMods permission layer. The prototype does not grant permissions.
+- Kept the prototype local-only, with no Supabase calls, remote persistence, server integration, or automatic appeal ingestion.
+- Moved `staffops/ideas/AppealReviewWorkspace.java` into `Prototypes/AppealReviewWorkspace/` and removed the original idea file. Other Appeal-related idea files were left unchanged.
+- Compilation, production integration, permission enforcement, persistence recovery, and in-game behavior have not been verified.
