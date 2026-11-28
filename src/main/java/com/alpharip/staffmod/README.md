@@ -11,7 +11,7 @@ The previous repository-root `Prototypes/` directory has been moved into `src/ma
 This document is the implementation checklist for Java prototype source in `src/main/java/com/alpharip/staffmod/Prototypes/` on branch `mod-ideas`.
 
 - Scope inspected: the complete `src/main/java/com/alpharip/staffmod/Prototypes/` tree on `mod-ideas`.
-- Current verified inventory: **717 Java files across 67 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
+- Current verified inventory: **733 Java files across 68 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -2316,3 +2316,23 @@ Folder: `src/main/java/com/alpharip/staffmod/Prototypes/BuilderGridAndRulerOverl
 **Current status:** The standalone settings model, saved world-coordinate anchor, grid snapping/calculation, world grid and ruler rendering, ruler offset HUD, settings GUI, and local properties persistence are present.
 
 **Still missing / not verified:** AlphaClient Core/module-menu registration and an approved GUI access route. Compilation against the exact ForgeGradle setup, rendering behavior in Minecraft 1.8.9, OpenGL state interaction with other overlays, measurement appearance at different angles/heights, GUI behavior at different resolutions, and settings save/load round trips have not been verified. No Supabase, Alpha Launcher, or `development` changes are included.
+
+## Risk Mitigation Board
+
+Folder: `RiskMitigationBoard/`
+
+- **RiskCategory.java**, **RiskSeverity.java**, and **RiskStatus.java** — Define the supported risk classifications, severity levels, and lifecycle states.
+- **RiskRecord.java** — Holds the risk description, owner, due date, timestamps, status, mitigation actions, and notes.
+- **RiskMitigationAction.java** and **RiskNote.java** — Represent actionable mitigation work and timestamped staff notes.
+- **RiskBoard.java** — Maintains the in-memory risk register and exposes record snapshots.
+- **RiskBoardService.java** — Provides validated create/update/status/action/note operations, filtering, and dashboard summary calculations.
+- **RiskBoardFilter.java** and **RiskBoardSort.java** — Support filtering by status, severity, category, owner, and text, plus severity/date sorting.
+- **RiskBoardSummary.java** — Exposes total, lifecycle, critical, overdue, and incomplete-action counts.
+- **RiskBoardStorage.java** — Saves and loads a versioned JSON snapshot locally. No remote service or Supabase integration is included.
+- **RiskBoardExport.java** — Exports a local CSV snapshot for manual review.
+- **RiskBoardAccess.java** and **RiskBoardController.java** — Define the authorization boundary and access-checked controller. A real adapter to the established StaffMods authorization layer is still required; this prototype does not grant permissions.
+- **RiskMitigationBoardGui.java** — Provides the first Alpha-styled in-game risk-register screen with record creation, summary counts, status cycling, and removal.
+
+**Current status:** The standalone data model, in-memory register, service operations, filtering/sorting helpers, summary model, local JSON persistence, CSV export, access boundary, controller, and first GUI screen are present.
+
+**Still missing / not verified:** Full GUI editing for category/severity/due dates, mitigation-action and note management controls, a concrete StaffMods authorization adapter and approved dashboard entry, production-safe persistence recovery, compilation against the exact ForgeGradle setup, and in-game behavior. No AlphaClient Core or `development` integration is included.
