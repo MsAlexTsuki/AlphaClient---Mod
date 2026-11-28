@@ -11,7 +11,7 @@ Existing prototype folders remain in repository-root `Prototypes/` unless specif
 This document is the implementation checklist for Java prototype source in repository-root `Prototypes/` and the canonical Java-source `src/main/java/com/alpharip/staffmod/Prototypes/` folder on branch `mod-ideas`.
 
 - Scope inspected: repository-root `Prototypes/` and `src/main/java/com/alpharip/staffmod/Prototypes/`.
-- Current verified inventory: **679 Java files** across **62 folders** in repository-root `Prototypes/`, plus **12 Java files** in `src/main/java/com/alpharip/staffmod/Prototypes/BuildSymmetryGuides/` (**691 prototype Java files across 63 folders total**). The repository-root `StaffMod.java` is separate and is not included in this prototype count.
+- Current verified inventory: **679 Java files** across **62 folders** in repository-root `Prototypes/`, plus **20 Java files** across **2 folders** in `src/main/java/com/alpharip/staffmod/Prototypes/` (**699 prototype Java files across 64 folders total**). The repository-root `StaffMod.java` is separate and is not included in this prototype count.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -2254,3 +2254,23 @@ Folder: `src/main/java/com/alpharip/staffmod/Prototypes/BuildSymmetryGuides/`.
 **Current status:** The standalone calculation model, immutable snapshot, event adapter, world overlay, settings GUI with one-block origin adjustment and connection-line controls, and local properties persistence are present in source. The original staffops/ideas/BuildSymmetryGuides.java idea stub is removed after moving its concept into this prototype folder.
 
 **Still missing / not verified:** AlphaClient Core/module-menu integration, an approved way to open the settings GUI, compilation against the exact ForgeGradle setup, and Minecraft 1.8.9 runtime/render verification. No Supabase, Alpha Launcher, or development changes are included.
+
+
+## Fishing Bite Alarm
+
+Folder: `src/main/java/com/alpharip/staffmod/Prototypes/FishingBiteAlarm/`.
+
+- **FishingBiteAlarm.java** — Standalone module facade with explicit Forge event registration/unregistration, settings ownership, local persistence, and a settings-screen entry point. It is not started or registered automatically by AlphaClient Core.
+- **FishingBiteAlarmSettings.java** — Holds the enable state, minimum alert interval, and sound volume with validated bounds. The original 60-second interval default is retained.
+- **FishingHookSample.java** — Captures an immutable snapshot of the local player's active fishing hook, including entity identity, Y position, vertical motion, and water state.
+- **FishingBiteDetector.java** — Detects a sharp downward bobber-motion impulse while the hook is in water. This is a client-side heuristic, not a server-confirmed bite event.
+- **FishingBiteAlarmEventHandler.java** — Samples the local player's fishing hook at the end of client ticks and resets detection when no valid hook is active.
+- **FishingBiteNotifier.java** — Plays the vanilla `random.orb` sound locally and enforces the configured minimum interval between alerts.
+- **FishingBiteAlarmGui.java** — Exposes enablement, alert interval, volume, test sound, save, and return controls.
+- **FishingBiteAlarmStorage.java** — Loads and saves settings locally under `config/alphaclient/fishing_bite_alarm.properties`.
+
+**Interval interpretation:** The original `staffops/ideas/FishingBiteAlarm.java` contained only `enabled = true` and `intervalSeconds = 60`; it did not define the interval's meaning. This prototype interprets it as the minimum time between alarm notifications and preserves the 60-second default.
+
+**Current status:** The standalone source structure, client-tick adapter, motion-based detector, local sound notifier, settings GUI, and local properties persistence are present. The original idea file is removed after moving its concept into this prototype.
+
+**Still missing / not verified:** AlphaClient Core/module-menu registration, an approved GUI access route, confirmation that the motion heuristic detects real fishing bites reliably, compilation against the exact ForgeGradle setup, and Minecraft 1.8.9 in-game verification. No Supabase, Alpha Launcher, or `development` changes are included.
