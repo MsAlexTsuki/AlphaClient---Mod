@@ -2434,7 +2434,7 @@ Folder: `RuleReferenceOverlay/`
 - **RuleReferenceService.java** — Performs matching, limits results, and filters manual searches. Verify ranking, duplicate handling, and result limits.
 - **RuleReferenceAccess.java** — Defines the authorization adapter boundary. Connect it to the existing StaffMods permission layer; this interface grants no access itself.
 - **RuleReferenceController.java** — Applies the access boundary before exposing rule results.
-- **RuleReferenceOverlay.java** — Preserves the original enabled flag and string-record API as a compatibility facade.
+- **RuleReferenceOverlay.java** — Preserves the original enabled flag and record-management API as a compatibility facade.
 - **RuleReferenceOverlayGui.java** — Provides an initial category-based in-game reference panel. Complete report-context integration, scrolling, rule details, and empty/loading/error states before production use.
 
 The prototype is local-only. It contains no Supabase calls, remote synchronization, or live report integration. Rule content must be supplied through an approved repository adapter. Compilation, permission integration, and in-game behavior have not been verified.

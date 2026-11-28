@@ -688,7 +688,7 @@ The idea-source directory also contains concrete Java foundations for many named
 - Added a modular rule-reference prototype with rule categories, severity levels, rule metadata, contextual report data, and scored rule matches.
 - Added local rule repository, keyword-based context matching, category/text search, result limits, and immutable result snapshots.
 - Added a session-local cache, configuration model, service/controller layers, and a StaffMods authorization adapter boundary.
-- Added an initial in-game category panel and preserved the original enabled flag and string-record API in the compatibility facade.
+- Added an initial in-game category panel and preserved the original enabled flag and record-management API in the compatibility facade.
 - Kept the prototype local-only; no Supabase calls, remote synchronization, or live report integration are included.
 - Moved `staffops/ideas/RuleReferenceOverlay.java` into `Prototypes/RuleReferenceOverlay/` and removed the original idea file.
 - Compilation, production permission integration, report-context integration, and in-game behavior have not been verified.
