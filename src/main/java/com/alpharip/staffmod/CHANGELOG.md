@@ -593,7 +593,7 @@ AccessReviewReminder; AccessibilityTheme; ActingRankAssignment; ActiveDeviceList
 
 ## StaffOps idea-source foundations
 
-The current branch contains **1,496 Java source files** under staffops/ideas. These are idea/source foundations and are not represented as finished client features.
+The current branch contains **1,496 Java source files** under staffops/ideas. These are idea/source foundations and are not represented as finished client features. The complete branch snapshot contains **2,672 Java source files**: 717 under `Prototypes`, 1,496 under `staffops/ideas`, 458 under `staffops/done`, and the root `StaffMod.java`.
 
 The idea-source work covers:
 - Combat and PvP: aim, rotation, movement, click-pattern, attack timing, reach, knockback, target switching, combat statistics, training, and opponent analysis.
