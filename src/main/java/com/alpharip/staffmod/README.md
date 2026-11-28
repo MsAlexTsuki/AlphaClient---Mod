@@ -1199,11 +1199,11 @@ The following counts are taken from the current `mod-ideas` Git tree. There are 
 | `Wrapped/` | 8 |
 | **Total in prototype folders inside `Prototypes/`** | **679** |
 
-## Current Java Source Inventory (authoritative)
+## Historical Java Source Inventory Manifest
 
-Snapshot: branch `mod-ideas`, commit/tree `ba25bc56f7196c3cb9f3b9d7cc74932469d4ac56`.
-Count: **679 Java files across 62 prototype folders inside `Prototypes/`, plus 1 root-level Java file (680 total)**.
-This manifest is generated from the current Git tree. It excludes everything under `staffops/` and excludes non-Java files. A listed file being present does not mean it compiles, is registered, or has been tested.
+Snapshot: an older `mod-ideas` tree, commit/tree `ba25bc56f7196c3cb9f3b9d7cc74932469d4ac56`.
+Historical count: **679 Java files across 62 prototype folders inside `Prototypes/`, plus 1 root-level Java file (680 total)**.
+This manifest is retained as a historical snapshot and is not the current branch inventory. It excludes everything under `staffops/` and excludes non-Java files. A listed file being present does not mean it compiles, is registered, or has been tested. Use the current inventory figures at the top of this README instead.
 
 ### `AccessibilityTheme/`
 
