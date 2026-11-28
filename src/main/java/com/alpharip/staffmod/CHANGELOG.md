@@ -593,7 +593,7 @@ AccessReviewReminder; AccessibilityTheme; ActingRankAssignment; ActiveDeviceList
 
 ## StaffOps idea-source foundations
 
-The current branch contains **1,496 Java source files** under staffops/ideas. These are idea/source foundations and are not represented as finished client features. The complete branch snapshot contains **2,672 Java source files**: 717 under `Prototypes`, 1,496 under `staffops/ideas`, 458 under `staffops/done`, and the root `StaffMod.java`.
+The current branch contains **1,496 Java source files** under staffops/ideas. These are idea/source foundations and are not represented as finished client features. The complete branch snapshot contains **2,688 Java source files**: 733 under `Prototypes`, 1,496 under `staffops/ideas`, 458 under `staffops/done`, and the root `StaffMod.java`.
 
 The idea-source work covers:
 - Combat and PvP: aim, rotation, movement, click-pattern, attack timing, reach, knockback, target switching, combat statistics, training, and opponent analysis.
@@ -625,3 +625,15 @@ The idea-source directory also contains concrete Java foundations for many named
 - Some prototypes have local models, controllers, GUIs, persistence, or event-adapter source; those components still require the integration and verification described in their documentation.
 - The branch snapshot does not establish a successful build or in-game test. No build or runtime test is claimed here.
 - Alpha Launcher was not changed as part of this changelog.
+
+### 2026-11-28
+
+#### Risk Mitigation Board
+- Added a standalone risk register with categories, severity levels, lifecycle statuses, ownership, due dates, and timestamps.
+- Added mitigation-action and staff-note models for tracking response work and investigation context.
+- Added board management, validated service operations, filtering, sorting, dashboard summary counts, and CSV export.
+- Added versioned local JSON persistence without remote services or Supabase.
+- Added an Alpha-styled GUI foundation for creating risks, reviewing summary counts, cycling statuses, and removing records.
+- Added an authorization adapter boundary; production access must still be connected to the established StaffMods permission layer. The prototype does not grant permissions.
+- Moved the source from `staffops/ideas/RiskMitigationBoard.java` into the standalone `Prototypes/RiskMitigationBoard/` folder and removed the original idea file.
+- Compilation, production integration, persistence recovery, and in-game behavior have not been verified.
