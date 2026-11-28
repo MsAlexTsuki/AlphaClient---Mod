@@ -4,14 +4,14 @@
 
 **All standalone prototypes belong in `src/main/java/com/alpharip/staffmod/Prototypes/`.**
 
-When creating, extending, or inspecting a prototype, look in `Prototypes/` first. Do not create a new prototype beside `staffops/` and do not place a prototype under `staffops/ideas/` unless the user explicitly asks for an idea note there. Keep `staffops/` for its separate ideas/done workflow. The package-root files, including `StaffMod.java`, are not prototype folders.
+This README is stored directly beside `staffops/` in `src/main/java/com/alpharip/staffmod/`. When creating, extending, or inspecting a prototype, use `Prototypes/` first. Do not create a new prototype beside `staffops/` and do not place a prototype under `staffops/ideas/` unless the user explicitly asks for an idea note there. Keep `staffops/` for its separate ideas/done workflow. The package-root files, including `StaffMod.java`, are not prototype folders.
 
-Existing prototype folders remain in repository-root `Prototypes/` unless specifically relocated. New or relocated Java source prototypes use `src/main/java/com/alpharip/staffmod/Prototypes/`. `BuildSymmetryGuides/` is now stored at that canonical source path; the other prototype folders were not moved.
+The previous repository-root `Prototypes/` directory has been moved into `src/main/java/com/alpharip/staffmod/Prototypes/`. The existing prototype folders were retained during the move; their contents were not rewritten. The `CHANGELOG.md`, `staffops/`, `Prototypes/`, and this README are now grouped under `src/main/java/com/alpharip/staffmod/`.
 
-This document is the implementation checklist for Java prototype source in repository-root `Prototypes/` and the canonical Java-source `src/main/java/com/alpharip/staffmod/Prototypes/` folder on branch `mod-ideas`.
+This document is the implementation checklist for Java prototype source in `src/main/java/com/alpharip/staffmod/Prototypes/` on branch `mod-ideas`.
 
-- Scope inspected: repository-root `Prototypes/` and `src/main/java/com/alpharip/staffmod/Prototypes/`.
-- Current verified inventory: **679 Java files** across **62 folders** in repository-root `Prototypes/`, plus **38 Java files** across **4 folders** in `src/main/java/com/alpharip/staffmod/Prototypes/` (**717 prototype Java files across 66 folders total**). The repository-root `StaffMod.java` is separate and is not included in this prototype count.
+- Scope inspected: the complete `src/main/java/com/alpharip/staffmod/Prototypes/` tree on `mod-ideas`.
+- Current verified inventory: **717 Java files across 67 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
