@@ -11,8 +11,8 @@ The previous repository-root `Prototypes/` directory has been moved into `src/ma
 This document is the implementation checklist for Java prototype source in `src/main/java/com/alpharip/staffmod/Prototypes/` on branch `mod-ideas`.
 
 - Scope inspected: the complete `src/main/java/com/alpharip/staffmod/Prototypes/` tree on `mod-ideas`.
-- Current verified inventory: **794 Java files across 71 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
-- Current branch source inventory: **2,745 Java files** in total — 794 in `Prototypes/`, 1,492 in `staffops/ideas/`, 458 in `staffops/done/`, and the separate root `StaffMod.java`.
+- Current verified inventory: **810 Java files across 72 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
+- Current branch source inventory: **2,761 Java files** in total — 810 in `Prototypes/`, 1,491 in `staffops/ideas/`, 458 in `staffops/done/`, and the separate root `StaffMod.java`.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -2415,3 +2415,26 @@ Folder: `Prototypes/IncidentPostMortemBoard/`
 **Current status:** The structured incident model, timeline, root-cause and impact records, assignment history, corrective-action and lessons-learned models, service, validation, filtering/sorting, summary, local JSON persistence, CSV export, access boundary, controller, and initial GUI are present in source. The original enabled flag and string-record methods are retained.
 
 **Still missing / not verified:** Full GUI workflows for editing impact/root-cause details and managing timelines, assignments, actions, and lessons; due-date/overdue support; a concrete StaffMods authorization adapter and dashboard registration; a live incident-event source; and integration with existing staff operations. The prototype is local-only, with no Supabase, remote persistence, or server integration. Compilation, persistence recovery, permission enforcement, and Minecraft 1.8.9 in-game behavior have not been verified.
+
+
+## Rule Reference Overlay
+
+Folder: `RuleReferenceOverlay/`
+
+- **RuleCategory.java** — Defines chat, combat, build, and general rule categories. Verify labels against the approved rules taxonomy.
+- **RuleSeverity.java** — Defines informational through critical severity labels.
+- **RuleEntry.java** — Immutable rule record containing title, description, source, category, severity, and search tags. Connect approved rule content and validate its provenance before production use.
+- **RuleContext.java** — Carries the report category and contextual text used for matching. Connect it to the real report model.
+- **RuleMatch.java** and **RuleReferenceResult.java** — Carry scored matches and immutable result snapshots; verify ranking and empty-result behavior.
+- **RuleRepository.java** and **InMemoryRuleRepository.java** — Define and provide a local in-memory rule source. Populate it with approved rules; no remote source is connected.
+- **RuleSearchQuery.java** — Holds category and text filters. Add tests for empty and partial queries.
+- **RuleMatcher.java** — Scores rules by category, tags, and title matches. This is basic keyword matching, not semantic classification; tune and test against representative reports.
+- **RuleReferenceCache.java** — Provides a session-local category cache. Disk persistence and remote synchronization are not implemented.
+- **RuleReferenceConfig.java** — Holds enable state and result limit; connect approved local settings persistence if required.
+- **RuleReferenceService.java** — Performs matching, limits results, and filters manual searches. Verify ranking, duplicate handling, and result limits.
+- **RuleReferenceAccess.java** — Defines the authorization adapter boundary. Connect it to the existing StaffMods permission layer; this interface grants no access itself.
+- **RuleReferenceController.java** — Applies the access boundary before exposing rule results.
+- **RuleReferenceOverlay.java** — Preserves the original enabled flag and string-record API as a compatibility facade.
+- **RuleReferenceOverlayGui.java** — Provides an initial category-based in-game reference panel. Complete report-context integration, scrolling, rule details, and empty/loading/error states before production use.
+
+The prototype is local-only. It contains no Supabase calls, remote synchronization, or live report integration. Rule content must be supplied through an approved repository adapter. Compilation, permission integration, and in-game behavior have not been verified.

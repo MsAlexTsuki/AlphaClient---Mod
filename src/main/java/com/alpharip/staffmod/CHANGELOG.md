@@ -680,3 +680,15 @@ The idea-source directory also contains concrete Java foundations for many named
 - Moved `staffops/ideas/IncidentPostmortemBoard.java` into `Prototypes/IncidentPostMortemBoard/` and removed the original idea file.
 - No Supabase, remote persistence, server integration, or automatic incident ingestion is included.
 - Compilation, production integration, permission enforcement, persistence recovery, and in-game behavior have not been verified.
+
+
+### 2026-11-28
+
+#### Rule Reference Overlay
+- Added a modular rule-reference prototype with rule categories, severity levels, rule metadata, contextual report data, and scored rule matches.
+- Added local rule repository, keyword-based context matching, category/text search, result limits, and immutable result snapshots.
+- Added a session-local cache, configuration model, service/controller layers, and a StaffMods authorization adapter boundary.
+- Added an initial in-game category panel and preserved the original enabled flag and string-record API in the compatibility facade.
+- Kept the prototype local-only; no Supabase calls, remote synchronization, or live report integration are included.
+- Moved `staffops/ideas/RuleReferenceOverlay.java` into `Prototypes/RuleReferenceOverlay/` and removed the original idea file.
+- Compilation, production permission integration, report-context integration, and in-game behavior have not been verified.
