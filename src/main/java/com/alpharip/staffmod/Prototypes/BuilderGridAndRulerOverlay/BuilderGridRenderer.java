@@ -87,8 +87,10 @@ public final class BuilderGridRenderer {
             double viewerX, double viewerZ) {
         int anchorX = snapshot.getAnchorX();
         int anchorZ = snapshot.getAnchorZ();
-        int playerX = snapshot.getPlayerX();
-        int playerZ = snapshot.getPlayerZ();
+        int playerX = clamp(snapshot.getPlayerX(), anchorX - snapshot.getAreaRadius(),
+                anchorX + snapshot.getAreaRadius());
+        int playerZ = clamp(snapshot.getPlayerZ(), anchorZ - snapshot.getAreaRadius(),
+                anchorZ + snapshot.getAreaRadius());
         int spacing = snapshot.getGridSpacing();
 
         GL11.glLineWidth(2.0F);
@@ -104,6 +106,10 @@ public final class BuilderGridRenderer {
 
         drawTicks(anchorX, playerX, anchorZ, true, spacing, y, viewerX, viewerZ);
         drawTicks(anchorZ, playerZ, playerX, false, spacing, y, viewerX, viewerZ);
+    }
+
+    private static int clamp(int value, int minimum, int maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
     }
 
     private static void drawTicks(int start, int end, int fixedCoordinate,
