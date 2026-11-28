@@ -12,7 +12,17 @@ public final class RiskBoardStorage {
         File temp=new File(file.getAbsolutePath()+".tmp");FileWriter writer=null;
         try{
             Snapshot s=new Snapshot();s.records=board.getAll();writer=new FileWriter(temp);GSON.toJson(s,writer);writer.flush();writer.close();writer=null;
-            if(file.exists()&&!file.delete())return false;if(!temp.renameTo(file)){temp.delete();return false;}return true;
+            File backup=new File(file.getAbsolutePath()+".bak");
+            if(backup.exists()&&!backup.delete())return false;
+            boolean hadOriginal=file.exists();
+            if(hadOriginal&&!file.renameTo(backup))return false;
+            if(!temp.renameTo(file)){
+                if(hadOriginal)backup.renameTo(file);
+                temp.delete();
+                return false;
+            }
+            if(hadOriginal)backup.delete();
+            return true;
         }catch(Exception e){if(temp.exists())temp.delete();return false;}
         finally{if(writer!=null)try{writer.close();}catch(Exception ignored){}}
     }
