@@ -11,7 +11,7 @@ Existing prototype folders remain in repository-root `Prototypes/` unless specif
 This document is the implementation checklist for Java prototype source in repository-root `Prototypes/` and the canonical Java-source `src/main/java/com/alpharip/staffmod/Prototypes/` folder on branch `mod-ideas`.
 
 - Scope inspected: repository-root `Prototypes/` and `src/main/java/com/alpharip/staffmod/Prototypes/`.
-- Current verified inventory: **679 Java files** across **62 folders** in repository-root `Prototypes/`, plus **20 Java files** across **2 folders** in `src/main/java/com/alpharip/staffmod/Prototypes/` (**699 prototype Java files across 64 folders total**). The repository-root `StaffMod.java` is separate and is not included in this prototype count.
+- Current verified inventory: **679 Java files** across **62 folders** in repository-root `Prototypes/`, plus **28 Java files** across **3 folders** in `src/main/java/com/alpharip/staffmod/Prototypes/` (**707 prototype Java files across 65 folders total**). The repository-root `StaffMod.java` is separate and is not included in this prototype count.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -2274,3 +2274,23 @@ Folder: `src/main/java/com/alpharip/staffmod/Prototypes/FishingBiteAlarm/`.
 **Current status:** The standalone source structure, client-tick adapter, motion-based detector, local sound notifier, settings GUI, and local properties persistence are present. The original idea file is removed after moving its concept into this prototype.
 
 **Still missing / not verified:** AlphaClient Core/module-menu registration, an approved GUI access route, confirmation that the motion heuristic detects real fishing bites reliably, compilation against the exact ForgeGradle setup, and Minecraft 1.8.9 in-game verification. No Supabase, Alpha Launcher, or `development` changes are included.
+
+
+## Chunk Borders
+
+Folder: `src/main/java/com/alpharip/staffmod/Prototypes/ChunkBorders/`
+
+- **ChunkBorders.java** — Standalone module facade with explicit Forge event registration/unregistration, settings access, GUI entry point, and local persistence. It is not automatically registered or enabled by AlphaClient Core.
+- **ChunkBordersSettings.java** — Holds the disabled-by-default state, preserved default style, chunk render radius, vertical/horizontal line toggles, current-chunk highlight toggle, and opacity with bounded setters.
+- **ChunkBorderStyle.java** — Defines the supported visual styles and their render colors/line widths.
+- **ChunkBordersSnapshot.java** — Immutable render-time copy of the active settings and player chunk coordinates.
+- **ChunkBordersRenderer.java** — Draws chunk grid boundaries and vertical corner pillars in the world render pass, using camera-relative coordinates and restoring the OpenGL state it changes.
+- **ChunkBordersEventHandler.java** — Receives Forge world-render events and delegates rendering only while the standalone module is running and enabled.
+- **ChunkBordersGui.java** — Exposes module enablement, style, radius, vertical/horizontal lines, current-chunk highlight, opacity, save, and return controls.
+- **ChunkBordersStorage.java** — Loads and saves settings locally under `config/alphaclient/chunk_borders.properties`.
+
+**Preserved defaults:** The original `staffops/ideas/ChunkBorders.java` had `enabled = false`, `category = "World/diagnostics"`, and `style = "default"`. The disabled state and default style are retained. The category remains descriptive documentation; this standalone prototype does not register itself into the production World category.
+
+**Current status:** The standalone settings model, style definitions, render snapshot, Forge world-render adapter, OpenGL chunk-boundary renderer, settings GUI, and local properties persistence are present.
+
+**Still missing / not verified:** AlphaClient Core/module-menu registration and an approved GUI access route. Compilation against the exact ForgeGradle setup, rendering behavior in Minecraft 1.8.9, OpenGL state interaction with other overlays, performance at larger radii, GUI behavior at different resolutions, and settings save/load round trips have not been verified. No Supabase, Alpha Launcher, or `development` changes are included.
