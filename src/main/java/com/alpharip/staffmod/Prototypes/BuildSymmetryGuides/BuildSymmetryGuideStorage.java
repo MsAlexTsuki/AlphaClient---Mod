@@ -27,6 +27,8 @@ public final class BuildSymmetryGuideStorage {
                     config.isShowMirrorPreview()));
             config.setShowAxisLines(readBoolean(properties, "showAxisLines",
                     config.isShowAxisLines()));
+            config.setShowConnectionLines(readBoolean(properties, "showConnectionLines",
+                    config.isShowConnectionLines()));
             config.setGuideDistance(readInt(properties, "guideDistance",
                     config.getGuideDistance()));
             config.setOpacity(readFloat(properties, "opacity", config.getOpacity()));
@@ -49,6 +51,7 @@ public final class BuildSymmetryGuideStorage {
         properties.setProperty("originZ", String.valueOf(config.getOriginZ()));
         properties.setProperty("showMirrorPreview", String.valueOf(config.isShowMirrorPreview()));
         properties.setProperty("showAxisLines", String.valueOf(config.isShowAxisLines()));
+        properties.setProperty("showConnectionLines", String.valueOf(config.isShowConnectionLines()));
         properties.setProperty("guideDistance", String.valueOf(config.getGuideDistance()));
         properties.setProperty("opacity", String.valueOf(config.getOpacity()));
         properties.setProperty("color", String.valueOf(config.getColor().getId()));

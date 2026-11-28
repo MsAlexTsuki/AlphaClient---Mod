@@ -67,6 +67,18 @@ public final class BuildSymmetryGuides {
 
     void clearTarget() { snapshot = null; }
 
+    public void adjustOrigin(int deltaX, int deltaZ) {
+        config.setOrigin(saturatedAdd(config.getOriginX(), deltaX),
+                saturatedAdd(config.getOriginZ(), deltaZ));
+        snapshot = null;
+    }
+
+    private static int saturatedAdd(int value, int delta) {
+        long result = (long) value + delta;
+        return result > Integer.MAX_VALUE ? Integer.MAX_VALUE
+                : result < Integer.MIN_VALUE ? Integer.MIN_VALUE : (int) result;
+    }
+
     public boolean setOriginToPlayer() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null) return false;

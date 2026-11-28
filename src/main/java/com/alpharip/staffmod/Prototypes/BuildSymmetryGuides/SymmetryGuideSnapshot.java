@@ -11,6 +11,7 @@ public final class SymmetryGuideSnapshot {
     private final List<SymmetryGuidePoint> mirrorPoints;
     private final boolean showMirrorPreview;
     private final boolean showAxisLines;
+    private final boolean showConnectionLines;
     private final int guideDistance;
     private final float opacity;
     private final int colorRgb;
@@ -27,6 +28,7 @@ public final class SymmetryGuideSnapshot {
                 points == null ? Collections.<SymmetryGuidePoint>emptyList() : points));
         this.showMirrorPreview = config.isShowMirrorPreview();
         this.showAxisLines = config.isShowAxisLines();
+        this.showConnectionLines = config.isShowConnectionLines();
         this.guideDistance = config.getGuideDistance();
         this.opacity = config.getOpacity();
         this.colorRgb = config.getColor().getRgb();
@@ -38,6 +40,7 @@ public final class SymmetryGuideSnapshot {
     public List<SymmetryGuidePoint> getMirrorPoints() { return mirrorPoints; }
     public boolean isShowMirrorPreview() { return showMirrorPreview; }
     public boolean isShowAxisLines() { return showAxisLines; }
+    public boolean isShowConnectionLines() { return showConnectionLines; }
     public int getGuideDistance() { return guideDistance; }
     public float getOpacity() { return opacity; }
     public int getColorRgb() { return colorRgb; }

@@ -43,6 +43,10 @@ public final class BuildSymmetryGuidesRenderer {
             if (snapshot.isShowAxisLines()) {
                 drawAxes(snapshot, mc.thePlayer.posY, viewerX, viewerY, viewerZ);
             }
+            if (snapshot.isShowConnectionLines()) {
+                drawConnections(snapshot, mc.thePlayer.posX, mc.thePlayer.posY,
+                        mc.thePlayer.posZ, viewerX, viewerY, viewerZ);
+            }
             if (snapshot.isShowMirrorPreview()) {
                 drawMirrorOutlines(snapshot, mc.thePlayer.posX, mc.thePlayer.posY,
                         mc.thePlayer.posZ, viewerX, viewerY, viewerZ);
@@ -68,6 +72,31 @@ public final class BuildSymmetryGuidesRenderer {
         if (snapshot.getAxis().reflectsZ()) {
             GL11.glVertex3d(x - distance, y, z);
             GL11.glVertex3d(x + distance, y, z);
+        }
+        GL11.glEnd();
+    }
+
+    private static void drawConnections(SymmetryGuideSnapshot snapshot,
+            double playerX, double playerY, double playerZ,
+            double viewerX, double viewerY, double viewerZ) {
+        BlockCoordinates source = snapshot.getSource();
+        double sx = source.getX() + 0.5D - viewerX;
+        double sy = source.getY() + 0.5D - viewerY;
+        double sz = source.getZ() + 0.5D - viewerZ;
+        double maxDistanceSq = (double) snapshot.getGuideDistance()
+                * snapshot.getGuideDistance();
+        GL11.glLineWidth(1.5F);
+        GL11.glBegin(GL11.GL_LINES);
+        for (SymmetryGuidePoint point : snapshot.getMirrorPoints()) {
+            BlockCoordinates target = point.getPosition();
+            double dx = target.getX() + 0.5D - playerX;
+            double dy = target.getY() + 0.5D - playerY;
+            double dz = target.getZ() + 0.5D - playerZ;
+            if (dx * dx + dy * dy + dz * dz > maxDistanceSq) continue;
+            GL11.glVertex3d(sx, sy, sz);
+            GL11.glVertex3d(target.getX() + 0.5D - viewerX,
+                    target.getY() + 0.5D - viewerY,
+                    target.getZ() + 0.5D - viewerZ);
         }
         GL11.glEnd();
     }

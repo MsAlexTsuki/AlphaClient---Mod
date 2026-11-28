@@ -8,6 +8,7 @@ public final class BuildSymmetryGuideConfig {
     private int originZ;
     private boolean showMirrorPreview = true;
     private boolean showAxisLines = true;
+    private boolean showConnectionLines = true;
     private int guideDistance = 24;
     private float opacity = 0.75F;
     private SymmetryGuideColor color = SymmetryGuideColor.GOLD;
@@ -23,6 +24,8 @@ public final class BuildSymmetryGuideConfig {
     public void setShowMirrorPreview(boolean value) { showMirrorPreview = value; }
     public boolean isShowAxisLines() { return showAxisLines; }
     public void setShowAxisLines(boolean value) { showAxisLines = value; }
+    public boolean isShowConnectionLines() { return showConnectionLines; }
+    public void setShowConnectionLines(boolean value) { showConnectionLines = value; }
     public int getGuideDistance() { return guideDistance; }
     public void setGuideDistance(int value) { guideDistance = Math.max(4, Math.min(64, value)); }
     public float getOpacity() { return opacity; }
