@@ -123,99 +123,104 @@ The following 35 folders are present under staffops/done in the current branch:
 
 These folders are recorded as completed/moved StaffOps source collections. Their presence does not by itself certify production integration or successful in-game testing.
 
-## Standalone Java prototypes
+## Standalone Java prototype changelog
 
-The current branch contains **717 Java files across 66 prototype folders** under Prototypes. The prototypes are separate source projects, not automatically registered AlphaClient modules.
+These entries describe source work added to the standalone prototype collection. They are prototypes, not claims that the features are integrated into the playable AlphaClient.
 
-### PvP, combat, training and statistics
-- Aimassist Expansion — target selection, rotation calculation, smoothing, modes, settings, and GUI source.
-- Aim Pattern Library — pattern records, categories, validation, statistics, registry, service, and GUI.
-- Combo Analysis — hit-session tracking, combo results, and summary statistics.
-- Combo Breaker Cue — configurable cue state and reason categories.
-- Clutch Highlights — highlight records, event types, and retention configuration.
-- Opponent Profiles — opponent encounter and win-record model.
-- Duel Statistics — duel records, snapshots, and opponent-specific statistics.
-- Aim Trainer and Aim Drift Heatmap — training sessions, results, configuration, and heatmap source.
-- Bridge Speed Trainer — run records, personal bests, statistics, configuration, and session controller.
-- Ender Pearl Accuracy Practice — practice-session source.
-- Bow Charge Indicator — draw-tick calculation, charge snapshots, readiness, and configuration.
-- Knockback Direction Indicator — knockback snapshots, direction/magnitude data, and settings.
-- Armor Break Prediction — per-slot durability tracking, samples, results, and prediction configuration.
-- Ender Pearl Trajectory Prediction — vector model, trajectory simulation, prediction results, and configuration.
-- Hitbox — isolated hitbox geometry, module, settings, and renderer source.
-- Arrow Tracker and ArrowCounter — arrow tracking and HUD source.
-- Block Placement Timing, Block Break Timing, and Combat Timer — timing samples, statistics, and configuration.
-- LootFeed — kill/drop tracking, grouped entries, HUD rendering, ordering, eviction, and independent fade behavior.
-- Lifetime Stats Book — lifetime-stat records, snapshots, tracking, and summary source.
+### 2026-11-28
 
-### HUD, visuals and client presentation
-- Air HUD and Biome HUD.
-- Armor Break Warning.
-- Weather-Reactive HUD.
-- Adjustable Rain and Snow Speed.
-- Adjustable Star Density.
-- Adjustable Third Person camera distance settings and options-screen hook boundary.
-- Block Break Progress Ring.
-- Chunk Borders.
-- Build Symmetry Guides.
-- Builder Grid and Ruler Overlay.
-- Fishing Bite Alarm.
-- Minecraft Window AlphaClient title formatting and JAR-version resolution.
-- TimeTill event countdown and HUD rendering.
-- Alert Sounds settings and GUI.
-- Customization source for themes, colors, block overlays, and palettes.
-- Achievement Checklist, Achievement Suffixes, Achievement Wall, Anniversary Badges, Birthday Celebration, and Playtime Badges.
-- Annual Alpha Wrapped summary and cards.
-- Screenshot Comparison and composition.
-- Item NBT Viewer, Player Direction Viewer, and Player Connection Viewer.
-- AFK Camera activity tracking, settings, controller, and GUI.
-- ToggleSneak and ToggleSprint with separate state, controller, and keybinding source.
+#### Builder Grid & Ruler Overlay
+- Added a world-space building grid with configurable spacing and guide radius.
+- Added X/Z measurement guides, block-distance tick marks, and an X/Y/Z ruler HUD.
+- Added origin capture, coordinate snapping, a dedicated settings interface, and local settings persistence.
+- Bounded ruler rendering to the configured guide area and updated the prototype inventory.
+- Source: [prototype implementation](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/dda1668ea59fd85cef41e68f675d5b3b462353c8) · [rendering and inventory refinement](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/614e6354c77e0fc45438cdb7f95d0ab468e075c2)
 
-### Building, inventory, survival and singleplayer
-- Easy Craft — recipe catalogue, categories, search, favorites, crafting-table screen/button boundary, and crafting adapter contract.
-- AutoSave — save-state tracking, local settings/storage, HUD, and GUI.
-- Animal Breeding Cooldown Timer — per-animal records, cooldown calculations, event boundary, storage, and GUI.
-- Base Storage Ledger — storage index, item records, search/GUI source, and index-read optimizations.
-- Remember Chest Inventory — chest snapshots, scanning, memory entries, search, storage, and GUI.
-- Chest Item Total — chest item counting and entry tracking.
-- Remember Villagers — villager trade capture, records, persistence, and GUI.
-- Resource Pack Organizer — resource-pack entries, file management, validation, and GUI.
-- Build Symmetry Guides — X/Z mirror previews and guide settings.
-- Builder Grid and Ruler Overlay — world-space grid, measurement guides, ruler HUD, origin controls, and snapping.
-- Chunk Borders — chunk boundaries, corner pillars, current-chunk highlighting, style, distance, and opacity controls.
-- Fishing Bite Alarm — hook movement detection and configurable alert settings.
-- Pet Memorial — pet-death records, formatting, and memorial-book source.
-- Adventure Diary — adventure entries, events, and diary presentation.
-- Bestiary — mob kill-event tracking and bestiary records.
+#### Chunk Borders
+- Added vertical chunk-corner pillars and horizontal chunk-boundary lines.
+- Added current-chunk highlighting, three visual styles, configurable render distance, visibility controls, and opacity settings.
+- Added a dedicated settings interface and local settings storage.
+- Preserved the prototype's disabled default and default visual style.
+- Source: [Chunk Borders prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/4eb0c96c01bfab68bb14db6e77a542a0b065fda0)
 
-### Staff dashboard, moderation and investigation prototypes
-- Staff Dashboard Expansion: Attendance, Availability, Competency, Coverage Forecast, Goals, Improvement Plans, Overloaded Staff Alert, Presence, Rank Comparison, Responsibility Board, Review Calendar, Shifts and Checklist, Staff Duty Mode, Staff Handoff, and Staff Queue.
-- Access Review Reminder.
-- Acting Rank Assignment.
-- Acknowledgement Tracker.
-- Active Device List and Global Sign-Out.
-- Alpha Crash Reporter.
-- Case Escalation Timer.
-- Blind Case Review.
-- Appeal Conflict Detector.
-- Punishment Command Preflight.
-- Punishment Conflict Detector.
-- Player History.
-- Investigation case source for case management, case linking, import/export, redaction, and evidence workflows.
-- Ally Faction Notes under Kitmap & HCF.
-- Staff-oriented viewer and inspection source, including player connection/direction viewers and item NBT inspection.
+#### Fishing Bite Alarm
+- Added fishing-hook movement detection as the trigger for a local sound alert.
+- Added adjustable alert interval and volume, a test-sound option, a settings interface, and local settings storage.
+- Source: [Fishing Bite Alarm prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/8cb0f99e39dcb440210450831e8c89e163a18aad)
 
-### Store, social and platform prototypes
-- AlphaClans — clan identity, membership, roles, permissions, invitations, ownership transfer, and bounded clan chat records.
-- AlphaCoins — shared wallet/core service, commands, daily challenges, and playtime rewards.
-- Alpha Store — central section registry, Addons, Cosmetics, Owned, and Partners catalogues.
-- Cosmetics catalogue — 128 migrated cosmetic component files, category metadata, search, details, optional texture previews, ownership registry, and local loadout/equip state.
-- Addons catalogue — local metadata, search, category filtering, and local state transitions.
-- Partners directory — relationship categories, search, and profile details.
-- Account Linking — local account-link model, validation, registry, service, settings, and GUI.
-- Alpha Policy website and policy document collection, including draft policy pages and the policy reader.
-- AlphaCrashReporter — crash capture, analysis, report metadata, privacy redaction, and report-detail screen.
+#### Build Symmetry Guides
+- Added X-plane, Z-plane, and combined X/Z mirror previews.
+- Added configurable guide visibility, guide lines, colors, opacity, and origin controls.
+- The prototype renders visual guides only; it does not place or modify blocks.
+- Moved the source into the canonical Java prototype directory and updated its documentation.
+- Source: [initial prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/40b064f7c684f4f3ad06c2c4104d63ea0ff526e0) · [source move and expansion](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/983fcf0cb0ad295bdad86a473ab39bb56f189abd) · [location documentation](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/85e016e42f16b23ee8093028ee973dafbc1e4f6)
 
+### 2026-11-27
+
+#### Auto Loading Server Profiles
+- Added a modular prototype for loading server-specific profiles.
+- Expanded its README with a detailed source audit, implementation boundaries, and a sibling-directory inventory.
+- Source: [prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/d7e91fd14185beea2673b1320e0c20e4d621eebd) · [documentation](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/ba25bc56f7196c3cb9f3b9d7cc74932469d4ac56)
+
+#### StaffOps prototype handoff
+- Moved RecordingStudio and Store source collections into `staffops/done`.
+- Moved BuildTimelapse into `staffops/done`.
+- Removed a duplicate Resource Pack Search Bar idea entry.
+- Source: [RecordingStudio and Store move](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/278d9c8bd83e7d7e2a8d77fc419d84bc20c1d392) · [BuildTimelapse move](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/e52d2be7648df2624a497dd39f65af0cae139f1e) · [duplicate idea removal](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/1bbf61c296382585c0643a74ef3748395f73a383)
+
+### 2026-11-24
+
+#### Bestiary
+- Added a kill-based Bestiary foundation with mob kill records.
+- Added client-side tracking for kills made by the local player.
+- Source: [Bestiary tracking](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/49f5e2fc112dce9dad0f82f575f449ab259ae21) · [local-player kill tracking](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/e89a467182e951abfcfca9131d8fbb4096cdabbe)
+
+#### Lifetime Stats Book
+- Added lifetime-stat records, snapshots, tracking, and summary source.
+- Source: [Lifetime Stats Book](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/5ba0e565f283e248f435275b9d26de8116bfa42e)
+
+#### Weather-Reactive HUD
+- Added a HUD prototype that represents current weather conditions.
+- Source: [Weather-Reactive HUD](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/3e266a1b37b33e611b8bf5cc400a2447dfe6c8f0)
+
+#### Pet Memorial and Adventure Diary
+- Added pet-death records and memorial-book presentation source.
+- Added adventure-entry and event records with diary presentation source.
+- Source: [Pet Memorial](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/3d057f5059472a61dcd88286b0e4b0c935a55444) · [Adventure Diary](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/13c1981f7ec52d4e32aa53b95e39acf52dcee35a)
+
+#### ToggleSneak and ToggleSprint
+- Added standalone ToggleSneak and ToggleSprint prototype source.
+- Separated movement-toggle state from runtime/controller responsibilities and added a dedicated controller.
+- Expanded the prototype architecture and documented the enabled-by-default ToggleSprint setting.
+- Source: [initial prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/7057dfe1733f1ad917cc7d26273dfe604624ca7f) · [controller](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/bd936601198b7ea725b9f62fe81365d63cecea06) · [architecture documentation](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/0598868f6a7a190644c30db069903619fa27afdf)
+
+### 2026-11-21
+
+#### Hitbox
+- Added an isolated Hitbox prototype with its own geometry, module, settings, and renderer source.
+- Added visibility restrictions to the prototype.
+- Source: [Hitbox prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/a0111369b161a6d7e6258d8ea45430fcf0431439) · [visibility restrictions](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/52a612de5ebd131a0ceb3e0a6d4b393742c4c5bf)
+
+#### Resource Pack Organizer
+- Added resource-pack entries, file-management source, category validation, and GUI source.
+- Removed the original idea file after the prototype handoff.
+- Source: [prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/68d24fb0bec954478d0244948c0644aa9733f015) · [idea-file removal](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/92d2ee7134776ee0bf0ad8d74283bb50cec52749)
+
+#### Base Storage Ledger
+- Added a storage index, item records, and search/GUI source.
+- Avoided rebuilding the storage index during GUI reads.
+- Removed the original idea file after the prototype handoff.
+- Source: [prototype](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/1e6e06941630cc02de8697bb31f2323c58a7beaa) · [index-read optimization](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/7002f291a7b54d889089b2d92c72ae4dfb170a5f) · [idea-file removal](https://github.com/MsAlexTsuki/AlphaClient---Mod/commit/c0bdcc5430baba60863e73f766164be19368d480)
+
+### Other standalone prototypes represented in the current branch
+
+- **PvP and combat:** Aimassist Expansion; Aim Pattern Library; Combo Analysis; Combo Breaker Cue; Clutch Highlights; Opponent Profiles; Duel Statistics; Aim Trainer and Aim Drift Heatmap; Bridge Speed Trainer; Ender Pearl Accuracy Practice; Bow Charge Indicator; Knockback Direction Indicator; Armor Break Prediction; Ender Pearl Trajectory Prediction; Arrow Tracker; Block Placement Timing; Block Break Timing; Combat Timer; LootFeed; and Lifetime Stats Book.
+- **HUD and visuals:** Air HUD; Biome HUD; Armor Break Warning; Adjustable Rain and Snow Speed; Adjustable Star Density; Adjust Third Person; Block Break Progress Ring; Chunk Borders; Minecraft Window AlphaClient title formatting; TimeTill; Alert Sounds; Customization; achievements and badges; Alpha Wrapped; Screenshot Comparison; Item NBT Viewer; Player Direction Viewer; Player Connection Viewer; AFK Camera; ToggleSneak; and ToggleSprint.
+- **Building, inventory, survival, and singleplayer:** Easy Craft; AutoSave; Animal Breeding Cooldown Timer; Base Storage Ledger; Remember Chest Inventory; Chest Item Total; Remember Villagers; Resource Pack Organizer; Build Symmetry Guides; Builder Grid & Ruler Overlay; Fishing Bite Alarm; Pet Memorial; Adventure Diary; and Bestiary.
+- **Staff, moderation, and investigation:** Staff Dashboard Expansion; Access Review Reminder; Acting Rank Assignment; Acknowledgement Tracker; Active Device List and Global Sign-Out; Alpha Crash Reporter; Case Escalation Timer; Blind Case Review; Appeal Conflict Detector; Punishment Command Preflight; Punishment Conflict Detector; Player History; investigation case-management source; and Ally Faction Notes.
+- **Store, social, and platform:** AlphaClans; AlphaCoins; Alpha Store; Cosmetics catalogue; Addons catalogue; Partners directory; Account Linking; Alpha Policy website and policy documents; and AlphaCrashReporter.
+
+The list above identifies additional prototype source present in the branch. It does not imply that each item is integrated into AlphaClient Core or verified in-game.
 
 ### Detailed StaffOps module work
 - **AimAssist Expansion:** added target selection, target snapshots, rotation calculation, smoothing controls, modes, settings, and a standalone GUI.
