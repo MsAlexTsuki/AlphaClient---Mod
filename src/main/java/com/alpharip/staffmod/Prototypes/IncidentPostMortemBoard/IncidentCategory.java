@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.IncidentPostMortemBoard; public enum IncidentCategory { GAMEPLAY, SECURITY, MODERATION, PLATFORM, COMMUNITY, OTHER }

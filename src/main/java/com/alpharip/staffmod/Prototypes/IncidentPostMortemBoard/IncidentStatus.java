@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.IncidentPostMortemBoard; public enum IncidentStatus { OPEN, INVESTIGATING, ACTION_REQUIRED, RESOLVED, CLOSED }

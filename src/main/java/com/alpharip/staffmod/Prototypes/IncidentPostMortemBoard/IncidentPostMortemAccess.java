@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.IncidentPostMortemBoard; /** Adapter boundary only; implement through the existing StaffMods authorization layer. */ public interface IncidentPostMortemAccess { boolean canView(); boolean canManage(); }

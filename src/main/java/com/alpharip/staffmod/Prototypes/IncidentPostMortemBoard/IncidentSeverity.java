@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.IncidentPostMortemBoard; public enum IncidentSeverity { LOW, MEDIUM, HIGH, CRITICAL }

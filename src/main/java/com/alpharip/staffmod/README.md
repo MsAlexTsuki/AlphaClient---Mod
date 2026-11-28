@@ -11,8 +11,8 @@ The previous repository-root `Prototypes/` directory has been moved into `src/ma
 This document is the implementation checklist for Java prototype source in `src/main/java/com/alpharip/staffmod/Prototypes/` on branch `mod-ideas`.
 
 - Scope inspected: the complete `src/main/java/com/alpharip/staffmod/Prototypes/` tree on `mod-ideas`.
-- Current verified inventory: **773 Java files across 70 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
-- Current branch source inventory: **2,725 Java files** in total — 773 in `Prototypes/`, 1,493 in `staffops/ideas/`, 458 in `staffops/done/`, and the separate root `StaffMod.java`.
+- Current verified inventory: **794 Java files across 71 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
+- Current branch source inventory: **2,745 Java files** in total — 794 in `Prototypes/`, 1,492 in `staffops/ideas/`, 458 in `staffops/done/`, and the separate root `StaffMod.java`.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -2388,3 +2388,30 @@ Folder: `Prototypes/AppealReviewWorkspace/`
 - **AppealReviewWorkspaceGui.java** — Provides an initial in-game queue with submission, status cycling, removal, and summary counts. Dedicated evidence, notes, reviewer assignment, decision, escalation, and reopen-request screens are not exposed yet.
 
 The prototype is local-only: no Supabase calls, remote persistence, server integration, or automatic appeal ingestion are included. Compilation, production integration, permission enforcement through the real StaffMods layer, persistence recovery, and in-game behavior remain unverified.
+
+
+## Incident PostMortem Board
+
+Folder: `Prototypes/IncidentPostMortemBoard/`
+
+- **IncidentRecord.java** — Stores incident details, reporter/owner, category, severity, status, timestamps, impact, root cause, timeline, assignments, corrective actions, and lessons learned.
+- **IncidentCategory.java**, **IncidentSeverity.java**, and **IncidentStatus.java** — Define incident classification, severity, and lifecycle states.
+- **IncidentTimelineEntry.java** — Records timestamped events and the responsible staff member.
+- **IncidentRootCause.java** — Captures the primary cause, contributing factors, analyst, and review timestamp.
+- **IncidentImpact.java** — Records affected systems/users, impact description, and a bounded impact score.
+- **IncidentAction.java** — Tracks corrective/preventive work, assignee, and completion state.
+- **IncidentLesson.java** — Stores lessons learned and their author/category.
+- **IncidentAssignment.java** — Records ownership assignment history.
+- **IncidentPostMortemBoard.java** — Maintains the incident register and preserves the original enabled flag and string-record API.
+- **IncidentPostMortemFilter.java** and **IncidentPostMortemSort.java** — Support queue filtering and ordering.
+- **IncidentPostMortemSummary.java** — Exposes workflow totals, critical incidents, and unfinished-action counts.
+- **IncidentPostMortemValidator.java** — Validates required fields and input limits.
+- **IncidentPostMortemService.java** — Provides creation, status changes, assignments, timeline, root cause, impact, actions, lessons, filtering, sorting, and summaries.
+- **IncidentPostMortemStorage.java** — Saves and loads a versioned local JSON snapshot with temporary-file and backup replacement handling.
+- **IncidentPostMortemExport.java** — Exports incident summaries to CSV.
+- **IncidentPostMortemAccess.java** and **IncidentPostMortemController.java** — Define an authorization boundary and coordinate board, service, and storage. A real StaffMods authorization adapter is still required; this prototype does not grant permissions.
+- **IncidentPostMortemGui.java** — Provides an initial in-game incident queue with record creation, status cycling, removal, and summary counts.
+
+**Current status:** The structured incident model, timeline, root-cause and impact records, assignment history, corrective-action and lessons-learned models, service, validation, filtering/sorting, summary, local JSON persistence, CSV export, access boundary, controller, and initial GUI are present in source. The original enabled flag and string-record methods are retained.
+
+**Still missing / not verified:** Full GUI workflows for editing impact/root-cause details and managing timelines, assignments, actions, and lessons; due-date/overdue support; a concrete StaffMods authorization adapter and dashboard registration; a live incident-event source; and integration with existing staff operations. The prototype is local-only, with no Supabase, remote persistence, or server integration. Compilation, persistence recovery, permission enforcement, and Minecraft 1.8.9 in-game behavior have not been verified.

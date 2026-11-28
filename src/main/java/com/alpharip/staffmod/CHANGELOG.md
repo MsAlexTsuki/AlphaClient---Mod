@@ -665,3 +665,18 @@ The idea-source directory also contains concrete Java foundations for many named
 - Moved `staffops/ideas/AuditFindingsBoard.java` into `Prototypes/AuditFindingsBoard/` and removed the original idea file.
 - Compilation, production integration, permission enforcement, persistence recovery, and in-game behavior have not been verified.
 
+
+
+### 2026-11-28
+
+#### Incident PostMortem Board
+- Added a modular incident postmortem prototype with incident records, categories, severity levels, lifecycle statuses, reporter/owner information, and timestamps.
+- Added incident timelines, root-cause analysis, impact assessments, assignment history, corrective/preventive actions, and lessons-learned records.
+- Added service operations, input validation, queue filtering and sorting, and dashboard summary counts.
+- Added versioned local JSON persistence with temporary-file and backup replacement handling, plus CSV export.
+- Added an initial in-game incident queue for creating incidents, cycling statuses, removing records, and viewing summary counts.
+- Added an authorization adapter boundary; production access must be connected to the established StaffMods permission layer. The prototype does not grant permissions.
+- Preserved the original enabled flag and string-record API in the new board facade.
+- Moved `staffops/ideas/IncidentPostmortemBoard.java` into `Prototypes/IncidentPostMortemBoard/` and removed the original idea file.
+- No Supabase, remote persistence, server integration, or automatic incident ingestion is included.
+- Compilation, production integration, permission enforcement, persistence recovery, and in-game behavior have not been verified.
