@@ -24,6 +24,13 @@ public final class RiskBoardExport {
         finally{if(writer!=null)try{writer.close();}catch(Exception ignored){}}
     }
     private static String csv(String value){
-        return "\""+(value==null?"":value).replace("\"","\\" )+"\"";
+        String text=value==null?"":value;
+        StringBuilder escaped=new StringBuilder("\"");
+        for(int i=0;i<text.length();i++){
+            char current=text.charAt(i);
+            if(current=='"')escaped.append("\"\"");
+            else escaped.append(current);
+        }
+        return escaped.append('"').toString();
     }
 }
