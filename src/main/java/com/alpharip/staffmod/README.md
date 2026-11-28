@@ -11,8 +11,8 @@ The previous repository-root `Prototypes/` directory has been moved into `src/ma
 This document is the implementation checklist for Java prototype source in `src/main/java/com/alpharip/staffmod/Prototypes/` on branch `mod-ideas`.
 
 - Scope inspected: the complete `src/main/java/com/alpharip/staffmod/Prototypes/` tree on `mod-ideas`.
-- Current verified inventory: **751 Java files across 69 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
-- Current branch source inventory: **2,705 Java files** in total — 751 in `Prototypes/`, 1,495 in `staffops/ideas/`, 458 in `staffops/done/`, and the separate root `StaffMod.java`.
+- Current verified inventory: **773 Java files across 70 top-level prototype folders** in `src/main/java/com/alpharip/staffmod/Prototypes/`. The package-root `StaffMod.java` is separate and is not included in this prototype count.
+- Current branch source inventory: **2,725 Java files** in total — 773 in `Prototypes/`, 1,493 in `staffops/ideas/`, 458 in `staffops/done/`, and the separate root `StaffMod.java`.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -2338,6 +2338,34 @@ Folder: `RiskMitigationBoard/`
 
 **Still missing / not verified:** Full GUI editing for category/severity/due dates, mitigation-action and note management controls, a concrete StaffMods authorization adapter and approved dashboard entry, production-safe persistence recovery, compilation against the exact ForgeGradle setup, and in-game behavior. No AlphaClient Core or `development` integration is included.
 
+
+
+## Audit Findings Board
+
+Folder: `AuditFindingsBoard/`
+
+- **AuditFinding.java** — Stores one finding with title, description, category, severity, status, owner, due date, timestamps, assignments, notes, actions, evidence references, resolution, and history.
+- **AuditFindingCategory.java**, **AuditFindingSeverity.java**, and **AuditFindingStatus.java** — Define finding classification, severity, and workflow states.
+- **AuditFindingAssignment.java** — Records assignment history, including assignee, assigning staff member, and timestamp.
+- **AuditFindingNote.java** — Stores timestamped internal review notes.
+- **AuditFindingAction.java** — Tracks follow-up actions, assignees, and completion state.
+- **AuditFindingHistoryEntry.java** — Records local changes as timestamped audit-trail entries.
+- **AuditFindingResolution.java** — Captures the resolution outcome, rationale, actor, and timestamp.
+- **AuditFindingEvidenceReference.java** — Stores evidence labels and references as metadata only; it does not copy, upload, or verify evidence files.
+- **AuditFindingsRegistry.java** — Maintains the in-memory findings collection and safe list snapshots.
+- **AuditFindingsFilter.java** and **AuditFindingsSort.java** — Define queue filters and ordering by creation, severity, due date, or recent update.
+- **AuditFindingsSummary.java** — Exposes total, workflow-state, critical, overdue, and unfinished-action counts.
+- **AuditFindingsValidator.java** — Validates required fields and input length limits.
+- **AuditFindingsService.java** — Provides finding creation/update, status changes, assignment, notes, follow-up actions, evidence references, resolution, removal, filtering, sorting, and summary calculations.
+- **AuditFindingsStorage.java** — Saves and loads a versioned local JSON snapshot with temporary-file and backup replacement handling.
+- **AuditFindingsExport.java** — Exports a findings snapshot to CSV for manual review.
+- **AuditFindingsAccess.java** and **AuditFindingsController.java** — Define an access boundary and access-checked operations. A real adapter to the established StaffMods authorization layer is still required; this prototype does not grant permissions.
+- **AuditFindingsBoard.java** — Provides the standalone board facade and preserves the original enabled flag and string-record API while exposing the structured findings service.
+- **AuditFindingsGui.java** — Provides an initial in-game queue with finding creation, category/severity selection, status cycling, removal, and summary counts.
+
+**Current status:** The structured finding model, workflow enums, assignment/note/action/evidence/resolution records, local history, registry, service, validation, filtering/sorting, summary calculations, local JSON persistence, CSV export, access boundary, controller, and initial GUI are present in source. The original basic enabled flag and string-record operations are retained in the new facade.
+
+**Still missing / not verified:** A concrete StaffMods authorization adapter, dashboard/menu registration, full GUI screens for editing findings and managing assignments/notes/actions/evidence/resolutions, configurable due-date input, and integration with a real audit-event source. Evidence references are metadata only. No Supabase, remote persistence, or server integration is included. Compilation, persistence recovery, permission enforcement, and Minecraft 1.8.9 in-game behavior have not been verified.
 
 ## Appeal Review Workspace
 

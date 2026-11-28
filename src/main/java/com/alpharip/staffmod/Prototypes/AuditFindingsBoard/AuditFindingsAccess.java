@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.AuditFindingsBoard;/** Adapter boundary only; this interface grants no ranks or permissions. */ public interface AuditFindingsAccess {boolean canViewFindings();boolean canManageFindings();}

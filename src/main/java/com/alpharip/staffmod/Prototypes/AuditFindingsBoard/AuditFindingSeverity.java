@@ -1,0 +1,1 @@
+package com.alpharip.staffmod.AuditFindingsBoard; public enum AuditFindingSeverity { INFO(0), LOW(1), MEDIUM(2), HIGH(3), CRITICAL(4); private final int weight; AuditFindingSeverity(int w){weight=w;} public int getWeight(){return weight;} }

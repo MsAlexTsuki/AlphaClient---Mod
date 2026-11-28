@@ -1,0 +1,8 @@
+package com.alpharip.staffmod.AuditFindingsBoard;
+import com.google.gson.Gson;import com.google.gson.GsonBuilder;import java.io.*;import java.util.*;
+public final class AuditFindingsStorage {
+ private static final Gson GSON=new GsonBuilder().setPrettyPrinting().create();private AuditFindingsStorage(){}
+ private static final class Snapshot{int version=1;List<AuditFinding> findings=new ArrayList<AuditFinding>();}
+ public static boolean save(File file,AuditFindingsRegistry registry){if(file==null||registry==null)return false;File parent=file.getParentFile();if(parent!=null&&!parent.exists()&&!parent.mkdirs())return false;File temp=new File(file+".tmp"),bak=new File(file+".bak");Writer w=null;try{Snapshot s=new Snapshot();s.findings=registry.getAll();w=new OutputStreamWriter(new FileOutputStream(temp),"UTF-8");GSON.toJson(s,w);w.flush();w.close();w=null;if(bak.exists()&&!bak.delete())return false;boolean had=file.exists();if(had&&!file.renameTo(bak))return false;if(!temp.renameTo(file)){if(had)bak.renameTo(file);temp.delete();return false;}if(had)bak.delete();return true;}catch(Exception e){temp.delete();return false;}finally{if(w!=null)try{w.close();}catch(Exception ignored){}}}
+ public static boolean load(File file,AuditFindingsRegistry registry){if(file==null||registry==null||!file.isFile())return false;Reader r=null;try{r=new InputStreamReader(new FileInputStream(file),"UTF-8");Snapshot s=GSON.fromJson(r,Snapshot.class);if(s==null||s.version!=1||s.findings==null)return false;registry.replaceAll(s.findings);return true;}catch(Exception e){return false;}finally{if(r!=null)try{r.close();}catch(Exception ignored){}}}
+}

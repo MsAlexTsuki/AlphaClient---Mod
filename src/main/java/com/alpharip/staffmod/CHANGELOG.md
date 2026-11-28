@@ -650,3 +650,18 @@ The idea-source directory also contains concrete Java foundations for many named
 - Kept the prototype local-only, with no Supabase calls, remote persistence, server integration, or automatic appeal ingestion.
 - Moved `staffops/ideas/AppealReviewWorkspace.java` into `Prototypes/AppealReviewWorkspace/` and removed the original idea file. Other Appeal-related idea files were left unchanged.
 - Compilation, production integration, permission enforcement, persistence recovery, and in-game behavior have not been verified.
+
+### 2026-11-28
+
+#### Audit Findings Board
+- Added a structured audit-finding model with categories, severity levels, workflow statuses, ownership, due dates, and timestamps.
+- Added assignment history, internal notes, follow-up actions, evidence-reference metadata, resolution records, and a local change history.
+- Added a registry and service layer for creating, updating, assigning, reviewing, resolving, filtering, sorting, and summarizing findings.
+- Added dashboard counters for workflow states, critical findings, overdue items, and unfinished actions.
+- Added versioned local JSON persistence and CSV export. No Supabase calls, remote persistence, or server integration are included.
+- Added an initial in-game queue for creating findings, selecting category and severity, cycling status, removing entries, and viewing summary counts.
+- Added an authorization adapter boundary; production access must be connected to the established StaffMods permission layer. The prototype does not grant permissions.
+- Preserved the original enabled flag and string-record API in the new board facade.
+- Moved `staffops/ideas/AuditFindingsBoard.java` into `Prototypes/AuditFindingsBoard/` and removed the original idea file.
+- Compilation, production integration, permission enforcement, persistence recovery, and in-game behavior have not been verified.
+
