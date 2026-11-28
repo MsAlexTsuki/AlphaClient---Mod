@@ -6,12 +6,12 @@
 
 When creating, extending, or inspecting a prototype, look in `Prototypes/` first. Do not create a new prototype beside `staffops/` and do not place a prototype under `staffops/ideas/` unless the user explicitly asks for an idea note there. Keep `staffops/` for its separate ideas/done workflow. The package-root files, including `StaffMod.java`, are not prototype folders.
 
-The folders listed in this guide are now organized under `Prototypes/`; their individual names and contents remain unchanged by this documentation update.
+Existing prototype folders remain in repository-root `Prototypes/` unless specifically relocated. New or relocated Java source prototypes use `src/main/java/com/alpharip/staffmod/Prototypes/`. `BuildSymmetryGuides/` is now stored at that canonical source path; the other prototype folders were not moved.
 
-This document is the implementation checklist for **every Java prototype file currently located inside `Prototypes/`** under this package on branch `mod-ideas`.
+This document is the implementation checklist for Java prototype source in repository-root `Prototypes/` and the canonical Java-source `src/main/java/com/alpharip/staffmod/Prototypes/` folder on branch `mod-ideas`.
 
-- Scope inspected: `src/main/java/com/alpharip/staffmod/Prototypes/`.
-- Current verified inventory: **691 Java files** across **64 top-level prototype folders inside `Prototypes/`**, plus **1 Java file** directly in the package root (**692 total**).
+- Scope inspected: repository-root `Prototypes/` and `src/main/java/com/alpharip/staffmod/Prototypes/`.
+- Current verified inventory: **679 Java files** across **62 folders** in repository-root `Prototypes/`, plus **12 Java files** in `src/main/java/com/alpharip/staffmod/Prototypes/BuildSymmetryGuides/` (**691 prototype Java files across 63 folders total**). The repository-root `StaffMod.java` is separate and is not included in this prototype count.
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
