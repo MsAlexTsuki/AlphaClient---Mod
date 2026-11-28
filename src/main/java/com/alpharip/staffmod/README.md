@@ -11,7 +11,7 @@ The folders listed in this guide are now organized under `Prototypes/`; their in
 This document is the implementation checklist for **every Java prototype file currently located inside `Prototypes/`** under this package on branch `mod-ideas`.
 
 - Scope inspected: `src/main/java/com/alpharip/staffmod/Prototypes/`.
-- Current verified inventory: **679 Java files** across **62 folders containing Java files inside `Prototypes/`**, plus **1 Java file** directly in the package root (**680 total**).
+- Current verified inventory: **691 Java files** across **64 top-level prototype folders inside `Prototypes/`**, plus **1 Java file** directly in the package root (**692 total**).
 - This is a prototype roadmap, not a claim that these modules are production-ready.
 - The existing source idea files under `staffops/ideas/` are not included in this inventory.
 - Do not copy these prototypes into AlphaClient Core or `development` unless that work is separately and explicitly authorized.
@@ -1534,6 +1534,21 @@ This manifest is generated from the current Git tree. It excludes everything und
 - `BlockBreakRingRenderer.java`
 - `BlockBreakRingSnapshot.java`
 
+### BuildSymmetryGuides/
+
+- BlockCoordinates.java
+- BuildSymmetryGuideConfig.java
+- BuildSymmetryGuideStorage.java
+- BuildSymmetryGuides.java
+- BuildSymmetryGuidesEventHandler.java
+- BuildSymmetryGuidesGui.java
+- BuildSymmetryGuidesRenderer.java
+- SymmetryAxis.java
+- SymmetryCalculator.java
+- SymmetryGuideColor.java
+- SymmetryGuidePoint.java
+- SymmetryGuideSnapshot.java
+
 ### `cases/`
 
 - `AppealCase.java`
@@ -2215,3 +2230,27 @@ Folder: `togglesneak/` (a inside `Prototypes/`).
 **Current status:** The standalone state models, configurable activation bindings, client-tick adapter, explicit runtime lifecycle, and English keybinding labels are present in source. Both modules start enabled with their toggled movement state off; assign activation keys in Options → Controls.
 
 **Still missing / not verified:** The runtime is not wired into a client lifecycle or module menu, and no settings GUI or persistence is included. Forge compilation and Minecraft 1.8.9 in-game behavior have not been verified. No AlphaClient Core, `development`, Alpha Launcher, or Supabase integration is included.
+
+
+## Build Symmetry Guides
+
+Folder: BuildSymmetryGuides/.
+
+- **BuildSymmetryGuides.java** — Standalone module facade with explicit Forge event registration/unregistration, target snapshot ownership, local settings loading/saving, and a settings-screen entry point. It is not registered automatically by AlphaClient Core.
+- **BuildSymmetryGuideConfig.java** — Holds the enable state, X/Z/BOTH mirror-plane selection, origin coordinates, preview toggles, guide distance, opacity, and color.
+- **SymmetryAxis.java** — Defines reflection across the X plane, Z plane, or both planes.
+- **BlockCoordinates.java** — Immutable integer block-coordinate value object.
+- **SymmetryGuidePoint.java** — Represents one reflected destination and its reflection label.
+- **SymmetryCalculator.java** — Calculates X, Z, and combined reflections around the center of the configured origin block. It preserves Y and filters source-position and duplicate destinations; it never changes the world.
+- **SymmetryGuideSnapshot.java** — Provides immutable render-ready state for the current targeted block.
+- **SymmetryGuideColor.java** — Defines the local overlay color palette.
+- **BuildSymmetryGuidesEventHandler.java** — Samples the targeted block on client ticks and delegates world rendering through Forge events.
+- **BuildSymmetryGuidesRenderer.java** — Draws horizontal mirror-plane guide lines and wireframe outlines at reflected destination coordinates.
+- **BuildSymmetryGuidesGui.java** — Provides controls for enablement, mirror plane, preview, axis lines, guide distance, opacity, color, and setting the origin to the player's current position.
+- **BuildSymmetryGuideStorage.java** — Loads and saves settings in a local properties file under the Minecraft config directory.
+
+**Mirror behavior:** X reflects the X coordinate, Z reflects the Z coordinate, and BOTH calculates the X reflection, Z reflection, and combined reflection. The mirror planes pass through the center of the configured origin block. Y is unchanged. The renderer only draws guides; it does not place or modify blocks.
+
+**Current status:** The standalone calculation model, immutable snapshot, event adapter, world overlay, settings GUI, and local properties persistence are present in source. The original staffops/ideas/BuildSymmetryGuides.java idea stub is removed after moving its concept into this prototype folder.
+
+**Still missing / not verified:** AlphaClient Core/module-menu integration, an approved way to open the settings GUI, compilation against the exact ForgeGradle setup, and Minecraft 1.8.9 runtime/render verification. No Supabase, Alpha Launcher, or development changes are included.
